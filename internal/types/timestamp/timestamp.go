@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// Timestamp is a timestamp string type
 type Timestamp string
 
 func New(t string) Timestamp {
@@ -17,6 +18,7 @@ func (t Timestamp) String() string {
 	return string(t)
 }
 
+// ValidateOnceADayWindowFormat validates once a day window format
 func (t Timestamp) ValidateOnceADayWindowFormat() error {
 	// valid time format is "hh24:mi"
 	validTimeFormat := "([0-1][0-9]|2[0-3]):([0-5][0-9])"
@@ -29,6 +31,7 @@ func (t Timestamp) ValidateOnceADayWindowFormat() error {
 	return nil
 }
 
+// ValidateOnceAWeekWindowFormat validates once a week window date format
 func (t Timestamp) ValidateOnceAWeekWindowFormat() error {
 	// valid time format is "ddd:hh24:mi"
 	validTimeFormat := "(sun|mon|tue|wed|thu|fri|sat):([0-1][0-9]|2[0-3]):([0-5][0-9])"

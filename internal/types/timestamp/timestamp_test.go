@@ -90,3 +90,45 @@ func TestValidateOnceAWeekWindowFormat(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateUTCFormat(t *testing.T) {
+	t.Parallel()
+	type tc struct {
+		value       string
+		expectError bool
+	}
+	tests := map[string]tc{
+		"invalid no TZ": {
+			value:       "2015-03-07 23:45:00",
+			expectError: true,
+		},
+		"invalid date order": {
+			value:       "27-03-2019 23:45:00",
+			expectError: true,
+		},
+		"invalid format": {
+			value:       "Mon, 02 Jan 2006 15:04:05 -0700",
+			expectError: true,
+		},
+		"valid": {
+			value: "2006-01-02T15:04:05Z",
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ts := New(test.value)
+			err := ts.ValidateUTCFormat()
+
+			if err == nil && test.expectError {
+				t.Fatal("expected error, got no error")
+			}
+
+			if err != nil && !test.expectError {
+				t.Fatalf("got unexpected error: %s", err)
+			}
+		})
+	}
+}
