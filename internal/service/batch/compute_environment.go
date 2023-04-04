@@ -250,8 +250,8 @@ func ResourceComputeEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags:tftags.TagsSchema(),
-names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -274,7 +274,7 @@ func resourceComputeEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 	input := &batch.CreateComputeEnvironmentInput{
 		ComputeEnvironmentName: aws.String(computeEnvironmentName),
 		ServiceRole:            aws.String(d.Get("service_role").(string)),
-		Tags: GetTagsIn(ctx),
+		Tags:                   GetTagsIn(ctx),
 		Type:                   aws.String(computeEnvironmentType),
 	}
 
