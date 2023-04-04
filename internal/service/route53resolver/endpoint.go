@@ -64,6 +64,12 @@ func ResourceEndpoint() *schema.Resource {
 							Computed:     true,
 							ValidateFunc: validation.IsIPAddress,
 						},
+						"ipv6": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IsIPv6Address,
+						},
 						"ip_id": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -75,6 +81,11 @@ func ResourceEndpoint() *schema.Resource {
 					},
 				},
 				Set: endpointHashIPAddress,
+			},
+			"resolver_endpoint_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(route53resolver.ResolverEndpointType_Values(), false),
 			},
 			"name": {
 				Type:         schema.TypeString,
@@ -109,10 +120,11 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &route53resolver.CreateResolverEndpointInput{
-		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-endpoint-")),
-		Direction:        aws.String(d.Get("direction").(string)),
-		IpAddresses:      expandEndpointIPAddresses(d.Get("ip_address").(*schema.Set)),
-		SecurityGroupIds: flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set)),
+		CreatorRequestId:     aws.String(id.PrefixedUniqueId("tf-r53-resolver-endpoint-")),
+		Direction:            aws.String(d.Get("direction").(string)),
+		ResolverEndpointType: aws.String(d.Get("resolver_endpoint_type").(string)),
+		IpAddresses:          expandEndpointIPAddresses(d.Get("ip_address").(*schema.Set)),
+		SecurityGroupIds:     flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set)),
 	}
 
 	if v, ok := d.GetOk("name"); ok {
@@ -158,6 +170,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 	arn := aws.StringValue(ep.Arn)
 	d.Set("arn", arn)
 	d.Set("direction", ep.Direction)
+	d.Set("resolver_endpoint_type", ep.ResolverEndpointType)
 	d.Set("host_vpc_id", ep.HostVPCId)
 	d.Set("name", ep.Name)
 	d.Set("security_group_ids", aws.StringValueSlice(ep.SecurityGroupIds))
@@ -428,6 +441,9 @@ func expandEndpointIPAddressUpdate(vIpAddress interface{}) *route53resolver.IpAd
 	if vIp, ok := mIpAddress["ip"].(string); ok && vIp != "" {
 		ipAddressUpdate.Ip = aws.String(vIp)
 	}
+	if vIpv6, ok := mIpAddress["ipv6"].(string); ok && vIpv6 != "" {
+		ipAddressUpdate.Ipv6 = aws.String(vIpv6)
+	}
 	if vIpId, ok := mIpAddress["ip_id"].(string); ok && vIpId != "" {
 		ipAddressUpdate.IpId = aws.String(vIpId)
 	}
@@ -449,6 +465,9 @@ func expandEndpointIPAddresses(vIpAddresses *schema.Set) []*route53resolver.IpAd
 		if vIp, ok := mIpAddress["ip"].(string); ok && vIp != "" {
 			ipAddressRequest.Ip = aws.String(vIp)
 		}
+		if vIpv6, ok := mIpAddress["ipv6"].(string); ok && vIpv6 != "" {
+			ipAddressRequest.Ipv6 = aws.String(vIpv6)
+		}
 
 		ipAddressRequests = append(ipAddressRequests, ipAddressRequest)
 	}
@@ -467,6 +486,7 @@ func flattenEndpointIPAddresses(ipAddresses []*route53resolver.IpAddressResponse
 		mIpAddress := map[string]interface{}{
 			"subnet_id": aws.StringValue(ipAddress.SubnetId),
 			"ip":        aws.StringValue(ipAddress.Ip),
+			"ipv6":      aws.StringValue(ipAddress.Ipv6),
 			"ip_id":     aws.StringValue(ipAddress.IpId),
 		}
 

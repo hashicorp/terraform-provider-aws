@@ -40,6 +40,25 @@ resource "aws_route53_resolver_rule" "fwd" {
 }
 ```
 
+### IPv6 Forward rule
+
+```terraform
+resource "aws_route53_resolver_rule" "fwd" {
+  domain_name          = "example.com"
+  name                 = "example"
+  rule_type            = "FORWARD"
+  resolver_endpoint_id = aws_route53_resolver_endpoint.foo.id
+
+  target_ip {
+    ipv6 = "2600:1f18:1686:2000:4e60:6e3e:258:da36"
+  }
+
+  tags = {
+    Environment = "Prod"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -55,8 +74,9 @@ This argument should only be specified for `FORWARD` type rules.
 
 The `target_ip` object supports the following:
 
-* `ip` - (Required) One IP address that you want to forward DNS queries to. You can specify only IPv4 addresses.
-* `port` - (Optional) The port at `ip` that you want to forward DNS queries to. Default value is `53`
+* `ip` - (Optional) One IPv4 address that you want to forward DNS queries to.
+* `ipv6` - (Optional) One IPv6 address that you want to forward DNS queries to.
+* `port` - (Optional) The port at `ip` that you want to forward DNS queries to. Default value is `53`.
 
 ## Attributes Reference
 

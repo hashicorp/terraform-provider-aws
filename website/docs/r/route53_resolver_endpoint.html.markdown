@@ -14,8 +14,9 @@ Provides a Route 53 Resolver endpoint resource.
 
 ```terraform
 resource "aws_route53_resolver_endpoint" "foo" {
-  name      = "foo"
-  direction = "INBOUND"
+  name                   = "foo"
+  direction              = "INBOUND"
+  resolver_endpoint_type = "IPV4"
 
   security_group_ids = [
     aws_security_group.sg1.id,
@@ -44,6 +45,8 @@ The following arguments are supported:
 * `direction` - (Required) The direction of DNS queries to or from the Route 53 Resolver endpoint.
 Valid values are `INBOUND` (resolver forwards DNS queries to the DNS service for a VPC from your network or another VPC)
 or `OUTBOUND` (resolver forwards DNS queries from the DNS service for a VPC to your network or another VPC).
+* `resolver_endpoint_type` - (Optional) The endpoint IP type. This endpoint type is applied to all IP addresses.
+Valid values are `IPV6`,`IPV4` or `DUALSTACK` (both IPv4 and IPv6).
 * `ip_address` - (Required) The subnets and IP addresses in your VPC that you want DNS queries to pass through on the way from your VPCs
 to your network (for outbound endpoints) or on the way from your network to your VPCs (for inbound endpoints). Described below.
 * `security_group_ids` - (Required) The ID of one or more security groups that you want to use to control access to this VPC.
@@ -53,7 +56,8 @@ to your network (for outbound endpoints) or on the way from your network to your
 The `ip_address` object supports the following:
 
 * `subnet_id` - (Required) The ID of the subnet that contains the IP address.
-* `ip` - (Optional) The IP address in the subnet that you want to use for DNS queries.
+* `ip` - (Optional) The IPv4 address in the subnet that you want to use for DNS queries.
+* `ipv6` - (Optional) The IPv6 address in the subnet that you want to use for DNS queries.
 
 ## Attributes Reference
 
