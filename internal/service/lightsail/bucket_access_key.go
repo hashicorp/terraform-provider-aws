@@ -29,7 +29,7 @@ func ResourceBucketAccessKey() *schema.Resource {
 		ReadWithoutTimeout:   resourceBucketAccessKeyRead,
 		DeleteWithoutTimeout: resourceBucketAccessKeyDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{

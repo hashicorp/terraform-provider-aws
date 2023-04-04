@@ -20,9 +20,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_transfer_user")
+// @SDKResource("aws_transfer_user", name="User")
+// @Tags(identifierAttribute="arn")
 func ResourceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserCreate,
@@ -116,8 +118,8 @@ func ResourceUser() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validServerID,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"user_name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -133,8 +135,6 @@ func ResourceUser() *schema.Resource {
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	serverID := d.Get("server_id").(string)
 	userName := d.Get("user_name").(string)
@@ -142,6 +142,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	input := &transfer.CreateUserInput{
 		Role:     aws.String(d.Get("role").(string)),
 		ServerId: aws.String(serverID),
+		Tags:     GetTagsIn(ctx),
 		UserName: aws.String(userName),
 	}
 
@@ -170,10 +171,6 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.PosixProfile = expandUserPOSIXUser(v.([]interface{}))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	_, err := conn.CreateUserWithContext(ctx, input)
 
 	if err != nil {
@@ -188,8 +185,6 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	serverID, userName, err := UserParseResourceID(d.Id())
 
@@ -229,16 +224,8 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("server_id", serverID)
 	d.Set("user_name", user.UserName)
 
-	tags := KeyValueTags(ctx, user.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	SetTagsOut(ctx, user.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
 	return diags
 }
 
@@ -291,14 +278,6 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Transfer User (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 

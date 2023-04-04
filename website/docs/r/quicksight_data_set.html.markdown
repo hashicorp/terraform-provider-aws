@@ -378,7 +378,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-A QuickSight Data Set can be imported using the AWS account ID and data set ID name separated by a comma (`,`) e.g.,
+A QuickSight Data Set can be imported using the AWS account ID and data set ID separated by a comma (`,`) e.g.,
 
 ```
 $ terraform import aws_quicksight_data_set.example 123456789012,example-id
