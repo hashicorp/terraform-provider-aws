@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -143,8 +144,28 @@ func ResourceSecret() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"automatically_after_days": {
-							Type:     schema.TypeInt,
-							Required: true,
+							Type:          schema.TypeInt,
+							Optional:      true,
+							ConflictsWith: []string{"rotation_rules.0.schedule_expression"},
+							ExactlyOneOf:  []string{"rotation_rules.0.automatically_after_days", "rotation_rules.0.schedule_expression"},
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								_, exists := d.GetOk("rotation_rules.0.schedule_expression")
+								return exists
+							},
+							DiffSuppressOnRefresh: true,
+							ValidateFunc:          validation.IntBetween(1, 1000),
+						},
+						"duration": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringMatch(regexp.MustCompile(`[0-9h]+`), ""),
+						},
+						"schedule_expression": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"rotation_rules.0.automatically_after_days"},
+							ExactlyOneOf:  []string{"rotation_rules.0.automatically_after_days", "rotation_rules.0.schedule_expression"},
+							ValidateFunc:  validation.StringMatch(regexp.MustCompile(`[0-9A-Za-z\(\)#\?\*\-\/, ]+`), ""),
 						},
 					},
 				},
