@@ -19,9 +19,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_api_gateway_stage")
+// @SDKResource("aws_api_gateway_stage", name="Stage")
+// @Tags(identifierAttribute="arn")
 func ResourceStage() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStageCreate,
@@ -61,6 +63,10 @@ func ResourceStage() *schema.Resource {
 						},
 					},
 				},
+			},
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"cache_cluster_enabled": {
 				Type:     schema.TypeBool,
@@ -133,15 +139,11 @@ func ResourceStage() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"xray_tracing_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"web_acl_arn": {
 				Type:     schema.TypeString,
@@ -156,8 +158,6 @@ func ResourceStage() *schema.Resource {
 func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	respApiId := d.Get("rest_api_id").(string)
 	stageName := d.Get("stage_name").(string)
@@ -166,6 +166,7 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		RestApiId:    aws.String(respApiId),
 		StageName:    aws.String(stageName),
 		DeploymentId: aws.String(deploymentId),
+		Tags:         GetTagsIn(ctx),
 	}
 
 	waitForCache := false
@@ -192,10 +193,6 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if v, ok := d.GetOk("canary_settings"); ok {
 		input.CanarySettings = expandStageCanarySettings(v.([]interface{}), deploymentId)
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	output, err := conn.CreateStageWithContext(ctx, input)
@@ -226,10 +223,7 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	log.Printf("[DEBUG] Reading API Gateway Stage %s", d.Id())
 	restApiId := d.Get("rest_api_id").(string)
 	stageName := d.Get("stage_name").(string)
 	stage, err := FindStageByName(ctx, conn, restApiId, stageName)
@@ -270,16 +264,7 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "setting canary_settings: %s", err)
 	}
 
-	tags := KeyValueTags(ctx, stage.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, stage.Tags)
 
 	stageArn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -313,19 +298,6 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	respApiId := d.Get("rest_api_id").(string)
 	stageName := d.Get("stage_name").(string)
-
-	stageArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		Service:   "apigateway",
-		Resource:  fmt.Sprintf("/restapis/%s/stages/%s", respApiId, stageName),
-	}.String()
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, stageArn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
-		}
-	}
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		operations := make([]*apigateway.PatchOperation, 0)
