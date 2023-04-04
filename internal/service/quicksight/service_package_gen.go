@@ -105,6 +105,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Group Membership",
 		},
 		{
+			Factory:  ResourceTemplate,
+			TypeName: "aws_quicksight_template",
+		},
+		{
 			Factory:  ResourceUser,
 			TypeName: "aws_quicksight_user",
 			Name:     "User",

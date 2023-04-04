@@ -6,7 +6,9 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -55,6 +57,66 @@ func waitUpdated(ctx context.Context, conn *quicksight.QuickSight, accountId, da
 		}
 
 		return output, err
+	}
+
+	return nil, err
+}
+
+func waitTemplateCreated(ctx context.Context, conn *quicksight.QuickSight, id string, timeout time.Duration) (*quicksight.Template, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{quicksight.ResourceStatusCreationInProgress},
+		Target:                    []string{quicksight.ResourceStatusCreationSuccessful},
+		Refresh:                   statusTemplate(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*quicksight.Template); ok {
+		if status, apiErrors := aws.StringValue(out.Version.Status), out.Version.Errors; status == quicksight.ResourceStatusCreationFailed && apiErrors != nil {
+			var errors *multierror.Error
+
+			for _, apiError := range apiErrors {
+				if apiError == nil {
+					continue
+				}
+				errors = multierror.Append(errors, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
+			}
+			tfresource.SetLastError(err, errors)
+		}
+
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitTemplateUpdated(ctx context.Context, conn *quicksight.QuickSight, id string, timeout time.Duration) (*quicksight.Template, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{quicksight.ResourceStatusUpdateInProgress},
+		Target:                    []string{quicksight.ResourceStatusUpdateSuccessful, quicksight.ResourceStatusCreationSuccessful},
+		Refresh:                   statusTemplate(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*quicksight.Template); ok {
+		if status, apiErrors := aws.StringValue(out.Version.Status), out.Version.Errors; status == quicksight.ResourceStatusCreationFailed && apiErrors != nil {
+			var errors *multierror.Error
+
+			for _, apiError := range apiErrors {
+				if apiError == nil {
+					continue
+				}
+				errors = multierror.Append(errors, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
+			}
+			tfresource.SetLastError(err, errors)
+		}
+
+		return out, err
 	}
 
 	return nil, err

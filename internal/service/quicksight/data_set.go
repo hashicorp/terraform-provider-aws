@@ -173,6 +173,26 @@ func ResourceDataSet() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
+			"output_columns": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"description": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"permissions": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -869,6 +889,10 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("error setting logical_table_map: %s", err)
 	}
 
+	if err := d.Set("output_columns", flattenOutputColumns(dataSet.OutputColumns)); err != nil {
+		return diag.Errorf("error setting output_columns: %s", err)
+	}
+
 	if err := d.Set("physical_table_map", flattenPhysicalTableMap(dataSet.PhysicalTableMap, physicalTableMapSchema())); err != nil {
 		return diag.Errorf("error setting physical_table_map: %s", err)
 	}
@@ -913,33 +937,19 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			Name:             aws.String(d.Get("name").(string)),
 		}
 
-		if d.HasChange("column_groups") {
-			params.ColumnGroups = expandDataSetColumnGroups(d.Get("column_groups").([]interface{}))
-		}
+		params.ColumnGroups = expandDataSetColumnGroups(d.Get("column_groups").([]interface{}))
 
-		if d.HasChange("column_level_permission_rules") {
-			params.ColumnLevelPermissionRules = expandDataSetColumnLevelPermissionRules(d.Get("column_level_permission_rules").([]interface{}))
-		}
+		params.ColumnLevelPermissionRules = expandDataSetColumnLevelPermissionRules(d.Get("column_level_permission_rules").([]interface{}))
 
-		if d.HasChange("data_set_usage_configuration") {
-			params.DataSetUsageConfiguration = expandDataSetUsageConfiguration(d.Get("data_set_usage_configuration").([]interface{}))
-		}
+		params.DataSetUsageConfiguration = expandDataSetUsageConfiguration(d.Get("data_set_usage_configuration").([]interface{}))
 
-		if d.HasChange("field_folders") {
-			params.FieldFolders = expandDataSetFieldFolders(d.Get("field_folders").(*schema.Set).List())
-		}
+		params.FieldFolders = expandDataSetFieldFolders(d.Get("field_folders").(*schema.Set).List())
 
-		if d.HasChange("logical_table_map") {
-			params.LogicalTableMap = expandDataSetLogicalTableMap(d.Get("logical_table_map").(*schema.Set))
-		}
+		params.LogicalTableMap = expandDataSetLogicalTableMap(d.Get("logical_table_map").(*schema.Set))
 
-		if d.HasChange("row_level_permission_data_set") {
-			params.RowLevelPermissionDataSet = expandDataSetRowLevelPermissionDataSet(d.Get("row_level_permission_data_set").([]interface{}))
-		}
+		params.RowLevelPermissionDataSet = expandDataSetRowLevelPermissionDataSet(d.Get("row_level_permission_data_set").([]interface{}))
 
-		if d.HasChange("row_level_permission_tag_configuration") {
-			params.RowLevelPermissionTagConfiguration = expandDataSetRowLevelPermissionTagConfigurations(d.Get("row_level_permission_tag_configuration").([]interface{}))
-		}
+		params.RowLevelPermissionTagConfiguration = expandDataSetRowLevelPermissionTagConfigurations(d.Get("row_level_permission_tag_configuration").([]interface{}))
 
 		_, err = conn.UpdateDataSetWithContext(ctx, params)
 		if err != nil {
@@ -1797,6 +1807,35 @@ func flattenColumnGroups(apiObject []*quicksight.ColumnGroup) []interface{} {
 	return tfList
 }
 
+func flattenOutputColumns(apiObject []*quicksight.OutputColumn) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, column := range apiObject {
+		if column == nil {
+			continue
+		}
+
+		item := map[string]interface{}{}
+
+		if column.Description != nil {
+			item["description"] = aws.StringValue(column.Description)
+		}
+		if column.Name != nil {
+			item["name"] = aws.StringValue(column.Name)
+		}
+		if column.Type != nil {
+			item["type"] = aws.StringValue(column.Type)
+		}
+
+		tfList = append(tfList, item)
+	}
+
+	return tfList
+}
+
 func flattenGeoSpatialColumnGroup(apiObject *quicksight.GeoSpatialColumnGroup) []interface{} {
 	if apiObject == nil {
 		return nil
@@ -2328,7 +2367,7 @@ func flattenUploadSettings(apiObject *quicksight.UploadSettings) []interface{} {
 		tfMap["contains_header"] = aws.BoolValue(apiObject.ContainsHeader)
 	}
 	if apiObject.Delimiter != nil {
-		tfMap["contains_header"] = aws.StringValue(apiObject.Delimiter)
+		tfMap["delimiter"] = aws.StringValue(apiObject.Delimiter)
 	}
 	if apiObject.Format != nil {
 		tfMap["format"] = aws.StringValue(apiObject.Format)
