@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -124,34 +124,34 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		var response *http.Response
-		err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+		err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 			response, err = client.Do(request)
 
 			if errs.IsA[net.Error](err) {
-				return resource.RetryableError(fmt.Errorf("making HTTP request: %w", err))
+				return retry.RetryableError(fmt.Errorf("making HTTP request: %w", err))
 			}
 
 			if err != nil {
-				return resource.NonRetryableError(fmt.Errorf("making HTTP request: %w", err))
+				return retry.NonRetryableError(fmt.Errorf("making HTTP request: %w", err))
 			}
 
 			if response == nil {
-				return resource.NonRetryableError(fmt.Errorf("no response for activation key request"))
+				return retry.NonRetryableError(fmt.Errorf("no response for activation key request"))
 			}
 
 			log.Printf("[DEBUG] Received HTTP response: %#v", response)
 			if expected := http.StatusFound; expected != response.StatusCode {
-				return resource.NonRetryableError(fmt.Errorf("expected HTTP status code %d, received: %d", expected, response.StatusCode))
+				return retry.NonRetryableError(fmt.Errorf("expected HTTP status code %d, received: %d", expected, response.StatusCode))
 			}
 
 			redirectURL, err := response.Location()
 			if err != nil {
-				return resource.NonRetryableError(fmt.Errorf("extracting HTTP Location header: %w", err))
+				return retry.NonRetryableError(fmt.Errorf("extracting HTTP Location header: %w", err))
 			}
 
 			if errorType := redirectURL.Query().Get("errorType"); errorType == "PRIVATE_LINK_ENDPOINT_UNREACHABLE" {
 				errMessage := fmt.Errorf("during activation: %s", errorType)
-				return resource.RetryableError(errMessage)
+				return retry.RetryableError(errMessage)
 			}
 
 			activationKey = redirectURL.Query().Get("activationKey")

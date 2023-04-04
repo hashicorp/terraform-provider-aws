@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/macie2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -111,15 +111,15 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	var err error
-	err = resource.RetryContext(ctx, 4*time.Minute, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
 		_, err := conn.CreateMemberWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, macie2.ErrorCodeClientError) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -155,15 +155,15 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	log.Printf("[INFO] Inviting Macie2 Member: %s", inputInvite)
 
 	var output *macie2.CreateInvitationsOutput
-	err = resource.RetryContext(ctx, 4*time.Minute, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
 		output, err = conn.CreateInvitationsWithContext(ctx, inputInvite)
 
 		if tfawserr.ErrCodeEquals(err, macie2.ErrorCodeClientError) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -274,15 +274,15 @@ func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			log.Printf("[INFO] Inviting Macie2 Member: %s", inputInvite)
 			var output *macie2.CreateInvitationsOutput
 			var err error
-			err = resource.RetryContext(ctx, 4*time.Minute, func() *resource.RetryError {
+			err = retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
 				output, err = conn.CreateInvitationsWithContext(ctx, inputInvite)
 
 				if tfawserr.ErrCodeEquals(err, macie2.ErrorCodeClientError) {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 
 				if err != nil {
-					return resource.NonRetryableError(err)
+					return retry.NonRetryableError(err)
 				}
 
 				return nil

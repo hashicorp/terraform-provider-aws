@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -132,10 +132,10 @@ func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.Resourc
 
 	clusterName := d.Get("cluster_name").(string)
 	configName, oidc := expandOIDCIdentityProviderConfigRequest(d.Get("oidc").([]interface{})[0].(map[string]interface{}))
-	id := IdentityProviderConfigCreateResourceID(clusterName, configName)
+	idpID := IdentityProviderConfigCreateResourceID(clusterName, configName)
 
 	input := &eks.AssociateIdentityProviderConfigInput{
-		ClientRequestToken: aws.String(resource.UniqueId()),
+		ClientRequestToken: aws.String(id.UniqueId()),
 		ClusterName:        aws.String(clusterName),
 		Oidc:               oidc,
 	}
@@ -147,10 +147,10 @@ func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.Resourc
 	_, err := conn.AssociateIdentityProviderConfigWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error associating EKS Identity Provider Config (%s): %s", id, err)
+		return diag.Errorf("error associating EKS Identity Provider Config (%s): %s", idpID, err)
 	}
 
-	d.SetId(id)
+	d.SetId(idpID)
 
 	_, err = waitOIDCIdentityProviderConfigCreated(ctx, conn, clusterName, configName, d.Timeout(schema.TimeoutCreate))
 

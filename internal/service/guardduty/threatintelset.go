@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -102,7 +102,7 @@ func resourceThreatIntelSetCreate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "creating GuardDuty Threat Intel Set (%s): %s", name, err)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{guardduty.ThreatIntelSetStatusActivating, guardduty.ThreatIntelSetStatusDeactivating},
 		Target:     []string{guardduty.ThreatIntelSetStatusActive, guardduty.ThreatIntelSetStatusInactive},
 		Refresh:    threatintelsetRefreshStatusFunc(ctx, conn, *resp.ThreatIntelSetId, detectorID),
@@ -232,7 +232,7 @@ func resourceThreatIntelSetDelete(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "deleting GuardDuty Threat Intel Set (%s): %s", d.Id(), err)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			guardduty.ThreatIntelSetStatusActive,
 			guardduty.ThreatIntelSetStatusActivating,
@@ -254,7 +254,7 @@ func resourceThreatIntelSetDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func threatintelsetRefreshStatusFunc(ctx context.Context, conn *guardduty.GuardDuty, threatIntelSetID, detectorID string) resource.StateRefreshFunc {
+func threatintelsetRefreshStatusFunc(ctx context.Context, conn *guardduty.GuardDuty, threatIntelSetID, detectorID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &guardduty.GetThreatIntelSetInput{
 			DetectorId:       aws.String(detectorID),

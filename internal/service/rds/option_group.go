@@ -12,7 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -143,9 +144,9 @@ func resourceOptionGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	if v, ok := d.GetOk("name"); ok {
 		groupName = v.(string)
 	} else if v, ok := d.GetOk("name_prefix"); ok {
-		groupName = resource.PrefixedUniqueId(v.(string))
+		groupName = id.PrefixedUniqueId(v.(string))
 	} else {
-		groupName = resource.UniqueId()
+		groupName = id.UniqueId()
 	}
 
 	createOpts := &rds.CreateOptionGroupInput{
@@ -291,14 +292,14 @@ func resourceOptionGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 			log.Printf("[DEBUG] Modify DB Option Group: %s", modifyOpts)
 
-			err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+			err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 				_, err := conn.ModifyOptionGroupWithContext(ctx, modifyOpts)
 				if err != nil {
 					// InvalidParameterValue: IAM role ARN value is invalid or does not include the required permissions for: SQLSERVER_BACKUP_RESTORE
 					if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
-						return resource.RetryableError(err)
+						return retry.RetryableError(err)
 					}
-					return resource.NonRetryableError(err)
+					return retry.NonRetryableError(err)
 				}
 				return nil
 			})
@@ -331,14 +332,14 @@ func resourceOptionGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	log.Printf("[DEBUG] Deleting RDS Option Group: %s", d.Id())
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
 		_, err := conn.DeleteOptionGroupWithContext(ctx, deleteOpts)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, rds.ErrCodeInvalidOptionGroupStateFault) {
 				log.Printf(`[DEBUG] AWS believes the RDS Option Group is still in use, this could be because of a internal snapshot create by AWS, see github issue #4597 for more info. retrying...`)
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})

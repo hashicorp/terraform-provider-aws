@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -249,7 +249,7 @@ func FindMaintenanceWindowByID(ctx context.Context, conn *ssm.SSM, id string) (*
 	output, err := conn.GetMaintenanceWindowWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

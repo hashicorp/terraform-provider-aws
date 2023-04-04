@@ -11,7 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -181,20 +182,20 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-	var id string
+	var instanceID string
 	if v, ok := d.GetOk("identifier"); ok {
-		id = v.(string)
+		instanceID = v.(string)
 	} else if v, ok := d.GetOk("identifier_prefix"); ok {
-		id = resource.PrefixedUniqueId(v.(string))
+		instanceID = id.PrefixedUniqueId(v.(string))
 	} else {
-		id = resource.PrefixedUniqueId("tf-")
+		instanceID = id.PrefixedUniqueId("tf-")
 	}
 
 	input := &neptune.CreateDBInstanceInput{
 		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 		DBClusterIdentifier:     aws.String(d.Get("cluster_identifier").(string)),
 		DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
-		DBInstanceIdentifier:    aws.String(id),
+		DBInstanceIdentifier:    aws.String(instanceID),
 		Engine:                  aws.String(d.Get("engine").(string)),
 		PromotionTier:           aws.Int64(int64(d.Get("promotion_tier").(int))),
 		PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
@@ -230,7 +231,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	}, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions")
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Neptune Cluster Instance (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating Neptune Cluster Instance (%s): %s", instanceID, err)
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*neptune.CreateDBInstanceOutput).DBInstance.DBInstanceIdentifier))
@@ -410,7 +411,7 @@ func FindClusterInstanceByID(ctx context.Context, conn *neptune.Neptune, id stri
 	output, err := conn.DescribeDBInstancesWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBInstanceNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -428,7 +429,7 @@ func FindClusterInstanceByID(ctx context.Context, conn *neptune.Neptune, id stri
 
 	// Eventual consistency check.
 	if aws.StringValue(dbInstance.DBInstanceIdentifier) != id {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -453,10 +454,10 @@ func FindClusterMemberByInstanceByTwoPartKey(ctx context.Context, conn *neptune.
 		}
 	}
 
-	return nil, &resource.NotFoundError{}
+	return nil, &retry.NotFoundError{}
 }
 
-func statusClusterInstance(ctx context.Context, conn *neptune.Neptune, id string) resource.StateRefreshFunc {
+func statusClusterInstance(ctx context.Context, conn *neptune.Neptune, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindClusterInstanceByID(ctx, conn, id)
 
@@ -473,7 +474,7 @@ func statusClusterInstance(ctx context.Context, conn *neptune.Neptune, id string
 }
 
 func waitClusterInstanceAvailable(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBInstance, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			"backing-up",
 			"configuring-enhanced-monitoring",
@@ -506,7 +507,7 @@ func waitClusterInstanceAvailable(ctx context.Context, conn *neptune.Neptune, id
 }
 
 func waitClusterInstanceDeleted(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBInstance, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			"modifying",
 			"deleting",

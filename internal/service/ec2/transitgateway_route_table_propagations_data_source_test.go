@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccTransitGatewayRouteTablePropagationsDataSource_basic(t *testing.T) {
+func testAccTransitGatewayRouteTablePropagationsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_ec2_transit_gateway_route_table_propagations.test"
@@ -30,7 +30,7 @@ func TestAccTransitGatewayRouteTablePropagationsDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccTransitGatewayRouteTablePropagationsDataSource_filter(t *testing.T) {
+func testAccTransitGatewayRouteTablePropagationsDataSource_filter(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_ec2_transit_gateway_route_table_propagations.test"

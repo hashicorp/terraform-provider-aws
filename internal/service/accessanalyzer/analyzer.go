@@ -10,7 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -80,21 +81,21 @@ func resourceAnalyzerCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	input := &accessanalyzer.CreateAnalyzerInput{
 		AnalyzerName: aws.String(analyzerName),
-		ClientToken:  aws.String(resource.UniqueId()),
+		ClientToken:  aws.String(id.UniqueId()),
 		Tags:         Tags(tags.IgnoreAWS()),
 		Type:         aws.String(d.Get("type").(string)),
 	}
 
 	// Handle Organizations eventual consistency
-	err := resource.RetryContext(ctx, organizationCreationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, organizationCreationTimeout, func() *retry.RetryError {
 		_, err := conn.CreateAnalyzerWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, accessanalyzer.ErrCodeValidationException, "You must create an organization") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -179,7 +180,7 @@ func resourceAnalyzerDelete(ctx context.Context, d *schema.ResourceData, meta in
 	log.Printf("[DEBUG] Deleting Access Analyzer Analyzer: (%s)", d.Id())
 	_, err := conn.DeleteAnalyzerWithContext(ctx, &accessanalyzer.DeleteAnalyzerInput{
 		AnalyzerName: aws.String(d.Id()),
-		ClientToken:  aws.String(resource.UniqueId()),
+		ClientToken:  aws.String(id.UniqueId()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, accessanalyzer.ErrCodeResourceNotFoundException) {

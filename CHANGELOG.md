@@ -2,19 +2,39 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_ec2_transit_gateway_attachments` ([#29644](https://github.com/hashicorp/terraform-provider-aws/issues/29644))
+* **New Data Source:** `aws_ec2_transit_gateway_route_table_associations` ([#29642](https://github.com/hashicorp/terraform-provider-aws/issues/29642))
+* **New Data Source:** `aws_ec2_transit_gateway_route_table_propagations` ([#29640](https://github.com/hashicorp/terraform-provider-aws/issues/29640))
+* **New Data Source:** `aws_oam_link` ([#30401](https://github.com/hashicorp/terraform-provider-aws/issues/30401))
+* **New Data Source:** `aws_oam_links` ([#30401](https://github.com/hashicorp/terraform-provider-aws/issues/30401))
+* **New Data Source:** `aws_quicksight_data_set` ([#30422](https://github.com/hashicorp/terraform-provider-aws/issues/30422))
+* **New Resource:** `aws_lightsail_distribution` ([#30124](https://github.com/hashicorp/terraform-provider-aws/issues/30124))
+* **New Resource:** `aws_quicksight_account_subscription` ([#30359](https://github.com/hashicorp/terraform-provider-aws/issues/30359))
 * **New Resource:** `aws_quicksight_data_set` ([#30349](https://github.com/hashicorp/terraform-provider-aws/issues/30349))
+* **New Resource:** `aws_quicksight_folder` ([#30400](https://github.com/hashicorp/terraform-provider-aws/issues/30400))
 
 ENHANCEMENTS:
 
+* data-source/aws_secretsmanager_secret: Add `rotation_rules.duration` and `rotation_rules.schedule_expression` attributes ([#30425](https://github.com/hashicorp/terraform-provider-aws/issues/30425))
+* data-source/aws_secretsmanager_secret_rotation: Add `rotation_rules.duration` and `rotation_rules.schedule_expression` attributes ([#30425](https://github.com/hashicorp/terraform-provider-aws/issues/30425))
 * resource/aws_s3_bucket:  Enable S3-compatible providers with no support for bucket tagging ([#30151](https://github.com/hashicorp/terraform-provider-aws/issues/30151))
 * resource/aws_sagemaker_endpoint_configuration: Add `name_prefix` argument ([#28785](https://github.com/hashicorp/terraform-provider-aws/issues/28785))
 * resource/aws_sagemaker_feature_group: Add `table_format` to the `offline_store_config` configuration block ([#30118](https://github.com/hashicorp/terraform-provider-aws/issues/30118))
+* resource/aws_secretsmanager_secret: Add `duration` and `schedule_expression` attributes to `rotation_rules` configuration block ([#30425](https://github.com/hashicorp/terraform-provider-aws/issues/30425))
+* resource/aws_secretsmanager_secret_rotation: Add `duration` and `schedule_expression` attributes to `rotation_rules` configuration block ([#30425](https://github.com/hashicorp/terraform-provider-aws/issues/30425))
 
 BUG FIXES:
 
 * resource/aws_ce_cost_category: Fixed `effective_start` being reset on any changes despite `effective_start` having the same value ([#30369](https://github.com/hashicorp/terraform-provider-aws/issues/30369))
+* resource/aws_db_instance: Fix crash when updating `password` ([#30379](https://github.com/hashicorp/terraform-provider-aws/issues/30379))
 * resource/aws_glue_crawler: Fix InvalidInputException error string matching ([#30370](https://github.com/hashicorp/terraform-provider-aws/issues/30370))
 * resource/aws_glue_trigger: Fix InvalidInputException error string matching ([#30370](https://github.com/hashicorp/terraform-provider-aws/issues/30370))
+* resource/aws_rds_cluster: Fix crash when updating `master_password` ([#30379](https://github.com/hashicorp/terraform-provider-aws/issues/30379))
+* resource/aws_rds_cluster: Fix inconsistent final plan errors when `engine_version` updates are not applied immediately ([#30247](https://github.com/hashicorp/terraform-provider-aws/issues/30247))
+* resource/aws_rds_cluster: Send `db_instance_parameter_group_name` on all modify requests when set ([#30247](https://github.com/hashicorp/terraform-provider-aws/issues/30247))
+* resource/aws_rds_cluster_instance: Fix inconsistent final plan errors when `engine_version` updates are not applied immediately ([#30247](https://github.com/hashicorp/terraform-provider-aws/issues/30247))
+* resource/aws_rds_instance: Fix inconsistent final plan errors when `engine_version` updates are not applied immediately ([#30247](https://github.com/hashicorp/terraform-provider-aws/issues/30247))
+* resource/aws_s3_bucket_lifecycle_configuration: Allow `rule.filter.object_size_greater_than` = 0 ([#29857](https://github.com/hashicorp/terraform-provider-aws/issues/29857))
 * resource/aws_scheduler_schedule: Mark `arn` property of `dead_letter_config` as a required property ([#30360](https://github.com/hashicorp/terraform-provider-aws/issues/30360))
 
 ## 4.61.0 (March 30, 2023)

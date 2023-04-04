@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -94,16 +94,16 @@ func ObjectListTags(ctx context.Context, conn s3iface.S3API, bucket, key string)
 
 	var output *s3.GetObjectTaggingOutput
 
-	err := resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
 		var err error
 		output, err = conn.GetObjectTaggingWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchKey) {
-			return resource.RetryableError(fmt.Errorf("getting object tagging %s, retrying: %w", bucket, err))
+			return retry.RetryableError(fmt.Errorf("getting object tagging %s, retrying: %w", bucket, err))
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil

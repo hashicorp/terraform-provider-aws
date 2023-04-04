@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -300,7 +301,7 @@ func TestAccRDSClusterParameterGroup_generatedName(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", resource.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -328,7 +329,7 @@ func TestAccRDSClusterParameterGroup_GeneratedName_parameter(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", resource.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
 				),
 			},
 			{

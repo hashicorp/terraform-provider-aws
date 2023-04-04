@@ -32,6 +32,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
+	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
@@ -716,6 +717,11 @@ func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
 	client.transcribeClient = transcribe.NewFromConfig(cfg, func(o *transcribe.Options) {
 		if endpoint := c.Endpoints[names.Transcribe]; endpoint != "" {
 			o.EndpointResolver = transcribe.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.vpclatticeClient = vpclattice.NewFromConfig(cfg, func(o *vpclattice.Options) {
+		if endpoint := c.Endpoints[names.VPCLattice]; endpoint != "" {
+			o.EndpointResolver = vpclattice.EndpointResolverFromURL(endpoint)
 		}
 	})
 }

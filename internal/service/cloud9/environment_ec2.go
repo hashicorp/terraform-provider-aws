@@ -8,7 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloud9"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -108,7 +109,7 @@ func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, m
 
 	name := d.Get("name").(string)
 	input := &cloud9.CreateEnvironmentEC2Input{
-		ClientRequestToken: aws.String(resource.UniqueId()),
+		ClientRequestToken: aws.String(id.UniqueId()),
 		ConnectionType:     aws.String(d.Get("connection_type").(string)),
 		InstanceType:       aws.String(d.Get("instance_type").(string)),
 		Name:               aws.String(name),
@@ -133,17 +134,17 @@ func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, m
 
 	log.Printf("[INFO] Creating Cloud9 EC2 Environment: %s", input)
 	var output *cloud9.CreateEnvironmentEC2Output
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
 		output, err = conn.CreateEnvironmentEC2WithContext(ctx, input)
 
 		if err != nil {
 			// NotFoundException: User arn:aws:iam::*******:user/****** does not exist.
 			if tfawserr.ErrMessageContains(err, cloud9.ErrCodeNotFoundException, "User") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil

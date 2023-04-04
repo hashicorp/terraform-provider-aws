@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -646,7 +646,7 @@ func findDomainDetailByName(ctx context.Context, conn *route53domains.Client, na
 		var invalidInput *types.InvalidInput
 
 		if errors.As(err, &invalidInput) && strings.Contains(invalidInput.ErrorMessage(), "not found") {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -673,7 +673,7 @@ func findOperationDetailByID(ctx context.Context, conn *route53domains.Client, i
 		var invalidInput *types.InvalidInput
 
 		if errors.As(err, &invalidInput) && strings.Contains(invalidInput.ErrorMessage(), "not found") {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -693,7 +693,7 @@ func findOperationDetailByID(ctx context.Context, conn *route53domains.Client, i
 	return output, nil
 }
 
-func statusOperation(ctx context.Context, conn *route53domains.Client, id string) resource.StateRefreshFunc {
+func statusOperation(ctx context.Context, conn *route53domains.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findOperationDetailByID(ctx, conn, id)
 
@@ -710,7 +710,7 @@ func statusOperation(ctx context.Context, conn *route53domains.Client, id string
 }
 
 func waitOperationSucceeded(ctx context.Context, conn *route53domains.Client, id string, timeout time.Duration) (*route53domains.GetOperationDetailOutput, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.OperationStatusSubmitted, types.OperationStatusInProgress),
 		Target:  enum.Slice(types.OperationStatusSuccessful),
 		Timeout: timeout,

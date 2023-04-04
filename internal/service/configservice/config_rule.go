@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -212,15 +212,15 @@ func resourceRulePutConfig(ctx context.Context, d *schema.ResourceData, meta int
 		Tags:       Tags(tags.IgnoreAWS()),
 	}
 	log.Printf("[DEBUG] Creating AWSConfig config rule: %s", input)
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err := conn.PutConfigRuleWithContext(ctx, &input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, configservice.ErrCodeInsufficientPermissionsException) {
 				// IAM is eventually consistent
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(fmt.Errorf("Failed to create AWSConfig rule: %w", err))
+			return retry.NonRetryableError(fmt.Errorf("Failed to create AWSConfig rule: %w", err))
 		}
 
 		return nil
@@ -306,13 +306,13 @@ func resourceConfigRuleDelete(ctx context.Context, d *schema.ResourceData, meta 
 	input := &configservice.DeleteConfigRuleInput{
 		ConfigRuleName: aws.String(name),
 	}
-	err := resource.RetryContext(ctx, 2*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 2*time.Minute, func() *retry.RetryError {
 		_, err := conn.DeleteConfigRuleWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, configservice.ErrCodeResourceInUseException) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})

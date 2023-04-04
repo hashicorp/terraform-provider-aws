@@ -300,6 +300,7 @@ const (
 	TranscribeStreaming          = "transcribestreaming"
 	Transfer                     = "transfer"
 	Translate                    = "translate"
+	VPCLattice                   = "vpclattice"
 	VoiceID                      = "voiceid"
 	WAF                          = "waf"
 	WAFRegional                  = "wafregional"

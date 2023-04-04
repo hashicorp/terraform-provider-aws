@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -309,7 +309,7 @@ func FindConnectAttachmentByID(ctx context.Context, conn *networkmanager.Network
 	output, err := conn.GetConnectAttachmentWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -326,7 +326,7 @@ func FindConnectAttachmentByID(ctx context.Context, conn *networkmanager.Network
 	return output.ConnectAttachment, nil
 }
 
-func statusConnectAttachmentState(ctx context.Context, conn *networkmanager.NetworkManager, id string) resource.StateRefreshFunc {
+func statusConnectAttachmentState(ctx context.Context, conn *networkmanager.NetworkManager, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindConnectAttachmentByID(ctx, conn, id)
 
@@ -343,7 +343,7 @@ func statusConnectAttachmentState(ctx context.Context, conn *networkmanager.Netw
 }
 
 func waitConnectAttachmentCreated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.ConnectAttachment, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkmanager.AttachmentStateCreating, networkmanager.AttachmentStatePendingNetworkUpdate},
 		Target:  []string{networkmanager.AttachmentStateAvailable, networkmanager.AttachmentStatePendingAttachmentAcceptance},
 		Timeout: timeout,
@@ -360,7 +360,7 @@ func waitConnectAttachmentCreated(ctx context.Context, conn *networkmanager.Netw
 }
 
 func waitConnectAttachmentDeleted(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.ConnectAttachment, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        []string{networkmanager.AttachmentStateDeleting},
 		Target:         []string{},
 		Timeout:        timeout,
@@ -378,7 +378,7 @@ func waitConnectAttachmentDeleted(ctx context.Context, conn *networkmanager.Netw
 }
 
 func waitConnectAttachmentAvailable(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.ConnectAttachment, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkmanager.AttachmentStateCreating, networkmanager.AttachmentStatePendingNetworkUpdate, networkmanager.AttachmentStatePendingAttachmentAcceptance},
 		Target:  []string{networkmanager.AttachmentStateAvailable},
 		Timeout: timeout,

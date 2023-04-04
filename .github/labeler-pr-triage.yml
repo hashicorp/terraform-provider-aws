@@ -1064,6 +1064,9 @@ service/vpc:
   - 'website/**/vpc_security_group_*'
   - 'website/**/vpc\.*'
   - 'website/**/vpcs\.*'
+service/vpclattice:
+  - 'internal/service/vpclattice/**/*'
+  - 'website/**/vpclattice_*'
 service/vpnclient:
   - 'internal/service/ec2/**/vpnclient_*'
   - 'website/**/ec2_client_vpn_*'

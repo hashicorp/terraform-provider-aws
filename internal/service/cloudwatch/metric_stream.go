@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -382,7 +382,7 @@ func FindMetricStreamByName(ctx context.Context, conn *cloudwatch.CloudWatch, na
 	output, err := conn.GetMetricStreamWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, cloudwatch.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -399,7 +399,7 @@ func FindMetricStreamByName(ctx context.Context, conn *cloudwatch.CloudWatch, na
 	return output, nil
 }
 
-func statusMetricStream(ctx context.Context, conn *cloudwatch.CloudWatch, name string) resource.StateRefreshFunc {
+func statusMetricStream(ctx context.Context, conn *cloudwatch.CloudWatch, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindMetricStreamByName(ctx, conn, name)
 
@@ -421,7 +421,7 @@ const (
 )
 
 func waitMetricStreamDeleted(ctx context.Context, conn *cloudwatch.CloudWatch, name string, timeout time.Duration) (*cloudwatch.GetMetricStreamOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{metricStreamStateRunning, metricStreamStateStopped},
 		Target:  []string{},
 		Refresh: statusMetricStream(ctx, conn, name),
@@ -438,7 +438,7 @@ func waitMetricStreamDeleted(ctx context.Context, conn *cloudwatch.CloudWatch, n
 }
 
 func waitMetricStreamRunning(ctx context.Context, conn *cloudwatch.CloudWatch, name string, timeout time.Duration) (*cloudwatch.GetMetricStreamOutput, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{metricStreamStateStopped},
 		Target:  []string{metricStreamStateRunning},
 		Refresh: statusMetricStream(ctx, conn, name),

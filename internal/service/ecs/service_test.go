@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1526,17 +1527,17 @@ func testAccCheckServiceExists(ctx context.Context, name string, service *ecs.Se
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn()
 
-		err := resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+		err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
 			var err error
 			service, err = tfecs.FindServiceNoTagsByID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["cluster"])
 			if tfresource.NotFound(err) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 
 			return nil

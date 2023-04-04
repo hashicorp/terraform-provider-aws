@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -490,16 +490,16 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	var listener *elbv2.Listener
 
-	err := resource.RetryContext(ctx, loadBalancerListenerReadTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, loadBalancerListenerReadTimeout, func() *retry.RetryError {
 		var err error
 		listener, err = FindListenerByARN(ctx, conn, d.Id())
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -618,15 +618,15 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		err := resource.RetryContext(ctx, loadBalancerListenerUpdateTimeout, func() *resource.RetryError {
+		err := retry.RetryContext(ctx, loadBalancerListenerUpdateTimeout, func() *retry.RetryError {
 			_, err := conn.ModifyListenerWithContext(ctx, params)
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeCertificateNotFoundException) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 
 			return nil
@@ -644,17 +644,17 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		err := resource.RetryContext(ctx, loadBalancerTagPropagationTimeout, func() *resource.RetryError {
+		err := retry.RetryContext(ctx, loadBalancerTagPropagationTimeout, func() *retry.RetryError {
 			err := UpdateTags(ctx, conn, d.Id(), o, n)
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) ||
 				tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
 				log.Printf("[DEBUG] Retrying tagging of LB Listener (%s) after error: %s", d.Id(), err)
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 
 			return nil
@@ -698,17 +698,17 @@ func retryListenerCreate(ctx context.Context, conn *elbv2.ELBV2, params *elbv2.C
 	)
 	var output *elbv2.CreateListenerOutput
 
-	err := resource.RetryContext(ctx, loadBalancerListenerCreateTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, loadBalancerListenerCreateTimeout, func() *retry.RetryError {
 		var err error
 
 		output, err = conn.CreateListenerWithContext(ctx, params)
 
 		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeCertificateNotFoundException) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil

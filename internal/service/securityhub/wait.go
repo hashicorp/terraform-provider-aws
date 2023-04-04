@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/securityhub"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -18,7 +18,7 @@ const (
 
 // waitAdminAccountEnabled waits for an AdminAccount to return Enabled
 func waitAdminAccountEnabled(ctx context.Context, conn *securityhub.SecurityHub, adminAccountID string) (*securityhub.AdminAccount, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{adminStatusNotFound},
 		Target:  []string{securityhub.AdminStatusEnabled},
 		Refresh: statusAdminAccountAdmin(ctx, conn, adminAccountID),
@@ -36,7 +36,7 @@ func waitAdminAccountEnabled(ctx context.Context, conn *securityhub.SecurityHub,
 
 // waitAdminAccountNotFound waits for an AdminAccount to return NotFound
 func waitAdminAccountNotFound(ctx context.Context, conn *securityhub.SecurityHub, adminAccountID string) (*securityhub.AdminAccount, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{securityhub.AdminStatusDisableInProgress},
 		Target:  []string{adminStatusNotFound},
 		Refresh: statusAdminAccountAdmin(ctx, conn, adminAccountID),

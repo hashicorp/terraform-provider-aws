@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -273,7 +273,7 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &fsx.CreateFileSystemInput{
-		ClientRequestToken: aws.String(resource.UniqueId()),
+		ClientRequestToken: aws.String(id.UniqueId()),
 		FileSystemType:     aws.String(fsx.FileSystemTypeLustre),
 		StorageCapacity:    aws.Int64(int64(d.Get("storage_capacity").(int))),
 		StorageType:        aws.String(d.Get("storage_type").(string)),
@@ -284,7 +284,7 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	backupInput := &fsx.CreateFileSystemFromBackupInput{
-		ClientRequestToken: aws.String(resource.UniqueId()),
+		ClientRequestToken: aws.String(id.UniqueId()),
 		StorageType:        aws.String(d.Get("storage_type").(string)),
 		SubnetIds:          flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
 		LustreConfiguration: &fsx.CreateFileSystemLustreConfiguration{
@@ -417,7 +417,7 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 	if d.HasChangesExcept("tags_all", "tags") {
 		var waitAdminAction = false
 		input := &fsx.UpdateFileSystemInput{
-			ClientRequestToken:  aws.String(resource.UniqueId()),
+			ClientRequestToken:  aws.String(id.UniqueId()),
 			FileSystemId:        aws.String(d.Id()),
 			LustreConfiguration: &fsx.UpdateFileSystemLustreConfiguration{},
 		}

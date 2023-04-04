@@ -34,6 +34,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
+	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
 	"github.com/aws/aws-sdk-go/service/account"
@@ -645,6 +646,7 @@ type AWSClient struct {
 	transcribestreamingConn          *transcribestreamingservice.TranscribeStreamingService
 	transferConn                     *transfer.Transfer
 	translateConn                    *translate.Translate
+	vpclatticeClient                 *vpclattice.Client
 	voiceidConn                      *voiceid.VoiceID
 	wafConn                          *waf.WAF
 	wafregionalConn                  *wafregional.WAFRegional
@@ -1876,6 +1878,10 @@ func (client *AWSClient) TransferConn() *transfer.Transfer {
 
 func (client *AWSClient) TranslateConn() *translate.Translate {
 	return client.translateConn
+}
+
+func (client *AWSClient) VPCLatticeClient() *vpclattice.Client {
+	return client.vpclatticeClient
 }
 
 func (client *AWSClient) VoiceIDConn() *voiceid.VoiceID {

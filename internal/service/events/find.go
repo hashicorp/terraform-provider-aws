@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -19,7 +19,7 @@ func FindConnectionByName(ctx context.Context, conn *eventbridge.EventBridge, na
 	output, err := conn.DescribeConnectionWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -48,7 +48,7 @@ func FindRuleByEventBusAndRuleNames(ctx context.Context, conn *eventbridge.Event
 	output, err := conn.DescribeRuleWithContext(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -103,7 +103,7 @@ func FindTargetByThreePartKey(ctx context.Context, conn *eventbridge.EventBridge
 	})
 
 	if tfawserr.ErrCodeEquals(err, "ValidationException", eventbridge.ErrCodeResourceNotFoundException) || (err != nil && regexp.MustCompile(" not found$").MatchString(err.Error())) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -114,7 +114,7 @@ func FindTargetByThreePartKey(ctx context.Context, conn *eventbridge.EventBridge
 	}
 
 	if output == nil {
-		return nil, &resource.NotFoundError{}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil

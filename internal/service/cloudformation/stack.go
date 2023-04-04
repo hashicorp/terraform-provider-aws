@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -135,7 +135,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-	requestToken := resource.UniqueId()
+	requestToken := id.UniqueId()
 	name := d.Get("name").(string)
 	input := &cloudformation.CreateStackInput{
 		ClientRequestToken: aws.String(requestToken),
@@ -332,7 +332,7 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-	requestToken := resource.UniqueId()
+	requestToken := id.UniqueId()
 	input := &cloudformation.UpdateStackInput{
 		StackName:          aws.String(d.Id()),
 		ClientRequestToken: aws.String(requestToken),
@@ -414,7 +414,7 @@ func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationConn()
 
-	requestToken := resource.UniqueId()
+	requestToken := id.UniqueId()
 	input := &cloudformation.DeleteStackInput{
 		StackName:          aws.String(d.Id()),
 		ClientRequestToken: aws.String(requestToken),

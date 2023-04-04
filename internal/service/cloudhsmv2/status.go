@@ -5,11 +5,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusCluster(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string) resource.StateRefreshFunc {
+func statusCluster(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindClusterByID(ctx, conn, id)
 
@@ -25,7 +25,7 @@ func statusCluster(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string) 
 	}
 }
 
-func statusHSM(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string) resource.StateRefreshFunc {
+func statusHSM(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindHSMByTwoPartKey(ctx, conn, id, "")
 

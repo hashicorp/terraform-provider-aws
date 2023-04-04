@@ -10,7 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -109,9 +110,9 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 	if v, ok := d.GetOk("name"); ok {
 		groupName = v.(string)
 	} else if v, ok := d.GetOk("name_prefix"); ok {
-		groupName = resource.PrefixedUniqueId(v.(string))
+		groupName = id.PrefixedUniqueId(v.(string))
 	} else {
-		groupName = resource.UniqueId()
+		groupName = id.UniqueId()
 	}
 
 	createOpts := docdb.CreateDBClusterParameterGroupInput{
@@ -278,7 +279,7 @@ func WaitForClusterParameterGroupDeletion(ctx context.Context, conn *docdb.DocDB
 		DBClusterParameterGroupName: aws.String(name),
 	}
 
-	err := resource.RetryContext(ctx, 10*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 10*time.Minute, func() *retry.RetryError {
 		_, err := conn.DescribeDBClusterParameterGroupsWithContext(ctx, params)
 
 		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBParameterGroupNotFoundFault) {
@@ -286,10 +287,10 @@ func WaitForClusterParameterGroupDeletion(ctx context.Context, conn *docdb.DocDB
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
-		return resource.RetryableError(fmt.Errorf("DocDB Parameter Group (%s) still exists", name))
+		return retry.RetryableError(fmt.Errorf("DocDB Parameter Group (%s) still exists", name))
 	})
 	if tfresource.TimedOut(err) {
 		_, err = conn.DescribeDBClusterParameterGroupsWithContext(ctx, params)

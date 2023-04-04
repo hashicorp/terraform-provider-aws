@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -139,7 +140,7 @@ func testAccCheckAssessmentReportDestroy(ctx context.Context) resource.TestCheck
 
 			_, err := tfauditmanager.FindAssessmentReportByID(ctx, conn, rs.Primary.ID)
 			if err != nil {
-				var nfe *resource.NotFoundError
+				var nfe *retry.NotFoundError
 				if errors.As(err, &nfe) {
 					return nil
 				}

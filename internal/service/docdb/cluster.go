@@ -12,7 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -293,9 +294,9 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("cluster_identifier"); ok {
 		identifier = v.(string)
 	} else if v, ok := d.GetOk("cluster_identifier_prefix"); ok {
-		identifier = resource.PrefixedUniqueId(v.(string))
+		identifier = id.PrefixedUniqueId(v.(string))
 	} else {
-		identifier = resource.PrefixedUniqueId("tf-")
+		identifier = id.PrefixedUniqueId("tf-")
 	}
 
 	if _, ok := d.GetOk("snapshot_identifier"); ok {
@@ -356,13 +357,13 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		log.Printf("[DEBUG] DocDB Cluster restore from snapshot configuration: %s", opts)
-		err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+		err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 			_, err := conn.RestoreDBClusterFromSnapshotWithContext(ctx, &opts)
 			if err != nil {
 				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			return nil
 		})
@@ -449,14 +450,14 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		var resp *docdb.CreateDBClusterOutput
-		err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+		err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 			var err error
 			resp, err = conn.CreateDBClusterWithContext(ctx, createOpts)
 			if err != nil {
 				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			return nil
 		})
@@ -477,7 +478,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	log.Println(
 		"[INFO] Waiting for DocDB Cluster to be available")
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    resourceClusterCreatePendingStates,
 		Target:     []string{"available"},
 		Refresh:    resourceClusterStateRefreshFunc(ctx, conn, d.Id()),
@@ -718,22 +719,22 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if requestUpdate {
-		err := resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
+		err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
 			_, err := conn.ModifyDBClusterWithContext(ctx, req)
 			if err != nil {
 				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 
 				if tfawserr.ErrMessageContains(err, docdb.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 
 				if tfawserr.ErrMessageContains(err, docdb.ErrCodeInvalidDBClusterStateFault, "DB cluster is not available for modification") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			return nil
 		})
@@ -800,19 +801,19 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	log.Printf("[DEBUG] DocDB Cluster delete options: %s", deleteOpts)
 
-	err := resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
 		_, err := conn.DeleteDBClusterWithContext(ctx, &deleteOpts)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, docdb.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, docdb.ErrCodeInvalidDBClusterStateFault, "cluster is a part of a global cluster") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBClusterNotFoundFault) {
 				return nil
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -823,7 +824,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "DocDB Cluster cannot be deleted: %s", err)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    resourceClusterDeletePendingStates,
 		Target:     []string{"destroyed"},
 		Refresh:    resourceClusterStateRefreshFunc(ctx, conn, d.Id()),
@@ -841,7 +842,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceClusterStateRefreshFunc(ctx context.Context, conn *docdb.DocDB, dbClusterIdentifier string) resource.StateRefreshFunc {
+func resourceClusterStateRefreshFunc(ctx context.Context, conn *docdb.DocDB, dbClusterIdentifier string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.DescribeDBClustersWithContext(ctx, &docdb.DescribeDBClustersInput{
 			DBClusterIdentifier: aws.String(dbClusterIdentifier),
@@ -899,7 +900,7 @@ var resourceClusterUpdatePendingStates = []string{
 }
 
 func waitForClusterUpdate(ctx context.Context, conn *docdb.DocDB, id string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    resourceClusterUpdatePendingStates,
 		Target:     []string{"available"},
 		Refresh:    resourceClusterStateRefreshFunc(ctx, conn, id),

@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -320,7 +320,7 @@ func FindGroupByName(ctx context.Context, conn *resourcegroups.ResourceGroups, n
 	output, err := conn.GetGroupWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, resourcegroups.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -345,7 +345,7 @@ func findGroupConfigurationByGroupName(ctx context.Context, conn *resourcegroups
 	output, err := conn.GetGroupConfigurationWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, resourcegroups.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -362,7 +362,7 @@ func findGroupConfigurationByGroupName(ctx context.Context, conn *resourcegroups
 	return output.GroupConfiguration, nil
 }
 
-func statusGroupConfiguration(ctx context.Context, conn *resourcegroups.ResourceGroups, groupName string) resource.StateRefreshFunc {
+func statusGroupConfiguration(ctx context.Context, conn *resourcegroups.ResourceGroups, groupName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findGroupConfigurationByGroupName(ctx, conn, groupName)
 
@@ -379,7 +379,7 @@ func statusGroupConfiguration(ctx context.Context, conn *resourcegroups.Resource
 }
 
 func waitGroupConfigurationUpdated(ctx context.Context, conn *resourcegroups.ResourceGroups, groupName string, timeout time.Duration) (*resourcegroups.GroupConfiguration, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{resourcegroups.GroupConfigurationStatusUpdating},
 		Target:  []string{resourcegroups.GroupConfigurationStatusUpdateComplete},
 		Refresh: statusGroupConfiguration(ctx, conn, groupName),

@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -300,7 +300,7 @@ func resourceFileCacheCreate(ctx context.Context, d *schema.ResourceData, meta i
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &fsx.CreateFileCacheInput{
-		ClientRequestToken:   aws.String(resource.UniqueId()),
+		ClientRequestToken:   aws.String(id.UniqueId()),
 		FileCacheType:        aws.String(d.Get("file_cache_type").(string)),
 		FileCacheTypeVersion: aws.String(d.Get("file_cache_type_version").(string)),
 		StorageCapacity:      aws.Int64(int64(d.Get("storage_capacity").(int))),
@@ -419,7 +419,7 @@ func resourceFileCacheUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 	if d.HasChangesExcept("tags_all") {
 		input := &fsx.UpdateFileCacheInput{
-			ClientRequestToken:  aws.String(resource.UniqueId()),
+			ClientRequestToken:  aws.String(id.UniqueId()),
 			FileCacheId:         aws.String(d.Id()),
 			LustreConfiguration: &fsx.UpdateFileCacheLustreConfiguration{},
 		}
@@ -446,7 +446,7 @@ func resourceFileCacheDelete(ctx context.Context, d *schema.ResourceData, meta i
 	log.Printf("[INFO] Deleting FSx FileCache %s", d.Id())
 
 	_, err := conn.DeleteFileCacheWithContext(ctx, &fsx.DeleteFileCacheInput{
-		ClientRequestToken: aws.String(resource.UniqueId()),
+		ClientRequestToken: aws.String(id.UniqueId()),
 		FileCacheId:        aws.String(d.Id()),
 	})
 

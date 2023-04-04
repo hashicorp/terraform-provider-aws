@@ -130,7 +130,7 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	input2 := &connect.ClaimPhoneNumberInput{
-		ClientToken: aws.String(uuid), // can't use aws.String(resource.UniqueId()), because not a valid uuid
+		ClientToken: aws.String(uuid), // can't use aws.String(id.UniqueId()), because it's not a valid uuid
 		PhoneNumber: phoneNumber,
 		TargetArn:   aws.String(targetArn),
 	}

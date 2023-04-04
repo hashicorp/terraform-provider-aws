@@ -5,11 +5,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workspaces"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func StatusDirectoryState(ctx context.Context, conn *workspaces.WorkSpaces, id string) resource.StateRefreshFunc {
+func StatusDirectoryState(ctx context.Context, conn *workspaces.WorkSpaces, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDirectoryByID(ctx, conn, id)
 
@@ -26,7 +26,7 @@ func StatusDirectoryState(ctx context.Context, conn *workspaces.WorkSpaces, id s
 }
 
 // nosemgrep:ci.workspaces-in-func-name
-func StatusWorkspaceState(ctx context.Context, conn *workspaces.WorkSpaces, workspaceID string) resource.StateRefreshFunc {
+func StatusWorkspaceState(ctx context.Context, conn *workspaces.WorkSpaces, workspaceID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := conn.DescribeWorkspacesWithContext(ctx, &workspaces.DescribeWorkspacesInput{
 			WorkspaceIds: aws.StringSlice([]string{workspaceID}),

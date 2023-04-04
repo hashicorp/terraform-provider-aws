@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -873,20 +873,20 @@ func DeleteCacheCluster(ctx context.Context, conn *elasticache.ElastiCache, cach
 	}
 
 	log.Printf("[DEBUG] Deleting ElastiCache Cache Cluster: %s", input)
-	err := resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
 		_, err := conn.DeleteCacheClusterWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, elasticache.ErrCodeInvalidCacheClusterStateFault, "serving as primary") {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, elasticache.ErrCodeInvalidCacheClusterStateFault, "only member of a replication group") {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			// The cluster may be just snapshotting, so we retry until it's ready for deletion
 			if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeInvalidCacheClusterStateFault) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})

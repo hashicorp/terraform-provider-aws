@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -541,17 +541,17 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	// If a cluster is scaling up due to load a delete request will fail
 	// This is a temporary workaround until EKS supports multiple parallel mutating operations
-	err := tfresource.Retry(ctx, clusterDeleteRetryTimeout, func() *resource.RetryError {
+	err := tfresource.Retry(ctx, clusterDeleteRetryTimeout, func() *retry.RetryError {
 		var err error
 
 		_, err = conn.DeleteClusterWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, eks.ErrCodeResourceInUseException, "in progress") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -592,7 +592,7 @@ func FindClusterByName(ctx context.Context, conn *eks.EKS, name string) (*eks.Cl
 	// Sometimes the EKS API returns the ResourceNotFound error in this form:
 	// ClientException: No cluster found for name: tf-acc-test-0o1f8
 	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, eks.ErrCodeClientException, "No cluster found for name:") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -618,7 +618,7 @@ func findClusterUpdateByTwoPartKey(ctx context.Context, conn *eks.EKS, name, id 
 	output, err := conn.DescribeUpdateWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -635,7 +635,7 @@ func findClusterUpdateByTwoPartKey(ctx context.Context, conn *eks.EKS, name, id 
 	return output.Update, nil
 }
 
-func statusCluster(ctx context.Context, conn *eks.EKS, name string) resource.StateRefreshFunc {
+func statusCluster(ctx context.Context, conn *eks.EKS, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindClusterByName(ctx, conn, name)
 
@@ -651,7 +651,7 @@ func statusCluster(ctx context.Context, conn *eks.EKS, name string) resource.Sta
 	}
 }
 
-func statusClusterUpdate(ctx context.Context, conn *eks.EKS, name, id string) resource.StateRefreshFunc {
+func statusClusterUpdate(ctx context.Context, conn *eks.EKS, name, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findClusterUpdateByTwoPartKey(ctx, conn, name, id)
 
@@ -668,7 +668,7 @@ func statusClusterUpdate(ctx context.Context, conn *eks.EKS, name, id string) re
 }
 
 func waitClusterCreated(ctx context.Context, conn *eks.EKS, name string, timeout time.Duration) (*eks.Cluster, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{eks.ClusterStatusPending, eks.ClusterStatusCreating},
 		Target:  []string{eks.ClusterStatusActive},
 		Refresh: statusCluster(ctx, conn, name),
@@ -685,7 +685,7 @@ func waitClusterCreated(ctx context.Context, conn *eks.EKS, name string, timeout
 }
 
 func waitClusterDeleted(ctx context.Context, conn *eks.EKS, name string, timeout time.Duration) (*eks.Cluster, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{eks.ClusterStatusActive, eks.ClusterStatusDeleting},
 		Target:  []string{},
 		Refresh: statusCluster(ctx, conn, name),
@@ -702,7 +702,7 @@ func waitClusterDeleted(ctx context.Context, conn *eks.EKS, name string, timeout
 }
 
 func waitClusterUpdateSuccessful(ctx context.Context, conn *eks.EKS, name, id string, timeout time.Duration) (*eks.Update, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{eks.UpdateStatusInProgress},
 		Target:  []string{eks.UpdateStatusSuccessful},
 		Refresh: statusClusterUpdate(ctx, conn, name, id),

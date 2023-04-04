@@ -9,7 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -102,9 +103,9 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	if v, ok := d.GetOk("name"); ok {
 		d.Set("name", v.(string))
 	} else if v, ok := d.GetOk("name_prefix"); ok {
-		d.Set("name", resource.PrefixedUniqueId(v.(string)))
+		d.Set("name", id.PrefixedUniqueId(v.(string)))
 	} else {
-		d.Set("name", resource.PrefixedUniqueId("tf-"))
+		d.Set("name", id.PrefixedUniqueId("tf-"))
 	}
 
 	request := &neptune.CreateEventSubscriptionInput{
@@ -147,7 +148,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 
 	log.Println("[INFO] Waiting for Neptune Event Subscription to be ready")
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"creating"},
 		Target:     []string{"active"},
 		Refresh:    resourceEventSubscriptionRefreshFunc(ctx, d.Id(), conn),
@@ -266,7 +267,7 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 
 		log.Println("[INFO] Waiting for Neptune Event Subscription modification to finish")
 
-		stateConf := &resource.StateChangeConf{
+		stateConf := &retry.StateChangeConf{
 			Pending:    []string{"modifying"},
 			Target:     []string{"active"},
 			Refresh:    resourceEventSubscriptionRefreshFunc(ctx, d.Id(), conn),
@@ -351,7 +352,7 @@ func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "deleting Neptune Event Subscription (%s): %s", d.Id(), err)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"deleting"},
 		Target:     []string{},
 		Refresh:    resourceEventSubscriptionRefreshFunc(ctx, d.Id(), conn),
@@ -369,7 +370,7 @@ func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceEventSubscriptionRefreshFunc(ctx context.Context, name string, conn *neptune.Neptune) resource.StateRefreshFunc {
+func resourceEventSubscriptionRefreshFunc(ctx context.Context, name string, conn *neptune.Neptune) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		sub, err := resourceEventSubscriptionRetrieve(ctx, name, conn)
 

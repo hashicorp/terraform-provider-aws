@@ -280,6 +280,7 @@ func ResourceDataSet() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -795,7 +796,7 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("permissions"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Permissions = expandDataSetPermissions(v.([]interface{}))
+		input.Permissions = expandResourcePermissions(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("row_level_permission_data_set"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -869,11 +870,11 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("error setting field_folders: %s", err)
 	}
 
-	if err := d.Set("logical_table_map", flattenLogicalTableMap(dataSet.LogicalTableMap)); err != nil {
+	if err := d.Set("logical_table_map", flattenLogicalTableMap(dataSet.LogicalTableMap, logicalTableMapSchema())); err != nil {
 		return diag.Errorf("error setting logical_table_map: %s", err)
 	}
 
-	if err := d.Set("physical_table_map", flattenPhysicalTableMap(dataSet.PhysicalTableMap)); err != nil {
+	if err := d.Set("physical_table_map", flattenPhysicalTableMap(dataSet.PhysicalTableMap, physicalTableMapSchema())); err != nil {
 		return diag.Errorf("error setting physical_table_map: %s", err)
 	}
 
@@ -1710,22 +1711,6 @@ func expandDataSetUploadSettings(tfMap map[string]interface{}) *quicksight.Uploa
 	return uploadSettings
 }
 
-func expandDataSetPermissions(tfList []interface{}) []*quicksight.ResourcePermission {
-	permissions := make([]*quicksight.ResourcePermission, len(tfList))
-
-	for i, tfListRaw := range tfList {
-		tfMap := tfListRaw.(map[string]interface{})
-
-		permission := &quicksight.ResourcePermission{
-			Actions:   flex.ExpandStringSet(tfMap["actions"].(*schema.Set)),
-			Principal: aws.String(tfMap["principal"].(string)),
-		}
-
-		permissions[i] = permission
-	}
-	return permissions
-}
-
 func expandDataSetRowLevelPermissionDataSet(tfList []interface{}) *quicksight.RowLevelPermissionDataSet {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
@@ -1943,7 +1928,7 @@ func fieldFoldersHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func flattenLogicalTableMap(apiObject map[string]*quicksight.LogicalTable) *schema.Set {
+func flattenLogicalTableMap(apiObject map[string]*quicksight.LogicalTable, resourceSchema *schema.Resource) *schema.Set {
 	if len(apiObject) == 0 {
 		return nil
 	}
@@ -1969,7 +1954,7 @@ func flattenLogicalTableMap(apiObject map[string]*quicksight.LogicalTable) *sche
 		tfList = append(tfList, tfMap)
 	}
 
-	return schema.NewSet(schema.HashResource(logicalTableMapSchema()), tfList)
+	return schema.NewSet(schema.HashResource(resourceSchema), tfList)
 }
 
 func flattenDataTransforms(apiObject []*quicksight.TransformOperation) []interface{} {
@@ -2091,7 +2076,7 @@ func flattenProjectOperation(apiObject *quicksight.ProjectOperation) []interface
 
 	tfMap := map[string]interface{}{}
 	if apiObject.ProjectedColumns != nil {
-		tfMap["project_columns"] = aws.StringValueSlice(apiObject.ProjectedColumns)
+		tfMap["projected_columns"] = flex.FlattenStringList(apiObject.ProjectedColumns)
 	}
 
 	return []interface{}{tfMap}
@@ -2243,7 +2228,7 @@ func flattenJoinKeyProperties(apiObject *quicksight.JoinKeyProperties) map[strin
 	return tfMap
 }
 
-func flattenPhysicalTableMap(apiObject map[string]*quicksight.PhysicalTable) *schema.Set {
+func flattenPhysicalTableMap(apiObject map[string]*quicksight.PhysicalTable, resourceSchema *schema.Resource) *schema.Set {
 	if len(apiObject) == 0 {
 		return nil
 	}
@@ -2269,7 +2254,7 @@ func flattenPhysicalTableMap(apiObject map[string]*quicksight.PhysicalTable) *sc
 		tfList = append(tfList, tfMap)
 	}
 
-	return schema.NewSet(schema.HashResource(physicalTableMapSchema()), tfList)
+	return schema.NewSet(schema.HashResource(resourceSchema), tfList)
 }
 
 func flattenCustomSQL(apiObject *quicksight.CustomSql) []interface{} {

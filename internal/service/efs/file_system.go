@@ -11,7 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -153,7 +154,7 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 	if v, ok := d.GetOk("creation_token"); ok {
 		creationToken = v.(string)
 	} else {
-		creationToken = resource.UniqueId()
+		creationToken = id.UniqueId()
 	}
 	throughputMode := d.Get("throughput_mode").(string)
 
@@ -364,7 +365,7 @@ func FindFileSystemByID(ctx context.Context, conn *efs.EFS, id string) (*efs.Fil
 	output, err := conn.DescribeFileSystemsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -381,7 +382,7 @@ func FindFileSystemByID(ctx context.Context, conn *efs.EFS, id string) (*efs.Fil
 	return output.FileSystems[0], nil
 }
 
-func statusFileSystemLifeCycleState(ctx context.Context, conn *efs.EFS, id string) resource.StateRefreshFunc {
+func statusFileSystemLifeCycleState(ctx context.Context, conn *efs.EFS, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindFileSystemByID(ctx, conn, id)
 
@@ -407,7 +408,7 @@ const (
 )
 
 func waitFileSystemAvailable(ctx context.Context, conn *efs.EFS, fileSystemID string) (*efs.FileSystemDescription, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{efs.LifeCycleStateCreating, efs.LifeCycleStateUpdating},
 		Target:     []string{efs.LifeCycleStateAvailable},
 		Refresh:    statusFileSystemLifeCycleState(ctx, conn, fileSystemID),
@@ -426,7 +427,7 @@ func waitFileSystemAvailable(ctx context.Context, conn *efs.EFS, fileSystemID st
 }
 
 func waitFileSystemDeleted(ctx context.Context, conn *efs.EFS, fileSystemID string) (*efs.FileSystemDescription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{efs.LifeCycleStateAvailable, efs.LifeCycleStateDeleting},
 		Target:     []string{},
 		Refresh:    statusFileSystemLifeCycleState(ctx, conn, fileSystemID),

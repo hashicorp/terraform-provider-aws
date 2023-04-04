@@ -10,7 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -135,7 +136,7 @@ func resourceAcceleratorCreate(ctx context.Context, d *schema.ResourceData, meta
 	name := d.Get("name").(string)
 	input := &globalaccelerator.CreateAcceleratorInput{
 		Enabled:          aws.Bool(d.Get("enabled").(bool)),
-		IdempotencyToken: aws.String(resource.UniqueId()),
+		IdempotencyToken: aws.String(id.UniqueId()),
 		Name:             aws.String(name),
 		Tags:             Tags(tags.IgnoreAWS()),
 	}
@@ -358,7 +359,7 @@ func findAccelerator(ctx context.Context, conn *globalaccelerator.GlobalAccelera
 	output, err := conn.DescribeAcceleratorWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -387,7 +388,7 @@ func findAcceleratorAttributes(ctx context.Context, conn *globalaccelerator.Glob
 	output, err := conn.DescribeAcceleratorAttributesWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -404,7 +405,7 @@ func findAcceleratorAttributes(ctx context.Context, conn *globalaccelerator.Glob
 	return output.AcceleratorAttributes, nil
 }
 
-func statusAccelerator(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) resource.StateRefreshFunc {
+func statusAccelerator(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		accelerator, err := FindAcceleratorByARN(ctx, conn, arn)
 
@@ -421,7 +422,7 @@ func statusAccelerator(ctx context.Context, conn *globalaccelerator.GlobalAccele
 }
 
 func waitAcceleratorDeployed(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string, timeout time.Duration) (*globalaccelerator.Accelerator, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{globalaccelerator.AcceleratorStatusInProgress},
 		Target:  []string{globalaccelerator.AcceleratorStatusDeployed},
 		Refresh: statusAccelerator(ctx, conn, arn),

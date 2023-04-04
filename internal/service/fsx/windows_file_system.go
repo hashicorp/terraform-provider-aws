@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -278,7 +278,7 @@ func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &fsx.CreateFileSystemInput{
-		ClientRequestToken: aws.String(resource.UniqueId()),
+		ClientRequestToken: aws.String(id.UniqueId()),
 		FileSystemType:     aws.String(fsx.FileSystemTypeWindows),
 		StorageCapacity:    aws.Int64(int64(d.Get("storage_capacity").(int))),
 		SubnetIds:          flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
@@ -290,7 +290,7 @@ func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	backupInput := &fsx.CreateFileSystemFromBackupInput{
-		ClientRequestToken: aws.String(resource.UniqueId()),
+		ClientRequestToken: aws.String(id.UniqueId()),
 		SubnetIds:          flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
 		WindowsConfiguration: &fsx.CreateFileSystemWindowsConfiguration{
 			AutomaticBackupRetentionDays: aws.Int64(int64(d.Get("automatic_backup_retention_days").(int))),
@@ -410,7 +410,7 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 
 	if d.HasChangesExcept("tags_all", "aliases") {
 		input := &fsx.UpdateFileSystemInput{
-			ClientRequestToken:   aws.String(resource.UniqueId()),
+			ClientRequestToken:   aws.String(id.UniqueId()),
 			FileSystemId:         aws.String(d.Id()),
 			WindowsConfiguration: &fsx.UpdateFileSystemWindowsConfiguration{},
 		}
@@ -542,7 +542,7 @@ func resourceWindowsFileSystemDelete(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).FSxConn()
 
 	input := &fsx.DeleteFileSystemInput{
-		ClientRequestToken: aws.String(resource.UniqueId()),
+		ClientRequestToken: aws.String(id.UniqueId()),
 		FileSystemId:       aws.String(d.Id()),
 		WindowsConfiguration: &fsx.DeleteFileSystemWindowsConfiguration{
 			SkipFinalBackup: aws.Bool(d.Get("skip_final_backup").(bool)),

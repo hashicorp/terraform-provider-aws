@@ -13,7 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -522,9 +523,9 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("cluster_identifier"); ok {
 		identifier = v.(string)
 	} else if v, ok := d.GetOk("cluster_identifier_prefix"); ok {
-		identifier = resource.PrefixedUniqueId(v.(string))
+		identifier = id.PrefixedUniqueId(v.(string))
 	} else {
-		identifier = resource.PrefixedUniqueId("tf-")
+		identifier = id.PrefixedUniqueId("tf-")
 	}
 
 	if v, ok := d.GetOk("snapshot_identifier"); ok {
@@ -1236,8 +1237,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.DBClusterParameterGroupName = aws.String(d.Get("db_cluster_parameter_group_name").(string))
 		}
 
-		if d.HasChange("db_instance_parameter_group_name") {
-			input.DBInstanceParameterGroupName = aws.String(d.Get("db_instance_parameter_group_name").(string))
+		// DB instance parameter group name is not currently returned from the
+		// DescribeDBClusters API. This means there is no drift detection, so when
+		// set, the configured attribute should always be sent on modify.
+		if v, ok := d.GetOk("db_instance_parameter_group_name"); ok || d.HasChange("db_instance_parameter_group_name") {
+			input.DBInstanceParameterGroupName = aws.String(v.(string))
 		}
 
 		if d.HasChange("deletion_protection") {
@@ -1267,6 +1271,13 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EngineVersion = aws.String(d.Get("engine_version").(string))
 		}
 
+		// This can happen when updates are deferred (apply_immediately = false), and
+		// multiple applies occur before the maintenance window. In this case,
+		// continue sending the desired engine_version as part of the modify request.
+		if d.Get("engine_version").(string) != d.Get("engine_version_actual").(string) {
+			input.EngineVersion = aws.String(d.Get("engine_version").(string))
+		}
+
 		if d.HasChange("iam_database_authentication_enabled") {
 			input.EnableIAMDatabaseAuthentication = aws.Bool(d.Get("iam_database_authentication_enabled").(bool))
 		}
@@ -1279,12 +1290,12 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.ManageMasterUserPassword = aws.Bool(d.Get("manage_master_user_password").(bool))
 		}
 		if d.HasChange("master_password") {
-			if v, ok := d.GetOk("master_password"); ok && len(v.([]interface{})) > 0 && v.([]interface{}) != nil {
+			if v, ok := d.GetOk("master_password"); ok {
 				input.MasterUserPassword = aws.String(v.(string))
 			}
 		}
 		if d.HasChange("master_user_secret_kms_key_id") {
-			if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok && len(v.([]interface{})) > 0 && v.([]interface{}) != nil {
+			if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
 				input.MasterUserSecretKmsKeyId = aws.String(v.(string))
 			}
 		}
@@ -1561,7 +1572,11 @@ func removeIAMRoleFromCluster(ctx context.Context, conn *rds.RDS, clusterID, rol
 func clusterSetResourceDataEngineVersionFromCluster(d *schema.ResourceData, c *rds.DBCluster) {
 	oldVersion := d.Get("engine_version").(string)
 	newVersion := aws.StringValue(c.EngineVersion)
-	compareActualEngineVersion(d, oldVersion, newVersion)
+	var pendingVersion string
+	if c.PendingModifiedValues != nil && c.PendingModifiedValues.EngineVersion != nil {
+		pendingVersion = aws.StringValue(c.PendingModifiedValues.EngineVersion)
+	}
+	compareActualEngineVersion(d, oldVersion, newVersion, pendingVersion)
 }
 
 func FindDBClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBCluster, error) {
@@ -1572,7 +1587,7 @@ func FindDBClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBCl
 	output, err := conn.DescribeDBClustersWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1595,12 +1610,12 @@ func FindDBClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBCl
 	// Eventual consistency check.
 	if arn.IsARN(id) {
 		if aws.StringValue(dbCluster.DBClusterArn) != id {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastRequest: input,
 			}
 		}
 	} else if aws.StringValue(dbCluster.DBClusterIdentifier) != id {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -1609,7 +1624,7 @@ func FindDBClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBCl
 }
 
 func waitDBClusterCreated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBCluster, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			ClusterStatusBackingUp,
 			ClusterStatusCreating,
@@ -1636,7 +1651,7 @@ func waitDBClusterCreated(ctx context.Context, conn *rds.RDS, id string, timeout
 }
 
 func waitDBClusterUpdated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBCluster, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			ClusterStatusBackingUp,
 			ClusterStatusConfiguringIAMDatabaseAuth,
@@ -1662,7 +1677,7 @@ func waitDBClusterUpdated(ctx context.Context, conn *rds.RDS, id string, timeout
 }
 
 func waitDBClusterDeleted(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBCluster, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			ClusterStatusAvailable,
 			ClusterStatusBackingUp,
@@ -1685,7 +1700,7 @@ func waitDBClusterDeleted(ctx context.Context, conn *rds.RDS, id string, timeout
 	return nil, err
 }
 
-func statusDBCluster(ctx context.Context, conn *rds.RDS, id string) resource.StateRefreshFunc {
+func statusDBCluster(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDBClusterByID(ctx, conn, id)
 

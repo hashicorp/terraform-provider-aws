@@ -17,7 +17,8 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -311,9 +312,9 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	if v, ok := d.GetOk("name"); ok {
 		name = v.(string)
 	} else if v, ok := d.GetOk("name_prefix"); ok {
-		name = resource.PrefixedUniqueId(v.(string))
+		name = id.PrefixedUniqueId(v.(string))
 	} else {
-		name = resource.PrefixedUniqueId("tf-lb-")
+		name = id.PrefixedUniqueId("tf-lb-")
 	}
 	d.Set("name", name)
 
@@ -611,16 +612,16 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		err := resource.RetryContext(ctx, loadBalancerTagPropagationTimeout, func() *resource.RetryError {
+		err := retry.RetryContext(ctx, loadBalancerTagPropagationTimeout, func() *retry.RetryError {
 			err := UpdateTags(ctx, conn, d.Id(), o, n)
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
 				log.Printf("[DEBUG] Retrying tagging of LB (%s) after error: %s", d.Id(), err)
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 
 			return nil
@@ -697,7 +698,7 @@ func FindLoadBalancerByARN(ctx context.Context, conn *elbv2.ELBV2, arn string) (
 
 	// Eventual consistency check.
 	if aws.StringValue(output.LoadBalancerArn) != arn {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -723,7 +724,7 @@ func FindLoadBalancers(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.Desc
 	})
 
 	if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -754,7 +755,7 @@ func FindLoadBalancer(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.Descr
 	return output[0], nil
 }
 
-func statusLoadBalancerState(ctx context.Context, conn *elbv2.ELBV2, arn string) resource.StateRefreshFunc {
+func statusLoadBalancerState(ctx context.Context, conn *elbv2.ELBV2, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindLoadBalancerByARN(ctx, conn, arn)
 
@@ -771,7 +772,7 @@ func statusLoadBalancerState(ctx context.Context, conn *elbv2.ELBV2, arn string)
 }
 
 func waitLoadBalancerActive(ctx context.Context, conn *elbv2.ELBV2, arn string, timeout time.Duration) (*elbv2.LoadBalancer, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{elbv2.LoadBalancerStateEnumProvisioning, elbv2.LoadBalancerStateEnumFailed},
 		Target:     []string{elbv2.LoadBalancerStateEnumActive},
 		Refresh:    statusLoadBalancerState(ctx, conn, arn),

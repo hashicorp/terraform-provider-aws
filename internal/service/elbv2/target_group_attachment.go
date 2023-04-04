@@ -10,7 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -77,15 +78,15 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 	log.Printf("[INFO] Registering Target %s with Target Group %s", d.Get("target_id").(string),
 		d.Get("target_group_arn").(string))
 
-	err := resource.RetryContext(ctx, 10*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 10*time.Minute, func() *retry.RetryError {
 		_, err := conn.RegisterTargetsWithContext(ctx, params)
 
 		if tfawserr.ErrCodeEquals(err, "InvalidTarget") {
-			return resource.RetryableError(fmt.Errorf("Error attaching instance to LB, retrying: %s", err))
+			return retry.RetryableError(fmt.Errorf("Error attaching instance to LB, retrying: %s", err))
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -98,7 +99,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	//lintignore:R016 // Allow legacy unstable ID usage in managed resource
-	d.SetId(resource.PrefixedUniqueId(fmt.Sprintf("%s-", d.Get("target_group_arn"))))
+	d.SetId(id.PrefixedUniqueId(fmt.Sprintf("%s-", d.Get("target_group_arn"))))
 
 	return diags
 }

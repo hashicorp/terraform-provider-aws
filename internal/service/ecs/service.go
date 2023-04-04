@@ -16,7 +16,8 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -481,7 +482,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	schedulingStrategy := d.Get("scheduling_strategy").(string)
 	input := ecs.CreateServiceInput{
 		CapacityProviderStrategy: expandCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set)),
-		ClientToken:              aws.String(resource.UniqueId()),
+		ClientToken:              aws.String(id.UniqueId()),
 		DeploymentConfiguration:  &ecs.DeploymentConfiguration{},
 		DeploymentController:     deploymentController,
 		EnableECSManagedTags:     aws.Bool(d.Get("enable_ecs_managed_tags").(bool)),
@@ -920,19 +921,19 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		// Retry due to IAM eventual consistency
-		err := resource.RetryContext(ctx, propagationTimeout+serviceUpdateTimeout, func() *resource.RetryError {
+		err := retry.RetryContext(ctx, propagationTimeout+serviceUpdateTimeout, func() *retry.RetryError {
 			_, err := conn.UpdateServiceWithContext(ctx, input)
 
 			if err != nil {
 				if tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "verify that the ECS service role being passed has the proper permissions") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 
 				if tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "does not have an associated load balancer") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			return nil
 		})
@@ -1010,19 +1011,19 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 		Cluster: aws.String(d.Get("cluster").(string)),
 	}
 	// Wait until the ECS service is drained
-	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
 		_, err := conn.DeleteServiceWithContext(ctx, &input)
 
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "The service cannot be stopped while deployments are active.") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			if tfawserr.ErrMessageContains(err, "DependencyViolation", "has a dependent object") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -1536,28 +1537,28 @@ func resourceLoadBalancerHash(v interface{}) int {
 
 func serviceCreateWithRetry(ctx context.Context, conn *ecs.ECS, input ecs.CreateServiceInput) (*ecs.CreateServiceOutput, error) {
 	var output *ecs.CreateServiceOutput
-	err := resource.RetryContext(ctx, propagationTimeout+serviceCreateTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout+serviceCreateTimeout, func() *retry.RetryError {
 		var err error
 		output, err = conn.CreateServiceWithContext(ctx, &input)
 
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			if tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "verify that the ECS service role being passed has the proper permissions") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			if tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "does not have an associated load balancer") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			if tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "Unable to assume the service linked role") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
