@@ -28,10 +28,10 @@ func testAccMemberAssociation_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckInspector2MemberAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckMemberAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInspector2MemberAssociationConfig_basic(),
+				Config: testAccMemberAssociationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberAssociationExists(ctx, resourceName),
 				),
@@ -59,10 +59,10 @@ func testAccMemberAssociation_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckInspector2MemberAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckMemberAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInspector2MemberAssociationConfig_basic(),
+				Config: testAccMemberAssociationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberAssociationExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfinspector2.ResourceMemberAssociation(), resourceName),
@@ -72,6 +72,7 @@ func testAccMemberAssociation_disappears(t *testing.T) {
 		},
 	})
 }
+
 func testAccCheckMemberAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -91,7 +92,7 @@ func testAccCheckMemberAssociationExists(ctx context.Context, n string) resource
 	}
 }
 
-func testAccCheckInspector2MemberAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckMemberAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client()
 
@@ -117,7 +118,7 @@ func testAccCheckInspector2MemberAssociationDestroy(ctx context.Context) resourc
 	}
 }
 
-func testAccInspector2MemberAssociationConfig_basic() string {
+func testAccMemberAssociationConfig_basic() string {
 	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), `
 data "aws_caller_identity" "current" {}
 
