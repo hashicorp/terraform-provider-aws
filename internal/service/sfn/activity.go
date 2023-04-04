@@ -16,9 +16,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_sfn_activity")
+// @SDKResource("aws_sfn_activity", name="Activity")
+// @Tags(identifierAttribute="id")
 func ResourceActivity() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceActivityCreate,
@@ -41,8 +43,8 @@ func ResourceActivity() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 80),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -51,13 +53,11 @@ func ResourceActivity() *schema.Resource {
 
 func resourceActivityCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SFNConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &sfn.CreateActivityInput{
 		Name: aws.String(name),
-		Tags: Tags(tags.IgnoreAWS()),
+		Tags: GetTagsIn(ctx),
 	}
 
 	output, err := conn.CreateActivityWithContext(ctx, input)
@@ -73,8 +73,6 @@ func resourceActivityCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceActivityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SFNConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := FindActivityByARN(ctx, conn, d.Id())
 
@@ -91,37 +89,11 @@ func resourceActivityRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("creation_date", output.CreationDate.Format(time.RFC3339))
 	d.Set("name", output.Name)
 
-	tags, err := ListTags(ctx, conn, d.Id())
-
-	if err != nil {
-		return diag.Errorf("listing tags for Step Functions Activity (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
-
 	return nil
 }
 
 func resourceActivityUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SFNConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("updating Step Functions Activity (%s) tags: %s", d.Id(), err)
-		}
-	}
-
+	// Tags only.
 	return resourceActivityRead(ctx, d, meta)
 }
 

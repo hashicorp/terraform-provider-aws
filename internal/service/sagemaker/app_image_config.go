@@ -15,9 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_sagemaker_app_image_config")
+// @SDKResource("aws_sagemaker_app_image_config", name="App Image Config")
+// @Tags(identifierAttribute="arn")
 func ResourceAppImageConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAppImageConfigCreate,
@@ -100,8 +102,8 @@ func ResourceAppImageConfig() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
@@ -110,16 +112,11 @@ func ResourceAppImageConfig() *schema.Resource {
 func resourceAppImageConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("app_image_config_name").(string)
 	input := &sagemaker.CreateAppImageConfigInput{
 		AppImageConfigName: aws.String(name),
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
+		Tags:               GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("kernel_gateway_image_config"); ok && len(v.([]interface{})) > 0 {
@@ -139,8 +136,6 @@ func resourceAppImageConfigCreate(ctx context.Context, d *schema.ResourceData, m
 func resourceAppImageConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	image, err := FindAppImageConfigByName(ctx, conn, d.Id())
 	if err != nil {
@@ -160,37 +155,12 @@ func resourceAppImageConfigRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "setting kernel_gateway_image_config: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for SageMaker App Image Config (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceAppImageConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker App Image Config (%s) tags: %s", d.Id(), err)
-		}
-	}
 
 	if d.HasChange("kernel_gateway_image_config") {
 		input := &sagemaker.UpdateAppImageConfigInput{
