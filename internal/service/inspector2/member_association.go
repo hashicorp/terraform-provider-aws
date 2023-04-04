@@ -114,7 +114,7 @@ func FindMemberByAccountID(ctx context.Context, conn *inspector2.Client, id stri
 
 	output, err := conn.GetMember(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*types.AccessDeniedException](err) || errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -127,6 +127,13 @@ func FindMemberByAccountID(ctx context.Context, conn *inspector2.Client, id stri
 
 	if output == nil || output.Member == nil {
 		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if status := output.Member.RelationshipStatus; status == types.RelationshipStatusRemoved {
+		return nil, &retry.NotFoundError{
+			Message:     string(status),
+			LastRequest: input,
+		}
 	}
 
 	return output.Member, nil
