@@ -44,10 +44,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceRecoveryGroup,
 			TypeName: "aws_route53recoveryreadiness_recovery_group",
+			Name:     "Recovery Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceResourceSet,
 			TypeName: "aws_route53recoveryreadiness_resource_set",
+			Name:     "Resource Set",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }

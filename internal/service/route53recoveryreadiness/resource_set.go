@@ -21,7 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_route53recoveryreadiness_resource_set")
+// @SDKResource("aws_route53recoveryreadiness_resource_set", name="Resource Set")
+// @Tags(identifierAttribute="arn")
 func ResourceResourceSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceSetCreate,
