@@ -19,9 +19,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_sagemaker_domain")
+// @SDKResource("aws_sagemaker_domain", name="Domain")
+// @Tags(identifierAttribute="arn")
 func ResourceDomain() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainCreate,
@@ -570,8 +572,8 @@ func ResourceDomain() *schema.Resource {
 				MaxItems: 16,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"url": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -590,8 +592,6 @@ func ResourceDomain() *schema.Resource {
 func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &sagemaker.CreateDomainInput{
 		DomainName:           aws.String(d.Get("domain_name").(string)),
@@ -600,6 +600,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		AppNetworkAccessType: aws.String(d.Get("app_network_access_type").(string)),
 		SubnetIds:            flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
 		DefaultUserSettings:  expandDomainDefaultUserSettings(d.Get("default_user_settings").([]interface{})),
+		Tags:                 GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("app_security_group_management"); ok {
@@ -616,10 +617,6 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if v, ok := d.GetOk("kms_key_id"); ok {
 		input.KmsKeyId = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] SageMaker Domain create config: %#v", *input)
@@ -646,8 +643,6 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	domain, err := FindDomainByName(ctx, conn, d.Id())
 	if err != nil {
@@ -688,23 +683,6 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "setting domain_settings for SageMaker Domain (%s): %s", d.Id(), err)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for SageMaker Domain (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -737,14 +715,6 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		if _, err := WaitDomainInService(ctx, conn, d.Id()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Domain (%s) to update: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Domain (%s) tags: %s", d.Id(), err)
 		}
 	}
 
