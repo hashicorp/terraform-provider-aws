@@ -139,6 +139,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 									"version": {
 										Type:     schema.TypeString,
 										Optional: true,
+										Computed: true,
 									},
 								},
 							},
@@ -384,54 +385,10 @@ func resourceComputeEnvironmentUpdate(d *schema.ResourceData, meta interface{}) 
 					}
 				}
 
-				if d.HasChange("compute_resources.0.ec2_configuration.#") {
-					ec2Configuration := &batch.Ec2Configuration{}
-					countBefore, countAfter := d.GetChange("compute_resources.0.ec2_configuration.#")
-					log.Printf("[DEBUG] ec2_configuration count changed from %d to %d", countBefore.(int), countAfter.(int))
-					if countBefore.(int) == 0 && countAfter.(int) > 0 {
-						// we had no previous ec2 configuration and now we do
-						if imageIdOverride, ok := d.GetOk("compute_resources.0.ec2_configuration.0.image_id_override"); ok {
-							ec2Configuration.ImageIdOverride = aws.String(imageIdOverride.(string))
-						}
-						if imageType, ok := d.GetOk("compute_resources.0.ec2_configuration.0.image_type"); ok {
-							ec2Configuration.ImageType = aws.String(imageType.(string))
-						}
-					} else if countBefore.(int) > 0 && countAfter.(int) == 0 {
-						// we previously had an ec2 configuration and now we don't
-						// To remove the EC2 configuration and any custom AMI ID specified in imageIdOverride,
-						// set this value to an empty string.
-						log.Println("[DEBUG] deleting Ec2Configuration")
-						ec2Configuration.ImageIdOverride = aws.String("")
-					}
-					computeResourceUpdate.Ec2Configuration = []*batch.Ec2Configuration{ec2Configuration}
-				} else if ec2ConfigurationCount := d.Get("compute_resources.0.ec2_configuration.#"); ec2ConfigurationCount.(int) > 0 {
-					// we had an ec2 configuration before and we still have an ec2 configuration now.
-					// check for changes in the ec2 configuration
-					ec2Configuration := &batch.Ec2Configuration{}
-					needToUpdateEc2Configuration := false
-					if d.HasChange("compute_resources.0.ec2_configuration.0.image_id_override") {
-						needToUpdateEc2Configuration = true
-						before, after := d.GetChange("compute_resources.0.ec2_configuration.0.image_id_override")
-						log.Printf("[DEBUG] ec2_configuration image_id_override changing from %s to %s", before, after)
-						if after != nil {
-							ec2Configuration.ImageIdOverride = aws.String(after.(string))
-						} else {
-							ec2Configuration.ImageIdOverride = aws.String("")
-						}
-					}
-					if d.HasChange("compute_resources.0.ec2_configuration.0.image_type") {
-						needToUpdateEc2Configuration = true
-						before, after := d.GetChange("compute_resources.0.ec2_configuration.0.image_type")
-						log.Printf("[DEBUG] ec2_configuration image_type changing from %s to %s", before, after)
-						if after != nil {
-							ec2Configuration.ImageType = aws.String(after.(string))
-						} else {
-							ec2Configuration.ImageType = aws.String("")
-						}
-					}
-					if needToUpdateEc2Configuration {
-						computeResourceUpdate.Ec2Configuration = []*batch.Ec2Configuration{ec2Configuration}
-					}
+				if d.HasChange("compute_resources.0.ec2_configuration") {
+					defaultImageType := "ECS_AL2" // TODO remember to update this when adding EKS support
+					ec2Configuration := d.Get("compute_resources.0.ec2_configuration").([]interface{})
+					computeResourceUpdate.Ec2Configuration = ExpandComputeEnvironmentEc2ConfigurationUpdate(ec2Configuration, defaultImageType)
 				}
 
 				if d.HasChange("compute_resources.0.ec2_key_pair") {
@@ -462,65 +419,9 @@ func resourceComputeEnvironmentUpdate(d *schema.ResourceData, meta interface{}) 
 					computeResourceUpdate.InstanceTypes = flex.ExpandStringSet(d.Get("compute_resources.0.instance_type").(*schema.Set))
 				}
 
-				if d.HasChange("compute_resources.0.launch_template.#") {
-					launchTemplate := &batch.LaunchTemplateSpecification{}
-					countBefore, countAfter := d.GetChange("compute_resources.0.launch_template.#")
-					log.Printf("[DEBUG] launch_template count changed from %d to %d", countBefore.(int), countAfter.(int))
-					if countBefore.(int) == 0 && countAfter.(int) > 0 {
-						// we previously didn't have a launch template and now we do
-						if launchTemplateId, ok := d.GetOk("compute_resources.0.launch_template.0.launch_template_id"); ok {
-							launchTemplate.LaunchTemplateId = aws.String(launchTemplateId.(string))
-						}
-						if launchTemplateName, ok := d.GetOk("compute_resources.0.launch_template.0.launch_template_name"); ok {
-							launchTemplate.LaunchTemplateName = aws.String(launchTemplateName.(string))
-						}
-						if launchTemplateVersion, ok := d.GetOk("compute_resources.0.launch_template.0.version"); ok {
-							launchTemplate.Version = aws.String(launchTemplateVersion.(string))
-						}
-					} else if countBefore.(int) > 0 && countAfter.(int) == 0 {
-						log.Println("[DEBUG] deleting LaunchTemplateSpecification")
-						// To remove the custom launch template and use the default launch template,
-						// set launchTemplateId or launchTemplateName member of the launch template specification to an empty string.
-						launchTemplate.LaunchTemplateId = aws.String("")
-					}
-					computeResourceUpdate.LaunchTemplate = launchTemplate
-				} else if launchTemplateCount := d.Get("compute_resources.0.launch_template.#"); launchTemplateCount.(int) > 0 {
-					// we have a launch template configuration. check for changes to it
-					hasLaunchTemplateChange := false
-					launchTemplate := &batch.LaunchTemplateSpecification{}
-					if d.HasChange("compute_resources.0.launch_template.0.launch_template_id") {
-						hasLaunchTemplateChange = true
-						before, after := d.GetChange("compute_resources.0.launch_template.0.launch_template_id")
-						log.Printf("[DEBUG] launch_template_id changing from %s to %s", before, after)
-						if after != nil {
-							launchTemplate.LaunchTemplateId = aws.String(after.(string))
-						} else {
-							launchTemplate.LaunchTemplateId = aws.String("")
-						}
-					}
-					if d.HasChange("compute_resources.0.launch_template.0.launch_template_name") {
-						hasLaunchTemplateChange = true
-						before, after := d.GetChange("compute_resources.0.launch_template.0.launch_template_name")
-						log.Printf("[DEBUG] launch_template_name changing from %s to %s", before, after)
-						if after != nil {
-							launchTemplate.LaunchTemplateName = aws.String(after.(string))
-						} else {
-							launchTemplate.LaunchTemplateName = aws.String("")
-						}
-					}
-					if d.HasChange("compute_resources.0.launch_template.0.version") {
-						hasLaunchTemplateChange = true
-						before, after := d.GetChange("compute_resources.0.launch_template.0.version")
-						log.Printf("[DEBUG] launch_template version changing from %s to %s", before, after)
-						if after != nil {
-							launchTemplate.Version = aws.String(after.(string))
-						} else {
-							launchTemplate.Version = aws.String("")
-						}
-					}
-					if hasLaunchTemplateChange {
-						computeResourceUpdate.LaunchTemplate = launchTemplate
-					}
+				if d.HasChange("compute_resources.0.launch_template") {
+					launchTemplate := d.Get("compute_resources.0.launch_template").([]interface{})
+					computeResourceUpdate.LaunchTemplate = ExpandComputeEnvironmentLaunchTemplateUpdate(launchTemplate)
 				}
 
 				if d.HasChange("compute_resources.0.tags") {
@@ -554,6 +455,55 @@ func resourceComputeEnvironmentUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	return resourceComputeEnvironmentRead(d, meta)
+}
+
+func ExpandComputeEnvironmentEc2ConfigurationUpdate(ec2Configuration []interface{}, defaultImageType string) []*batch.Ec2Configuration {
+	if len(ec2Configuration) == 0 {
+		return []*batch.Ec2Configuration{
+			{
+				ImageType: aws.String(defaultImageType),
+			},
+		}
+	}
+
+	results := make([]*batch.Ec2Configuration, 0)
+	for _, ec2 := range ec2Configuration {
+		result := &batch.Ec2Configuration{}
+		m := ec2.(map[string]interface{})
+		if v, ok := m["image_id_override"]; ok {
+			result.ImageIdOverride = aws.String(v.(string))
+		}
+		if v, ok := m["image_type"]; ok {
+			result.ImageType = aws.String(v.(string))
+		}
+		results = append(results, result)
+	}
+
+	return results
+}
+
+func ExpandComputeEnvironmentLaunchTemplateUpdate(launchTemplate []interface{}) *batch.LaunchTemplateSpecification {
+	if len(launchTemplate) == 0 {
+		// delete any existing launch template configuration
+		return &batch.LaunchTemplateSpecification{
+			LaunchTemplateId: aws.String(""),
+		}
+	}
+
+	lts := &batch.LaunchTemplateSpecification{}
+	m := launchTemplate[0].(map[string]interface{})
+	if id, ok := m["launch_template_id"]; ok {
+		lts.LaunchTemplateId = aws.String(id.(string))
+	}
+	if name, ok := m["launch_template_name"]; ok {
+		lts.LaunchTemplateName = aws.String(name.(string))
+	}
+	if version, ok := m["version"]; ok {
+		lts.Version = aws.String(version.(string))
+	} else {
+		lts.Version = aws.String("")
+	}
+	return lts
 }
 
 func resourceComputeEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {

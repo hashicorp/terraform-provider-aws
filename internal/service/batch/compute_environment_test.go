@@ -2,9 +2,11 @@ package batch_test
 
 import (
 	"fmt"
+	"reflect"
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -15,6 +17,138 @@ import (
 	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
+
+func TestExpandComputeEnvironmentLaunchEc2ConfigurationUpdate(t *testing.T) {
+	testCases := []struct {
+		flattened []interface{}
+		expected  []*batch.Ec2Configuration
+	}{
+		{
+			flattened: []interface{}{},
+			expected: []*batch.Ec2Configuration{
+				{
+					ImageType: aws.String("default"),
+				},
+			},
+		},
+		{
+			flattened: []interface{}{
+				map[string]interface{}{
+					"image_type": "ECS_AL1",
+				},
+			},
+			expected: []*batch.Ec2Configuration{
+				{
+					ImageType: aws.String("ECS_AL1"),
+				},
+			},
+		},
+		{
+			flattened: []interface{}{
+				map[string]interface{}{
+					"image_id_override": "ami-deadbeef",
+				},
+			},
+			expected: []*batch.Ec2Configuration{
+				{
+					ImageIdOverride: aws.String("ami-deadbeef"),
+				},
+			},
+		},
+		{
+			flattened: []interface{}{
+				map[string]interface{}{
+					"image_id_override": "ami-deadbeef",
+					"image_type":        "ECS_AL1",
+				},
+			},
+			expected: []*batch.Ec2Configuration{
+				{
+					ImageIdOverride: aws.String("ami-deadbeef"),
+					ImageType:       aws.String("ECS_AL1"),
+				},
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		expanded := tfbatch.ExpandComputeEnvironmentEc2ConfigurationUpdate(testCase.flattened, "default")
+		if !reflect.DeepEqual(expanded, testCase.expected) {
+			t.Fatalf("Got\n\n%#v\n\nExpected:\n\n%#v\n",
+				expanded,
+				testCase.expected)
+		}
+	}
+}
+
+func TestExpandComputeEnvironmentLaunchTemplateUpdate(t *testing.T) {
+	testCases := []struct {
+		flattened []interface{}
+		expected  *batch.LaunchTemplateSpecification
+	}{
+		{
+			flattened: []interface{}{},
+			expected: &batch.LaunchTemplateSpecification{
+				LaunchTemplateId: aws.String(""),
+			},
+		},
+		{
+			flattened: []interface{}{
+				map[string]interface{}{
+					"launch_template_id": "lt-123456",
+				},
+			},
+			expected: &batch.LaunchTemplateSpecification{
+				LaunchTemplateId: aws.String("lt-123456"),
+				Version:          aws.String(""),
+			},
+		},
+		{
+			flattened: []interface{}{
+				map[string]interface{}{
+					"launch_template_name": "my-launch-template",
+				},
+			},
+			expected: &batch.LaunchTemplateSpecification{
+				LaunchTemplateName: aws.String("my-launch-template"),
+				Version:            aws.String(""),
+			},
+		},
+		{
+			flattened: []interface{}{
+				map[string]interface{}{
+					"launch_template_id": "lt-123456",
+					"version":            "$LATEST",
+				},
+			},
+			expected: &batch.LaunchTemplateSpecification{
+				LaunchTemplateId: aws.String("lt-123456"),
+				Version:          aws.String("$LATEST"),
+			},
+		},
+		{
+			flattened: []interface{}{
+				map[string]interface{}{
+					"launch_template_name": "my-launch-template",
+					"version":              "$LATEST",
+				},
+			},
+			expected: &batch.LaunchTemplateSpecification{
+				LaunchTemplateName: aws.String("my-launch-template"),
+				Version:            aws.String("$LATEST"),
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		expanded := tfbatch.ExpandComputeEnvironmentLaunchTemplateUpdate(testCase.flattened)
+		if !reflect.DeepEqual(expanded, testCase.expected) {
+			t.Fatalf("Got\n\n%#v\n\nExpected:\n\n%#v\n",
+				expanded,
+				testCase.expected)
+		}
+	}
+}
 
 func TestAccBatchComputeEnvironment_basic(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
