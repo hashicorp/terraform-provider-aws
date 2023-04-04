@@ -326,6 +326,8 @@ reached point 4, with output: {
 
 Using debugging from within VS Code provides extra benefits but also an extra challenge. The extra benefits include the ability to set break points, step over and into code, and seeing the values of variables. The extra challenge is getting your debug environment properly set up to include access to your AWS credentials and environment variables used for testing.
 
+Special thanks to Drew Mullen for [his work on debugging the AWS provider in VS Code](https://dev.to/drewmullen/vscode-terraform-provider-development-setup-debugging-6bn).
+
 #### Set up `launch.json`
 
 VS Code uses a hidden directory called `.vscode` in the root of your project for configuration files. This directory and files it contains are ignored by Git using the `.gitignore` file included with the AWS provider. This allows you to have your own local configuration without concerns that it will be uploaded to or overwritten by the AWS provider repository.
