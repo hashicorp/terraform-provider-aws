@@ -26,12 +26,20 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
+			Factory:  ResourceAccountSubscription,
+			TypeName: "aws_quicksight_account_subscription",
+		},
+		{
 			Factory:  ResourceDataSet,
 			TypeName: "aws_quicksight_data_set",
 		},
 		{
 			Factory:  ResourceDataSource,
 			TypeName: "aws_quicksight_data_source",
+		},
+		{
+			Factory:  ResourceFolder,
+			TypeName: "aws_quicksight_folder",
 		},
 		{
 			Factory:  ResourceGroup,

@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -632,7 +631,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("permission"); ok && v.(*schema.Set).Len() > 0 {
-		params.Permissions = expandDataSourcePermissions(v.(*schema.Set).List())
+		params.Permissions = expandResourcePermissions(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("ssl_properties"); ok && len(v.([]interface{})) != 0 && v.([]interface{})[0] != nil {
@@ -1274,22 +1273,6 @@ func expandDataSourceParameters(tfList []interface{}) *quicksight.DataSourcePara
 	return dataSourceParams
 }
 
-func expandDataSourcePermissions(tfList []interface{}) []*quicksight.ResourcePermission {
-	permissions := make([]*quicksight.ResourcePermission, len(tfList))
-
-	for i, tfListRaw := range tfList {
-		tfMap := tfListRaw.(map[string]interface{})
-		permission := &quicksight.ResourcePermission{
-			Actions:   flex.ExpandStringSet(tfMap["actions"].(*schema.Set)),
-			Principal: aws.String(tfMap["principal"].(string)),
-		}
-
-		permissions[i] = permission
-	}
-
-	return permissions
-}
-
 func expandDataSourceSSLProperties(tfList []interface{}) *quicksight.SslProperties {
 	if len(tfList) == 0 {
 		return nil
@@ -1568,34 +1551,6 @@ func flattenParameters(parameters *quicksight.DataSourceParameters) []interface{
 	}
 
 	return params
-}
-
-func flattenPermissions(perms []*quicksight.ResourcePermission) []interface{} {
-	if len(perms) == 0 {
-		return []interface{}{}
-	}
-
-	values := make([]interface{}, 0)
-
-	for _, p := range perms {
-		if p == nil {
-			continue
-		}
-
-		perm := make(map[string]interface{})
-
-		if p.Principal != nil {
-			perm["principal"] = aws.StringValue(p.Principal)
-		}
-
-		if p.Actions != nil {
-			perm["actions"] = flex.FlattenStringList(p.Actions)
-		}
-
-		values = append(values, perm)
-	}
-
-	return values
 }
 
 func flattenSSLProperties(props *quicksight.SslProperties) []interface{} {

@@ -280,6 +280,7 @@ func ResourceDataSet() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -795,7 +796,7 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("permissions"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Permissions = expandDataSetPermissions(v.([]interface{}))
+		input.Permissions = expandResourcePermissions(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("row_level_permission_data_set"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -1708,22 +1709,6 @@ func expandDataSetUploadSettings(tfMap map[string]interface{}) *quicksight.Uploa
 	}
 
 	return uploadSettings
-}
-
-func expandDataSetPermissions(tfList []interface{}) []*quicksight.ResourcePermission {
-	permissions := make([]*quicksight.ResourcePermission, len(tfList))
-
-	for i, tfListRaw := range tfList {
-		tfMap := tfListRaw.(map[string]interface{})
-
-		permission := &quicksight.ResourcePermission{
-			Actions:   flex.ExpandStringSet(tfMap["actions"].(*schema.Set)),
-			Principal: aws.String(tfMap["principal"].(string)),
-		}
-
-		permissions[i] = permission
-	}
-	return permissions
 }
 
 func expandDataSetRowLevelPermissionDataSet(tfList []interface{}) *quicksight.RowLevelPermissionDataSet {

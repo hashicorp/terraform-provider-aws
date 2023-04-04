@@ -333,16 +333,15 @@ func testDecryptPasswordAndTest(ctx context.Context, nProfile, nAccessKey, key s
 
 		decryptedPassword, err := pgpkeys.DecryptBytes(password, key)
 		if err != nil {
-			return fmt.Errorf("Error decrypting password: %s", err)
+			return fmt.Errorf("decrypting password: %s", err)
 		}
 
-		iamAsCreatedUserSession := session.New(&aws.Config{
+		iamAsCreatedUserSession, err := session.NewSession(&aws.Config{
 			Region:      aws.String(acctest.Region()),
 			Credentials: credentials.NewStaticCredentials(accessKeyId, secretAccessKey, ""),
 		})
-		_, err = iamAsCreatedUserSession.Config.Credentials.GetWithContext(ctx)
 		if err != nil {
-			return fmt.Errorf("Error getting session credentials: %s", err)
+			return fmt.Errorf("creating session: %s", err)
 		}
 
 		return retry.RetryContext(ctx, 2*time.Minute, func() *retry.RetryError {
@@ -363,8 +362,11 @@ func testDecryptPasswordAndTest(ctx context.Context, nProfile, nAccessKey, key s
 				if tfawserr.ErrCodeEquals(err, "InvalidClientTokenId") {
 					return retry.RetryableError(err)
 				}
+				if tfawserr.ErrMessageContains(err, "AccessDenied", "not authorized to perform: iam:ChangePassword") {
+					return retry.RetryableError(err)
+				}
 
-				return retry.NonRetryableError(fmt.Errorf("Error changing decrypted password: %s", err))
+				return retry.NonRetryableError(fmt.Errorf("changing decrypted password: %s", err))
 			}
 
 			return nil
