@@ -5,15 +5,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/inspector2"
-	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfinspector2 "github.com/hashicorp/terraform-provider-aws/internal/service/inspector2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccInspector2MemberAssociation_basic(t *testing.T) {
@@ -21,14 +19,22 @@ func TestAccInspector2MemberAssociation_basic(t *testing.T) {
 	resourceName := "aws_inspector2_member_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckInspector2MemberAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInspector2MemberAssociationConfig_basic(),
-				Check:  resource.ComposeTestCheckFunc(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMemberAssociationExists(ctx, resourceName),
+				),
 			},
 			{
 				ResourceName:      resourceName,
@@ -44,20 +50,45 @@ func TestAccInspector2MemberAssociation_disappears(t *testing.T) {
 	resourceName := "aws_inspector2_member_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckInspector2MemberAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInspector2MemberAssociationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMemberAssociationExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfinspector2.ResourceMemberAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
+}
+func testAccCheckMemberAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Inspector2 Member Association ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client()
+
+		_, err := tfinspector2.FindMemberByAccountID(ctx, conn, rs.Primary.ID)
+
+		return err
+	}
 }
 
 func testAccCheckInspector2MemberAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
@@ -69,11 +100,7 @@ func testAccCheckInspector2MemberAssociationDestroy(ctx context.Context) resourc
 				continue
 			}
 
-			getMemberInput := &inspector2.GetMemberInput{
-				AccountId: aws.String(rs.Primary.ID),
-			}
-
-			_, err := conn.GetMember(ctx, getMemberInput)
+			_, err := tfinspector2.FindMemberByAccountID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -83,7 +110,7 @@ func testAccCheckInspector2MemberAssociationDestroy(ctx context.Context) resourc
 				return err
 			}
 
-			return fmt.Errorf("SNS Data Protection Topic Policy %s still exists", rs.Primary.ID)
+			return fmt.Errorf("Inspector2 Member Association %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -91,11 +118,21 @@ func testAccCheckInspector2MemberAssociationDestroy(ctx context.Context) resourc
 }
 
 func testAccInspector2MemberAssociationConfig_basic() string {
-	return `
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), `
 data "aws_caller_identity" "current" {}
 
-resource "aws_inspector2_member_association" "test" {
+resource "aws_inspector2_delegated_admin_account" "test" {
   account_id = data.aws_caller_identity.current.account_id
 }
-`
+
+data "aws_caller_identity" "member" {
+  provider = "awsalternate"
+}
+
+resource "aws_inspector2_member_association" "test" {
+  account_id = data.aws_caller_identity.member.account_id
+
+  depends_on = [aws_inspector2_delegated_admin_account.test]
+}
+`)
 }
