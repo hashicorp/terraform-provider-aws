@@ -33,7 +33,7 @@ The following arguments are optional:
 * `auth_type` - (Optional) Type of IAM policy. Either `NONE` or `AWS_IAM`.
 * `certificate_arn` - (Optional) Amazon Resource Name (ARN) of the certificate.
 * `custom_domain_name` - (Optional) Custom domain name of the service.
-* `tags` - (Optional) A map of tags to assign to the service. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
@@ -43,6 +43,7 @@ In addition to all arguments above, the following attributes are exported:
 * `dns_entry` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
 * `id` - Unique identifier for the service.
 * `status` - Status of the service.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 

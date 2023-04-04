@@ -3,349 +3,329 @@ package vpclattice
 import (
 	"context"
 	"errors"
-	"fmt"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
-// @Tags(identifierAttribute="arn")
-func newResourceService(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceService{}, nil
-}
+// @SDKResource("aws_vpclattice_service")
+func ResourceService() *schema.Resource {
+	return &schema.Resource{
+		CreateWithoutTimeout: resourceServiceCreate,
+		ReadWithoutTimeout:   resourceServiceRead,
+		UpdateWithoutTimeout: resourceServiceUpdate,
+		DeleteWithoutTimeout: resourceServiceDelete,
 
-type resourceServiceData struct {
-	ARN              types.String   `tfsdk:"arn"`
-	AuthType         types.String   `tfsdk:"auth_type"`
-	CertificateARN   types.String   `tfsdk:"certificate_arn"`
-	CustomDomainName types.String   `tfsdk:"custom_domain_name"`
-	DnsEntry         types.List     `tfsdk:"dns_entry"`
-	ID               types.String   `tfsdk:"id"`
-	Name             types.String   `tfsdk:"name"`
-	Status           types.String   `tfsdk:"status"`
-	Timeouts         timeouts.Value `tfsdk:"timeouts"`
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(5 * time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
+		},
+
+		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"auth_type": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[types.AuthType](),
+			},
+			"certificate_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"custom_domain_name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(3, 255),
+			},
+			"dns_entry": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(3, 40),
+			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
+		},
+
+		CustomizeDiff: verify.SetTagsDiff,
+	}
 }
 
 const (
-	ResNameService       = "Service"
-	serviceCreateTimeout = 30 * time.Minute
-	serviceDeleteTimeout = 30 * time.Minute
+	ResNameService = "Service"
 )
 
-type resourceService struct {
-	framework.ResourceWithConfigure
-}
-
-func (r *resourceService) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_vpclattice_service"
-}
-
-func (r *resourceService) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"auth_type": schema.StringAttribute{
-				Optional:            true,
-				Computed:            true,
-				MarkdownDescription: "Type of IAM policy. Either `NONE` or `AWS_IAM`",
-				Validators: []validator.String{
-					enum.FrameworkValidate[awstypes.AuthType](),
-				},
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"certificate_arn": schema.StringAttribute{
-				Optional:            true,
-				MarkdownDescription: "Amazon Resource Name (ARN) of the certificate",
-			},
-			"custom_domain_name": schema.StringAttribute{
-				Optional:            true,
-				MarkdownDescription: "Custom domain name of the service",
-				Validators: []validator.String{
-					stringvalidator.LengthBetween(3, 255),
-				},
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplaceIfConfigured(),
-				},
-			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "Name of the service. The name must be unique within the account. The valid characters are a-z, 0-9, and hyphens (-). You can't use a hyphen as the first or last character, or immediately after another hyphen.",
-				Validators: []validator.String{
-					stringvalidator.LengthBetween(3, 40),
-				},
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"status": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "Status of the service. If the status is `CREATE_FAILED`, you will have to delete and recreate the service.",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-		},
-		Blocks: map[string]schema.Block{
-			"dns_entry": schema.ListNestedBlock{
-				MarkdownDescription: "Public DNS name of the service",
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"domain_name": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "Domain name of the service",
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
-						},
-						"hosted_zone_id": schema.StringAttribute{
-							Computed:            true,
-							MarkdownDescription: "ID of the hosted zone",
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
-						},
-					},
-				},
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Update: false,
-				Delete: true,
-			}),
-		},
-	}
-}
-
-func (r *resourceService) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan, state resourceServiceData
-
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	createTimeout, diags := plan.Timeouts.Create(ctx, serviceCreateTimeout) // nosemgrep:ci.semgrep.migrate.direct-CRUD-calls
-
-	resp.Diagnostics.Append(diags...)
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, createTimeout)
-	defer cancel()
-
-	conn := r.Meta().VPCLatticeClient()
+func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
 	in := &vpclattice.CreateServiceInput{
 		ClientToken: aws.String(id.UniqueId()),
-		Name:        plan.Name.ValueStringPointer(),
+		Name:        aws.String(d.Get("name").(string)),
 	}
 
-	if !plan.AuthType.IsNull() {
-		in.AuthType = awstypes.AuthType(plan.AuthType.ValueString())
+	if v, ok := d.GetOk("auth_type"); ok {
+		in.AuthType = types.AuthType(v.(string))
 	}
 
-	if !plan.CertificateARN.IsNull() {
-		in.CertificateArn = plan.CertificateARN.ValueStringPointer()
+	if v, ok := d.GetOk("certificate_arn"); ok {
+		in.CertificateArn = aws.String(v.(string))
 	}
 
-	if !plan.CustomDomainName.IsNull() {
-		in.CustomDomainName = plan.CustomDomainName.ValueStringPointer()
+	if v, ok := d.GetOk("custom_domain_name"); ok {
+		in.CustomDomainName = aws.String(v.(string))
+	}
+
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+
+	if len(tags) > 0 {
+		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	out, err := conn.CreateService(ctx, in)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.VPCLattice, create.ErrActionCreating, ResNameService, plan.Name.String(), nil),
-			err.Error(),
-		)
-		return
+		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameService, d.Get("name").(string), err)
 	}
 
-	if _, err := waitServiceCreated(ctx, conn, *out.Id, createTimeout); err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.VPCLattice, create.ErrActionWaitingForCreation, ResNameService, plan.Name.String(), nil),
-			err.Error(),
-		)
-		return
+	if out == nil {
+		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameService, d.Get("name").(string), errors.New("empty output"))
 	}
 
-	state = plan
-	state.ARN = flex.StringToFramework(ctx, out.Arn)
-	state.AuthType = flex.StringToFramework(ctx, (*string)(&out.AuthType))
-	state.CertificateARN = flex.StringToFramework(ctx, out.CertificateArn)
-	state.CustomDomainName = flex.StringToFramework(ctx, out.CustomDomainName)
-	// state.DnsEntry = flattenDNSEntry(ctx, out.DnsEntry)
-	state.ID = flex.StringToFramework(ctx, out.Id)
-	state.Name = flex.StringToFramework(ctx, out.Name)
-	state.Status = flex.StringToFramework(ctx, (*string)(&out.Status))
+	d.SetId(aws.ToString(out.Id))
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	if _, err := waitServiceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return create.DiagError(names.VPCLattice, create.ErrActionWaitingForCreation, ResNameService, d.Id(), err)
+	}
+
+	return resourceServiceRead(ctx, d, meta)
 }
 
-func (r *resourceService) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().VPCLatticeClient()
+func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
-	var state resourceServiceData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
+	out, err := findServiceByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] VPCLattice Service (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	out, err := findServiceByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
-		return
+	if err != nil {
+		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameService, d.Id(), err)
 	}
 
-	state.ARN = flex.StringToFramework(ctx, out.Arn)
-	state.AuthType = flex.StringToFramework(ctx, (*string)(&out.AuthType))
-	state.CertificateARN = flex.StringToFramework(ctx, out.CertificateArn)
-	state.CustomDomainName = flex.StringToFramework(ctx, out.CustomDomainName)
-	// state.DnsEntry = flattenDNSEntry(ctx, out.DnsEntry)
-	state.ID = flex.StringToFramework(ctx, out.Id)
-	state.Name = flex.StringToFramework(ctx, out.Name)
-	state.Status = flex.StringToFramework(ctx, (*string)(&out.Status))
+	d.Set("arn", out.Arn)
+	d.Set("auth_type", out.AuthType)
+	d.Set("certificate_arn", out.CertificateArn)
+	d.Set("custom_domain_name", out.CustomDomainName)
+	d.Set("name", out.Name)
+	d.Set("status", out.Status)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	if err := d.Set("dns_entry", flattenDNSEntry(out.DnsEntry)); err != nil {
+		return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameService, d.Id(), err)
+	}
+
+	tags, err := ListTags(ctx, conn, *out.Arn)
+	if err != nil {
+		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameService, d.Id(), err)
+	}
+
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameService, d.Id(), err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameService, d.Id(), err)
+	}
+
+	return nil
 }
 
-func (r *resourceService) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().VPCLatticeClient()
+func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
-	var plan, state resourceServiceData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if !plan.AuthType.Equal(state.AuthType) ||
-		!plan.CertificateARN.Equal(state.CertificateARN) {
-		input := &vpclattice.UpdateServiceInput{
-			ServiceIdentifier: plan.ID.ValueStringPointer(),
+	if d.HasChangesExcept("tags", "tags_all") {
+		in := &vpclattice.UpdateServiceInput{
+			ServiceIdentifier: aws.String(d.Id()),
 		}
 
-		if !plan.AuthType.Equal(state.AuthType) {
-			input.AuthType = awstypes.AuthType(plan.AuthType.ValueString())
+		if d.HasChanges("auth_type") {
+			in.AuthType = types.AuthType(d.Get("auth_type").(string))
 		}
 
-		if !plan.CertificateARN.Equal(state.CertificateARN) {
-			input.CertificateArn = plan.CertificateARN.ValueStringPointer()
+		if d.HasChanges("certificate_arn") {
+			in.CertificateArn = aws.String(d.Get("certificate_arn").(string))
 		}
 
-		out, err := conn.UpdateService(ctx, input)
-
+		log.Printf("[DEBUG] Updating VPCLattice Service (%s): %#v", d.Id(), in)
+		_, err := conn.UpdateService(ctx, in)
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("updating Security Policy (%s)", plan.Name.ValueString()), err.Error())
-			return
+			return create.DiagError(names.VPCLattice, create.ErrActionUpdating, ResNameService, d.Id(), err)
 		}
-
-		state.AuthType = flex.StringToFramework(ctx, (*string)(&out.AuthType))
-		state.CertificateARN = flex.StringToFramework(ctx, out.CertificateArn)
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return diag.Errorf("updating %s %s (%s) tags: %s", names.VPCLattice, ResNameService, d.Id(), err)
+		}
+	}
+
+	return resourceServiceRead(ctx, d, meta)
 }
 
-func (r *resourceService) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().VPCLatticeClient()
+func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
-	var state resourceServiceData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	deleteTimeout, diags := state.Timeouts.Delete(ctx, serviceDeleteTimeout) // nosemgrep:ci.semgrep.migrate.direct-CRUD-calls
-
-	resp.Diagnostics.Append(diags...)
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, deleteTimeout)
-	defer cancel()
+	log.Printf("[INFO] Deleting VPCLattice Service %s", d.Id())
 
 	_, err := conn.DeleteService(ctx, &vpclattice.DeleteServiceInput{
-		ServiceIdentifier: flex.StringFromFramework(ctx, state.ID),
+		ServiceIdentifier: aws.String(d.Id()),
 	})
+
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
+		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return
+			return nil
 		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.VPCLattice, create.ErrActionDeleting, ResNameService, state.Name.String(), nil),
-			err.Error(),
-		)
+
+		return create.DiagError(names.VPCLattice, create.ErrActionDeleting, ResNameService, d.Id(), err)
 	}
 
-	if _, err := waitServiceDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout); err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.VPCLattice, create.ErrActionWaitingForDeletion, ResNameService, state.Name.String(), nil),
-			err.Error(),
-		)
-		return
+	if _, err := waitServiceDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return create.DiagError(names.VPCLattice, create.ErrActionWaitingForDeletion, ResNameService, d.Id(), err)
+	}
+
+	return nil
+}
+
+func waitServiceCreated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetServiceOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(types.ServiceStatusCreateInProgress),
+		Target:                    enum.Slice(types.ServiceStatusActive),
+		Refresh:                   statusService(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*vpclattice.GetServiceOutput); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitServiceDeleted(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetServiceOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.ServiceStatusDeleteInProgress, types.ServiceStatusActive),
+		Target:  []string{},
+		Refresh: statusService(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*vpclattice.GetServiceOutput); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func statusService(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		out, err := findServiceByID(ctx, conn, id)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return out, string(out.Status), nil
 	}
 }
 
-func (r *resourceService) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+func findServiceByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetServiceOutput, error) {
+	in := &vpclattice.GetServiceInput{
+		ServiceIdentifier: aws.String(id),
+	}
+	out, err := conn.GetService(ctx, in)
+	if err != nil {
+		var nfe *types.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
+		}
+
+		return nil, err
+	}
+
+	if out == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
 }
 
-// var dnsEntryAttrs = map[string]attr.Type{
-// 	"domain_name":    types.StringType,
-// 	"hosted_zone_id": types.StringType,
-// }
+func flattenDNSEntry(apiObject *types.DnsEntry) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
 
-// func flattenDNSEntry(ctx context.Context, dns *awstypes.DnsEntry) types.List {
-// 	elemType := types.ObjectType{AttrTypes: dnsEntryAttrs}
+	m := map[string]interface{}{}
 
-// 	if dns == nil {
-// 		return types.ListNull(elemType)
-// 	}
+	if v := apiObject.DomainName; v != nil {
+		m["domain_name"] = aws.ToString(v)
+	}
 
-// 	attrs := map[string]attr.Value{}
-// 	attrs["domain_name"] = flex.StringToFramework(ctx, dns.DomainName)
-// 	attrs["hosted_zone_id"] = flex.StringToFramework(ctx, dns.HostedZoneId)
+	if v := apiObject.HostedZoneId; v != nil {
+		m["hosted_zone_id"] = aws.ToString(v)
+	}
 
-// 	vals := types.ObjectValueMust(dnsEntryAttrs, attrs)
-
-// 	return types.ListValueMust(elemType, []attr.Value{vals})
-// }
+	return m
+}
