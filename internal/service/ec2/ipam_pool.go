@@ -22,6 +22,7 @@ import (
 )
 
 // @SDKResource("aws_vpc_ipam_pool", name="IPAM Pool")
+// @Tags(identifierAttribute="id")
 func ResourceIPAMPool() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPAMPoolCreate,

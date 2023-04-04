@@ -22,7 +22,7 @@ import (
 )
 
 // @SDKResource("aws_placement_group", name="Placement Group")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="placement_group_id")
 func ResourcePlacementGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePlacementGroupCreate,
