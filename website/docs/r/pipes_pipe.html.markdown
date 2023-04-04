@@ -94,10 +94,14 @@ resource "aws_pipes_pipe" "example" {
 
 The following arguments are required:
 
-* `name` - (Required) Unique name of the pipe.
 * `role_arn` - (Required) ARN of the role that allows the pipe to send data to the target.
 * `source` - (Required) Source resource of the pipe (typically an ARN).
 * `target` - (Required) Target resource of the pipe (typically an ARN).
+
+The following arguments are optional:
+
+* `name` - (Optional) Name of the pipe. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
+* `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 
 ## Attributes Reference
 

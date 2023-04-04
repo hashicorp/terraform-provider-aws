@@ -93,6 +93,78 @@ func TestAccPipesPipe_disappears(t *testing.T) {
 	})
 }
 
+func TestAccPipesPipe_nameGenerated(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var pipe pipes.DescribePipeOutput
+	resourceName := "aws_pipes_pipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPipeConfig_nameGenerated(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", resource.UniqueIdPrefix),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccPipesPipe_namePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var pipe pipes.DescribePipeOutput
+	resourceName := "aws_pipes_pipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPipeConfig_namePrefix("tf-acc-test-prefix-"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckPipeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).PipesClient()
@@ -182,15 +254,7 @@ resource "aws_iam_role" "test" {
 }
 `
 
-func testAccPipeConfig_basic(name string) string {
-	return acctest.ConfigCompose(
-		testAccPipeConfig_base,
-		fmt.Sprintf(`
-locals {
-  name = %[1]q
-}
-`, name),
-		`
+const testAccPipeConfig_base_sqsSource = `
 resource "aws_iam_role_policy" "source" {
   role = aws_iam_role.test.id
   policy = jsonencode({
@@ -211,10 +275,10 @@ resource "aws_iam_role_policy" "source" {
   })
 }
 
-resource "aws_sqs_queue" "source" {
-  name = "${local.name}-source"
-}
+resource "aws_sqs_queue" "source" {}
+`
 
+const testAccPipeConfig_base_sqsTarget = `
 resource "aws_iam_role_policy" "target" {
   role = aws_iam_role.test.id
   policy = jsonencode({
@@ -233,17 +297,55 @@ resource "aws_iam_role_policy" "target" {
   })
 }
 
-resource "aws_sqs_queue" "target" {
-  name = "${local.name}-target"
-}
+resource "aws_sqs_queue" "target" {}
+`
 
+func testAccPipeConfig_basic(name string) string {
+	return acctest.ConfigCompose(
+		testAccPipeConfig_base,
+		testAccPipeConfig_base_sqsSource,
+		testAccPipeConfig_base_sqsTarget,
+		fmt.Sprintf(`
 resource "aws_pipes_pipe" "test" {
   depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
-  name       = local.name
+  name       = %[1]q
+  role_arn   = aws_iam_role.test.arn
+  source     = aws_sqs_queue.source.arn
+  target     = aws_sqs_queue.target.arn
+}
+`, name),
+	)
+}
+
+func testAccPipeConfig_nameGenerated() string {
+	return acctest.ConfigCompose(
+		testAccPipeConfig_base,
+		testAccPipeConfig_base_sqsSource,
+		testAccPipeConfig_base_sqsTarget,
+		`
+resource "aws_pipes_pipe" "test" {
+  depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
   role_arn   = aws_iam_role.test.arn
   source     = aws_sqs_queue.source.arn
   target     = aws_sqs_queue.target.arn
 }
 `,
+	)
+}
+
+func testAccPipeConfig_namePrefix(namePrefix string) string {
+	return acctest.ConfigCompose(
+		testAccPipeConfig_base,
+		testAccPipeConfig_base_sqsSource,
+		testAccPipeConfig_base_sqsTarget,
+		fmt.Sprintf(`
+resource "aws_pipes_pipe" "test" {
+  depends_on  = [aws_iam_role_policy.source, aws_iam_role_policy.target]
+  name_prefix = %[1]q
+  role_arn    = aws_iam_role.test.arn
+  source      = aws_sqs_queue.source.arn
+  target      = aws_sqs_queue.target.arn
+}
+`, namePrefix),
 	)
 }

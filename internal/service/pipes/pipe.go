@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/pipes"
 	"github.com/aws/aws-sdk-go-v2/service/pipes/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -44,9 +45,20 @@ func ResourcePipe() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name_prefix"},
+				ValidateFunc:  validation.StringLenBetween(1, 64),
+			},
+			"name_prefix": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validation.StringLenBetween(1, 64-resource.UniqueIDSuffixLength),
 			},
 			"role_arn": {
 				Type:         schema.TypeString,
@@ -75,7 +87,7 @@ const (
 func resourcePipeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).PipesClient()
 
-	name := d.Get("name").(string)
+	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 
 	input := &pipes.CreatePipeInput{
 		Name:    aws.String(name),
@@ -119,6 +131,7 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	d.Set("arn", output.Arn)
 	d.Set("name", output.Name)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(output.Name)))
 	d.Set("role_arn", output.RoleArn)
 	d.Set("source", output.Source)
 	d.Set("target", output.Target)
