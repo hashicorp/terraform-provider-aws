@@ -171,9 +171,6 @@ func (r *resourceUserPoolClient) Schema(ctx context.Context, request resource.Sc
 			"id_token_validity": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
-				Validators: []validator.Int64{
-					int64validator.Between(1, 86400),
-				},
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.UseStateForUnknown(),
 				},
@@ -217,9 +214,6 @@ func (r *resourceUserPoolClient) Schema(ctx context.Context, request resource.Sc
 			"refresh_token_validity": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
-				Validators: []validator.Int64{
-					int64validator.Between(0, 315360000),
-				},
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.UseStateForUnknown(),
 				},
@@ -495,16 +489,26 @@ func (r *resourceUserPoolClient) ConfigValidators(ctx context.Context) []resourc
 	return []resource.ConfigValidator{
 		accessTokenValidityValidator{
 			validityValidator{
-				attr: "access_token_validity",
-				min:  5 * time.Minute,
-				max:  24 * time.Hour,
+				attr:        "access_token_validity",
+				min:         5 * time.Minute,
+				max:         24 * time.Hour,
+				defaultUnit: time.Hour,
 			},
 		},
 		idTokenValidityValidator{
 			validityValidator{
-				attr: "id_token_validity",
-				min:  5 * time.Minute,
-				max:  24 * time.Hour,
+				attr:        "id_token_validity",
+				min:         5 * time.Minute,
+				max:         24 * time.Hour,
+				defaultUnit: time.Hour,
+			},
+		},
+		refreshTokenValidityValidator{
+			validityValidator{
+				attr:        "refresh_token_validity",
+				min:         60 * time.Minute,
+				max:         315360000 * time.Second,
+				defaultUnit: 24 * time.Hour,
 			},
 		},
 	}
@@ -769,10 +773,28 @@ func (v idTokenValidityValidator) ValidateResource(ctx context.Context, req reso
 	)
 }
 
+var _ resource.ConfigValidator = &refreshTokenValidityValidator{}
+
+type refreshTokenValidityValidator struct {
+	validityValidator
+}
+
+func (v refreshTokenValidityValidator) ValidateResource(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	v.validate(ctx, req, resp,
+		func(rupcd resourceUserPoolClientData) types.Int64 {
+			return rupcd.RefreshTokenValidity
+		},
+		func(tvu *tokenValidityUnits) types.String {
+			return tvu.RefreshToken
+		},
+	)
+}
+
 type validityValidator struct {
-	min  time.Duration
-	max  time.Duration
-	attr string
+	min         time.Duration
+	max         time.Duration
+	attr        string
+	defaultUnit time.Duration
 }
 
 func (v validityValidator) Description(ctx context.Context) string {
@@ -805,7 +827,7 @@ func (v validityValidator) validate(ctx context.Context, req resource.ValidateCo
 		return
 	}
 	if units == nil {
-		duration = time.Duration(val * int64(time.Hour))
+		duration = time.Duration(val * int64(v.defaultUnit))
 	} else {
 		switch aws.ToString(flex.StringFromFramework(ctx, unitF(units))) {
 		case cognitoidentityprovider.TimeUnitsTypeSeconds:

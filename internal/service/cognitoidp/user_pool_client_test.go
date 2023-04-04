@@ -293,6 +293,28 @@ func TestAccCognitoIDPUserPoolClient_refreshTokenValidity(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPUserPoolClient_refreshTokenValidity_error(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolClientDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccUserPoolClientConfig_refreshTokenValidity(rName, 10*365+1),
+				ExpectError: regexp.MustCompile(`Attribute refresh_token_validity must have a duration between 1h0m0s and\s+87600h0m0s,\s+got: 87624h0m0s`),
+			},
+			{
+				Config:      testAccUserPoolClientConfig_refreshTokenValidityUnit(rName, 59, cognitoidentityprovider.TimeUnitsTypeMinutes),
+				ExpectError: regexp.MustCompile(`Attribute refresh_token_validity must have a duration between 1h0m0s and\s+87600h0m0s,\s+got: 59m0s`),
+			},
+		},
+	})
+}
+
 func TestAccCognitoIDPUserPoolClient_tokenValidityUnits(t *testing.T) {
 	ctx := acctest.Context(t)
 	var client cognitoidentityprovider.UserPoolClientType
@@ -1120,11 +1142,29 @@ func testAccUserPoolClientConfig_refreshTokenValidity(rName string, refreshToken
 		testAccUserPoolClientBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_cognito_user_pool_client" "test" {
-  name                   = %[1]q
+  name         = %[1]q
+  user_pool_id = aws_cognito_user_pool.test.id
+
   refresh_token_validity = %[2]d
-  user_pool_id           = aws_cognito_user_pool.test.id
 }
 `, rName, refreshTokenValidity))
+}
+
+func testAccUserPoolClientConfig_refreshTokenValidityUnit(rName string, refreshTokenValidity int, unit string) string {
+	return acctest.ConfigCompose(
+		testAccUserPoolClientBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_cognito_user_pool_client" "test" {
+  name         = %[1]q
+  user_pool_id = aws_cognito_user_pool.test.id
+
+  refresh_token_validity = %[2]d
+
+  token_validity_units {
+    refresh_token = %[3]q
+  }
+}
+`, rName, refreshTokenValidity, unit))
 }
 
 func testAccUserPoolClientConfig_accessTokenValidity(rName string, validity int) string {
