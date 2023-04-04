@@ -8,14 +8,19 @@ FEATURES:
 * **New Data Source:** `aws_oam_link` ([#30401](https://github.com/hashicorp/terraform-provider-aws/issues/30401))
 * **New Data Source:** `aws_oam_links` ([#30401](https://github.com/hashicorp/terraform-provider-aws/issues/30401))
 * **New Resource:** `aws_lightsail_distribution` ([#30124](https://github.com/hashicorp/terraform-provider-aws/issues/30124))
+* **New Resource:** `aws_quicksight_account_subscription` ([#30359](https://github.com/hashicorp/terraform-provider-aws/issues/30359))
 * **New Resource:** `aws_quicksight_data_set` ([#30349](https://github.com/hashicorp/terraform-provider-aws/issues/30349))
 * **New Resource:** `aws_quicksight_folder` ([#30400](https://github.com/hashicorp/terraform-provider-aws/issues/30400))
 
 ENHANCEMENTS:
 
+* data-source/aws_secretsmanager_secret: Add `rotation_rules.duration` and `rotation_rules.schedule_expression` attributes ([#30425](https://github.com/hashicorp/terraform-provider-aws/issues/30425))
+* data-source/aws_secretsmanager_secret_rotation: Add `rotation_rules.duration` and `rotation_rules.schedule_expression` attributes ([#30425](https://github.com/hashicorp/terraform-provider-aws/issues/30425))
 * resource/aws_s3_bucket:  Enable S3-compatible providers with no support for bucket tagging ([#30151](https://github.com/hashicorp/terraform-provider-aws/issues/30151))
 * resource/aws_sagemaker_endpoint_configuration: Add `name_prefix` argument ([#28785](https://github.com/hashicorp/terraform-provider-aws/issues/28785))
 * resource/aws_sagemaker_feature_group: Add `table_format` to the `offline_store_config` configuration block ([#30118](https://github.com/hashicorp/terraform-provider-aws/issues/30118))
+* resource/aws_secretsmanager_secret: Add `duration` and `schedule_expression` attributes to `rotation_rules` configuration block ([#30425](https://github.com/hashicorp/terraform-provider-aws/issues/30425))
+* resource/aws_secretsmanager_secret_rotation: Add `duration` and `schedule_expression` attributes to `rotation_rules` configuration block ([#30425](https://github.com/hashicorp/terraform-provider-aws/issues/30425))
 
 BUG FIXES:
 
