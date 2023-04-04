@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -51,6 +52,12 @@ func ResourcePipe() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "Managed by Terraform",
+			},
+			"desired_state": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          string(types.RequestedPipeStateRunning),
+				ValidateDiagFunc: enum.Validate[types.RequestedPipeState](),
 			},
 			"name": {
 				Type:          schema.TypeString,
@@ -100,10 +107,11 @@ func resourcePipeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 
 	input := &pipes.CreatePipeInput{
-		Name:    aws.String(name),
-		RoleArn: aws.String(d.Get("role_arn").(string)),
-		Source:  aws.String(d.Get("source").(string)),
-		Target:  aws.String(d.Get("target").(string)),
+		DesiredState: types.RequestedPipeState(d.Get("desired_state").(string)),
+		Name:         aws.String(name),
+		RoleArn:      aws.String(d.Get("role_arn").(string)),
+		Source:       aws.String(d.Get("source").(string)),
+		Target:       aws.String(d.Get("target").(string)),
 	}
 
 	if v, ok := d.Get("description").(string); ok {
@@ -152,6 +160,7 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	d.Set("arn", output.Arn)
 	d.Set("description", output.Description)
+	d.Set("desired_state", output.DesiredState)
 	d.Set("name", output.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(output.Name)))
 	d.Set("role_arn", output.RoleArn)
@@ -183,10 +192,11 @@ func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &pipes.UpdatePipeInput{
-			Description: aws.String(d.Get("description").(string)),
-			Name:        aws.String(d.Id()),
-			RoleArn:     aws.String(d.Get("role_arn").(string)),
-			Target:      aws.String(d.Get("target").(string)),
+			Description:  aws.String(d.Get("description").(string)),
+			DesiredState: types.RequestedPipeState(d.Get("desired_state").(string)),
+			Name:         aws.String(d.Id()),
+			RoleArn:      aws.String(d.Get("role_arn").(string)),
+			Target:       aws.String(d.Get("target").(string)),
 		}
 
 		log.Printf("[DEBUG] Updating EventBridge Pipes Pipe (%s): %#v", d.Id(), input)
