@@ -1328,17 +1328,17 @@ func testAccUserPoolClientConfig_emptySets(rName string) string {
 		testAccUserPoolClientBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_cognito_user_pool_client" "test" {
-  name                = %[1]q
-  user_pool_id        = aws_cognito_user_pool.test.id
+  name         = %[1]q
+  user_pool_id = aws_cognito_user_pool.test.id
 
-  allowed_oauth_flows = []
-  allowed_oauth_scopes = []
-  callback_urls = []
-  explicit_auth_flows = []
-  logout_urls = []
-  read_attributes = []
+  allowed_oauth_flows          = []
+  allowed_oauth_scopes         = []
+  callback_urls                = []
+  explicit_auth_flows          = []
+  logout_urls                  = []
+  read_attributes              = []
   supported_identity_providers = []
-  write_attributes = []
+  write_attributes             = []
 }
 `, rName))
 }

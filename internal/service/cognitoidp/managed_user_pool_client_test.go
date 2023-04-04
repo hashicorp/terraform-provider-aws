@@ -1341,17 +1341,17 @@ resource "aws_cognito_managed_user_pool_client" "test" {
     aws_opensearch_domain.test,
   ]
 
-  // allowed_oauth_flows and allowed_oauth_scopes cannot be empty:
-  // > InvalidParameterException: AllowedOAuthFlows and AllowedOAuthScopes are
-  // > required if user pool client is allowed to use OAuth flows.
-  // callback_urls cannot be empty:
-  // > InvalidOAuthFlowException: CallbackUrls can not be empty when code flow
-  // > or implicit flow is selected
-  explicit_auth_flows = []
-  logout_urls = []
-  read_attributes = []
+  # allowed_oauth_flows and allowed_oauth_scopes cannot be empty:
+  # > InvalidParameterException: AllowedOAuthFlows and AllowedOAuthScopes are
+  # > required if user pool client is allowed to use OAuth flows.
+  # callback_urls cannot be empty:
+  # > InvalidOAuthFlowException: CallbackUrls can not be empty when code flow
+  # > or implicit flow is selected
+  explicit_auth_flows          = []
+  logout_urls                  = []
+  read_attributes              = []
   supported_identity_providers = []
-  write_attributes = []
+  write_attributes             = []
 }
 `, rName))
 }
