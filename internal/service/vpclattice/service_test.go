@@ -266,7 +266,7 @@ resource "aws_vpclattice_service" "test" {
   name = %[1]q
 
   tags = {
-	%[2]q = %[3]q
+    %[2]q = %[3]q
   }
 }
 `, rName, tagKey1, tagValue1)
@@ -276,10 +276,10 @@ func testAccServiceConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 st
 	return fmt.Sprintf(`
 resource "aws_vpclattice_service" "test" {
   name = %[1]q
-	
+
   tags = {
-	%[2]q = %[3]q
-	%[4]q = %[5]q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
