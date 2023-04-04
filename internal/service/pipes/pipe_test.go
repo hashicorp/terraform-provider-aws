@@ -48,6 +48,7 @@ func TestAccPipesPipe_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "pipes", regexp.MustCompile(regexp.QuoteMeta(`pipe/`+rName))),
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, "desired_state", "RUNNING"),
+					resource.TestCheckResourceAttr(resourceName, "enrichment", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "source", "aws_sqs_queue.source", "arn"),
@@ -229,6 +230,66 @@ func TestAccPipesPipe_desiredState(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
 					resource.TestCheckResourceAttr(resourceName, "desired_state", "RUNNING"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccPipesPipe_enrichment(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var pipe pipes.DescribePipeOutput
+	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_pipes_pipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPipeConfig_enrichment(name, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					resource.TestCheckResourceAttrPair(resourceName, "enrichment", "aws_cloudwatch_event_api_destination.test.0", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPipeConfig_enrichment(name, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					resource.TestCheckResourceAttrPair(resourceName, "enrichment", "aws_cloudwatch_event_api_destination.test.1", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPipeConfig_basic(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					resource.TestCheckResourceAttr(resourceName, "enrichment", ""),
 				),
 			},
 			{
@@ -659,6 +720,44 @@ resource "aws_pipes_pipe" "test" {
   desired_state = %[2]q
 }
 `, name, state),
+	)
+}
+
+func testAccPipeConfig_enrichment(name string, i int) string {
+	return acctest.ConfigCompose(
+		testAccPipeConfig_base,
+		testAccPipeConfig_base_sqsSource,
+		testAccPipeConfig_base_sqsTarget,
+		fmt.Sprintf(`
+resource "aws_cloudwatch_event_connection" "test" {
+  name               = %[1]q
+  authorization_type = "API_KEY"
+  auth_parameters {
+    api_key {
+      key   = "testKey"
+      value = "testValue"
+    }
+  }
+}
+
+resource "aws_cloudwatch_event_api_destination" "test" {
+  count               = 2
+  name                = "${%[1]q}-${count.index}"
+  invocation_endpoint = "https://example.com/${count.index}"
+  http_method         = "POST"
+  connection_arn      = aws_cloudwatch_event_connection.test.arn
+}
+
+resource "aws_pipes_pipe" "test" {
+  depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
+  name       = %[1]q
+  role_arn   = aws_iam_role.test.arn
+  source     = aws_sqs_queue.source.arn
+  target     = aws_sqs_queue.target.arn
+
+  enrichment = aws_cloudwatch_event_api_destination.test[%[2]d].arn
+}
+`, name, i),
 	)
 }
 

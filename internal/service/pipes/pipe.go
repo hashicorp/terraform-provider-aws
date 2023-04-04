@@ -59,6 +59,11 @@ func ResourcePipe() *schema.Resource {
 				Default:          string(types.RequestedPipeStateRunning),
 				ValidateDiagFunc: enum.Validate[types.RequestedPipeState](),
 			},
+			"enrichment": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(1, 1600),
+			},
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -118,6 +123,10 @@ func resourcePipeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.Description = aws.String(v)
 	}
 
+	if v, ok := d.Get("enrichment").(string); ok && v != "" {
+		input.Enrichment = aws.String(v)
+	}
+
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
@@ -161,6 +170,7 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("arn", output.Arn)
 	d.Set("description", output.Description)
 	d.Set("desired_state", output.DesiredState)
+	d.Set("enrichment", output.Enrichment)
 	d.Set("name", output.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(output.Name)))
 	d.Set("role_arn", output.RoleArn)
@@ -197,6 +207,15 @@ func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			Name:         aws.String(d.Id()),
 			RoleArn:      aws.String(d.Get("role_arn").(string)),
 			Target:       aws.String(d.Get("target").(string)),
+		}
+
+		if d.HasChange("enrichment") {
+			// Reset state in case it's a deletion.
+			input.Enrichment = aws.String("")
+		}
+
+		if v, ok := d.Get("enrichment").(string); ok && v != "" {
+			input.Enrichment = aws.String(v)
 		}
 
 		log.Printf("[DEBUG] Updating EventBridge Pipes Pipe (%s): %#v", d.Id(), input)
