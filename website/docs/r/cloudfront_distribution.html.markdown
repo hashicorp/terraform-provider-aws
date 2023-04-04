@@ -210,7 +210,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   # AWS Managed Caching Polify (CachingDisabled)
   default_cache_behavior {
     # Using the CachingDisabled managed policy ID:
-    cache_policy_id  = "4135ea2d-6df8-44a3-9df3-4b5a84be39a"
+    cache_policy_id  = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
     path_pattern     = "/content/*"
     target_origin_id = local.s3_origin_id
