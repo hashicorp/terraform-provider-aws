@@ -842,6 +842,10 @@ func expandWebACLRules(l []interface{}) []*wafv2.Rule {
 	return rules
 }
 
+func expandTokenDomains(s *schema.Set) []*string {
+	return flex.ExpandStringSet(s)
+}
+
 func expandWebACLRule(m map[string]interface{}) *wafv2.Rule {
 	if m == nil {
 		return nil

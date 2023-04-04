@@ -2240,6 +2240,52 @@ func TestAccWAFV2WebACL_Operators_maxNested(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2WebACL_tokenDomains(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v wafv2.WebACL
+	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domain1 := "mywebsite.com"
+	domain2 := "myotherwebsite.com"
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_tokenDomains(webACLName, domain1, domain2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "description", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "token_domains.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "token_domains.*", domain1),
+					resource.TestCheckTypeSetElemAttr(resourceName, "token_domains.*", domain2),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
 func testAccCheckWebACLDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
@@ -4331,4 +4377,25 @@ resource "aws_wafv2_web_acl" "test" {
   }
 }
 `, name)
+}
+
+func testAccWebACLConfig_tokenDomains(name, domain1, domain2 string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  token_domains = [%[2]q, %[3]q]
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name, domain1, domain2)
 }
