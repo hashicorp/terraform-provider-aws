@@ -10,12 +10,83 @@ description: |-
 
 Terraform resource for managing an AWS EventBridge Pipes Pipe.
 
+You can find out more about EventBridge Pipes in the [User Guide](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-pipes.html).
+
+~> **Note:** EventBridge was formerly known as CloudWatch Events. The functionality is identical.
+
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
+data "aws_caller_identity" "main" {}
+
+resource "aws_iam_role" "test" {
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = {
+      Effect = "Allow"
+      Action = "sts:AssumeRole"
+      Principal = {
+        Service = "pipes.amazonaws.com"
+      }
+      Condition = {
+        StringEquals = {
+          "aws:SourceAccount" = data.aws_caller_identity.main.account_id
+        }
+      }
+    }
+  })
+}
+
+resource "aws_iam_role_policy" "source" {
+  role = aws_iam_role.test.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "sqs:DeleteMessage",
+          "sqs:GetQueueAttributes",
+          "sqs:ReceiveMessage",
+        ],
+        Resource = [
+          aws_sqs_queue.source.arn,
+        ]
+      },
+    ]
+  })
+}
+
+resource "aws_sqs_queue" "source" {}
+
+resource "aws_iam_role_policy" "target" {
+  role = aws_iam_role.test.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "sqs:SendMessage",
+        ],
+        Resource = [
+          aws_sqs_queue.target.arn,
+        ]
+      },
+    ]
+  })
+}
+
+resource "aws_sqs_queue" "target" {}
+
 resource "aws_pipes_pipe" "example" {
+  depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
+  name       = "example-pipe"
+  role_arn   = aws_iam_role.example.arn
+  source     = aws_sqs_queue.source.arn
+  target     = aws_sqs_queue.target.arn
 }
 ```
 
@@ -23,31 +94,30 @@ resource "aws_pipes_pipe" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-
-The following arguments are optional:
-
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `name` - (Required) Unique name of the pipe.
+* `role_arn` - (Required) ARN of the role that allows the pipe to send data to the target.
+* `source` - (Required) Source resource of the pipe (typically an ARN).
+* `target` - (Required) Target resource of the pipe (typically an ARN).
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - ARN of the Pipe. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `arn` - ARN of this pipe.
+* `id` - Same as `name`.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
-EventBridge Pipes Pipe can be imported using the `example_id_arg`, e.g.,
+Pipes can be imported using the `name`. For example:
 
 ```
-$ terraform import aws_pipes_pipe.example rft-8012925589
+$ terraform import aws_pipes_pipe.example my-pipe
 ```
