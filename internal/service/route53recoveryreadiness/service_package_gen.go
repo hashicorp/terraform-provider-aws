@@ -28,10 +28,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceCell,
 			TypeName: "aws_route53recoveryreadiness_cell",
+			Name:     "Cell",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceReadinessCheck,
 			TypeName: "aws_route53recoveryreadiness_readiness_check",
+			Name:     "Readiness Check",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceRecoveryGroup,
