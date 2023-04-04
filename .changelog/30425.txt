@@ -9,3 +9,7 @@ resource/aws_secretsmanager_secret_rotation: Add `duration` and `schedule_expres
 ```release-note:enhancement
 data-source/aws_secretsmanager_secret: Add `rotation_rules.duration` and `rotation_rules.schedule_expression` attributes
 ```
+
+```release-note:enhancement
+data-source/aws_secretsmanager_secret_rotation: Add `rotation_rules.duration` and `rotation_rules.schedule_expression` attributes
+```
