@@ -49,8 +49,8 @@ In addition to all arguments above, the following attributes are exported:
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30m`)
-* `delete` - (Default `30m`)
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 
