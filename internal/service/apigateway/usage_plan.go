@@ -113,8 +113,8 @@ func ResourceUsagePlan() *schema.Resource {
 					},
 				},
 			},
-			names.AttrTags:tftags.TagsSchema(),
-names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"throttle_settings": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
