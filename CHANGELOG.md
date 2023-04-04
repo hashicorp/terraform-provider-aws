@@ -7,6 +7,7 @@ FEATURES:
 * **New Data Source:** `aws_ec2_transit_gateway_route_table_propagations` ([#29640](https://github.com/hashicorp/terraform-provider-aws/issues/29640))
 * **New Data Source:** `aws_oam_link` ([#30401](https://github.com/hashicorp/terraform-provider-aws/issues/30401))
 * **New Data Source:** `aws_oam_links` ([#30401](https://github.com/hashicorp/terraform-provider-aws/issues/30401))
+* **New Data Source:** `aws_quicksight_data_set` ([#30422](https://github.com/hashicorp/terraform-provider-aws/issues/30422))
 * **New Resource:** `aws_lightsail_distribution` ([#30124](https://github.com/hashicorp/terraform-provider-aws/issues/30124))
 * **New Resource:** `aws_quicksight_account_subscription` ([#30359](https://github.com/hashicorp/terraform-provider-aws/issues/30359))
 * **New Resource:** `aws_quicksight_data_set` ([#30349](https://github.com/hashicorp/terraform-provider-aws/issues/30349))
