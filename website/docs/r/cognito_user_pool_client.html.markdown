@@ -136,7 +136,9 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `access_token_validity` - (Optional) Time limit, between 5 minutes and 1 day, after which the access token is no longer valid and cannot be used. This value will be overridden if you have entered a value in `token_validity_units`.
+* `access_token_validity` - (Optional) Time limit, between 5 minutes and 1 day, after which the access token is no longer valid and cannot be used.
+  By default, the unit is a hour.
+  The unit can be overridden by a value in `token_validity_units.access_token`.
 * `allowed_oauth_flows_user_pool_client` - (Optional) Whether the client is allowed to follow the OAuth protocol when interacting with Cognito user pools.
 * `allowed_oauth_flows` - (Optional) List of allowed OAuth flows (code, implicit, client_credentials).
 * `allowed_oauth_scopes` - (Optional) List of allowed OAuth scopes (phone, email, openid, profile, and aws.cognito.signin.user.admin).

@@ -157,6 +157,32 @@ func TestAccCognitoIDPUserPoolClient_accessTokenValidity(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPUserPoolClient_accessTokenValidity_error(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolClientDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccUserPoolClientConfig_accessTokenValidity(rName, 25),
+				ExpectError: regexp.MustCompile(`Attribute access_token_validity must have a duration between 5m0s and\s+24h0m0s, got: 25h0m0s`),
+			},
+			{
+				Config:      testAccUserPoolClientConfig_accessTokenValidityUnit(rName, 2, cognitoidentityprovider.TimeUnitsTypeDays),
+				ExpectError: regexp.MustCompile(`Attribute access_token_validity must have a duration between 5m0s and\s+24h0m0s, got: 48h0m0s`),
+			},
+			{
+				Config:      testAccUserPoolClientConfig_accessTokenValidityUnit(rName, 4, cognitoidentityprovider.TimeUnitsTypeMinutes),
+				ExpectError: regexp.MustCompile(`Attribute access_token_validity must have a duration between 5m0s and\s+24h0m0s, got: 4m0s`),
+			},
+		},
+	})
+}
+
 func TestAccCognitoIDPUserPoolClient_idTokenValidity(t *testing.T) {
 	ctx := acctest.Context(t)
 	var client cognitoidentityprovider.UserPoolClientType
@@ -1080,11 +1106,29 @@ func testAccUserPoolClientConfig_accessTokenValidity(rName string, validity int)
 		testAccUserPoolClientBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_cognito_user_pool_client" "test" {
-  name                  = %[1]q
+  name         = %[1]q
+  user_pool_id = aws_cognito_user_pool.test.id
+
   access_token_validity = %[2]d
-  user_pool_id          = aws_cognito_user_pool.test.id
 }
 `, rName, validity))
+}
+
+func testAccUserPoolClientConfig_accessTokenValidityUnit(rName string, validity int, unit string) string {
+	return acctest.ConfigCompose(
+		testAccUserPoolClientBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_cognito_user_pool_client" "test" {
+  name         = %[1]q
+  user_pool_id = aws_cognito_user_pool.test.id
+
+  access_token_validity = %[2]d
+
+  token_validity_units {
+    access_token = %[3]q
+  }
+}
+`, rName, validity, unit))
 }
 
 func testAccUserPoolClientConfig_idTokenValidity(rName string, validity int) string {

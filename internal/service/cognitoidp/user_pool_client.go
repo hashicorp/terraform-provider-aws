@@ -6,8 +6,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -57,9 +59,6 @@ func (r *resourceUserPoolClient) Schema(ctx context.Context, request resource.Sc
 			"access_token_validity": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
-				Validators: []validator.Int64{
-					int64validator.Between(1, 86400),
-				},
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.UseStateForUnknown(),
 				},
@@ -492,6 +491,15 @@ func (r *resourceUserPoolClient) ImportState(ctx context.Context, request resour
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("user_pool_id"), userPoolId)...)
 }
 
+func (r *resourceUserPoolClient) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
+	return []resource.ConfigValidator{
+		accessTokenValidityValidator{
+			min: 5 * time.Minute,
+			max: 24 * time.Hour,
+		},
+	}
+}
+
 type resourceUserPoolClientData struct {
 	AccessTokenValidity                      types.Int64  `tfsdk:"access_token_validity"`
 	AllowedOauthFlows                        types.Set    `tfsdk:"allowed_oauth_flows"`
@@ -708,4 +716,61 @@ func flattenTokenValidityUnits(ctx context.Context, tvu *cognitoidentityprovider
 	val := types.ObjectValueMust(attributeTypes, attrs)
 
 	return types.ListValueMust(elemType, []attr.Value{val})
+}
+
+var _ resource.ConfigValidator = &accessTokenValidityValidator{}
+
+type accessTokenValidityValidator struct {
+	min time.Duration
+	max time.Duration
+}
+
+func (v accessTokenValidityValidator) Description(ctx context.Context) string {
+	return v.MarkdownDescription(ctx)
+}
+
+func (v accessTokenValidityValidator) MarkdownDescription(_ context.Context) string {
+	return fmt.Sprintf("must have a duration between %s and %s", v.min, v.max)
+}
+
+func (v accessTokenValidityValidator) ValidateResource(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var config resourceUserPoolClientData
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if config.AccessTokenValidity.IsUnknown() || config.AccessTokenValidity.IsNull() {
+		return
+	}
+
+	atv := time.Duration(aws.ToInt64(flex.Int64FromFramework(ctx, config.AccessTokenValidity)))
+	duration := atv * time.Hour
+
+	var units []tokenValidityUnits
+	resp.Diagnostics.Append(config.TokenValidityUnits.ElementsAs(ctx, &units, false)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if len(units) == 1 {
+		switch aws.ToString(flex.StringFromFramework(ctx, units[0].AccessToken)) {
+		case cognitoidentityprovider.TimeUnitsTypeSeconds:
+			duration = atv * time.Second
+		case cognitoidentityprovider.TimeUnitsTypeMinutes:
+			duration = atv * time.Minute
+		case cognitoidentityprovider.TimeUnitsTypeHours:
+			duration = atv * time.Hour
+		case cognitoidentityprovider.TimeUnitsTypeDays:
+			duration = atv * time.Hour * 24
+		}
+	}
+
+	if duration < v.min || duration > v.max {
+		resp.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
+			path.Root("access_token_validity"),
+			v.Description(ctx),
+			fmt.Sprintf("%s", duration),
+		))
+	}
 }
