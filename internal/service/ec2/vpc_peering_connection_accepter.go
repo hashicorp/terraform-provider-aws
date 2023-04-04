@@ -13,9 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpc_peering_connection_accepter")
+// @SDKResource("aws_vpc_peering_connection_accepter", name="VPC Peering Connection")
+// @Tags(identifierAttribute="id")
 func ResourceVPCPeeringConnectionAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCPeeringAccepterCreate,
@@ -65,9 +67,9 @@ func ResourceVPCPeeringConnectionAccepter() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"requester": vpcPeeringConnectionOptionsSchema,
-			"tags":      tftags.TagsSchema(),
-			"tags_all":  tftags.TagsSchemaComputed(),
+			"requester":       vpcPeeringConnectionOptionsSchema,
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -86,8 +88,6 @@ func ResourceVPCPeeringConnectionAccepter() *schema.Resource {
 func resourceVPCPeeringAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if peeringConnectionOptionsAllowsClassicLink(d) {
 		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic no VPC Peering Connections can be accepted with ClassicLink options enabled`)
@@ -114,7 +114,7 @@ func resourceVPCPeeringAccepterCreate(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if len(tags) > 0 {
+	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
 		if err := CreateTags(ctx, conn, d.Id(), tags.Map()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating EC2 VPC Peering Connection (%s) tags: %s", d.Id(), err)
 		}

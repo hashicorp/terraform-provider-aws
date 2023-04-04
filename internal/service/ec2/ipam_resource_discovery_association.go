@@ -17,9 +17,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpc_ipam_resource_discovery_association")
+// @SDKResource("aws_vpc_ipam_resource_discovery_association", name="IPAM Resource Discovery Association")
+// @Tags(identifierAttribute="id")
 func ResourceIPAMResourceDiscoveryAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPAMResourceDiscoveryAssociationCreate,
@@ -72,8 +74,8 @@ func ResourceIPAMResourceDiscoveryAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -81,8 +83,6 @@ func ResourceIPAMResourceDiscoveryAssociation() *schema.Resource {
 func resourceIPAMResourceDiscoveryAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	ipamID := d.Get("ipam_id").(string)
 	ipamResourceDiscoveryID := d.Get("ipam_resource_discovery_id").(string)
@@ -90,7 +90,7 @@ func resourceIPAMResourceDiscoveryAssociationCreate(ctx context.Context, d *sche
 		ClientToken:             aws.String(id.UniqueId()),
 		IpamId:                  aws.String(ipamID),
 		IpamResourceDiscoveryId: aws.String(ipamResourceDiscoveryID),
-		TagSpecifications:       tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeIpamResourceDiscoveryAssociation),
+		TagSpecifications:       getTagSpecificationsIn(ctx, ec2.ResourceTypeIpamResourceDiscoveryAssociation),
 	}
 
 	output, err := conn.AssociateIpamResourceDiscoveryWithContext(ctx, input)
@@ -111,8 +111,6 @@ func resourceIPAMResourceDiscoveryAssociationCreate(ctx context.Context, d *sche
 func resourceIPAMResourceDiscoveryAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	rda, err := FindIPAMResourceDiscoveryAssociationByID(ctx, conn, d.Id())
 
@@ -135,33 +133,17 @@ func resourceIPAMResourceDiscoveryAssociationRead(ctx context.Context, d *schema
 	d.Set("owner_id", rda.OwnerId)
 	d.Set("state", rda.State)
 
-	tags := KeyValueTags(ctx, rda.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, rda.Tags)
 
 	return nil
 }
 
 func resourceIPAMResourceDiscoveryAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	// Tags only.
 
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating IPAM Resource Discovery Association (%s) tags: %s", d.Id(), err)
-		}
-	}
-
-	return nil
+	return append(diags, resourceIPAMResourceDiscoveryAssociationRead(ctx, d, meta)...)
 }
 
 func resourceIPAMResourceDiscoveryAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

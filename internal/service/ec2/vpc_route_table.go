@@ -20,6 +20,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 var routeTableValidDestinations = []string{
@@ -42,7 +43,8 @@ var routeTableValidTargets = []string{
 	"vpc_peering_connection_id",
 }
 
-// @SDKResource("aws_route_table")
+// @SDKResource("aws_route_table", name="Route Table")
+// @Tags(identifierAttribute="id")
 func ResourceRouteTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteTableCreate,
@@ -156,8 +158,8 @@ func ResourceRouteTable() *schema.Resource {
 				Set: resourceRouteTableHash,
 			},
 
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 
 			"vpc_id": {
 				Type:     schema.TypeString,
@@ -173,12 +175,10 @@ func ResourceRouteTable() *schema.Resource {
 func resourceRouteTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateRouteTableInput{
 		VpcId:             aws.String(d.Get("vpc_id").(string)),
-		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeRouteTable),
+		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeRouteTable),
 	}
 
 	log.Printf("[DEBUG] Creating Route Table: %s", input)
@@ -220,8 +220,6 @@ func resourceRouteTableCreate(ctx context.Context, d *schema.ResourceData, meta 
 func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	routeTable, err := FindRouteTableByID(ctx, conn, d.Id())
 
@@ -249,17 +247,8 @@ func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting route: %s", err)
 	}
 
-	//Ignore the AmazonFSx service tag in addition to standard ignores
-	tags := KeyValueTags(ctx, routeTable.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Ignore(tftags.New(ctx, []string{"AmazonFSx"}))
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	//Ignore the AmazonFSx service tag in addition to standard ignores.
+	SetTagsOut(ctx, Tags(KeyValueTags(ctx, routeTable.Tags).Ignore(tftags.New(ctx, []string{"AmazonFSx"}))))
 
 	ownerID := aws.StringValue(routeTable.OwnerId)
 	arn := arn.ARN{

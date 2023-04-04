@@ -15,9 +15,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_nat_gateway")
+// @SDKResource("aws_nat_gateway", name="NAT Gateway")
+// @Tags(identifierAttribute="id")
 func ResourceNATGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNATGatewayCreate,
@@ -62,8 +64,8 @@ func ResourceNATGateway() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -72,12 +74,10 @@ func ResourceNATGateway() *schema.Resource {
 
 func resourceNATGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateNatGatewayInput{
 		ClientToken:       aws.String(id.UniqueId()),
-		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeNatgateway),
+		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeNatgateway),
 	}
 
 	if v, ok := d.GetOk("allocation_id"); ok {
@@ -113,8 +113,6 @@ func resourceNATGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	ng, err := FindNATGatewayByID(ctx, conn, d.Id())
 
@@ -136,31 +134,13 @@ func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("public_ip", address.PublicIp)
 	d.Set("subnet_id", ng.SubnetId)
 
-	tags := KeyValueTags(ctx, ng.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, ng.Tags)
 
 	return nil
 }
 
 func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("updating EC2 NAT Gateway (%s) tags: %s", d.Id(), err)
-		}
-	}
-
+	// Tags only.
 	return resourceNATGatewayRead(ctx, d, meta)
 }
 
