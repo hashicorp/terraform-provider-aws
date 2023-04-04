@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -670,7 +669,7 @@ func ClusterIDRegionFromARN(arnID string) (string, string, error) {
 			return "", "", fmt.Errorf("could not get DB Cluster ID from parsing ARN (%s): %w", arnID, err)
 		}
 
-		if parsedARN.Service != endpoints.RdsServiceID || parts[0] != "cluster" {
+		if parsedARN.Service != rds.EndpointsID || parts[0] != "cluster" {
 			return "", "", fmt.Errorf("wrong ARN (%s) for a DB Cluster", arnID)
 		}
 
