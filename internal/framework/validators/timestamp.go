@@ -5,7 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/timestamp"
 )
 
 type utcTimestampValidator struct{}
@@ -23,7 +23,8 @@ func (validator utcTimestampValidator) ValidateString(ctx context.Context, reque
 		return
 	}
 
-	if err := verify.ValidateUTCTimestamp(request.ConfigValue.ValueString()); err != nil {
+	t := timestamp.New(request.ConfigValue.ValueString())
+	if err := t.ValidateUTCFormat(); err != nil {
 		response.Diagnostics.Append(diag.NewAttributeErrorDiagnostic(
 			request.Path,
 			validator.Description(ctx),
@@ -52,7 +53,8 @@ func (validator onceADayWindowFormatValidator) ValidateString(ctx context.Contex
 		return
 	}
 
-	if err := verify.ValidateOnceADayWindowFormat(request.ConfigValue.ValueString()); err != nil {
+	t := timestamp.New(request.ConfigValue.ValueString())
+	if err := t.ValidateOnceADayWindowFormat(); err != nil {
 		response.Diagnostics.Append(diag.NewAttributeErrorDiagnostic(
 			request.Path,
 			validator.Description(ctx),
@@ -81,7 +83,8 @@ func (validator onceAWeekWindowFormatValidator) ValidateString(ctx context.Conte
 		return
 	}
 
-	if err := verify.ValidateOnceAWeekWindowFormat(request.ConfigValue.ValueString()); err != nil {
+	t := timestamp.New(request.ConfigValue.ValueString())
+	if err := t.ValidateOnceAWeekWindowFormat(); err != nil {
 		response.Diagnostics.Append(diag.NewAttributeErrorDiagnostic(
 			request.Path,
 			validator.Description(ctx),

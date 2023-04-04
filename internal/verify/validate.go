@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/timestamp"
 )
 
 var accountIDRegexp = regexp.MustCompile(`^(aws|aws-managed|third-party|\d{12})$`)
@@ -294,22 +295,11 @@ func ValidMulticastIPAddress(v interface{}, k string) (ws []string, errors []err
 	return
 }
 
-func ValidateOnceADayWindowFormat(value string) error {
-	// valid time format is "hh24:mi"
-	validTimeFormat := "([0-1][0-9]|2[0-3]):([0-5][0-9])"
-	validTimeFormatConsolidated := "^(" + validTimeFormat + "-" + validTimeFormat + "|)$"
-
-	if !regexp.MustCompile(validTimeFormatConsolidated).MatchString(value) {
-		return fmt.Errorf("(%s) must satisfy the format of \"hh24:mi-hh24:mi\"", value)
-	}
-
-	return nil
-}
-
 func ValidOnceADayWindowFormat(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
-	if err := ValidateOnceADayWindowFormat(value); err != nil {
+	t := timestamp.New(value)
+	if err := t.ValidateOnceADayWindowFormat(); err != nil {
 		errors = append(errors, err)
 		return
 	}
@@ -317,23 +307,11 @@ func ValidOnceADayWindowFormat(v interface{}, k string) (ws []string, errors []e
 	return
 }
 
-func ValidateOnceAWeekWindowFormat(value string) error {
-	// valid time format is "ddd:hh24:mi"
-	validTimeFormat := "(sun|mon|tue|wed|thu|fri|sat):([0-1][0-9]|2[0-3]):([0-5][0-9])"
-	validTimeFormatConsolidated := "^(" + validTimeFormat + "-" + validTimeFormat + "|)$"
-
-	val := strings.ToLower(value)
-	if !regexp.MustCompile(validTimeFormatConsolidated).MatchString(val) {
-		return fmt.Errorf("(%s) must satisfy the format of \"ddd:hh24:mi-ddd:hh24:mi\"", val)
-	}
-
-	return nil
-}
-
 func ValidOnceAWeekWindowFormat(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
-	if err := ValidateOnceAWeekWindowFormat(value); err != nil {
+	t := timestamp.New(value)
+	if err := t.ValidateOnceAWeekWindowFormat(); err != nil {
 		errors = append(errors, err)
 		return
 	}
@@ -389,21 +367,14 @@ func ValidTypeStringNullableFloat(v interface{}, k string) (ws []string, es []er
 	return
 }
 
-func ValidateUTCTimestamp(value string) error {
-	_, err := time.Parse(time.RFC3339, value)
-	if err != nil {
-		return fmt.Errorf("must be in RFC3339 time format %q. Example: %s", time.RFC3339, err)
-	}
-
-	return nil
-}
-
 // ValidUTCTimestamp validates a string in UTC Format required by APIs including:
 // https://docs.aws.amazon.com/iot/latest/apireference/API_CloudwatchMetricAction.html
 // https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBInstanceToPointInTime.html
 func ValidUTCTimestamp(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if err := ValidateUTCTimestamp(value); err != nil {
+
+	t := timestamp.New(value)
+	if err := t.ValidateUTCFormat(); err != nil {
 		errors = append(errors, err)
 		return
 	}
