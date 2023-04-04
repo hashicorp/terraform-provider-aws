@@ -411,7 +411,7 @@ Once the debugger has stopped at a breakpoint, you can control how it continues 
 
 From left to right, the controls are as follows:
 
-1. Pause (_i.e._, two vertical lines) pauses execution whereever it happens to be when you click pause
+1. Pause (_i.e._, two vertical lines) pauses execution wherever it happens to be when you click pause
 2. Step over (_i.e._, dot with a curved arrow above it) goes to the next statement but will not follow execution inside functions
 3. Step into (_i.e._, dot with an arrow pointing down) goes to the next statement, following execution inside functions
 4. Step out (_i.e._, dot with an arrow pointing up) goes to the next statement in the calling function skipping the rest of the execution in the current function
