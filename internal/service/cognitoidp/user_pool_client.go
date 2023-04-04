@@ -497,6 +497,10 @@ func (r *resourceUserPoolClient) ConfigValidators(ctx context.Context) []resourc
 			min: 5 * time.Minute,
 			max: 24 * time.Hour,
 		},
+		idTokenValidityValidator{
+			min: 5 * time.Minute,
+			max: 24 * time.Hour,
+		},
 	}
 }
 
@@ -744,8 +748,8 @@ func (v accessTokenValidityValidator) ValidateResource(ctx context.Context, req 
 		return
 	}
 
-	atv := time.Duration(aws.ToInt64(flex.Int64FromFramework(ctx, config.AccessTokenValidity)))
-	duration := atv * time.Hour
+	atv := aws.ToInt64(flex.Int64FromFramework(ctx, config.AccessTokenValidity))
+	duration := time.Duration(atv * int64(time.Hour))
 
 	var units []tokenValidityUnits
 	resp.Diagnostics.Append(config.TokenValidityUnits.ElementsAs(ctx, &units, false)...)
@@ -756,13 +760,13 @@ func (v accessTokenValidityValidator) ValidateResource(ctx context.Context, req 
 	if len(units) == 1 {
 		switch aws.ToString(flex.StringFromFramework(ctx, units[0].AccessToken)) {
 		case cognitoidentityprovider.TimeUnitsTypeSeconds:
-			duration = atv * time.Second
+			duration = time.Duration(atv * int64(time.Second))
 		case cognitoidentityprovider.TimeUnitsTypeMinutes:
-			duration = atv * time.Minute
+			duration = time.Duration(atv * int64(time.Minute))
 		case cognitoidentityprovider.TimeUnitsTypeHours:
-			duration = atv * time.Hour
+			duration = time.Duration(atv * int64(time.Hour))
 		case cognitoidentityprovider.TimeUnitsTypeDays:
-			duration = atv * time.Hour * 24
+			duration = time.Duration(atv * 24 * int64(time.Hour))
 		}
 	}
 
@@ -770,7 +774,64 @@ func (v accessTokenValidityValidator) ValidateResource(ctx context.Context, req 
 		resp.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
 			path.Root("access_token_validity"),
 			v.Description(ctx),
-			fmt.Sprintf("%s", duration),
+			duration.String(),
+		))
+	}
+}
+
+var _ resource.ConfigValidator = &idTokenValidityValidator{}
+
+type idTokenValidityValidator struct {
+	min time.Duration
+	max time.Duration
+}
+
+func (v idTokenValidityValidator) Description(ctx context.Context) string {
+	return v.MarkdownDescription(ctx)
+}
+
+func (v idTokenValidityValidator) MarkdownDescription(_ context.Context) string {
+	return fmt.Sprintf("must have a duration between %s and %s", v.min, v.max)
+}
+
+func (v idTokenValidityValidator) ValidateResource(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var config resourceUserPoolClientData
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if config.IdTokenValidity.IsUnknown() || config.IdTokenValidity.IsNull() {
+		return
+	}
+
+	itv := aws.ToInt64(flex.Int64FromFramework(ctx, config.IdTokenValidity))
+	duration := time.Duration(itv * int64(time.Hour))
+
+	var units []tokenValidityUnits
+	resp.Diagnostics.Append(config.TokenValidityUnits.ElementsAs(ctx, &units, false)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if len(units) == 1 {
+		switch aws.ToString(flex.StringFromFramework(ctx, units[0].IdToken)) {
+		case cognitoidentityprovider.TimeUnitsTypeSeconds:
+			duration = time.Duration(itv * int64(time.Second))
+		case cognitoidentityprovider.TimeUnitsTypeMinutes:
+			duration = time.Duration(itv * int64(time.Minute))
+		case cognitoidentityprovider.TimeUnitsTypeHours:
+			duration = time.Duration(itv * int64(time.Hour))
+		case cognitoidentityprovider.TimeUnitsTypeDays:
+			duration = time.Duration(itv * 24 * int64(time.Hour))
+		}
+	}
+
+	if duration < v.min || duration > v.max {
+		resp.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
+			path.Root("id_token_validity"),
+			v.Description(ctx),
+			duration.String(),
 		))
 	}
 }
