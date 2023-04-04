@@ -103,6 +103,7 @@ The following arguments are optional:
 * `description` - (Optional) A description of the pipe. At most 512 characters.
 * `name` - (Optional) Name of the pipe. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
@@ -110,6 +111,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of this pipe.
 * `id` - Same as `name`.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 

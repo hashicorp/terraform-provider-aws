@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -38,6 +39,8 @@ func ResourcePipe() *schema.Resource {
 			Update: schema.DefaultTimeout(30 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -76,6 +79,8 @@ func ResourcePipe() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1600),
 			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"target": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -103,6 +108,13 @@ func resourcePipeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if v, ok := d.Get("description").(string); ok {
 		input.Description = aws.String(v)
+	}
+
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	output, err := conn.CreatePipe(ctx, input)
@@ -146,29 +158,55 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("source", output.Source)
 	d.Set("target", output.Target)
 
+	tags, err := ListTags(ctx, conn, aws.ToString(output.Arn))
+	if err != nil {
+		return create.DiagError(names.Pipes, create.ErrActionReading, ResNamePipe, d.Id(), err)
+	}
+
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return create.DiagError(names.Pipes, create.ErrActionSetting, ResNamePipe, d.Id(), err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return create.DiagError(names.Pipes, create.ErrActionSetting, ResNamePipe, d.Id(), err)
+	}
+
 	return nil
 }
 
 func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).PipesClient()
 
-	input := &pipes.UpdatePipeInput{
-		Description: aws.String(d.Get("description").(string)),
-		Name:        aws.String(d.Id()),
-		RoleArn:     aws.String(d.Get("role_arn").(string)),
-		Target:      aws.String(d.Get("target").(string)),
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &pipes.UpdatePipeInput{
+			Description: aws.String(d.Get("description").(string)),
+			Name:        aws.String(d.Id()),
+			RoleArn:     aws.String(d.Get("role_arn").(string)),
+			Target:      aws.String(d.Get("target").(string)),
+		}
+
+		log.Printf("[DEBUG] Updating EventBridge Pipes Pipe (%s): %#v", d.Id(), input)
+
+		output, err := conn.UpdatePipe(ctx, input)
+
+		if err != nil {
+			return create.DiagError(names.Pipes, create.ErrActionUpdating, ResNamePipe, d.Id(), err)
+		}
+
+		if _, err := waitPipeUpdated(ctx, conn, aws.ToString(output.Name), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return create.DiagError(names.Pipes, create.ErrActionWaitingForUpdate, ResNamePipe, d.Id(), err)
+		}
 	}
 
-	log.Printf("[DEBUG] Updating EventBridge Pipes Pipe (%s): %#v", d.Id(), input)
-
-	output, err := conn.UpdatePipe(ctx, input)
-
-	if err != nil {
-		return create.DiagError(names.Pipes, create.ErrActionUpdating, ResNamePipe, d.Id(), err)
-	}
-
-	if _, err := waitPipeUpdated(ctx, conn, aws.ToString(output.Name), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return create.DiagError(names.Pipes, create.ErrActionWaitingForUpdate, ResNamePipe, d.Id(), err)
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return diag.Errorf("error updating EventBridge Pipes Pipe (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	return resourcePipeRead(ctx, d, meta)

@@ -50,6 +50,7 @@ func TestAccPipesPipe_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "source", "aws_sqs_queue.source", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "target", "aws_sqs_queue.target", "arn"),
 				),
 			},
@@ -227,6 +228,70 @@ func TestAccPipesPipe_namePrefix(t *testing.T) {
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccPipesPipe_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var pipe pipes.DescribePipeOutput
+	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_pipes_pipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPipeConfig_tags1(name, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPipeConfig_tags2(name, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPipeConfig_tags1(name, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
@@ -439,5 +504,48 @@ resource "aws_pipes_pipe" "test" {
   target      = aws_sqs_queue.target.arn
 }
 `, namePrefix),
+	)
+}
+
+func testAccPipeConfig_tags1(name, tag1Key, tag1Value string) string {
+	return acctest.ConfigCompose(
+		testAccPipeConfig_base,
+		testAccPipeConfig_base_sqsSource,
+		testAccPipeConfig_base_sqsTarget,
+		fmt.Sprintf(`
+resource "aws_pipes_pipe" "test" {
+  depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
+  name       = %[1]q
+  role_arn   = aws_iam_role.test.arn
+  source     = aws_sqs_queue.source.arn
+  target     = aws_sqs_queue.target.arn
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, name, tag1Key, tag1Value),
+	)
+}
+
+func testAccPipeConfig_tags2(name, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return acctest.ConfigCompose(
+		testAccPipeConfig_base,
+		testAccPipeConfig_base_sqsSource,
+		testAccPipeConfig_base_sqsTarget,
+		fmt.Sprintf(`
+resource "aws_pipes_pipe" "test" {
+  depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
+  name       = %[1]q
+  role_arn   = aws_iam_role.test.arn
+  source     = aws_sqs_queue.source.arn
+  target     = aws_sqs_queue.target.arn
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, name, tag1Key, tag1Value, tag2Key, tag2Value),
 	)
 }
