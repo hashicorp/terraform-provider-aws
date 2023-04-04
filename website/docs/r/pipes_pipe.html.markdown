@@ -100,6 +100,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `description` - (Optional) A description of the pipe. At most 512 characters.
 * `name` - (Optional) Name of the pipe. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 

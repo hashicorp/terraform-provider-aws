@@ -44,6 +44,11 @@ func ResourcePipe() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "Managed by Terraform",
+			},
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -96,6 +101,10 @@ func resourcePipeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		Target:  aws.String(d.Get("target").(string)),
 	}
 
+	if v, ok := d.Get("description").(string); ok {
+		input.Description = aws.String(v)
+	}
+
 	output, err := conn.CreatePipe(ctx, input)
 	if err != nil {
 		return create.DiagError(names.Pipes, create.ErrActionCreating, ResNamePipe, name, err)
@@ -130,6 +139,7 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	d.Set("arn", output.Arn)
+	d.Set("description", output.Description)
 	d.Set("name", output.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(output.Name)))
 	d.Set("role_arn", output.RoleArn)
@@ -143,9 +153,10 @@ func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).PipesClient()
 
 	input := &pipes.UpdatePipeInput{
-		Name:    aws.String(d.Id()),
-		RoleArn: aws.String(d.Get("role_arn").(string)),
-		Target:  aws.String(d.Get("target").(string)),
+		Description: aws.String(d.Get("description").(string)),
+		Name:        aws.String(d.Id()),
+		RoleArn:     aws.String(d.Get("role_arn").(string)),
+		Target:      aws.String(d.Get("target").(string)),
 	}
 
 	log.Printf("[DEBUG] Updating EventBridge Pipes Pipe (%s): %#v", d.Id(), input)
