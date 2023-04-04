@@ -20,9 +20,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_sfn_state_machine")
+// @SDKResource("aws_sfn_state_machine", name="State Machine")
+// @Tags(identifierAttribute="id")
 func ResourceStateMachine() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStateMachineCreate,
@@ -103,8 +105,8 @@ func ResourceStateMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"tracing_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -135,15 +137,13 @@ func ResourceStateMachine() *schema.Resource {
 
 func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SFNConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &sfn.CreateStateMachineInput{
 		Definition: aws.String(d.Get("definition").(string)),
 		Name:       aws.String(name),
 		RoleArn:    aws.String(d.Get("role_arn").(string)),
-		Tags:       Tags(tags.IgnoreAWS()),
+		Tags:       GetTagsIn(ctx),
 		Type:       aws.String(d.Get("type").(string)),
 	}
 
@@ -174,8 +174,6 @@ func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SFNConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := FindStateMachineByARN(ctx, conn, d.Id())
 
@@ -215,27 +213,6 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("tracing_configuration", nil)
 	}
 	d.Set("type", output.Type)
-
-	tags, err := ListTags(ctx, conn, d.Id())
-
-	if tfawserr.ErrCodeEquals(err, "UnknownOperationException") {
-		return nil
-	}
-
-	if err != nil {
-		return diag.Errorf("listing tags for Step Functions State Machine (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
 
 	return nil
 }
@@ -290,14 +267,6 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 
 		if err != nil {
 			return diag.Errorf("waiting for Step Functions State Machine (%s) update: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("updating Step Functions State Machine (%s) tags: %s", d.Id(), err)
 		}
 	}
 
