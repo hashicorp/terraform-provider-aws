@@ -3,10 +3,10 @@ package meta
 import (
 	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
