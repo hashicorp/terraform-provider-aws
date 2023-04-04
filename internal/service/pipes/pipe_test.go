@@ -351,6 +351,54 @@ func TestAccPipesPipe_tags(t *testing.T) {
 	})
 }
 
+func TestAccPipesPipe_target(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var pipe pipes.DescribePipeOutput
+	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_pipes_pipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPipeConfig_basic(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					resource.TestCheckResourceAttrPair(resourceName, "target", "aws_sqs_queue.target", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPipeConfig_target(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					resource.TestCheckResourceAttrPair(resourceName, "target", "aws_sqs_queue.target2", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckPipeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).PipesClient()
@@ -650,5 +698,42 @@ resource "aws_pipes_pipe" "test" {
   }
 }
 `, name, tag1Key, tag1Value, tag2Key, tag2Value),
+	)
+}
+
+func testAccPipeConfig_target(name string) string {
+	return acctest.ConfigCompose(
+		testAccPipeConfig_base,
+		testAccPipeConfig_base_sqsSource,
+		testAccPipeConfig_base_sqsTarget,
+		fmt.Sprintf(`
+resource "aws_iam_role_policy" "target2" {
+  role = aws_iam_role.test.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "sqs:SendMessage",
+        ],
+        Resource = [
+          aws_sqs_queue.target2.arn,
+        ]
+      },
+    ]
+  })
+}
+
+resource "aws_sqs_queue" "target2" {}
+
+resource "aws_pipes_pipe" "test" {
+  depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target2]
+  name       = %[1]q
+  role_arn   = aws_iam_role.test.arn
+  source     = aws_sqs_queue.source.arn
+  target     = aws_sqs_queue.target2.arn
+}
+`, name),
 	)
 }
