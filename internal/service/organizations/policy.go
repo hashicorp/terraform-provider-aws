@@ -56,7 +56,6 @@ func ResourcePolicy() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"tags":            tftags.TagsSchema(),
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
