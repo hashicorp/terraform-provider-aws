@@ -65,9 +65,20 @@ func ResourceService() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(3, 255),
 			},
 			"dns_entry": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
 				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"domain_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"hosted_zone_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"name": {
 				Type:         schema.TypeString,
@@ -149,12 +160,15 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("auth_type", out.AuthType)
 	d.Set("certificate_arn", out.CertificateArn)
 	d.Set("custom_domain_name", out.CustomDomainName)
+	if out.DnsEntry != nil {
+		if err := d.Set("dns_entry", []interface{}{flattenDNSEntry(out.DnsEntry)}); err != nil {
+			return diag.Errorf("setting dns_entry: %s", err)
+		}
+	} else {
+		d.Set("dns_entry", nil)
+	}
 	d.Set("name", out.Name)
 	d.Set("status", out.Status)
-
-	if err := d.Set("dns_entry", flattenDNSEntry(out.DnsEntry)); err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameService, d.Id(), err)
-	}
 
 	return nil
 }
@@ -287,15 +301,15 @@ func flattenDNSEntry(apiObject *types.DnsEntry) map[string]interface{} {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DomainName; v != nil {
-		m["domain_name"] = aws.ToString(v)
+		tfMap["domain_name"] = aws.ToString(v)
 	}
 
 	if v := apiObject.HostedZoneId; v != nil {
-		m["hosted_zone_id"] = aws.ToString(v)
+		tfMap["hosted_zone_id"] = aws.ToString(v)
 	}
 
-	return m
+	return tfMap
 }
