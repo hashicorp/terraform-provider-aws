@@ -487,24 +487,24 @@ func (r *resourceUserPoolClient) ImportState(ctx context.Context, request resour
 
 func (r *resourceUserPoolClient) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
 	return []resource.ConfigValidator{
-		accessTokenValidityValidator{
-			validityValidator{
+		resourceUserPoolClientAccessTokenValidityValidator{
+			resourceUserPoolClientValidityValidator{
 				attr:        "access_token_validity",
 				min:         5 * time.Minute,
 				max:         24 * time.Hour,
 				defaultUnit: time.Hour,
 			},
 		},
-		idTokenValidityValidator{
-			validityValidator{
+		resourceUserPoolClientIDTokenValidityValidator{
+			resourceUserPoolClientValidityValidator{
 				attr:        "id_token_validity",
 				min:         5 * time.Minute,
 				max:         24 * time.Hour,
 				defaultUnit: time.Hour,
 			},
 		},
-		refreshTokenValidityValidator{
-			validityValidator{
+		resourceUserPoolClientRefreshTokenValidityValidator{
+			resourceUserPoolClientValidityValidator{
 				attr:        "refresh_token_validity",
 				min:         60 * time.Minute,
 				max:         315360000 * time.Second,
@@ -739,13 +739,13 @@ func flattenTokenValidityUnits(ctx context.Context, tvu *cognitoidentityprovider
 	return types.ListValueMust(elemType, []attr.Value{val})
 }
 
-var _ resource.ConfigValidator = &accessTokenValidityValidator{}
+var _ resource.ConfigValidator = &resourceUserPoolClientAccessTokenValidityValidator{}
 
-type accessTokenValidityValidator struct {
-	validityValidator
+type resourceUserPoolClientAccessTokenValidityValidator struct {
+	resourceUserPoolClientValidityValidator
 }
 
-func (v accessTokenValidityValidator) ValidateResource(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+func (v resourceUserPoolClientAccessTokenValidityValidator) ValidateResource(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
 	v.validate(ctx, req, resp,
 		func(rupcd resourceUserPoolClientData) types.Int64 {
 			return rupcd.AccessTokenValidity
@@ -756,13 +756,13 @@ func (v accessTokenValidityValidator) ValidateResource(ctx context.Context, req 
 	)
 }
 
-var _ resource.ConfigValidator = &idTokenValidityValidator{}
+var _ resource.ConfigValidator = &resourceUserPoolClientIDTokenValidityValidator{}
 
-type idTokenValidityValidator struct {
-	validityValidator
+type resourceUserPoolClientIDTokenValidityValidator struct {
+	resourceUserPoolClientValidityValidator
 }
 
-func (v idTokenValidityValidator) ValidateResource(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+func (v resourceUserPoolClientIDTokenValidityValidator) ValidateResource(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
 	v.validate(ctx, req, resp,
 		func(rupcd resourceUserPoolClientData) types.Int64 {
 			return rupcd.IdTokenValidity
@@ -773,13 +773,13 @@ func (v idTokenValidityValidator) ValidateResource(ctx context.Context, req reso
 	)
 }
 
-var _ resource.ConfigValidator = &refreshTokenValidityValidator{}
+var _ resource.ConfigValidator = &resourceUserPoolClientRefreshTokenValidityValidator{}
 
-type refreshTokenValidityValidator struct {
-	validityValidator
+type resourceUserPoolClientRefreshTokenValidityValidator struct {
+	resourceUserPoolClientValidityValidator
 }
 
-func (v refreshTokenValidityValidator) ValidateResource(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+func (v resourceUserPoolClientRefreshTokenValidityValidator) ValidateResource(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
 	v.validate(ctx, req, resp,
 		func(rupcd resourceUserPoolClientData) types.Int64 {
 			return rupcd.RefreshTokenValidity
@@ -790,22 +790,22 @@ func (v refreshTokenValidityValidator) ValidateResource(ctx context.Context, req
 	)
 }
 
-type validityValidator struct {
+type resourceUserPoolClientValidityValidator struct {
 	min         time.Duration
 	max         time.Duration
 	attr        string
 	defaultUnit time.Duration
 }
 
-func (v validityValidator) Description(ctx context.Context) string {
+func (v resourceUserPoolClientValidityValidator) Description(ctx context.Context) string {
 	return v.MarkdownDescription(ctx)
 }
 
-func (v validityValidator) MarkdownDescription(_ context.Context) string {
+func (v resourceUserPoolClientValidityValidator) MarkdownDescription(_ context.Context) string {
 	return fmt.Sprintf("must have a duration between %s and %s", v.min, v.max)
 }
 
-func (v validityValidator) validate(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse, valF func(resourceUserPoolClientData) types.Int64, unitF func(*tokenValidityUnits) types.String) {
+func (v resourceUserPoolClientValidityValidator) validate(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse, valF func(resourceUserPoolClientData) types.Int64, unitF func(*tokenValidityUnits) types.String) {
 	var config resourceUserPoolClientData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
