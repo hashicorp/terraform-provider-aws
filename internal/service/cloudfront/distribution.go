@@ -21,7 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cloudfront_distribution")
+// @SDKResource("aws_cloudfront_distribution", name="Distribution")
+// @Tags(identifierAttribute="arn")
 func ResourceDistribution() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -819,8 +820,8 @@ func ResourceDistribution() *schema.Resource {
 				Default:  false,
 			},
 
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -830,21 +831,22 @@ func ResourceDistribution() *schema.Resource {
 func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-	params := &cloudfront.CreateDistributionWithTagsInput{
+	input := &cloudfront.CreateDistributionWithTagsInput{
 		DistributionConfigWithTags: &cloudfront.DistributionConfigWithTags{
 			DistributionConfig: expandDistributionConfig(d),
-			Tags:               &cloudfront.Tags{Items: Tags(tags.IgnoreAWS())},
 		},
+	}
+
+	if tags := GetTagsIn(ctx); len(tags) > 0 {
+		input.DistributionConfigWithTags.Tags = &cloudfront.Tags{Items: tags}
 	}
 
 	var resp *cloudfront.CreateDistributionWithTagsOutput
 	// Handle eventual consistency issues
 	err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
 		var err error
-		resp, err = conn.CreateDistributionWithTagsWithContext(ctx, params)
+		resp, err = conn.CreateDistributionWithTagsWithContext(ctx, input)
 
 		// ACM and IAM certificate eventual consistency
 		// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
@@ -861,7 +863,7 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 
 	// Propagate AWS Go SDK retried error, if any
 	if tfresource.TimedOut(err) {
-		resp, err = conn.CreateDistributionWithTagsWithContext(ctx, params)
+		resp, err = conn.CreateDistributionWithTagsWithContext(ctx, input)
 	}
 
 	if err != nil {
@@ -883,8 +885,6 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := FindDistributionByID(ctx, conn, d.Id())
 
@@ -918,21 +918,6 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("etag", output.ETag)
 	d.Set("arn", output.Distribution.ARN)
 	d.Set("hosted_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID())
-
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for CloudFront Distribution (%s): %s", d.Id(), err)
-	}
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
 
 	return diags
 }
@@ -999,13 +984,6 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 		log.Printf("[DEBUG] Waiting until CloudFront Distribution (%s) is deployed", d.Id())
 		if err := DistributionWaitUntilDeployed(ctx, d.Id(), meta); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting until CloudFront Distribution (%s) is deployed: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags for CloudFront Distribution (%s): %s", d.Id(), err)
 		}
 	}
 
