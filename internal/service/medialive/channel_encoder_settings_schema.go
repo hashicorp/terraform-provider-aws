@@ -1794,7 +1794,7 @@ func outputSettingsSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"destination": destinationSchema(),
-							"certficate_mode": {
+							"certificate_mode": {
 								Type:             schema.TypeString,
 								Optional:         true,
 								Computed:         true,
