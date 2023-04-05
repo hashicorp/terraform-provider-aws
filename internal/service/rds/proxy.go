@@ -17,9 +17,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_db_proxy")
+// @SDKResource("aws_db_proxy", name="DB Proxy")
+// @Tags(identifierAttribute="arn")
 func ResourceProxy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProxyCreate,
@@ -111,8 +113,8 @@ func ResourceProxy() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -136,15 +138,13 @@ func ResourceProxy() *schema.Resource {
 func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := rds.CreateDBProxyInput{
 		Auth:         expandProxyAuth(d.Get("auth").([]interface{})),
 		DBProxyName:  aws.String(d.Get("name").(string)),
 		EngineFamily: aws.String(d.Get("engine_family").(string)),
 		RoleArn:      aws.String(d.Get("role_arn").(string)),
-		Tags:         Tags(tags.IgnoreAWS()),
+		Tags:         GetTagsIn(ctx),
 		VpcSubnetIds: flex.ExpandStringSet(d.Get("vpc_subnet_ids").(*schema.Set)),
 	}
 
@@ -182,8 +182,6 @@ func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceProxyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	dbProxy, err := FindDBProxyByName(ctx, conn, d.Id())
 
@@ -208,23 +206,6 @@ func resourceProxyRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("vpc_subnet_ids", flex.FlattenStringSet(dbProxy.VpcSubnetIds))
 	d.Set("vpc_security_group_ids", flex.FlattenStringSet(dbProxy.VpcSecurityGroupIds))
 	d.Set("endpoint", dbProxy.Endpoint)
-
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for RDS DB Proxy (%s): %s", d.Get("arn").(string), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
 
 	return diags
 }
@@ -264,14 +245,6 @@ func resourceProxyUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		if _, err := waitDBProxyUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Proxy (%s) update: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating RDS DB Proxy (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 

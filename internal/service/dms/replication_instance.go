@@ -9,7 +9,7 @@ import (
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -189,7 +189,7 @@ func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceDa
 
 	d.SetId(d.Get("replication_instance_id").(string))
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"creating", "modifying"},
 		Target:     []string{"available"},
 		Refresh:    resourceReplicationInstanceStateRefreshFunc(ctx, conn, d.Id()),
@@ -365,7 +365,7 @@ func resourceReplicationInstanceUpdate(ctx context.Context, d *schema.ResourceDa
 			return sdkdiag.AppendErrorf(diags, "modifying DMS Replication Instance (%s): %s", d.Id(), err)
 		}
 
-		stateConf := &resource.StateChangeConf{
+		stateConf := &retry.StateChangeConf{
 			Pending:    []string{"modifying", "upgrading"},
 			Target:     []string{"available"},
 			Refresh:    resourceReplicationInstanceStateRefreshFunc(ctx, conn, d.Id()),
@@ -404,7 +404,7 @@ func resourceReplicationInstanceDelete(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "deleting DMS Replication Instance (%s): %s", d.Id(), err)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"deleting"},
 		Target:     []string{},
 		Refresh:    resourceReplicationInstanceStateRefreshFunc(ctx, conn, d.Id()),
@@ -422,7 +422,7 @@ func resourceReplicationInstanceDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceReplicationInstanceStateRefreshFunc(ctx context.Context, conn *dms.DatabaseMigrationService, replicationInstanceID string) resource.StateRefreshFunc {
+func resourceReplicationInstanceStateRefreshFunc(ctx context.Context, conn *dms.DatabaseMigrationService, replicationInstanceID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		v, err := conn.DescribeReplicationInstancesWithContext(ctx, &dms.DescribeReplicationInstancesInput{
 			Filters: []*dms.Filter{

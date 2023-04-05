@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -327,16 +327,16 @@ func deleteParameterGroup(ctx context.Context, conn *elasticache.ElastiCache, na
 	deleteOpts := elasticache.DeleteCacheParameterGroupInput{
 		CacheParameterGroupName: aws.String(name),
 	}
-	err := resource.RetryContext(ctx, 3*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 3*time.Minute, func() *retry.RetryError {
 		_, err := conn.DeleteCacheParameterGroupWithContext(ctx, &deleteOpts)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault) {
 				return nil
 			}
 			if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeInvalidCacheParameterGroupStateFault) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -403,13 +403,13 @@ func resourceResetParameterGroup(ctx context.Context, conn *elasticache.ElastiCa
 		CacheParameterGroupName: aws.String(name),
 		ParameterNameValues:     parameters,
 	}
-	return resource.RetryContext(ctx, 30*time.Second, func() *resource.RetryError {
+	return retry.RetryContext(ctx, 30*time.Second, func() *retry.RetryError {
 		_, err := conn.ResetCacheParameterGroupWithContext(ctx, &input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, elasticache.ErrCodeInvalidCacheParameterGroupStateFault, " has pending changes") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})

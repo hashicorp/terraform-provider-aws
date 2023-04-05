@@ -19,7 +19,8 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -487,7 +488,7 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 		OutputDataConfig:       expandDocumentClassifierOutputDataConfig(d.Get("output_data_config").([]interface{})),
 		VersionName:            versionName,
 		VpcConfig:              expandVPCConfig(d.Get("vpc_config").([]interface{})),
-		ClientRequestToken:     aws.String(resource.UniqueId()),
+		ClientRequestToken:     aws.String(id.UniqueId()),
 	}
 
 	if v, ok := d.Get("model_kms_key_id").(string); ok && v != "" {
@@ -514,7 +515,7 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 	}
 
 	var out *comprehend.CreateDocumentClassifierOutput
-	err := tfresource.Retry(ctx, timeout, func() *resource.RetryError {
+	err := tfresource.Retry(ctx, timeout, func() *retry.RetryError {
 		var err error
 		out, err = conn.CreateDocumentClassifier(ctx, in)
 
@@ -522,12 +523,12 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 			var tmre *types.TooManyRequestsException
 			var qee ratelimit.QuotaExceededError // This is not a typo: the ratelimit.QuotaExceededError is returned as a struct, not a pointer
 			if errors.As(err, &tmre) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			} else if errors.As(err, &qee) {
 				// Unable to get a rate limit token
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			} else {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 		}
 
@@ -625,7 +626,7 @@ func FindDocumentClassifierByID(ctx context.Context, conn *comprehend.Client, id
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -662,7 +663,7 @@ func ListDocumentClassifierVersionsByName(ctx context.Context, conn *comprehend.
 }
 
 func waitDocumentClassifierCreated(ctx context.Context, conn *comprehend.Client, id string, timeout time.Duration) (*types.DocumentClassifierProperties, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining),
 		Target:       enum.Slice(types.ModelStatusTrained),
 		Refresh:      statusDocumentClassifier(ctx, conn, id),
@@ -683,7 +684,7 @@ func waitDocumentClassifierCreated(ctx context.Context, conn *comprehend.Client,
 }
 
 func waitDocumentClassifierStopped(ctx context.Context, conn *comprehend.Client, id string, timeout time.Duration) (*types.DocumentClassifierProperties, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining, types.ModelStatusStopRequested),
 		Target:       enum.Slice(types.ModelStatusTrained, types.ModelStatusStopped, types.ModelStatusInError, types.ModelStatusDeleting),
 		Refresh:      statusDocumentClassifier(ctx, conn, id),
@@ -701,7 +702,7 @@ func waitDocumentClassifierStopped(ctx context.Context, conn *comprehend.Client,
 }
 
 func waitDocumentClassifierDeleted(ctx context.Context, conn *comprehend.Client, id string, timeout time.Duration) (*types.DocumentClassifierProperties, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining, types.ModelStatusDeleting, types.ModelStatusInError, types.ModelStatusStopRequested),
 		Target:         []string{},
 		Refresh:        statusDocumentClassifier(ctx, conn, id),
@@ -719,7 +720,7 @@ func waitDocumentClassifierDeleted(ctx context.Context, conn *comprehend.Client,
 	return nil, err
 }
 
-func statusDocumentClassifier(ctx context.Context, conn *comprehend.Client, id string) resource.StateRefreshFunc {
+func statusDocumentClassifier(ctx context.Context, conn *comprehend.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := FindDocumentClassifierByID(ctx, conn, id)
 		if tfresource.NotFound(err) {

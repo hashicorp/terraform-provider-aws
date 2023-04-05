@@ -11,7 +11,7 @@ import (
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -120,7 +120,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(d.Get("name").(string))
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"creating", "modifying"},
 		Target:     []string{"active"},
 		Refresh:    resourceEventSubscriptionStateRefreshFunc(ctx, conn, d.Id()),
@@ -159,7 +159,7 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 			return sdkdiag.AppendErrorf(diags, "updating DMS Event Subscription (%s): %s", d.Id(), err)
 		}
 
-		stateConf := &resource.StateChangeConf{
+		stateConf := &retry.StateChangeConf{
 			Pending:    []string{"modifying"},
 			Target:     []string{"active"},
 			Refresh:    resourceEventSubscriptionStateRefreshFunc(ctx, conn, d.Id()),
@@ -269,7 +269,7 @@ func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "deleting DMS Event Subscription (%s): %s", d.Id(), err)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"deleting"},
 		Target:     []string{},
 		Refresh:    resourceEventSubscriptionStateRefreshFunc(ctx, conn, d.Id()),
@@ -286,7 +286,7 @@ func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceEventSubscriptionStateRefreshFunc(ctx context.Context, conn *dms.DatabaseMigrationService, name string) resource.StateRefreshFunc {
+func resourceEventSubscriptionStateRefreshFunc(ctx context.Context, conn *dms.DatabaseMigrationService, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		v, err := conn.DescribeEventSubscriptionsWithContext(ctx, &dms.DescribeEventSubscriptionsInput{
 			SubscriptionName: aws.String(name),

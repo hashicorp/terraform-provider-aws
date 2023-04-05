@@ -11,7 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -106,11 +107,11 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	addonName := d.Get("addon_name").(string)
 	clusterName := d.Get("cluster_name").(string)
-	id := AddonCreateResourceID(clusterName, addonName)
+	addonId := AddonCreateResourceID(clusterName, addonName)
 
 	input := &eks.CreateAddonInput{
 		AddonName:          aws.String(addonName),
-		ClientRequestToken: aws.String(resource.UniqueId()),
+		ClientRequestToken: aws.String(id.UniqueId()),
 		ClusterName:        aws.String(clusterName),
 	}
 
@@ -134,19 +135,19 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err := conn.CreateAddonWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "CREATE_FAILED") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "does not exist") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -157,10 +158,10 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating EKS Add-On (%s): %w", id, err))
+		return diag.FromErr(fmt.Errorf("creating EKS Add-On (%s): %w", addonId, err))
 	}
 
-	d.SetId(id)
+	d.SetId(addonId)
 
 	_, err = waitAddonCreated(ctx, conn, clusterName, addonName, d.Timeout(schema.TimeoutCreate))
 
@@ -239,7 +240,7 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChanges("addon_version", "service_account_role_arn", "configuration_values") {
 		input := &eks.UpdateAddonInput{
 			AddonName:          aws.String(addonName),
-			ClientRequestToken: aws.String(resource.UniqueId()),
+			ClientRequestToken: aws.String(id.UniqueId()),
 			ClusterName:        aws.String(clusterName),
 		}
 

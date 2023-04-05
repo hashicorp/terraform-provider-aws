@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1380,15 +1381,19 @@ func testAccCheckObjectDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := conn.HeadObjectWithContext(ctx, &s3.HeadObjectInput{
-				Bucket:  aws.String(rs.Primary.Attributes["bucket"]),
-				Key:     aws.String(rs.Primary.Attributes["key"]),
-				IfMatch: aws.String(rs.Primary.Attributes["etag"]),
-			})
-			if err == nil {
-				return fmt.Errorf("AWS S3 Object still exists: %s", rs.Primary.ID)
+			_, err := tfs3.FindObjectByThreePartKey(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], rs.Primary.Attributes["etag"])
+
+			if tfresource.NotFound(err) {
+				continue
 			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("S3 Object %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
@@ -1414,18 +1419,18 @@ func testAccCheckObjectExists(ctx context.Context, n string, obj *s3.GetObjectOu
 
 		var out *s3.GetObjectOutput
 
-		err := resource.RetryContext(ctx, 2*time.Minute, func() *resource.RetryError {
+		err := retry.RetryContext(ctx, 2*time.Minute, func() *retry.RetryError {
 			var err error
 			out, err = conn.GetObjectWithContext(ctx, input)
 
 			if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchKey) {
-				return resource.RetryableError(
+				return retry.RetryableError(
 					fmt.Errorf("getting object %s, retrying: %w", rs.Primary.Attributes["bucket"], err),
 				)
 			}
 
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 
 			return nil
@@ -1493,13 +1498,10 @@ func testAccCheckObjectStorageClass(ctx context.Context, n, expectedClass string
 		rs := s.RootModule().Resources[n]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
-		out, err := conn.HeadObjectWithContext(ctx, &s3.HeadObjectInput{
-			Bucket: aws.String(rs.Primary.Attributes["bucket"]),
-			Key:    aws.String(rs.Primary.Attributes["key"]),
-		})
+		out, err := tfs3.FindObjectByThreePartKey(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], "")
 
 		if err != nil {
-			return fmt.Errorf("HeadObject error: %v", err)
+			return err
 		}
 
 		// The "STANDARD" (which is also the default) storage
@@ -1523,13 +1525,10 @@ func testAccCheckObjectSSE(ctx context.Context, n, expectedSSE string) resource.
 		rs := s.RootModule().Resources[n]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
-		out, err := conn.HeadObjectWithContext(ctx, &s3.HeadObjectInput{
-			Bucket: aws.String(rs.Primary.Attributes["bucket"]),
-			Key:    aws.String(rs.Primary.Attributes["key"]),
-		})
+		out, err := tfs3.FindObjectByThreePartKey(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], "")
 
 		if err != nil {
-			return fmt.Errorf("HeadObject error: %v", err)
+			return err
 		}
 
 		if out.ServerSideEncryption == nil {

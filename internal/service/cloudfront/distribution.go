@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -842,18 +842,18 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 
 	var resp *cloudfront.CreateDistributionWithTagsOutput
 	// Handle eventual consistency issues
-	err := resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
 		var err error
 		resp, err = conn.CreateDistributionWithTagsWithContext(ctx, params)
 
 		// ACM and IAM certificate eventual consistency
 		// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
 		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeInvalidViewerCertificate) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -947,17 +947,17 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	// Handle eventual consistency issues
-	err := resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
 		_, err := conn.UpdateDistributionWithContext(ctx, params)
 
 		// ACM and IAM certificate eventual consistency
 		// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
 		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeInvalidViewerCertificate) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -1134,7 +1134,7 @@ func FindDistributionByID(ctx context.Context, conn *cloudfront.CloudFront, id s
 	output, err := conn.GetDistributionWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1155,7 +1155,7 @@ func FindDistributionByID(ctx context.Context, conn *cloudfront.CloudFront, id s
 // distribution is deployed. It currently takes exactly 15 minutes to deploy
 // but that might change in the future.
 func DistributionWaitUntilDeployed(ctx context.Context, id string, meta interface{}) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"InProgress"},
 		Target:     []string{"Deployed"},
 		Refresh:    resourceWebDistributionStateRefreshFunc(ctx, id, meta),
@@ -1169,7 +1169,7 @@ func DistributionWaitUntilDeployed(ctx context.Context, id string, meta interfac
 }
 
 // The refresh function for resourceAwsCloudFrontWebDistributionWaitUntilDeployed.
-func resourceWebDistributionStateRefreshFunc(ctx context.Context, id string, meta interface{}) resource.StateRefreshFunc {
+func resourceWebDistributionStateRefreshFunc(ctx context.Context, id string, meta interface{}) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		conn := meta.(*conns.AWSClient).CloudFrontConn()
 		params := &cloudfront.GetDistributionInput{

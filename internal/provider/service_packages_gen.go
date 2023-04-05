@@ -32,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ce"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/chime"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/chimesdkmediapipelines"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloud9"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudcontrol"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
@@ -149,6 +150,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/qldb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ram"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/rbin"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftdata"
@@ -171,6 +173,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/securitylake"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/serverlessrepo"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
@@ -184,6 +187,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmincidents"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sts"
@@ -192,6 +196,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreamwrite"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
@@ -229,6 +234,7 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		budgets.ServicePackage,
 		ce.ServicePackage,
 		chime.ServicePackage,
+		chimesdkmediapipelines.ServicePackage,
 		cloud9.ServicePackage,
 		cloudcontrol.ServicePackage,
 		cloudformation.ServicePackage,
@@ -346,6 +352,7 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		qldb.ServicePackage,
 		quicksight.ServicePackage,
 		ram.ServicePackage,
+		rbin.ServicePackage,
 		rds.ServicePackage,
 		redshift.ServicePackage,
 		redshiftdata.ServicePackage,
@@ -368,6 +375,7 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		schemas.ServicePackage,
 		secretsmanager.ServicePackage,
 		securityhub.ServicePackage,
+		securitylake.ServicePackage,
 		serverlessrepo.ServicePackage,
 		servicecatalog.ServicePackage,
 		servicediscovery.ServicePackage,
@@ -381,6 +389,7 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		sns.ServicePackage,
 		sqs.ServicePackage,
 		ssm.ServicePackage,
+		ssmincidents.ServicePackage,
 		ssoadmin.ServicePackage,
 		storagegateway.ServicePackage,
 		sts.ServicePackage,
@@ -389,6 +398,7 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		timestreamwrite.ServicePackage,
 		transcribe.ServicePackage,
 		transfer.ServicePackage,
+		vpclattice.ServicePackage,
 		waf.ServicePackage,
 		wafregional.ServicePackage,
 		wafv2.ServicePackage,

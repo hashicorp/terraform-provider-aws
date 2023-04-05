@@ -16,9 +16,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_schemas_registry")
+// @SDKResource("aws_schemas_registry", name="Registry")
+// @Tags(identifierAttribute="arn")
 func ResourceRegistry() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRegistryCreate,
@@ -50,9 +52,8 @@ func ResourceRegistry() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`^[\.\-_A-Za-z0-9]+`), ""),
 				),
 			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -62,20 +63,15 @@ func ResourceRegistry() *schema.Resource {
 func resourceRegistryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &schemas.CreateRegistryInput{
 		RegistryName: aws.String(name),
+		Tags:         GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating EventBridge Schemas Registry: %s", input)
@@ -93,8 +89,6 @@ func resourceRegistryCreate(ctx context.Context, d *schema.ResourceData, meta in
 func resourceRegistryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := FindRegistryByName(ctx, conn, d.Id())
 
@@ -111,22 +105,6 @@ func resourceRegistryRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("arn", output.RegistryArn)
 	d.Set("description", output.Description)
 	d.Set("name", output.RegistryName)
-
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for EventBridge Schemas Registry (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
 
 	return diags
 }
@@ -146,13 +124,6 @@ func resourceRegistryUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EventBridge Schemas Registry (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 

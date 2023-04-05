@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -1021,16 +1021,16 @@ func DisassociateReplicationGroup(ctx context.Context, conn *elasticache.ElastiC
 		ReplicationGroupId:       aws.String(id),
 		ReplicationGroupRegion:   aws.String(region),
 	}
-	err := resource.RetryContext(ctx, readyTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, readyTimeout, func() *retry.RetryError {
 		_, err := conn.DisassociateGlobalReplicationGroupWithContext(ctx, input)
 		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeGlobalReplicationGroupNotFoundFault) {
 			return nil
 		}
 		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeInvalidGlobalReplicationGroupStateFault) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -1066,7 +1066,7 @@ func deleteReplicationGroup(ctx context.Context, replicationGroupID string, conn
 	}
 
 	// 10 minutes should give any creating/deleting cache clusters or snapshots time to complete
-	err := resource.RetryContext(ctx, 10*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 10*time.Minute, func() *retry.RetryError {
 		_, err := conn.DeleteReplicationGroupWithContext(ctx, input)
 		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeReplicationGroupNotFoundFault) {
 			return nil
@@ -1074,10 +1074,10 @@ func deleteReplicationGroup(ctx context.Context, replicationGroupID string, conn
 		// Cache Cluster is creating/deleting or Replication Group is snapshotting
 		// InvalidReplicationGroupState: Cache cluster tf-acc-test-uqhe-003 is not in a valid state to be deleted
 		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeInvalidReplicationGroupStateFault) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})

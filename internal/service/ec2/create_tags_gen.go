@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -32,7 +32,7 @@ func CreateTags(ctx context.Context, conn ec2iface.EC2API, identifier string, ta
 		output, err := conn.CreateTagsWithContext(ctx, input)
 
 		if tfawserr.ErrCodeContains(err, ".NotFound") {
-			err = &resource.NotFoundError{
+			err = &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}

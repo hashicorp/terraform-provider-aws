@@ -43,7 +43,7 @@ func TestAccIAMRolePolicyAttachment_basic(t *testing.T) {
 				ResourceName:      "aws_iam_role_policy_attachment.test-attach",
 				ImportState:       true,
 				ImportStateIdFunc: testAccRolePolicyAttachmentImportStateIdFunc("aws_iam_role_policy_attachment.test-attach"),
-				// We do not have a way to align IDs since the Create function uses resource.PrefixedUniqueId()
+				// We do not have a way to align IDs since the Create function uses id.PrefixedUniqueId()
 				// Failed state verification, resource with ID ROLE-POLICYARN not found
 				// ImportStateVerify: true,
 				ImportStateCheck: func(s []*terraform.InstanceState) error {

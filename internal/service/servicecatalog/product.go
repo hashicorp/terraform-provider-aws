@@ -9,7 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,15 +18,18 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_servicecatalog_product")
+// @SDKResource("aws_servicecatalog_product", name="Product")
+// @Tags
 func ResourceProduct() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProductCreate,
 		ReadWithoutTimeout:   resourceProductRead,
 		UpdateWithoutTimeout: resourceProductUpdate,
 		DeleteWithoutTimeout: resourceProductDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -38,15 +42,15 @@ func ResourceProduct() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"accept_language": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      AcceptLanguageEnglish,
 				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"created_time": {
 				Type:     schema.TypeString,
@@ -137,8 +141,8 @@ func ResourceProduct() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -153,17 +157,16 @@ func ResourceProduct() *schema.Resource {
 func resourceProductCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &servicecatalog.CreateProductInput{
-		IdempotencyToken: aws.String(resource.UniqueId()),
+		IdempotencyToken: aws.String(id.UniqueId()),
 		Name:             aws.String(d.Get("name").(string)),
 		Owner:            aws.String(d.Get("owner").(string)),
 		ProductType:      aws.String(d.Get("type").(string)),
 		ProvisioningArtifactParameters: expandProvisioningArtifactParameters(
 			d.Get("provisioning_artifact_parameters").([]interface{})[0].(map[string]interface{}),
 		),
+		Tags: GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("accept_language"); ok {
@@ -190,22 +193,18 @@ func resourceProductCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.SupportUrl = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	var output *servicecatalog.CreateProductOutput
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		var err error
 
 		output, err = conn.CreateProductWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -244,8 +243,6 @@ func resourceProductCreate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceProductRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := WaitProductReady(ctx, conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutRead))
 
@@ -280,16 +277,7 @@ func resourceProductRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("support_url", pvs.SupportUrl)
 	d.Set("type", pvs.Type)
 
-	tags := KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, output.Tags)
 
 	return diags
 }
@@ -335,15 +323,15 @@ func resourceProductUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.SupportUrl = aws.String(v.(string))
 		}
 
-		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+		err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
 			_, err := conn.UpdateProductWithContext(ctx, input)
 
 			if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 
 			return nil

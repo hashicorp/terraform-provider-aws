@@ -14,7 +14,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/kendra/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -380,7 +381,7 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	name := d.Get("name").(string)
 
 	input := &kendra.CreateIndexInput{
-		ClientToken: aws.String(resource.UniqueId()),
+		ClientToken: aws.String(id.UniqueId()),
 		Name:        aws.String(name),
 		RoleArn:     aws.String(d.Get("role_arn").(string)),
 	}
@@ -644,7 +645,7 @@ func findIndexByID(ctx context.Context, conn *kendra.Client, id string) (*kendra
 		var resourceNotFoundException *types.ResourceNotFoundException
 
 		if errors.As(err, &resourceNotFoundException) {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -660,7 +661,7 @@ func findIndexByID(ctx context.Context, conn *kendra.Client, id string) (*kendra
 	return output, nil
 }
 
-func statusIndex(ctx context.Context, conn *kendra.Client, id string) resource.StateRefreshFunc {
+func statusIndex(ctx context.Context, conn *kendra.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findIndexByID(ctx, conn, id)
 
@@ -677,7 +678,7 @@ func statusIndex(ctx context.Context, conn *kendra.Client, id string) resource.S
 }
 
 func waitIndexCreated(ctx context.Context, conn *kendra.Client, id string, timeout time.Duration) (*kendra.DescribeIndexOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.IndexStatusCreating),
 		Target:  enum.Slice(types.IndexStatusActive),
 		Timeout: timeout,
@@ -697,7 +698,7 @@ func waitIndexCreated(ctx context.Context, conn *kendra.Client, id string, timeo
 }
 
 func waitIndexUpdated(ctx context.Context, conn *kendra.Client, id string, timeout time.Duration) (*kendra.DescribeIndexOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.IndexStatusUpdating),
 		Target:  enum.Slice(types.IndexStatusActive),
 		Timeout: timeout,
@@ -717,7 +718,7 @@ func waitIndexUpdated(ctx context.Context, conn *kendra.Client, id string, timeo
 }
 
 func waitIndexDeleted(ctx context.Context, conn *kendra.Client, id string, timeout time.Duration) (*kendra.DescribeIndexOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.IndexStatusDeleting),
 		Target:  []string{},
 		Timeout: timeout,

@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -348,7 +348,7 @@ func FindGlobalNetworkByID(ctx context.Context, conn *networkmanager.NetworkMana
 
 	// Eventual consistency check.
 	if aws.StringValue(output.GlobalNetworkId) != id {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -356,7 +356,7 @@ func FindGlobalNetworkByID(ctx context.Context, conn *networkmanager.NetworkMana
 	return output, nil
 }
 
-func statusGlobalNetworkState(ctx context.Context, conn *networkmanager.NetworkManager, id string) resource.StateRefreshFunc {
+func statusGlobalNetworkState(ctx context.Context, conn *networkmanager.NetworkManager, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindGlobalNetworkByID(ctx, conn, id)
 
@@ -373,7 +373,7 @@ func statusGlobalNetworkState(ctx context.Context, conn *networkmanager.NetworkM
 }
 
 func waitGlobalNetworkCreated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.GlobalNetwork, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkmanager.GlobalNetworkStatePending},
 		Target:  []string{networkmanager.GlobalNetworkStateAvailable},
 		Timeout: timeout,
@@ -390,7 +390,7 @@ func waitGlobalNetworkCreated(ctx context.Context, conn *networkmanager.NetworkM
 }
 
 func waitGlobalNetworkDeleted(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.GlobalNetwork, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        []string{networkmanager.GlobalNetworkStateDeleting},
 		Target:         []string{},
 		Timeout:        timeout,
@@ -408,7 +408,7 @@ func waitGlobalNetworkDeleted(ctx context.Context, conn *networkmanager.NetworkM
 }
 
 func waitGlobalNetworkUpdated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.GlobalNetwork, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkmanager.GlobalNetworkStateUpdating},
 		Target:  []string{networkmanager.GlobalNetworkStateAvailable},
 		Timeout: timeout,

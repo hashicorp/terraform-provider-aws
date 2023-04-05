@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -375,29 +375,29 @@ func resourceCrawlerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	// Retry for IAM eventual consistency
-	err = resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err = glueConn.CreateCrawlerWithContext(ctx, crawlerInput)
 		if err != nil {
 			// InvalidInputException: Insufficient Lake Formation permission(s) on xxx
 			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Insufficient Lake Formation permission") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Service is unable to assume role") {
-				return resource.RetryableError(err)
+			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Service is unable to assume provided role") {
+				return retry.RetryableError(err)
 			}
 
 			// InvalidInputException: Unable to retrieve connection tf-acc-test-8656357591012534997: User: arn:aws:sts::*******:assumed-role/tf-acc-test-8656357591012534997/AWS-Crawler is not authorized to perform: glue:GetConnection on resource: * (Service: AmazonDataCatalog; Status Code: 400; Error Code: AccessDeniedException; Request ID: 4d72b66f-9c75-11e8-9faf-5b526c7be968)
 			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "is not authorized") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			// InvalidInputException: SQS queue arn:aws:sqs:us-west-2:*******:tf-acc-test-4317277351691904203 does not exist or the role provided does not have access to it.
 			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "SQS queue") && tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "does not exist or the role provided does not have access to it") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -528,29 +528,29 @@ func resourceCrawlerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		// Retry for IAM eventual consistency
-		err = resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+		err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 			_, err := glueConn.UpdateCrawlerWithContext(ctx, updateCrawlerInput)
 			if err != nil {
 				// InvalidInputException: Insufficient Lake Formation permission(s) on xxx
 				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Insufficient Lake Formation permission") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 
-				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Service is unable to assume role") {
-					return resource.RetryableError(err)
+				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Service is unable to assume provided role") {
+					return retry.RetryableError(err)
 				}
 
 				// InvalidInputException: Unable to retrieve connection tf-acc-test-8656357591012534997: User: arn:aws:sts::*******:assumed-role/tf-acc-test-8656357591012534997/AWS-Crawler is not authorized to perform: glue:GetConnection on resource: * (Service: AmazonDataCatalog; Status Code: 400; Error Code: AccessDeniedException; Request ID: 4d72b66f-9c75-11e8-9faf-5b526c7be968)
 				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "is not authorized") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 
 				// InvalidInputException: SQS queue arn:aws:sqs:us-west-2:*******:tf-acc-test-4317277351691904203 does not exist or the role provided does not have access to it.
 				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "SQS queue") && tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "does not exist or the role provided does not have access to it") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			return nil
 		})

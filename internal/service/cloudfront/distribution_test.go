@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1569,11 +1570,11 @@ func testAccCheckDistributionDisappears(ctx context.Context, distribution *cloud
 			IfMatch: getDistributionOutput.ETag,
 		}
 
-		err = resource.RetryContext(ctx, 2*time.Minute, func() *resource.RetryError {
+		err = retry.RetryContext(ctx, 2*time.Minute, func() *retry.RetryError {
 			_, err = conn.DeleteDistributionWithContext(ctx, deleteDistributionInput)
 
 			if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeDistributionNotDisabled) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
@@ -1581,11 +1582,11 @@ func testAccCheckDistributionDisappears(ctx context.Context, distribution *cloud
 			}
 
 			if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodePreconditionFailed) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 
 			return nil

@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -309,7 +309,7 @@ func FindLinks(ctx context.Context, conn *networkmanager.NetworkManager, input *
 	})
 
 	if globalNetworkIDNotFoundError(err) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -336,7 +336,7 @@ func FindLinkByTwoPartKey(ctx context.Context, conn *networkmanager.NetworkManag
 
 	// Eventual consistency check.
 	if aws.StringValue(output.GlobalNetworkId) != globalNetworkID || aws.StringValue(output.LinkId) != linkID {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -344,7 +344,7 @@ func FindLinkByTwoPartKey(ctx context.Context, conn *networkmanager.NetworkManag
 	return output, nil
 }
 
-func statusLinkState(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, linkID string) resource.StateRefreshFunc {
+func statusLinkState(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, linkID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindLinkByTwoPartKey(ctx, conn, globalNetworkID, linkID)
 
@@ -361,7 +361,7 @@ func statusLinkState(ctx context.Context, conn *networkmanager.NetworkManager, g
 }
 
 func waitLinkCreated(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, linkID string, timeout time.Duration) (*networkmanager.Link, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkmanager.LinkStatePending},
 		Target:  []string{networkmanager.LinkStateAvailable},
 		Timeout: timeout,
@@ -378,7 +378,7 @@ func waitLinkCreated(ctx context.Context, conn *networkmanager.NetworkManager, g
 }
 
 func waitLinkDeleted(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, linkID string, timeout time.Duration) (*networkmanager.Link, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkmanager.LinkStateDeleting},
 		Target:  []string{},
 		Timeout: timeout,
@@ -395,7 +395,7 @@ func waitLinkDeleted(ctx context.Context, conn *networkmanager.NetworkManager, g
 }
 
 func waitLinkUpdated(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, linkID string, timeout time.Duration) (*networkmanager.Link, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkmanager.LinkStateUpdating},
 		Target:  []string{networkmanager.LinkStateAvailable},
 		Timeout: timeout,

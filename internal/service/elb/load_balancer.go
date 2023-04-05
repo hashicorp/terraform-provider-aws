@@ -17,7 +17,8 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -255,9 +256,9 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		elbName = v.(string)
 	} else {
 		if v, ok := d.GetOk("name_prefix"); ok {
-			elbName = resource.PrefixedUniqueId(v.(string))
+			elbName = id.PrefixedUniqueId(v.(string))
 		} else {
-			elbName = resource.PrefixedUniqueId("tf-lb-")
+			elbName = id.PrefixedUniqueId("tf-lb-")
 		}
 		d.Set("name", elbName)
 	}
@@ -490,20 +491,20 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 
 			// Occasionally AWS will error with a 'duplicate listener', without any
 			// other listeners on the ELB. Retry here to eliminate that.
-			err := resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
+			err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
 				_, err := conn.CreateLoadBalancerListenersWithContext(ctx, input)
 				if err != nil {
 					if tfawserr.ErrCodeEquals(err, elb.ErrCodeDuplicateListenerException) {
 						log.Printf("[DEBUG] Duplicate listener found for ELB (%s), retrying", d.Id())
-						return resource.RetryableError(err)
+						return retry.RetryableError(err)
 					}
 					if tfawserr.ErrMessageContains(err, elb.ErrCodeCertificateNotFoundException, "Server Certificate not found for the key: arn") {
 						log.Printf("[DEBUG] SSL Cert not found for given ARN, retrying")
-						return resource.RetryableError(err)
+						return retry.RetryableError(err)
 					}
 
 					// Didn't recognize the error, so shouldn't retry.
-					return resource.NonRetryableError(err)
+					return retry.NonRetryableError(err)
 				}
 				// Successful creation
 				return nil
@@ -731,16 +732,16 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 			}
 
 			log.Printf("[DEBUG] ELB attach subnets opts: %s", attachOpts)
-			err := resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
+			err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
 				_, err := conn.AttachLoadBalancerToSubnetsWithContext(ctx, attachOpts)
 				if err != nil {
 					if tfawserr.ErrMessageContains(err, elb.ErrCodeInvalidConfigurationRequestException, "cannot be attached to multiple subnets in the same AZ") {
 						// eventually consistent issue with removing a subnet in AZ1 and
 						// immediately adding a new one in the same AZ
 						log.Printf("[DEBUG] retrying az association")
-						return resource.RetryableError(err)
+						return retry.RetryableError(err)
 					}
-					return resource.NonRetryableError(err)
+					return retry.NonRetryableError(err)
 				}
 				return nil
 			})
@@ -794,7 +795,7 @@ func FindLoadBalancerByName(ctx context.Context, conn *elb.ELB, name string) (*e
 	output, err := conn.DescribeLoadBalancersWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -814,7 +815,7 @@ func FindLoadBalancerByName(ctx context.Context, conn *elb.ELB, name string) (*e
 
 	// Eventual consistency check.
 	if aws.StringValue(output.LoadBalancerDescriptions[0].LoadBalancerName) != name {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}

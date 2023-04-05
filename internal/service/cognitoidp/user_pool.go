@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -773,19 +773,19 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 	// IAM roles & policies can take some time to propagate and be attached
 	// to the User Pool
 	var resp *cognitoidentityprovider.CreateUserPoolOutput
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
 		resp, err = conn.CreateUserPoolWithContext(ctx, params)
 		if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
 			log.Printf("[DEBUG] Received %s, retrying CreateUserPool", err)
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleAccessPolicyException, "Role does not have permission to publish with SNS") {
 			log.Printf("[DEBUG] Received %s, retrying CreateUserPool", err)
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -816,19 +816,19 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		// IAM Roles and Policies can take some time to propagate
-		err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+		err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 			_, err := conn.SetUserPoolMfaConfigWithContext(ctx, input)
 
 			if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleAccessPolicyException, "Role does not have permission to publish with SNS") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 
 			return nil
@@ -1012,19 +1012,19 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		// IAM Roles and Policies can take some time to propagate
-		err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+		err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 			_, err := conn.SetUserPoolMfaConfigWithContext(ctx, input)
 
 			if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleAccessPolicyException, "Role does not have permission to publish with SNS") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 
 			return nil
@@ -1202,23 +1202,23 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 		// IAM roles & policies can take some time to propagate and be attached
 		// to the User Pool.
-		err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+		err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 			_, err := conn.UpdateUserPoolWithContext(ctx, params)
 			if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
 				log.Printf("[DEBUG] Received %s, retrying UpdateUserPool", err)
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleAccessPolicyException, "Role does not have permission to publish with SNS") {
 				log.Printf("[DEBUG] Received %s, retrying UpdateUserPool", err)
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidParameterException, "Please use TemporaryPasswordValidityDays in PasswordPolicy instead of UnusedAccountValidityDays") {
 				log.Printf("[DEBUG] Received %s, retrying UpdateUserPool without UnusedAccountValidityDays", err)
 				params.AdminCreateUserConfig.UnusedAccountValidityDays = nil
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			return nil
 		})

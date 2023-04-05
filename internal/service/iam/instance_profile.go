@@ -10,27 +10,32 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
 	instanceProfileNameMaxLen       = 128
-	instanceProfileNamePrefixMaxLen = instanceProfileNameMaxLen - resource.UniqueIDSuffixLength
+	instanceProfileNamePrefixMaxLen = instanceProfileNameMaxLen - id.UniqueIDSuffixLength
 )
 
-// @SDKResource("aws_iam_instance_profile")
+// @SDKResource("aws_iam_instance_profile", name="Instance Profile")
+// @Tags
 func ResourceInstanceProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceProfileCreate,
 		ReadWithoutTimeout:   resourceInstanceProfileRead,
 		UpdateWithoutTimeout: resourceInstanceProfileUpdate,
 		DeleteWithoutTimeout: resourceInstanceProfileDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -55,6 +60,7 @@ func ResourceInstanceProfile() *schema.Resource {
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validResourceName(instanceProfileNamePrefixMaxLen),
@@ -69,12 +75,12 @@ func ResourceInstanceProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"unique_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -84,45 +90,30 @@ func ResourceInstanceProfile() *schema.Resource {
 func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-	var name string
-	if v, ok := d.GetOk("name"); ok {
-		name = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		name = resource.PrefixedUniqueId(v.(string))
-	} else {
-		name = resource.UniqueId()
-	}
-
-	request := &iam.CreateInstanceProfileInput{
+	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	tags := GetTagsIn(ctx)
+	input := &iam.CreateInstanceProfileInput{
 		InstanceProfileName: aws.String(name),
 		Path:                aws.String(d.Get("path").(string)),
+		Tags:                tags,
 	}
 
-	if len(tags) > 0 {
-		request.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	var err error
-	response, err := conn.CreateInstanceProfileWithContext(ctx, request)
+	output, err := conn.CreateInstanceProfileWithContext(ctx, input)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if request.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating IAM Instance Profile (%s) with tags: %s. Trying create without tags.", name, err)
-		request.Tags = nil
+		input.Tags = nil
 
-		response, err = conn.CreateInstanceProfileWithContext(ctx, request)
-	}
-
-	if err == nil {
-		err = instanceProfileReadResult(ctx, d, response.InstanceProfile, meta) // sets id
+		output, err = conn.CreateInstanceProfileWithContext(ctx, input)
 	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IAM Instance Profile (%s): %s", name, err)
 	}
+
+	flattenInstanceProfile(ctx, d, output.InstanceProfile) // sets id
 
 	waiterRequest := &iam.GetInstanceProfileInput{
 		InstanceProfileName: aws.String(name),
@@ -131,13 +122,14 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 	// this ensures that terraform resources which rely on the instance profile will 'see'
 	// that the instance profile exists.
 	err = conn.WaitUntilInstanceProfileExistsWithContext(ctx, waiterRequest)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "timed out while waiting for instance profile %s: %s", name, err)
 	}
 
 	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
-	if request.Tags == nil && len(tags) > 0 {
-		err := instanceProfileUpdateTags(ctx, conn, d.Id(), nil, tags)
+	if input.Tags == nil && len(tags) > 0 {
+		err := instanceProfileUpdateTags(ctx, conn, d.Id(), nil, KeyValueTags(ctx, tags))
 
 		// If default tags only, log and continue. Otherwise, error.
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
@@ -159,16 +151,16 @@ func instanceProfileAddRole(ctx context.Context, conn *iam.IAM, profileName, rol
 		RoleName:            aws.String(roleName),
 	}
 
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err := conn.AddRoleToInstanceProfileWithContext(ctx, request)
 		// IAM unfortunately does not provide a better error code or message for eventual consistency
 		// InvalidParameterValue: Value (XXX) for parameter iamInstanceProfile.name is invalid. Invalid IAM Instance Profile name
 		// NoSuchEntity: The request was rejected because it referenced an entity that does not exist. The error message describes the entity. HTTP Status Code: 404
 		if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile name") || tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "The role with name") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -244,7 +236,7 @@ func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	return diags
+	return append(diags, resourceInstanceProfileRead(ctx, d, meta)...)
 }
 
 func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -284,9 +276,8 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	if err := instanceProfileReadResult(ctx, d, instanceProfile, meta); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading IAM Instance Profile (%s): %s", d.Id(), err)
-	}
+	flattenInstanceProfile(ctx, d, instanceProfile)
+
 	return diags
 }
 
@@ -312,14 +303,12 @@ func resourceInstanceProfileDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func instanceProfileReadResult(ctx context.Context, d *schema.ResourceData, result *iam.InstanceProfile, meta interface{}) error {
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
+func flattenInstanceProfile(ctx context.Context, d *schema.ResourceData, result *iam.InstanceProfile) {
 	d.SetId(aws.StringValue(result.InstanceProfileName))
-	d.Set("name", result.InstanceProfileName)
 	d.Set("arn", result.Arn)
 	d.Set("create_date", result.CreateDate.Format(time.RFC3339))
+	d.Set("name", result.InstanceProfileName)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(result.InstanceProfileName)))
 	d.Set("path", result.Path)
 	d.Set("unique_id", result.InstanceProfileId)
 
@@ -327,16 +316,5 @@ func instanceProfileReadResult(ctx context.Context, d *schema.ResourceData, resu
 		d.Set("role", result.Roles[0].RoleName) //there will only be 1 role returned
 	}
 
-	tags := KeyValueTags(ctx, result.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	SetTagsOut(ctx, result.Tags)
 }

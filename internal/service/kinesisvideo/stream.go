@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kinesisvideo"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -130,7 +130,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	arn := aws.StringValue(resp.StreamARN)
 	d.SetId(arn)
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{kinesisvideo.StatusCreating},
 		Target:     []string{kinesisvideo.StatusActive},
 		Refresh:    StreamStateRefresh(ctx, conn, arn),
@@ -226,7 +226,7 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{kinesisvideo.StatusUpdating},
 		Target:     []string{kinesisvideo.StatusActive},
 		Refresh:    StreamStateRefresh(ctx, conn, d.Id()),
@@ -256,7 +256,7 @@ func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "deleting Kinesis Video Stream (%s): %s", d.Id(), err)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{kinesisvideo.StatusDeleting},
 		Target:     []string{"DELETED"},
 		Refresh:    StreamStateRefresh(ctx, conn, d.Id()),
@@ -272,7 +272,7 @@ func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func StreamStateRefresh(ctx context.Context, conn *kinesisvideo.KinesisVideo, arn string) resource.StateRefreshFunc {
+func StreamStateRefresh(ctx context.Context, conn *kinesisvideo.KinesisVideo, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		emptyResp := &kinesisvideo.DescribeStreamInput{}
 

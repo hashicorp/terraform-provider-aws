@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -195,7 +195,7 @@ func resourceOepnzfsVolumeCreate(ctx context.Context, d *schema.ResourceData, me
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &fsx.CreateVolumeInput{
-		ClientRequestToken: aws.String(resource.UniqueId()),
+		ClientRequestToken: aws.String(id.UniqueId()),
 		Name:               aws.String(d.Get("name").(string)),
 		VolumeType:         aws.String(d.Get("volume_type").(string)),
 		OpenZFSConfiguration: &fsx.CreateOpenZFSVolumeConfiguration{
@@ -353,7 +353,7 @@ func resourceOpenzfsVolumeUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &fsx.UpdateVolumeInput{
-			ClientRequestToken:   aws.String(resource.UniqueId()),
+			ClientRequestToken:   aws.String(id.UniqueId()),
 			VolumeId:             aws.String(d.Id()),
 			OpenZFSConfiguration: &fsx.UpdateOpenZFSVolumeConfiguration{},
 		}

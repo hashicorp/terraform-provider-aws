@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -88,16 +88,16 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	var err error
 	var resp *organizations.CreatePolicyOutput
-	err = resource.RetryContext(ctx, 4*time.Minute, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
 		resp, err = conn.CreatePolicyWithContext(ctx, input)
 
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, organizations.ErrCodeFinalizingOrganizationException) {
 				log.Printf("[DEBUG] Retrying creating Organizations Policy (%s): %s", name, err)
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -144,7 +144,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 			return nil
 		}
 
-		return diag.FromErr(&resource.NotFoundError{})
+		return diag.FromErr(&retry.NotFoundError{})
 	}
 
 	d.Set("arn", resp.Policy.PolicySummary.Arn)

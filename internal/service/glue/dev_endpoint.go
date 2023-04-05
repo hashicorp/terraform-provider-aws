@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -231,21 +231,21 @@ func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	log.Printf("[DEBUG] Creating Glue Dev Endpoint: %#v", *input)
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err := conn.CreateDevEndpointWithContext(ctx, input)
 		if err != nil {
 			// Retry for IAM eventual consistency
 			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "should be given assume role permissions for Glue Service") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "is not authorized to perform") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "S3 endpoint and NAT validation has failed for subnetId") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -481,14 +481,14 @@ func resourceDevEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	if hasChanged {
 		log.Printf("[DEBUG] Updating Glue Dev Endpoint: %s", input)
-		err := resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
+		err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
 			_, err := conn.UpdateDevEndpointWithContext(ctx, input)
 			if err != nil {
 				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "another concurrent update operation") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			return nil
 		})

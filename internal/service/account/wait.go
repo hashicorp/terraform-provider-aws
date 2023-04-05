@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/account"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -15,7 +15,7 @@ const (
 )
 
 func waitAlternateContactCreated(ctx context.Context, conn *account.Account, accountID, contactType string, timeout time.Duration) (*account.AlternateContact, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusFound},
 		Refresh:                   statusAlternateContact(ctx, conn, accountID, contactType),
@@ -34,7 +34,7 @@ func waitAlternateContactCreated(ctx context.Context, conn *account.Account, acc
 }
 
 func waitAlternateContactUpdated(ctx context.Context, conn *account.Account, accountID, contactType, email, name, phone, title string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusNotUpdated},
 		Target:                    []string{statusUpdated},
 		Refresh:                   statusAlternateContactUpdate(ctx, conn, accountID, contactType, email, name, phone, title),
@@ -49,7 +49,7 @@ func waitAlternateContactUpdated(ctx context.Context, conn *account.Account, acc
 }
 
 func waitAlternateContactDeleted(ctx context.Context, conn *account.Account, accountID, contactType string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusFound},
 		Target:  []string{},
 		Refresh: statusAlternateContact(ctx, conn, accountID, contactType),

@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -136,20 +136,20 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 		}},
 	}
 
-	err = resource.RetryContext(ctx, maxDuration(replicaUpdateTimeout, d.Timeout(schema.TimeoutCreate)), func() *resource.RetryError {
+	err = retry.RetryContext(ctx, maxDuration(replicaUpdateTimeout, d.Timeout(schema.TimeoutCreate)), func() *retry.RetryError {
 		_, err := conn.UpdateTableWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "simultaneously") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceInUseException) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -402,20 +402,20 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 			TableName: aws.String(tableName),
 		}
 
-		err := resource.RetryContext(ctx, maxDuration(replicaUpdateTimeout, d.Timeout(schema.TimeoutUpdate)), func() *resource.RetryError {
+		err := retry.RetryContext(ctx, maxDuration(replicaUpdateTimeout, d.Timeout(schema.TimeoutUpdate)), func() *retry.RetryError {
 			_, err := tabConn.UpdateTableWithContext(ctx, input)
 			if err != nil {
 				if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 				if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 				if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceInUseException) {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			return nil
 		})
@@ -489,20 +489,20 @@ func resourceTableReplicaDelete(ctx context.Context, d *schema.ResourceData, met
 		},
 	}
 
-	err = resource.RetryContext(ctx, updateTableTimeout, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, updateTableTimeout, func() *retry.RetryError {
 		_, err := conn.UpdateTableWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceInUseException) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})

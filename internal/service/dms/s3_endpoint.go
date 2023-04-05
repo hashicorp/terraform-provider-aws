@@ -12,7 +12,7 @@ import (
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -352,16 +352,16 @@ func resourceS3EndpointCreate(ctx context.Context, d *schema.ResourceData, meta 
 	log.Println("[DEBUG] DMS create endpoint:", input)
 
 	var out *dms.CreateEndpointOutput
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		var err error
 		out, err = conn.CreateEndpointWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, "AccessDeniedFault") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -529,15 +529,15 @@ func resourceS3EndpointUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 		log.Println("[DEBUG] DMS update endpoint:", input)
 
-		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+		err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 			_, err := conn.ModifyEndpointWithContext(ctx, input)
 
 			if tfawserr.ErrCodeEquals(err, "AccessDeniedFault") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 
 			return nil
