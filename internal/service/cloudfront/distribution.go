@@ -835,11 +835,12 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 	input := &cloudfront.CreateDistributionWithTagsInput{
 		DistributionConfigWithTags: &cloudfront.DistributionConfigWithTags{
 			DistributionConfig: expandDistributionConfig(d),
+			Tags:               &cloudfront.Tags{Items: []*cloudfront.Tag{}},
 		},
 	}
 
 	if tags := GetTagsIn(ctx); len(tags) > 0 {
-		input.DistributionConfigWithTags.Tags = &cloudfront.Tags{Items: tags}
+		input.DistributionConfigWithTags.Tags.Items = tags
 	}
 
 	var resp *cloudfront.CreateDistributionWithTagsOutput
