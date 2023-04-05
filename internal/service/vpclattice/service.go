@@ -24,6 +24,7 @@ import (
 )
 
 // @SDKResource("aws_vpclattice_service")
+// @Tags(identifier_attribute="arn")
 func ResourceService() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceCreate,
