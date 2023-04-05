@@ -15,9 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_glue_registry")
+// @SDKResource("aws_glue_registry", name="Registry")
+// @Tags(identifierAttribute="arn")
 func ResourceRegistry() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRegistryCreate,
@@ -49,8 +51,8 @@ func ResourceRegistry() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9-_$#]+$`), ""),
 				),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -58,12 +60,10 @@ func ResourceRegistry() *schema.Resource {
 func resourceRegistryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &glue.CreateRegistryInput{
 		RegistryName: aws.String(d.Get("registry_name").(string)),
-		Tags:         Tags(tags.IgnoreAWS()),
+		Tags:         GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -83,8 +83,6 @@ func resourceRegistryCreate(ctx context.Context, d *schema.ResourceData, meta in
 func resourceRegistryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := FindRegistryByID(ctx, conn, d.Id())
 	if err != nil {
@@ -107,23 +105,6 @@ func resourceRegistryRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("description", output.Description)
 	d.Set("registry_name", output.RegistryName)
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Glue Registry (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -144,13 +125,6 @@ func resourceRegistryUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		_, err := conn.UpdateRegistryWithContext(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Glue Registry (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
