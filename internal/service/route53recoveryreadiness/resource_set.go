@@ -18,9 +18,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_route53recoveryreadiness_resource_set")
+// @SDKResource("aws_route53recoveryreadiness_resource_set", name="Resource Set")
+// @Tags(identifierAttribute="arn")
 func ResourceResourceSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceSetCreate,
@@ -137,8 +139,8 @@ func ResourceResourceSet() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -148,8 +150,6 @@ func ResourceResourceSet() *schema.Resource {
 func resourceResourceSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &route53recoveryreadiness.CreateResourceSetInput{
 		ResourceSetName: aws.String(d.Get("resource_set_name").(string)),
@@ -164,7 +164,7 @@ func resourceResourceSetCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(aws.StringValue(resp.ResourceSetName))
 
-	if len(tags) > 0 {
+	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
 		arn := aws.StringValue(resp.ResourceSetArn)
 		if err := UpdateTags(ctx, conn, arn, nil, tags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "adding Route53 Recovery Readiness Resource Set (%s) tags: %s", d.Id(), err)
@@ -177,8 +177,6 @@ func resourceResourceSetCreate(ctx context.Context, d *schema.ResourceData, meta
 func resourceResourceSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &route53recoveryreadiness.GetResourceSetInput{
 		ResourceSetName: aws.String(d.Id()),
@@ -204,23 +202,6 @@ func resourceResourceSetRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting AWS Route53 Recovery Readiness Resource Set resources: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Route53 Recovery Readiness Resource Set (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -237,14 +218,6 @@ func resourceResourceSetUpdate(ctx context.Context, d *schema.ResourceData, meta
 	_, err := conn.UpdateResourceSetWithContext(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Route53 Recovery Readiness Resource Set: %s", err)
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		arn := d.Get("arn").(string)
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Route53 Recovery Readiness Resource Set (%s) tags: %s", d.Id(), err)
-		}
 	}
 
 	return append(diags, resourceResourceSetRead(ctx, d, meta)...)

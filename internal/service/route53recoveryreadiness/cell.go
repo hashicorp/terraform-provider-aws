@@ -18,9 +18,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_route53recoveryreadiness_cell")
+// @SDKResource("aws_route53recoveryreadiness_cell", name="Cell")
+// @Tags(identifierAttribute="arn")
 func ResourceCell() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCellCreate,
@@ -59,8 +61,8 @@ func ResourceCell() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -70,8 +72,6 @@ func ResourceCell() *schema.Resource {
 func resourceCellCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &route53recoveryreadiness.CreateCellInput{
 		CellName: aws.String(d.Get("cell_name").(string)),
@@ -85,7 +85,7 @@ func resourceCellCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.SetId(aws.StringValue(resp.CellName))
 
-	if len(tags) > 0 {
+	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
 		arn := aws.StringValue(resp.CellArn)
 		if err := UpdateTags(ctx, conn, arn, nil, tags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "adding Route53 Recovery Readiness Cell (%s) tags: %s", d.Id(), err)
@@ -98,8 +98,6 @@ func resourceCellCreate(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceCellRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &route53recoveryreadiness.GetCellInput{
 		CellName: aws.String(d.Id()),
@@ -122,23 +120,6 @@ func resourceCellRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("cells", resp.Cells)
 	d.Set("parent_readiness_scopes", resp.ParentReadinessScopes)
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Route53 Recovery Readiness Cell (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -154,14 +135,6 @@ func resourceCellUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	_, err := conn.UpdateCellWithContext(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Route53 Recovery Readiness Cell: %s", err)
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		arn := d.Get("arn").(string)
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Route53 Recovery Readiness Cell (%s) tags: %s", d.Id(), err)
-		}
 	}
 
 	return append(diags, resourceCellRead(ctx, d, meta)...)

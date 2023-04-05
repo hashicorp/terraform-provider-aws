@@ -69,6 +69,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceEndpoint,
 			TypeName: "aws_route53_resolver_endpoint",
+			Name:     "Endpoint",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceFirewallConfig,
@@ -77,6 +81,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceFirewallDomainList,
 			TypeName: "aws_route53_resolver_firewall_domain_list",
+			Name:     "Firewall Domain List",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceFirewallRule,
@@ -85,14 +93,26 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceFirewallRuleGroup,
 			TypeName: "aws_route53_resolver_firewall_rule_group",
+			Name:     "Firewall Rule Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceFirewallRuleGroupAssociation,
 			TypeName: "aws_route53_resolver_firewall_rule_group_association",
+			Name:     "Rule Group Association",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceQueryLogConfig,
 			TypeName: "aws_route53_resolver_query_log_config",
+			Name:     "Query Log Config",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceQueryLogConfigAssociation,
@@ -101,6 +121,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceRule,
 			TypeName: "aws_route53_resolver_rule",
+			Name:     "Rule",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceRuleAssociation,
