@@ -22,6 +22,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -29,9 +30,8 @@ const (
 	coreNetworkStatePending = "PENDING"
 )
 
-// This resource is explicitly NOT exported from the provider until design is finalized.
-// Its Delete handler is used by sweepers.
-// @SDKResource("aws_networkmanager_core_network")
+// @SDKResource("aws_networkmanager_core_network", name="Core Network")
+// @Tags(identifierAttribute="arn")
 func ResourceCoreNetwork() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCoreNetworkCreate,
@@ -161,22 +161,20 @@ func ResourceCoreNetwork() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	globalNetworkID := d.Get("global_network_id").(string)
-
 	input := &networkmanager.CreateCoreNetworkInput{
 		ClientToken:     aws.String(id.UniqueId()),
 		GlobalNetworkId: aws.String(globalNetworkID),
+		Tags:            GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -207,10 +205,6 @@ func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.PolicyDocument = aws.String(policyDocumentTarget)
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	output, err := conn.CreateCoreNetworkWithContext(ctx, input)
 
 	if err != nil {
@@ -228,8 +222,6 @@ func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceCoreNetworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	coreNetwork, err := FindCoreNetworkByID(ctx, conn, d.Id())
 
@@ -277,16 +269,7 @@ func resourceCoreNetworkRead(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set("policy_document", encodedPolicyDocument)
 	}
 
-	tags := KeyValueTags(ctx, coreNetwork.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, coreNetwork.Tags)
 
 	return nil
 }
@@ -346,14 +329,6 @@ func resourceCoreNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta
 			if _, err := waitCoreNetworkUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return diag.Errorf("waiting for Network Manager Core Network (%s) update: %s", d.Id(), err)
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating Network Manager Core Network (%s) tags: %s", d.Id(), err)
 		}
 	}
 
