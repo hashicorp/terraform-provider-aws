@@ -2,7 +2,6 @@ package emrserverless_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"regexp"
 	"testing"
@@ -148,15 +147,8 @@ func TestAccEMRServerlessApplication_imageConfiguration(t *testing.T) {
 	resourceName := "aws_emrserverless_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	firstVersionRegex, err := regexp.Compile("1\\.0\\.0")
-	if err != nil {
-		t.Error(err)
-	}
-
-	secondVersionRegex, err := regexp.Compile("1\\.0\\.1")
-	if err != nil {
-		t.Error(err)
-	}
+	firstVersionRegex := regexp.MustCompile(`1\.0\.0`)
+	secondVersionRegex := regexp.MustCompile(`1\.0\.1`)
 
 	firstImageConfig, err := testAccApplicationConfig_imageConfiguration(rName, "1.0.0", "1.0.1", "1.0.0")
 	if err != nil {
@@ -513,11 +505,11 @@ resource "aws_emrserverless_application" "test" {
 // repo in order to run the test
 func testAccApplicationConfig_imageConfiguration(rName, firstImageVersion, secondImageVersion, selectedImageVersion string) (string, error) {
 	if firstImageVersion == secondImageVersion {
-		return "", errors.New(fmt.Sprintf("firstImageVersion and secondImageVersion cannot be equal. Was given %[1]q for both", firstImageVersion))
+		return "", fmt.Errorf("firstImageVersion and secondImageVersion cannot be equal. Was given %[1]q for both", firstImageVersion)
 	}
 
 	if selectedImageVersion != firstImageVersion && selectedImageVersion != secondImageVersion {
-		return "", errors.New(fmt.Sprintf("selectedImageVersion must be equal to firstImageVersion or secondImageVersion (%[1]q or %[2]q). Was given %[3]q", firstImageVersion, secondImageVersion, selectedImageVersion))
+		return "", fmt.Errorf("selectedImageVersion must be equal to firstImageVersion or secondImageVersion (%[1]q or %[2]q). Was given %[3]q", firstImageVersion, secondImageVersion, selectedImageVersion)
 	}
 
 	selectedVersionResourceName := "test_version1"
