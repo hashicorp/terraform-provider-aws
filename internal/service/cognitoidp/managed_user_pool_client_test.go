@@ -215,7 +215,7 @@ func TestAccCognitoIDPManagedUserPoolClient_accessTokenValidity(t *testing.T) {
 	})
 }
 
-func TestAccCognitoIDManagedPUserPoolClient_accessTokenValidity_error(t *testing.T) {
+func TestAccCognitoIDPManagedUserPoolClient_accessTokenValidity_error(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := randomOpenSearchDomainName()
 
