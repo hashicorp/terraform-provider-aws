@@ -5612,6 +5612,9 @@ var awsPartition = partition{
 		"codepipeline": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
+					Region: "af-south-1",
+				}: endpoint{},
+				endpointKey{
 					Region: "ap-east-1",
 				}: endpoint{},
 				endpointKey{
@@ -5640,6 +5643,9 @@ var awsPartition = partition{
 				},
 				endpointKey{
 					Region: "eu-central-1",
+				}: endpoint{},
+				endpointKey{
+					Region: "eu-central-2",
 				}: endpoint{},
 				endpointKey{
 					Region: "eu-north-1",
@@ -5701,6 +5707,9 @@ var awsPartition = partition{
 					},
 					Deprecated: boxedTrue,
 				},
+				endpointKey{
+					Region: "me-south-1",
+				}: endpoint{},
 				endpointKey{
 					Region: "sa-east-1",
 				}: endpoint{},
