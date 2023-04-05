@@ -44,6 +44,7 @@ const (
 	SSMContactsEndpointId                = "ssm-contacts"
 	SSMIncidentsEndpointID               = "ssm-incidents"
 	TranscribeEndpointID                 = "transcribe"
+	VPCLatticeEndpointID                 = "vpc-lattice"
 )
 
 // Type ServiceDatum corresponds closely to columns in `names_data.csv` and are

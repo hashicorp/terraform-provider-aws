@@ -1440,7 +1440,7 @@ func BucketRegionalDomainName(bucket string, region string) (string, error) {
 	if region == "" {
 		return fmt.Sprintf("%s.s3.amazonaws.com", bucket), nil //lintignore:AWSR001
 	}
-	endpoint, err := endpoints.DefaultResolver().EndpointFor(endpoints.S3ServiceID, region)
+	endpoint, err := endpoints.DefaultResolver().EndpointFor(s3.EndpointsID, region)
 	if err != nil {
 		return "", err
 	}
