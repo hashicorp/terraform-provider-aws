@@ -18,9 +18,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_quicksight_data_set")
+// @SDKResource("aws_quicksight_data_set", name="Data Set")
+// @Tags(identifierAttribute="arn")
 func ResourceDataSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataSetCreate,
@@ -277,8 +279,8 @@ func ResourceDataSet() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
@@ -752,7 +754,6 @@ func physicalTableMapSchema() *schema.Resource {
 
 func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QuickSightConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("aws_account_id"); ok {
@@ -768,11 +769,7 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		ImportMode:       aws.String(d.Get("import_mode").(string)),
 		PhysicalTableMap: expandDataSetPhysicalTableMap(d.Get("physical_table_map").(*schema.Set)),
 		Name:             aws.String(d.Get("name").(string)),
-	}
-
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
+		Tags:             GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("column_groups"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -817,8 +814,6 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QuickSightConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
 	if err != nil {
@@ -870,11 +865,11 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("error setting field_folders: %s", err)
 	}
 
-	if err := d.Set("logical_table_map", flattenLogicalTableMap(dataSet.LogicalTableMap)); err != nil {
+	if err := d.Set("logical_table_map", flattenLogicalTableMap(dataSet.LogicalTableMap, logicalTableMapSchema())); err != nil {
 		return diag.Errorf("error setting logical_table_map: %s", err)
 	}
 
-	if err := d.Set("physical_table_map", flattenPhysicalTableMap(dataSet.PhysicalTableMap)); err != nil {
+	if err := d.Set("physical_table_map", flattenPhysicalTableMap(dataSet.PhysicalTableMap, physicalTableMapSchema())); err != nil {
 		return diag.Errorf("error setting physical_table_map: %s", err)
 	}
 
@@ -884,23 +879,6 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if err := d.Set("row_level_permission_tag_configuration", flattenRowLevelPermissionTagConfiguration(dataSet.RowLevelPermissionTagConfiguration)); err != nil {
 		return diag.Errorf("error setting row_level_permission_tag_configuration: %s", err)
-	}
-
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-
-	if err != nil {
-		return diag.Errorf("error listing tags for QuickSight Data Set (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("error setting tags_all: %s", err)
 	}
 
 	permsResp, err := conn.DescribeDataSetPermissionsWithContext(ctx, &quicksight.DescribeDataSetPermissionsInput{
@@ -998,14 +976,6 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if err != nil {
 			return diag.Errorf("error updating QuickSight Data Set (%s) permissions: %s", dataSetId, err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("error updating QuickSight Data Source (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -1928,7 +1898,7 @@ func fieldFoldersHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func flattenLogicalTableMap(apiObject map[string]*quicksight.LogicalTable) *schema.Set {
+func flattenLogicalTableMap(apiObject map[string]*quicksight.LogicalTable, resourceSchema *schema.Resource) *schema.Set {
 	if len(apiObject) == 0 {
 		return nil
 	}
@@ -1954,7 +1924,7 @@ func flattenLogicalTableMap(apiObject map[string]*quicksight.LogicalTable) *sche
 		tfList = append(tfList, tfMap)
 	}
 
-	return schema.NewSet(schema.HashResource(logicalTableMapSchema()), tfList)
+	return schema.NewSet(schema.HashResource(resourceSchema), tfList)
 }
 
 func flattenDataTransforms(apiObject []*quicksight.TransformOperation) []interface{} {
@@ -2076,7 +2046,7 @@ func flattenProjectOperation(apiObject *quicksight.ProjectOperation) []interface
 
 	tfMap := map[string]interface{}{}
 	if apiObject.ProjectedColumns != nil {
-		tfMap["project_columns"] = aws.StringValueSlice(apiObject.ProjectedColumns)
+		tfMap["projected_columns"] = flex.FlattenStringList(apiObject.ProjectedColumns)
 	}
 
 	return []interface{}{tfMap}
@@ -2228,7 +2198,7 @@ func flattenJoinKeyProperties(apiObject *quicksight.JoinKeyProperties) map[strin
 	return tfMap
 }
 
-func flattenPhysicalTableMap(apiObject map[string]*quicksight.PhysicalTable) *schema.Set {
+func flattenPhysicalTableMap(apiObject map[string]*quicksight.PhysicalTable, resourceSchema *schema.Resource) *schema.Set {
 	if len(apiObject) == 0 {
 		return nil
 	}
@@ -2254,7 +2224,7 @@ func flattenPhysicalTableMap(apiObject map[string]*quicksight.PhysicalTable) *sc
 		tfList = append(tfList, tfMap)
 	}
 
-	return schema.NewSet(schema.HashResource(physicalTableMapSchema()), tfList)
+	return schema.NewSet(schema.HashResource(resourceSchema), tfList)
 }
 
 func flattenCustomSQL(apiObject *quicksight.CustomSql) []interface{} {

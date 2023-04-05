@@ -20,9 +20,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_storagegateway_cached_iscsi_volume")
+// @SDKResource("aws_storagegateway_cached_iscsi_volume", name="Cached iSCSI Volume")
+// @Tags(identifierAttribute="arn")
 func ResourceCachediSCSIVolume() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCachediSCSIVolumeCreate,
@@ -95,8 +97,8 @@ func ResourceCachediSCSIVolume() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"kms_encrypted": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -118,8 +120,6 @@ func ResourceCachediSCSIVolume() *schema.Resource {
 func resourceCachediSCSIVolumeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &storagegateway.CreateCachediSCSIVolumeInput{
 		ClientToken:        aws.String(id.UniqueId()),
@@ -127,7 +127,7 @@ func resourceCachediSCSIVolumeCreate(ctx context.Context, d *schema.ResourceData
 		NetworkInterfaceId: aws.String(d.Get("network_interface_id").(string)),
 		TargetName:         aws.String(d.Get("target_name").(string)),
 		VolumeSizeInBytes:  aws.Int64(int64(d.Get("volume_size_in_bytes").(int))),
-		Tags:               Tags(tags.IgnoreAWS()),
+		Tags:               GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("snapshot_id"); ok {
@@ -157,25 +157,9 @@ func resourceCachediSCSIVolumeCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceCachediSCSIVolumeRead(ctx, d, meta)...)
 }
 
-func resourceCachediSCSIVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
-		}
-	}
-
-	return append(diags, resourceCachediSCSIVolumeRead(ctx, d, meta)...)
-}
-
 func resourceCachediSCSIVolumeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &storagegateway.DescribeCachediSCSIVolumesInput{
 		VolumeARNs: []*string{aws.String(d.Id())},
@@ -214,21 +198,6 @@ func resourceCachediSCSIVolumeRead(ctx context.Context, d *schema.ResourceData, 
 		d.Set("kms_encrypted", false)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for resource (%s): %s", arn, err)
-	}
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	if volume.VolumeiSCSIAttributes != nil {
 		d.Set("chap_enabled", volume.VolumeiSCSIAttributes.ChapEnabled)
 		d.Set("lun_number", volume.VolumeiSCSIAttributes.LunNumber)
@@ -247,6 +216,14 @@ func resourceCachediSCSIVolumeRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	return diags
+}
+
+func resourceCachediSCSIVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// Tags only.
+
+	return append(diags, resourceCachediSCSIVolumeRead(ctx, d, meta)...)
 }
 
 func resourceCachediSCSIVolumeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

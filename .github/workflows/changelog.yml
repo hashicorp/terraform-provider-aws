@@ -4,11 +4,6 @@ on:
     branches:
       - main
       - 'release/**'
-  pull_request:
-    paths:
-      - .changelog/*
-      - go.sum
-      - CHANGELOG.md
   pull_request_target:
 
 jobs:
@@ -24,7 +19,7 @@ jobs:
       changed: ${{ steps.filter.outputs.changed }}
     steps:
       - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50
-        if: (github.event_name == 'pull_request_target' && !needs.community_check.outputs.maintainer)
+        if: github.event_name == 'pull_request_target' && needs.community_check.outputs.maintainer == 'false'
         id: filter
         with:
           filters: |
@@ -33,7 +28,7 @@ jobs:
 
   comment:
     needs: changes
-    if: needs.changes.outputs.changed
+    if: needs.changes.outputs.changed == 'true'
     name: Comment
     runs-on: ubuntu-latest
     steps:
@@ -58,19 +53,3 @@ jobs:
             Please note that the `CHANGELOG.md` file contents are handled by the maintainers during merge. This is to prevent pull request merge conflicts, especially for contributions which may not be merged immediately. Please see the [Contributing Guide](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing) for additional pull request review items.
 
             Remove any changes to the `CHANGELOG.md` file and commit them in this pull request to prevent delays with reviewing and potentially merging this pull request.
-
-  misspell:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
-      - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9
-        with:
-          go-version-file: go.mod
-      - uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8
-        continue-on-error: true
-        timeout-minutes: 2
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - run: cd .ci/tools && go install github.com/client9/misspell/cmd/misspell
-      - run: misspell -error -source text CHANGELOG.md .changelog

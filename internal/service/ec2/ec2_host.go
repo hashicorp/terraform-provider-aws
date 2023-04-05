@@ -18,9 +18,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ec2_host")
+// @SDKResource("aws_ec2_host", name="Host")
+// @Tags(identifierAttribute="id")
 func ResourceHost() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHostCreate,
@@ -75,8 +77,8 @@ func ResourceHost() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -84,15 +86,14 @@ func ResourceHost() *schema.Resource {
 func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.AllocateHostsInput{
-		AutoPlacement:    aws.String(d.Get("auto_placement").(string)),
-		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
-		ClientToken:      aws.String(id.UniqueId()),
-		HostRecovery:     aws.String(d.Get("host_recovery").(string)),
-		Quantity:         aws.Int64(1),
+		AutoPlacement:     aws.String(d.Get("auto_placement").(string)),
+		AvailabilityZone:  aws.String(d.Get("availability_zone").(string)),
+		ClientToken:       aws.String(id.UniqueId()),
+		HostRecovery:      aws.String(d.Get("host_recovery").(string)),
+		Quantity:          aws.Int64(1),
+		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeDedicatedHost),
 	}
 
 	if v, ok := d.GetOk("instance_family"); ok {
@@ -105,10 +106,6 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if v, ok := d.GetOk("outpost_arn"); ok {
 		input.OutpostArn = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeDedicatedHost)
 	}
 
 	output, err := conn.AllocateHostsWithContext(ctx, input)
@@ -129,8 +126,6 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	host, err := FindHostByID(ctx, conn, d.Id())
 
@@ -160,16 +155,7 @@ func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("outpost_arn", host.OutpostArn)
 	d.Set("owner_id", host.OwnerId)
 
-	tags := KeyValueTags(ctx, host.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, host.Tags)
 
 	return diags
 }
@@ -211,13 +197,6 @@ func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 		if _, err := WaitHostUpdated(ctx, conn, d.Id()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Host (%s) update: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 Host (%s) tags: %s", d.Id(), err)
 		}
 	}
 

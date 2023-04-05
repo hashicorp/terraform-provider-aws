@@ -72,7 +72,7 @@ func testAccAnalyzer_disappears(t *testing.T) {
 	})
 }
 
-func testAccAnalyzer_Tags(t *testing.T) {
+func testAccAnalyzer_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var analyzer accessanalyzer.AnalyzerSummary
 

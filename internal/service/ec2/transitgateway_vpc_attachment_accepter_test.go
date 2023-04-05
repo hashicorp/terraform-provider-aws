@@ -57,7 +57,7 @@ func testAccTransitGatewayVPCAttachmentAccepter_basic(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayVPCAttachmentAccepter_Tags(t *testing.T) {
+func testAccTransitGatewayVPCAttachmentAccepter_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var transitGatewayVpcAttachment ec2.TransitGatewayVpcAttachment
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment_accepter.test"

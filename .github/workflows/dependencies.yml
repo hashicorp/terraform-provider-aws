@@ -20,7 +20,7 @@ jobs:
       changed: ${{ steps.filter.outputs.changed }}
     steps:
       - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50
-        if: (github.event_name == 'pull_request_target' && !needs.community_check.outputs.maintainer)
+        if: github.event_name == 'pull_request_target' && needs.community_check.outputs.maintainer == 'false'
         id: filter
         with:
           filters: |
@@ -31,7 +31,7 @@ jobs:
 
   comment:
     needs: changes
-    if: needs.changes.outputs.changed
+    if: needs.changes.outputs.changed == 'true'
     name: Comment
     runs-on: ubuntu-latest
     steps:
