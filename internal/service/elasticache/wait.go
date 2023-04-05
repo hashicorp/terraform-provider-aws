@@ -71,6 +71,7 @@ func WaitReplicationGroupMemberClustersAvailable(ctx context.Context, conn *elas
 			CacheClusterStatusCreating,
 			CacheClusterStatusDeleting,
 			CacheClusterStatusModifying,
+			CacheClusterStatusSnapshotting,
 		},
 		Target:     []string{CacheClusterStatusAvailable},
 		Refresh:    StatusReplicationGroupMemberClusters(ctx, conn, replicationGroupID),
