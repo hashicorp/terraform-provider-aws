@@ -1552,11 +1552,11 @@ func testAccContainerRecipeConfig_platformOverride(rName string) string {
 		testAccContainerRecipeBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_container_recipe" "test" {
-  name           		= %[1]q
-  container_type 		= "DOCKER"
-  parent_image   		= "public.ecr.aws/amazonlinux/amazonlinux:latest"
-  version        		= "1.0.0"
-	platform_override = "Linux"
+  name              = %[1]q
+  container_type    = "DOCKER"
+  parent_image      = "public.ecr.aws/amazonlinux/amazonlinux:latest"
+  version           = "1.0.0"
+  platform_override = "Linux"
 
   component {
     component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
