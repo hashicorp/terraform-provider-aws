@@ -29,7 +29,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceService,
 			TypeName: "aws_vpclattice_service",
 			Name:     "Service",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }
