@@ -13,6 +13,7 @@ FEATURES:
 * **New Resource:** `aws_quicksight_account_subscription` ([#30359](https://github.com/hashicorp/terraform-provider-aws/issues/30359))
 * **New Resource:** `aws_quicksight_data_set` ([#30349](https://github.com/hashicorp/terraform-provider-aws/issues/30349))
 * **New Resource:** `aws_quicksight_folder` ([#30400](https://github.com/hashicorp/terraform-provider-aws/issues/30400))
+* **New Resource:** `aws_vpclattice_service` ([#30429](https://github.com/hashicorp/terraform-provider-aws/issues/30429))
 
 ENHANCEMENTS:
 
@@ -30,6 +31,7 @@ BUG FIXES:
 * resource/aws_db_instance: Fix crash when updating `password` ([#30379](https://github.com/hashicorp/terraform-provider-aws/issues/30379))
 * resource/aws_glue_crawler: Fix InvalidInputException error string matching ([#30370](https://github.com/hashicorp/terraform-provider-aws/issues/30370))
 * resource/aws_glue_trigger: Fix InvalidInputException error string matching ([#30370](https://github.com/hashicorp/terraform-provider-aws/issues/30370))
+* resource/aws_medialive_channel: Fix attribute `certificate_mode` spelling in `rtmp_output_settings` ([#30224](https://github.com/hashicorp/terraform-provider-aws/issues/30224))
 * resource/aws_rds_cluster: Fix crash when updating `master_password` ([#30379](https://github.com/hashicorp/terraform-provider-aws/issues/30379))
 * resource/aws_rds_cluster: Fix inconsistent final plan errors when `engine_version` updates are not applied immediately ([#30247](https://github.com/hashicorp/terraform-provider-aws/issues/30247))
 * resource/aws_rds_cluster: Send `db_instance_parameter_group_name` on all modify requests when set ([#30247](https://github.com/hashicorp/terraform-provider-aws/issues/30247))
