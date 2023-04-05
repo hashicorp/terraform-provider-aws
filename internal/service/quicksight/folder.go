@@ -24,8 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @SDKResource("aws_quicksight_folder")
+// @SDKResource("aws_quicksight_folder", name="Folder")
+// @Tags(identifierAttribute="arn")
 func ResourceFolder() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFolderCreate,
@@ -122,8 +122,8 @@ func ResourceFolder() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
@@ -149,6 +149,7 @@ func resourceFolderCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		AwsAccountId: aws.String(awsAccountId),
 		FolderId:     aws.String(folderId),
 		Name:         aws.String(d.Get("name").(string)),
+		Tags:         GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("folder_type"); ok {
@@ -161,13 +162,6 @@ func resourceFolderCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if v, ok := d.GetOk("permissions"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		in.Permissions = expandResourcePermissions(v.([]interface{}))
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	out, err := conn.CreateFolderWithContext(ctx, in)
@@ -215,23 +209,6 @@ func resourceFolderRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if err := d.Set("folder_path", flex.FlattenStringList(out.FolderPath)); err != nil {
 		return diag.Errorf("error setting folder_path: %s", err)
-	}
-
-	tags, err := ListTags(ctx, conn, aws.StringValue(out.Arn))
-	if err != nil {
-		return create.DiagError(names.QuickSight, create.ErrActionReading, ResNameFolder, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.QuickSight, create.ErrActionSetting, ResNameFolder, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.QuickSight, create.ErrActionSetting, ResNameFolder, d.Id(), err)
 	}
 
 	permsResp, err := conn.DescribeFolderPermissionsWithContext(ctx, &quicksight.DescribeFolderPermissionsInput{
@@ -295,14 +272,6 @@ func resourceFolderUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		if err != nil {
 			return diag.Errorf("error updating QuickSight Folder (%s) permissions: %s", folderId, err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("error updating QuickSight Folder (%s) tags: %s", d.Id(), err)
 		}
 	}
 
