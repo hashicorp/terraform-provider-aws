@@ -1137,36 +1137,6 @@ resource "aws_cognito_user_pool_client" "test" {
 `, rName, revoke))
 }
 
-func testAccUserPoolClientConfig_refreshTokenValidity(rName string, refreshTokenValidity int) string {
-	return acctest.ConfigCompose(
-		testAccUserPoolClientBaseConfig(rName),
-		fmt.Sprintf(`
-resource "aws_cognito_user_pool_client" "test" {
-  name         = %[1]q
-  user_pool_id = aws_cognito_user_pool.test.id
-
-  refresh_token_validity = %[2]d
-}
-`, rName, refreshTokenValidity))
-}
-
-func testAccUserPoolClientConfig_refreshTokenValidityUnit(rName string, refreshTokenValidity int, unit string) string {
-	return acctest.ConfigCompose(
-		testAccUserPoolClientBaseConfig(rName),
-		fmt.Sprintf(`
-resource "aws_cognito_user_pool_client" "test" {
-  name         = %[1]q
-  user_pool_id = aws_cognito_user_pool.test.id
-
-  refresh_token_validity = %[2]d
-
-  token_validity_units {
-    refresh_token = %[3]q
-  }
-}
-`, rName, refreshTokenValidity, unit))
-}
-
 func testAccUserPoolClientConfig_accessTokenValidity(rName string, validity int) string {
 	return acctest.ConfigCompose(
 		testAccUserPoolClientBaseConfig(rName),
@@ -1225,6 +1195,36 @@ resource "aws_cognito_user_pool_client" "test" {
   }
 }
 `, rName, validity, unit))
+}
+
+func testAccUserPoolClientConfig_refreshTokenValidity(rName string, refreshTokenValidity int) string {
+	return acctest.ConfigCompose(
+		testAccUserPoolClientBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_cognito_user_pool_client" "test" {
+  name         = %[1]q
+  user_pool_id = aws_cognito_user_pool.test.id
+
+  refresh_token_validity = %[2]d
+}
+`, rName, refreshTokenValidity))
+}
+
+func testAccUserPoolClientConfig_refreshTokenValidityUnit(rName string, refreshTokenValidity int, unit string) string {
+	return acctest.ConfigCompose(
+		testAccUserPoolClientBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_cognito_user_pool_client" "test" {
+  name         = %[1]q
+  user_pool_id = aws_cognito_user_pool.test.id
+
+  refresh_token_validity = %[2]d
+
+  token_validity_units {
+    refresh_token = %[3]q
+  }
+}
+`, rName, refreshTokenValidity, unit))
 }
 
 func testAccUserPoolClientConfig_tokenValidityUnits(rName, value string) string {
