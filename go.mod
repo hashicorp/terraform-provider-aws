@@ -12,7 +12,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.20.7
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.22.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.92.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.93.0
 	github.com/aws/aws-sdk-go-v2/service/fis v1.14.6
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.15.6
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.6
