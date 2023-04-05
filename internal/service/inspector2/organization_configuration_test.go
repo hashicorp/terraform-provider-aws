@@ -19,19 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccInspector2OrganizationConfiguration_serial(t *testing.T) {
-	t.Parallel()
-
-	testCases := map[string]func(t *testing.T){
-		"basic":      testAccOrganizationConfiguration_basic,
-		"disappears": testAccOrganizationConfiguration_disappears,
-		"ec2ECR":     testAccOrganizationConfiguration_ec2ECR,
-		"lambda":     testAccOrganizationConfiguration_lambda,
-	}
-
-	acctest.RunSerialTests1Level(t, testCases, 0)
-}
-
 func testAccOrganizationConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_inspector2_organization_configuration.test"

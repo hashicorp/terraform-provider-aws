@@ -19,9 +19,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_api_gateway_usage_plan")
+// @SDKResource("aws_api_gateway_usage_plan", name="Usage Plan")
+// @Tags(identifierAttribute="arn")
 func ResourceUsagePlan() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUsagePlanCreate,
@@ -111,8 +113,8 @@ func ResourceUsagePlan() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"throttle_settings": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -143,12 +145,11 @@ func ResourceUsagePlan() *schema.Resource {
 func resourceUsagePlanCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &apigateway.CreateUsagePlanInput{
 		Name: aws.String(name),
+		Tags: GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("api_stages"); ok && v.(*schema.Set).Len() > 0 {
@@ -176,10 +177,6 @@ func resourceUsagePlanCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	if v, ok := d.GetOk("throttle_settings"); ok {
 		input.Throttle = expandThrottleSettings(v.([]interface{}))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	output, err := conn.CreateUsagePlanWithContext(ctx, input)
@@ -217,8 +214,6 @@ func resourceUsagePlanCreate(ctx context.Context, d *schema.ResourceData, meta i
 func resourceUsagePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	up, err := FindUsagePlanByID(ctx, conn, d.Id())
 
@@ -258,16 +253,7 @@ func resourceUsagePlanRead(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	tags := KeyValueTags(ctx, up.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, up.Tags)
 
 	return diags
 }
@@ -468,14 +454,6 @@ func resourceUsagePlanUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating API Gateway Usage Plan (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating API Gateway Usage Plan (%s) tags: %s", d.Id(), err)
 		}
 	}
 

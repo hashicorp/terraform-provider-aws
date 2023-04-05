@@ -13,7 +13,7 @@ jobs:
 
   RemoveNeedsTriageFromMaintainers:
     needs: community_check
-    if: (github.event.action == 'opened' && needs.community_check.outputs.maintainer)
+    if: github.event.action == 'opened' && needs.community_check.outputs.maintainer == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Remove needs-triage label from member's Issues

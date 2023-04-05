@@ -28,10 +28,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceProtection,
 			TypeName: "aws_shield_protection",
+			Name:     "Protection",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceProtectionGroup,
 			TypeName: "aws_shield_protection_group",
+			Name:     "Protection Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "protection_group_arn",
+			},
 		},
 		{
 			Factory:  ResourceProtectionHealthCheckAssociation,

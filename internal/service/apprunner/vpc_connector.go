@@ -17,9 +17,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_apprunner_vpc_connector")
+// @SDKResource("aws_apprunner_vpc_connector", name="VPC Connector")
+// @Tags(identifierAttribute="arn")
 func ResourceVPCConnector() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCConnectorCreate,
@@ -52,8 +54,8 @@ func ResourceVPCConnector() *schema.Resource {
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_connector_name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -71,18 +73,13 @@ func ResourceVPCConnector() *schema.Resource {
 
 func resourceVPCConnectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	vpcConnectorName := d.Get("vpc_connector_name").(string)
 	input := &apprunner.CreateVpcConnectorInput{
 		SecurityGroups:   flex.ExpandStringSet(d.Get("security_groups").(*schema.Set)),
 		Subnets:          flex.ExpandStringSet(d.Get("subnets").(*schema.Set)),
+		Tags:             GetTagsIn(ctx),
 		VpcConnectorName: aws.String(vpcConnectorName),
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	output, err := conn.CreateVpcConnectorWithContext(ctx, input)
@@ -102,8 +99,6 @@ func resourceVPCConnectorCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceVPCConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	vpcConnector, err := FindVPCConnectorByARN(ctx, conn, d.Id())
 
@@ -117,7 +112,6 @@ func resourceVPCConnectorRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("reading App Runner VPC Connector (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.StringValue(vpcConnector.VpcConnectorArn)
 	d.Set("arn", vpcConnector.VpcConnectorArn)
 	d.Set("security_groups", aws.StringValueSlice(vpcConnector.SecurityGroups))
 	d.Set("status", vpcConnector.Status)
@@ -125,37 +119,11 @@ func resourceVPCConnectorRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("vpc_connector_name", vpcConnector.VpcConnectorName)
 	d.Set("vpc_connector_revision", vpcConnector.VpcConnectorRevision)
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return diag.Errorf("listing tags for App Runner VPC Connector (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
-
 	return nil
 }
 
 func resourceVPCConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating App Runner VPC Connector (%s) tags: %s", d.Id(), err)
-		}
-	}
-
+	// Tags only.
 	return resourceVPCConnectorRead(ctx, d, meta)
 }
 

@@ -18,9 +18,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_rum_app_monitor")
+// @SDKResource("aws_rum_app_monitor", name="App Monitor")
+// @Tags(identifierAttribute="arn")
 func ResourceAppMonitor() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAppMonitorCreate,
@@ -136,8 +138,8 @@ func ResourceAppMonitor() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
@@ -145,14 +147,13 @@ func ResourceAppMonitor() *schema.Resource {
 
 func resourceAppMonitorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).RUMConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &cloudwatchrum.CreateAppMonitorInput{
 		Name:         aws.String(name),
 		CwLogEnabled: aws.Bool(d.Get("cw_log_enabled").(bool)),
 		Domain:       aws.String(d.Get("domain").(string)),
+		Tags:         GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("app_monitor_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -161,10 +162,6 @@ func resourceAppMonitorCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk("custom_events"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.CustomEvents = expandCustomEvents(v.([]interface{})[0].(map[string]interface{}))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	_, err := conn.CreateAppMonitorWithContext(ctx, input)
@@ -180,8 +177,6 @@ func resourceAppMonitorCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceAppMonitorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).RUMConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	appMon, err := FindAppMonitorByName(ctx, conn, d.Id())
 
@@ -217,16 +212,7 @@ func resourceAppMonitorRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("domain", appMon.Domain)
 	d.Set("name", appMon.Name)
 
-	tags := KeyValueTags(ctx, appMon.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, appMon.Tags)
 
 	return nil
 }
@@ -259,14 +245,6 @@ func resourceAppMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 		if err != nil {
 			return diag.Errorf("updating CloudWatch RUM App Monitor (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating CloudWatch RUM App Monitor (%s) tags: %s", d.Id(), err)
 		}
 	}
 

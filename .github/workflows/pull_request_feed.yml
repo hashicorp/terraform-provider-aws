@@ -34,7 +34,7 @@ jobs:
     steps:
       - name: Notification Maintainer PR Opened
         uses: slackapi/slack-github-action@007b2c3c751a190b6f0f040e47ed024deaa72844
-        if: github.event.action == 'opened' && needs.community_check.outputs.maintainer
+        if: github.event.action == 'opened' && needs.community_check.outputs.maintainer == 'true'
         with:
           payload: |
             {
