@@ -28,6 +28,10 @@ func DataSourceProxy() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"client_password_auth_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"description": {
 							Type:     schema.TypeString,
 							Computed: true,

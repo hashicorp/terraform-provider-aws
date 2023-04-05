@@ -59,12 +59,12 @@ func TestAccCognitoIDPManagedUserPoolClient_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_redirect_uri", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_propagate_additional_user_context_data", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_token_revocation", "true"),
-					resource.TestCheckNoResourceAttr(resourceName, "explicit_auth_flows"),
+					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "id_token_validity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "logout_urls.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "logout_urls.0", regexp.MustCompile(fmt.Sprintf(`https://search-%s-\w+.%s.es.amazonaws.com/_dashboards/app/home`, rName, acctest.Region()))),
 					resource.TestCheckResourceAttr(resourceName, "prevent_user_existence_errors", ""),
-					resource.TestCheckNoResourceAttr(resourceName, "read_attributes"),
+					resource.TestCheckResourceAttr(resourceName, "read_attributes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "refresh_token_validity", "30"),
 					resource.TestCheckResourceAttr(resourceName, "supported_identity_providers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "supported_identity_providers.0", "COGNITO"),
@@ -806,6 +806,104 @@ func TestAccCognitoIDPManagedUserPoolClient_Disappears_OpenSearchDomain(t *testi
 	})
 }
 
+func TestAccCognitoIDPManagedUserPoolClient_emptySets(t *testing.T) {
+	ctx := acctest.Context(t)
+	var client cognitoidentityprovider.UserPoolClientType
+	rName := randomOpenSearchDomainName()
+	resourceName := "aws_cognito_managed_user_pool_client.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolClientDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccManagedUserPoolClientConfig_emptySets(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_scopes.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "callback_urls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "logout_urls.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "read_attributes.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "supported_identity_providers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "write_attributes.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccUserPoolClientImportStateIDFunc(ctx, resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"name_prefix",
+				},
+			},
+			{
+				Config:   testAccManagedUserPoolClientConfig_nulls(rName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccCognitoIDPManagedUserPoolClient_nulls(t *testing.T) {
+	ctx := acctest.Context(t)
+	var client cognitoidentityprovider.UserPoolClientType
+	rName := randomOpenSearchDomainName()
+	resourceName := "aws_cognito_managed_user_pool_client.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolClientDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccManagedUserPoolClientConfig_nulls(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_scopes.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "callback_urls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "logout_urls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "read_attributes.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "supported_identity_providers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "write_attributes.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccUserPoolClientImportStateIDFunc(ctx, resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"name_prefix",
+				},
+			},
+			{
+				Config: testAccManagedUserPoolClientConfig_emptySets(rName),
+				// This currently shows a diff of "null -> []"
+				// PlanOnly: true,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_scopes.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "callback_urls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "logout_urls.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "read_attributes.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "supported_identity_providers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "write_attributes.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccManagedUserPoolClientBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -1198,7 +1296,7 @@ func testAccManagedUserPoolClientConfig_analyticsARNShareData(rName string, shar
 	return acctest.ConfigCompose(
 		testAccManagedUserPoolClientAnalyticsBaseConfig(rName),
 		fmt.Sprintf(`
-resource "aws_cognito_user_pool_client" "test" {
+resource "aws_cognito_managed_user_pool_client" "test" {
   name_prefix  = "AmazonOpenSearchService-%[1]s"
   user_pool_id = aws_cognito_user_pool.test.id
 
@@ -1229,4 +1327,46 @@ resource "aws_cognito_managed_user_pool_client" "test" {
   auth_session_validity = %[2]d
 }
 `, rName, validity))
+}
+
+func testAccManagedUserPoolClientConfig_emptySets(rName string) string {
+	return acctest.ConfigCompose(
+		testAccManagedUserPoolClientBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_cognito_managed_user_pool_client" "test" {
+  name_prefix  = "AmazonOpenSearchService-%[1]s"
+  user_pool_id = aws_cognito_user_pool.test.id
+
+  depends_on = [
+    aws_opensearch_domain.test,
+  ]
+
+  # allowed_oauth_flows and allowed_oauth_scopes cannot be empty:
+  # > InvalidParameterException: AllowedOAuthFlows and AllowedOAuthScopes are
+  # > required if user pool client is allowed to use OAuth flows.
+  # callback_urls cannot be empty:
+  # > InvalidOAuthFlowException: CallbackUrls can not be empty when code flow
+  # > or implicit flow is selected
+  explicit_auth_flows          = []
+  logout_urls                  = []
+  read_attributes              = []
+  supported_identity_providers = []
+  write_attributes             = []
+}
+`, rName))
+}
+
+func testAccManagedUserPoolClientConfig_nulls(rName string) string {
+	return acctest.ConfigCompose(
+		testAccManagedUserPoolClientBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_cognito_managed_user_pool_client" "test" {
+  name_prefix  = "AmazonOpenSearchService-%[1]s"
+  user_pool_id = aws_cognito_user_pool.test.id
+
+  depends_on = [
+    aws_opensearch_domain.test,
+  ]
+}
+`, rName))
 }

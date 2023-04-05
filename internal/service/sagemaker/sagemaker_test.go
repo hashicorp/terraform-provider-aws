@@ -58,9 +58,9 @@ func TestAccSageMaker_serial(t *testing.T) {
 		"FlowDefinition": {
 			"basic":                          testAccFlowDefinition_basic,
 			"disappears":                     testAccFlowDefinition_disappears,
+			"tags":                           testAccFlowDefinition_tags,
 			"HumanLoopConfigPublicWorkforce": testAccFlowDefinition_humanLoopConfig_publicWorkforce,
 			"HumanLoopRequestSource":         testAccFlowDefinition_humanLoopRequestSource,
-			"Tags":                           testAccFlowDefinition_tags,
 		},
 		"Space": {
 			"basic":                    testAccSpace_basic,
@@ -91,10 +91,10 @@ func TestAccSageMaker_serial(t *testing.T) {
 		},
 		"Workteam": {
 			"disappears":         testAccWorkteam_disappears,
+			"tags":               testAccWorkteam_tags,
 			"CognitoConfig":      testAccWorkteam_cognitoConfig,
 			"NotificationConfig": testAccWorkteam_notificationConfig,
 			"OidcConfig":         testAccWorkteam_oidcConfig,
-			"Tags":               testAccWorkteam_tags,
 		},
 		"Servicecatalog": {
 			"basic": testAccServicecatalogPortfolioStatus_basic,

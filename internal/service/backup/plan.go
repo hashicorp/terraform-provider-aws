@@ -22,9 +22,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_backup_plan")
+// @SDKResource("aws_backup_plan", name="Plan")
+// @Tags(identifierAttribute="arn")
 func ResourcePlan() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePlanCreate,
@@ -161,8 +163,8 @@ func ResourcePlan() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -172,8 +174,6 @@ func ResourcePlan() *schema.Resource {
 func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &backup.CreateBackupPlanInput{
 		BackupPlan: &backup.PlanInput{
@@ -181,10 +181,9 @@ func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta interf
 			Rules:                  expandPlanRules(ctx, d.Get("rule").(*schema.Set)),
 			AdvancedBackupSettings: expandPlanAdvancedSettings(d.Get("advanced_backup_setting").(*schema.Set)),
 		},
-		BackupPlanTags: Tags(tags.IgnoreAWS()),
+		BackupPlanTags: GetTagsIn(ctx),
 	}
 
-	log.Printf("[DEBUG] Creating Backup Plan: %#v", input)
 	resp, err := conn.CreateBackupPlanWithContext(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Backup Plan: %s", err)
@@ -198,8 +197,6 @@ func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta interf
 func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.GetBackupPlanWithContext(ctx, &backup.GetBackupPlanInput{
 		BackupPlanId: aws.String(d.Id()),
@@ -227,21 +224,6 @@ func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "setting advanced_backup_setting: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Plan (%s): %s", d.Id(), err)
-	}
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -263,13 +245,6 @@ func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err := conn.UpdateBackupPlanWithContext(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Backup Plan (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags for Backup Plan (%s): %s", d.Id(), err)
 		}
 	}
 
