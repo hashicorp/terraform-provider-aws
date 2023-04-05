@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpclattice_service")
+// @SDKResource("aws_vpclattice_service", name="Service")
 // @Tags(identifier_attribute="arn")
 func ResourceService() *schema.Resource {
 	return &schema.Resource{
@@ -43,7 +43,7 @@ func ResourceService() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -79,8 +79,8 @@ func ResourceService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -97,6 +97,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	in := &vpclattice.CreateServiceInput{
 		ClientToken: aws.String(id.UniqueId()),
 		Name:        aws.String(d.Get("name").(string)),
+		Tags:        GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("auth_type"); ok {
@@ -109,13 +110,6 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if v, ok := d.GetOk("custom_domain_name"); ok {
 		in.CustomDomainName = aws.String(v.(string))
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	out, err := conn.CreateService(ctx, in)
@@ -162,23 +156,6 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameService, d.Id(), err)
 	}
 
-	tags, err := ListTags(ctx, conn, *out.Arn)
-	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameService, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameService, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameService, d.Id(), err)
-	}
-
 	return nil
 }
 
@@ -205,21 +182,13 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating %s %s (%s) tags: %s", names.VPCLattice, ResNameService, d.Id(), err)
-		}
-	}
-
 	return resourceServiceRead(ctx, d, meta)
 }
 
 func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
-	log.Printf("[INFO] Deleting VPCLattice Service %s", d.Id())
-
+	log.Printf("[INFO] Deleting VPCLattice Service: %s", d.Id())
 	_, err := conn.DeleteService(ctx, &vpclattice.DeleteServiceInput{
 		ServiceIdentifier: aws.String(d.Id()),
 	})
