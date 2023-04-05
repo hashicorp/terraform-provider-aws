@@ -45,10 +45,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceLink,
 			TypeName: "aws_oam_link",
+			Name:     "Link",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceSink,
 			TypeName: "aws_oam_sink",
+			Name:     "Sink",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceSinkPolicy,
