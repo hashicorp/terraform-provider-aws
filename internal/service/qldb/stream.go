@@ -17,11 +17,9 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_qldb_stream", name="Stream")
-// @Tags(identifierAttribute="arn")
+// @SDKResource("aws_qldb_stream")
 func ResourceStream() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStreamCreate,
@@ -90,8 +88,8 @@ func ResourceStream() *schema.Resource {
 					validation.StringLenBetween(1, 32),
 				),
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -100,6 +98,8 @@ func ResourceStream() *schema.Resource {
 
 func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QLDBConn()
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	ledgerName := d.Get("ledger_name").(string)
 	name := d.Get("stream_name").(string)
@@ -107,7 +107,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		LedgerName: aws.String(ledgerName),
 		RoleArn:    aws.String(d.Get("role_arn").(string)),
 		StreamName: aws.String(name),
-		Tags:       GetTagsIn(ctx),
+		Tags:       Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("exclusive_end_time"); ok {
@@ -142,6 +142,8 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QLDBConn()
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	ledgerName := d.Get("ledger_name").(string)
 	stream, err := FindStream(ctx, conn, ledgerName, d.Id())
@@ -178,11 +180,37 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("role_arn", stream.RoleArn)
 	d.Set("stream_name", stream.StreamName)
 
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
+
+	if err != nil {
+		return diag.Errorf("listing tags for QLDB Stream (%s): %s", d.Id(), err)
+	}
+
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return diag.Errorf("setting tags: %s", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return diag.Errorf("setting tags_all: %s", err)
+	}
+
 	return nil
 }
 
 func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// Tags only.
+	conn := meta.(*conns.AWSClient).QLDBConn()
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return diag.Errorf("updating tags: %s", err)
+		}
+	}
+
 	return resourceStreamRead(ctx, d, meta)
 }
 
