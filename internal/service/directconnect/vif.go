@@ -55,15 +55,6 @@ func virtualInterfaceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	arn := d.Get("arn").(string)
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Direct Connect virtual interface (%s) tags: %s", arn, err)
-		}
-	}
-
 	return diags
 }
 
