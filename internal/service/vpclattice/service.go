@@ -202,7 +202,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
-	log.Printf("[INFO] Deleting VPCLattice Service: %s", d.Id())
+	log.Printf("[INFO] Deleting VPC Lattice Service: %s", d.Id())
 	_, err := conn.DeleteService(ctx, &vpclattice.DeleteServiceInput{
 		ServiceIdentifier: aws.String(d.Id()),
 	})
