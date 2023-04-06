@@ -188,7 +188,7 @@ resource "aws_vpclattice_service" "test" {
 }
 
 resource "aws_vpclattice_service_network" "test" {
-  name = %[1]q	
+  name = %[1]q
 }
 
 resource "aws_vpclattice_service_networkservice_association" "test" {
@@ -208,14 +208,14 @@ resource "aws_vpclattice_service" "test" {
 }
 
 resource "aws_vpclattice_service_network" "test" {
-  name = %[1]q	
+  name = %[1]q
 }
 
 resource "aws_vpclattice_service_networkservice_association" "test" {
   service_identifier         = aws_vpclattice_service.test.id
   service_network_identifier = aws_vpclattice_service_network.test.id
   tags = {
-  	%[2]q = %[3]q
+    %[2]q = %[3]q
   }
 }
 `, rName, tagKey1, tagValue1)
@@ -232,15 +232,15 @@ resource "aws_vpclattice_service" "test" {
 }
 
 resource "aws_vpclattice_service_network" "test" {
-  name = %[1]q	
+  name = %[1]q
 }
 
 resource "aws_vpclattice_service_networkservice_association" "test" {
   service_identifier         = aws_vpclattice_service.test.id
   service_network_identifier = aws_vpclattice_service_network.test.id
   tags = {
-  	%[2]q = %[3]q
-  	%[4]q = %[5]q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
