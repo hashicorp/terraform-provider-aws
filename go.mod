@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230201104953-d1d05f4e2bfb
-	github.com/aws/aws-sdk-go v1.44.235
+	github.com/aws/aws-sdk-go v1.44.237
 	github.com/aws/aws-sdk-go-v2 v1.17.7
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.1
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.24.3
@@ -12,9 +12,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.20.7
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.22.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.92.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.93.0
 	github.com/aws/aws-sdk-go-v2/service/fis v1.14.6
-	github.com/aws/aws-sdk-go-v2/service/healthlake v1.15.6
+	github.com/aws/aws-sdk-go-v2/service/healthlake v1.15.7
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.6
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.11.7
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.4.1
@@ -37,7 +37,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.15.0
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.21.0
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.26.2
-	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.0.0
+	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.0.1
 	github.com/aws/smithy-go v1.13.5
 	github.com/beevik/etree v1.1.0
 	github.com/google/go-cmp v0.5.9

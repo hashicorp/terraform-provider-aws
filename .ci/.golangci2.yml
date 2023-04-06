@@ -33,10 +33,6 @@ issues:
     - linters:
         - staticcheck
       text: "SA1019: strings.Title has been deprecated since Go 1.18 and an alternative has been available since Go 1.0"
-      # AWS Endpoint constants
-    - linters:
-        - staticcheck
-      text: "SA1019: endpoints.\\w+ is deprecated: Use client package's EndpointsID value instead of these ServiceIDs. These IDs are not maintained, and are out of date."
     # Per-Service
     - linters:
         - staticcheck
