@@ -8,6 +8,7 @@ FEATURES:
 * **New Data Source:** `aws_oam_link` ([#30401](https://github.com/hashicorp/terraform-provider-aws/issues/30401))
 * **New Data Source:** `aws_oam_links` ([#30401](https://github.com/hashicorp/terraform-provider-aws/issues/30401))
 * **New Data Source:** `aws_quicksight_data_set` ([#30422](https://github.com/hashicorp/terraform-provider-aws/issues/30422))
+* **New Data Source:** `aws_vpclattice_service` ([#30490](https://github.com/hashicorp/terraform-provider-aws/issues/30490))
 * **New Resource:** `aws_inspector2_member_association` ([#28921](https://github.com/hashicorp/terraform-provider-aws/issues/28921))
 * **New Resource:** `aws_lightsail_distribution` ([#30124](https://github.com/hashicorp/terraform-provider-aws/issues/30124))
 * **New Resource:** `aws_quicksight_account_subscription` ([#30359](https://github.com/hashicorp/terraform-provider-aws/issues/30359))
