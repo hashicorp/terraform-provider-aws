@@ -31,364 +31,48 @@ resource "aws_s3_bucket" "example" {
 
 ### Static Website Hosting
 
--> **NOTE:** The parameter `website` is deprecated.
-Use the resource [`aws_s3_bucket_website_configuration`](s3_bucket_website_configuration.html.markdown) instead.
+-> **NOTE:** The `website` attribute is deprecated.
+See [`aws_s3_bucket_website_configuration`](s3_bucket_website_configuration.html.markdown) for examples with static website hosting configured.
 
-```terraform
-resource "aws_s3_bucket" "b" {
-  bucket = "s3-website-test.hashicorp.com"
-  acl    = "public-read"
-  policy = file("policy.json")
+### CORS Rules
 
-  website {
-    index_document = "index.html"
-    error_document = "error.html"
+-> **NOTE:** The `cors_rule` attribute is deprecated.
+See [`aws_s3_bucket_cors_configuration`](s3_bucket_cors_configuration.html.markdown) for examples with CORS rules configured.
 
-    routing_rules = <<EOF
-[{
-    "Condition": {
-        "KeyPrefixEquals": "docs/"
-    },
-    "Redirect": {
-        "ReplaceKeyPrefixWith": "documents/"
-    }
-}]
-EOF
-  }
-}
-```
+### Versioning
 
-### Using CORS
+-> **NOTE:** The `versioning` attribute is deprecated.
+See [`aws_s3_bucket_versioning`](s3_bucket_versioning.html.markdown) for examples with versioning configured.
 
--> **NOTE:** The parameter `cors_rule` is deprecated.
-Use the resource [`aws_s3_bucket_cors_configuration`](s3_bucket_cors_configuration.html.markdown) instead.
+### Logging
 
-```terraform
-resource "aws_s3_bucket" "b" {
-  bucket = "s3-website-test.hashicorp.com"
-  acl    = "public-read"
+-> **NOTE:** The `logging` attribute is deprecated.
+See [`aws_s3_bucket_logging`](s3_bucket_logging.html.markdown) for examples with logging enabled.
 
-  cors_rule {
-    allowed_headers = ["*"]
-    allowed_methods = ["PUT", "POST"]
-    allowed_origins = ["https://s3-website-test.hashicorp.com"]
-    expose_headers  = ["ETag"]
-    max_age_seconds = 3000
-  }
-}
-```
+### Object Lifecycle Rules
 
-### Using versioning
+-> **NOTE:** The `lifecycle_rule` attribute is deprecated.
+See [`aws_s3_bucket_lifecycle_configuration`](s3_bucket_lifecycle_configuration.html.markdown) for examples with object lifecycle rules.
 
--> **NOTE:** The parameter `versioning` is deprecated.
-Use the resource [`aws_s3_bucket_versioning`](s3_bucket_versioning.html.markdown) instead.
+### Object Lock Configuration
 
-```terraform
-resource "aws_s3_bucket" "b" {
-  bucket = "my-tf-test-bucket"
-  acl    = "private"
+-> **NOTE:** The `object_lock_configuration` attribute is deprecated.
+See [`aws_s3_bucket_object_lock_configuration`](s3_bucket_object_lock_configuration.html.markdown) for examples with object lock configurations on both new and existing buckets.
 
-  versioning {
-    enabled = true
-  }
-}
-```
+### Replication Configuration
 
-### Enable Logging
-
--> **NOTE:** The parameter `logging` is deprecated.
-Use the resource [`aws_s3_bucket_logging`](s3_bucket_logging.html.markdown) instead.
-
-```terraform
-resource "aws_s3_bucket" "log_bucket" {
-  bucket = "my-tf-log-bucket"
-  acl    = "log-delivery-write"
-}
-
-resource "aws_s3_bucket" "b" {
-  bucket = "my-tf-test-bucket"
-  acl    = "private"
-
-  logging {
-    target_bucket = aws_s3_bucket.log_bucket.id
-    target_prefix = "log/"
-  }
-}
-```
-
-### Using object lifecycle
-
--> **NOTE:** The parameter `lifecycle_rule` is deprecated.
-Use the resource [`aws_s3_bucket_lifecycle_configuration`](s3_bucket_lifecycle_configuration.html) instead.
-
-```terraform
-resource "aws_s3_bucket" "bucket" {
-  bucket = "my-bucket"
-  acl    = "private"
-
-  lifecycle_rule {
-    id      = "log"
-    enabled = true
-
-    prefix = "log/"
-
-    tags = {
-      rule      = "log"
-      autoclean = "true"
-    }
-
-    transition {
-      days          = 30
-      storage_class = "STANDARD_IA" # or "ONEZONE_IA"
-    }
-
-    transition {
-      days          = 60
-      storage_class = "GLACIER"
-    }
-
-    expiration {
-      days = 90
-    }
-  }
-
-  lifecycle_rule {
-    id      = "tmp"
-    prefix  = "tmp/"
-    enabled = true
-
-    expiration {
-      date = "2016-01-12"
-    }
-  }
-}
-
-resource "aws_s3_bucket" "versioning_bucket" {
-  bucket = "my-versioning-bucket"
-  acl    = "private"
-
-  versioning {
-    enabled = true
-  }
-
-  lifecycle_rule {
-    prefix  = "config/"
-    enabled = true
-
-    noncurrent_version_transition {
-      days          = 30
-      storage_class = "STANDARD_IA"
-    }
-
-    noncurrent_version_transition {
-      days          = 60
-      storage_class = "GLACIER"
-    }
-
-    noncurrent_version_expiration {
-      days = 90
-    }
-  }
-}
-```
-
-### Using object lock configuration
-
--> **NOTE:** The parameter `object_lock_configuration` is deprecated.
-To **enable** Object Lock on a **new** bucket, use the `object_lock_enabled` argument in **this** resource.
-To configure the default retention rule of the Object Lock configuration use the resource [`aws_s3_bucket_object_lock_configuration` resource](s3_bucket_object_lock_configuration.html.markdown) instead.
-To **enable** Object Lock on an **existing** bucket, please contact AWS Support and refer to the [Object lock configuration for an existing bucket](s3_bucket_object_lock_configuration.html.markdown#object-lock-configuration-for-an-existing-bucket) example for more details.
-
-```terraform
-resource "aws_s3_bucket" "example" {
-  bucket = "my-tf-example-bucket"
-
-  object_lock_configuration {
-    object_lock_enabled = "Enabled"
-
-    rule {
-      default_retention {
-        mode = "COMPLIANCE"
-        days = 5
-      }
-    }
-  }
-}
-```
-
-### Using replication configuration
-
--> **NOTE:** The parameter `replication_configuration` is deprecated.
-Use the resource [`aws_s3_bucket_replication_configuration`](s3_bucket_replication_configuration.html) instead.
-
-```terraform
-provider "aws" {
-  region = "eu-west-1"
-}
-
-provider "aws" {
-  alias  = "central"
-  region = "eu-central-1"
-}
-
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    effect = "Allow"
-
-    principals {
-      type        = "Service"
-      identifiers = ["s3.amazonaws.com"]
-    }
-
-    actions = ["sts:AssumeRole"]
-  }
-}
-resource "aws_iam_role" "replication" {
-  name               = "tf-iam-role-replication-12345"
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-data "aws_iam_policy_document" "replication" {
-  statement {
-    effect = "Allow"
-
-    actions = [
-      "s3:GetReplicationConfiguration",
-      "s3:ListBucket",
-    ]
-
-    resources = [aws_s3_bucket.source.arn]
-  }
-
-  statement {
-    effect = "Allow"
-    actions = [
-      "s3:GetObjectVersionForReplication",
-      "s3:GetObjectVersionAcl",
-      "s3:GetObjectVersionTagging",
-    ]
-
-    resources = ["${aws_s3_bucket.source.arn}/*"]
-  }
-
-  statement {
-    effect = "Allow"
-
-    actions = [
-      "s3:ReplicateObject",
-      "s3:ReplicateDelete",
-      "s3:ReplicateTags",
-    ]
-
-    resources = ["${aws_s3_bucket.destination.arn}/*"]
-  }
-}
-
-resource "aws_iam_policy" "replication" {
-  name   = "tf-iam-role-policy-replication-12345"
-  policy = data.aws_iam_policy_document.replication.json
-}
-
-resource "aws_iam_role_policy_attachment" "replication" {
-  role       = aws_iam_role.replication.name
-  policy_arn = aws_iam_policy.replication.arn
-}
-
-resource "aws_s3_bucket" "destination" {
-  bucket = "tf-test-bucket-destination-12345"
-
-  versioning {
-    enabled = true
-  }
-}
-
-resource "aws_s3_bucket" "source" {
-  provider = aws.central
-  bucket   = "tf-test-bucket-source-12345"
-  acl      = "private"
-
-  versioning {
-    enabled = true
-  }
-
-  replication_configuration {
-    role = aws_iam_role.replication.arn
-
-    rules {
-      id     = "foobar"
-      status = "Enabled"
-
-      filter {
-        tags = {}
-      }
-      destination {
-        bucket        = aws_s3_bucket.destination.arn
-        storage_class = "STANDARD"
-
-        replication_time {
-          status  = "Enabled"
-          minutes = 15
-        }
-
-        metrics {
-          status  = "Enabled"
-          minutes = 15
-        }
-      }
-    }
-  }
-}
-```
+-> **NOTE:** The `replication_configuration` attribute is deprecated.
+See [`aws_s3_bucket_replication_configuration`](s3_bucket_replication_configuration.html.markdown) for examples with replication configured.
 
 ### Enable SSE-KMS Server Side Encryption
 
--> **NOTE:** The parameter `server_side_encryption_configuration` is deprecated.
-Use the resource [`aws_s3_bucket_server_side_encryption_configuration`](s3_bucket_server_side_encryption_configuration.html) instead.
+-> **NOTE:** The `server_side_encryption_configuration` attribute is deprecated.
+See [`aws_s3_bucket_server_side_encryption_configuration`](s3_bucket_server_side_encryption_configuration.html.markdown) for examples with server side encryption configured.
 
-```terraform
-resource "aws_kms_key" "mykey" {
-  description             = "This key is used to encrypt bucket objects"
-  deletion_window_in_days = 10
-}
+### ACL Policy Grants
 
-resource "aws_s3_bucket" "mybucket" {
-  bucket = "mybucket"
-
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        kms_master_key_id = aws_kms_key.mykey.arn
-        sse_algorithm     = "aws:kms"
-      }
-    }
-  }
-}
-```
-
-### Using ACL policy grants
-
--> **NOTE:** The parameters `acl` and `grant` are deprecated.
-Use the resource [`aws_s3_bucket_acl`](s3_bucket_acl.html.markdown) instead.
-
-```terraform
-data "aws_canonical_user_id" "current_user" {}
-
-resource "aws_s3_bucket" "bucket" {
-  bucket = "mybucket"
-
-  grant {
-    id          = data.aws_canonical_user_id.current_user.id
-    type        = "CanonicalUser"
-    permissions = ["FULL_CONTROL"]
-  }
-
-  grant {
-    type        = "Group"
-    permissions = ["READ_ACP", "WRITE"]
-    uri         = "http://acs.amazonaws.com/groups/s3/LogDelivery"
-  }
-}
-```
+-> **NOTE:** The `acl` and `grant` attributes are deprecated.
+See [`aws_s3_bucket_acl`](s3_bucket_acl.html.markdown) for examples with ACL grants.
 
 ## Argument Reference
 
