@@ -170,8 +170,7 @@ func resourceDefaultRouteTableCreate(ctx context.Context, d *schema.ResourceData
 
 	// Delete all existing routes.
 	for _, v := range routeTable.Routes {
-		// you cannot delete the local route
-		if aws.StringValue(v.GatewayId) == "local" {
+		if gatewayID := aws.StringValue(v.GatewayId); gatewayID == "local" || gatewayID == "VpcLattice" {
 			continue
 		}
 
