@@ -13,13 +13,14 @@ import (
 )
 
 func TestAccEFSFileSystemDataSource_id(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_efs_file_system.test"
 	resourceName := "aws_efs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemDataSourceConfig_id,
@@ -43,13 +44,14 @@ func TestAccEFSFileSystemDataSource_id(t *testing.T) {
 }
 
 func TestAccEFSFileSystemDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_efs_file_system.test"
 	resourceName := "aws_efs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemDataSourceConfig_tags,
@@ -73,13 +75,14 @@ func TestAccEFSFileSystemDataSource_tags(t *testing.T) {
 }
 
 func TestAccEFSFileSystemDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_efs_file_system.test"
 	resourceName := "aws_efs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemDataSourceConfig_name,
@@ -103,13 +106,14 @@ func TestAccEFSFileSystemDataSource_name(t *testing.T) {
 }
 
 func TestAccEFSFileSystemDataSource_availabilityZone(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_efs_file_system.test"
 	resourceName := "aws_efs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemDataSourceConfig_availabilityZone,
@@ -124,10 +128,11 @@ func TestAccEFSFileSystemDataSource_availabilityZone(t *testing.T) {
 }
 
 func TestAccEFSFileSystemDataSource_nonExistent_fileSystemID(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccFileSystemDataSourceConfig_idNonExistent,
@@ -138,19 +143,20 @@ func TestAccEFSFileSystemDataSource_nonExistent_fileSystemID(t *testing.T) {
 }
 
 func TestAccEFSFileSystemDataSource_nonExistent_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var desc efs.FileSystemDescription
 	resourceName := "aws_efs_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemConfig_dataSourceBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileSystem(resourceName, &desc),
+					testAccCheckFileSystem(ctx, resourceName, &desc),
 				),
 			},
 			{
@@ -193,6 +199,14 @@ func testAccFileSystemCheckDataSource(dName, rName string) resource.TestCheckFun
 
 		return nil
 	}
+}
+
+func testAccFileSystemConfig_dataSourceBasic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
+  creation_token = %[1]q
+}
+`, rName)
 }
 
 const testAccFileSystemDataSourceConfig_idNonExistent = `

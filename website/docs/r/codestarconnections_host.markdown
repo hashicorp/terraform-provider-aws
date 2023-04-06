@@ -33,7 +33,7 @@ The following arguments are supported:
 
 A `vpc_configuration` block supports the following arguments:
 
-* `security_group_ids` - (Required) he ID of the security group or security groups associated with the Amazon VPC connected to the infrastructure where your provider type is installed.
+* `security_group_ids` - (Required) ID of the security group or security groups associated with the Amazon VPC connected to the infrastructure where your provider type is installed.
 * `subnet_ids` - (Required) The ID of the subnet or subnets associated with the Amazon VPC connected to the infrastructure where your provider type is installed.
 * `tls_certificate` - (Optional) The value of the Transport Layer Security (TLS) certificate associated with the infrastructure where your provider type is installed.
 * `vpc_id` - (Required) The ID of the Amazon VPC connected to the infrastructure where your provider type is installed.

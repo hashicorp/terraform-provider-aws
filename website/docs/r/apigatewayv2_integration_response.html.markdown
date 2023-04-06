@@ -27,18 +27,18 @@ resource "aws_apigatewayv2_integration_response" "example" {
 
 The following arguments are supported:
 
-* `api_id` - (Required) The API identifier.
-* `integration_id` - (Required) The identifier of the [`aws_apigatewayv2_integration`](/docs/providers/aws/r/apigatewayv2_integration.html).
-* `integration_response_key` - (Required) The integration response key.
+* `api_id` - (Required) API identifier.
+* `integration_id` - (Required) Identifier of the [`aws_apigatewayv2_integration`](/docs/providers/aws/r/apigatewayv2_integration.html).
+* `integration_response_key` - (Required) Integration response key.
 * `content_handling_strategy` - (Optional) How to handle response payload content type conversions. Valid values: `CONVERT_TO_BINARY`, `CONVERT_TO_TEXT`.
-* `response_templates` - (Optional) A map of Velocity templates that are applied on the request payload based on the value of the Content-Type header sent by the client.
+* `response_templates` - (Optional) Map of Velocity templates that are applied on the request payload based on the value of the Content-Type header sent by the client.
 * `template_selection_expression` - (Optional) The [template selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-template-selection-expressions) for the integration response.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The integration response identifier.
+* `id` - Integration response identifier.
 
 ## Import
 

@@ -8,7 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/aws/aws-sdk-go/service/networkmanager/networkmanageriface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // []*SERVICE.Tag handling
@@ -30,25 +32,42 @@ func Tags(tags tftags.KeyValueTags) []*networkmanager.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from networkmanager service tags.
-func KeyValueTags(tags []*networkmanager.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []*networkmanager.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
 		m[aws.StringValue(tag.Key)] = tag.Value
 	}
 
-	return tftags.New(m)
+	return tftags.New(ctx, m)
+}
+
+// GetTagsIn returns networkmanager service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*networkmanager.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets networkmanager service tags in Context.
+func SetTagsOut(ctx context.Context, tags []*networkmanager.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
 }
 
 // UpdateTags updates networkmanager service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn networkmanageriface.NetworkManagerAPI, identifier string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn networkmanageriface.NetworkManagerAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+
+func UpdateTags(ctx context.Context, conn networkmanageriface.NetworkManagerAPI, identifier string, oldTagsMap, newTagsMap any) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &networkmanager.UntagResourceInput{
@@ -59,7 +78,7 @@ func UpdateTagsWithContext(ctx context.Context, conn networkmanageriface.Network
 		_, err := conn.UntagResourceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -72,9 +91,15 @@ func UpdateTagsWithContext(ctx context.Context, conn networkmanageriface.Network
 		_, err := conn.TagResourceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 	}
 
 	return nil
+}
+
+// UpdateTags updates networkmanager service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).NetworkManagerConn(), identifier, oldTags, newTags)
 }

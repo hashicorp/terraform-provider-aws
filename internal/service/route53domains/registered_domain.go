@@ -14,16 +14,18 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_route53domains_registered_domain")
 func ResourceRegisteredDomain() *schema.Resource {
 	contactSchema := &schema.Schema{
 		Type:     schema.TypeList,
@@ -51,16 +53,16 @@ func ResourceRegisteredDomain() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(0, 255),
 				},
 				"contact_type": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.StringInSlice(contactTypeValues(types.ContactType("").Values()...), false),
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.ContactType](),
 				},
 				"country_code": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.StringInSlice(countryCodeValues(types.CountryCode("").Values()...), false),
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.CountryCode](),
 				},
 				"email": {
 					Type:         schema.TypeString,
@@ -241,7 +243,7 @@ func ResourceRegisteredDomain() *schema.Resource {
 }
 
 func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53DomainsConn
+	conn := meta.(*conns.AWSClient).Route53DomainsClient()
 
 	domainName := d.Get("domain_name").(string)
 	domainDetail, err := findDomainDetailByName(ctx, conn, domainName)
@@ -314,7 +316,7 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	newTags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{}))).IgnoreConfig(ignoreTagsConfig)
+	newTags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))).IgnoreConfig(ignoreTagsConfig)
 	oldTags := tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if !oldTags.Equal(newTags) {
@@ -327,7 +329,7 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53DomainsConn
+	conn := meta.(*conns.AWSClient).Route53DomainsClient()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -418,7 +420,7 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceRegisteredDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53DomainsConn
+	conn := meta.(*conns.AWSClient).Route53DomainsClient()
 
 	if d.HasChanges("admin_contact", "registrant_contact", "tech_contact") {
 		var adminContact, registrantContact, techContact *types.ContactDetail
@@ -644,7 +646,7 @@ func findDomainDetailByName(ctx context.Context, conn *route53domains.Client, na
 		var invalidInput *types.InvalidInput
 
 		if errors.As(err, &invalidInput) && strings.Contains(invalidInput.ErrorMessage(), "not found") {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -671,7 +673,7 @@ func findOperationDetailByID(ctx context.Context, conn *route53domains.Client, i
 		var invalidInput *types.InvalidInput
 
 		if errors.As(err, &invalidInput) && strings.Contains(invalidInput.ErrorMessage(), "not found") {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -691,7 +693,7 @@ func findOperationDetailByID(ctx context.Context, conn *route53domains.Client, i
 	return output, nil
 }
 
-func statusOperation(ctx context.Context, conn *route53domains.Client, id string) resource.StateRefreshFunc {
+func statusOperation(ctx context.Context, conn *route53domains.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findOperationDetailByID(ctx, conn, id)
 
@@ -708,9 +710,9 @@ func statusOperation(ctx context.Context, conn *route53domains.Client, id string
 }
 
 func waitOperationSucceeded(ctx context.Context, conn *route53domains.Client, id string, timeout time.Duration) (*route53domains.GetOperationDetailOutput, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
-		Pending: operationStatusValues(types.OperationStatusSubmitted, types.OperationStatusInProgress),
-		Target:  operationStatusValues(types.OperationStatusSuccessful),
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.OperationStatusSubmitted, types.OperationStatusInProgress),
+		Target:  enum.Slice(types.OperationStatusSuccessful),
 		Timeout: timeout,
 		Refresh: statusOperation(ctx, conn, id),
 	}
@@ -964,35 +966,4 @@ func flattenNameservers(apiObjects []types.Nameserver) []interface{} {
 	}
 
 	return tfList
-}
-
-// Helpers added. Could be generated or somehow use go 1.18 generics?
-func contactTypeValues(input ...types.ContactType) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	return output
-}
-
-func countryCodeValues(input ...types.CountryCode) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	return output
-}
-
-func operationStatusValues(input ...types.OperationStatus) []string {
-	var output []string
-
-	for _, v := range input {
-		output = append(output, string(v))
-	}
-
-	return output
 }

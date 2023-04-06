@@ -11,16 +11,17 @@ import (
 )
 
 func TestAccServiceQuotasServiceQuotaDataSource_quotaCode(t *testing.T) {
+	ctx := acctest.Context(t)
 	const dataSourceName = "data.aws_servicequotas_service_quota.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(servicequotas.EndpointsID, t)
-			preCheckServiceQuotaSet(setQuotaServiceCode, setQuotaQuotaCode, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, servicequotas.EndpointsID)
+			preCheckServiceQuotaSet(ctx, setQuotaServiceCode, setQuotaQuotaCode, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicequotas.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, servicequotas.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceQuotaDataSourceConfig_code(setQuotaServiceCode, setQuotaQuotaCode),
@@ -41,16 +42,17 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaCode(t *testing.T) {
 }
 
 func TestAccServiceQuotasServiceQuotaDataSource_quotaCode_Unset(t *testing.T) {
+	ctx := acctest.Context(t)
 	const dataSourceName = "data.aws_servicequotas_service_quota.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(servicequotas.EndpointsID, t)
-			preCheckServiceQuotaUnset(unsetQuotaServiceCode, unsetQuotaQuotaCode, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, servicequotas.EndpointsID)
+			preCheckServiceQuotaUnset(ctx, unsetQuotaServiceCode, unsetQuotaQuotaCode, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicequotas.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, servicequotas.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceQuotaDataSourceConfig_code(unsetQuotaServiceCode, unsetQuotaQuotaCode),
@@ -72,15 +74,16 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaCode_Unset(t *testing.T) {
 }
 
 func TestAccServiceQuotasServiceQuotaDataSource_PermissionError_quotaCode(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
 			acctest.PreCheckAssumeRoleARN(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicequotas.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		ErrorCheck:               acctest.ErrorCheck(t, servicequotas.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccServiceQuotaDataSourceConfig_permissionErrorCode("elasticloadbalancing", "L-53DA6B97"),
@@ -91,16 +94,17 @@ func TestAccServiceQuotasServiceQuotaDataSource_PermissionError_quotaCode(t *tes
 }
 
 func TestAccServiceQuotasServiceQuotaDataSource_quotaName(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_servicequotas_service_quota.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(servicequotas.EndpointsID, t)
-			preCheckServiceQuotaSet(setQuotaServiceCode, setQuotaQuotaCode, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, servicequotas.EndpointsID)
+			preCheckServiceQuotaSet(ctx, setQuotaServiceCode, setQuotaQuotaCode, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicequotas.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, servicequotas.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceQuotaDataSourceConfig_name("vpc", setQuotaQuotaName),
@@ -121,16 +125,17 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaName(t *testing.T) {
 }
 
 func TestAccServiceQuotasServiceQuotaDataSource_quotaName_Unset(t *testing.T) {
+	ctx := acctest.Context(t)
 	const dataSourceName = "data.aws_servicequotas_service_quota.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(servicequotas.EndpointsID, t)
-			preCheckServiceQuotaUnset(unsetQuotaServiceCode, unsetQuotaQuotaCode, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, servicequotas.EndpointsID)
+			preCheckServiceQuotaUnset(ctx, unsetQuotaServiceCode, unsetQuotaQuotaCode, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicequotas.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, servicequotas.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceQuotaDataSourceConfig_name(unsetQuotaServiceCode, unsetQuotaQuotaName),
@@ -152,15 +157,16 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaName_Unset(t *testing.T) {
 }
 
 func TestAccServiceQuotasServiceQuotaDataSource_PermissionError_quotaName(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
 			acctest.PreCheckAssumeRoleARN(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicequotas.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		ErrorCheck:               acctest.ErrorCheck(t, servicequotas.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccServiceQuotaDataSourceConfig_permissionErrorName("elasticloadbalancing", "Application Load Balancers per Region"),

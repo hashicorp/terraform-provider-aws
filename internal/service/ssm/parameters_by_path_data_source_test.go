@@ -11,14 +11,15 @@ import (
 )
 
 func TestAccSSMParametersByPathDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "data.aws_ssm_parameters_by_path.test"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParametersByPathDataSourceConfig_basic(rName1, rName2, false),
@@ -69,13 +70,14 @@ data "aws_ssm_parameters_by_path" "test" {
 }
 
 func TestAccSSMParametersByPathDataSource_withRecursion(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "data.aws_ssm_parameters_by_path.recursive"
 	pathPrefix := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParametersByPathDataSourceConfig_recursion(pathPrefix),

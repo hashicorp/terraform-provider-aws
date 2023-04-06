@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_keyspaces_table")
 func ResourceTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTableCreate,
@@ -164,7 +165,7 @@ func ResourceTable() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"clustering_key": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							ForceNew: true,
 							Elem: &schema.Resource{
@@ -218,7 +219,7 @@ func ResourceTable() *schema.Resource {
 							},
 						},
 						"partition_key": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Required: true,
 							ForceNew: true,
 							Elem: &schema.Resource{
@@ -295,9 +296,9 @@ func ResourceTable() *schema.Resource {
 }
 
 func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KeyspacesConn
+	conn := meta.(*conns.AWSClient).KeyspacesConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	keyspaceName := d.Get("keyspace_name").(string)
 	tableName := d.Get("table_name").(string)
@@ -357,7 +358,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KeyspacesConn
+	conn := meta.(*conns.AWSClient).KeyspacesConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -426,7 +427,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("ttl", nil)
 	}
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("listing tags for Keyspaces Table (%s): %s", d.Id(), err)
@@ -447,7 +448,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KeyspacesConn
+	conn := meta.(*conns.AWSClient).KeyspacesConn()
 
 	keyspaceName, tableName, err := TableParseResourceID(d.Id())
 
@@ -602,7 +603,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating Keyspaces Table (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -611,7 +612,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KeyspacesConn
+	conn := meta.(*conns.AWSClient).KeyspacesConn()
 
 	keyspaceName, tableName, err := TableParseResourceID(d.Id())
 
@@ -659,7 +660,7 @@ func TableParseResourceID(id string) (string, string, error) {
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected KEYSPACE-NAME%[2]sTABLE-NAME", id, tableIDSeparator)
 }
 
-func statusTable(ctx context.Context, conn *keyspaces.Keyspaces, keyspaceName, tableName string) resource.StateRefreshFunc {
+func statusTable(ctx context.Context, conn *keyspaces.Keyspaces, keyspaceName, tableName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindTableByTwoPartKey(ctx, conn, keyspaceName, tableName)
 
@@ -676,7 +677,7 @@ func statusTable(ctx context.Context, conn *keyspaces.Keyspaces, keyspaceName, t
 }
 
 func waitTableCreated(ctx context.Context, conn *keyspaces.Keyspaces, keyspaceName, tableName string, timeout time.Duration) (*keyspaces.GetTableOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{keyspaces.TableStatusCreating},
 		Target:  []string{keyspaces.TableStatusActive},
 		Refresh: statusTable(ctx, conn, keyspaceName, tableName),
@@ -693,7 +694,7 @@ func waitTableCreated(ctx context.Context, conn *keyspaces.Keyspaces, keyspaceNa
 }
 
 func waitTableDeleted(ctx context.Context, conn *keyspaces.Keyspaces, keyspaceName, tableName string, timeout time.Duration) (*keyspaces.GetTableOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{keyspaces.TableStatusActive, keyspaces.TableStatusDeleting},
 		Target:  []string{},
 		Refresh: statusTable(ctx, conn, keyspaceName, tableName),
@@ -710,7 +711,7 @@ func waitTableDeleted(ctx context.Context, conn *keyspaces.Keyspaces, keyspaceNa
 }
 
 func waitTableUpdated(ctx context.Context, conn *keyspaces.Keyspaces, keyspaceName, tableName string, timeout time.Duration) (*keyspaces.GetTableOutput, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{keyspaces.TableStatusUpdating},
 		Target:  []string{keyspaces.TableStatusActive},
 		Refresh: statusTable(ctx, conn, keyspaceName, tableName),
@@ -802,16 +803,16 @@ func expandSchemaDefinition(tfMap map[string]interface{}) *keyspaces.SchemaDefin
 
 	apiObject := &keyspaces.SchemaDefinition{}
 
+	if v, ok := tfMap["clustering_key"].([]interface{}); ok && len(v) > 0 {
+		apiObject.ClusteringKeys = expandClusteringKeys(v)
+	}
+
 	if v, ok := tfMap["column"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.AllColumns = expandColumnDefinitions(v.List())
 	}
 
-	if v, ok := tfMap["clustering_key"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.ClusteringKeys = expandClusteringKeys(v.List())
-	}
-
-	if v, ok := tfMap["partition_key"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.PartitionKeys = expandPartitionKeys(v.List())
+	if v, ok := tfMap["partition_key"].([]interface{}); ok && len(v) > 0 {
+		apiObject.PartitionKeys = expandPartitionKeys(v)
 	}
 
 	if v, ok := tfMap["static_column"].(*schema.Set); ok && v.Len() > 0 {

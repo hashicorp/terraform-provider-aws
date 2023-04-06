@@ -8,9 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_eks_identity_provider_config")
 func ResourceIdentityProviderConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIdentityProviderConfigCreate,
@@ -92,7 +92,7 @@ func ResourceIdentityProviderConfig() *schema.Resource {
 							Type:     schema.TypeMap,
 							Optional: true,
 							ForceNew: true,
-							ValidateDiagFunc: allDiagFunc(
+							ValidateDiagFunc: verify.ValidAllDiag(
 								validation.MapKeyLenBetween(1, 63),
 								validation.MapValueLenBetween(1, 253),
 							),
@@ -125,28 +125,17 @@ func ResourceIdentityProviderConfig() *schema.Resource {
 	}
 }
 
-// https://github.com/hashicorp/terraform-plugin-sdk/issues/780.
-func allDiagFunc(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
-	return func(i interface{}, k cty.Path) diag.Diagnostics {
-		var diags diag.Diagnostics
-		for _, validator := range validators {
-			diags = append(diags, validator(i, k)...)
-		}
-		return diags
-	}
-}
-
 func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	clusterName := d.Get("cluster_name").(string)
 	configName, oidc := expandOIDCIdentityProviderConfigRequest(d.Get("oidc").([]interface{})[0].(map[string]interface{}))
-	id := IdentityProviderConfigCreateResourceID(clusterName, configName)
+	idpID := IdentityProviderConfigCreateResourceID(clusterName, configName)
 
 	input := &eks.AssociateIdentityProviderConfigInput{
-		ClientRequestToken: aws.String(resource.UniqueId()),
+		ClientRequestToken: aws.String(id.UniqueId()),
 		ClusterName:        aws.String(clusterName),
 		Oidc:               oidc,
 	}
@@ -155,13 +144,13 @@ func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.Resourc
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	_, err := conn.AssociateIdentityProviderConfig(input)
+	_, err := conn.AssociateIdentityProviderConfigWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error associating EKS Identity Provider Config (%s): %s", id, err)
+		return diag.Errorf("error associating EKS Identity Provider Config (%s): %s", idpID, err)
 	}
 
-	d.SetId(id)
+	d.SetId(idpID)
 
 	_, err = waitOIDCIdentityProviderConfigCreated(ctx, conn, clusterName, configName, d.Timeout(schema.TimeoutCreate))
 
@@ -173,7 +162,7 @@ func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -204,7 +193,7 @@ func resourceIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceD
 
 	d.Set("status", oidc.Status)
 
-	tags := KeyValueTags(oidc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, oidc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -219,11 +208,11 @@ func resourceIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceIdentityProviderConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating tags: %s", err)
 		}
 	}
@@ -232,7 +221,7 @@ func resourceIdentityProviderConfigUpdate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceIdentityProviderConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 
 	clusterName, configName, err := IdentityProviderConfigParseResourceID(d.Id())
 

@@ -10,12 +10,13 @@ import (
 )
 
 func TestAccGlueScriptDataSource_Language_python(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_glue_script.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScriptDataSourceConfig_python(),
@@ -28,12 +29,13 @@ func TestAccGlueScriptDataSource_Language_python(t *testing.T) {
 }
 
 func TestAccGlueScriptDataSource_Language_scala(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_glue_script.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScriptDataSourceConfig_scala(),

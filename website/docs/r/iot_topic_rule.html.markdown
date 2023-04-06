@@ -41,43 +41,36 @@ resource "aws_sns_topic" "myerrortopic" {
   name = "myerrortopic"
 }
 
-resource "aws_iam_role" "role" {
-  name = "myrole"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "iot.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
+    principals {
+      type        = "Service"
+      identifiers = ["iot.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-EOF
+
+resource "aws_iam_role" "role" {
+  name               = "myrole"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "iam_policy_for_lambda" {
+  statement {
+    effect    = "Allow"
+    actions   = ["sns:Publish"]
+    resources = [aws_sns_topic.mytopic.arn]
+  }
 }
 
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
-  name = "mypolicy"
-  role = aws_iam_role.role.id
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-        "Effect": "Allow",
-        "Action": [
-            "sns:Publish"
-        ],
-        "Resource": "${aws_sns_topic.mytopic.arn}"
-    }
-  ]
-}
-EOF
+  name   = "mypolicy"
+  role   = aws_iam_role.role.id
+  policy = data.aws_iam_policy_document.iam_policy_for_lambda.json
 }
 ```
 
@@ -89,7 +82,7 @@ EOF
 * `sql` - (Required) The SQL statement used to query the topic. For more information, see AWS IoT SQL Reference (http://docs.aws.amazon.com/iot/latest/developerguide/iot-rules.html#aws-iot-sql-reference) in the AWS IoT Developer Guide.
 * `sql_version` - (Required) The version of the SQL rules engine to use when evaluating the rule.
 * `error_action` - (Optional) Configuration block with error action to be associated with the rule. See the documentation for `cloudwatch_alarm`, `cloudwatch_logs`, `cloudwatch_metric`, `dynamodb`, `dynamodbv2`, `elasticsearch`, `firehose`, `http`, `iot_analytics`, `iot_events`, `kafka`, `kinesis`, `lambda`, `republish`, `s3`, `sns`, `sqs`, `step_functions`, `timestream` configuration blocks for further configuration details.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `cloudwatch_alarm` object takes the following arguments:
 
@@ -234,7 +227,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The name of the topic rule
 * `arn` - The ARN of the topic rule
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

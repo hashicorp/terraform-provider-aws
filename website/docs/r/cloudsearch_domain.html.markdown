@@ -96,12 +96,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_cloudsearch_domain` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30 minutes`) How long to wait for the CloudSearch domain to be created.
-* `update` - (Default `30 minutes`) How long to wait for the CloudSearch domain to be updated.
-* `delete` - (Default `20 minutes`) How long to wait for the CloudSearch domain to be deleted.
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `20m`)
 
 ## Import
 
