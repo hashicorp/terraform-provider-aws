@@ -37,7 +37,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.15.0
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.21.0
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.26.2
-	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.0.0
+	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.0.1
 	github.com/aws/smithy-go v1.13.5
 	github.com/beevik/etree v1.1.0
 	github.com/google/go-cmp v0.5.9
