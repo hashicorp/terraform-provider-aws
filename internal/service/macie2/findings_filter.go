@@ -20,9 +20,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_macie2_findings_filter")
+// @SDKResource("aws_macie2_findings_filter", name="Findings Filter")
+// @Tags
 func ResourceFindingsFilter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFindingsFilterCreate,
@@ -119,8 +121,8 @@ func ResourceFindingsFilter() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchemaForceNew(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -132,13 +134,11 @@ func ResourceFindingsFilter() *schema.Resource {
 func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Macie2Conn()
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
 	input := &macie2.CreateFindingsFilterInput{
 		ClientToken: aws.String(id.UniqueId()),
 		Name:        aws.String(create.Name(d.Get("name").(string), d.Get("name_prefix").(string))),
 		Action:      aws.String(d.Get("action").(string)),
+		Tags:        GetTagsIn(ctx),
 	}
 
 	var err error
@@ -152,9 +152,6 @@ func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 	if v, ok := d.GetOk("position"); ok {
 		input.Position = aws.Int64(int64(v.(int)))
-	}
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	var output *macie2.CreateFindingsFilterOutput
@@ -188,8 +185,6 @@ func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, m
 func resourceFindingsFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Macie2Conn()
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	input := &macie2.GetFindingsFilterInput{
 		Id: aws.String(d.Id()),
 	}
@@ -215,15 +210,8 @@ func resourceFindingsFilterRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("description", resp.Description)
 	d.Set("action", resp.Action)
 	d.Set("position", resp.Position)
-	tags := KeyValueTags(ctx, resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	if err = d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie FindingsFilter (%s): %w", "tags", d.Id(), err))
-	}
-
-	if err = d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie FindingsFilter (%s): %w", "tags_all", d.Id(), err))
-	}
+	SetTagsOut(ctx, resp.Tags)
 
 	d.Set("arn", resp.Arn)
 
