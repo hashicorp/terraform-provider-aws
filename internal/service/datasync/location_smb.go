@@ -159,10 +159,6 @@ func resourceLocationSMBRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading DataSync Location SMB (%s): %s", d.Id(), err)
 	}
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading DataSync Location SMB (%s) tags: %s", d.Id(), err)
-	}
-
 	subdirectory, err := SubdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
 
 	if err != nil {
