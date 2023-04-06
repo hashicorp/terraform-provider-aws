@@ -55,9 +55,20 @@ func ResourceServiceNetworkServiceAssociation() *schema.Resource {
 				Computed: true,
 			},
 			"dns_entry": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
 				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"domain_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"hosted_zone_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"service_identifier": {
 				Type:     schema.TypeString,
@@ -92,13 +103,7 @@ func resourceServiceNetworkServiceAssociationCreate(ctx context.Context, d *sche
 		ClientToken:              aws.String(id.UniqueId()),
 		ServiceIdentifier:        aws.String(d.Get("service_identifier").(string)),
 		ServiceNetworkIdentifier: aws.String(d.Get("service_network_identifier").(string)),
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
+		Tags:                     GetTagsIn(ctx),
 	}
 
 	out, err := conn.CreateServiceNetworkServiceAssociation(ctx, in)
@@ -112,7 +117,7 @@ func resourceServiceNetworkServiceAssociationCreate(ctx context.Context, d *sche
 
 	d.SetId(aws.ToString(out.Id))
 
-	if _, err := waitServiceNetworkAssociationCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitServiceNetworkServiceAssociationCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionWaitingForCreation, ResNameServiceNetworkAssociation, d.Id(), err)
 	}
 
@@ -122,7 +127,7 @@ func resourceServiceNetworkServiceAssociationCreate(ctx context.Context, d *sche
 func resourceServiceNetworkServiceAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
-	out, err := findServiceNetworkAscByID(ctx, conn, d.Id())
+	out, err := findServiceNetworkServiceAssociationByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPCLattice Service Network Association (%s) not found, removing from state", d.Id())
@@ -137,36 +142,21 @@ func resourceServiceNetworkServiceAssociationRead(ctx context.Context, d *schema
 	d.Set("arn", out.Arn)
 	d.Set("created_by", out.CreatedBy)
 	d.Set("custom_domain_name", out.CustomDomainName)
-	d.Set("status", out.Status)
+	if out.DnsEntry != nil {
+		if err := d.Set("dns_entry", []interface{}{flattenDNSEntry(out.DnsEntry)}); err != nil {
+			return diag.Errorf("setting dns_entry: %s", err)
+		}
+	} else {
+		d.Set("dns_entry", nil)
+	}
 	d.Set("service_identifier", out.ServiceId)
 	d.Set("service_network_identifier", out.ServiceNetworkId)
-
-	if err := d.Set("dns_entry", flattenServiceDNSEntry(out.DnsEntry)); err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameServiceNetworkAssociation, d.Id(), err)
-	}
-
-	tags, err := ListTags(ctx, conn, *out.Arn)
-	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameServiceNetworkAssociation, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameServiceNetworkAssociation, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameServiceNetworkAssociation, d.Id(), err)
-	}
+	d.Set("status", out.Status)
 
 	return nil
 }
 
 func resourceServiceNetworkServiceAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	// Tags only.
 	return resourceServiceNetworkServiceAssociationRead(ctx, d, meta)
 }
@@ -189,14 +179,14 @@ func resourceServiceNetworkServiceAssociationDelete(ctx context.Context, d *sche
 		return create.DiagError(names.VPCLattice, create.ErrActionDeleting, ResNameServiceNetworkAssociation, d.Id(), err)
 	}
 
-	if _, err := waitServiceNetworkAssociationDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitServiceNetworkServiceAssociationDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionWaitingForDeletion, ResNameServiceNetworkAssociation, d.Id(), err)
 	}
 
 	return nil
 }
 
-func findServiceNetworkAscByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetServiceNetworkServiceAssociationOutput, error) {
+func findServiceNetworkServiceAssociationByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetServiceNetworkServiceAssociationOutput, error) {
 	in := &vpclattice.GetServiceNetworkServiceAssociationInput{
 		ServiceNetworkServiceAssociationIdentifier: aws.String(id),
 	}
@@ -220,11 +210,11 @@ func findServiceNetworkAscByID(ctx context.Context, conn *vpclattice.Client, id 
 	return out, nil
 }
 
-func waitServiceNetworkAssociationCreated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetServiceNetworkServiceAssociationOutput, error) {
+func waitServiceNetworkServiceAssociationCreated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetServiceNetworkServiceAssociationOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.ServiceNetworkVpcAssociationStatusCreateInProgress),
 		Target:                    enum.Slice(types.ServiceNetworkVpcAssociationStatusActive),
-		Refresh:                   statusServiceNetworkAssociation(ctx, conn, id),
+		Refresh:                   statusServiceNetworkServiceAssociation(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -238,11 +228,11 @@ func waitServiceNetworkAssociationCreated(ctx context.Context, conn *vpclattice.
 	return nil, err
 }
 
-func waitServiceNetworkAssociationDeleted(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetServiceNetworkServiceAssociationOutput, error) {
+func waitServiceNetworkServiceAssociationDeleted(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetServiceNetworkServiceAssociationOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ServiceNetworkVpcAssociationStatusDeleteInProgress, types.ServiceNetworkVpcAssociationStatusActive),
 		Target:  []string{},
-		Refresh: statusServiceNetworkAssociation(ctx, conn, id),
+		Refresh: statusServiceNetworkServiceAssociation(ctx, conn, id),
 		Timeout: timeout,
 	}
 
@@ -254,9 +244,9 @@ func waitServiceNetworkAssociationDeleted(ctx context.Context, conn *vpclattice.
 	return nil, err
 }
 
-func statusServiceNetworkAssociation(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
+func statusServiceNetworkServiceAssociation(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findServiceNetworkAscByID(ctx, conn, id)
+		out, err := findServiceNetworkServiceAssociationByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -267,22 +257,4 @@ func statusServiceNetworkAssociation(ctx context.Context, conn *vpclattice.Clien
 
 		return out, string(out.Status), nil
 	}
-}
-
-func flattenServiceDNSEntry(apiObject *types.DnsEntry) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	m := map[string]interface{}{}
-
-	if v := apiObject.DomainName; v != nil {
-		m["domain_name"] = aws.ToString(v)
-	}
-
-	if v := apiObject.HostedZoneId; v != nil {
-		m["hosted_zone_id"] = aws.ToString(v)
-	}
-
-	return m
 }
