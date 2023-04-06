@@ -150,6 +150,10 @@ func resourceThingTypeRead(ctx context.Context, d *schema.ResourceData, meta int
 		d.Set("deprecated", out.ThingTypeMetadata.Deprecated)
 	}
 
+	if err := d.Set("properties", flattenThingTypeProperties(out.ThingTypeProperties)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting properties: %s", err)
+	}
+
 	d.Set("arn", out.ThingTypeArn)
 
 	return diags
