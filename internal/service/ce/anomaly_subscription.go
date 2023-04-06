@@ -118,7 +118,7 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if v, ok := d.GetOk("threshold"); ok {
-		input.AnomalySubscription.Threshold = aws.Float64(v.(float64)) //nolint:staticcheck
+		input.AnomalySubscription.Threshold = aws.Float64(v.(float64)) //nolint
 	}
 
 	if v, ok := d.GetOk("threshold_expression"); ok {
@@ -166,7 +166,7 @@ func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData
 	d.Set("frequency", subscription.Frequency)
 	d.Set("monitor_arn_list", subscription.MonitorArnList)
 	d.Set("subscriber", flattenAnomalySubscriptionSubscribers(subscription.Subscribers))
-	d.Set("threshold", subscription.Threshold) //nolint:staticcheck
+	d.Set("threshold", subscription.Threshold) //nolint
 	d.Set("name", subscription.SubscriptionName)
 
 	if err = d.Set("threshold_expression", []interface{}{flattenCostCategoryRuleExpression(subscription.ThresholdExpression)}); err != nil {
@@ -213,7 +213,7 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 
 		if d.HasChange("threshold") {
-			input.Threshold = aws.Float64(d.Get("threshold").(float64)) //nolint:staticcheck
+			input.Threshold = aws.Float64(d.Get("threshold").(float64)) //nolint
 		}
 
 		if d.HasChange("threshold_expression") {
