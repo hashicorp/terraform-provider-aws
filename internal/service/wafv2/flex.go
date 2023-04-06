@@ -1179,13 +1179,9 @@ func expandJson(tfList []interface{}) *wafv2.ResponseInspectionJson {
 
 	m := tfList[0].(map[string]interface{})
 	out := wafv2.ResponseInspectionJson{
-		Identifier: aws.String(m["identifier"].(string)),
-	}
-	if v, ok := m["failure_valies"].(*schema.Set); ok && v.Len() > 0 {
-		out.FailureValues = flex.ExpandStringSet(v)
-	}
-	if v, ok := m["success_values"].(*schema.Set); ok && v.Len() > 0 {
-		out.SuccessValues = flex.ExpandStringSet(v)
+		Identifier:    aws.String(m["identifier"].(string)),
+		FailureValues: flex.ExpandStringSet(m["failure_valies"].(*schema.Set)),
+		SuccessValues: flex.ExpandStringSet(m["success_values"].(*schema.Set)),
 	}
 
 	return &out
@@ -1197,13 +1193,11 @@ func expandStatusCode(tfList []interface{}) *wafv2.ResponseInspectionStatusCode 
 	}
 
 	m := tfList[0].(map[string]interface{})
-	out := wafv2.ResponseInspectionStatusCode{}
-	if v, ok := m["failure_codes"].(*schema.Set); ok && v.Len() > 0 {
-		out.FailureCodes = flex.ExpandInt64Set(v)
+	out := wafv2.ResponseInspectionStatusCode{
+		FailureCodes: flex.ExpandInt64Set(m["failure_codes"].(*schema.Set)),
+		SuccessCodes: flex.ExpandInt64Set(m["success_codes"].(*schema.Set)),
 	}
-	if v, ok := m["success_codes"].(*schema.Set); ok && v.Len() > 0 {
-		out.SuccessCodes = flex.ExpandInt64Set(v)
-	}
+
 	return &out
 }
 

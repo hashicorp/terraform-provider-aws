@@ -698,11 +698,10 @@ The `managed_rule_group_configs` block support the following arguments:
 
 * `body_contains` (Optional) Configures inspection of the response body. See [`body_contains`](#body_contains) for more details.
 * `header` (Optional) Configures inspection of the response header.See [`header`](#header) for more details.
-* `json` (Optional) Configures inspection of the response JSON. See [`json`](#body_contains) for more details.
+* `json` (Optional) Configures inspection of the response JSON. See [`json`](#json) for more details.
 * `status_code` (Optional) Configures inspection of the response status code.See [`status_code`](#status_code) for more details.
 
 #### `body_contains`
-`json` and `body_contains` blocks use the same format.
 
 * `success_strings` (Required) Strings in the body of the response that indicate a successful login attempt.
 * `failure_strings` (Required) Strings in the body of the response that indicate a failed login attempt.
@@ -712,6 +711,12 @@ The `managed_rule_group_configs` block support the following arguments:
 * `name` (Required) The name of the header to match against. The name must be an exact match, including case.
 * `success_values` (Required) Values in the response header with the specified name that indicate a successful login attempt.
 * `failure_values` (Required) Values in the response header with the specified name that indicate a failed login attempt.
+
+#### `json`
+
+* `identifier` (Required) The identifier for the value to match against in the JSON.
+* `success_strings` (Required) Strings in the body of the response that indicate a successful login attempt.
+* `failure_strings` (Required) Strings in the body of the response that indicate a failed login attempt.
 
 #### `status_code`
 
