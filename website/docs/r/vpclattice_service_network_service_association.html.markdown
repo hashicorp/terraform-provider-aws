@@ -39,8 +39,8 @@ In addition to all arguments above, the following attributes are exported:
 * `created_by` - The account that created the association.
 * `custom_domain_name` - The custom domain name of the service.
 * `dns_entry` - The DNS name of the service.
-   * `domain_name` - The domain name of the service.
-   * `hosted_zone_id` - The ID of the hosted zone.
+    * `domain_name` - The domain name of the service.
+    * `hosted_zone_id` - The ID of the hosted zone.
 * `id` - The ID of the association.
 * `status` - The operations status. Valid Values are CREATE_IN_PROGRESS | ACTIVE | DELETE_IN_PROGRESS | CREATE_FAILED | DELETE_FAILED
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
