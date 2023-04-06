@@ -641,15 +641,19 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig(t *testing.T) {
 						"override_action.0.count.#": "0",
 						"override_action.0.none.#":  "1",
 						"statement.#":               "1",
-						"statement.0.managed_rule_group_statement.#":                                                          "1",
-						"statement.0.managed_rule_group_statement.0.name":                                                     "AWSManagedRulesATPRuleSet",
-						"statement.0.managed_rule_group_statement.0.vendor_name":                                              "AWS",
-						"statement.0.managed_rule_group_statement.0.excluded_rule.#":                                          "0",
-						"statement.0.managed_rule_group_statement.0.scope_down_statement.#":                                   "0",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.login_path":                  "/login",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.1.payload_type":                "JSON",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.2.password_field.0.identifier": "/password",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.3.username_field.0.identifier": "/username",
+						"statement.0.managed_rule_group_statement.#":                                                                          "1",
+						"statement.0.managed_rule_group_statement.0.name":                                                                     "AWSManagedRulesATPRuleSet",
+						"statement.0.managed_rule_group_statement.0.vendor_name":                                                              "AWS",
+						"statement.0.managed_rule_group_statement.0.excluded_rule.#":                                                          "0",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.#":                                                   "0",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.login_path": "/login",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.request_inspection.0.password_field.0.identifier":    "/password",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.request_inspection.0.payload_type":                   "JSON",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.request_inspection.0.username_field.0.identifier":    "/username",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.response_inspection.0.status_code.0.failure_codes.#": "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.response_inspection.0.status_code.0.failure_codes.0": "403",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.response_inspection.0.status_code.0.success_codes.#": "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.response_inspection.0.status_code.0.success_codes.0": "200",
 					}),
 				),
 			},
@@ -667,15 +671,19 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig(t *testing.T) {
 						"override_action.0.count.#": "0",
 						"override_action.0.none.#":  "1",
 						"statement.#":               "1",
-						"statement.0.managed_rule_group_statement.#":                                                          "1",
-						"statement.0.managed_rule_group_statement.0.name":                                                     "AWSManagedRulesATPRuleSet",
-						"statement.0.managed_rule_group_statement.0.vendor_name":                                              "AWS",
-						"statement.0.managed_rule_group_statement.0.excluded_rule.#":                                          "0",
-						"statement.0.managed_rule_group_statement.0.scope_down_statement.#":                                   "0",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.login_path":                  "/app-login",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.1.payload_type":                "JSON",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.2.password_field.0.identifier": "/app-password",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.3.username_field.0.identifier": "/app-username",
+						"statement.0.managed_rule_group_statement.#":                                                                          "1",
+						"statement.0.managed_rule_group_statement.0.name":                                                                     "AWSManagedRulesATPRuleSet",
+						"statement.0.managed_rule_group_statement.0.vendor_name":                                                              "AWS",
+						"statement.0.managed_rule_group_statement.0.excluded_rule.#":                                                          "0",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.#":                                                   "0",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.login_path": "/login",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.request_inspection.0.password_field.0.identifier":    "/password",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.request_inspection.0.payload_type":                   "JSON",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.request_inspection.0.username_field.0.identifier":    "/username",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.response_inspection.0.status_code.0.failure_codes.#": "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.response_inspection.0.status_code.0.failure_codes.0": "403",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.response_inspection.0.status_code.0.success_codes.#": "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.response_inspection.0.status_code.0.success_codes.0": "200",
 					}),
 				),
 			},
@@ -3292,22 +3300,26 @@ resource "aws_wafv2_web_acl" "test" {
         name        = "AWSManagedRulesATPRuleSet"
         vendor_name = "AWS"
 
-        managed_rule_group_configs {
-          login_path = "/login"
-        }
-        managed_rule_group_configs {
-          payload_type = "JSON"
-        }
-        managed_rule_group_configs {
-          password_field {
-            identifier = "/password"
+				managed_rule_group_configs {
+          aws_managed_rules_atp_rule_set {
+            login_path = "/api/1/signin"
+            request_inspection {
+              password_field {
+                identifier = "/password"
+              }
+              payload_type = "JSON"
+              username_field {
+                identifier = "/username"
+              }
+            }
+            response_inspection {
+              status_code {
+                failure_codes = ["403"]
+                success_codes = ["200"]
+              }
+            }
           }
-        }
-        managed_rule_group_configs {
-          username_field {
-            identifier = "/username"
-          }
-        }
+				}
       }
     }
 
@@ -3356,22 +3368,26 @@ resource "aws_wafv2_web_acl" "test" {
         name        = "AWSManagedRulesATPRuleSet"
         vendor_name = "AWS"
 
-        managed_rule_group_configs {
-          login_path = "/app-login"
-        }
-        managed_rule_group_configs {
-          payload_type = "JSON"
-        }
-        managed_rule_group_configs {
-          password_field {
-            identifier = "/app-password"
+				managed_rule_group_configs {
+          aws_managed_rules_atp_rule_set {
+            login_path = "/api/1/signin"
+            request_inspection {
+              password_field {
+                identifier = "/password"
+              }
+              payload_type = "JSON"
+              username_field {
+                identifier = "/username"
+              }
+            }
+            response_inspection {
+              status_code {
+                failure_codes = ["403"]
+                success_codes = ["200"]
+              }
+            }
           }
-        }
-        managed_rule_group_configs {
-          username_field {
-            identifier = "/app-username"
-          }
-        }
+				}
       }
     }
 
