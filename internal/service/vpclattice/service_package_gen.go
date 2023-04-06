@@ -47,8 +47,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceServiceNetworkAssociation,
-			TypeName: "aws_vpclattice_service_networkservice_association",
+			Factory:  ResourceServiceNetworkServiceAssociation,
+			TypeName: "aws_vpclattice_service_network_service_association",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "arn",
 			},

@@ -1,14 +1,14 @@
 ---
 subcategory: "VPC Lattice"
 layout: "aws"
-page_title: "AWS: aws_vpclattice_vpclattice_servicenetwork_service_association"
+page_title: "AWS: aws_vpclattice_service_network_service_association"
 description: |-
-  Terraform resource for managing an AWS VPC Lattice Vpc Lattice Service Network Service Association.
+  Terraform resource for managing an AWS VPC Lattice Service Network Service Association.
 ---
 
-# Resource: aws_vpclattice_vpclattice_servicenetwork_service_association
+# Resource: aws_vpclattice_service_network_service_association
 
-Terraform resource for managing an AWS VPC Lattice Vpc Lattice Service Network Service Association.
+Terraform resource for managing an AWS VPC Lattice Service Network Service Association.
 
 ## Example Usage
 

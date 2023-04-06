@@ -22,14 +22,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpclattice_service_networkservice_association")
+// @SDKResource("aws_vpclattice_service_network_service_association")
 // @Tags(identifierAttribute="arn")
-func ResourceServiceNetworkAssociation() *schema.Resource {
+func ResourceServiceNetworkServiceAssociation() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceServiceNetworkAssociationCreate,
-		ReadWithoutTimeout:   resourceServiceNetworkAssociationRead,
-		UpdateWithoutTimeout: resourceServiceNetworkAssociationUpdate,
-		DeleteWithoutTimeout: resourceServiceNetworkAssociationDelete,
+		CreateWithoutTimeout: resourceServiceNetworkServiceAssociationCreate,
+		ReadWithoutTimeout:   resourceServiceNetworkServiceAssociationRead,
+		UpdateWithoutTimeout: resourceServiceNetworkServiceAssociationUpdate,
+		DeleteWithoutTimeout: resourceServiceNetworkServiceAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -85,7 +85,7 @@ const (
 	ResNameServiceNetworkAssociation = "ServiceNetworkAssociation"
 )
 
-func resourceServiceNetworkAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceNetworkServiceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
 	in := &vpclattice.CreateServiceNetworkServiceAssociationInput{
@@ -116,10 +116,10 @@ func resourceServiceNetworkAssociationCreate(ctx context.Context, d *schema.Reso
 		return create.DiagError(names.VPCLattice, create.ErrActionWaitingForCreation, ResNameServiceNetworkAssociation, d.Id(), err)
 	}
 
-	return resourceServiceNetworkAssociationRead(ctx, d, meta)
+	return resourceServiceNetworkServiceAssociationRead(ctx, d, meta)
 }
 
-func resourceServiceNetworkAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceNetworkServiceAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
 	out, err := findServiceNetworkAscByID(ctx, conn, d.Id())
@@ -165,13 +165,13 @@ func resourceServiceNetworkAssociationRead(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-func resourceServiceNetworkAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceNetworkServiceAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
 	// Tags only.
-	return resourceServiceNetworkAssociationRead(ctx, d, meta)
+	return resourceServiceNetworkServiceAssociationRead(ctx, d, meta)
 }
 
-func resourceServiceNetworkAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceNetworkServiceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
 	log.Printf("[INFO] Deleting VPCLattice Service Network Association %s", d.Id())

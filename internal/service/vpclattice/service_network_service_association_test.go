@@ -20,27 +20,27 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccVPCLatticeServiceNetworkAsc_basic(t *testing.T) {
+func TestAccVPCLatticeServiceNetworkServiceAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var servicenetworkasc vpclattice.GetServiceNetworkServiceAssociationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_vpclattice_service_networkservice_association.test"
+	resourceName := "aws_vpclattice_service_network_service_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
-			//testAccPreChecks(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceNetworkAscDestroy(ctx),
+		CheckDestroy:             testAccCheckServiceNetworkServiceAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceNetworkAscConfig_basic(rName),
+				Config: testAccServiceNetworkServiceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceNetworkAscExists(ctx, resourceName, &servicenetworkasc),
+					testAccCheckServiceNetworkServiceAssociationExists(ctx, resourceName, &servicenetworkasc),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile("servicenetworkserviceassociation/.+$")),
 				),
 			},
@@ -53,28 +53,28 @@ func TestAccVPCLatticeServiceNetworkAsc_basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCLatticeServiceNetworkAsc_disappears(t *testing.T) {
+func TestAccVPCLatticeServiceNetworkServiceAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var servicenetworkasc vpclattice.GetServiceNetworkServiceAssociationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_vpclattice_service_networkservice_association.test"
+	resourceName := "aws_vpclattice_service_network_service_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
-			//testAccPreChecks(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceNetworkAscDestroy(ctx),
+		CheckDestroy:             testAccCheckServiceNetworkServiceAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceNetworkAscConfig_basic(rName),
+				Config: testAccServiceNetworkServiceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceNetworkAscExists(ctx, resourceName, &servicenetworkasc),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceServiceNetworkAssociation(), resourceName),
+					testAccCheckServiceNetworkServiceAssociationExists(ctx, resourceName, &servicenetworkasc),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceServiceNetworkServiceAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -82,22 +82,26 @@ func TestAccVPCLatticeServiceNetworkAsc_disappears(t *testing.T) {
 	})
 }
 
-func TestAccVPCLatticeServiceNetworkAsc_tags(t *testing.T) {
+func TestAccVPCLatticeServiceNetworkServiceAssociation_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var servicenetworkasc1, servicenetworkasc2, service3 vpclattice.GetServiceNetworkServiceAssociationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_vpclattice_service_networkservice_association.test"
+	resourceName := "aws_vpclattice_service_network_service_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceNetworkAscDestroy(ctx),
+		CheckDestroy:             testAccCheckServiceNetworkServiceAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceNetworkAscConfig_tags1(rName, "key1", "value1"),
+				Config: testAccServiceNetworkServiceAssociationConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceNetworkAscExists(ctx, resourceName, &servicenetworkasc1),
+					testAccCheckServiceNetworkServiceAssociationExists(ctx, resourceName, &servicenetworkasc1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -108,18 +112,18 @@ func TestAccVPCLatticeServiceNetworkAsc_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccServiceNetworkAscConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccServiceNetworkServiceAssociationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceNetworkAscExists(ctx, resourceName, &servicenetworkasc2),
+					testAccCheckServiceNetworkServiceAssociationExists(ctx, resourceName, &servicenetworkasc2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccServiceNetworkAscConfig_tags1(rName, "key2", "value2"),
+				Config: testAccServiceNetworkServiceAssociationConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceNetworkAscExists(ctx, resourceName, &service3),
+					testAccCheckServiceNetworkServiceAssociationExists(ctx, resourceName, &service3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -128,12 +132,12 @@ func TestAccVPCLatticeServiceNetworkAsc_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckServiceNetworkAscDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckServiceNetworkServiceAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_vpclattice_service_networkservice_association" {
+			if rs.Type != "aws_vpclattice_service_network_service_association" {
 				continue
 			}
 
@@ -155,7 +159,7 @@ func testAccCheckServiceNetworkAscDestroy(ctx context.Context) resource.TestChec
 	}
 }
 
-func testAccCheckServiceNetworkAscExists(ctx context.Context, name string, service *vpclattice.GetServiceNetworkServiceAssociationOutput) resource.TestCheckFunc {
+func testAccCheckServiceNetworkServiceAssociationExists(ctx context.Context, name string, service *vpclattice.GetServiceNetworkServiceAssociationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -181,7 +185,7 @@ func testAccCheckServiceNetworkAscExists(ctx context.Context, name string, servi
 	}
 }
 
-func testAccServiceNetworkAscConfig_basic(rName string) string {
+func testAccServiceNetworkServiceAssociationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpclattice_service" "test" {
   name = %[1]q
@@ -191,29 +195,27 @@ resource "aws_vpclattice_service_network" "test" {
   name = %[1]q
 }
 
-resource "aws_vpclattice_service_networkservice_association" "test" {
+resource "aws_vpclattice_service_network_service_association" "test" {
   service_identifier         = aws_vpclattice_service.test.id
   service_network_identifier = aws_vpclattice_service_network.test.id
 }
 `, rName)
 }
 
-func testAccServiceNetworkAscConfig_tags1(rName, tagKey1, tagValue1 string) string {
+func testAccServiceNetworkServiceAssociationConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpclattice_service" "test" {
   name = %[1]q
-  tags = {
-    %[2]q = %[3]q
-  }
 }
 
 resource "aws_vpclattice_service_network" "test" {
   name = %[1]q
 }
 
-resource "aws_vpclattice_service_networkservice_association" "test" {
+resource "aws_vpclattice_service_network_service_association" "test" {
   service_identifier         = aws_vpclattice_service.test.id
   service_network_identifier = aws_vpclattice_service_network.test.id
+
   tags = {
     %[2]q = %[3]q
   }
@@ -221,23 +223,20 @@ resource "aws_vpclattice_service_networkservice_association" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccServiceNetworkAscConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccServiceNetworkServiceAssociationConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpclattice_service" "test" {
   name = %[1]q
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
 }
 
 resource "aws_vpclattice_service_network" "test" {
   name = %[1]q
 }
 
-resource "aws_vpclattice_service_networkservice_association" "test" {
+resource "aws_vpclattice_service_network_service_association" "test" {
   service_identifier         = aws_vpclattice_service.test.id
   service_network_identifier = aws_vpclattice_service_network.test.id
+
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q
