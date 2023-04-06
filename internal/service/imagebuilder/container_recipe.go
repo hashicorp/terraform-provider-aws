@@ -338,10 +338,6 @@ func resourceContainerRecipeCreate(ctx context.Context, d *schema.ResourceData, 
 		input.ParentImage = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("platform_override"); ok {
-		input.PlatformOverride = aws.String(v.(string))
-	}
-
 	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
