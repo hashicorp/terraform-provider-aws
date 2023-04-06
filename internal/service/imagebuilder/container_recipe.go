@@ -306,10 +306,6 @@ func resourceContainerRecipeCreate(ctx context.Context, d *schema.ResourceData, 
 		input.ImageOsVersionOverride = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("platform_override"); ok {
-		input.PlatformOverride = aws.String(v.(string))
-	}
-
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
@@ -336,6 +332,10 @@ func resourceContainerRecipeCreate(ctx context.Context, d *schema.ResourceData, 
 
 	if v, ok := d.GetOk("parent_image"); ok {
 		input.ParentImage = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("platform_override"); ok {
+		input.PlatformOverride = aws.String(v.(string))
 	}
 
 	if len(tags) > 0 {
