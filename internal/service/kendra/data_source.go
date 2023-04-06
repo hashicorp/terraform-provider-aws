@@ -470,8 +470,8 @@ func ResourceDataSource() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags:tftags.TagsSchema(),
-names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -595,7 +595,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		ClientToken: aws.String(id.UniqueId()),
 		IndexId:     aws.String(d.Get("index_id").(string)),
 		Name:        aws.String(name),
-		Tags: GetTagsIn(ctx),
+		Tags:        GetTagsIn(ctx),
 		Type:        types.DataSourceType(d.Get("type").(string)),
 	}
 
