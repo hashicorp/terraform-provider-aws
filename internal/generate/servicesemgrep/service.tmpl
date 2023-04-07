@@ -27,7 +27,7 @@
             - pattern-not-regex: ^testAccCloudTrailConfig_.*
             {{- end }}
             {{- if eq .ServiceAlias "Pipes" }}
-            - pattern-not-regex: ^.+Pipes$
+            - pattern-not-regex: ^.+Pipe[sS].*$
             {{- end }}
             {{- if eq .ServiceAlias "RAM" }}
             - pattern-not-regex: Framework

@@ -2735,7 +2735,7 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Pipes"
-            - pattern-not-regex: ^.+Pipes$
+            - pattern-not-regex: ^.+Pipe[sS].*$
             - pattern-not-regex: ^TestAcc.*
     severity: WARNING
   - id: pipes-in-test-name
