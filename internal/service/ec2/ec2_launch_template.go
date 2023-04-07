@@ -667,7 +667,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 						"http_protocol_ipv6": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      ec2.LaunchTemplateInstanceMetadataProtocolIpv6Disabled,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice(ec2.LaunchTemplateInstanceMetadataProtocolIpv6_Values(), false),
 						},
 						"http_put_response_hop_limit": {
@@ -685,7 +685,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 						"instance_metadata_tags": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      ec2.LaunchTemplateInstanceMetadataTagsStateDisabled,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice(ec2.LaunchTemplateInstanceMetadataTagsState_Values(), false),
 						},
 					},
