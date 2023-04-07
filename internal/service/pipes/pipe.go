@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/pipes"
 	"github.com/aws/aws-sdk-go-v2/service/pipes/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -78,7 +78,7 @@ func ResourcePipe() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validation.StringLenBetween(1, 64-resource.UniqueIDSuffixLength),
+				ValidateFunc:  validation.StringLenBetween(1, 64-id.UniqueIDSuffixLength),
 			},
 			"role_arn": {
 				Type:         schema.TypeString,

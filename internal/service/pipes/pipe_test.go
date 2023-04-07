@@ -15,9 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-
 	tfpipes "github.com/hashicorp/terraform-provider-aws/internal/service/pipes"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -913,9 +912,13 @@ resource "aws_cloudwatch_event_connection" "test" {
   }
 }
 
+locals {
+  name_prefix = %[1]q
+}
+
 resource "aws_cloudwatch_event_api_destination" "test" {
   count               = 2
-  name                = "${%[1]q}-${count.index}"
+  name                = "${local.name_prefix}-${count.index}"
   invocation_endpoint = "https://example.com/${count.index}"
   http_method         = "POST"
   connection_arn      = aws_cloudwatch_event_connection.test.arn
@@ -952,7 +955,7 @@ resource "aws_pipes_pipe" "test" {
 
   source_parameters {
     filter_criteria {
-      filter { 
+      filter {
         pattern = jsonencode({
           source = [%[2]q]
         })
@@ -981,13 +984,13 @@ resource "aws_pipes_pipe" "test" {
 
   source_parameters {
     filter_criteria {
-      filter { 
+      filter {
         pattern = jsonencode({
           source = [%[2]q]
         })
       }
 
-      filter { 
+      filter {
         pattern = jsonencode({
           source = [%[3]q]
         })

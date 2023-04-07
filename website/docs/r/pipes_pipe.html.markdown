@@ -87,7 +87,7 @@ resource "aws_pipes_pipe" "example" {
   role_arn   = aws_iam_role.example.arn
   source     = aws_sqs_queue.source.arn
   target     = aws_sqs_queue.target.arn
-  
+
   source_parameters {}
   target_parameters {}
 }

@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/pipes"
 	"github.com/aws/aws-sdk-go-v2/service/pipes/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -23,7 +23,7 @@ const (
 	pipeStatusStopFailed   = string(types.PipeStateStopFailed)
 )
 
-func statusPipe(ctx context.Context, conn *pipes.Client, name string) resource.StateRefreshFunc {
+func statusPipe(ctx context.Context, conn *pipes.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindPipeByName(ctx, conn, name)
 
