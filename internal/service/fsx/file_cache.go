@@ -380,10 +380,6 @@ func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	dataRepositoryAssociations, err := findDataRepositoryAssociationsByIDs(ctx, conn, filecache.DataRepositoryAssociationIds)
 
-	if err != nil {
-		return create.DiagError(names.FSx, create.ErrActionSetting, ResNameFileCache, d.Id(), err)
-	}
-
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	if err := d.Set("data_repository_association", flattenDataRepositoryAssociations(ctx, dataRepositoryAssociations, defaultTagsConfig, ignoreTagsConfig)); err != nil {
