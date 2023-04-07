@@ -37,10 +37,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceBroker,
 			TypeName: "aws_mq_broker",
+			Name:     "Broker",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceConfiguration,
 			TypeName: "aws_mq_configuration",
+			Name:     "Configuration",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }

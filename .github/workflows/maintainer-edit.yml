@@ -14,7 +14,7 @@ jobs:
     steps:
       - name: Comment if maintainers cannot edit
         if: (!github.event.pull_request.maintainer_can_modify && needs.community_check.outputs.maintainer == 'false')
-        uses: peter-evans/create-or-update-comment@67dcc547d311b736a8e6c5c236542148a47adc3d
+        uses: peter-evans/create-or-update-comment@3383acd359705b10cb1eeef05c0e88c056ea4666
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body: |

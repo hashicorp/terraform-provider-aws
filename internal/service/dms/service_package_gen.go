@@ -28,30 +28,58 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceCertificate,
 			TypeName: "aws_dms_certificate",
+			Name:     "Certificate",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "certificate_arn",
+			},
 		},
 		{
 			Factory:  ResourceEndpoint,
 			TypeName: "aws_dms_endpoint",
+			Name:     "Endpoint",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "endpoint_arn",
+			},
 		},
 		{
 			Factory:  ResourceEventSubscription,
 			TypeName: "aws_dms_event_subscription",
+			Name:     "Event Subscription",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceReplicationInstance,
 			TypeName: "aws_dms_replication_instance",
+			Name:     "Replication Instance",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "replication_instance_arn",
+			},
 		},
 		{
 			Factory:  ResourceReplicationSubnetGroup,
 			TypeName: "aws_dms_replication_subnet_group",
+			Name:     "Replication Subnet Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "replication_subnet_group_arn",
+			},
 		},
 		{
 			Factory:  ResourceReplicationTask,
 			TypeName: "aws_dms_replication_task",
+			Name:     "Replication Task",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "replication_task_arn",
+			},
 		},
 		{
 			Factory:  ResourceS3Endpoint,
 			TypeName: "aws_dms_s3_endpoint",
+			Name:     "S3 Endpoint",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "endpoint_arn",
+			},
 		},
 	}
 }

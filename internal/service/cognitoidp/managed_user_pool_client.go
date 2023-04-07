@@ -6,7 +6,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -51,9 +53,6 @@ func (r *resourceManagedUserPoolClient) Schema(ctx context.Context, request reso
 			"access_token_validity": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
-				Validators: []validator.Int64{
-					int64validator.Between(1, 86400),
-				},
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.UseStateForUnknown(),
 				},
@@ -160,9 +159,6 @@ func (r *resourceManagedUserPoolClient) Schema(ctx context.Context, request reso
 			"id_token_validity": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
-				Validators: []validator.Int64{
-					int64validator.Between(1, 86400),
-				},
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.UseStateForUnknown(),
 				},
@@ -223,9 +219,6 @@ func (r *resourceManagedUserPoolClient) Schema(ctx context.Context, request reso
 			"refresh_token_validity": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
-				Validators: []validator.Int64{
-					int64validator.Between(0, 315360000),
-				},
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.UseStateForUnknown(),
 				},
@@ -591,6 +584,35 @@ func (r *resourceManagedUserPoolClient) ImportState(ctx context.Context, request
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("user_pool_id"), userPoolId)...)
 }
 
+func (r *resourceManagedUserPoolClient) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
+	return []resource.ConfigValidator{
+		resourceManagedUserPoolClientAccessTokenValidityValidator{
+			resourceManagedUserPoolClientValidityValidator{
+				attr:        "access_token_validity",
+				min:         5 * time.Minute,
+				max:         24 * time.Hour,
+				defaultUnit: time.Hour,
+			},
+		},
+		resourceManagedUserPoolClientIDTokenValidityValidator{
+			resourceManagedUserPoolClientValidityValidator{
+				attr:        "id_token_validity",
+				min:         5 * time.Minute,
+				max:         24 * time.Hour,
+				defaultUnit: time.Hour,
+			},
+		},
+		resourceManagedUserPoolClientRefreshTokenValidityValidator{
+			resourceManagedUserPoolClientValidityValidator{
+				attr:        "refresh_token_validity",
+				min:         60 * time.Minute,
+				max:         315360000 * time.Second,
+				defaultUnit: 24 * time.Hour,
+			},
+		},
+	}
+}
+
 type resourceManagedUserPoolClientData struct {
 	AccessTokenValidity                      types.Int64    `tfsdk:"access_token_validity"`
 	AllowedOauthFlows                        types.Set      `tfsdk:"allowed_oauth_flows"`
@@ -671,5 +693,116 @@ func (data resourceManagedUserPoolClientData) updateInput(ctx context.Context, d
 		TokenValidityUnits:                       expandTokenValidityUnits(ctx, data.TokenValidityUnits, diags),
 		UserPoolId:                               flex.StringFromFramework(ctx, data.UserPoolID),
 		WriteAttributes:                          flex.ExpandFrameworkStringSet(ctx, data.WriteAttributes),
+	}
+}
+
+var _ resource.ConfigValidator = &resourceManagedUserPoolClientAccessTokenValidityValidator{}
+
+type resourceManagedUserPoolClientAccessTokenValidityValidator struct {
+	resourceManagedUserPoolClientValidityValidator
+}
+
+func (v resourceManagedUserPoolClientAccessTokenValidityValidator) ValidateResource(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	v.validate(ctx, req, resp,
+		func(rupcd resourceManagedUserPoolClientData) types.Int64 {
+			return rupcd.AccessTokenValidity
+		},
+		func(tvu *tokenValidityUnits) types.String {
+			return tvu.AccessToken
+		},
+	)
+}
+
+var _ resource.ConfigValidator = &resourceManagedUserPoolClientIDTokenValidityValidator{}
+
+type resourceManagedUserPoolClientIDTokenValidityValidator struct {
+	resourceManagedUserPoolClientValidityValidator
+}
+
+func (v resourceManagedUserPoolClientIDTokenValidityValidator) ValidateResource(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	v.validate(ctx, req, resp,
+		func(rupcd resourceManagedUserPoolClientData) types.Int64 {
+			return rupcd.IdTokenValidity
+		},
+		func(tvu *tokenValidityUnits) types.String {
+			return tvu.IdToken
+		},
+	)
+}
+
+var _ resource.ConfigValidator = &resourceManagedUserPoolClientRefreshTokenValidityValidator{}
+
+type resourceManagedUserPoolClientRefreshTokenValidityValidator struct {
+	resourceManagedUserPoolClientValidityValidator
+}
+
+func (v resourceManagedUserPoolClientRefreshTokenValidityValidator) ValidateResource(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	v.validate(ctx, req, resp,
+		func(rupcd resourceManagedUserPoolClientData) types.Int64 {
+			return rupcd.RefreshTokenValidity
+		},
+		func(tvu *tokenValidityUnits) types.String {
+			return tvu.RefreshToken
+		},
+	)
+}
+
+type resourceManagedUserPoolClientValidityValidator struct {
+	min         time.Duration
+	max         time.Duration
+	attr        string
+	defaultUnit time.Duration
+}
+
+func (v resourceManagedUserPoolClientValidityValidator) Description(ctx context.Context) string {
+	return v.MarkdownDescription(ctx)
+}
+
+func (v resourceManagedUserPoolClientValidityValidator) MarkdownDescription(_ context.Context) string {
+	return fmt.Sprintf("must have a duration between %s and %s", v.min, v.max)
+}
+
+func (v resourceManagedUserPoolClientValidityValidator) validate(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse, valF func(resourceManagedUserPoolClientData) types.Int64, unitF func(*tokenValidityUnits) types.String) {
+	var config resourceManagedUserPoolClientData
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	x := valF(config)
+
+	if x.IsUnknown() || x.IsNull() {
+		return
+	}
+
+	val := aws.ToInt64(flex.Int64FromFramework(ctx, x))
+
+	var duration time.Duration
+
+	units := resolveTokenValidityUnits(ctx, config.TokenValidityUnits, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if units == nil {
+		duration = time.Duration(val * int64(v.defaultUnit))
+	} else {
+		switch aws.ToString(flex.StringFromFramework(ctx, unitF(units))) {
+		case cognitoidentityprovider.TimeUnitsTypeSeconds:
+			duration = time.Duration(val * int64(time.Second))
+		case cognitoidentityprovider.TimeUnitsTypeMinutes:
+			duration = time.Duration(val * int64(time.Minute))
+		case cognitoidentityprovider.TimeUnitsTypeHours:
+			duration = time.Duration(val * int64(time.Hour))
+		case cognitoidentityprovider.TimeUnitsTypeDays:
+			duration = time.Duration(val * 24 * int64(time.Hour))
+		}
+	}
+
+	if duration < v.min || duration > v.max {
+		resp.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
+			path.Root(v.attr),
+			v.Description(ctx),
+			duration.String(),
+		))
 	}
 }

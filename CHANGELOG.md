@@ -1,4 +1,5 @@
-## 4.62.0 (Unreleased)
+## 4.63.0 (Unreleased)
+## 4.62.0 (April  6, 2023)
 
 FEATURES:
 
@@ -8,6 +9,7 @@ FEATURES:
 * **New Data Source:** `aws_oam_link` ([#30401](https://github.com/hashicorp/terraform-provider-aws/issues/30401))
 * **New Data Source:** `aws_oam_links` ([#30401](https://github.com/hashicorp/terraform-provider-aws/issues/30401))
 * **New Data Source:** `aws_quicksight_data_set` ([#30422](https://github.com/hashicorp/terraform-provider-aws/issues/30422))
+* **New Data Source:** `aws_vpclattice_service` ([#30490](https://github.com/hashicorp/terraform-provider-aws/issues/30490))
 * **New Resource:** `aws_inspector2_member_association` ([#28921](https://github.com/hashicorp/terraform-provider-aws/issues/28921))
 * **New Resource:** `aws_lightsail_distribution` ([#30124](https://github.com/hashicorp/terraform-provider-aws/issues/30124))
 * **New Resource:** `aws_quicksight_account_subscription` ([#30359](https://github.com/hashicorp/terraform-provider-aws/issues/30359))
@@ -18,8 +20,13 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_route_table: Ignore routes managed by VPC Lattice ([#30515](https://github.com/hashicorp/terraform-provider-aws/issues/30515))
 * data-source/aws_secretsmanager_secret: Add `rotation_rules.duration` and `rotation_rules.schedule_expression` attributes ([#30425](https://github.com/hashicorp/terraform-provider-aws/issues/30425))
 * data-source/aws_secretsmanager_secret_rotation: Add `rotation_rules.duration` and `rotation_rules.schedule_expression` attributes ([#30425](https://github.com/hashicorp/terraform-provider-aws/issues/30425))
+* resource/aws_default_route_table: Ignore routes managed by VPC Lattice ([#30515](https://github.com/hashicorp/terraform-provider-aws/issues/30515))
+* resource/aws_emrserverless_application: Add `image_configuration` field ([#30398](https://github.com/hashicorp/terraform-provider-aws/issues/30398))
+* resource/aws_imagebuilder_container_recipe: Add `platform_override` field ([#30398](https://github.com/hashicorp/terraform-provider-aws/issues/30398))
+* resource/aws_route_table: Ignore routes managed by VPC Lattice ([#30515](https://github.com/hashicorp/terraform-provider-aws/issues/30515))
 * resource/aws_s3_bucket:  Enable S3-compatible providers with no support for bucket tagging ([#30151](https://github.com/hashicorp/terraform-provider-aws/issues/30151))
 * resource/aws_sagemaker_endpoint_configuration: Add `name_prefix` argument ([#28785](https://github.com/hashicorp/terraform-provider-aws/issues/28785))
 * resource/aws_sagemaker_feature_group: Add `table_format` to the `offline_store_config` configuration block ([#30118](https://github.com/hashicorp/terraform-provider-aws/issues/30118))
