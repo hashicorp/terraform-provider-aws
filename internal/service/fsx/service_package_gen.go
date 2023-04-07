@@ -113,6 +113,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceWindowsFileSystem,
 			TypeName: "aws_fsx_windows_file_system",
+			Name:     "Windows File System",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }

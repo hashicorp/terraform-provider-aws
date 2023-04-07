@@ -24,7 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_fsx_windows_file_system")
+// @SDKResource("aws_fsx_windows_file_system", name="Windows File System")
+// @Tags(identifierAttribute="arn")
 func ResourceWindowsFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWindowsFileSystemCreate,
@@ -217,9 +218,7 @@ func ResourceWindowsFileSystem() *schema.Resource {
 				MinItems: 1,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":            tftags.TagsSchema(),
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchema(),
 			"throughput_capacity": {
 				Type:         schema.TypeInt,
 				Required:     true,
@@ -275,14 +274,13 @@ func ResourceWindowsFileSystem() *schema.Resource {
 func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &fsx.CreateFileSystemInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
 		FileSystemType:     aws.String(fsx.FileSystemTypeWindows),
 		StorageCapacity:    aws.Int64(int64(d.Get("storage_capacity").(int))),
 		SubnetIds:          flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
+		Tags:               GetTagsIn(ctx),
 		WindowsConfiguration: &fsx.CreateFileSystemWindowsConfiguration{
 			AutomaticBackupRetentionDays: aws.Int64(int64(d.Get("automatic_backup_retention_days").(int))),
 			CopyTagsToBackups:            aws.Bool(d.Get("copy_tags_to_backups").(bool)),
@@ -293,6 +291,7 @@ func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 	backupInput := &fsx.CreateFileSystemFromBackupInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
 		SubnetIds:          flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
+		Tags:               GetTagsIn(ctx),
 		WindowsConfiguration: &fsx.CreateFileSystemWindowsConfiguration{
 			AutomaticBackupRetentionDays: aws.Int64(int64(d.Get("automatic_backup_retention_days").(int))),
 			CopyTagsToBackups:            aws.Bool(d.Get("copy_tags_to_backups").(bool)),
@@ -345,11 +344,6 @@ func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 		backupInput.WindowsConfiguration.AuditLogConfiguration = expandWindowsAuditLogCreateConfiguration(v.([]interface{}))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-		backupInput.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	if v, ok := d.GetOk("weekly_maintenance_start_time"); ok {
 		input.WindowsConfiguration.WeeklyMaintenanceStartTime = aws.String(v.(string))
 		backupInput.WindowsConfiguration.WeeklyMaintenanceStartTime = aws.String(v.(string))
@@ -392,14 +386,6 @@ func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating FSx Windows File System (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
 
 	if d.HasChange("aliases") {
 		o, n := d.GetChange("aliases")
@@ -461,8 +447,6 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 func resourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	filesystem, err := FindFileSystemByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -520,16 +504,7 @@ func resourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "setting subnet_ids: %s", err)
 	}
 
-	tags := KeyValueTags(ctx, filesystem.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, filesystem.Tags)
 
 	d.Set("throughput_capacity", filesystem.WindowsConfiguration.ThroughputCapacity)
 	d.Set("vpc_id", filesystem.VpcId)
