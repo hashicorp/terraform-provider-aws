@@ -378,7 +378,7 @@ func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	// Lookup and set Data Repository Associations
 
-	dataRepositoryAssociations, err := findDataRepositoryAssociationsByIDs(ctx, conn, filecache.DataRepositoryAssociationIds)
+	dataRepositoryAssociations, _ := findDataRepositoryAssociationsByIDs(ctx, conn, filecache.DataRepositoryAssociationIds)
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
