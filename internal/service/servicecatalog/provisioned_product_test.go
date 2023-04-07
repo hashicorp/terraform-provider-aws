@@ -16,8 +16,6 @@ import (
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 )
 
-// add sweeper to delete known test servicecat provisioned products
-
 func TestAccServiceCatalogProvisionedProduct_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_provisioned_product.test"
