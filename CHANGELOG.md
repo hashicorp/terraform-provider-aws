@@ -8,8 +8,13 @@ FEATURES:
 
 * **New Resource:** `aws_vpclattice_service_network_service_association` ([#30410](https://github.com/hashicorp/terraform-provider-aws/issues/30410))
 
+ENHANCEMENTS:
+
+* resource/aws_wafv2_web_acl: Add `aws_managed_rules_atp_rule_set` to `managed_rule_group_configs` configuration block ([#30518](https://github.com/hashicorp/terraform-provider-aws/issues/30518))
+
 BUG FIXES:
 
+* resource/aws_msk_serverless_cluster: Change `vpc_config.security_group_ids` to Computed ([#30535](https://github.com/hashicorp/terraform-provider-aws/issues/30535))
 * resource/aws_servicecatalog_provisioned_product: Allow the waiting that comes with updating and deleting to not error due to a `status` of `TAINTED` ([#30522](https://github.com/hashicorp/terraform-provider-aws/issues/30522))
 
 ## 4.62.0 (April  6, 2023)
