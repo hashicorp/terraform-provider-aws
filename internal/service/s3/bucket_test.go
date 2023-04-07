@@ -2954,22 +2954,6 @@ resource "aws_s3_bucket" "test" {
 `, bucketName)
 }
 
-func testAccBucketConfig_aclGrants(bucketName string) string {
-	return fmt.Sprintf(`
-data "aws_canonical_user_id" "current" {}
-
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-
-  grant {
-    id          = data.aws_canonical_user_id.current.id
-    type        = "CanonicalUser"
-    permissions = ["FULL_CONTROL", "WRITE"]
-  }
-}
-`, bucketName)
-}
-
 func testAccBucketConfig_lifecycle(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
