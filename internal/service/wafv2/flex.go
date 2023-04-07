@@ -1134,7 +1134,7 @@ func expandResponseInspection(tfList []interface{}) *wafv2.ResponseInspection {
 		out.Header = expandHeader(v)
 	}
 	if v, ok := m["json"].([]interface{}); ok && len(v) > 0 {
-		out.Json = expandJson(v)
+		out.Json = expandResponseInspectionJSON(v)
 	}
 	if v, ok := m["status_code"].([]interface{}); ok && len(v) > 0 {
 		out.StatusCode = expandStatusCode(v)
@@ -1172,7 +1172,7 @@ func expandHeader(tfList []interface{}) *wafv2.ResponseInspectionHeader {
 	return &out
 }
 
-func expandJson(tfList []interface{}) *wafv2.ResponseInspectionJson {
+func expandResponseInspectionJSON(tfList []interface{}) *wafv2.ResponseInspectionJson {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -2275,7 +2275,7 @@ func flattenResponseInspection(apiObject *wafv2.ResponseInspection) []interface{
 		m["header"] = flattenHeader(apiObject.Header)
 	}
 	if apiObject.Json != nil {
-		m["json"] = flattenJson(apiObject.Json)
+		m["json"] = flattenResponseInspectionJSON(apiObject.Json)
 	}
 	if apiObject.StatusCode != nil {
 		m["status_code"] = flattenStatusCode(apiObject.StatusCode)
@@ -2310,7 +2310,7 @@ func flattenHeader(apiObject *wafv2.ResponseInspectionHeader) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenJson(apiObject *wafv2.ResponseInspectionJson) []interface{} {
+func flattenResponseInspectionJSON(apiObject *wafv2.ResponseInspectionJson) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
