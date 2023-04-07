@@ -47,9 +47,10 @@ func TestAccImageBuilderImageRecipe_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -100,9 +101,10 @@ func TestAccImageBuilderImageRecipe_BlockDeviceMapping_deviceName(t *testing.T) 
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -130,9 +132,10 @@ func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_deleteOnTermination(t 
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -160,9 +163,10 @@ func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_encrypted(t *testing.T
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -190,9 +194,10 @@ func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_iops(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -219,9 +224,10 @@ func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_kmsKeyID(t *testing.T)
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -248,9 +254,10 @@ func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_snapshotID(t *testing.
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -278,9 +285,10 @@ func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_throughput(t *testing.
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -308,9 +316,10 @@ func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_volumeSize(t *testing.
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -338,9 +347,10 @@ func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_volumeTypeGP2(t *testi
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -368,9 +378,10 @@ func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_volumeTypeGP3(t *testi
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -398,9 +409,10 @@ func TestAccImageBuilderImageRecipe_BlockDeviceMapping_noDevice(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -428,9 +440,10 @@ func TestAccImageBuilderImageRecipe_BlockDeviceMapping_virtualName(t *testing.T)
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -458,9 +471,10 @@ func TestAccImageBuilderImageRecipe_component(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -512,9 +526,10 @@ func TestAccImageBuilderImageRecipe_description(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -540,9 +555,10 @@ func TestAccImageBuilderImageRecipe_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 			{
 				Config: testAccImageRecipeConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -584,9 +600,10 @@ func TestAccImageBuilderImageRecipe_workingDirectory(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -639,9 +656,10 @@ func TestAccImageBuilderImageRecipe_systemsManagerAgent(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -667,9 +685,10 @@ func TestAccImageBuilderImageRecipe_updateDependency(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 			{
 				Config: testAccImageRecipeConfig_componentUpdate(rName, "hello world updated"),
@@ -702,9 +721,10 @@ func TestAccImageBuilderImageRecipe_userDataBase64(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -728,9 +748,10 @@ func TestAccImageBuilderImageRecipe_windowsBaseImage(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -1162,7 +1183,7 @@ parameters:
   - Parameter1:
       type: string
   - Parameter2:
-      type: string  
+      type: string
 schemaVersion: 1.0
 EOF
 
