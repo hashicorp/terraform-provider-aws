@@ -2,12 +2,10 @@ package s3_test
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"reflect"
 	"regexp"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -2713,53 +2711,6 @@ func testAccCheckBucketDomainName(resourceName string, attributeName string, buc
 	}
 }
 
-func testAccCheckBucketPolicy(ctx context.Context, n string, policy string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
-
-		out, err := conn.GetBucketPolicyWithContext(ctx, &s3.GetBucketPolicyInput{
-			Bucket: aws.String(rs.Primary.ID),
-		})
-
-		if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchBucketPolicy) {
-			return nil
-		}
-
-		if policy == "" {
-			if err == nil {
-				return fmt.Errorf("Expected no policy, got: %#v", *out.Policy)
-			} else {
-				return fmt.Errorf("GetBucketPolicy error: %v, expected %s", err, policy)
-			}
-		}
-		if err != nil {
-			return fmt.Errorf("GetBucketPolicy error: %v, expected %s", err, policy)
-		}
-
-		if v := out.Policy; v == nil {
-			if policy != "" {
-				return fmt.Errorf("bad policy, found nil, expected: %s", policy)
-			}
-		} else {
-			expected := make(map[string]interface{})
-			if err := json.Unmarshal([]byte(policy), &expected); err != nil {
-				return err
-			}
-			actual := make(map[string]interface{})
-			if err := json.Unmarshal([]byte(*v), &actual); err != nil {
-				return err
-			}
-
-			if !reflect.DeepEqual(expected, actual) {
-				return fmt.Errorf("bad policy, expected: %#v, got %#v", expected, actual)
-			}
-		}
-
-		return nil
-	}
-}
-
 func testAccBucketRegionalDomainName(bucket, region string) string {
 	regionalEndpoint, err := tfs3.BucketRegionalDomainName(bucket, region)
 	if err != nil {
@@ -2803,23 +2754,6 @@ func testAccCheckBucketCheckTags(ctx context.Context, n string, expectedTags map
 
 		return nil
 	}
-}
-
-func testAccBucketPolicy(bucketName, partition string) string {
-	return fmt.Sprintf(`{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "*"
-      },
-      "Action": "s3:GetObject",
-      "Resource": "arn:%[1]s:s3:::%[2]s/*"
-    }
-  ]
-}`, partition, bucketName)
 }
 
 func testAccBucketConfig_basic(bucketName string) string {
@@ -3140,7 +3074,7 @@ resource "aws_s3_bucket" "test" {
 `, bucketName)
 }
 
-func testAccBucketConfig_policy(bucketName, partition string) string {
+func testAccBucketConfig_policy(bucketName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_caller_identity" "current" {}
@@ -3167,9 +3101,9 @@ data "aws_iam_policy_document" "policy" {
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-  policy = %[2]s
+  policy = data.aws_iam_policy_document.policy.json
 }
-`, bucketName, strconv.Quote(testAccBucketPolicy(bucketName, partition)))
+`, bucketName)
 }
 
 func testAccBucketConfig_ReplicationBase(bucketName string) string {
