@@ -269,6 +269,10 @@ func TestAccServiceCatalogProvisionedProduct_tainted(t *testing.T) {
 			},
 			{
 				Config: testAccProvisionedProductConfig_updateTainted(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProvisionedProductExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "status", servicecatalog.ProvisionedProductStatusTainted),
+				),
 			},
 			{
 				// Check we can still run a complete plan after the previous update error
