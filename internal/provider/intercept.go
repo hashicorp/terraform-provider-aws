@@ -222,7 +222,7 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 			// Merge the resource's configured tags with any provider configured default_tags.
 			tags := tagsInContext.DefaultConfig.MergeTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})))
 			// Remove system tags.
-			tags = tags.IgnoreAWS().IgnoreElasticbeanstalk().IgnoreRDS()
+			tags = tags.IgnoreAWS()
 
 			tagsInContext.TagsIn = types.Some(tags)
 
@@ -321,7 +321,7 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 			}
 
 			// Remove any provider configured ignore_tags and system tags from those returned from the service API.
-			tags := tagsInContext.TagsOut.UnwrapOrDefault().IgnoreAWS().IgnoreElasticbeanstalk().IgnoreRDS().IgnoreConfig(tagsInContext.IgnoreConfig)
+			tags := tagsInContext.TagsOut.UnwrapOrDefault().IgnoreAWS().IgnoreConfig(tagsInContext.IgnoreConfig)
 
 			// The resource's configured tags do not include any provider configured default_tags.
 			if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(tagsInContext.DefaultConfig).Map()); err != nil {
