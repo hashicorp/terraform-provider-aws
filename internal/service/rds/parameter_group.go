@@ -146,7 +146,8 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	arn := aws.StringValue(dbParameterGroup.DBParameterGroupArn)
 	d.Set("arn", arn)
 	d.Set("description", dbParameterGroup.Description)
-	d.Set("family", dbParameterGroup.DBParameterGroupFamily)
+	fmt.Printf("setting family to %s\n", *dbParameterGroup.DBParameterGroupFamily)
+	d.Set("family", *dbParameterGroup.DBParameterGroupFamily)
 	d.Set("name", dbParameterGroup.DBParameterGroupName)
 
 	input := &rds.DescribeDBParametersInput{
