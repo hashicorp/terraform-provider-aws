@@ -14,6 +14,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_batch_compute_environment: Fix crash when `compute_resources.launch_template` is empty ([#30537](https://github.com/hashicorp/terraform-provider-aws/issues/30537))
 * resource/aws_msk_serverless_cluster: Change `vpc_config.security_group_ids` to Computed ([#30535](https://github.com/hashicorp/terraform-provider-aws/issues/30535))
 * resource/aws_servicecatalog_provisioned_product: Allow the waiting that comes with updating and deleting to not error due to a `status` of `TAINTED` ([#30522](https://github.com/hashicorp/terraform-provider-aws/issues/30522))
 
