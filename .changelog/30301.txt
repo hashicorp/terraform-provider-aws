@@ -1,8 +1,4 @@
 ```release-note:new-resource
-aws_sagemaker_monitoring_schedule
-```
-
-```release-note:new-resource
 aws_sagemaker_data_quality_job_definition
 ```
 
