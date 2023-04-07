@@ -4,6 +4,10 @@ NOTES:
 
 * resource/aws_servicecatalog_provisioned_product: Previously, this resource would error or hang until timeout and then error, if a stack had a `status` of `TAINTED`. Now, the resource will continue functioning normally if the `status` is `TAINTED`. This is because the stack is in a "stable state" and "ready to perform any operation." However, although "the stack has completed the requested operation," it "is not exactly what was requested." The `status` will reflect `TAINTED` and `status_message` will provide clues as to what happened. See the `aws_servicecatalog_provisioned_product` documentation for more information and ways to use logging with this. ([#30522](https://github.com/hashicorp/terraform-provider-aws/issues/30522))
 
+FEATURES:
+
+* **New Resource:** `aws_vpclattice_service_network_service_association` ([#30410](https://github.com/hashicorp/terraform-provider-aws/issues/30410))
+
 BUG FIXES:
 
 * resource/aws_servicecatalog_provisioned_product: Allow the waiting that comes with updating and deleting to not error due to a `status` of `TAINTED` ([#30522](https://github.com/hashicorp/terraform-provider-aws/issues/30522))
