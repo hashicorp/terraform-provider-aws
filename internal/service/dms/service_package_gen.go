@@ -20,7 +20,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{}
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceCertificate,
+			TypeName: "aws_dms_certificate",
+		},
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
