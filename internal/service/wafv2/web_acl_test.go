@@ -3300,7 +3300,7 @@ resource "aws_wafv2_web_acl" "test" {
         name        = "AWSManagedRulesATPRuleSet"
         vendor_name = "AWS"
 
-				managed_rule_group_configs {
+        managed_rule_group_configs {
           aws_managed_rules_atp_rule_set {
             login_path = "/api/1/signin"
             request_inspection {
@@ -3319,7 +3319,7 @@ resource "aws_wafv2_web_acl" "test" {
               }
             }
           }
-				}
+        }
       }
     }
 
@@ -3368,7 +3368,7 @@ resource "aws_wafv2_web_acl" "test" {
         name        = "AWSManagedRulesATPRuleSet"
         vendor_name = "AWS"
 
-				managed_rule_group_configs {
+        managed_rule_group_configs {
           aws_managed_rules_atp_rule_set {
             login_path = "/api/1/signin"
             request_inspection {
@@ -3387,7 +3387,7 @@ resource "aws_wafv2_web_acl" "test" {
               }
             }
           }
-				}
+        }
       }
     }
 
