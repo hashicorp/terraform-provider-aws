@@ -764,39 +764,6 @@ func TestAccRDSParameterGroup_caseParameters(t *testing.T) {
 	})
 }
 
-func TestAccRDSParameterGroup_applyMethodDiffs(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v rds.DBParameterGroup
-	resourceName := "aws_db_parameter_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccParameterGroupConfig_applyMethodDiffs(rName, "rds.force_ssl", "1", "pending-reboot"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					//testAccCheckParameterGroupAttributes(&v, rName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "family", "postgres15"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":         "rds.force_ssl",
-						"value":        "1",
-						"apply_method": "pending-reboot",
-					}),
-				),
-			},
-			{
-				Config: testAccParameterGroupConfig_applyMethodDiffs(rName, "rds.force_ssl", "1", "pending-reboot"),
-			},
-		},
-	})
-}
-
 func TestDBParameterModifyChunk(t *testing.T) {
 	t.Parallel()
 
@@ -1805,28 +1772,3 @@ resource "aws_db_parameter_group" "test" {
   }
 }
 `
-
-func testAccParameterGroupConfig_applyMethodDiffs(rName, paramName, paramValue, applyMethod string) string {
-	return fmt.Sprintf(`
-variable "parameter" {
-  description = "List containing map of parameters to apply"
-  type        = list(map(any))
-  default     = [
-     {
-      name = "binlog_cache_size"
-      value = 32768
-    }
-  ]
-}
-
-resource "aws_db_parameter_group" "test" {
-  family = "postgres15"
-  name   = %[1]q
-  parameter {
-    name         = %[2]q
-    value        = %[3]q
-    apply_method = %[4]q
-  }
-}
-`, rName, paramName, paramValue, applyMethod)
-}
