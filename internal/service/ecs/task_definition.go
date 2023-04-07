@@ -27,7 +27,7 @@ import (
 )
 
 // @SDKResource("aws_ecs_task_definition", name="Task Definition")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
 func ResourceTaskDefinition() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
