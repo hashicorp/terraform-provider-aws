@@ -99,6 +99,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_sagemaker_model_package_group_policy",
 		},
 		{
+			Factory:  ResourceMonitoringSchedule,
+			TypeName: "aws_sagemaker_monitoring_schedule",
+		},
+		{
 			Factory:  ResourceNotebookInstance,
 			TypeName: "aws_sagemaker_notebook_instance",
 		},
