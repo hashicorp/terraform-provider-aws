@@ -203,8 +203,8 @@ func ResourceApplication() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrTags:tftags.TagsSchema(),
-names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -226,7 +226,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		ClientToken:  aws.String(id.UniqueId()),
 		ReleaseLabel: aws.String(d.Get("release_label").(string)),
 		Name:         aws.String(name),
-		Tags: GetTagsIn(ctx),
+		Tags:         GetTagsIn(ctx),
 		Type:         aws.String(d.Get("type").(string)),
 	}
 
