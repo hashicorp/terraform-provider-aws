@@ -1165,7 +1165,7 @@ func expandHeader(tfList []interface{}) *wafv2.ResponseInspectionHeader {
 	m := tfList[0].(map[string]interface{})
 	out := wafv2.ResponseInspectionHeader{
 		Name:          aws.String(m["name"].(string)),
-		FailureValues: flex.ExpandStringSet(m["failure_valies"].(*schema.Set)),
+		FailureValues: flex.ExpandStringSet(m["failure_values"].(*schema.Set)),
 		SuccessValues: flex.ExpandStringSet(m["success_values"].(*schema.Set)),
 	}
 
@@ -1179,8 +1179,8 @@ func expandResponseInspectionJSON(tfList []interface{}) *wafv2.ResponseInspectio
 
 	m := tfList[0].(map[string]interface{})
 	out := wafv2.ResponseInspectionJson{
+		FailureValues: flex.ExpandStringSet(m["failure_values"].(*schema.Set)),
 		Identifier:    aws.String(m["identifier"].(string)),
-		FailureValues: flex.ExpandStringSet(m["failure_valies"].(*schema.Set)),
 		SuccessValues: flex.ExpandStringSet(m["success_values"].(*schema.Set)),
 	}
 
@@ -2317,6 +2317,7 @@ func flattenResponseInspectionJSON(apiObject *wafv2.ResponseInspectionJson) []in
 
 	m := map[string]interface{}{
 		"failure_values": flex.FlattenStringSet(apiObject.FailureValues),
+		"identifier":     aws.StringValue(apiObject.Identifier),
 		"succeed_values": flex.FlattenStringSet(apiObject.SuccessValues),
 	}
 
