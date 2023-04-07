@@ -95,7 +95,6 @@ func ResourceServerlessCluster() *schema.Resource {
 						"security_group_ids": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Computed: true,
 							ForceNew: true,
 							MaxItems: 5,
 							Elem: &schema.Schema{
