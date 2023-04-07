@@ -56,6 +56,7 @@ func TestAccPipesPipe_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "target", "aws_sqs_queue.target", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.#", "1"),
 				),
 			},
 			{
@@ -636,6 +637,66 @@ func TestAccPipesPipe_target(t *testing.T) {
 	})
 }
 
+func TestAccPipesPipe_targetParameters_inputTemplate(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var pipe pipes.DescribePipeOutput
+	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_pipes_pipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPipeConfig_targetParameters_inputTemplate(name, "$.first"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.input_template", "$.first"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPipeConfig_targetParameters_inputTemplate(name, "$.second"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.input_template", "$.second"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPipeConfig_basic(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					resource.TestCheckNoResourceAttr(resourceName, "target_parameters.0.input_template"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckPipeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).PipesClient()
@@ -785,6 +846,7 @@ resource "aws_pipes_pipe" "test" {
   target     = aws_sqs_queue.target.arn
 
   source_parameters {}
+  target_parameters {}
 }
 `, name),
 	)
@@ -804,6 +866,7 @@ resource "aws_pipes_pipe" "test" {
   target     = aws_sqs_queue.target.arn
 
   source_parameters {}
+  target_parameters {}
 
   description = %[2]q
 }
@@ -825,6 +888,7 @@ resource "aws_pipes_pipe" "test" {
   target     = aws_sqs_queue.target.arn
 
   source_parameters {}
+  target_parameters {}
 
   desired_state = %[2]q
 }
@@ -865,6 +929,7 @@ resource "aws_pipes_pipe" "test" {
   target     = aws_sqs_queue.target.arn
 
   source_parameters {}
+  target_parameters {}
 
   enrichment = aws_cloudwatch_event_api_destination.test[%[2]d].arn
 }
@@ -894,6 +959,8 @@ resource "aws_pipes_pipe" "test" {
       }
     }
   }
+
+  target_parameters {}
 }
 `, name, criteria1),
 	)
@@ -927,6 +994,8 @@ resource "aws_pipes_pipe" "test" {
       }
     }
   }
+
+  target_parameters {}
 }
 `, name, criteria1, criteria2),
 	)
@@ -948,6 +1017,8 @@ resource "aws_pipes_pipe" "test" {
   source_parameters {
     filter_criteria {}
   }
+
+  target_parameters {}
 }
 `, name),
 	)
@@ -966,6 +1037,7 @@ resource "aws_pipes_pipe" "test" {
   target     = aws_sqs_queue.target.arn
 
   source_parameters {}
+  target_parameters {}
 }
 `,
 	)
@@ -985,6 +1057,7 @@ resource "aws_pipes_pipe" "test" {
   target      = aws_sqs_queue.target.arn
 
   source_parameters {}
+  target_parameters {}
 }
 `, namePrefix),
 	)
@@ -1042,6 +1115,7 @@ resource "aws_pipes_pipe" "test" {
   target     = aws_sqs_queue.target.arn
 
   source_parameters {}
+  target_parameters {}
 }
 `, name),
 	)
@@ -1061,6 +1135,7 @@ resource "aws_pipes_pipe" "test" {
   target     = aws_sqs_queue.target.arn
 
   source_parameters {}
+  target_parameters {}
 
   tags = {
     %[2]q = %[3]q
@@ -1084,6 +1159,7 @@ resource "aws_pipes_pipe" "test" {
   target     = aws_sqs_queue.target.arn
 
   source_parameters {}
+  target_parameters {}
 
   tags = {
     %[2]q = %[3]q
@@ -1128,7 +1204,31 @@ resource "aws_pipes_pipe" "test" {
   target     = aws_sqs_queue.target2.arn
 
   source_parameters {}
+  target_parameters {}
 }
 `, name),
+	)
+}
+
+func testAccPipeConfig_targetParameters_inputTemplate(name, template string) string {
+	return acctest.ConfigCompose(
+		testAccPipeConfig_base,
+		testAccPipeConfig_base_sqsSource,
+		testAccPipeConfig_base_sqsTarget,
+		fmt.Sprintf(`
+resource "aws_pipes_pipe" "test" {
+  depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
+  name       = %[1]q
+  role_arn   = aws_iam_role.test.arn
+  source     = aws_sqs_queue.source.arn
+  target     = aws_sqs_queue.target.arn
+
+  source_parameters {}
+
+  target_parameters {
+    input_template = %[2]q
+  }
+}
+`, name, template),
 	)
 }

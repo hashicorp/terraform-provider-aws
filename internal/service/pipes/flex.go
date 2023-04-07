@@ -116,3 +116,31 @@ func flattenPipeSourceParameters(apiObject *types.PipeSourceParameters) map[stri
 
 	return m
 }
+
+func expandPipeTargetParameters(tfMap map[string]interface{}) *types.PipeTargetParameters {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.PipeTargetParameters{}
+
+	if v, ok := tfMap["input_template"].(string); ok {
+		a.InputTemplate = aws.String(v)
+	}
+
+	return a
+}
+
+func flattenPipeTargetParameters(apiObject *types.PipeTargetParameters) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.InputTemplate; v != nil {
+		m["input_template"] = aws.ToString(v)
+	}
+
+	return m
+}

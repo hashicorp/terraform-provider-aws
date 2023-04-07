@@ -131,6 +131,20 @@ func ResourcePipe() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1600),
 			},
+			"target_parameters": {
+				Type:     schema.TypeList,
+				Required: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"input_template": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(0, 8192),
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -162,6 +176,10 @@ func resourcePipeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if v, ok := d.Get("source_parameters").([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		input.SourceParameters = expandPipeSourceParameters(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.Get("target_parameters").([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		input.TargetParameters = expandPipeTargetParameters(v[0].(map[string]interface{}))
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -221,6 +239,12 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("source", output.Source)
 	d.Set("target", output.Target)
 
+	if v := output.TargetParameters; v != nil {
+		if err := d.Set("target_parameters", []interface{}{flattenPipeTargetParameters(v)}); err != nil {
+			return create.DiagError(names.Pipes, create.ErrActionSetting, ResNamePipe, d.Id(), err)
+		}
+	}
+
 	tags, err := ListTags(ctx, conn, aws.ToString(output.Arn))
 	if err != nil {
 		return create.DiagError(names.Pipes, create.ErrActionReading, ResNamePipe, d.Id(), err)
@@ -254,6 +278,7 @@ func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 			// Omitting the SourceParameters entirely is interpreted as "no change".
 			SourceParameters: &types.UpdatePipeSourceParameters{},
+			TargetParameters: &types.PipeTargetParameters{},
 		}
 
 		if d.HasChange("enrichment") {
@@ -273,6 +298,14 @@ func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 		if v, ok := d.Get("source_parameters.0.filter_criteria").([]interface{}); ok && len(v) > 0 && v[0] != nil {
 			input.SourceParameters.FilterCriteria = expandFilterCriteria(v[0].(map[string]interface{}))
+		}
+
+		if d.HasChange("target_parameters.0.input_template") {
+			input.TargetParameters.InputTemplate = aws.String("")
+		}
+
+		if v, ok := d.Get("target_parameters.0.input_template").(string); ok {
+			input.TargetParameters.InputTemplate = aws.String(v)
 		}
 
 		log.Printf("[DEBUG] Updating EventBridge Pipes Pipe (%s): %#v", d.Id(), input)

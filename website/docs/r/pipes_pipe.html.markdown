@@ -98,6 +98,7 @@ The following arguments are required:
 * `source` - (Required) Source resource of the pipe (typically an ARN).
 * `target` - (Required) Target resource of the pipe (typically an ARN).
 * `source_parameters` - (Required) Parameters required to set up a source for the pipe. Detailed below.
+* `target_parameters` - (Required) Parameters required to set up a target for your pipe. Detailed below.
 
 The following arguments are optional:
 
@@ -119,6 +120,10 @@ The following arguments are optional:
 ##### source_parameters.filter_criteria.filter Configuration Block
 
 * `pattern` - (Required) The event pattern. At most 4096 characters.
+
+### target_parameters Configuration Block
+
+* `input_template` - (Optional) Valid JSON text passed to the target. In this case, nothing from the event itself is passed to the target.
 
 ## Attributes Reference
 
