@@ -254,6 +254,11 @@ func resourceContainerRecipe() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice([]string{"Linux", "Windows"}, false),
 			},
+			"skip_destroy": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"target_repository": {
@@ -423,6 +428,12 @@ func resourceContainerRecipeUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceContainerRecipeDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
+
+	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+		log.Printf("[DEBUG] Retaining Imagebuilder Container Recipe version %q", d.Id())
+		return diags
+	}
+
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Image Builder Container Recipe: %s", d.Id())

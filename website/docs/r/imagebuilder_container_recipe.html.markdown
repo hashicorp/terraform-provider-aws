@@ -66,6 +66,7 @@ The following attributes are optional:
 * `instance_configuration` - (Optional) Configuration block used to configure an instance for building and testing container images. Detailed below.
 * `kms_key_id` - (Optional) The KMS key used to encrypt the container image.
 * `platform_override` - (Optional) Specifies the operating system platform when you use a custom base image.
+* `skip_destroy` - (Optional) Whether to retain the old version when the resource is destroyed or replacement is necessary. Defaults to `false`.
 * `tags` - (Optional) Key-value map of resource tags for the container recipe. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `working_directory` - (Optional) The working directory to be used during build and test workflows.
 
