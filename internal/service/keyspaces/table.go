@@ -20,9 +20,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_keyspaces_table")
+// @SDKResource("aws_keyspaces_table", name="Table")
+// @Tags(identifierAttribute="arn")
 func ResourceTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTableCreate,
@@ -275,8 +277,8 @@ func ResourceTable() *schema.Resource {
 					),
 				),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"ttl": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -297,8 +299,6 @@ func ResourceTable() *schema.Resource {
 
 func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KeyspacesConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	keyspaceName := d.Get("keyspace_name").(string)
 	tableName := d.Get("table_name").(string)
@@ -306,6 +306,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	input := &keyspaces.CreateTableInput{
 		KeyspaceName: aws.String(keyspaceName),
 		TableName:    aws.String(tableName),
+		Tags:         GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("capacity_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -336,12 +337,6 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.Ttl = expandTimeToLive(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if tags := Tags(tags.IgnoreAWS()); len(tags) > 0 {
-		// The Keyspaces API requires that when Tags is set, it's non-empty.
-		input.Tags = tags
-	}
-
-	log.Printf("[DEBUG] Creating Keyspaces Table: %s", input)
 	_, err := conn.CreateTableWithContext(ctx, input)
 
 	if err != nil {
@@ -359,8 +354,6 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KeyspacesConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	keyspaceName, tableName, err := TableParseResourceID(d.Id())
 
@@ -425,23 +418,6 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	} else {
 		d.Set("ttl", nil)
-	}
-
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-
-	if err != nil {
-		return diag.Errorf("listing tags for Keyspaces Table (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	return nil
@@ -597,14 +573,6 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 					}
 				}
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating Keyspaces Table (%s) tags: %s", d.Id(), err)
 		}
 	}
 
