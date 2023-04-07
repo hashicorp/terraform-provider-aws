@@ -665,16 +665,16 @@ resource "aws_s3_bucket_acl" "test" {
 }
 
 func testAccBucketMetricConfig_emptyFilter(bucketName, metricName string) string {
-	return fmt.Sprintf(`
-%s
-
+	return acctest.ConfigCompose(
+		testAccBucketMetricsBucketConfig(bucketName),
+		fmt.Sprintf(`
 resource "aws_s3_bucket_metric" "test" {
   bucket = aws_s3_bucket.bucket.id
-  name   = "%s"
+  name   = %[1]q
 
   filter {}
 }
-`, testAccBucketMetricsBucketConfig(bucketName), metricName)
+`, metricName))
 }
 
 func testAccBucketMetricConfig_filterPrefix(bucketName, metricName, prefix string) string {
