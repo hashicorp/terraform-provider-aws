@@ -86,6 +86,7 @@ resource "aws_wafv2_web_acl" "example" {
 ```
 
 ### Account Takeover Protection
+
 ```
 resource "aws_wafv2_web_acl" "atp-example" {
   name        = "managed-atp-example"
