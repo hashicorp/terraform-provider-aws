@@ -19,6 +19,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_elasticache_user_group")
@@ -48,8 +49,8 @@ func ResourceUserGroup() *schema.Resource {
 					return strings.EqualFold(old, new)
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"user_group_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -71,20 +72,15 @@ var resourceUserGroupPendingStates = []string{
 func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &elasticache.CreateUserGroupInput{
 		Engine:      aws.String(d.Get("engine").(string)),
+		Tags:        GetTagsIn(ctx),
 		UserGroupId: aws.String(d.Get("user_group_id").(string)),
 	}
 
 	if v, ok := d.GetOk("user_ids"); ok {
 		input.UserIds = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	out, err := conn.CreateUserGroupWithContext(ctx, input)
@@ -118,7 +114,7 @@ func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	// In some partitions, only post-create tagging supported
-	if input.Tags == nil && len(tags) > 0 {
+	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); input.Tags == nil && len(tags) > 0 {
 		err := UpdateTags(ctx, conn, aws.StringValue(out.ARN), nil, tags)
 
 		if err != nil {
@@ -137,8 +133,6 @@ func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	resp, err := FindUserGroupByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && (tfresource.NotFound(err) || tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserGroupNotFoundFault)) {
@@ -155,30 +149,6 @@ func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("engine", resp.Engine)
 	d.Set("user_ids", resp.UserIds)
 	d.Set("user_group_id", resp.UserGroupId)
-
-	tags, err := ListTags(ctx, conn, aws.StringValue(resp.ARN))
-
-	if err != nil && !verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		return sdkdiag.AppendErrorf(diags, "listing tags for ElastiCache User Group (%s): %s", aws.StringValue(resp.ARN), err)
-	}
-
-	// tags not supported in all partitions
-	if err != nil {
-		log.Printf("[WARN] failed listing tags for ElastiCache User Group (%s): %s", aws.StringValue(resp.ARN), err)
-	}
-
-	if tags != nil {
-		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-		//lintignore:AWSR002
-		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-		}
-
-		if err := d.Set("tags_all", tags.Map()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-		}
-	}
 
 	return diags
 }
@@ -227,21 +197,6 @@ func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating ElastiCache User Group (%q): %s", d.Id(), err)
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n)
-
-		if err != nil {
-			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.ErrorISOUnsupported(conn.PartitionID, err) {
-				// explicitly setting tags or not an iso-unsupported error
-				return sdkdiag.AppendErrorf(diags, "updating ElastiCache User Group (%s) tags: %s", d.Get("arn").(string), err)
-			}
-
-			log.Printf("[WARN] failed updating tags for ElastiCache User Group (%s): %s", d.Get("arn").(string), err)
 		}
 	}
 
