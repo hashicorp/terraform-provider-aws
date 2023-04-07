@@ -57,6 +57,7 @@ The following attributes are optional:
 
 * `block_device_mapping` - (Optional) Configuration block(s) with block device mappings for the image recipe. Detailed below.
 * `description` - (Optional) Description of the image recipe.
+* `skip_destroy` - (Optional) Whether to retain the old version when the resource is destroyed or replacement is necessary. Defaults to `false`.
 * `systems_manager_agent` - (Optional) Configuration block for the Systems Manager Agent installed by default by Image Builder. Detailed below.
 * `tags` - (Optional) Key-value map of resource tags for the image recipe. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `user_data_base64` - (Optional) Base64 encoded user data. Use this to provide commands or a command script to run when you launch your build instance.
