@@ -268,8 +268,7 @@ func TestAccServiceCatalogProvisionedProduct_tainted(t *testing.T) {
 				),
 			},
 			{
-				Config:      testAccProvisionedProductConfig_updateTainted(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
-				ExpectError: regexp.MustCompile(`unexpected state 'TAINTED', wanted target 'AVAILABLE'`),
+				Config: testAccProvisionedProductConfig_updateTainted(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
 			},
 			{
 				// Check we can still run a complete plan after the previous update error
