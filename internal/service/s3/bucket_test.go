@@ -3113,12 +3113,24 @@ func testAccBucketConfig_logging(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "log_bucket" {
   bucket = "%[1]s-log"
+}
+
+resource "aws_s3_bucket_ownership_controls" "log_bucket_ownership" {
+  bucket = aws_s3_bucket.log_bucket.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
+resource "aws_s3_bucket_acl" "log_bucket_acl" {
+  depends_on = [aws_s3_bucket_ownership_controls.log_bucket_ownership]
+
+  bucket = aws_s3_bucket.log_bucket.id
   acl    = "log-delivery-write"
 }
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-  acl    = "private"
 
   logging {
     target_bucket = aws_s3_bucket.log_bucket.id
