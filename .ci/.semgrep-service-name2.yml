@@ -2750,6 +2750,7 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Pipes"
+            - pattern-not-regex: ^.+Pipes$
             - pattern-not-regex: ^TestAcc.*
     severity: WARNING
   - id: pipes-in-test-name
@@ -2780,6 +2781,7 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Pipes"
+            - pattern-not-regex: ^pipeS.*
     severity: WARNING
   - id: pipes-in-var-name
     languages:
@@ -2794,6 +2796,7 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Pipes"
+            - pattern-not-regex: ^pipeS.*
     severity: WARNING
   - id: pricing-in-func-name
     languages:
