@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_imagebuilder_container_recipe: Add optional skip_destroy argument
+```
+
+```release-note:enhancement
+resource/aws_imagebuilder_image_recipe: Add optional skip_destroy argument
+```
