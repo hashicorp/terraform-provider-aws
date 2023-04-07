@@ -23,9 +23,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_appstream_stack")
+// @SDKResource("aws_appstream_stack", name="Stack")
+// @Tags(identifierAttribute="arn")
 func ResourceStack() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStackCreate,
@@ -177,8 +179,8 @@ func ResourceStack() *schema.Resource {
 				},
 				Set: userSettingsHash,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: customdiff.All(
@@ -232,12 +234,11 @@ func ResourceStack() *schema.Resource {
 
 func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppStreamConn()
+
 	input := &appstream.CreateStackInput{
 		Name: aws.String(d.Get("name").(string)),
+		Tags: GetTagsIn(ctx),
 	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if v, ok := d.GetOk("access_endpoints"); ok {
 		input.AccessEndpoints = expandAccessEndpoints(v.(*schema.Set).List())
@@ -275,10 +276,6 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.UserSettings = expandUserSettings(v.(*schema.Set).List())
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	var err error
 	var output *appstream.CreateStackOutput
 	err = retry.RetryContext(ctx, stackOperationTimeout, func() *retry.RetryError {
@@ -309,9 +306,6 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppStreamConn()
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeStacksWithContext(ctx, &appstream.DescribeStacksInput{Names: []*string{aws.String(d.Id())}})
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
@@ -346,24 +340,8 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		if err = d.Set("user_settings", flattenUserSettings(v.UserSettings)); err != nil {
 			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "user_settings", d.Id(), err))
 		}
-
-		tg, err := conn.ListTagsForResourceWithContext(ctx, &appstream.ListTagsForResourceInput{
-			ResourceArn: v.Arn,
-		})
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error listing stack tags for AppStream Stack (%s): %w", d.Id(), err))
-		}
-
-		tags := KeyValueTags(ctx, tg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-		if err = d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "tags", d.Id(), err))
-		}
-
-		if err = d.Set("tags_all", tags.Map()); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "tags_all", d.Id(), err))
-		}
 	}
+
 	return nil
 }
 
@@ -402,19 +380,10 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.UserSettings = expandUserSettings(d.Get("user_settings").(*schema.Set).List())
 	}
 
-	resp, err := conn.UpdateStackWithContext(ctx, input)
+	_, err := conn.UpdateStackWithContext(ctx, input)
 
 	if err != nil {
 		diag.FromErr(fmt.Errorf("error updating Appstream Stack (%s): %w", d.Id(), err))
-	}
-
-	if d.HasChange("tags") {
-		arn := aws.StringValue(resp.Stack.Arn)
-
-		o, n := d.GetChange("tags")
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating Appstream Stack tags (%s): %w", d.Id(), err))
-		}
 	}
 
 	return resourceStackRead(ctx, d, meta)

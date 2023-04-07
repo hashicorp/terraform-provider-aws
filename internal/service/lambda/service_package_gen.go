@@ -69,6 +69,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceFunction,
 			TypeName: "aws_lambda_function",
+			Name:     "Function",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceFunctionEventInvokeConfig,

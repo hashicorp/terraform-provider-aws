@@ -17,13 +17,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 var validateAuthorizerResultTTLInSeconds = validation.IntBetween(0, 3600)
 
 const DefaultAuthorizerResultTTLInSeconds = 300
 
-// @SDKResource("aws_appsync_graphql_api")
+// @SDKResource("aws_appsync_graphql_api", name="GraphQL API")
+// @Tags(identifierAttribute="arn")
 func ResourceGraphQLAPI() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGraphQLAPICreate,
@@ -253,8 +255,8 @@ func ResourceGraphQLAPI() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"xray_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -268,12 +270,11 @@ func ResourceGraphQLAPI() *schema.Resource {
 func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &appsync.CreateGraphqlApiInput{
 		AuthenticationType: aws.String(d.Get("authentication_type").(string)),
 		Name:               aws.String(d.Get("name").(string)),
+		Tags:               GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("log_config"); ok {
@@ -294,10 +295,6 @@ func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk("additional_authentication_provider"); ok {
 		input.AdditionalAuthenticationProviders = expandGraphQLAPIAdditionalAuthProviders(v.([]interface{}), meta.(*conns.AWSClient).Region)
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("xray_enabled"); ok {
@@ -321,8 +318,6 @@ func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta 
 func resourceGraphQLAPIRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &appsync.GetGraphqlApiInput{
 		ApiId: aws.String(d.Id()),
@@ -368,16 +363,7 @@ func resourceGraphQLAPIRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting uris: %s", err)
 	}
 
-	tags := KeyValueTags(ctx, resp.GraphqlApi.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, resp.GraphqlApi.Tags)
 
 	if err := d.Set("xray_enabled", resp.GraphqlApi.XrayEnabled); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting xray_enabled: %s", err)
@@ -389,14 +375,6 @@ func resourceGraphQLAPIRead(ctx context.Context, d *schema.ResourceData, meta in
 func resourceGraphQLAPIUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating AppSync GraphQL API (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
 
 	input := &appsync.UpdateGraphqlApiInput{
 		ApiId:              aws.String(d.Id()),

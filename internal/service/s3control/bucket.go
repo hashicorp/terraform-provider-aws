@@ -20,6 +20,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -27,7 +28,8 @@ const (
 	bucketStatePropagationTimeout = 5 * time.Minute
 )
 
-// @SDKResource("aws_s3control_bucket")
+// @SDKResource("aws_s3control_bucket", name="Bucket")
+// @Tags
 func resourceBucket() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCreate,
@@ -69,8 +71,8 @@ func resourceBucket() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -79,8 +81,6 @@ func resourceBucket() *schema.Resource {
 
 func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3ControlConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	bucket := d.Get("bucket").(string)
 	input := &s3control.CreateBucketInput{
@@ -96,7 +96,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(aws.StringValue(output.BucketArn))
 
-	if len(tags) > 0 {
+	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
 		if err := bucketUpdateTags(ctx, conn, d.Id(), nil, tags); err != nil {
 			return diag.Errorf("adding S3 Control Bucket (%s) tags: %s", d.Id(), err)
 		}
@@ -107,8 +107,6 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3ControlConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	parsedArn, err := arn.Parse(d.Id())
 
@@ -149,16 +147,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("listing tags for S3 Control Bucket (%s): %s", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, Tags(tags))
 
 	return nil
 }
@@ -267,7 +256,7 @@ func bucketListTags(ctx context.Context, conn *s3control.S3Control, identifier s
 
 // bucketUpdateTags updates S3control bucket tags.
 // The identifier is the bucket ARN.
-func bucketUpdateTags(ctx context.Context, conn *s3control.S3Control, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func bucketUpdateTags(ctx context.Context, conn *s3control.S3Control, identifier string, oldTagsMap, newTagsMap any) error {
 	parsedArn, err := arn.Parse(identifier)
 
 	if err != nil {

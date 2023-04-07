@@ -21,9 +21,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_api_gateway_rest_api")
+// @SDKResource("aws_api_gateway_rest_api", name="REST API")
+// @Tags(identifierAttribute="arn")
 func ResourceRestAPI() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRestAPICreate,
@@ -148,8 +150,8 @@ func ResourceRestAPI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -159,33 +161,30 @@ func ResourceRestAPI() *schema.Resource {
 func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-	log.Printf("[DEBUG] Creating API Gateway")
 
-	params := &apigateway.CreateRestApiInput{
+	input := &apigateway.CreateRestApiInput{
 		Name: aws.String(d.Get("name").(string)),
-		Tags: Tags(tags.IgnoreAWS()),
+		Tags: GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("api_key_source"); ok {
-		params.ApiKeySource = aws.String(v.(string))
+		input.ApiKeySource = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("binary_media_types"); ok {
-		params.BinaryMediaTypes = flex.ExpandStringList(v.([]interface{}))
+		input.BinaryMediaTypes = flex.ExpandStringList(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("description"); ok {
-		params.Description = aws.String(v.(string))
+		input.Description = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("disable_execute_api_endpoint"); ok {
-		params.DisableExecuteApiEndpoint = aws.Bool(v.(bool))
+		input.DisableExecuteApiEndpoint = aws.Bool(v.(bool))
 	}
 	if v, ok := d.GetOk("endpoint_configuration"); ok {
-		params.EndpointConfiguration = expandEndpointConfiguration(v.([]interface{}))
+		input.EndpointConfiguration = expandEndpointConfiguration(v.([]interface{}))
 	}
 	minimumCompressionSize := d.Get("minimum_compression_size").(int)
 	if minimumCompressionSize > -1 {
-		params.MinimumCompressionSize = aws.Int64(int64(minimumCompressionSize))
+		input.MinimumCompressionSize = aws.Int64(int64(minimumCompressionSize))
 	}
 	if v, ok := d.GetOk("policy"); ok {
 		policy, err := structure.NormalizeJsonString(v.(string))
@@ -193,10 +192,10 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta int
 			return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 		}
 
-		params.Policy = aws.String(policy)
+		input.Policy = aws.String(policy)
 	}
 
-	gateway, err := conn.CreateRestApiWithContext(ctx, params)
+	gateway, err := conn.CreateRestApiWithContext(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway: %s", err)
 	}
@@ -254,10 +253,6 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	log.Printf("[DEBUG] Reading API Gateway %s", d.Id())
 
 	api, err := conn.GetRestApiWithContext(ctx, &apigateway.GetRestApiInput{
 		RestApiId: aws.String(d.Id()),
@@ -340,16 +335,7 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}
 
-	tags := KeyValueTags(ctx, api.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, api.Tags)
 
 	rest_api_arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -655,13 +641,6 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta int
 					return sdkdiag.AppendErrorf(diags, "updating REST API (%s) after OpenAPI import: %s", d.Id(), err)
 				}
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 

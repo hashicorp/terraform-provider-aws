@@ -20,11 +20,13 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const clusterParameterGroupMaxParamsBulkEdit = 20
 
-// @SDKResource("aws_rds_cluster_parameter_group")
+// @SDKResource("aws_rds_cluster_parameter_group", name="Cluster Parameter Group")
+// @Tags(identifierAttribute="arn")
 func ResourceClusterParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterParameterGroupCreate,
@@ -90,8 +92,8 @@ func ResourceClusterParameterGroup() *schema.Resource {
 				},
 				Set: resourceParameterHash,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -101,15 +103,13 @@ func ResourceClusterParameterGroup() *schema.Resource {
 func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	groupName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &rds.CreateDBClusterParameterGroupInput{
 		DBClusterParameterGroupName: aws.String(groupName),
 		DBParameterGroupFamily:      aws.String(d.Get("family").(string)),
 		Description:                 aws.String(d.Get("description").(string)),
-		Tags:                        Tags(tags.IgnoreAWS()),
+		Tags:                        GetTagsIn(ctx),
 	}
 
 	output, err := conn.CreateDBClusterParameterGroupWithContext(ctx, input)
@@ -129,8 +129,6 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	dbClusterParameterGroup, err := FindDBClusterParameterGroupByName(ctx, conn, d.Id())
 
@@ -178,23 +176,6 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 
 	if err := d.Set("parameter", flattenParameters(parameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
-	}
-
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		log.Printf("[WARN] listing tags for RDS DB Cluster Parameter Group (%s): %s", d.Id(), err)
-	} else {
-		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-		//lintignore:AWSR002
-		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-		}
-
-		if err := d.Set("tags_all", tags.Map()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-		}
 	}
 
 	return diags

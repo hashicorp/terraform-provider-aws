@@ -496,7 +496,7 @@ func WaitLaunchPathsReady(ctx context.Context, conn *servicecatalog.ServiceCatal
 func WaitProvisionedProductReady(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, id, name string, timeout time.Duration) (*servicecatalog.DescribeProvisionedProductOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{StatusNotFound, StatusUnavailable, servicecatalog.ProvisionedProductStatusUnderChange, servicecatalog.ProvisionedProductStatusPlanInProgress},
-		Target:                    []string{servicecatalog.StatusAvailable},
+		Target:                    []string{servicecatalog.StatusAvailable, servicecatalog.ProvisionedProductStatusTainted}, // Note: "TAINTED" is a stable state, ready for any operation, but is not exactly what was requested (new version failed and rolled back to current version)
 		Refresh:                   StatusProvisionedProduct(ctx, conn, acceptLanguage, id, name),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: ContinuousTargetOccurrence,
@@ -509,9 +509,9 @@ func WaitProvisionedProductReady(ctx context.Context, conn *servicecatalog.Servi
 	if output, ok := outputRaw.(*servicecatalog.DescribeProvisionedProductOutput); ok {
 		if detail := output.ProvisionedProductDetail; detail != nil {
 			status := aws.StringValue(detail.Status)
-			// Note: "TAINTED" is described as a stable state per API docs, though can result from a failed update
-			// such that the stack rolls back to a previous version
+
 			if status == servicecatalog.ProvisionedProductStatusError || status == servicecatalog.ProvisionedProductStatusTainted {
+				// for TAINTED, this may be ineffectual since err is likely nil
 				tfresource.SetLastError(err, errors.New(aws.StringValue(detail.StatusMessage)))
 			}
 		}
@@ -523,7 +523,7 @@ func WaitProvisionedProductReady(ctx context.Context, conn *servicecatalog.Servi
 
 func WaitProvisionedProductTerminated(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, id, name string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{servicecatalog.StatusAvailable, servicecatalog.ProvisionedProductStatusUnderChange},
+		Pending: []string{servicecatalog.StatusAvailable, servicecatalog.ProvisionedProductStatusUnderChange, servicecatalog.ProvisionedProductStatusTainted},
 		Target:  []string{StatusNotFound, StatusUnavailable},
 		Refresh: StatusProvisionedProduct(ctx, conn, acceptLanguage, id, name),
 		Timeout: timeout,

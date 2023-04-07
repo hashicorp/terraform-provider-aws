@@ -21,9 +21,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_config_config_rule")
+// @SDKResource("aws_config_config_rule", name="Config Rule")
+// @Tags(identifierAttribute="arn")
 func ResourceConfigRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRulePutConfig,
@@ -176,8 +178,8 @@ func ResourceConfigRule() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -187,8 +189,6 @@ func ResourceConfigRule() *schema.Resource {
 func resourceRulePutConfig(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	ruleInput := configservice.ConfigRule{
@@ -209,7 +209,7 @@ func resourceRulePutConfig(ctx context.Context, d *schema.ResourceData, meta int
 
 	input := configservice.PutConfigRuleInput{
 		ConfigRule: &ruleInput,
-		Tags:       Tags(tags.IgnoreAWS()),
+		Tags:       GetTagsIn(ctx),
 	}
 	log.Printf("[DEBUG] Creating AWSConfig config rule: %s", input)
 	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
@@ -234,25 +234,12 @@ func resourceRulePutConfig(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(name)
 
-	log.Printf("[DEBUG] AWSConfig config rule %q created", name)
-
-	if !d.IsNewResource() && d.HasChange("tags_all") {
-		arn := d.Get("arn").(string)
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Config Config Rule (%s) tags: %s", arn, err)
-		}
-	}
-
 	return append(diags, resourceConfigRuleRead(ctx, d, meta)...)
 }
 
 func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	rule, err := FindConfigRule(ctx, conn, d.Id())
 
@@ -275,23 +262,6 @@ func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.Set("source", flattenRuleSource(rule.Source))
-
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Config Config Rule (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
 
 	return diags
 }

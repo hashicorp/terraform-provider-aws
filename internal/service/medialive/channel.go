@@ -25,7 +25,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_medialive_channel")
+// @SDKResource("aws_medialive_channel", name="Channel")
+// @Tags(identifierAttribute="arn")
 func ResourceChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceChannelCreate,
@@ -695,8 +696,8 @@ func ResourceChannel() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -713,6 +714,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 	in := &medialive.CreateChannelInput{
 		Name:      aws.String(d.Get("name").(string)),
 		RequestId: aws.String(id.UniqueId()),
+		Tags:      GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("cdi_input_specification"); ok && len(v.([]interface{})) > 0 {
@@ -741,13 +743,6 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	if v, ok := d.GetOk("vpc"); ok && len(v.([]interface{})) > 0 {
 		in.Vpc = expandChannelVPC(v.([]interface{}))
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	out, err := conn.CreateChannel(ctx, in)
@@ -815,23 +810,6 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
 	if err := d.Set("vpc", flattenChannelVPC(out.Vpc)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
-	}
-
-	tags, err := ListTags(ctx, conn, aws.ToString(out.Arn))
-	if err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionReading, ResNameChannel, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
 
@@ -907,14 +885,6 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.Get("start_channel").(bool) {
 		if err := startChannel(ctx, conn, d.Timeout(schema.TimeoutUpdate), d.Id()); err != nil {
 			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Get("name").(string), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
 		}
 	}
 

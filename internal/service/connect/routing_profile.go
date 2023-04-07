@@ -15,9 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_connect_routing_profile")
+// @SDKResource("aws_connect_routing_profile", name="Routing Profile")
+// @Tags(identifierAttribute="arn")
 func ResourceRoutingProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRoutingProfileCreate,
@@ -147,34 +149,28 @@ func ResourceRoutingProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceRoutingProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
-
 	input := &connect.CreateRoutingProfileInput{
 		DefaultOutboundQueueId: aws.String(d.Get("default_outbound_queue_id").(string)),
 		Description:            aws.String(d.Get("description").(string)),
 		InstanceId:             aws.String(instanceID),
 		MediaConcurrencies:     expandRoutingProfileMediaConcurrencies(d.Get("media_concurrencies").(*schema.Set).List()),
 		Name:                   aws.String(name),
+		Tags:                   GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("queue_configs"); ok && v.(*schema.Set).Len() > 0 {
 		input.QueueConfigs = expandRoutingProfileQueueConfigs(v.(*schema.Set).List())
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating Connect Routing Profile %s", input)
@@ -195,8 +191,6 @@ func resourceRoutingProfileCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceID, routingProfileID, err := RoutingProfileParseID(d.Id())
 
@@ -247,16 +241,7 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("queue_configs", queueConfigs)
 	d.Set("queue_configs_associated", queueConfigs)
 
-	tags := KeyValueTags(ctx, routingProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
-	}
+	SetTagsOut(ctx, resp.RoutingProfile.Tags)
 
 	return nil
 }
@@ -365,14 +350,6 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 			if err != nil {
 				return diag.Errorf("updating RoutingProfile Queue Configs, specifically associating queues to routing profile (%s): %s", d.Id(), err)
 			}
-		}
-	}
-
-	// updates to tags
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
 		}
 	}
 

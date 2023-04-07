@@ -2608,10 +2608,13 @@ resource "aws_rds_cluster" "test" {
 func testAccClusterConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %[1]q
-  master_username     = "tfacctest"
-  master_password     = "avoid-plaintext-passwords"
-  skip_final_snapshot = true
+  cluster_identifier              = %[1]q
+  database_name                   = "test"
+  master_username                 = "tfacctest"
+  master_password                 = "avoid-plaintext-passwords"
+  engine                          = "aurora-mysql"
+  db_cluster_parameter_group_name = "default.aurora-mysql5.7"
+  skip_final_snapshot             = true
 
   tags = {
     %[2]q = %[3]q
@@ -2623,10 +2626,13 @@ resource "aws_rds_cluster" "test" {
 func testAccClusterConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %[1]q
-  master_username     = "tfacctest"
-  master_password     = "avoid-plaintext-passwords"
-  skip_final_snapshot = true
+  cluster_identifier              = %[1]q
+  database_name                   = "test"
+  master_username                 = "tfacctest"
+  master_password                 = "avoid-plaintext-passwords"
+  engine                          = "aurora-mysql"
+  db_cluster_parameter_group_name = "default.aurora-mysql5.7"
+  skip_final_snapshot             = true
 
   tags = {
     %[2]q = %[3]q

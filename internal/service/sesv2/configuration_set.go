@@ -24,7 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_sesv2_configuration_set")
+// @SDKResource("aws_sesv2_configuration_set", name="Configuration Set")
+// @Tags(identifierAttribute="arn")
 func ResourceConfigurationSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationSetCreate,
@@ -117,8 +118,8 @@ func ResourceConfigurationSet() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"tracking_options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -184,6 +185,7 @@ func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData,
 
 	in := &sesv2.CreateConfigurationSetInput{
 		ConfigurationSetName: aws.String(d.Get("configuration_set_name").(string)),
+		Tags:                 GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("delivery_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -208,13 +210,6 @@ func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk("vdm_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		in.VdmOptions = expandVDMOptions(v.([]interface{})[0].(map[string]interface{}))
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	out, err := conn.CreateConfigurationSet(ctx, in)
@@ -303,23 +298,6 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 		}
 	} else {
 		d.Set("vdm_options", nil)
-	}
-
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameConfigurationSet, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameConfigurationSet, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameConfigurationSet, d.Id(), err)
 	}
 
 	return nil
@@ -444,14 +422,6 @@ func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData,
 		log.Printf("[DEBUG] Updating SESV2 ConfigurationSet VdmOptions (%s): %#v", d.Id(), in)
 		_, err := conn.PutConfigurationSetVdmOptions(ctx, in)
 		if err != nil {
-			return create.DiagError(names.SESV2, create.ErrActionUpdating, ResNameConfigurationSet, d.Id(), err)
-		}
-	}
-
-	if d.HasChanges("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return create.DiagError(names.SESV2, create.ErrActionUpdating, ResNameConfigurationSet, d.Id(), err)
 		}
 	}

@@ -19,9 +19,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_docdb_subnet_group")
+// @SDKResource("aws_docdb_subnet_group", name="Subnet Group")
+// @Tags(identifierAttribute="arn")
 func ResourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSubnetGroupCreate,
@@ -69,8 +71,8 @@ func ResourceSubnetGroup() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -80,8 +82,6 @@ func ResourceSubnetGroup() *schema.Resource {
 func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	subnetIds := flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set))
 
@@ -94,15 +94,15 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		groupName = id.UniqueId()
 	}
 
-	createOpts := docdb.CreateDBSubnetGroupInput{
+	input := docdb.CreateDBSubnetGroupInput{
 		DBSubnetGroupName:        aws.String(groupName),
 		DBSubnetGroupDescription: aws.String(d.Get("description").(string)),
 		SubnetIds:                subnetIds,
-		Tags:                     Tags(tags.IgnoreAWS()),
+		Tags:                     GetTagsIn(ctx),
 	}
 
-	log.Printf("[DEBUG] Create DocDB Subnet Group: %#v", createOpts)
-	_, err := conn.CreateDBSubnetGroupWithContext(ctx, &createOpts)
+	log.Printf("[DEBUG] Create DocDB Subnet Group: %#v", input)
+	_, err := conn.CreateDBSubnetGroupWithContext(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating DocDB Subnet Group: %s", err)
 	}
@@ -115,8 +115,6 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	describeOpts := docdb.DescribeDBSubnetGroupsInput{
 		DBSubnetGroupName: aws.String(d.Id()),
@@ -154,23 +152,6 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting subnet_ids: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for DocumentDB Subnet Group (%s): %s", d.Get("arn").(string), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -193,14 +174,6 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modify DocDB Subnet Group (%s) parameters: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating DocumentDB Subnet Group (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 

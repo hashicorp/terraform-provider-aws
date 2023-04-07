@@ -19,9 +19,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_networkmanager_connect_attachment")
+// @SDKResource("aws_networkmanager_connect_attachment", name="Connect Attachment")
+// @Tags(identifierAttribute="arn")
 func ResourceConnectAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectAttachmentCreate,
@@ -109,8 +111,8 @@ func ResourceConnectAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"transport_attachment_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -126,8 +128,6 @@ func ResourceConnectAttachment() *schema.Resource {
 
 func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	coreNetworkID := d.Get("core_network_id").(string)
 	edgeLocation := d.Get("edge_location").(string)
@@ -141,11 +141,8 @@ func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData
 		CoreNetworkId:         aws.String(coreNetworkID),
 		EdgeLocation:          aws.String(edgeLocation),
 		Options:               options,
+		Tags:                  GetTagsIn(ctx),
 		TransportAttachmentId: aws.String(transportAttachmentID),
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutCreate),
@@ -192,8 +189,6 @@ func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	connectAttachment, err := FindConnectAttachmentByID(ctx, conn, d.Id())
 
@@ -234,31 +229,13 @@ func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("state", a.State)
 	d.Set("transport_attachment_id", connectAttachment.TransportAttachmentId)
 
-	tags := KeyValueTags(ctx, a.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, a.Tags)
 
 	return nil
 }
 
 func resourceConnectAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("updating Network Manager Connect Attachment (%s) tags: %s", d.Get("arn").(string), err))
-		}
-	}
-
+	// Tags only.
 	return resourceConnectAttachmentRead(ctx, d, meta)
 }
 

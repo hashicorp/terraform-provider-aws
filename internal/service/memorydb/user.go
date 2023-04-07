@@ -15,9 +15,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_memorydb_user")
+// @SDKResource("aws_memorydb_user", name="User")
+// @Tags(identifierAttribute="arn")
 func ResourceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserCreate,
@@ -74,8 +76,8 @@ func ResourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"user_name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -88,18 +90,15 @@ func ResourceUser() *schema.Resource {
 
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).MemoryDBConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	userName := d.Get("user_name").(string)
-
 	input := &memorydb.CreateUserInput{
 		AccessString: aws.String(d.Get("access_string").(string)),
 		AuthenticationMode: &memorydb.AuthenticationMode{
 			Passwords: flex.ExpandStringSet(d.Get("authentication_mode.0.passwords").(*schema.Set)),
 			Type:      aws.String(d.Get("authentication_mode.0.type").(string)),
 		},
-		Tags:     Tags(tags.IgnoreAWS()),
+		Tags:     GetTagsIn(ctx),
 		UserName: aws.String(userName),
 	}
 
@@ -142,15 +141,6 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 		if err := waitUserActive(ctx, conn, d.Id()); err != nil {
 			return diag.Errorf("error waiting for MemoryDB User (%s) to be modified: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		log.Printf("[DEBUG] Updating MemoryDB User (%s) tags", d.Id())
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("error updating MemoryDB User (%s) tags: %s", d.Id(), err)
 		}
 	}
 
