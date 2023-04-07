@@ -91,6 +91,39 @@ func ResourcePipe() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1600),
 			},
+			"source_parameters": {
+				Type:     schema.TypeList,
+				Required: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"filter_criteria": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							MaxItems:         1,
+							DiffSuppressFunc: suppressEmptyConfigurationBlock("source_parameters.0.filter_criteria"),
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"filter": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 5,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"pattern": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringLenBetween(1, 4096),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"target": {
@@ -125,6 +158,10 @@ func resourcePipeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if v, ok := d.Get("enrichment").(string); ok && v != "" {
 		input.Enrichment = aws.String(v)
+	}
+
+	if v, ok := d.Get("source_parameters").([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		input.SourceParameters = expandPipeSourceParameters(v[0].(map[string]interface{}))
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -173,6 +210,13 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("enrichment", output.Enrichment)
 	d.Set("name", output.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(output.Name)))
+
+	if v := output.SourceParameters; v != nil {
+		if err := d.Set("source_parameters", []interface{}{flattenPipeSourceParameters(v)}); err != nil {
+			return create.DiagError(names.Pipes, create.ErrActionSetting, ResNamePipe, d.Id(), err)
+		}
+	}
+
 	d.Set("role_arn", output.RoleArn)
 	d.Set("source", output.Source)
 	d.Set("target", output.Target)
@@ -207,6 +251,9 @@ func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			Name:         aws.String(d.Id()),
 			RoleArn:      aws.String(d.Get("role_arn").(string)),
 			Target:       aws.String(d.Get("target").(string)),
+
+			// Omitting the SourceParameters entirely is interpreted as "no change".
+			SourceParameters: &types.UpdatePipeSourceParameters{},
 		}
 
 		if d.HasChange("enrichment") {
@@ -216,6 +263,16 @@ func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 		if v, ok := d.Get("enrichment").(string); ok && v != "" {
 			input.Enrichment = aws.String(v)
+		}
+
+		if d.HasChange("source_parameters.0.filter_criteria") {
+			// To unset a parameter, it must be set to an empty object. Nulling a
+			// parameter will be interpreted as "no change".
+			input.SourceParameters.FilterCriteria = &types.FilterCriteria{}
+		}
+
+		if v, ok := d.Get("source_parameters.0.filter_criteria").([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			input.SourceParameters.FilterCriteria = expandFilterCriteria(v[0].(map[string]interface{}))
 		}
 
 		log.Printf("[DEBUG] Updating EventBridge Pipes Pipe (%s): %#v", d.Id(), input)
@@ -263,4 +320,19 @@ func resourcePipeDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	return nil
+}
+
+func suppressEmptyConfigurationBlock(key string) schema.SchemaDiffSuppressFunc {
+	return func(k, o, n string, d *schema.ResourceData) bool {
+		if k != key+".#" {
+			return false
+		}
+
+		if o == "0" && n == "1" {
+			v := d.Get(key).([]interface{})
+			return len(v) == 0 || v[0] == nil || len(v[0].(map[string]interface{})) == 0
+		}
+
+		return false
+	}
 }

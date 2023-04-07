@@ -97,6 +97,7 @@ The following arguments are required:
 * `role_arn` - (Required) ARN of the role that allows the pipe to send data to the target.
 * `source` - (Required) Source resource of the pipe (typically an ARN).
 * `target` - (Required) Target resource of the pipe (typically an ARN).
+* `source_parameters` - (Required) Parameters required to set up a source for the pipe. Detailed below.
 
 The following arguments are optional:
 
@@ -106,6 +107,18 @@ The following arguments are optional:
 * `name` - (Optional) Name of the pipe. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### source_parameters Configuration Block
+
+* `filter_criteria` - (Optional) The collection of event patterns used to filter events. Detailed below.
+
+#### source_parameters.filter_criteria Configuration Block
+
+* `filter` - (Optional) An array of up to 5 event patterns. Detailed below.
+
+##### source_parameters.filter_criteria.filter Configuration Block
+
+* `pattern` - (Required) The event pattern. At most 4096 characters.
 
 ## Attributes Reference
 

@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/pipes"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -52,6 +53,7 @@ func TestAccPipesPipe_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "source", "aws_sqs_queue.source", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "target", "aws_sqs_queue.target", "arn"),
 				),
@@ -301,6 +303,107 @@ func TestAccPipesPipe_enrichment(t *testing.T) {
 	})
 }
 
+func TestAccPipesPipe_sourceParameters_filterCriteria(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var pipe pipes.DescribePipeOutput
+	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_pipes_pipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPipeConfig_sourceParameters_filterCriteria1(name, "test1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.filter_criteria.0.filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.filter_criteria.0.filter.0.pattern", `{"source":["test1"]}`),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPipeConfig_sourceParameters_filterCriteria2(name, "test1", "test2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.filter_criteria.0.filter.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.filter_criteria.0.filter.0.pattern", `{"source":["test1"]}`),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.filter_criteria.0.filter.1.pattern", `{"source":["test2"]}`),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPipeConfig_sourceParameters_filterCriteria1(name, "test2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.filter_criteria.0.filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.filter_criteria.0.filter.0.pattern", `{"source":["test2"]}`),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPipeConfig_sourceParameters_filterCriteria0(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.filter_criteria.0.filter.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPipeConfig_sourceParameters_filterCriteria1(name, "test2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.filter_criteria.0.filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.filter_criteria.0.filter.0.pattern", `{"source":["test2"]}`),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPipeConfig_basic(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPipeExists(ctx, resourceName, &pipe),
+					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.filter_criteria.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccPipesPipe_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -325,7 +428,7 @@ func TestAccPipesPipe_nameGenerated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", resource.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -680,6 +783,8 @@ resource "aws_pipes_pipe" "test" {
   role_arn   = aws_iam_role.test.arn
   source     = aws_sqs_queue.source.arn
   target     = aws_sqs_queue.target.arn
+
+  source_parameters {}
 }
 `, name),
 	)
@@ -697,6 +802,8 @@ resource "aws_pipes_pipe" "test" {
   role_arn   = aws_iam_role.test.arn
   source     = aws_sqs_queue.source.arn
   target     = aws_sqs_queue.target.arn
+
+  source_parameters {}
 
   description = %[2]q
 }
@@ -716,6 +823,8 @@ resource "aws_pipes_pipe" "test" {
   role_arn   = aws_iam_role.test.arn
   source     = aws_sqs_queue.source.arn
   target     = aws_sqs_queue.target.arn
+
+  source_parameters {}
 
   desired_state = %[2]q
 }
@@ -755,9 +864,92 @@ resource "aws_pipes_pipe" "test" {
   source     = aws_sqs_queue.source.arn
   target     = aws_sqs_queue.target.arn
 
+  source_parameters {}
+
   enrichment = aws_cloudwatch_event_api_destination.test[%[2]d].arn
 }
 `, name, i),
+	)
+}
+
+func testAccPipeConfig_sourceParameters_filterCriteria1(name, criteria1 string) string {
+	return acctest.ConfigCompose(
+		testAccPipeConfig_base,
+		testAccPipeConfig_base_sqsSource,
+		testAccPipeConfig_base_sqsTarget,
+		fmt.Sprintf(`
+resource "aws_pipes_pipe" "test" {
+  depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
+  name       = %[1]q
+  role_arn   = aws_iam_role.test.arn
+  source     = aws_sqs_queue.source.arn
+  target     = aws_sqs_queue.target.arn
+
+  source_parameters {
+    filter_criteria {
+      filter { 
+        pattern = jsonencode({
+          source = [%[2]q]
+        })
+      }
+    }
+  }
+}
+`, name, criteria1),
+	)
+}
+
+func testAccPipeConfig_sourceParameters_filterCriteria2(name, criteria1, criteria2 string) string {
+	return acctest.ConfigCompose(
+		testAccPipeConfig_base,
+		testAccPipeConfig_base_sqsSource,
+		testAccPipeConfig_base_sqsTarget,
+		fmt.Sprintf(`
+resource "aws_pipes_pipe" "test" {
+  depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
+  name       = %[1]q
+  role_arn   = aws_iam_role.test.arn
+  source     = aws_sqs_queue.source.arn
+  target     = aws_sqs_queue.target.arn
+
+  source_parameters {
+    filter_criteria {
+      filter { 
+        pattern = jsonencode({
+          source = [%[2]q]
+        })
+      }
+
+      filter { 
+        pattern = jsonencode({
+          source = [%[3]q]
+        })
+      }
+    }
+  }
+}
+`, name, criteria1, criteria2),
+	)
+}
+
+func testAccPipeConfig_sourceParameters_filterCriteria0(name string) string {
+	return acctest.ConfigCompose(
+		testAccPipeConfig_base,
+		testAccPipeConfig_base_sqsSource,
+		testAccPipeConfig_base_sqsTarget,
+		fmt.Sprintf(`
+resource "aws_pipes_pipe" "test" {
+  depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
+  name       = %[1]q
+  role_arn   = aws_iam_role.test.arn
+  source     = aws_sqs_queue.source.arn
+  target     = aws_sqs_queue.target.arn
+
+  source_parameters {
+    filter_criteria {}
+  }
+}
+`, name),
 	)
 }
 
@@ -772,6 +964,8 @@ resource "aws_pipes_pipe" "test" {
   role_arn   = aws_iam_role.test.arn
   source     = aws_sqs_queue.source.arn
   target     = aws_sqs_queue.target.arn
+
+  source_parameters {}
 }
 `,
 	)
@@ -789,6 +983,8 @@ resource "aws_pipes_pipe" "test" {
   role_arn    = aws_iam_role.test.arn
   source      = aws_sqs_queue.source.arn
   target      = aws_sqs_queue.target.arn
+
+  source_parameters {}
 }
 `, namePrefix),
 	)
@@ -844,6 +1040,8 @@ resource "aws_pipes_pipe" "test" {
   role_arn   = aws_iam_role.test2.arn
   source     = aws_sqs_queue.source.arn
   target     = aws_sqs_queue.target.arn
+
+  source_parameters {}
 }
 `, name),
 	)
@@ -861,6 +1059,8 @@ resource "aws_pipes_pipe" "test" {
   role_arn   = aws_iam_role.test.arn
   source     = aws_sqs_queue.source.arn
   target     = aws_sqs_queue.target.arn
+
+  source_parameters {}
 
   tags = {
     %[2]q = %[3]q
@@ -882,6 +1082,8 @@ resource "aws_pipes_pipe" "test" {
   role_arn   = aws_iam_role.test.arn
   source     = aws_sqs_queue.source.arn
   target     = aws_sqs_queue.target.arn
+
+  source_parameters {}
 
   tags = {
     %[2]q = %[3]q
@@ -924,6 +1126,8 @@ resource "aws_pipes_pipe" "test" {
   role_arn   = aws_iam_role.test.arn
   source     = aws_sqs_queue.source.arn
   target     = aws_sqs_queue.target2.arn
+
+  source_parameters {}
 }
 `, name),
 	)
