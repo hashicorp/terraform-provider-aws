@@ -22,6 +22,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_fsx_windows_file_system", name="Windows File System")
@@ -218,7 +219,8 @@ func ResourceWindowsFileSystem() *schema.Resource {
 				MinItems: 1,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchema(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"throughput_capacity": {
 				Type:         schema.TypeInt,
 				Required:     true,
