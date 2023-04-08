@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccVPCLatticeServiceNetworkVpcAssociation_basic(t *testing.T) {
+func TestAccVPCLatticeServiceNetworkVPCAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var servicenetworkvpcasc vpclattice.GetServiceNetworkVpcAssociationOutput
@@ -35,12 +35,12 @@ func TestAccVPCLatticeServiceNetworkVpcAssociation_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceNetworkVpcAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckServiceNetworkVPCAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceNetworkVpcAssociationConfig_basic(rName),
+				Config: testAccServiceNetworkVPCAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceNetworkVpcAssociationExists(ctx, resourceName, &servicenetworkvpcasc),
+					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &servicenetworkvpcasc),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile("servicenetworkvpcassociation/.+$")),
 				),
 			},
@@ -53,7 +53,7 @@ func TestAccVPCLatticeServiceNetworkVpcAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCLatticeServiceNetworkVpcAssociation_disappears(t *testing.T) {
+func TestAccVPCLatticeServiceNetworkVPCAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var servicenetworkvpcasc vpclattice.GetServiceNetworkVpcAssociationOutput
@@ -68,12 +68,12 @@ func TestAccVPCLatticeServiceNetworkVpcAssociation_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceNetworkVpcAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckServiceNetworkVPCAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceNetworkVpcAssociationConfig_basic(rName),
+				Config: testAccServiceNetworkVPCAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceNetworkVpcAssociationExists(ctx, resourceName, &servicenetworkvpcasc),
+					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &servicenetworkvpcasc),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceServiceNetworkVPCAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -82,7 +82,7 @@ func TestAccVPCLatticeServiceNetworkVpcAssociation_disappears(t *testing.T) {
 	})
 }
 
-func TestAccVPCLatticeServiceNetworkVpcAssociation_full(t *testing.T) {
+func TestAccVPCLatticeServiceNetworkVPCAssociation_full(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var servicenetworkvpcasc vpclattice.GetServiceNetworkVpcAssociationOutput
@@ -97,12 +97,12 @@ func TestAccVPCLatticeServiceNetworkVpcAssociation_full(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceNetworkVpcAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckServiceNetworkVPCAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceNetworkVpcAssociationConfig_full(rName),
+				Config: testAccServiceNetworkVPCAssociationConfig_full(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceNetworkVpcAssociationExists(ctx, resourceName, &servicenetworkvpcasc),
+					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &servicenetworkvpcasc),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile("servicenetworkvpcassociation/.+$")),
 					resource.TestCheckResourceAttrSet(resourceName, "service_network_identifier"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_identifier"),
@@ -118,7 +118,7 @@ func TestAccVPCLatticeServiceNetworkVpcAssociation_full(t *testing.T) {
 	})
 }
 
-func TestAccVPCLatticeServiceNetworkVpcAssociation_tags(t *testing.T) {
+func TestAccVPCLatticeServiceNetworkVPCAssociation_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var servicenetworkvpcasc1, servicenetworkvpcasc2, service3 vpclattice.GetServiceNetworkVpcAssociationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -132,12 +132,12 @@ func TestAccVPCLatticeServiceNetworkVpcAssociation_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceNetworkVpcAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckServiceNetworkVPCAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceNetworkVpcAssociationConfig_tags1(rName, "key1", "value1"),
+				Config: testAccServiceNetworkVPCAssociationConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceNetworkVpcAssociationExists(ctx, resourceName, &servicenetworkvpcasc1),
+					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &servicenetworkvpcasc1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -148,18 +148,18 @@ func TestAccVPCLatticeServiceNetworkVpcAssociation_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccServiceNetworkVpcAssociationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccServiceNetworkVPCAssociationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceNetworkVpcAssociationExists(ctx, resourceName, &servicenetworkvpcasc2),
+					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &servicenetworkvpcasc2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccServiceNetworkVpcAssociationConfig_tags1(rName, "key2", "value2"),
+				Config: testAccServiceNetworkVPCAssociationConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceNetworkVpcAssociationExists(ctx, resourceName, &service3),
+					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &service3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -168,7 +168,7 @@ func TestAccVPCLatticeServiceNetworkVpcAssociation_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckServiceNetworkVpcAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckServiceNetworkVPCAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
 
@@ -195,7 +195,7 @@ func testAccCheckServiceNetworkVpcAssociationDestroy(ctx context.Context) resour
 	}
 }
 
-func testAccCheckServiceNetworkVpcAssociationExists(ctx context.Context, name string, service *vpclattice.GetServiceNetworkVpcAssociationOutput) resource.TestCheckFunc {
+func testAccCheckServiceNetworkVPCAssociationExists(ctx context.Context, name string, service *vpclattice.GetServiceNetworkVpcAssociationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -221,7 +221,7 @@ func testAccCheckServiceNetworkVpcAssociationExists(ctx context.Context, name st
 	}
 }
 
-func testAccServiceNetworkVpcAssociationConfig_basic(rName string) string {
+func testAccServiceNetworkVPCAssociationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -238,7 +238,7 @@ resource "aws_vpclattice_service_network_vpc_association" "test" {
 `, rName)
 }
 
-func testAccServiceNetworkVpcAssociationConfig_full(rName string) string {
+func testAccServiceNetworkVPCAssociationConfig_full(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -260,7 +260,7 @@ resource "aws_vpclattice_service_network_vpc_association" "test" {
 `, rName)
 }
 
-func testAccServiceNetworkVpcAssociationConfig_tags1(rName, tagKey1, tagValue1 string) string {
+func testAccServiceNetworkVPCAssociationConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -281,7 +281,7 @@ resource "aws_vpclattice_service_network_vpc_association" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccServiceNetworkVpcAssociationConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccServiceNetworkVPCAssociationConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
