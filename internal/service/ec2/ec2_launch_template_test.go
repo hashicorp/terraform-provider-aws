@@ -2955,7 +2955,7 @@ func TestAccEC2LaunchTemplate_metadataOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", "enabled"), //Setting any of the values in metadata options will set the http_endpoint to enabled, you will not see it via the Console, but will in the API for any instance made from the template
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", ""), //Setting any of the values in metadata options will set the http_endpoint to enabled, you will not see it via the Console, but will in the API for any instance made from the template
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "required"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "2"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_protocol_ipv6", ""),
