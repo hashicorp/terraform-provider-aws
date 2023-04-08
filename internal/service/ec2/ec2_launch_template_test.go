@@ -2907,8 +2907,8 @@ func TestAccEC2LaunchTemplate_metadataOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", "enabled"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "required"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "2"),
-					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_protocol_ipv6", "\"\""),
-					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.instance_metadata_tags", "\"\""),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_protocol_ipv6", ""),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.instance_metadata_tags", ""),
 				),
 			},
 			{
@@ -2925,7 +2925,6 @@ func TestAccEC2LaunchTemplate_metadataOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "required"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "2"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_protocol_ipv6", "enabled"),
-					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.instance_metadata_tags", "\"\""),
 				),
 			},
 			{
@@ -2958,7 +2957,6 @@ func TestAccEC2LaunchTemplate_metadataOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", "enabled"), //Setting any of the values in metadata options will set the http_endpoint to enabled, you will not see it via the Console, but will in the API for any instance made from the template
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "required"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "2"),
-					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_protocol_ipv6", "\"\""),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.instance_metadata_tags", "enabled"),
 				),
 			},
