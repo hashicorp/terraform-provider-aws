@@ -4062,7 +4062,7 @@ resource "aws_launch_template" "test" {
 
 func testAccLaunchTemplateConfig_metadataOptions(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_launch_template" "test1" {
+resource "aws_launch_template" "test" {
   name = %[1]q
 
   metadata_options {
@@ -4076,7 +4076,7 @@ resource "aws_launch_template" "test1" {
 
 func testAccLaunchTemplateConfig_metadataOptionsIPv6(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_launch_template" "test2" {
+resource "aws_launch_template" "test" {
   name = %[1]q
 
   metadata_options {
@@ -4091,7 +4091,7 @@ resource "aws_launch_template" "test2" {
 
 func testAccLaunchTemplateConfig_metadataOptionsInstanceTags(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_launch_template" "test3" {
+resource "aws_launch_template" "test" {
   name = %[1]q
 
   metadata_options {
@@ -4106,7 +4106,7 @@ resource "aws_launch_template" "test3" {
 }
 func testAccLaunchTemplateConfig_metadataOptionsNoHTTPEndpoint(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_launch_template" "test4" {
+resource "aws_launch_template" "test" {
   name = %[1]q
 
   metadata_options {
