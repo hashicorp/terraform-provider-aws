@@ -25,12 +25,12 @@ import (
 
 // @SDKResource("aws_vpclattice_service_network_vpc_association")
 // @Tags(identifierAttribute="arn")
-func ResourceServiceNetworkVpcAssociation() *schema.Resource {
+func ResourceServiceNetworkVPCAssociation() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceServiceNetworkVpcAssociationCreate,
-		ReadWithoutTimeout:   resourceServiceNetworkVpcAssociationRead,
-		UpdateWithoutTimeout: resourceServiceNetworkVpcAssociationUpdate,
-		DeleteWithoutTimeout: resourceServiceNetworkVpcAssociationDelete,
+		CreateWithoutTimeout: resourceServiceNetworkVPCAssociationCreate,
+		ReadWithoutTimeout:   resourceServiceNetworkVPCAssociationRead,
+		UpdateWithoutTimeout: resourceServiceNetworkVPCAssociationUpdate,
+		DeleteWithoutTimeout: resourceServiceNetworkVPCAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -80,10 +80,10 @@ func ResourceServiceNetworkVpcAssociation() *schema.Resource {
 }
 
 const (
-	ResNameServiceNetworkVpcAssociation = "ServiceNetworkVpcAssociation"
+	ResNameServiceNetworkVPCAssociation = "ServiceNetworkVPCAssociation"
 )
 
-func resourceServiceNetworkVpcAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceNetworkVPCAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
 	in := &vpclattice.CreateServiceNetworkVpcAssociationInput{
@@ -99,26 +99,26 @@ func resourceServiceNetworkVpcAssociationCreate(ctx context.Context, d *schema.R
 
 	out, err := conn.CreateServiceNetworkVpcAssociation(ctx, in)
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameServiceNetworkVpcAssociation, "", err)
+		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameServiceNetworkVPCAssociation, "", err)
 	}
 
 	if out == nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameServiceNetworkVpcAssociation, "", errors.New("empty output"))
+		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameServiceNetworkVPCAssociation, "", errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Id))
 
-	if _, err := waitServiceNetworkVpcAssociationCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionWaitingForCreation, ResNameServiceNetworkVpcAssociation, d.Id(), err)
+	if _, err := waitServiceNetworkVPCAssociationCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return create.DiagError(names.VPCLattice, create.ErrActionWaitingForCreation, ResNameServiceNetworkVPCAssociation, d.Id(), err)
 	}
 
-	return resourceServiceNetworkVpcAssociationRead(ctx, d, meta)
+	return resourceServiceNetworkVPCAssociationRead(ctx, d, meta)
 }
 
-func resourceServiceNetworkVpcAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceNetworkVPCAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
-	out, err := findServiceNetworkVpcAssociationByID(ctx, conn, d.Id())
+	out, err := findServiceNetworkVPCAssociationByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPCLattice Service Network VPC Association (%s) not found, removing from state", d.Id())
@@ -127,7 +127,7 @@ func resourceServiceNetworkVpcAssociationRead(ctx context.Context, d *schema.Res
 	}
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameServiceNetworkVpcAssociation, d.Id(), err)
+		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameServiceNetworkVPCAssociation, d.Id(), err)
 	}
 
 	d.Set("arn", out.Arn)
@@ -140,7 +140,7 @@ func resourceServiceNetworkVpcAssociationRead(ctx context.Context, d *schema.Res
 	return nil
 }
 
-func resourceServiceNetworkVpcAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceNetworkVPCAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 	if d.HasChangesExcept("tags", "tags_all") {
 		in := &vpclattice.UpdateServiceNetworkVpcAssociationInput{
@@ -154,15 +154,14 @@ func resourceServiceNetworkVpcAssociationUpdate(ctx context.Context, d *schema.R
 		log.Printf("[DEBUG] Updating VPCLattice ServiceNetwork VPC Association (%s): %#v", d.Id(), in)
 		_, err := conn.UpdateServiceNetworkVpcAssociation(ctx, in)
 		if err != nil {
-			return create.DiagError(names.VPCLattice, create.ErrActionUpdating, ResNameServiceNetworkVpcAssociation, d.Id(), err)
+			return create.DiagError(names.VPCLattice, create.ErrActionUpdating, ResNameServiceNetworkVPCAssociation, d.Id(), err)
 		}
-
 	}
 
-	return resourceServiceNetworkVpcAssociationRead(ctx, d, meta)
+	return resourceServiceNetworkVPCAssociationRead(ctx, d, meta)
 }
 
-func resourceServiceNetworkVpcAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceNetworkVPCAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
 	log.Printf("[INFO] Deleting VPCLattice Service Network VPC Association %s", d.Id())
@@ -177,17 +176,17 @@ func resourceServiceNetworkVpcAssociationDelete(ctx context.Context, d *schema.R
 			return nil
 		}
 
-		return create.DiagError(names.VPCLattice, create.ErrActionDeleting, ResNameServiceNetworkVpcAssociation, d.Id(), err)
+		return create.DiagError(names.VPCLattice, create.ErrActionDeleting, ResNameServiceNetworkVPCAssociation, d.Id(), err)
 	}
 
-	if _, err := waitServiceNetworkVpcAssociationDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionWaitingForDeletion, ResNameServiceNetworkVpcAssociation, d.Id(), err)
+	if _, err := waitServiceNetworkVPCAssociationDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return create.DiagError(names.VPCLattice, create.ErrActionWaitingForDeletion, ResNameServiceNetworkVPCAssociation, d.Id(), err)
 	}
 
 	return nil
 }
 
-func findServiceNetworkVpcAssociationByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetServiceNetworkVpcAssociationOutput, error) {
+func findServiceNetworkVPCAssociationByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetServiceNetworkVpcAssociationOutput, error) {
 	in := &vpclattice.GetServiceNetworkVpcAssociationInput{
 		ServiceNetworkVpcAssociationIdentifier: aws.String(id),
 	}
@@ -211,11 +210,11 @@ func findServiceNetworkVpcAssociationByID(ctx context.Context, conn *vpclattice.
 	return out, nil
 }
 
-func waitServiceNetworkVpcAssociationCreated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetServiceNetworkVpcAssociationOutput, error) {
+func waitServiceNetworkVPCAssociationCreated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetServiceNetworkVpcAssociationOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.ServiceNetworkVpcAssociationStatusCreateInProgress),
 		Target:                    enum.Slice(types.ServiceNetworkVpcAssociationStatusActive),
-		Refresh:                   statusServiceNetworkVpcAssociation(ctx, conn, id),
+		Refresh:                   statusServiceNetworkVPCAssociation(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -229,11 +228,11 @@ func waitServiceNetworkVpcAssociationCreated(ctx context.Context, conn *vpclatti
 	return nil, err
 }
 
-func waitServiceNetworkVpcAssociationDeleted(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetServiceNetworkVpcAssociationOutput, error) {
+func waitServiceNetworkVPCAssociationDeleted(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetServiceNetworkVpcAssociationOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ServiceNetworkVpcAssociationStatusDeleteInProgress, types.ServiceNetworkVpcAssociationStatusActive),
 		Target:  []string{},
-		Refresh: statusServiceNetworkVpcAssociation(ctx, conn, id),
+		Refresh: statusServiceNetworkVPCAssociation(ctx, conn, id),
 		Timeout: timeout,
 	}
 
@@ -245,9 +244,9 @@ func waitServiceNetworkVpcAssociationDeleted(ctx context.Context, conn *vpclatti
 	return nil, err
 }
 
-func statusServiceNetworkVpcAssociation(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
+func statusServiceNetworkVPCAssociation(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findServiceNetworkVpcAssociationByID(ctx, conn, id)
+		out, err := findServiceNetworkVPCAssociationByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
