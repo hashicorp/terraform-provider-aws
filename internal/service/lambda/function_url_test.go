@@ -44,6 +44,7 @@ func TestAccLambdaFunctionURL_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "function_arn"),
 					resource.TestCheckResourceAttr(resourceName, "function_name", funcName),
 					resource.TestCheckResourceAttrSet(resourceName, "function_url"),
+					resource.TestCheckResourceAttr(resourceName, "invoke_mode", "BUFFERED"),
 					resource.TestCheckResourceAttr(resourceName, "qualifier", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "url_id"),
 				),
@@ -210,6 +211,61 @@ func TestAccLambdaFunctionURL_TwoURLs(t *testing.T) {
 			},
 			{
 				ResourceName:      liveResourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccLambdaFunctionURL_invokeMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf lambda.GetFunctionUrlConfigOutput
+	resourceName := "aws_lambda_function_url.test"
+	rString := sdkacctest.RandString(8)
+	funcName := fmt.Sprintf("tf_acc_lambda_func_basic_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_basic_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccFunctionURLPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionURLDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionURLConfig_invokeMode(funcName, policyName, roleName, "BUFFERED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionURLExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "invoke_mode", "BUFFERED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFunctionURLConfig_invokeMode(funcName, policyName, roleName, "RESPONSE_STREAM"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionURLExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "invoke_mode", "RESPONSE_STREAM"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFunctionURLConfig_basic(funcName, policyName, roleName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionURLExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "invoke_mode", "BUFFERED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -460,6 +516,24 @@ resource "aws_lambda_function_url" "test" {
   }
 }
 `, funcName, aliasName))
+}
+
+func testAccFunctionURLConfig_invokeMode(funcName, policyName, roleName, invokeMode string) string {
+	return acctest.ConfigCompose(testAccFunctionURLConfig_base(policyName, roleName), fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs14.x"
+}
+
+resource "aws_lambda_function_url" "test" {
+  function_name      = aws_lambda_function.test.function_name
+  authorization_type = "NONE"
+  invoke_mode        = %[2]q
+}
+`, funcName, invokeMode))
 }
 
 func testAccFunctionURLConfig_two(funcName, aliasName, policyName, roleName string) string {
