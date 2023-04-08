@@ -2925,6 +2925,7 @@ func TestAccEC2LaunchTemplate_metadataOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "required"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "2"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_protocol_ipv6", "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.instance_metadata_tags", ""),
 				),
 			},
 			{
