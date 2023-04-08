@@ -93,6 +93,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceUserGroup,
 			TypeName: "aws_elasticache_user_group",
+			Name:     "User Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceUserGroupAssociation,
