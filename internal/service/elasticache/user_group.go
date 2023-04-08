@@ -272,7 +272,7 @@ func waitUserGroupCreated(ctx context.Context, conn *elasticache.ElastiCache, id
 	return nil, err
 }
 
-func waitUserGroupUpdated(ctx context.Context, conn *elasticache.ElastiCache, id string, timeout time.Duration) (*elasticache.UserGroup, error) {
+func waitUserGroupUpdated(ctx context.Context, conn *elasticache.ElastiCache, id string, timeout time.Duration) (*elasticache.UserGroup, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{userGroupStatusModifying},
 		Target:     []string{userGroupStatusActive},
