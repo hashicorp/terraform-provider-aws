@@ -114,7 +114,7 @@ func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("vpc_id", ngw.VpcId)
 
 	for _, address := range ngw.NatGatewayAddresses {
-		if aws.StringValue(address.AllocationId) != "" {
+		if aws.BoolValue(address.IsPrimary) == true {
 			d.Set("allocation_id", address.AllocationId)
 			d.Set("network_interface_id", address.NetworkInterfaceId)
 			d.Set("private_ip", address.PrivateIp)
