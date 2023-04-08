@@ -37,6 +37,10 @@ func ResourceNATGateway() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"association_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"connectivity_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -129,6 +133,7 @@ func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 	for _, address := range ng.NatGatewayAddresses {
 		if aws.BoolValue(address.IsPrimary) {
 			d.Set("allocation_id", address.AllocationId)
+			d.Set("association_id", address.AssociationId)
 			d.Set("network_interface_id", address.NetworkInterfaceId)
 			d.Set("private_ip", address.PrivateIp)
 			d.Set("public_ip", address.PublicIp)
