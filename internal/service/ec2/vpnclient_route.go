@@ -28,8 +28,8 @@ func ResourceClientVPNRoute() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(ClientVPNRouteCreatedTimeout),
-			Delete: schema.DefaultTimeout(ClientVPNRouteDeletedTimeout),
+			Create: schema.DefaultTimeout(4 * time.Minute),
+			Delete: schema.DefaultTimeout(4 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
