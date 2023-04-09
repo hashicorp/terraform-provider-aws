@@ -122,7 +122,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 	input := &route53resolver.CreateResolverEndpointInput{
 		CreatorRequestId:     aws.String(id.PrefixedUniqueId("tf-r53-resolver-endpoint-")),
 		Direction:            aws.String(d.Get("direction").(string)),
-    ResolverEndpointType: aws.String(d.Get("resolver_endpoint_type").(string)),
+		ResolverEndpointType: aws.String(d.Get("resolver_endpoint_type").(string)),
 		IpAddresses:          expandEndpointIPAddresses(d.Get("ip_address").(*schema.Set)),
 		SecurityGroupIds:     flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set)),
 		Tags:                 GetTagsIn(ctx),
