@@ -215,6 +215,32 @@ func TestAccCognitoIDPManagedUserPoolClient_accessTokenValidity(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPManagedUserPoolClient_accessTokenValidity_error(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := randomOpenSearchDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolClientDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccManagedUserPoolClientConfig_accessTokenValidity(rName, 25),
+				ExpectError: regexp.MustCompile(`Attribute access_token_validity must have a duration between 5m0s and\s+24h0m0s, got: 25h0m0s`),
+			},
+			{
+				Config:      testAccManagedUserPoolClientConfig_accessTokenValidityUnit(rName, 2, cognitoidentityprovider.TimeUnitsTypeDays),
+				ExpectError: regexp.MustCompile(`Attribute access_token_validity must have a duration between 5m0s and\s+24h0m0s, got: 48h0m0s`),
+			},
+			{
+				Config:      testAccManagedUserPoolClientConfig_accessTokenValidityUnit(rName, 4, cognitoidentityprovider.TimeUnitsTypeMinutes),
+				ExpectError: regexp.MustCompile(`Attribute access_token_validity must have a duration between 5m0s and\s+24h0m0s, got: 4m0s`),
+			},
+		},
+	})
+}
+
 func TestAccCognitoIDPManagedUserPoolClient_idTokenValidity(t *testing.T) {
 	ctx := acctest.Context(t)
 	var client cognitoidentityprovider.UserPoolClientType
@@ -263,6 +289,32 @@ func TestAccCognitoIDPManagedUserPoolClient_idTokenValidity(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPManagedUserPoolClient_idTokenValidity_error(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := randomOpenSearchDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolClientDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccManagedUserPoolClientConfig_idTokenValidity(rName, 25),
+				ExpectError: regexp.MustCompile(`Attribute id_token_validity must have a duration between 5m0s and\s+24h0m0s,\s+got: 25h0m0s`),
+			},
+			{
+				Config:      testAccManagedUserPoolClientConfig_idTokenValidityUnit(rName, 2, cognitoidentityprovider.TimeUnitsTypeDays),
+				ExpectError: regexp.MustCompile(`Attribute id_token_validity must have a duration between 5m0s and\s+24h0m0s,\s+got: 48h0m0s`),
+			},
+			{
+				Config:      testAccManagedUserPoolClientConfig_idTokenValidityUnit(rName, 4, cognitoidentityprovider.TimeUnitsTypeMinutes),
+				ExpectError: regexp.MustCompile(`Attribute id_token_validity must have a duration between 5m0s and\s+24h0m0s,\s+got: 4m0s`),
+			},
+		},
+	})
+}
+
 func TestAccCognitoIDPManagedUserPoolClient_refreshTokenValidity(t *testing.T) {
 	ctx := acctest.Context(t)
 	var client cognitoidentityprovider.UserPoolClientType
@@ -306,6 +358,28 @@ func TestAccCognitoIDPManagedUserPoolClient_refreshTokenValidity(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"name_prefix",
 				},
+			},
+		},
+	})
+}
+
+func TestAccCognitoIDPManagedUserPoolClient_refreshTokenValidity_error(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := randomOpenSearchDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolClientDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccManagedUserPoolClientConfig_refreshTokenValidity(rName, 10*365+1),
+				ExpectError: regexp.MustCompile(`Attribute refresh_token_validity must have a duration between 1h0m0s and\s+87600h0m0s,\s+got: 87624h0m0s`),
+			},
+			{
+				Config:      testAccManagedUserPoolClientConfig_refreshTokenValidityUnit(rName, 59, cognitoidentityprovider.TimeUnitsTypeMinutes),
+				ExpectError: regexp.MustCompile(`Attribute refresh_token_validity must have a duration between 1h0m0s and\s+87600h0m0s,\s+got: 59m0s`),
 			},
 		},
 	})
@@ -1045,6 +1119,27 @@ resource "aws_cognito_managed_user_pool_client" "test" {
 `, rName, validity))
 }
 
+func testAccManagedUserPoolClientConfig_accessTokenValidityUnit(rName string, validity int, unit string) string {
+	return acctest.ConfigCompose(
+		testAccManagedUserPoolClientBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_cognito_managed_user_pool_client" "test" {
+  name_prefix  = "AmazonOpenSearchService-%[1]s"
+  user_pool_id = aws_cognito_user_pool.test.id
+
+  depends_on = [
+    aws_opensearch_domain.test,
+  ]
+
+  access_token_validity = %[2]d
+
+  token_validity_units {
+    access_token = %[3]q
+  }
+}
+`, rName, validity, unit))
+}
+
 func testAccManagedUserPoolClientConfig_idTokenValidity(rName string, validity int) string {
 	return acctest.ConfigCompose(
 		testAccManagedUserPoolClientBaseConfig(rName),
@@ -1062,6 +1157,27 @@ resource "aws_cognito_managed_user_pool_client" "test" {
 `, rName, validity))
 }
 
+func testAccManagedUserPoolClientConfig_idTokenValidityUnit(rName string, validity int, unit string) string {
+	return acctest.ConfigCompose(
+		testAccManagedUserPoolClientBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_cognito_managed_user_pool_client" "test" {
+  name_prefix  = "AmazonOpenSearchService-%[1]s"
+  user_pool_id = aws_cognito_user_pool.test.id
+
+  depends_on = [
+    aws_opensearch_domain.test,
+  ]
+
+  id_token_validity = %[2]d
+
+  token_validity_units {
+    id_token = %[3]q
+  }
+}
+`, rName, validity, unit))
+}
+
 func testAccManagedUserPoolClientConfig_refreshTokenValidity(rName string, refreshTokenValidity int) string {
 	return acctest.ConfigCompose(
 		testAccManagedUserPoolClientBaseConfig(rName),
@@ -1077,6 +1193,27 @@ resource "aws_cognito_managed_user_pool_client" "test" {
   refresh_token_validity = %[2]d
 }
 `, rName, refreshTokenValidity))
+}
+
+func testAccManagedUserPoolClientConfig_refreshTokenValidityUnit(rName string, refreshTokenValidity int, unit string) string {
+	return acctest.ConfigCompose(
+		testAccManagedUserPoolClientBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_cognito_managed_user_pool_client" "test" {
+  name_prefix  = "AmazonOpenSearchService-%[1]s"
+  user_pool_id = aws_cognito_user_pool.test.id
+
+  depends_on = [
+    aws_opensearch_domain.test,
+  ]
+
+  refresh_token_validity = %[2]d
+
+  token_validity_units {
+    refresh_token = %[3]q
+  }
+}
+`, rName, refreshTokenValidity, unit))
 }
 
 func testAccManagedUserPoolClientConfig_tokenValidityUnits(rName, units string) string {

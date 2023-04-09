@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/timestamp"
 )
 
 var accountIDRegexp = regexp.MustCompile(`^(aws|aws-managed|third-party|\d{12})$`)
@@ -295,28 +296,26 @@ func ValidMulticastIPAddress(v interface{}, k string) (ws []string, errors []err
 }
 
 func ValidOnceADayWindowFormat(v interface{}, k string) (ws []string, errors []error) {
-	// valid time format is "hh24:mi"
-	validTimeFormat := "([0-1][0-9]|2[0-3]):([0-5][0-9])"
-	validTimeFormatConsolidated := "^(" + validTimeFormat + "-" + validTimeFormat + "|)$"
-
 	value := v.(string)
-	if !regexp.MustCompile(validTimeFormatConsolidated).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q must satisfy the format of \"hh24:mi-hh24:mi\".", k))
+
+	t := timestamp.New(value)
+	if err := t.ValidateOnceADayWindowFormat(); err != nil {
+		errors = append(errors, err)
+		return
 	}
+
 	return
 }
 
 func ValidOnceAWeekWindowFormat(v interface{}, k string) (ws []string, errors []error) {
-	// valid time format is "ddd:hh24:mi"
-	validTimeFormat := "(sun|mon|tue|wed|thu|fri|sat):([0-1][0-9]|2[0-3]):([0-5][0-9])"
-	validTimeFormatConsolidated := "^(" + validTimeFormat + "-" + validTimeFormat + "|)$"
+	value := v.(string)
 
-	value := strings.ToLower(v.(string))
-	if !regexp.MustCompile(validTimeFormatConsolidated).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q must satisfy the format of \"ddd:hh24:mi-ddd:hh24:mi\".", k))
+	t := timestamp.New(value)
+	if err := t.ValidateOnceAWeekWindowFormat(); err != nil {
+		errors = append(errors, err)
+		return
 	}
+
 	return
 }
 
@@ -373,10 +372,13 @@ func ValidTypeStringNullableFloat(v interface{}, k string) (ws []string, es []er
 // https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBInstanceToPointInTime.html
 func ValidUTCTimestamp(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	_, err := time.Parse(time.RFC3339, value)
-	if err != nil {
-		errors = append(errors, fmt.Errorf("%q must be in RFC3339 time format %q. Example: %s", k, time.RFC3339, err))
+
+	t := timestamp.New(value)
+	if err := t.ValidateUTCFormat(); err != nil {
+		errors = append(errors, err)
+		return
 	}
+
 	return
 }
 

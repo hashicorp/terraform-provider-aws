@@ -45,7 +45,7 @@ jobs:
       - run: echo ${{ steps.prc.outputs.comment-id }}
       - name: PR Comment
         if: steps.prc.outputs.comment-id == ''
-        uses: peter-evans/create-or-update-comment@67dcc547d311b736a8e6c5c236542148a47adc3d
+        uses: peter-evans/create-or-update-comment@3383acd359705b10cb1eeef05c0e88c056ea4666
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:

@@ -259,7 +259,7 @@ func dataSourceRoutesRead(ctx context.Context, conn *ec2.EC2, ec2Routes []*ec2.R
 	routes := make([]map[string]interface{}, 0, len(ec2Routes))
 	// Loop through the routes and add them to the set
 	for _, r := range ec2Routes {
-		if aws.StringValue(r.GatewayId) == "local" {
+		if gatewayID := aws.StringValue(r.GatewayId); gatewayID == "local" || gatewayID == "VpcLattice" {
 			continue
 		}
 

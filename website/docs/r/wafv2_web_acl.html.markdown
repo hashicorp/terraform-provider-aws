@@ -85,6 +85,73 @@ resource "aws_wafv2_web_acl" "example" {
 }
 ```
 
+### Account Takeover Protection
+
+```
+resource "aws_wafv2_web_acl" "atp-example" {
+  name        = "managed-atp-example"
+  description = "Example of a managed ATP rule."
+  scope       = "CLOUDFRONT"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "atp-rule-1"
+    priority = 1
+
+    override_action {
+      count {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesATPRuleSet"
+        vendor_name = "AWS"
+
+        managed_rule_group_configs {
+          aws_managed_rules_atp_rule_set {
+            login_path = "/api/1/signin"
+
+            request_inspection {
+              password_field {
+                identifier = "/password"
+              }
+
+              payload_type = "JSON"
+
+              username_field {
+                identifier = "/email"
+              }
+            }
+
+            response_inspection {
+              status_code {
+                failure_codes = ["403"]
+                success_codes = ["200"]
+              }
+            }
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+```
+
 ### Rate Based
 Rate-limit US and NL-based clients to 10,000 requests for every 5 minutes.
 
@@ -598,14 +665,27 @@ The `rule_action_override` block supports the following arguments:
 The `managed_rule_group_configs` block support the following arguments:
 
 * `aws_managed_rules_bot_control_rule_set` - (Optional) Additional configuration for using the Bot Control managed rule group. Use this to specify the inspection level that you want to use. See [`aws_managed_rules_bot_control_rule_set`](#aws_managed_rules_bot_control_rule_set) for more details
-* `login_path` - (Optional) The path of the login endpoint for your application.
-* `password_field` - (Optional) Details about your login page password field. See [`password_field`](#password_field) for more details.
-* `payload_type`- (Optional) The payload type for your login endpoint, either JSON or form encoded.
-* `username_field` - (Optional) Details about your login page username field. See [`username_field`](#username_field) for more details.
+* `aws_managed_rules_atp_rule_set` - (Optional) Additional configuration for using the Account Takeover Protection managed rule group. Use this to specify information such as the sign-in page of your application and the type of content to accept or reject from the client.
+* `login_path` - (Optional, **Deprecated**) The path of the login endpoint for your application.
+* `password_field` - (Optional, **Deprecated**) Details about your login page password field. See [`password_field`](#password_field) for more details.
+* `payload_type`- (Optional, **Deprecated**) The payload type for your login endpoint, either JSON or form encoded.
+* `username_field` - (Optional, **Deprecated**) Details about your login page username field. See [`username_field`](#username_field) for more details.
 
 #### `aws_managed_rules_bot_control_rule_set`
 
 * `inspection_level` - (Optional) The inspection level to use for the Bot Control rule group.
+
+#### `aws_managed_rules_atp_rule_set`
+
+* `login_path` - (Required) The path of the login endpoint for your application.
+* `request_inspection` - (Optional) The criteria for inspecting login requests, used by the ATP rule group to validate credentials usage. See [`request_inspection`](#request_inspection) for more details.
+* `response_inspection` - (Optional) The criteria for inspecting responses to login requests, used by the ATP rule group to track login failure rates. Note that Response Inspection is available only on web ACLs that protect CloudFront distributions. See [`response_inspection`](#response_inspection) for more details.
+
+#### `request_inspection`
+
+* `payload_type` (Required) The payload type for your login endpoint, either JSON or form encoded.
+* `username_field` (Required) Details about your login page username field. See [`username_field`](#username_field) for more details.
+* `password_field` (Required) Details about your login page password field. See [`password_field`](#password_field) for more details.
 
 #### `password_field`
 
@@ -614,6 +694,35 @@ The `managed_rule_group_configs` block support the following arguments:
 #### `username_field`
 
 * `identifier` - (Optional) The name of the username field.
+
+#### `response_inspection`
+
+* `body_contains` (Optional) Configures inspection of the response body. See [`body_contains`](#body_contains) for more details.
+* `header` (Optional) Configures inspection of the response header.See [`header`](#header) for more details.
+* `json` (Optional) Configures inspection of the response JSON. See [`json`](#json) for more details.
+* `status_code` (Optional) Configures inspection of the response status code.See [`status_code`](#status_code) for more details.
+
+#### `body_contains`
+
+* `success_strings` (Required) Strings in the body of the response that indicate a successful login attempt.
+* `failure_strings` (Required) Strings in the body of the response that indicate a failed login attempt.
+
+#### `header`
+
+* `name` (Required) The name of the header to match against. The name must be an exact match, including case.
+* `success_values` (Required) Values in the response header with the specified name that indicate a successful login attempt.
+* `failure_values` (Required) Values in the response header with the specified name that indicate a failed login attempt.
+
+#### `json`
+
+* `identifier` (Required) The identifier for the value to match against in the JSON.
+* `success_strings` (Required) Strings in the body of the response that indicate a successful login attempt.
+* `failure_strings` (Required) Strings in the body of the response that indicate a failed login attempt.
+
+#### `status_code`
+
+* `success_codes` (Required) Status codes in the response that indicate a successful login attempt.
+* `failure_codes` (Required) Status codes in the response that indicate a failed login attempt.
 
 #### `field_to_match`
 

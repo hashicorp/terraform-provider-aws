@@ -80,6 +80,20 @@ func ResourceApplication() *schema.Resource {
 					},
 				},
 			},
+			"image_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"image_uri": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 			"initial_capacity": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -227,6 +241,10 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.AutoStopConfiguration = expandAutoStopConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("image_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.ImageConfiguration = expandImageConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("initial_capacity"); ok && v.(*schema.Set).Len() > 0 {
 		input.InitialCapacity = expandInitialCapacity(v.(*schema.Set))
 	}
@@ -291,6 +309,10 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting auto_stop_configuration: %s", err)
 	}
 
+	if err := d.Set("image_configuration", flattenImageConfiguration(application.ImageConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting image_configuration: %s", err)
+	}
+
 	if err := d.Set("initial_capacity", flattenInitialCapacity(application.InitialCapacity)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting initial_capacity: %s", err)
 	}
@@ -337,6 +359,10 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if v, ok := d.GetOk("auto_stop_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.AutoStopConfiguration = expandAutoStopConfig(v.([]interface{})[0].(map[string]interface{}))
+		}
+
+		if v, ok := d.GetOk("image_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.ImageConfiguration = expandImageConfiguration(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		if v, ok := d.GetOk("initial_capacity"); ok && v.(*schema.Set).Len() > 0 {
@@ -536,6 +562,36 @@ func flattenNetworkConfiguration(apiObject *emrserverless.NetworkConfiguration) 
 	}
 
 	return tfMap
+}
+
+func expandImageConfiguration(tfMap map[string]interface{}) *emrserverless.ImageConfigurationInput_ {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &emrserverless.ImageConfigurationInput_{}
+
+	if v, ok := tfMap["image_uri"].(string); ok && v != "" {
+		apiObject.ImageUri = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenImageConfiguration(apiObject *emrserverless.ImageConfiguration) []interface{} {
+	if apiObject == nil || apiObject.ImageUri == nil {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	if v := apiObject.ImageUri; v != nil {
+		tfList = append(tfList, map[string]interface{}{
+			"image_uri": aws.StringValue(v),
+		})
+	}
+
+	return tfList
 }
 
 func expandInitialCapacity(tfMap *schema.Set) map[string]*emrserverless.InitialCapacityConfig {

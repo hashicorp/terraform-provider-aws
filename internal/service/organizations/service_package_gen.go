@@ -57,6 +57,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceAccount,
 			TypeName: "aws_organizations_account",
+			Name:     "Account",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceDelegatedAdministrator,
@@ -69,10 +73,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceOrganizationalUnit,
 			TypeName: "aws_organizations_organizational_unit",
+			Name:     "Organizational Unit",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourcePolicy,
 			TypeName: "aws_organizations_policy",
+			Name:     "Policy",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourcePolicyAttachment,
