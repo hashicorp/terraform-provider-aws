@@ -10,13 +10,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindStageByName(ctx context.Context, conn *apigateway.APIGateway, restApiId, name string) (*apigateway.Stage, error) {
+func FindStageByTwoPartKey(ctx context.Context, conn *apigateway.APIGateway, restAPIID, stageName string) (*apigateway.Stage, error) {
 	input := &apigateway.GetStageInput{
-		RestApiId: aws.String(restApiId),
-		StageName: aws.String(name),
+		RestApiId: aws.String(restAPIID),
+		StageName: aws.String(stageName),
 	}
 
 	output, err := conn.GetStageWithContext(ctx, input)
+
 	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,

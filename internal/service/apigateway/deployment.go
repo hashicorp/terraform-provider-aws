@@ -199,7 +199,7 @@ func resourceDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta 
 	stageName := d.Get("stage_name").(string)
 	restApiId := d.Get("rest_api_id").(string)
 	if stageName != "" {
-		stage, err := FindStageByName(ctx, conn, restApiId, stageName)
+		stage, err := FindStageByTwoPartKey(ctx, conn, restApiId, stageName)
 
 		if err != nil && !tfresource.NotFound(err) {
 			return sdkdiag.AppendErrorf(diags, "getting referenced stage: %s", err)

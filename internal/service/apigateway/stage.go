@@ -230,7 +230,7 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	restAPIID := d.Get("rest_api_id").(string)
 	stageName := d.Get("stage_name").(string)
-	stage, err := FindStageByName(ctx, conn, restAPIID, stageName)
+	stage, err := FindStageByTwoPartKey(ctx, conn, restAPIID, stageName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway Stage (%s) not found, removing from state", d.Id())
