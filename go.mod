@@ -19,7 +19,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.11.7
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.4.2
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.39.1
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.30.2
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/oam v1.1.8
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.2.1
@@ -81,6 +81,7 @@ require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310 // indirect
+	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.10 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.18.12 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.12 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.32 // indirect
