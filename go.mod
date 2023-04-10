@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230201104953-d1d05f4e2bfb
 	github.com/aws/aws-sdk-go v1.44.238
 	github.com/aws/aws-sdk-go-v2 v1.17.8
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.22
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.1
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.24.4
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.8
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.20.7
@@ -33,7 +33,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.8
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.3.2
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.17.3
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.36.0
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.15.0
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.21.1
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.26.2
