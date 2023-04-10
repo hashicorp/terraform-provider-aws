@@ -197,6 +197,7 @@ data "aws_region" "current" {}
 resource "aws_vpclattice_target_group" "test" {
 	name     = %[1]q
 	type     = %[2]q
+	client_token = "tstclienttoken"
 	config {
 	  port             = 80
 	  protocol         = "HTTP"
