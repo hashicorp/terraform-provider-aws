@@ -246,16 +246,16 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta int
 		// Using PutRestApi with mode overwrite will remove any configuration
 		// that was done with CreateRestApi. Reconcile these changes by having
 		// any Terraform configured values overwrite imported configuration.
-		if patchOperations := resourceRestAPIWithBodyUpdateOperations(d, api); len(patchOperations) > 0 {
+		if operations := resourceRestAPIWithBodyUpdateOperations(d, api); len(operations) > 0 {
 			input := &apigateway.UpdateRestApiInput{
-				PatchOperations: patchOperations,
+				PatchOperations: operations,
 				RestApiId:       aws.String(d.Id()),
 			}
 
 			_, err := conn.UpdateRestApiWithContext(ctx, input)
 
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating REST API (%s) after OpenAPI import: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "updating API Gateway REST API (%s) after OpenAPI import: %s", d.Id(), err)
 			}
 		}
 	}
@@ -364,189 +364,194 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayConn()
-	log.Printf("[DEBUG] Updating API Gateway %s", d.Id())
 
-	operations := make([]*apigateway.PatchOperation, 0)
+	if d.HasChangesExcept("tags", "tags_all") {
+		operations := make([]*apigateway.PatchOperation, 0)
 
-	if d.HasChange("api_key_source") {
-		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String(apigateway.OpReplace),
-			Path:  aws.String("/apiKeySource"),
-			Value: aws.String(d.Get("api_key_source").(string)),
-		})
-	}
-	if d.HasChange("binary_media_types") {
-		o, n := d.GetChange("binary_media_types")
-		prefix := "binaryMediaTypes"
-
-		old := o.([]interface{})
-		new := n.([]interface{})
-
-		// Remove every binary media types. Simpler to remove and add new ones,
-		// since there are no replacings.
-		for _, v := range old {
+		if d.HasChange("api_key_source") {
 			operations = append(operations, &apigateway.PatchOperation{
-				Op:   aws.String(apigateway.OpRemove),
-				Path: aws.String(fmt.Sprintf("/%s/%s", prefix, escapeJSONPointer(v.(string)))),
+				Op:    aws.String(apigateway.OpReplace),
+				Path:  aws.String("/apiKeySource"),
+				Value: aws.String(d.Get("api_key_source").(string)),
 			})
 		}
 
-		// Handle additions
-		if len(new) > 0 {
-			for _, v := range new {
+		if d.HasChange("binary_media_types") {
+			o, n := d.GetChange("binary_media_types")
+			prefix := "binaryMediaTypes"
+
+			old := o.([]interface{})
+			new := n.([]interface{})
+
+			// Remove every binary media types. Simpler to remove and add new ones,
+			// since there are no replacings.
+			for _, v := range old {
 				operations = append(operations, &apigateway.PatchOperation{
-					Op:   aws.String(apigateway.OpAdd),
+					Op:   aws.String(apigateway.OpRemove),
 					Path: aws.String(fmt.Sprintf("/%s/%s", prefix, escapeJSONPointer(v.(string)))),
 				})
 			}
+
+			// Handle additions
+			if len(new) > 0 {
+				for _, v := range new {
+					operations = append(operations, &apigateway.PatchOperation{
+						Op:   aws.String(apigateway.OpAdd),
+						Path: aws.String(fmt.Sprintf("/%s/%s", prefix, escapeJSONPointer(v.(string)))),
+					})
+				}
+			}
 		}
-	}
-	if d.HasChange("description") {
-		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String(apigateway.OpReplace),
-			Path:  aws.String("/description"),
-			Value: aws.String(d.Get("description").(string)),
-		})
-	}
-	if d.HasChange("disable_execute_api_endpoint") {
-		value := strconv.FormatBool(d.Get("disable_execute_api_endpoint").(bool))
-		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String(apigateway.OpReplace),
-			Path:  aws.String("/disableExecuteApiEndpoint"),
-			Value: aws.String(value),
-		})
-	}
-	if d.HasChange("endpoint_configuration.0.types") {
-		// The REST API must have an endpoint type.
-		// If attempting to remove the configuration, do nothing.
-		if v, ok := d.GetOk("endpoint_configuration"); ok && len(v.([]interface{})) > 0 {
-			m := v.([]interface{})[0].(map[string]interface{})
+
+		if d.HasChange("description") {
+			operations = append(operations, &apigateway.PatchOperation{
+				Op:    aws.String(apigateway.OpReplace),
+				Path:  aws.String("/description"),
+				Value: aws.String(d.Get("description").(string)),
+			})
+		}
+
+		if d.HasChange("disable_execute_api_endpoint") {
+			value := strconv.FormatBool(d.Get("disable_execute_api_endpoint").(bool))
+			operations = append(operations, &apigateway.PatchOperation{
+				Op:    aws.String(apigateway.OpReplace),
+				Path:  aws.String("/disableExecuteApiEndpoint"),
+				Value: aws.String(value),
+			})
+		}
+
+		if d.HasChange("endpoint_configuration.0.types") {
+			// The REST API must have an endpoint type.
+			// If attempting to remove the configuration, do nothing.
+			if v, ok := d.GetOk("endpoint_configuration"); ok && len(v.([]interface{})) > 0 {
+				m := v.([]interface{})[0].(map[string]interface{})
+
+				operations = append(operations, &apigateway.PatchOperation{
+					Op:    aws.String(apigateway.OpReplace),
+					Path:  aws.String("/endpointConfiguration/types/0"),
+					Value: aws.String(m["types"].([]interface{})[0].(string)),
+				})
+			}
+		}
+
+		// Compare the old and new values, don't blindly remove as they can cause race conditions with DNS and endpoint creation
+		if d.HasChange("endpoint_configuration.0.vpc_endpoint_ids") {
+			o, n := d.GetChange("endpoint_configuration.0.vpc_endpoint_ids")
+			prefix := "/endpointConfiguration/vpcEndpointIds"
+
+			old := o.(*schema.Set).List()
+			new := n.(*schema.Set).List()
+
+			for _, v := range old {
+				for _, x := range new {
+					if v.(string) == x.(string) {
+						break
+					}
+				}
+				operations = append(operations, &apigateway.PatchOperation{
+					Op:    aws.String(apigateway.OpRemove),
+					Path:  aws.String(prefix),
+					Value: aws.String(v.(string)),
+				})
+			}
+
+			for _, v := range new {
+				for _, x := range old {
+					if v.(string) == x.(string) {
+						break
+					}
+				}
+				operations = append(operations, &apigateway.PatchOperation{
+					Op:    aws.String(apigateway.OpAdd),
+					Path:  aws.String(prefix),
+					Value: aws.String(v.(string)),
+				})
+			}
+		}
+
+		if d.HasChange("minimum_compression_size") {
+			minimumCompressionSize := d.Get("minimum_compression_size").(int)
+			var value string
+			if minimumCompressionSize > -1 {
+				value = strconv.Itoa(minimumCompressionSize)
+			}
+			operations = append(operations, &apigateway.PatchOperation{
+				Op:    aws.String(apigateway.OpReplace),
+				Path:  aws.String("/minimumCompressionSize"),
+				Value: aws.String(value),
+			})
+		}
+
+		if d.HasChange("name") {
+			operations = append(operations, &apigateway.PatchOperation{
+				Op:    aws.String(apigateway.OpReplace),
+				Path:  aws.String("/name"),
+				Value: aws.String(d.Get("name").(string)),
+			})
+		}
+
+		if d.HasChange("policy") {
+			policy, _ := structure.NormalizeJsonString(d.Get("policy").(string)) // validation covers error
 
 			operations = append(operations, &apigateway.PatchOperation{
 				Op:    aws.String(apigateway.OpReplace),
-				Path:  aws.String("/endpointConfiguration/types/0"),
-				Value: aws.String(m["types"].([]interface{})[0].(string)),
-			})
-		}
-	}
-	// Compare the old and new values, don't blindly remove as they can cause race conditions with DNS and endpoint creation
-	if d.HasChange("endpoint_configuration.0.vpc_endpoint_ids") {
-		o, n := d.GetChange("endpoint_configuration.0.vpc_endpoint_ids")
-		prefix := "/endpointConfiguration/vpcEndpointIds"
-
-		old := o.(*schema.Set).List()
-		new := n.(*schema.Set).List()
-
-		for _, v := range old {
-			for _, x := range new {
-				if v.(string) == x.(string) {
-					break
-				}
-			}
-			operations = append(operations, &apigateway.PatchOperation{
-				Op:    aws.String(apigateway.OpRemove),
-				Path:  aws.String(prefix),
-				Value: aws.String(v.(string)),
+				Path:  aws.String("/policy"),
+				Value: aws.String(policy),
 			})
 		}
 
-		for _, v := range new {
-			for _, x := range old {
-				if v.(string) == x.(string) {
-					break
-				}
-			}
-			operations = append(operations, &apigateway.PatchOperation{
-				Op:    aws.String(apigateway.OpAdd),
-				Path:  aws.String(prefix),
-				Value: aws.String(v.(string)),
+		if len(operations) > 0 {
+			_, err := conn.UpdateRestApiWithContext(ctx, &apigateway.UpdateRestApiInput{
+				PatchOperations: operations,
+				RestApiId:       aws.String(d.Id()),
 			})
-		}
-	}
-	if d.HasChange("minimum_compression_size") {
-		minimumCompressionSize := d.Get("minimum_compression_size").(int)
-		var value string
-		if minimumCompressionSize > -1 {
-			value = strconv.Itoa(minimumCompressionSize)
-		}
-		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String(apigateway.OpReplace),
-			Path:  aws.String("/minimumCompressionSize"),
-			Value: aws.String(value),
-		})
-	}
-	if d.HasChange("name") {
-		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String(apigateway.OpReplace),
-			Path:  aws.String("/name"),
-			Value: aws.String(d.Get("name").(string)),
-		})
-	}
-	if d.HasChange("policy") {
-		policy, _ := structure.NormalizeJsonString(d.Get("policy").(string)) // validation covers error
-
-		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String(apigateway.OpReplace),
-			Path:  aws.String("/policy"),
-			Value: aws.String(policy),
-		})
-	}
-
-	_, err := conn.UpdateRestApiWithContext(ctx, &apigateway.UpdateRestApiInput{
-		RestApiId:       aws.String(d.Id()),
-		PatchOperations: operations,
-	})
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating REST API (%s): %s", d.Id(), err)
-	}
-
-	if d.HasChanges("body", "parameters") {
-		if body, ok := d.GetOk("body"); ok {
-			log.Printf("[DEBUG] Updating API Gateway from OpenAPI spec: %s", d.Id())
-
-			// Terraform implementation uses the `overwrite` mode by default.
-			// Overwrite mode will delete existing literal properties if they are not explicitly set in the OpenAPI definition.
-			// The VPC endpoints deletion and immediate recreation can cause a race condition.
-			// 		Impacted properties: ApiKeySourceType, BinaryMediaTypes, Description, EndpointConfiguration, MinimumCompressionSize, Name, Policy
-			// The `merge` mode will not delete literal properties of a RestApi if they’re not explicitly set in the OAS definition.
-			input := &apigateway.PutRestApiInput{
-				RestApiId: aws.String(d.Id()),
-				Mode:      aws.String(modeConfigOrDefault(d)),
-				// Default value from schema is not being returned at runtime.
-				//Mode:      aws.String(d.Get("put_rest_api_mode").(string)),
-				Body: []byte(body.(string)),
-			}
-
-			if v, ok := d.GetOk("fail_on_warnings"); ok {
-				input.FailOnWarnings = aws.Bool(v.(bool))
-			}
-
-			if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
-				input.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
-			}
-
-			output, err := conn.PutRestApiWithContext(ctx, input)
 
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating API Gateway specification: %s", err)
+				return sdkdiag.AppendErrorf(diags, "updating API Gateway REST API (%s): %s", d.Id(), err)
 			}
+		}
 
-			// Using PutRestApi with mode overwrite will remove any configuration
-			// that was done previously. Reconcile these changes by having
-			// any Terraform configured values overwrite imported configuration.
-			updateInput := &apigateway.UpdateRestApiInput{
-				RestApiId:       aws.String(d.Id()),
-				PatchOperations: []*apigateway.PatchOperation{},
-			}
+		if d.HasChanges("body", "parameters") {
+			if body, ok := d.GetOk("body"); ok {
+				// Terraform implementation uses the `overwrite` mode by default.
+				// Overwrite mode will delete existing literal properties if they are not explicitly set in the OpenAPI definition.
+				// The VPC endpoints deletion and immediate recreation can cause a race condition.
+				// 		Impacted properties: ApiKeySourceType, BinaryMediaTypes, Description, EndpointConfiguration, MinimumCompressionSize, Name, Policy
+				// The `merge` mode will not delete literal properties of a RestApi if they’re not explicitly set in the OAS definition.
+				input := &apigateway.PutRestApiInput{
+					Body:      []byte(body.(string)),
+					Mode:      aws.String(modeConfigOrDefault(d)),
+					RestApiId: aws.String(d.Id()),
+				}
 
-			updateInput.PatchOperations = resourceRestAPIWithBodyUpdateOperations(d, output)
+				if v, ok := d.GetOk("fail_on_warnings"); ok {
+					input.FailOnWarnings = aws.Bool(v.(bool))
+				}
 
-			if len(updateInput.PatchOperations) > 0 {
-				_, err := conn.UpdateRestApiWithContext(ctx, updateInput)
+				if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
+					input.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
+				}
+
+				output, err := conn.PutRestApiWithContext(ctx, input)
 
 				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "updating REST API (%s) after OpenAPI import: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "updating API Gateway REST API (%s) specification: %s", d.Id(), err)
+				}
+
+				// Using PutRestApi with mode overwrite will remove any configuration
+				// that was done previously. Reconcile these changes by having
+				// any Terraform configured values overwrite imported configuration.
+				if operations := resourceRestAPIWithBodyUpdateOperations(d, output); len(operations) > 0 {
+					input := &apigateway.UpdateRestApiInput{
+						PatchOperations: operations,
+						RestApiId:       aws.String(d.Id()),
+					}
+
+					_, err := conn.UpdateRestApiWithContext(ctx, input)
+
+					if err != nil {
+						return sdkdiag.AppendErrorf(diags, "updating API Gateway REST API (%s) after OpenAPI import: %s", d.Id(), err)
+					}
 				}
 			}
 		}
