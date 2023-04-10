@@ -174,6 +174,39 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster Parameter Group (%s) parameters: %s", d.Id(), err)
 	}
 
+	// add only system parameters that are set in the config
+	p := d.Get("parameter")
+	if p == nil {
+		p = new(schema.Set)
+	}
+	s := p.(*schema.Set)
+	configParameters := expandParameters(s.List())
+
+	input = &rds.DescribeDBClusterParametersInput{
+		DBClusterParameterGroupName: aws.String(d.Id()),
+		Source:                      aws.String("system"),
+	}
+
+	err = conn.DescribeDBClusterParametersPagesWithContext(ctx, input, func(page *rds.DescribeDBClusterParametersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Parameters {
+			for _, p := range configParameters {
+				if aws.StringValue(v.ParameterName) == aws.StringValue(p.ParameterName) {
+					parameters = append(parameters, v)
+				}
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster Parameter Group (%s) parameters: %s", d.Id(), err)
+	}
+
 	if err := d.Set("parameter", flattenParameters(parameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
 	}

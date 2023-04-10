@@ -25,6 +25,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -36,8 +37,9 @@ const (
 	listenerActionOrderMax = 50_000
 )
 
-// @SDKResource("aws_alb_listener_rule")
-// @SDKResource("aws_lb_listener_rule")
+// @SDKResource("aws_alb_listener_rule", name="Listener Rule")
+// @SDKResource("aws_lb_listener_rule", name="Listener Rule")
+// @Tags(identifierAttribute="id")
 func ResourceListenerRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerRuleCreate,
@@ -466,8 +468,8 @@ func ResourceListenerRule() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: customdiff.Sequence(
 			verify.SetTagsDiff,
@@ -494,35 +496,31 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Conn()
 	listenerArn := d.Get("listener_arn").(string)
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-	params := &elbv2.CreateRuleInput{
+	input := &elbv2.CreateRuleInput{
 		ListenerArn: aws.String(listenerArn),
-	}
-	if len(tags) > 0 {
-		params.Tags = Tags(tags.IgnoreAWS())
+		Tags:        GetTagsIn(ctx),
 	}
 
 	var err error
 
-	params.Actions, err = expandLbListenerActions(d.Get("action").([]interface{}))
+	input.Actions, err = expandLbListenerActions(d.Get("action").([]interface{}))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating LB Listener Rule for Listener (%s): %s", listenerArn, err)
 	}
 
-	params.Conditions, err = lbListenerRuleConditions(d.Get("condition").(*schema.Set).List())
+	input.Conditions, err = lbListenerRuleConditions(d.Get("condition").(*schema.Set).List())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating LB Listener Rule for Listener (%s): %s", listenerArn, err)
 	}
 
-	resp, err := retryListenerRuleCreate(ctx, conn, d, params, listenerArn)
+	resp, err := retryListenerRuleCreate(ctx, conn, d, input, listenerArn)
 
 	// Some partitions may not support tag-on-create
-	if params.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] ELBv2 Listener Rule (%s) create failed (%s) with tags. Trying create without tags.", listenerArn, err)
-		params.Tags = nil
-		resp, err = retryListenerRuleCreate(ctx, conn, d, params, listenerArn)
+		input.Tags = nil
+		resp, err = retryListenerRuleCreate(ctx, conn, d, input, listenerArn)
 	}
 
 	if err != nil {
@@ -532,7 +530,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 	d.SetId(aws.StringValue(resp.Rules[0].RuleArn))
 
 	// Post-create tagging supported in some partitions
-	if params.Tags == nil && len(tags) > 0 {
+	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); input.Tags == nil && len(tags) > 0 {
 		err := UpdateTags(ctx, conn, d.Id(), nil, tags)
 
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
@@ -552,8 +550,6 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var resp *elbv2.DescribeRulesOutput
 	var req = &elbv2.DescribeRulesInput{
@@ -771,29 +767,6 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting condition: %s", err)
 	}
 
-	// tags at the end because, if not supported, will skip the rest of Read
-	tags, err := ListTags(ctx, conn, d.Id())
-
-	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] Unable to list tags for ELBv2 Listener Rule %s: %s", d.Id(), err)
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -848,39 +821,6 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 
 		if len(resp.Rules) == 0 {
 			return sdkdiag.AppendErrorf(diags, "modifying creating LB Listener Rule: no rules returned in response")
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := retry.RetryContext(ctx, loadBalancerTagPropagationTimeout, func() *retry.RetryError {
-			err := UpdateTags(ctx, conn, d.Id(), o, n)
-
-			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
-				log.Printf("[DEBUG] Retrying tagging of LB Listener Rule (%s) after error: %s", d.Id(), err)
-				return retry.RetryableError(err)
-			}
-
-			if err != nil {
-				return retry.NonRetryableError(err)
-			}
-
-			return nil
-		})
-
-		if tfresource.TimedOut(err) {
-			err = UpdateTags(ctx, conn, d.Id(), o, n)
-		}
-
-		// ISO partitions may not support tagging, giving error
-		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
-			log.Printf("[WARN] Unable to update tags for ELBv2 Listener Rule %s: %s", d.Id(), err)
-			return append(diags, resourceListenerRuleRead(ctx, d, meta)...)
-		}
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating LB (%s) tags: %s", d.Id(), err)
 		}
 	}
 

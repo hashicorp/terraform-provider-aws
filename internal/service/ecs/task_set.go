@@ -19,9 +19,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ecs_task_set")
+// @SDKResource("aws_ecs_task_set", name="Task Set")
+// @Tags(identifierAttribute="id")
 func ResourceTaskSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTaskSetCreate,
@@ -251,9 +253,8 @@ func ResourceTaskSet() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tftags.TagsSchema(),
-
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 
 			"wait_until_stable": {
 				Type:     schema.TypeBool,
@@ -288,8 +289,6 @@ func ResourceTaskSet() *schema.Resource {
 func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	cluster := d.Get("cluster").(string)
 	service := d.Get("service").(string)
@@ -297,11 +296,8 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		ClientToken:    aws.String(id.UniqueId()),
 		Cluster:        aws.String(cluster),
 		Service:        aws.String(service),
+		Tags:           GetTagsIn(ctx),
 		TaskDefinition: aws.String(d.Get("task_definition").(string)),
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("capacity_provider_strategy"); ok && v.(*schema.Set).Len() > 0 {
@@ -362,7 +358,7 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
-	if input.Tags == nil && len(tags) > 0 {
+	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); input.Tags == nil && len(tags) > 0 {
 		err := UpdateTags(ctx, conn, aws.StringValue(output.TaskSet.TaskSetArn), nil, tags)
 
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
@@ -382,8 +378,6 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceTaskSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	taskSetId, service, cluster, err := TaskSetParseID(d.Id())
 
@@ -460,16 +454,7 @@ func resourceTaskSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting service_registries: %s", err)
 	}
 
-	tags := KeyValueTags(ctx, taskSet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, taskSet.Tags)
 
 	return diags
 }
@@ -503,22 +488,6 @@ func resourceTaskSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			if err := waitTaskSetStable(ctx, conn, timeout, taskSetId, service, cluster); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for ECS Task Set (%s) to be stable after update: %s", d.Id(), err)
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n)
-
-		// Some partitions (i.e., ISO) may not support tagging, giving error
-		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
-			log.Printf("[WARN] ECS tagging failed updating tags for Task Set (%s): %s", d.Id(), err)
-			return append(diags, resourceTaskSetRead(ctx, d, meta)...)
-		}
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "ECS tagging failed updating tags for Task Set (%s): %s", d.Id(), err)
 		}
 	}
 

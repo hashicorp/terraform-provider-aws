@@ -13,9 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cloudwatch_event_bus")
+// @SDKResource("aws_cloudwatch_event_bus", name="Event Bus")
+// @Tags(identifierAttribute="arn")
 func ResourceBus() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBusCreate,
@@ -43,8 +45,8 @@ func ResourceBus() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -54,23 +56,16 @@ func ResourceBus() *schema.Resource {
 func resourceBusCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	eventBusName := d.Get("name").(string)
 	input := &eventbridge.CreateEventBusInput{
 		Name: aws.String(eventBusName),
+		Tags: GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("event_source_name"); ok {
 		input.EventSourceName = aws.String(v.(string))
 	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating EventBridge event bus: %v", input)
 
 	output, err := conn.CreateEventBusWithContext(ctx, input)
 
@@ -90,7 +85,7 @@ func resourceBusCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	log.Printf("[INFO] EventBridge event bus (%s) created", d.Id())
 
 	// Post-create tagging supported in some partitions
-	if input.Tags == nil && len(tags) > 0 {
+	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); input.Tags == nil && len(tags) > 0 {
 		err := UpdateTags(ctx, conn, aws.StringValue(output.EventBusArn), nil, tags)
 
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
@@ -109,8 +104,6 @@ func resourceBusCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceBusRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &eventbridge.DescribeEventBusInput{
 		Name: aws.String(d.Id()),
@@ -129,51 +122,13 @@ func resourceBusRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("arn", output.Arn)
 	d.Set("name", output.Name)
 
-	tags, err := ListTags(ctx, conn, aws.StringValue(output.Arn))
-
-	// ISO partitions may not support tagging, giving error
-	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] Unable to list tags for EventBridge Bus %s: %s", d.Id(), err)
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for EventBridge event bus (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceBusUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
 
-	arn := d.Get("arn").(string)
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := UpdateTags(ctx, conn, arn, o, n)
-
-		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
-			log.Printf("[WARN] Unable to update tags for EventBridge Bus %s: %s", d.Id(), err)
-			return append(diags, resourceBusRead(ctx, d, meta)...)
-		}
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EventBridge Bus tags: %s", err)
-		}
-	}
+	// Tags only.
 
 	return append(diags, resourceBusRead(ctx, d, meta)...)
 }
