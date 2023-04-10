@@ -26,6 +26,7 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"golang.org/x/exp/slices"
 )
 
@@ -73,7 +74,8 @@ var (
 	environmentCNAMERegex = regexp.MustCompile(`(^[^.]+)(.\w{2}-\w{4,9}-\d)?\.(elasticbeanstalk\.com|eb\.amazonaws\.com\.cn)$`)
 )
 
-// @SDKResource("aws_elastic_beanstalk_environment")
+// @SDKResource("aws_elastic_beanstalk_environment", name="Environment")
+// @Tags(identifierAttribute="arn")
 func ResourceEnvironment() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -177,8 +179,8 @@ func ResourceEnvironment() *schema.Resource {
 				Computed:      true,
 				ConflictsWith: []string{"platform_arn", "template_name"},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"template_name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -214,15 +216,13 @@ func ResourceEnvironment() *schema.Resource {
 func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &elasticbeanstalk.CreateEnvironmentInput{
 		ApplicationName: aws.String(d.Get("application").(string)),
 		EnvironmentName: aws.String(name),
 		OptionSettings:  extractOptionSettings(d.Get("setting").(*schema.Set)),
-		Tags:            Tags(tags.IgnoreElasticbeanstalk()),
+		Tags:            GetTagsIn(ctx),
 	}
 
 	if v := d.Get("description"); v.(string) != "" {
@@ -304,8 +304,6 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	env, err := FindEnvironmentByID(ctx, conn, d.Id())
 
@@ -428,23 +426,6 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting setting: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Elastic Beanstalk Environment (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreElasticbeanstalk().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -463,6 +444,8 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if err != nil {
 		pollInterval = 0
 	}
+
+	opTime := time.Now()
 
 	if d.HasChangesExcept("tags", "tags_all", "wait_for_ready_timeout", "poll_interval") {
 		input := elasticbeanstalk.UpdateEnvironmentInput{
@@ -560,42 +543,21 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.VersionLabel = aws.String(d.Get("version_label").(string))
 		}
 
-		opTime := time.Now()
 		_, err := conn.UpdateEnvironmentWithContext(ctx, &input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Environment (%s): %s", d.Id(), err)
-		}
-
-		if _, err := waitEnvironmentReady(ctx, conn, d.Id(), pollInterval, waitForReadyTimeOut); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Elastic Beanstalk Environment (%s) update: %s", d.Id(), err)
-		}
-
-		err = findEnvironmentErrorsByID(ctx, conn, d.Id(), opTime)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Environment (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		arn := d.Get("arn").(string)
-		o, n := d.GetChange("tags_all")
+	if _, err := waitEnvironmentReady(ctx, conn, d.Id(), pollInterval, waitForReadyTimeOut); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Elastic Beanstalk Environment (%s) update: %s", d.Id(), err)
+	}
 
-		opTime := time.Now()
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Environment (%s) tags: %s", arn, err)
-		}
+	err = findEnvironmentErrorsByID(ctx, conn, d.Id(), opTime)
 
-		if _, err := waitEnvironmentReady(ctx, conn, d.Id(), pollInterval, waitForReadyTimeOut); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Elastic Beanstalk Environment (%s) update: %s", d.Id(), err)
-		}
-
-		err = findEnvironmentErrorsByID(ctx, conn, d.Id(), opTime)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Environment (%s): %s", d.Id(), err)
-		}
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Environment (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourceEnvironmentRead(ctx, d, meta)...)

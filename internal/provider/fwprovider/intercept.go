@@ -295,6 +295,11 @@ func (r tagsInterceptor) create(ctx context.Context, request resource.CreateRequ
 		return ctx, diags
 	}
 
+	inContext, ok := conns.FromContext(ctx)
+	if !ok {
+		return ctx, diags
+	}
+
 	tagsInContext, ok := tftags.FromContext(ctx)
 	if !ok {
 		return ctx, diags
@@ -312,14 +317,14 @@ func (r tagsInterceptor) create(ctx context.Context, request resource.CreateRequ
 		// Merge the resource's configured tags with any provider configured default_tags.
 		tags := tagsInContext.DefaultConfig.MergeTags(tftags.New(ctx, planTags))
 		// Remove system tags.
-		tags = tags.IgnoreAWS()
+		tags = tags.IgnoreSystem(inContext.ServicePackageName)
 
 		tagsInContext.TagsIn = types.Some(tags)
 	case After:
 		// Set values for unknowns.
 		// Remove any provider configured ignore_tags and system tags from those passed to the service API.
 		// Computed tags_all include any provider configured default_tags.
-		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, tagsInContext.TagsIn.MustUnwrap().IgnoreAWS().IgnoreConfig(tagsInContext.IgnoreConfig).Map())
+		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, tagsInContext.TagsIn.MustUnwrap().IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig).Map())
 		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), &stateTagsAll)...)
 
 		if diags.HasError() {
@@ -336,25 +341,21 @@ func (r tagsInterceptor) read(ctx context.Context, request resource.ReadRequest,
 	}
 
 	inContext, ok := conns.FromContext(ctx)
-
 	if !ok {
 		return ctx, diags
 	}
 
 	sp, ok := meta.ServicePackages[inContext.ServicePackageName]
-
 	if !ok {
 		return ctx, diags
 	}
 
 	serviceName, err := names.HumanFriendly(inContext.ServicePackageName)
-
 	if err != nil {
 		serviceName = "<service>"
 	}
 
 	resourceName := inContext.ResourceName
-
 	if resourceName == "" {
 		resourceName = "<thing>"
 	}
@@ -409,7 +410,7 @@ func (r tagsInterceptor) read(ctx context.Context, request resource.ReadRequest,
 		stateTags := tftags.Null
 		// Remove any provider configured ignore_tags and system tags from those returned from the service API.
 		// The resource's configured tags do not include any provider configured default_tags.
-		if v := apiTags.IgnoreAWS().IgnoreConfig(tagsInContext.IgnoreConfig).RemoveDefaultConfig(tagsInContext.DefaultConfig).Map(); len(v) > 0 {
+		if v := apiTags.IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig).RemoveDefaultConfig(tagsInContext.DefaultConfig).Map(); len(v) > 0 {
 			stateTags = flex.FlattenFrameworkStringValueMapLegacy(ctx, v)
 		}
 		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTags), &stateTags)...)
@@ -419,7 +420,7 @@ func (r tagsInterceptor) read(ctx context.Context, request resource.ReadRequest,
 		}
 
 		// Computed tags_all do.
-		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, apiTags.IgnoreAWS().IgnoreConfig(tagsInContext.IgnoreConfig).Map())
+		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, apiTags.IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig).Map())
 		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), &stateTagsAll)...)
 
 		if diags.HasError() {
@@ -436,25 +437,21 @@ func (r tagsInterceptor) update(ctx context.Context, request resource.UpdateRequ
 	}
 
 	inContext, ok := conns.FromContext(ctx)
-
 	if !ok {
 		return ctx, diags
 	}
 
 	sp, ok := meta.ServicePackages[inContext.ServicePackageName]
-
 	if !ok {
 		return ctx, diags
 	}
 
 	serviceName, err := names.HumanFriendly(inContext.ServicePackageName)
-
 	if err != nil {
 		serviceName = "<service>"
 	}
 
 	resourceName := inContext.ResourceName
-
 	if resourceName == "" {
 		resourceName = "<thing>"
 	}
@@ -476,7 +473,7 @@ func (r tagsInterceptor) update(ctx context.Context, request resource.UpdateRequ
 		// Merge the resource's configured tags with any provider configured default_tags.
 		tags := tagsInContext.DefaultConfig.MergeTags(tftags.New(ctx, planTags))
 		// Remove system tags.
-		tags = tags.IgnoreAWS()
+		tags = tags.IgnoreSystem(inContext.ServicePackageName)
 
 		tagsInContext.TagsIn = types.Some(tags)
 
