@@ -31,6 +31,7 @@ func ResourceStage() *schema.Resource {
 		ReadWithoutTimeout:   resourceStageRead,
 		UpdateWithoutTimeout: resourceStageUpdate,
 		DeleteWithoutTimeout: resourceStageDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
