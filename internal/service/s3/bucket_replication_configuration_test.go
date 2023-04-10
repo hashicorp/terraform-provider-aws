@@ -1938,11 +1938,6 @@ resource "aws_s3_bucket" "source" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "source_acl" {
-  bucket = aws_s3_bucket.source.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_versioning" "source" {
   bucket = aws_s3_bucket.source.id
   versioning_configuration {
@@ -2016,11 +2011,6 @@ resource "aws_s3_bucket_versioning" "destination" {
 
 resource "aws_s3_bucket" "source" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "source_acl" {
-  bucket = aws_s3_bucket.source.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_versioning" "source" {
@@ -2320,11 +2310,6 @@ POLICY
 
 resource "aws_s3_bucket" "source" {
   bucket = "%[1]s-source"
-}
-
-resource "aws_s3_bucket_acl" "source" {
-  bucket = aws_s3_bucket.source.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_versioning" "source" {
