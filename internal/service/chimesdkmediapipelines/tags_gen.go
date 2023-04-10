@@ -38,6 +38,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 	if err != nil {
 		return err
 	}
+
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(tags)
 	}

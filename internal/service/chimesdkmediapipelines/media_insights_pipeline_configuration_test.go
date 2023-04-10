@@ -304,9 +304,10 @@ data "aws_iam_policy_document" "assume_role" {
 }
 
 resource "aws_iam_role" "test" {
-  name = "%s"
+  name               = "%s"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
+
 
 `, roleName)
 }
@@ -326,20 +327,20 @@ func testAccMediaInsightsPipelineConfigurationConfig_basic(roleName string, conf
 %s
 
 resource "aws_chimesdkmediapipelines_media_insights_pipeline_configuration" "test" {
-  name                           = %q
-  resource_access_role_arn       = aws_iam_role.test.arn
+  name                     = %q
+  resource_access_role_arn = aws_iam_role.test.arn
   elements {
-	type = "AmazonTranscribeCallAnalyticsProcessor"
-	amazon_transcribe_call_analytics_processor_configuration {
-	  language_code = "en-US"
-	}
+    type = "AmazonTranscribeCallAnalyticsProcessor"
+    amazon_transcribe_call_analytics_processor_configuration {
+      language_code = "en-US"
+    }
   }
 
   elements {
-	type = "KinesisDataStreamSink"
-	kinesis_data_stream_sink_configuration {
-		insights_target = aws_kinesis_stream.test.arn
-	}
+    type = "KinesisDataStreamSink"
+    kinesis_data_stream_sink_configuration {
+      insights_target = aws_kinesis_stream.test.arn
+    }
   }
 }
 `, resourceAccessRole(roleName), kinesisDataStream(kinesisStreamName), configName)
@@ -352,68 +353,68 @@ func testAccMediaInsightsPipelineConfigurationConfig_transcribeCallAnalyticsProc
 %s
 
 resource "aws_chimesdkmediapipelines_media_insights_pipeline_configuration" "test" {
-  name                           = %q
-  resource_access_role_arn       = aws_iam_role.test.arn
+  name                     = %q
+  resource_access_role_arn = aws_iam_role.test.arn
   elements {
-	type = "AmazonTranscribeCallAnalyticsProcessor"
-	amazon_transcribe_call_analytics_processor_configuration {
-	  call_analytics_stream_categories = [
+    type = "AmazonTranscribeCallAnalyticsProcessor"
+    amazon_transcribe_call_analytics_processor_configuration {
+      call_analytics_stream_categories = [
         "category_1",
         "category_2"
-	  ]
-      content_redaction_type = "PII"
+      ]
+      content_redaction_type               = "PII"
       enable_partial_results_stabilization = true
-      filter_partial_results = true
-	  language_code = "en-US"
-      language_model_name = "MyLanguageModel"
-	  partial_results_stability = "high"
-	  pii_entity_types = "ADDRESS,BANK_ACCOUNT_NUMBER"
-	  post_call_analytics_settings {
-		content_redaction_output = "redacted"
-		data_access_role_arn = aws_iam_role.test.arn
-		output_encryption_kms_key_id = "MyKmsKeyId "
-        output_location = "s3://MyBucket"
-	  }
+      filter_partial_results               = true
+      language_code                        = "en-US"
+      language_model_name                  = "MyLanguageModel"
+      partial_results_stability            = "high"
+      pii_entity_types                     = "ADDRESS,BANK_ACCOUNT_NUMBER"
+      post_call_analytics_settings {
+        content_redaction_output     = "redacted"
+        data_access_role_arn         = aws_iam_role.test.arn
+        output_encryption_kms_key_id = "MyKmsKeyId "
+        output_location              = "s3://MyBucket"
+      }
       vocabulary_filter_method = "mask"
-      vocabulary_filter_name = "MyVocabularyFilter"
-	  vocabulary_name = "MyVocabulary"
-	}
+      vocabulary_filter_name   = "MyVocabularyFilter"
+      vocabulary_name          = "MyVocabulary"
+    }
   }
 
   elements {
-	type = "KinesisDataStreamSink"
-	kinesis_data_stream_sink_configuration {
-		insights_target = aws_kinesis_stream.test.arn
-	}
+    type = "KinesisDataStreamSink"
+    kinesis_data_stream_sink_configuration {
+      insights_target = aws_kinesis_stream.test.arn
+    }
   }
 
   real_time_alert_configuration {
-	disabled = false
+    disabled = false
 
-	rules {
-	  type = "IssueDetection"
-	  issue_detection_configuration {
-	  	rule_name = "MyIssueDetectionRule"
-	  }
-	}
+    rules {
+      type = "IssueDetection"
+      issue_detection_configuration {
+        rule_name = "MyIssueDetectionRule"
+      }
+    }
 
-	rules {
-	  type = "KeywordMatch"
-	  keyword_match_configuration {
-	  	keywords = ["keyword1", "keyword2"]
-		negate = false
-		rule_name = "MyKeywordMatchRule"
-	  }
-	}
+    rules {
+      type = "KeywordMatch"
+      keyword_match_configuration {
+        keywords  = ["keyword1", "keyword2"]
+        negate    = false
+        rule_name = "MyKeywordMatchRule"
+      }
+    }
 
-	rules {
-	  type = "Sentiment"
-	  sentiment_configuration {
-	  	rule_name = "MySentimentRule"
-		sentiment_type = "NEGATIVE"
-		time_period = 60
-	  }
-	}
+    rules {
+      type = "Sentiment"
+      sentiment_configuration {
+        rule_name      = "MySentimentRule"
+        sentiment_type = "NEGATIVE"
+        time_period    = 60
+      }
+    }
   }
   %s
 }
@@ -427,32 +428,32 @@ func testAccMediaInsightsPipelineConfigurationConfig_transcribeProcessor(roleNam
 %s
 
 resource "aws_chimesdkmediapipelines_media_insights_pipeline_configuration" "test" {
-  name                           = %q
-  resource_access_role_arn       = aws_iam_role.test.arn
+  name                     = %q
+  resource_access_role_arn = aws_iam_role.test.arn
   elements {
-	type = "AmazonTranscribeProcessor"
-	amazon_transcribe_processor_configuration {
-      content_identification_type = "PII"
+    type = "AmazonTranscribeProcessor"
+    amazon_transcribe_processor_configuration {
+      content_identification_type          = "PII"
       enable_partial_results_stabilization = true
-      filter_partial_results = true
-	  language_code = "en-US"
-      language_model_name = "MyLanguageModel"
-	  partial_results_stability = "high"
-	  pii_entity_types = "ADDRESS,BANK_ACCOUNT_NUMBER"
-	  show_speaker_label = true
-      vocabulary_filter_method = "mask"
-      vocabulary_filter_name = "MyVocabularyFilter"
-	  vocabulary_name = "MyVocabulary"
-	}
+      filter_partial_results               = true
+      language_code                        = "en-US"
+      language_model_name                  = "MyLanguageModel"
+      partial_results_stability            = "high"
+      pii_entity_types                     = "ADDRESS,BANK_ACCOUNT_NUMBER"
+      show_speaker_label                   = true
+      vocabulary_filter_method             = "mask"
+      vocabulary_filter_name               = "MyVocabularyFilter"
+      vocabulary_name                      = "MyVocabulary"
+    }
   }
 
   elements {
-	type = "KinesisDataStreamSink"
-	kinesis_data_stream_sink_configuration {
-		insights_target = aws_kinesis_stream.test.arn
-	}
+    type = "KinesisDataStreamSink"
+    kinesis_data_stream_sink_configuration {
+      insights_target = aws_kinesis_stream.test.arn
+    }
   }
-  
+
   %s
 }
 `, resourceAccessRole(roleName), kinesisDataStream(kinesisStreamName), configName, tags)
@@ -465,15 +466,15 @@ func testAccMediaInsightsPipelineConfigurationConfig_s3RecordingSink(roleName, c
 data "aws_partition" "current" {}
 
 resource "aws_chimesdkmediapipelines_media_insights_pipeline_configuration" "test" {
-  name                           = %q
-  resource_access_role_arn       = aws_iam_role.test.arn
+  name                     = %q
+  resource_access_role_arn = aws_iam_role.test.arn
   elements {
-	type = "S3RecordingSink"
-	s3_recording_sink_configuration {
+    type = "S3RecordingSink"
+    s3_recording_sink_configuration {
       destination = "arn:${data.aws_partition.current.partition}:s3:::MyBucket"
-	}
+    }
   }
- 
+
   %s
 }
 `, resourceAccessRole(roleName), configName, tags)
@@ -493,42 +494,42 @@ data "aws_partition" "current" {}
 
 
 resource "aws_chimesdkmediapipelines_media_insights_pipeline_configuration" "test" {
-  name                           = %q
-  resource_access_role_arn       = aws_iam_role.test.arn
+  name                     = %q
+  resource_access_role_arn = aws_iam_role.test.arn
   elements {
-	type = "VoiceAnalyticsProcessor"
-	voice_analytics_processor_configuration {
-      speaker_search_status = "Enabled"
+    type = "VoiceAnalyticsProcessor"
+    voice_analytics_processor_configuration {
+      speaker_search_status      = "Enabled"
       voice_tone_analysis_status = "Enabled"
-	}
+    }
   }
-	
+
   elements {
-	type = "LambdaFunctionSink"
-	lambda_function_sink_configuration {
+    type = "LambdaFunctionSink"
+    lambda_function_sink_configuration {
       insights_target = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:MyFunction"
-	}
+    }
   }
 
   elements {
-	type = "SnsTopicSink"
-	sns_topic_sink_configuration {
+    type = "SnsTopicSink"
+    sns_topic_sink_configuration {
       insights_target = "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:topic/MyTopic"
-	}
+    }
   }
 
   elements {
-	type = "SqsQueueSink"
-	sqs_queue_sink_configuration {
+    type = "SqsQueueSink"
+    sqs_queue_sink_configuration {
       insights_target = "arn:${data.aws_partition.current.partition}:sqs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:queue/MyQueue"
-	}
+    }
   }
 
   elements {
-	type = "KinesisDataStreamSink"
-	kinesis_data_stream_sink_configuration {
-		insights_target = aws_kinesis_stream.test.arn
-	}
+    type = "KinesisDataStreamSink"
+    kinesis_data_stream_sink_configuration {
+      insights_target = aws_kinesis_stream.test.arn
+    }
   }
 }
 `, resourceAccessRole(roleName), kinesisDataStream(kinesisStreamName), configName)
