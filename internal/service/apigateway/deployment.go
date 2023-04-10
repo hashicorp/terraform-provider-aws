@@ -194,7 +194,7 @@ func resourceDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta 
 			RestApiId: aws.String(restAPIID),
 		})
 
-		if err == nil {
+		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "deleting API Gateway Stage (%s): %s", stageName, err)
 		}
 	}
