@@ -32,56 +32,48 @@ func ResourceDeployment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"created_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"execution_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"invoke_url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"rest_api_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-
-			"stage_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
 			"stage_description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-
+			"stage_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"triggers": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"variables": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"invoke_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"execution_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
