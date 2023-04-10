@@ -1188,7 +1188,7 @@ func TestAccAPIGatewayRestAPI_Name_overrideBody(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayRestApi_Fail_On_Warnings(t *testing.T) {
+func TestAccAPIGatewayRestAPI_FailOnWarnings(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.RestApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1202,12 +1202,12 @@ func TestAccAPIGatewayRestApi_Fail_On_Warnings(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Verify invalid body fails creation, when fail_on_warnings is true
 			{
-				Config:      testAccRestAPIFailOnWarningsConfig(rName, "original", "fail_on_warnings = true"),
+				Config:      testAccRestAPIConfig_failOnWarnings(rName, "original", "fail_on_warnings = true"),
 				ExpectError: regexp.MustCompile(`BadRequestException: Warnings found during import`),
 			},
 			// Verify invalid body succeeds creation, when fail_on_warnings is not set
 			{
-				Config: testAccRestAPIFailOnWarningsConfig(rName, "original", ""),
+				Config: testAccRestAPIConfig_failOnWarnings(rName, "original", ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
 					testAccCheckRestAPIRoutes(ctx, &conf, []string{"/", "/users"}),
@@ -1222,12 +1222,12 @@ func TestAccAPIGatewayRestApi_Fail_On_Warnings(t *testing.T) {
 			},
 			// Verify invalid body fails update, when fail_on_warnings is true
 			{
-				Config:      testAccRestAPIFailOnWarningsConfig(rName, "update", "fail_on_warnings = true"),
+				Config:      testAccRestAPIConfig_failOnWarnings(rName, "update", "fail_on_warnings = true"),
 				ExpectError: regexp.MustCompile(`BadRequestException: Warnings found during import`),
 			},
 			// Verify invalid body succeeds update, when fail_on_warnings is not set
 			{
-				Config: testAccRestAPIFailOnWarningsConfig(rName, "update", ""),
+				Config: testAccRestAPIConfig_failOnWarnings(rName, "update", ""),
 				Check:  resource.TestMatchResourceAttr(resourceName, "description", regexp.MustCompile(`update`)),
 			},
 		},
@@ -2696,7 +2696,7 @@ resource "aws_api_gateway_rest_api" "test" {
 `, rName, bodyPolicyEffect)
 }
 
-func testAccRestAPIFailOnWarningsConfig(rName string, title string, failOnWarnings string) string {
+func testAccRestAPIConfig_failOnWarnings(rName string, title string, failOnWarnings string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name        = %[1]q
