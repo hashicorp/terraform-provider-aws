@@ -23,9 +23,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_fsx_lustre_file_system")
+// @SDKResource("aws_fsx_lustre_file_system", name="Lustre File System")
+// @Tags(identifierAttribute="arn")
 func ResourceLustreFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLustreFileSystemCreate,
@@ -117,8 +119,8 @@ func ResourceLustreFileSystem() *schema.Resource {
 				MaxItems: 1,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -269,8 +271,6 @@ func resourceLustreFileSystemSchemaCustomizeDiff(_ context.Context, d *schema.Re
 func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &fsx.CreateFileSystemInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
@@ -281,6 +281,7 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 		LustreConfiguration: &fsx.CreateFileSystemLustreConfiguration{
 			DeploymentType: aws.String(d.Get("deployment_type").(string)),
 		},
+		Tags: GetTagsIn(ctx),
 	}
 
 	backupInput := &fsx.CreateFileSystemFromBackupInput{
@@ -290,6 +291,7 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 		LustreConfiguration: &fsx.CreateFileSystemLustreConfiguration{
 			DeploymentType: aws.String(d.Get("deployment_type").(string)),
 		},
+		Tags: GetTagsIn(ctx),
 	}
 
 	//Applicable only for TypePersistent1 and TypePersistent2
@@ -326,11 +328,6 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 	if v, ok := d.GetOk("security_group_ids"); ok {
 		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		backupInput.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-		backupInput.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("weekly_maintenance_start_time"); ok {
@@ -406,14 +403,6 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn()
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating FSx Lustre File System (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
-
 	if d.HasChangesExcept("tags_all", "tags") {
 		var waitAdminAction = false
 		input := &fsx.UpdateFileSystemInput{
@@ -473,8 +462,6 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 func resourceLustreFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	filesystem, err := FindFileSystemByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -530,16 +517,7 @@ func resourceLustreFileSystemRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "setting log_configuration: %s", err)
 	}
 
-	tags := KeyValueTags(ctx, filesystem.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, filesystem.Tags)
 
 	d.Set("vpc_id", filesystem.VpcId)
 	d.Set("weekly_maintenance_start_time", lustreConfig.WeeklyMaintenanceStartTime)

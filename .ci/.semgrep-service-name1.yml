@@ -3320,3 +3320,18 @@ rules:
             - pattern-regex: "(?i)IoT"
             - pattern-not-regex: ^TestAcc.*
     severity: WARNING
+  - id: iot-in-test-name
+    languages:
+      - go
+    message: Include "IoT" in test name
+    paths:
+      include:
+        - internal/service/iot/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccIoT"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING

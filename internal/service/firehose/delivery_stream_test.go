@@ -85,6 +85,47 @@ func TestAccFirehoseDeliveryStream_disappears(t *testing.T) {
 	})
 }
 
+func TestAccFirehoseDeliveryStream_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stream firehose.DeliveryStreamDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeliveryStreamConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccDeliveryStreamConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccDeliveryStreamConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccFirehoseDeliveryStream_s3basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stream firehose.DeliveryStreamDescription
@@ -299,48 +340,6 @@ func TestAccFirehoseDeliveryStream_s3basicWithSSEAndKeyType(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_type", firehose.KeyTypeAwsOwnedCmk),
-				),
-			},
-		},
-	})
-}
-
-func TestAccFirehoseDeliveryStream_s3basicWithTags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var stream firehose.DeliveryStreamDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_kinesis_firehose_delivery_stream.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDeliveryStreamConfig_s3basicTags(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "original"),
-				),
-			},
-			{
-				Config: testAccDeliveryStreamConfig_s3basicTagsChanged(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "changed"),
-				),
-			},
-			{
-				Config: testAccDeliveryStreamConfig_s3basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 		},
@@ -2028,7 +2027,7 @@ resource "aws_lambda_function" "lambda_function_test" {
 `, rName)
 }
 
-func testAccDeliveryStreamBaseConfig(rName string) string {
+func testAccDeliveryStreamConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -2061,11 +2060,6 @@ EOF
 
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
-  acl    = "private"
 }
 
 resource "aws_iam_role_policy" "firehose" {
@@ -2119,7 +2113,7 @@ EOF
 `, rName)
 }
 
-func testAccStreamSourceConfig(rName string) string {
+func testAccDeliveryStreamConfig_baseKinesisStreamSource(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "source" {
   name        = %[1]q
@@ -2251,11 +2245,6 @@ resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
-  acl    = "private"
-}
-
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
@@ -2286,7 +2275,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 func testAccDeliveryStreamConfig_s3basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on  = [aws_iam_role_policy.firehose]
@@ -2303,7 +2292,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 func testAccDeliveryStreamConfig_s3basicPrefixes(rName, prefix, errorOutputPrefix string) string {
 	return acctest.ConfigCompose(
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on  = ["aws_iam_role_policy.firehose"]
@@ -2322,7 +2311,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 func testAccDeliveryStreamConfig_s3basicSSE(rName string, sseEnabled bool) string {
 	return acctest.ConfigCompose(
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on  = [aws_iam_role_policy.firehose]
@@ -2343,7 +2332,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 func testAccDeliveryStreamConfig_s3BasicSSEAndKeyARN(rName string, sseEnabled bool) string {
 	return acctest.ConfigCompose(
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
@@ -2371,7 +2360,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 func testAccDeliveryStreamConfig_s3basicSSEAndKeyType(rName string, sseEnabled bool, keyType string) string {
 	return acctest.ConfigCompose(
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on  = [aws_iam_role_policy.firehose]
@@ -2391,9 +2380,9 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 `, rName, sseEnabled, keyType))
 }
 
-func testAccDeliveryStreamConfig_s3basicTags(rName string) string {
+func testAccDeliveryStreamConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on  = [aws_iam_role_policy.firehose]
@@ -2406,16 +2395,15 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   }
 
   tags = {
-    Environment = "production"
-    Usage       = "original"
+    %[2]q = %[3]q
   }
 }
-`, rName))
+`, rName, tagKey1, tagValue1))
 }
 
-func testAccDeliveryStreamConfig_s3basicTagsChanged(rName string) string {
+func testAccDeliveryStreamConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on  = [aws_iam_role_policy.firehose]
@@ -2428,16 +2416,17 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   }
 
   tags = {
-    Usage = "changed"
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, rName))
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccDeliveryStreamConfig_s3Source(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDeliveryStreamBaseConfig(rName),
-		testAccStreamSourceConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
+		testAccDeliveryStreamConfig_baseKinesisStreamSource(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on = [aws_iam_role_policy.firehose, aws_iam_role_policy.kinesis_source]
@@ -2460,7 +2449,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 func testAccDeliveryStreamConfig_s3Updates(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on  = [aws_iam_role_policy.firehose]
@@ -2481,7 +2470,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 func testAccDeliveryStreamConfig_extendedS3basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccLambdaBasicConfig(rName),
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on  = [aws_iam_role_policy.firehose]
@@ -2521,8 +2510,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 func testAccDeliveryStreamConfig_extendedS3Source(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDeliveryStreamBaseConfig(rName),
-		testAccStreamSourceConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
+		testAccDeliveryStreamConfig_baseKinesisStreamSource(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on = [aws_iam_role_policy.firehose, aws_iam_role_policy.kinesis_source]
@@ -2545,7 +2534,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 func testAccDeliveryStreamConfig_extendedS3DataFormatConversionConfigurationEnabled(rName string, enabled bool) string {
 	return acctest.ConfigCompose(
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
@@ -2613,7 +2602,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 func testAccDeliveryStreamConfig_extendedS3DataFormatConversionConfigurationHiveJSONSerDeEmpty(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
@@ -2679,7 +2668,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 func testAccDeliveryStreamConfig_extendedS3ExternalUpdate(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   destination = "extended_s3"
@@ -2695,7 +2684,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 func testAccDeliveryStreamConfig_extendedS3DataFormatConversionConfigurationOpenXJSONSerDeEmpty(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
@@ -2761,7 +2750,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 func testAccDeliveryStreamConfig_extendedS3DataFormatConversionConfigurationOrcSerDeEmpty(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
@@ -2827,7 +2816,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 func testAccDeliveryStreamConfig_extendedS3DataFormatConversionConfigurationParquetSerDeEmpty(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
@@ -2893,7 +2882,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 func testAccDeliveryStreamConfig_extendedS3ErrorOutputPrefix(rName, errorOutputPrefix string) string {
 	return acctest.ConfigCompose(
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   destination = "extended_s3"
@@ -2912,7 +2901,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 func testAccDeliveryStreamConfig_extendedS3S3BackUpConfigurationErrorOutputPrefix(rName, errorOutputPrefix string) string {
 	return acctest.ConfigCompose(
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   destination = "extended_s3"
@@ -2936,7 +2925,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 func testAccDeliveryStreamConfig_extendedS3ProcessingConfigurationEmpty(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   destination = "extended_s3"
@@ -2957,7 +2946,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 func testAccDeliveryStreamConfig_extendedS3KMSKeyARN(rName string) string {
 	return acctest.ConfigCompose(
 		testAccLambdaBasicConfig(rName),
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description = %[1]q
@@ -3001,7 +2990,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 func testAccDeliveryStreamConfig_extendedS3DynamicPartitioning(rName string) string {
 	return acctest.ConfigCompose(
 		testAccLambdaBasicConfig(rName),
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on  = [aws_iam_role_policy.firehose]
@@ -3057,7 +3046,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 func testAccDeliveryStreamConfig_extendedS3DynamicPartitioningBasic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccLambdaBasicConfig(rName),
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on  = [aws_iam_role_policy.firehose]
@@ -3077,7 +3066,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 func testAccDeliveryStreamConfig_extendedS3UpdatesInitial(rName string) string {
 	return acctest.ConfigCompose(
 		testAccLambdaBasicConfig(rName),
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on  = [aws_iam_role_policy.firehose]
@@ -3126,7 +3115,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 func testAccDeliveryStreamConfig_extendedS3UpdatesRemoveProcessors(rName string) string {
 	return acctest.ConfigCompose(
 		testAccLambdaBasicConfig(rName),
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on  = [aws_iam_role_policy.firehose]
@@ -3152,7 +3141,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 func testAccDeliveryStreamRedshiftConfigBase(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2", "usgw1-az2"),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
@@ -3335,7 +3324,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 func testAccDeliveryStreamConfig_splunkBasic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on  = [aws_iam_role_policy.firehose]
@@ -3358,7 +3347,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 func testAccDeliveryStreamConfig_splunkUpdates(rName string) string {
 	return acctest.ConfigCompose(
 		testAccLambdaBasicConfig(rName),
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on  = [aws_iam_role_policy.firehose]
@@ -3414,7 +3403,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 func testAccDeliveryStreamConfig_splunkErrorOutputPrefix(rName, errorOutputPrefix string) string {
 	return acctest.ConfigCompose(
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on  = [aws_iam_role_policy.firehose]
@@ -3437,7 +3426,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 func testAccDeliveryStreamConfig_httpEndpointBasic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on  = [aws_iam_role_policy.firehose]
@@ -3460,7 +3449,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 func testAccDeliveryStreamConfig_httpEndpointErrorOutputPrefix(rName, errorOutputPrefix string) string {
 	return acctest.ConfigCompose(
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on  = [aws_iam_role_policy.firehose]
@@ -3484,7 +3473,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 func testAccDeliveryStreamConfig_httpEndpointRetryDuration(rName string, retryDuration int) string {
 	return acctest.ConfigCompose(
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on  = [aws_iam_role_policy.firehose]
@@ -3509,7 +3498,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 func testAccDeliveryStreamConfig_httpEndpointUpdates(rName string) string {
 	return acctest.ConfigCompose(
 		testAccLambdaBasicConfig(rName),
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on  = [aws_iam_role_policy.firehose]
@@ -3560,7 +3549,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 func testAccDeliveryStreamBaseElasticsearchConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test_cluster" {
   domain_name = substr(%[1]q, 0, 28)
@@ -3607,7 +3596,7 @@ EOF
 // Elasticsearch associated with VPC
 func testAccDeliveryStreamBaseElasticsearchVPCConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDeliveryStreamBaseConfig(rName),
+		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -4026,11 +4015,6 @@ EOF
 
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
-  acl    = "private"
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {
