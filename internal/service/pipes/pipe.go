@@ -23,7 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_pipes_pipe")
+// @SDKResource("aws_pipes_pipe", name="Pipe")
+// @Tags(identifierAttribute="arn")
 func ResourcePipe() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePipeCreate,
@@ -124,8 +125,8 @@ func ResourcePipe() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"target": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -157,12 +158,12 @@ func resourcePipeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).PipesClient()
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
-
 	input := &pipes.CreatePipeInput{
 		DesiredState: types.RequestedPipeState(d.Get("desired_state").(string)),
 		Name:         aws.String(name),
 		RoleArn:      aws.String(d.Get("role_arn").(string)),
 		Source:       aws.String(d.Get("source").(string)),
+		Tags:         GetTagsIn(ctx),
 		Target:       aws.String(d.Get("target").(string)),
 	}
 
@@ -180,13 +181,6 @@ func resourcePipeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if v, ok := d.Get("target_parameters").([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		input.TargetParameters = expandPipeTargetParameters(v[0].(map[string]interface{}))
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	output, err := conn.CreatePipe(ctx, input)
@@ -243,23 +237,6 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		if err := d.Set("target_parameters", []interface{}{flattenPipeTargetParameters(v)}); err != nil {
 			return create.DiagError(names.Pipes, create.ErrActionSetting, ResNamePipe, d.Id(), err)
 		}
-	}
-
-	tags, err := ListTags(ctx, conn, aws.ToString(output.Arn))
-	if err != nil {
-		return create.DiagError(names.Pipes, create.ErrActionReading, ResNamePipe, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.Pipes, create.ErrActionSetting, ResNamePipe, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.Pipes, create.ErrActionSetting, ResNamePipe, d.Id(), err)
 	}
 
 	return nil
@@ -321,30 +298,22 @@ func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("error updating EventBridge Pipes Pipe (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return resourcePipeRead(ctx, d, meta)
 }
 
 func resourcePipeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).PipesClient()
 
-	log.Printf("[INFO] Deleting EventBridge Pipes Pipe %s", d.Id())
-
+	log.Printf("[INFO] Deleting EventBridge Pipes Pipe: %s", d.Id())
 	_, err := conn.DeletePipe(ctx, &pipes.DeletePipeInput{
 		Name: aws.String(d.Id()),
 	})
 
-	if err != nil {
-		if errs.IsA[*types.NotFoundException](err) {
-			return nil
-		}
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil
+	}
 
+	if err != nil {
 		return create.DiagError(names.Pipes, create.ErrActionDeleting, ResNamePipe, d.Id(), err)
 	}
 

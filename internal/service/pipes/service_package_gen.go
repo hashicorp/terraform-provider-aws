@@ -28,6 +28,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourcePipe,
 			TypeName: "aws_pipes_pipe",
+			Name:     "Pipe",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }
