@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccAPIGatewayRestAPI_basic(t *testing.T) {
@@ -1462,7 +1463,7 @@ func testAccCheckRestAPIEndpointsCount(ctx context.Context, conf *apigateway.Res
 	}
 }
 
-func testAccCheckRestAPIExists(ctx context.Context, n string, res *apigateway.RestApi) resource.TestCheckFunc {
+func testAccCheckRestAPIExists(ctx context.Context, n string, v *apigateway.RestApi) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1475,19 +1476,13 @@ func testAccCheckRestAPIExists(ctx context.Context, n string, res *apigateway.Re
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
-		req := &apigateway.GetRestApiInput{
-			RestApiId: aws.String(rs.Primary.ID),
-		}
-		describe, err := conn.GetRestApiWithContext(ctx, req)
+		output, err := tfapigateway.FindRESTAPIByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if *describe.Id != rs.Primary.ID {
-			return fmt.Errorf("APIGateway not found")
-		}
-
-		*res = *describe
+		*v = *output
 
 		return nil
 	}
@@ -1502,17 +1497,17 @@ func testAccCheckRestAPIDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			req := &apigateway.GetRestApisInput{}
-			describe, err := conn.GetRestApisWithContext(ctx, req)
+			_, err := tfapigateway.FindRESTAPIByID(ctx, conn, rs.Primary.ID)
 
-			if err == nil {
-				if len(describe.Items) != 0 &&
-					*describe.Items[0].Id == rs.Primary.ID {
-					return fmt.Errorf("API Gateway still exists")
-				}
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			return err
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("API Gateway REST API %s still exists", rs.Primary.ID)
 		}
 
 		return nil
