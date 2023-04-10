@@ -64,8 +64,8 @@ github.com/aws/aws-sdk-go-v2/service/healthlake v1.15.7 h1:7wmJnuXYm2lOYBifM3aqY
 github.com/aws/aws-sdk-go-v2/service/healthlake v1.15.7/go.mod h1:zMZPXgmqVOKXaTrANxHTzDTD1xvPpRKPqh2/Q0DHP9U=
 github.com/aws/aws-sdk-go-v2/service/iam v1.19.7 h1:10pGhchIHbjCuJWgXJ/bNm8443s4SxbQRgeSQYxOZrs=
 github.com/aws/aws-sdk-go-v2/service/iam v1.19.7/go.mod h1:lf/oAjt//UvPsmnOgPT61F+q4K6U0q4zDd1s1yx2NZs=
-github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.7 h1:BLt05nIR0oYETxy6511ETZTcVEElCP8EoFSi3KRI1ss=
-github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.7/go.mod h1:qdai9l1KfhYZ4J0HWFtN9KJ8pG+TwG9UxCHcdf0EdTE=
+github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.8 h1:9BP1PUam72O8E0Eny+ikUAPw3SjnrFPk96EJMKiFP+M=
+github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.8/go.mod h1:sVhCPMUvsVpZaStzya/bGBetfo7TSiisavighh2DyK0=
 github.com/aws/aws-sdk-go-v2/service/inspector2 v1.11.7 h1:JXUUeeOirLweZMt28JMBarO3vTVRxq7hTKo9QDt/IBU=
 github.com/aws/aws-sdk-go-v2/service/inspector2 v1.11.7/go.mod h1:wD8JZDhQhYMFA4dtTQFIijSRb3ofHlL4d2pkVbLov40=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.22/go.mod h1:xt0Au8yPIwYXf/GYPy/vl4K3CgwhfQMYbrH7DlUUIws=
