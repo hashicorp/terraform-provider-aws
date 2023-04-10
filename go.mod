@@ -32,7 +32,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.31.1
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.7
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.3.2
-	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.17.2
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.17.3
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.15.0
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.21.1
