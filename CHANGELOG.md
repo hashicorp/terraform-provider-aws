@@ -15,8 +15,10 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_lambda_function_url: Add `invoke_mode` attribute ([#30547](https://github.com/hashicorp/terraform-provider-aws/issues/30547))
+* data-source/aws_nat_gateway: Add `association_id` attribute ([#30546](https://github.com/hashicorp/terraform-provider-aws/issues/30546))
 * resource/aws_ec2_client_vpn_route: Increase Create and Delete timeouts to 4 minutes ([#30552](https://github.com/hashicorp/terraform-provider-aws/issues/30552))
 * resource/aws_lambda_function_url: Add `invoke_mode` attribute ([#30547](https://github.com/hashicorp/terraform-provider-aws/issues/30547))
+* resource/aws_nat_gateway: Add `association_id` attribute ([#30546](https://github.com/hashicorp/terraform-provider-aws/issues/30546))
 * resource/aws_wafv2_web_acl: Add `aws_managed_rules_atp_rule_set` to `managed_rule_group_configs` configuration block ([#30518](https://github.com/hashicorp/terraform-provider-aws/issues/30518))
 
 BUG FIXES:
