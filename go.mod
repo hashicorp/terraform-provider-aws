@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230201104953-d1d05f4e2bfb
 	github.com/aws/aws-sdk-go v1.44.238
 	github.com/aws/aws-sdk-go-v2 v1.17.8
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.1
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.2
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.24.4
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.8
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.20.8
