@@ -254,10 +254,15 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("arn", stageARN)
 	if aws.StringValue(stage.CacheClusterStatus) == apigateway.CacheClusterStatusDeleteInProgress {
 		d.Set("cache_cluster_enabled", false)
-		d.Set("cache_cluster_size", nil)
+		d.Set("cache_cluster_size", d.Get("cache_cluster_size"))
 	} else {
-		d.Set("cache_cluster_enabled", stage.CacheClusterEnabled)
-		d.Set("cache_cluster_size", stage.CacheClusterSize)
+		enabled := aws.BoolValue(stage.CacheClusterEnabled)
+		d.Set("cache_cluster_enabled", enabled)
+		if enabled {
+			d.Set("cache_cluster_size", stage.CacheClusterSize)
+		} else {
+			d.Set("cache_cluster_size", d.Get("cache_cluster_size"))
+		}
 	}
 	if err := d.Set("canary_settings", flattenCanarySettings(stage.CanarySettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting canary_settings: %s", err)
@@ -304,7 +309,7 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			})
 			waitForCache = true
 		}
-		if d.HasChange("cache_cluster_size") {
+		if d.HasChange("cache_cluster_size") && d.Get("cache_cluster_enabled").(bool) {
 			operations = append(operations, &apigateway.PatchOperation{
 				Op:    aws.String(apigateway.OpReplace),
 				Path:  aws.String("/cacheClusterSize"),

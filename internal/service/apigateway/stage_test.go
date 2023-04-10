@@ -150,10 +150,11 @@ func TestAccAPIGatewayStage_cacheSizeCacheDisabled(t *testing.T) {
 		CheckDestroy:             testAccCheckStageDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStageConfig_basic(rName),
+				Config: testAccStageConfig_cache(rName, "0.5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cache_cluster_size", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", "true"),
 				),
 			},
 			{
@@ -163,19 +164,27 @@ func TestAccAPIGatewayStage_cacheSizeCacheDisabled(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccStageConfig_cacheSizeCacheDisabled(rName, "0.5"),
+				Config: testAccStageConfig_cache(rName, "6.1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "cache_cluster_size", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "cache_cluster_size", "6.1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", "true"),
+				),
+			},
+			{
+				Config: testAccStageConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStageExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "cache_cluster_size", ""),
 					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", "false"),
 				),
 			},
 			{
-				Config: testAccStageConfig_cache(rName, "0.5"),
+				Config: testAccStageConfig_cacheSizeCacheDisabled(rName, "28.4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "cache_cluster_size", "0.5"),
-					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cache_cluster_size", "28.4"),
+					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", "false"),
 				),
 			},
 		},
