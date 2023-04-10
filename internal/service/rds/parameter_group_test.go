@@ -1025,8 +1025,9 @@ func testAccCheckParameterGroupAttributes(v *rds.DBParameterGroup, name string) 
 			return fmt.Errorf("Bad Parameter Group name, expected (%s), got (%s)", name, *v.DBParameterGroupName)
 		}
 
-		if *v.DBParameterGroupFamily != "mysql5.6" {
-			return fmt.Errorf("bad family: %#v", v.DBParameterGroupFamily)
+		family := "mysql5.6"
+		if aws.StringValue(v.DBParameterGroupFamily) != family {
+			return fmt.Errorf("bad family, got: %s, expecting: %s", aws.StringValue(v.DBParameterGroupFamily), family)
 		}
 
 		return nil

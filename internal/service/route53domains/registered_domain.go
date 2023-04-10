@@ -23,9 +23,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_route53domains_registered_domain")
+// @SDKResource("aws_route53domains_registered_domain", name="Registered Domain")
+// @Tags(identifierAttribute="id")
 func ResourceRegisteredDomain() *schema.Resource {
 	contactSchema := &schema.Schema{
 		Type:     schema.TypeList,
@@ -215,9 +217,9 @@ func ResourceRegisteredDomain() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":         tftags.TagsSchema(),
-			"tags_all":     tftags.TagsSchemaComputed(),
-			"tech_contact": contactSchema,
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"tech_contact":    contactSchema,
 			"tech_privacy": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -314,9 +316,8 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("error listing tags for Route 53 Domains Domain (%s): %s", d.Id(), err)
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	newTags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))).IgnoreConfig(ignoreTagsConfig)
+	newTags := KeyValueTags(ctx, GetTagsIn(ctx))
 	oldTags := tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if !oldTags.Equal(newTags) {
@@ -330,8 +331,6 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53DomainsClient()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	domainDetail, err := findDomainDetailByName(ctx, conn, d.Id())
 
@@ -399,23 +398,6 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 	}
 	d.Set("whois_server", domainDetail.WhoIsServer)
 
-	tags, err := ListTags(ctx, conn, d.Id())
-
-	if err != nil {
-		return diag.Errorf("error listing tags for Route 53 Domains Domain (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("error setting tags_all: %s", err)
-	}
-
 	return nil
 }
 
@@ -471,14 +453,6 @@ func resourceRegisteredDomainUpdate(ctx context.Context, d *schema.ResourceData,
 	if d.HasChange("transfer_lock") {
 		if err := modifyDomainTransferLock(ctx, conn, d.Id(), d.Get("transfer_lock").(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return diag.FromErr(err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("error updating Route 53 Domains Domain (%s) tags: %s", d.Id(), err)
 		}
 	}
 

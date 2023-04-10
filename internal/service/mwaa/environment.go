@@ -232,6 +232,15 @@ func ResourceEnvironment() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"startup_script_s3_object_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"startup_script_s3_path": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -321,6 +330,14 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.Schedulers = aws.Int64(int64(v.(int)))
 	}
 
+	if v, ok := d.GetOk("startup_script_s3_object_version"); ok {
+		input.StartupScriptS3ObjectVersion = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("startup_script_s3_path"); ok {
+		input.StartupScriptS3Path = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("webserver_access_mode"); ok {
 		input.WebserverAccessMode = aws.String(v.(string))
 	}
@@ -393,6 +410,8 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("schedulers", environment.Schedulers)
 	d.Set("service_role_arn", environment.ServiceRoleArn)
 	d.Set("source_bucket_arn", environment.SourceBucketArn)
+	d.Set("startup_script_s3_object_version", environment.StartupScriptS3ObjectVersion)
+	d.Set("startup_script_s3_path", environment.StartupScriptS3Path)
 	d.Set("status", environment.Status)
 	d.Set("webserver_access_mode", environment.WebserverAccessMode)
 	d.Set("webserver_url", environment.WebserverUrl)
@@ -474,6 +493,14 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if d.HasChange("source_bucket_arn") {
 			input.SourceBucketArn = aws.String(d.Get("source_bucket_arn").(string))
+		}
+
+		if d.HasChange("startup_script_s3_object_version") {
+			input.StartupScriptS3ObjectVersion = aws.String(d.Get("startup_script_s3_object_version").(string))
+		}
+
+		if d.HasChange("startup_script_s3_path") {
+			input.StartupScriptS3Path = aws.String(d.Get("startup_script_s3_path").(string))
 		}
 
 		if d.HasChange("webserver_access_mode") {
