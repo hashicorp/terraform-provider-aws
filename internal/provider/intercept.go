@@ -187,25 +187,21 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	inContext, ok := conns.FromContext(ctx)
-
 	if !ok {
 		return ctx, diags
 	}
 
 	sp, ok := meta.(*conns.AWSClient).ServicePackages[inContext.ServicePackageName]
-
 	if !ok {
 		return ctx, diags
 	}
 
 	serviceName, err := names.HumanFriendly(inContext.ServicePackageName)
-
 	if err != nil {
 		serviceName = "<service>"
 	}
 
 	resourceName := inContext.ResourceName
-
 	if resourceName == "" {
 		resourceName = "<thing>"
 	}
@@ -222,7 +218,7 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 			// Merge the resource's configured tags with any provider configured default_tags.
 			tags := tagsInContext.DefaultConfig.MergeTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})))
 			// Remove system tags.
-			tags = tags.IgnoreAWS()
+			tags = tags.IgnoreSystem(inContext.ServicePackageName)
 
 			tagsInContext.TagsIn = types.Some(tags)
 
@@ -321,7 +317,7 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 			}
 
 			// Remove any provider configured ignore_tags and system tags from those returned from the service API.
-			tags := tagsInContext.TagsOut.UnwrapOrDefault().IgnoreAWS().IgnoreConfig(tagsInContext.IgnoreConfig)
+			tags := tagsInContext.TagsOut.UnwrapOrDefault().IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig)
 
 			// The resource's configured tags do not include any provider configured default_tags.
 			if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(tagsInContext.DefaultConfig).Map()); err != nil {

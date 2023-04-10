@@ -183,25 +183,6 @@ func FindGlobalReplicationGroupMemberByID(ctx context.Context, conn *elasticache
 	}
 }
 
-func FindUserGroupByID(ctx context.Context, conn *elasticache.ElastiCache, groupID string) (*elasticache.UserGroup, error) {
-	input := &elasticache.DescribeUserGroupsInput{
-		UserGroupId: aws.String(groupID),
-	}
-	out, err := conn.DescribeUserGroupsWithContext(ctx, input)
-	if err != nil {
-		return nil, err
-	}
-
-	switch count := len(out.UserGroups); count {
-	case 0:
-		return nil, tfresource.NewEmptyResultError(input)
-	case 1:
-		return out.UserGroups[0], nil
-	default:
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-}
-
 func FindParameterGroupByName(ctx context.Context, conn *elasticache.ElastiCache, name string) (*elasticache.CacheParameterGroup, error) {
 	input := elasticache.DescribeCacheParameterGroupsInput{
 		CacheParameterGroupName: aws.String(name),
