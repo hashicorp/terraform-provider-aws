@@ -36,6 +36,7 @@ func TestAccLambdaFunctionURLDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "function_arn", resourceName, "function_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "function_name", resourceName, "function_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "function_url", resourceName, "function_url"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "invoke_mode", resourceName, "invoke_mode"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "last_modified_time"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "qualifier", resourceName, "qualifier"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "url_id", resourceName, "url_id"),
