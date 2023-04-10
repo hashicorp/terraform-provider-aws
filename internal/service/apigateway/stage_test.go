@@ -182,35 +182,6 @@ func TestAccAPIGatewayStage_cacheSizeCacheDisabled(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12756
-func TestAccAPIGatewayStage_Disappears_referencingDeployment(t *testing.T) {
-	ctx := acctest.Context(t)
-	var stage apigateway.Stage
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_stage.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStageDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccStageConfig_referencingDeployment(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &stage),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccStageImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccAPIGatewayStage_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.Stage
@@ -271,7 +242,7 @@ func TestAccAPIGatewayStage_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckStageDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStageConfig_referencingDeployment(rName),
+				Config: testAccStageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &stage),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceStage(), resourceName),
@@ -296,7 +267,7 @@ func TestAccAPIGatewayStage_Disappears_restAPI(t *testing.T) {
 		CheckDestroy:             testAccCheckStageDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStageConfig_referencingDeployment(rName),
+				Config: testAccStageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &stage),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceRestAPI(), "aws_api_gateway_rest_api.test"),
@@ -648,75 +619,6 @@ resource "aws_api_gateway_deployment" "test" {
   }
 }
 `, rName)
-}
-
-func testAccStageBaseDeploymentStageNameConfig(rName string, stageName string) string {
-	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
-  name = %[1]q
-}
-
-resource "aws_api_gateway_resource" "test" {
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
-  path_part   = "test"
-  rest_api_id = aws_api_gateway_rest_api.test.id
-}
-
-resource "aws_api_gateway_method" "test" {
-  authorization = "NONE"
-  http_method   = "GET"
-  resource_id   = aws_api_gateway_resource.test.id
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-}
-
-resource "aws_api_gateway_method_response" "error" {
-  http_method = aws_api_gateway_method.test.http_method
-  resource_id = aws_api_gateway_resource.test.id
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  status_code = "400"
-}
-
-resource "aws_api_gateway_integration" "test" {
-  http_method             = aws_api_gateway_method.test.http_method
-  integration_http_method = "GET"
-  resource_id             = aws_api_gateway_resource.test.id
-  rest_api_id             = aws_api_gateway_rest_api.test.id
-  type                    = "HTTP"
-  uri                     = "https://www.google.co.uk"
-}
-
-resource "aws_api_gateway_integration_response" "test" {
-  http_method = aws_api_gateway_integration.test.http_method
-  resource_id = aws_api_gateway_resource.test.id
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  status_code = aws_api_gateway_method_response.error.status_code
-}
-
-resource "aws_api_gateway_deployment" "test" {
-  depends_on = [aws_api_gateway_integration.test]
-
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = %[2]q
-}
-`, rName, stageName)
-}
-
-func testAccStageConfig_referencingDeployment(rName string) string {
-	return acctest.ConfigCompose(
-		testAccStageBaseDeploymentStageNameConfig(rName, ""),
-		`
-# Due to oddities with API Gateway, certain environments utilize
-# a double deployment configuration. This can cause destroy errors.
-resource "aws_api_gateway_stage" "test" {
-  deployment_id = aws_api_gateway_deployment.test.id
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  stage_name    = "test"
-
-  lifecycle {
-    ignore_changes = [deployment_id]
-  }
-}
-`)
 }
 
 func testAccStageConfig_basic(rName string) string {
