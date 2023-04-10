@@ -33,9 +33,8 @@ github.com/aws/aws-sdk-go-v2/config v1.18.12 h1:fKs/I4wccmfrNRO9rdrbMO1NgLxct6H9
 github.com/aws/aws-sdk-go-v2/config v1.18.12/go.mod h1:J36fOhj1LQBr+O4hJCiT8FwVvieeoSGOtPuvhKlsNu8=
 github.com/aws/aws-sdk-go-v2/credentials v1.13.12 h1:Cb+HhuEnV19zHRaYYVglwvdHGMJWbdsyP4oHhw04xws=
 github.com/aws/aws-sdk-go-v2/credentials v1.13.12/go.mod h1:37HG2MBroXK3jXfxVGtbM2J48ra2+Ltu+tmwr/jO0KA=
+github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.22 h1:3aMfcTmoXtTZnaT86QlVaYh+BRMbvrrmZwIQ5jWqCZQ=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.22/go.mod h1:YGSIJyQ6D6FjKMQh16hVFSIUD54L4F7zTGePqYMYYJU=
-github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.2 h1:jOzQAesnBFDmz93feqKnsTHsXrlwWORNZMFHMV+WLFU=
-github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.2/go.mod h1:cDh1p6XkSGSwSRIArWRc6+UqAQ7x4alQ0QfpVR6f+co=
 github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.28/go.mod h1:3lwChorpIM/BhImY/hy+Z6jekmN92cXGPI1QJasVPYY=
 github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.31/go.mod h1:QT0BqUvX1Bh2ABdTGnjqEjvjzrCfIniM9Sc8zn9Yndo=
 github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.32 h1:dpbVNUjczQ8Ae3QKHbpHBpfvaVkRdesxpTOe9pTouhU=
@@ -82,8 +81,8 @@ github.com/aws/aws-sdk-go-v2/service/lambda v1.30.2 h1:JEUEgBM8HZ27ahhZsIlgfj7xP
 github.com/aws/aws-sdk-go-v2/service/lambda v1.30.2/go.mod h1:PmNd6f36wPbp2+B3ZSuvHqqSwggfagEdI18tIb8s91o=
 github.com/aws/aws-sdk-go-v2/service/medialive v1.31.0 h1:EyrQ1iIpZ+1ep1AZKJ0rn+YwoqlG78LORzWBl5Yaj+k=
 github.com/aws/aws-sdk-go-v2/service/medialive v1.31.0/go.mod h1:xMm9ftEcjgzlYu/taqbHr2q4EKjus4F2bi98LgFtPl0=
-github.com/aws/aws-sdk-go-v2/service/oam v1.1.7 h1:EHkc5p3bd/isOPhTbDK9EOONAblY76dU9R02j+QzCxE=
-github.com/aws/aws-sdk-go-v2/service/oam v1.1.7/go.mod h1:vy3iHiV8djFWziYqJP9VDM/A4ksOjbP6/g+pfxm82XA=
+github.com/aws/aws-sdk-go-v2/service/oam v1.1.8 h1:ku4gtFZ87IB85QyNtXoRGUPWFFLZ44csV2ldChLjiFQ=
+github.com/aws/aws-sdk-go-v2/service/oam v1.1.8/go.mod h1:LkgszSb4W83VmcFjoa2FQQhbOIjYDCBUhxzopjKoyrk=
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.2.1 h1:uyHOcdWMME8TrM/EcFr46OHb2U7hM1DI9qt/+wcenCI=
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.2.1/go.mod h1:wxJb3JOaUGzkvzhCUnTnJEuQOJzk4M9Tsd61DRlSGyc=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.2.2 h1:pGVj3iv8Zhj3HopofOTgt8xc+OxYx7pbfW4gyyi0JPo=
