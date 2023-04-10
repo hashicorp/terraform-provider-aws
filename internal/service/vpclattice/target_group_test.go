@@ -148,7 +148,7 @@ func TestAccVPCLatticeTargetGroup_disappears(t *testing.T) {
 
 func testAccVPCLatticeTargetGroupConfig_fulllambda(rName string) string {
 	return fmt.Sprintf(`
-	data "aws_region" "current" {}
+data "aws_region" "current" {}
 resource "aws_vpclattice_target_group" "test" {
   name = %[1]q
   type = "LAMBDA"
@@ -163,12 +163,14 @@ data "aws_region" "current" {}
 resource "aws_vpclattice_target_group" "test" {
 	name     = %[1]q
 	type     = %[2]q
+
 	config {
 	  port             = 443
 	  protocol         = "HTTPS"
 	  vpc_identifier   =  aws_vpc.test.id
 	  ip_address_type  = "IPV4"
 	  protocol_version = "HTTP1"
+
 	  health_check {
 		enabled             	  = false
 		interval            	  = 30
@@ -195,25 +197,27 @@ func testAccVPCLatticeTargetGroupConfig_fullInstance(rName, rType string) string
 data "aws_region" "current" {}
 
 resource "aws_vpclattice_target_group" "test" {
-	name     = %[1]q
-	type     = %[2]q
+	name     	 = %[1]q
+	type     	 = %[2]q
 	client_token = "tstclienttoken"
+
 	config {
 	  port             = 80
 	  protocol         = "HTTP"
 	  vpc_identifier   =  aws_vpc.test.id
 	  protocol_version = "GRPC"
+
 	  health_check {
 		enabled             = true
 		interval            = 20
 		timeout             = 10
 		healthy_threshold   = 2
 		unhealthy_threshold = 2
-		matcher 		 		  = "200-299"
-		path             		  = "/instance"
-		port             		  = 80
-		protocol         		  = "HTTP"
-		protocol_version 		  = "HTTP1"
+		matcher 		    = "200-299"
+		path             	= "/instance"
+		port             	= 80
+		protocol         	= "HTTP"
+		protocol_version 	= "HTTP1"
 	  }
 	}
   }
@@ -231,11 +235,12 @@ data "aws_region" "current" {}
 resource "aws_vpclattice_target_group" "test" {
 	name     = %[1]q
 	type     = %[2]q
+
 	config {
-	  port             = 443
-	  protocol         = "HTTPS"
-	  vpc_identifier   = aws_vpc.test.id
-	  protocol_version = "HTTP1"
+		port             = 443
+		protocol         = "HTTPS"
+		vpc_identifier   = aws_vpc.test.id
+		protocol_version = "HTTP1"
 	}
   }
 
@@ -252,6 +257,7 @@ data "aws_region" "current" {}
 resource "aws_vpclattice_target_group" "test" {
 	name     = %[1]q
 	type     = %[2]q
+
 	config {
 		port             = 443
 		protocol         = "HTTPS"
@@ -321,12 +327,12 @@ func testAccTargetgroupConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue
 resource "aws_vpclattice_target_group" "test" {
   name = %[1]q
   type = "INSTANCE"
+
   config {
 	port             = 80
 	protocol         = "HTTP"
 	vpc_identifier   = aws_vpc.test.id
 	protocol_version = "HTTP1"
-
   }
 
   tags = {
