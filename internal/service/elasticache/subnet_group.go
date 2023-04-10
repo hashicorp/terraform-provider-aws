@@ -17,9 +17,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_elasticache_subnet_group")
+// @SDKResource("aws_elasticache_subnet_group", name="Subnet Group")
+// @Tags(identifierAttribute="arn")
 func ResourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSubnetGroupCreate,
@@ -57,8 +59,8 @@ func ResourceSubnetGroup() *schema.Resource {
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: resourceSubnetGroupDiff,
@@ -80,18 +82,13 @@ func resourceSubnetGroupDiff(ctx context.Context, diff *schema.ResourceDiff, met
 func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &elasticache.CreateCacheSubnetGroupInput{
 		CacheSubnetGroupDescription: aws.String(d.Get("description").(string)),
 		CacheSubnetGroupName:        aws.String(name),
 		SubnetIds:                   flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
+		Tags:                        GetTagsIn(ctx),
 	}
 
 	output, err := conn.CreateCacheSubnetGroupWithContext(ctx, input)
@@ -114,7 +111,7 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(strings.ToLower(name))
 
 	// In some partitions, only post-create tagging supported
-	if input.Tags == nil && len(tags) > 0 {
+	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); input.Tags == nil && len(tags) > 0 {
 		err := UpdateTags(ctx, conn, aws.StringValue(output.CacheSubnetGroup.ARN), nil, tags)
 
 		if err != nil {
@@ -133,8 +130,6 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	group, err := FindCacheSubnetGroupByName(ctx, conn, d.Id())
 
@@ -158,30 +153,6 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("description", group.CacheSubnetGroupDescription)
 	d.Set("subnet_ids", aws.StringValueSlice(subnetIDs))
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-
-	if err != nil && !verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		return sdkdiag.AppendErrorf(diags, "listing tags for ElastiCache Subnet Group (%s): %s", d.Id(), err)
-	}
-
-	// tags not supported in all partitions
-	if err != nil {
-		log.Printf("[WARN] failed listing tags for ElastiCache Subnet Group (%s): %s", d.Id(), err)
-	}
-
-	if tags != nil {
-		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-		//lintignore:AWSR002
-		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-		}
-
-		if err := d.Set("tags_all", tags.Map()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-		}
-	}
-
 	return diags
 }
 
@@ -200,21 +171,6 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating ElastiCache Subnet Group (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n)
-
-		if err != nil {
-			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.ErrorISOUnsupported(conn.PartitionID, err) {
-				// explicitly setting tags or not an iso-unsupported error
-				return sdkdiag.AppendErrorf(diags, "updating ElastiCache Subnet Group (%s) tags: %s", d.Id(), err)
-			}
-
-			log.Printf("[WARN] failed updating tags for ElastiCache Subnet Group (%s): %s", d.Id(), err)
 		}
 	}
 

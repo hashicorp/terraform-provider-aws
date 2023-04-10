@@ -15,7 +15,7 @@ Terraform resource for managing an AWS VPC Lattice Service Network Service Assoc
 ### Basic Usage
 
 ```terraform
-resource "aws_vpclattice_vpclattice_servicenetwork_service_association" "example" {
+resource "aws_vpclattice_service_network_service_association" "example" {
   service_identifier         = aws_vpclattice_service.example.id
   service_network_identifier = aws_vpclattice_service_network.example.id
 }
