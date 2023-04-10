@@ -296,23 +296,21 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChangesExcept("tags", "tags_all") {
 		operations := make([]*apigateway.PatchOperation, 0)
 		waitForCache := false
-		if d.HasChanges("cache_cluster_enabled", "cache_cluster_size") {
-			if d.HasChange("cache_cluster_enabled") {
-				operations = append(operations, &apigateway.PatchOperation{
-					Op:    aws.String(apigateway.OpReplace),
-					Path:  aws.String("/cacheClusterEnabled"),
-					Value: aws.String(fmt.Sprintf("%t", d.Get("cache_cluster_enabled").(bool))),
-				})
-				waitForCache = true
-			}
-			if d.HasChange("cache_cluster_size") {
-				operations = append(operations, &apigateway.PatchOperation{
-					Op:    aws.String(apigateway.OpReplace),
-					Path:  aws.String("/cacheClusterSize"),
-					Value: aws.String(d.Get("cache_cluster_size").(string)),
-				})
-				waitForCache = true
-			}
+		if d.HasChange("cache_cluster_enabled") {
+			operations = append(operations, &apigateway.PatchOperation{
+				Op:    aws.String(apigateway.OpReplace),
+				Path:  aws.String("/cacheClusterEnabled"),
+				Value: aws.String(fmt.Sprintf("%t", d.Get("cache_cluster_enabled").(bool))),
+			})
+			waitForCache = true
+		}
+		if d.HasChange("cache_cluster_size") {
+			operations = append(operations, &apigateway.PatchOperation{
+				Op:    aws.String(apigateway.OpReplace),
+				Path:  aws.String("/cacheClusterSize"),
+				Value: aws.String(d.Get("cache_cluster_size").(string)),
+			})
+			waitForCache = true
 		}
 		if d.HasChange("client_certificate_id") {
 			operations = append(operations, &apigateway.PatchOperation{
