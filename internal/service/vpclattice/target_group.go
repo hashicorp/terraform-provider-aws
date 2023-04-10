@@ -433,11 +433,11 @@ func flattenTargetGroupConfig(apiObject *types.TargetGroupConfig) []map[string]i
 	}
 
 	if apiObject.HealthCheck != nil {
-		port := *apiObject.Port
+		port := apiObject.Port
 		if apiObject.HealthCheck.Port != nil {
-			port = *apiObject.HealthCheck.Port
+			port = apiObject.HealthCheck.Port
 		}
-		m["health_check"] = []map[string]interface{}{flattenHealthCheckConfig(apiObject.HealthCheck, port)}
+		m["health_check"] = []map[string]interface{}{flattenHealthCheckConfig(apiObject.HealthCheck, *port)}
 	}
 
 	return []map[string]interface{}{m}
