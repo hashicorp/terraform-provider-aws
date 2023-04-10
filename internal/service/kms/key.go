@@ -152,7 +152,7 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	// The KMS service's awareness of principals is limited by "eventual consistency".
 	// They acknowledge this here:
 	// http://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
-	outputRaw, err := WaitIAMPropagation(ctx, func() (interface{}, error) {
+	output, err := WaitIAMPropagation(ctx, func() (*kms.CreateKeyOutput, error) {
 		return conn.CreateKeyWithContext(ctx, input)
 	})
 
@@ -160,7 +160,7 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "creating KMS Key: %s", err)
 	}
 
-	d.SetId(aws.StringValue(outputRaw.(*kms.CreateKeyOutput).KeyMetadata.KeyId))
+	d.SetId(aws.StringValue(output.KeyMetadata.KeyId))
 
 	if enableKeyRotation := d.Get("enable_key_rotation").(bool); enableKeyRotation {
 		if err := updateKeyRotationEnabled(ctx, conn, d.Id(), enableKeyRotation); err != nil {
