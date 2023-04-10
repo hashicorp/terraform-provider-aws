@@ -28,6 +28,7 @@ BUG FIXES:
 * resource/aws_elasticache_user_group: Change `user_group_id` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#30533](https://github.com/hashicorp/terraform-provider-aws/issues/30533))
 * resource/aws_launch_template: Fix crash when `instance_market_options.spot_options` is empty ([#30539](https://github.com/hashicorp/terraform-provider-aws/issues/30539))
 * resource/aws_msk_serverless_cluster: Change `vpc_config.security_group_ids` to Computed ([#30535](https://github.com/hashicorp/terraform-provider-aws/issues/30535))
+* resource/aws_rds_cluster_parameter_group: Fixes differences being reported on every apply when setting system-source parameters ([#30536](https://github.com/hashicorp/terraform-provider-aws/issues/30536))
 * resource/aws_servicecatalog_provisioned_product: Allow the waiting that comes with updating and deleting to not error due to a `status` of `TAINTED` ([#30522](https://github.com/hashicorp/terraform-provider-aws/issues/30522))
 
 ## 4.62.0 (April  6, 2023)
