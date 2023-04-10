@@ -445,6 +445,8 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 		pollInterval = 0
 	}
 
+	opTime := time.Now()
+
 	if d.HasChangesExcept("tags", "tags_all", "wait_for_ready_timeout", "poll_interval") {
 		input := elasticbeanstalk.UpdateEnvironmentInput{
 			EnvironmentId: aws.String(d.Id()),
@@ -541,22 +543,21 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.VersionLabel = aws.String(d.Get("version_label").(string))
 		}
 
-		opTime := time.Now()
 		_, err := conn.UpdateEnvironmentWithContext(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Environment (%s): %s", d.Id(), err)
 		}
+	}
 
-		if _, err := waitEnvironmentReady(ctx, conn, d.Id(), pollInterval, waitForReadyTimeOut); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Elastic Beanstalk Environment (%s) update: %s", d.Id(), err)
-		}
+	if _, err := waitEnvironmentReady(ctx, conn, d.Id(), pollInterval, waitForReadyTimeOut); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Elastic Beanstalk Environment (%s) update: %s", d.Id(), err)
+	}
 
-		err = findEnvironmentErrorsByID(ctx, conn, d.Id(), opTime)
+	err = findEnvironmentErrorsByID(ctx, conn, d.Id(), opTime)
 
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Environment (%s): %s", d.Id(), err)
-		}
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Environment (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourceEnvironmentRead(ctx, d, meta)...)
