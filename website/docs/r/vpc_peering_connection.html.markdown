@@ -22,6 +22,8 @@ management of the VPC Peering Connection and allows options to be set correctly 
 VPC Peering Connections use the `aws_vpc_peering_connection` resource to manage the requester's side of the
 connection and use the `aws_vpc_peering_connection_accepter` resource to manage the accepter's side of the connection.
 
+-> **Note:** Creating multiple `aws_vpc_peering_connection` resources with the same `peer_vpc_id` and `vpc_id` will not produce an error. Instead, AWS will return the connection `id` that already exists, resulting in multiple `aws_vpc_peering_connection` resources with the same `id`.
+
 ## Example Usage
 
 ```terraform
@@ -74,7 +76,6 @@ resource "aws_vpc" "bar" {
 ```
 
 Basic usage with region:
-
 
 ```terraform
 resource "aws_vpc_peering_connection" "foo" {
@@ -131,15 +132,6 @@ to the remote VPC.
 instance in a peer VPC. This enables an outbound communication from the local VPC to the remote ClassicLink
 connection.
 
-### Timeouts
-
-`aws_vpc_peering_connection` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
-
-- `create` - (Default `1 minute`) Used for creating a peering connection
-- `update` - (Default `1 minute`) Used for peering connection modifications
-- `delete` - (Default `1 minute`) Used for destroying peering connections
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -153,6 +145,14 @@ In addition to all arguments above, the following attributes are exported:
 If both VPCs are not in the same AWS account and region do not enable the `auto_accept` attribute.
 The accepter can manage its side of the connection using the `aws_vpc_peering_connection_accepter` resource
 or accept the connection manually using the AWS Management Console, AWS CLI, through SDKs, etc.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `1m`)
+- `update` - (Default `1m`)
+- `delete` - (Default `1m`)
 
 ## Import
 

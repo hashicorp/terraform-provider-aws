@@ -95,12 +95,11 @@ consisting of a DNS name and a port number
 
 ## Timeouts
 
-`aws_dax_cluster` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `45 minutes`) Used for creating a DAX cluster
-- `update` - (Default `45 minutes`) Used for cluster modifications
-- `delete` - (Default `90 minutes`) Used for destroying a DAX cluster
+- `create` - (Default `45m`)
+- `update` - (Default `45m`)
+- `delete` - (Default `90m`)
 
 ## Import
 

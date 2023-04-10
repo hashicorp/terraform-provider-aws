@@ -26,10 +26,10 @@ resource "aws_fsx_openzfs_file_system" "test" {
 
 The following arguments are supported:
 
-* `deployment_type` - (Required) - The filesystem deployment type. Only `SINGLE_AZ_1` is supported.
+* `deployment_type` - (Required) - The filesystem deployment type. Valid values: `SINGLE_AZ_1` and `SINGLE_AZ_2`.
 * `storage_capacity` - (Required) The storage capacity (GiB) of the file system. Valid values between `64` and `524288`.
 * `subnet_ids` - (Required) A list of IDs for the subnets that the file system will be accessible from. Exactly 1 subnet need to be provided.
-* `throughput_capacity` - (Required) Throughput (megabytes per second) of the file system in power of 2 increments. Minimum of `64` and maximum of `4096`.
+* `throughput_capacity` - (Required) Throughput (MB/s) of the file system. Valid values depend on `deployment_type`. Must be one of `64`, `128`, `256`, `512`, `1024`, `2048`, `3072`, `4096` for `SINGLE_AZ_1`. Must be one of `160`, `320`, `640`, `1280`, `2560`, `3840`, `5120`, `7680`, `10240` for `SINGLE_AZ_2`.
 * `automatic_backup_retention_days` - (Optional) The number of days to retain automatic backups. Setting this to 0 disables automatic backups. You can retain automatic backups for a maximum of 90 days.
 * `backup_id` - (Optional) The ID of the source backup to create the filesystem from.
 * `copy_tags_to_backups` - (Optional) A boolean flag indicating whether tags for the file system should be copied to backups. The default value is false.
@@ -87,12 +87,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_fsx_openzfs_file_system` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
-configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`) How long to wait for the file system to be created.
-* `update` - (Default `60m`) How long to wait for the file system to be updated.
-* `delete` - (Default `60m`) How long to wait for the file system to be deleted.
+* `create` - (Default `60m`)
+* `update` - (Default `60m`)
+* `delete` - (Default `60m`)
 
 ## Import
 

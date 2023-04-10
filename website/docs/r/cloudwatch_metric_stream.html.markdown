@@ -31,46 +31,41 @@ resource "aws_cloudwatch_metric_stream" "main" {
 }
 
 # https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-metric-streams-trustpolicy.html
-resource "aws_iam_role" "metric_stream_to_firehose" {
-  name = "metric_stream_to_firehose_role"
+data "aws_iam_policy_document" "streams_assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "streams.metrics.cloudwatch.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+    principals {
+      type        = "Service"
+      identifiers = ["streams.metrics.cloudwatch.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-EOF
+
+resource "aws_iam_role" "metric_stream_to_firehose" {
+  name               = "metric_stream_to_firehose_role"
+  assume_role_policy = data.aws_iam_policy_document.streams_assume_role.json
 }
 
 # https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-metric-streams-trustpolicy.html
-resource "aws_iam_role_policy" "metric_stream_to_firehose" {
-  name = "default"
-  role = aws_iam_role.metric_stream_to_firehose.id
+data "aws_iam_policy_document" "metric_stream_to_firehose" {
+  statement {
+    effect = "Allow"
 
-  policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "firehose:PutRecord",
-                "firehose:PutRecordBatch"
-            ],
-            "Resource": "${aws_kinesis_firehose_delivery_stream.s3_stream.arn}"
-        }
+    actions = [
+      "firehose:PutRecord",
+      "firehose:PutRecordBatch",
     ]
+
+    resources = [aws_kinesis_firehose_delivery_stream.s3_stream.arn]
+  }
 }
-EOF
+resource "aws_iam_role_policy" "metric_stream_to_firehose" {
+  name   = "default"
+  role   = aws_iam_role.metric_stream_to_firehose.id
+  policy = data.aws_iam_policy_document.metric_stream_to_firehose.json
 }
 
 resource "aws_s3_bucket" "bucket" {
@@ -82,50 +77,47 @@ resource "aws_s3_bucket_acl" "bucket_acl" {
   acl    = "private"
 }
 
-resource "aws_iam_role" "firehose_to_s3" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "firehose.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+data "aws_iam_policy_document" "firehose_assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["firehose.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-EOF
+
+resource "aws_iam_role" "firehose_to_s3" {
+  assume_role_policy = data.aws_iam_policy_document.firehose_assume_role.json
+}
+
+data "aws_iam_policy_document" "firehose_to_s3" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "s3:AbortMultipartUpload",
+      "s3:GetBucketLocation",
+      "s3:GetObject",
+      "s3:ListBucket",
+      "s3:ListBucketMultipartUploads",
+      "s3:PutObject",
+    ]
+
+    resources = [
+      aws_s3_bucket.bucket.arn,
+      "${aws_s3_bucket.bucket.arn}/*",
+    ]
+  }
 }
 
 resource "aws_iam_role_policy" "firehose_to_s3" {
-  name = "default"
-  role = aws_iam_role.firehose_to_s3.id
-
-  policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "s3:AbortMultipartUpload",
-                "s3:GetBucketLocation",
-                "s3:GetObject",
-                "s3:ListBucket",
-                "s3:ListBucketMultipartUploads",
-                "s3:PutObject"
-            ],
-            "Resource": [
-                "${aws_s3_bucket.bucket.arn}",
-                "${aws_s3_bucket.bucket.arn}/*"
-            ]
-        }
-    ]
-}
-EOF
+  name   = "default"
+  role   = aws_iam_role.firehose_to_s3.id
+  policy = data.aws_iam_policy_document.firehose_to_s3.json
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "s3_stream" {
@@ -224,5 +216,5 @@ In addition to all arguments above, the following attributes are exported:
 CloudWatch metric streams can be imported using the `name`, e.g.,
 
 ```
-$ terraform import aws_cloudwatch_metric_stream.sample <name>
+$ terraform import aws_cloudwatch_metric_stream.sample sample-stream-name
 ```

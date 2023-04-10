@@ -80,7 +80,7 @@ For a list of parameters supported by each action, see [AWS FIS actions referenc
 
 #### `target` (`action.*.target`)
 
-* `key` - (Required) Target type. Valid values are `Clusters` (ECS Clusters), `DBInstances` (RDS DB Instances), `Instances` (EC2 Instances), `Nodegroups` (EKS Node groups), `Roles` (IAM Roles).
+* `key` - (Required) Target type. Valid values are `Clusters` (ECS Clusters), `DBInstances` (RDS DB Instances), `Instances` (EC2 Instances), `Nodegroups` (EKS Node groups), `Roles` (IAM Roles), `SpotInstances` (EC2 Spot Instances).
 * `value` - (Required) Target name, referencing a corresponding target.
 
 ### `stop_condition`

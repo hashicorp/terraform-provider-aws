@@ -45,11 +45,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_ec2_transit_gateway_connect` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10 minutes`) Used for EC2 Transit Gateway Connect creation
-- `update` - (Default `10 minutes`) Used for EC2 Transit Gateway Connect update
-- `delete` - (Default `10 minutes`) Used for EC2 Transit Gateway Connect deletion
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 

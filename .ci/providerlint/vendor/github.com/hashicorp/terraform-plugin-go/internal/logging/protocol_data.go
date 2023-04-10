@@ -55,20 +55,34 @@ func ProtocolData(ctx context.Context, dataDir string, rpc string, message strin
 		return
 	}
 
-	fileName := fmt.Sprintf("%d_%s_%s_%s.%s", time.Now().Unix(), rpc, message, field, fileExtension)
-	filePath := path.Join(dataDir, fileName)
-	logFields := map[string]interface{}{KeyProtocolDataFile: filePath} // should not be persisted using With()
+	writeProtocolFile(ctx, dataDir, rpc, message, field, fileExtension, fileContents)
+}
 
-	ProtocolTrace(ctx, "Writing protocol data file", logFields)
+// ProtocolPrivateData emits raw protocol private data to a file, if given a
+// directory. This data is "private" in the sense that it is provider-owned,
+// rather than something managed by Terraform.
+//
+// The directory must exist and be writable, prior to invoking this function.
+//
+// File names are in the format: {TIME}_{RPC}_{MESSAGE}_{FIELD}(.empty)
+func ProtocolPrivateData(ctx context.Context, dataDir string, rpc string, message string, field string, data []byte) {
+	if dataDir == "" {
+		// Write a log, only once, that explains how to enable this functionality.
+		protocolDataSkippedLog.Do(func() {
+			ProtocolTrace(ctx, "Skipping protocol data file writing because no data directory is set. "+
+				fmt.Sprintf("Use the %s environment variable to enable this functionality.", EnvTfLogSdkProtoDataDir))
+		})
 
-	err := os.WriteFile(filePath, fileContents, 0644)
-
-	if err != nil {
-		ProtocolError(ctx, fmt.Sprintf("Unable to write protocol data file: %s", err), logFields)
 		return
 	}
 
-	ProtocolTrace(ctx, "Wrote protocol data file", logFields)
+	var fileExtension string
+
+	if len(data) == 0 {
+		fileExtension = fileExtEmpty
+	}
+
+	writeProtocolFile(ctx, dataDir, rpc, message, field, fileExtension, data)
 }
 
 func protocolDataDynamicValue5(_ context.Context, value *tfprotov5.DynamicValue) (string, []byte) {
@@ -105,4 +119,26 @@ func protocolDataDynamicValue6(_ context.Context, value *tfprotov6.DynamicValue)
 	}
 
 	return fileExtEmpty, nil
+}
+
+func writeProtocolFile(ctx context.Context, dataDir string, rpc string, message string, field string, fileExtension string, fileContents []byte) {
+	fileName := fmt.Sprintf("%d_%s_%s_%s", time.Now().UnixMilli(), rpc, message, field)
+
+	if fileExtension != "" {
+		fileName += "." + fileExtension
+	}
+
+	filePath := path.Join(dataDir, fileName)
+	ctx = ProtocolSetField(ctx, KeyProtocolDataFile, filePath)
+
+	ProtocolTrace(ctx, "Writing protocol data file")
+
+	err := os.WriteFile(filePath, fileContents, 0644)
+
+	if err != nil {
+		ProtocolError(ctx, "Unable to write protocol data file", map[string]any{KeyError: err.Error()})
+		return
+	}
+
+	ProtocolTrace(ctx, "Wrote protocol data file")
 }

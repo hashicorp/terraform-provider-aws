@@ -81,15 +81,6 @@ The following arguments are supported:
 * `snapshot_copy` - (Optional) Configuration of automatic copy of snapshots from one region to another. Documented below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Timeouts
-
-`aws_redshift_cluster` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
-
-- `create` - (Default `75 minutes`) Used for creating Clusters.
-- `update` - (Default `75 minutes`) Used for updating Clusters.
-- `delete` - (Default `40 minutes`) Used for destroying Clusters.
-
 ### Nested Blocks
 
 #### `logging`
@@ -139,6 +130,14 @@ Cluster nodes (for `cluster_nodes`) support the following attributes:
 * `node_role` - Whether the node is a leader node or a compute node
 * `private_ip_address` - The private IP address of a node within a cluster
 * `public_ip_address` - The public IP address of a node within a cluster
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `75m`)
+- `update` - (Default `75m`)
+- `delete` - (Default `40m`)
 
 ## Import
 

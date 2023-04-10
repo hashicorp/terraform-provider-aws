@@ -23,6 +23,9 @@ resource "aws_ec2_transit_gateway" "example" {
 The following arguments are supported:
 
 * `amazon_side_asn` - (Optional) Private Autonomous System Number (ASN) for the Amazon side of a BGP session. The range is `64512` to `65534` for 16-bit ASNs and `4200000000` to `4294967294` for 32-bit ASNs. Default value: `64512`.
+
+-> **NOTE:** Modifying `amazon_side_asn` on a Transit Gateway with active BGP sessions is [not allowed](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifyTransitGatewayOptions.html). You must first delete all Transit Gateway attachments that have BGP configured prior to modifying `amazon_side_asn`.
+
 * `auto_accept_shared_attachments` - (Optional) Whether resource attachment requests are automatically accepted. Valid values: `disable`, `enable`. Default value: `disable`.
 * `default_route_table_association` - (Optional) Whether resource attachments are automatically associated with the default association route table. Valid values: `disable`, `enable`. Default value: `enable`.
 * `default_route_table_propagation` - (Optional) Whether resource attachments automatically propagate routes to the default propagation route table. Valid values: `disable`, `enable`. Default value: `enable`.
@@ -46,11 +49,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_ec2_transit_gateway` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10 minutes`) Used for EC2 Transit Gateway creation
-- `update` - (Default `10 minutes`) Used for EC2 Transit Gateway updates
-- `delete` - (Default `10 minutes`) Used for EC2 Transit Gateway deletion
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 

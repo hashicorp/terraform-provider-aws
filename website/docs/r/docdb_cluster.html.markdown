@@ -91,12 +91,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_docdb_cluster` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `120 minutes`) Used for Cluster creation
-- `update` - (Default `120 minutes`) Used for Cluster modifications
-- `delete` - (Default `120 minutes`) Used for destroying cluster. This includes
+- `create` - (Default `120m`)
+- `update` - (Default `120m`)
+- `delete` - (Default `120m`)
 any cleanup task during the destroying process.
 
 ## Import

@@ -3,12 +3,14 @@ subcategory: "Managed Streaming for Kafka"
 layout: "aws"
 page_title: "AWS: aws_msk_cluster"
 description: |-
-  Terraform resource for managing an AWS Managed Streaming for Kafka cluster
+  Terraform resource for managing an AWS Managed Streaming for Kafka cluster.
 ---
 
 # Resource: aws_msk_cluster
 
-Manages AWS Managed Streaming for Kafka cluster
+Manages an Amazon MSK cluster.
+
+-> **Note:** This resource manages _provisioned_ clusters. To manage a _serverless_ Amazon MSK cluster, use the [`aws_msk_serverless_cluster`](/docs/providers/aws/r/msk_serverless_cluster.html) resource.
 
 ## Example Usage
 
@@ -62,24 +64,22 @@ resource "aws_s3_bucket_acl" "bucket_acl" {
   acl    = "private"
 }
 
-resource "aws_iam_role" "firehose_role" {
-  name = "firehose_test_role"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-"Version": "2012-10-17",
-"Statement": [
-  {
-    "Action": "sts:AssumeRole",
-    "Principal": {
-      "Service": "firehose.amazonaws.com"
-    },
-    "Effect": "Allow",
-    "Sid": ""
+    principals {
+      type        = "Service"
+      identifiers = ["firehose.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
   }
-  ]
 }
-EOF
+
+resource "aws_iam_role" "firehose_role" {
+  name               = "firehose_test_role"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
@@ -329,18 +329,18 @@ In addition to all arguments above, the following attributes are exported:
 * `current_version` - Current version of the MSK Cluster used for updates, e.g., `K13V1IB3VIYZZH`
 * `encryption_info.0.encryption_at_rest_kms_key_arn` - The ARN of the KMS key used for encryption at rest of the broker data volumes.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `storage_mode` - Controls storage mode for supported storage tiers. Valid values are: `LOCAL` or `TIERED`.
 * `zookeeper_connect_string` - A comma separated list of one or more hostname:port pairs to use to connect to the Apache Zookeeper cluster. The returned values are sorted alphabetically. The AWS API may not return all endpoints, so this value is not guaranteed to be stable across applies.
 * `zookeeper_connect_string_tls` - A comma separated list of one or more hostname:port pairs to use to connect to the Apache Zookeeper cluster via TLS. The returned values are sorted alphabetically. The AWS API may not return all endpoints, so this value is not guaranteed to be stable across applies.
 
 ## Timeouts
 
-`aws_msk_cluster` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `120 minutes`) How long to wait for the MSK Cluster to be created.
-* `update` - (Default `120 minutes`) How long to wait for the MSK Cluster to be updated.
+* `create` - (Default `120m`)
+* `update` - (Default `120m`)
 Note that the `update` timeout is used separately for `ebs_volume_size`, `instance_type`, `number_of_broker_nodes`, `configuration_info`, `kafka_version` and monitoring and logging update timeouts.
-* `delete` - (Default `120 minutes`) How long to wait for the MSK Cluster to be deleted.
+* `delete` - (Default `120m`)
 
 ## Import
 

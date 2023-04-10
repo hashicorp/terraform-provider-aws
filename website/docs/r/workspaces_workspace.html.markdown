@@ -63,15 +63,6 @@ The following arguments are supported:
 * `running_mode_auto_stop_timeout_in_minutes` – (Optional) The time after a user logs off when WorkSpaces are automatically stopped. Configured in 60-minute intervals.
 * `user_volume_size_gib` – (Optional) The size of the user storage.
 
-### Timeouts
-
-`aws_workspaces_workspace` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
-
-- `create` - (Default `30 minutes`) Used for WorkSpace creation.
-- `update` - (Default `10 minutes`) Used for WorkSpace updating.
-- `delete` - (Default `10 minutes`) Used for WorkSpace termination.
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -82,6 +73,14 @@ In addition to all arguments above, the following attributes are exported:
 * `state` - The operational state of the WorkSpace.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `30m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `10m`)
+
 ## Import
 
 Workspaces can be imported using their ID, e.g.,
@@ -89,4 +88,3 @@ Workspaces can be imported using their ID, e.g.,
 ```
 $ terraform import aws_workspaces_workspace.example ws-9z9zmbkhv
 ```
-

@@ -22,7 +22,7 @@ resource "aws_opsworks_java_app_layer" "app" {
 
 The following arguments are supported:
 
-* `stack_id` - (Required) The id of the stack the layer will belong to.
+* `stack_id` - (Required) ID of the stack the layer will belong to.
 * `name` - (Optional) A human-readable name for the layer.
 * `app_server` - (Optional) Keyword for the application container to use. Defaults to "tomcat".
 * `app_server_version` - (Optional) Version of the selected application container to use. Defaults to "7".

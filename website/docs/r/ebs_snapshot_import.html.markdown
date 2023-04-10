@@ -32,7 +32,6 @@ resource "aws_ebs_snapshot_import" "example" {
 
 ## Argument Reference
 
-
 The following arguments are supported:
 
 * `client_data` - (Optional) The client-specific data. Detailed below.
@@ -65,13 +64,12 @@ The following arguments are supported:
 * `s3_bucket` - The name of the Amazon S3 bucket where the disk image is located.
 * `s3_key` - The file name of the disk image.
 
-### Timeouts
+## Timeouts
 
-`aws_ebs_snapshot_import` provides the following
-[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `60 minutes`) Used for importing the EBS snapshot
-- `delete` - (Default `10 minutes`) Used for deleting the EBS snapshot
+- `create` - (Default `60m`)
+- `delete` - (Default `10m`)
 
 ## Attributes Reference
 

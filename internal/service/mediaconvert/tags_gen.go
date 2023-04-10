@@ -8,17 +8,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediaconvert"
 	"github.com/aws/aws-sdk-go/service/mediaconvert/mediaconvertiface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // ListTags lists mediaconvert service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn mediaconvertiface.MediaConvertAPI, identifier string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier)
-}
-
-func ListTagsWithContext(ctx context.Context, conn mediaconvertiface.MediaConvertAPI, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn mediaconvertiface.MediaConvertAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &mediaconvert.ListTagsForResourceInput{
 		Arn: aws.String(identifier),
 	}
@@ -26,10 +24,26 @@ func ListTagsWithContext(ctx context.Context, conn mediaconvertiface.MediaConver
 	output, err := conn.ListTagsForResourceWithContext(ctx, input)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.ResourceTags.Tags), nil
+	return KeyValueTags(ctx, output.ResourceTags.Tags), nil
+}
+
+// ListTags lists mediaconvert service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).MediaConvertConn(), identifier)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(tags)
+	}
+
+	return nil
 }
 
 // map[string]*string handling
@@ -40,19 +54,36 @@ func Tags(tags tftags.KeyValueTags) map[string]*string {
 }
 
 // KeyValueTags creates KeyValueTags from mediaconvert service tags.
-func KeyValueTags(tags map[string]*string) tftags.KeyValueTags {
-	return tftags.New(tags)
+func KeyValueTags(ctx context.Context, tags map[string]*string) tftags.KeyValueTags {
+	return tftags.New(ctx, tags)
+}
+
+// GetTagsIn returns mediaconvert service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) map[string]*string {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets mediaconvert service tags in Context.
+func SetTagsOut(ctx context.Context, tags map[string]*string) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
 }
 
 // UpdateTags updates mediaconvert service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn mediaconvertiface.MediaConvertAPI, identifier string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn mediaconvertiface.MediaConvertAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+
+func UpdateTags(ctx context.Context, conn mediaconvertiface.MediaConvertAPI, identifier string, oldTagsMap, newTagsMap any) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &mediaconvert.UntagResourceInput{
@@ -81,4 +112,10 @@ func UpdateTagsWithContext(ctx context.Context, conn mediaconvertiface.MediaConv
 	}
 
 	return nil
+}
+
+// UpdateTags updates mediaconvert service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).MediaConvertConn(), identifier, oldTags, newTags)
 }

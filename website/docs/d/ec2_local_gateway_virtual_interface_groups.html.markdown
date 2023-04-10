@@ -37,3 +37,9 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - AWS Region.
 * `ids` - Set of EC2 Local Gateway Virtual Interface Group identifiers.
 * `local_gateway_virtual_interface_ids` - Set of EC2 Local Gateway Virtual Interface identifiers.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

@@ -1,8 +1,8 @@
 package lambda
 
 import (
+	"context"
 	"errors"
-	"fmt"
 	"log"
 	"reflect"
 	"sort"
@@ -13,26 +13,48 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_lambda_event_source_mapping")
 func ResourceEventSourceMapping() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceEventSourceMappingCreate,
-		Read:   resourceEventSourceMappingRead,
-		Update: resourceEventSourceMappingUpdate,
-		Delete: resourceEventSourceMappingDelete,
+		CreateWithoutTimeout: resourceEventSourceMappingCreate,
+		ReadWithoutTimeout:   resourceEventSourceMappingRead,
+		UpdateWithoutTimeout: resourceEventSourceMappingUpdate,
+		DeleteWithoutTimeout: resourceEventSourceMappingDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
+			"amazon_managed_kafka_event_source_config": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"self_managed_event_source", "self_managed_kafka_event_source_config"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"consumer_group_id": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringLenBetween(1, 200),
+						},
+					},
+				},
+			},
 			"batch_size": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -68,12 +90,10 @@ func ResourceEventSourceMapping() *schema.Resource {
 					return old == new
 				},
 			},
-
 			"bisect_batch_on_function_error": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-
 			"destination_config": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -98,20 +118,17 @@ func ResourceEventSourceMapping() *schema.Resource {
 				},
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
-
 			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-
 			"event_source_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ExactlyOneOf: []string{"event_source_arn", "self_managed_event_source"},
 			},
-
 			"filter_criteria": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -135,12 +152,10 @@ func ResourceEventSourceMapping() *schema.Resource {
 					},
 				},
 			},
-
 			"function_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"function_name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -152,7 +167,6 @@ func ResourceEventSourceMapping() *schema.Resource {
 					return (oldFunctionName == new && oldFunctionNameErr == nil) || (newFunctionName == old && newFunctionNameErr == nil)
 				},
 			},
-
 			"function_response_types": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -161,22 +175,18 @@ func ResourceEventSourceMapping() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(lambda.FunctionResponseType_Values(), false),
 				},
 			},
-
 			"last_modified": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"last_processing_result": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"maximum_batching_window_in_seconds": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-
 			"maximum_record_age_in_seconds": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -186,21 +196,18 @@ func ResourceEventSourceMapping() *schema.Resource {
 					validation.IntBetween(60, 604_800),
 				),
 			},
-
 			"maximum_retry_attempts": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.IntBetween(-1, 10_000),
 			},
-
 			"parallelization_factor": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(1, 10),
 				Computed:     true,
 			},
-
 			"queues": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -210,7 +217,20 @@ func ResourceEventSourceMapping() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(1, 1000),
 				},
 			},
-
+			"scaling_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"maximum_concurrency": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(2, 1000),
+						},
+					},
+				},
+			},
 			"self_managed_event_source": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -241,7 +261,25 @@ func ResourceEventSourceMapping() *schema.Resource {
 				},
 				ExactlyOneOf: []string{"event_source_arn", "self_managed_event_source"},
 			},
-
+			"self_managed_kafka_event_source_config": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"event_source_arn", "amazon_managed_kafka_event_source_config"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"consumer_group_id": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringLenBetween(1, 200),
+						},
+					},
+				},
+			},
 			"source_access_configuration": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -260,31 +298,26 @@ func ResourceEventSourceMapping() *schema.Resource {
 					},
 				},
 			},
-
 			"starting_position": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(lambda.EventSourcePosition_Values(), false),
 			},
-
 			"starting_position_timestamp": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.IsRFC3339Time,
 			},
-
 			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"state_transition_reason": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"topics": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -294,13 +327,11 @@ func ResourceEventSourceMapping() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(1, 249),
 				},
 			},
-
 			"tumbling_window_in_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(0, 900),
 			},
-
 			"uuid": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -309,8 +340,9 @@ func ResourceEventSourceMapping() *schema.Resource {
 	}
 }
 
-func resourceEventSourceMappingCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	functionName := d.Get("function_name").(string)
 	input := &lambda.CreateEventSourceMappingInput{
@@ -319,6 +351,10 @@ func resourceEventSourceMappingCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	var target string
+
+	if v, ok := d.GetOk("amazon_managed_kafka_event_source_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.AmazonManagedKafkaEventSourceConfig = expandAmazonManagedKafkaEventSourceConfig(v.([]interface{})[0].(map[string]interface{}))
+	}
 
 	if v, ok := d.GetOk("batch_size"); ok {
 		input.BatchSize = aws.Int64(int64(v.(int)))
@@ -367,10 +403,18 @@ func resourceEventSourceMappingCreate(d *schema.ResourceData, meta interface{}) 
 		input.Queues = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
+	if v, ok := d.GetOk("scaling_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.ScalingConfig = expandScalingConfig(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("self_managed_event_source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.SelfManagedEventSource = expandSelfManagedEventSource(v.([]interface{})[0].(map[string]interface{}))
 
 		target = "Self-Managed Apache Kafka"
+	}
+
+	if v, ok := d.GetOk("self_managed_kafka_event_source_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.SelfManagedKafkaEventSourceConfig = expandSelfManagedKafkaEventSourceConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("source_access_configuration"); ok && v.(*schema.Set).Len() > 0 {
@@ -406,65 +450,73 @@ func resourceEventSourceMappingCreate(d *schema.ResourceData, meta interface{}) 
 	// retry
 	var eventSourceMappingConfiguration *lambda.EventSourceMappingConfiguration
 	var err error
-	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
-		eventSourceMappingConfiguration, err = conn.CreateEventSourceMapping(input)
+	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+		eventSourceMappingConfiguration, err = conn.CreateEventSourceMappingWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "cannot be assumed by Lambda") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "execution role does not have permissions") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "ensure the role can perform") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
 	})
 
 	if tfresource.TimedOut(err) {
-		eventSourceMappingConfiguration, err = conn.CreateEventSourceMapping(input)
+		eventSourceMappingConfiguration, err = conn.CreateEventSourceMappingWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating Lambda Event Source Mapping (%s): %w", target, err)
+		return sdkdiag.AppendErrorf(diags, "creating Lambda Event Source Mapping (%s): %s", target, err)
 	}
 
 	d.SetId(aws.StringValue(eventSourceMappingConfiguration.UUID))
 
-	if _, err := waitEventSourceMappingCreate(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Lambda Event Source Mapping (%s) to create: %w", d.Id(), err)
+	if _, err := waitEventSourceMappingCreate(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Lambda Event Source Mapping (%s) to create: %s", d.Id(), err)
 	}
 
-	return resourceEventSourceMappingRead(d, meta)
+	return append(diags, resourceEventSourceMappingRead(ctx, d, meta)...)
 }
 
-func resourceEventSourceMappingRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
-	eventSourceMappingConfiguration, err := FindEventSourceMappingConfigurationByID(conn, d.Id())
+	eventSourceMappingConfiguration, err := FindEventSourceMappingConfigurationByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[DEBUG] Lambda Event Source Mapping (%s) not found", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Lambda Event Source Mapping (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Lambda Event Source Mapping (%s): %s", d.Id(), err)
 	}
 
+	if eventSourceMappingConfiguration.AmazonManagedKafkaEventSourceConfig != nil {
+		if err := d.Set("amazon_managed_kafka_event_source_config", []interface{}{flattenAmazonManagedKafkaEventSourceConfig(eventSourceMappingConfiguration.AmazonManagedKafkaEventSourceConfig)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting amazon_managed_kafka_event_source_config: %s", err)
+		}
+	} else {
+		d.Set("amazon_managed_kafka_event_source_config", nil)
+	}
 	d.Set("batch_size", eventSourceMappingConfiguration.BatchSize)
 	d.Set("bisect_batch_on_function_error", eventSourceMappingConfiguration.BisectBatchOnFunctionError)
 	if eventSourceMappingConfiguration.DestinationConfig != nil {
 		if err := d.Set("destination_config", []interface{}{flattenDestinationConfig(eventSourceMappingConfiguration.DestinationConfig)}); err != nil {
-			return fmt.Errorf("error setting destination_config: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting destination_config: %s", err)
 		}
 	} else {
 		d.Set("destination_config", nil)
@@ -472,7 +524,7 @@ func resourceEventSourceMappingRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("event_source_arn", eventSourceMappingConfiguration.EventSourceArn)
 	if v := eventSourceMappingConfiguration.FilterCriteria; v != nil {
 		if err := d.Set("filter_criteria", []interface{}{flattenFilterCriteria(v)}); err != nil {
-			return fmt.Errorf("error setting filter criteria: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting filter criteria: %s", err)
 		}
 	} else {
 		d.Set("filter_criteria", nil)
@@ -491,15 +543,29 @@ func resourceEventSourceMappingRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("maximum_retry_attempts", eventSourceMappingConfiguration.MaximumRetryAttempts)
 	d.Set("parallelization_factor", eventSourceMappingConfiguration.ParallelizationFactor)
 	d.Set("queues", aws.StringValueSlice(eventSourceMappingConfiguration.Queues))
+	if v := eventSourceMappingConfiguration.ScalingConfig; v != nil {
+		if err := d.Set("scaling_config", []interface{}{flattenScalingConfig(v)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting scaling_config: %s", err)
+		}
+	} else {
+		d.Set("scaling_config", nil)
+	}
 	if eventSourceMappingConfiguration.SelfManagedEventSource != nil {
 		if err := d.Set("self_managed_event_source", []interface{}{flattenSelfManagedEventSource(eventSourceMappingConfiguration.SelfManagedEventSource)}); err != nil {
-			return fmt.Errorf("error setting self_managed_event_source: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting self_managed_event_source: %s", err)
 		}
 	} else {
 		d.Set("self_managed_event_source", nil)
 	}
+	if eventSourceMappingConfiguration.SelfManagedKafkaEventSourceConfig != nil {
+		if err := d.Set("self_managed_kafka_event_source_config", []interface{}{flattenSelfManagedKafkaEventSourceConfig(eventSourceMappingConfiguration.SelfManagedKafkaEventSourceConfig)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting self_managed_kafka_event_source_config: %s", err)
+		}
+	} else {
+		d.Set("self_managed_kafka_event_source_config", nil)
+	}
 	if err := d.Set("source_access_configuration", flattenSourceAccessConfigurations(eventSourceMappingConfiguration.SourceAccessConfigurations)); err != nil {
-		return fmt.Errorf("error setting source_access_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting source_access_configuration: %s", err)
 	}
 	d.Set("starting_position", eventSourceMappingConfiguration.StartingPosition)
 	if eventSourceMappingConfiguration.StartingPositionTimestamp != nil {
@@ -523,11 +589,12 @@ func resourceEventSourceMappingRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("enabled", nil)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceEventSourceMappingUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	log.Printf("[DEBUG] Updating Lambda Event Source Mapping: %s", d.Id())
 
@@ -586,6 +653,15 @@ func resourceEventSourceMappingUpdate(d *schema.ResourceData, meta interface{}) 
 		input.ParallelizationFactor = aws.Int64(int64(d.Get("parallelization_factor").(int)))
 	}
 
+	if d.HasChange("scaling_config") {
+		if v, ok := d.GetOk("scaling_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.ScalingConfig = expandScalingConfig(v.([]interface{})[0].(map[string]interface{}))
+		} else {
+			// AWS ignores the removal if this is left as nil.
+			input.ScalingConfig = &lambda.ScalingConfig{}
+		}
+	}
+
 	if d.HasChange("source_access_configuration") {
 		if v, ok := d.GetOk("source_access_configuration"); ok && v.(*schema.Set).Len() > 0 {
 			input.SourceAccessConfigurations = expandSourceAccessConfigurations(v.(*schema.Set).List())
@@ -596,37 +672,38 @@ func resourceEventSourceMappingUpdate(d *schema.ResourceData, meta interface{}) 
 		input.TumblingWindowInSeconds = aws.Int64(int64(d.Get("tumbling_window_in_seconds").(int)))
 	}
 
-	err := resource.Retry(eventSourceMappingPropagationTimeout, func() *resource.RetryError {
-		_, err := conn.UpdateEventSourceMapping(input)
+	err := retry.RetryContext(ctx, eventSourceMappingPropagationTimeout, func() *retry.RetryError {
+		_, err := conn.UpdateEventSourceMappingWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceInUseException) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.UpdateEventSourceMapping(input)
+		_, err = conn.UpdateEventSourceMappingWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error updating Lambda Event Source Mapping (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Lambda Event Source Mapping (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitEventSourceMappingUpdate(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Lambda Event Source Mapping (%s) to update: %w", d.Id(), err)
+	if _, err := waitEventSourceMappingUpdate(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Lambda Event Source Mapping (%s) to update: %s", d.Id(), err)
 	}
 
-	return resourceEventSourceMappingRead(d, meta)
+	return append(diags, resourceEventSourceMappingRead(ctx, d, meta)...)
 }
 
-func resourceEventSourceMappingDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+func resourceEventSourceMappingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	log.Printf("[INFO] Deleting Lambda Event Source Mapping: %s", d.Id())
 
@@ -634,37 +711,37 @@ func resourceEventSourceMappingDelete(d *schema.ResourceData, meta interface{}) 
 		UUID: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(eventSourceMappingPropagationTimeout, func() *resource.RetryError {
-		_, err := conn.DeleteEventSourceMapping(input)
+	err := retry.RetryContext(ctx, eventSourceMappingPropagationTimeout, func() *retry.RetryError {
+		_, err := conn.DeleteEventSourceMappingWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceInUseException) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteEventSourceMapping(input)
+		_, err = conn.DeleteEventSourceMappingWithContext(ctx, input)
 	}
 
 	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Lambda Event Source Mapping (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Lambda Event Source Mapping (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitEventSourceMappingDelete(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Lambda Event Source Mapping (%s) to delete: %w", d.Id(), err)
+	if _, err := waitEventSourceMappingDelete(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Lambda Event Source Mapping (%s) to delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandDestinationConfig(tfMap map[string]interface{}) *lambda.DestinationConfig {
@@ -758,6 +835,62 @@ func flattenSelfManagedEventSource(apiObject *lambda.SelfManagedEventSource) map
 		}
 
 		tfMap["endpoints"] = m
+	}
+
+	return tfMap
+}
+
+func expandAmazonManagedKafkaEventSourceConfig(tfMap map[string]interface{}) *lambda.AmazonManagedKafkaEventSourceConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &lambda.AmazonManagedKafkaEventSourceConfig{}
+
+	if v, ok := tfMap["consumer_group_id"].(string); ok && v != "" {
+		apiObject.ConsumerGroupId = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenAmazonManagedKafkaEventSourceConfig(apiObject *lambda.AmazonManagedKafkaEventSourceConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ConsumerGroupId; v != nil {
+		tfMap["consumer_group_id"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func expandSelfManagedKafkaEventSourceConfig(tfMap map[string]interface{}) *lambda.SelfManagedKafkaEventSourceConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &lambda.SelfManagedKafkaEventSourceConfig{}
+
+	if v, ok := tfMap["consumer_group_id"].(string); ok && v != "" {
+		apiObject.ConsumerGroupId = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenSelfManagedKafkaEventSourceConfig(apiObject *lambda.SelfManagedKafkaEventSourceConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ConsumerGroupId; v != nil {
+		tfMap["consumer_group_id"] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -944,11 +1077,39 @@ func flattenFilter(apiObject *lambda.Filter) map[string]interface{} {
 	return tfMap
 }
 
-func findEventSourceMappingConfiguration(conn *lambda.Lambda, input *lambda.GetEventSourceMappingInput) (*lambda.EventSourceMappingConfiguration, error) {
-	output, err := conn.GetEventSourceMapping(input)
+func expandScalingConfig(tfMap map[string]interface{}) *lambda.ScalingConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &lambda.ScalingConfig{}
+
+	if v, ok := tfMap["maximum_concurrency"].(int); ok && v != 0 {
+		apiObject.MaximumConcurrency = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func flattenScalingConfig(apiObject *lambda.ScalingConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.MaximumConcurrency; v != nil {
+		tfMap["maximum_concurrency"] = int(aws.Int64Value(v))
+	}
+
+	return tfMap
+}
+
+func findEventSourceMappingConfiguration(ctx context.Context, conn *lambda.Lambda, input *lambda.GetEventSourceMappingInput) (*lambda.EventSourceMappingConfiguration, error) {
+	output, err := conn.GetEventSourceMappingWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -965,17 +1126,17 @@ func findEventSourceMappingConfiguration(conn *lambda.Lambda, input *lambda.GetE
 	return output, nil
 }
 
-func FindEventSourceMappingConfigurationByID(conn *lambda.Lambda, uuid string) (*lambda.EventSourceMappingConfiguration, error) {
+func FindEventSourceMappingConfigurationByID(ctx context.Context, conn *lambda.Lambda, uuid string) (*lambda.EventSourceMappingConfiguration, error) {
 	input := &lambda.GetEventSourceMappingInput{
 		UUID: aws.String(uuid),
 	}
 
-	return findEventSourceMappingConfiguration(conn, input)
+	return findEventSourceMappingConfiguration(ctx, conn, input)
 }
 
-func statusEventSourceMappingState(conn *lambda.Lambda, id string) resource.StateRefreshFunc {
+func statusEventSourceMappingState(ctx context.Context, conn *lambda.Lambda, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		eventSourceMappingConfiguration, err := FindEventSourceMappingConfigurationByID(conn, id)
+		eventSourceMappingConfiguration, err := FindEventSourceMappingConfigurationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -996,15 +1157,15 @@ const (
 	eventSourceMappingPropagationTimeout = 5 * time.Minute
 )
 
-func waitEventSourceMappingCreate(conn *lambda.Lambda, id string) (*lambda.EventSourceMappingConfiguration, error) {
-	stateConf := &resource.StateChangeConf{
+func waitEventSourceMappingCreate(ctx context.Context, conn *lambda.Lambda, id string) (*lambda.EventSourceMappingConfiguration, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{eventSourceMappingStateCreating, eventSourceMappingStateDisabling, eventSourceMappingStateEnabling},
 		Target:  []string{eventSourceMappingStateDisabled, eventSourceMappingStateEnabled},
-		Refresh: statusEventSourceMappingState(conn, id),
+		Refresh: statusEventSourceMappingState(ctx, conn, id),
 		Timeout: eventSourceMappingCreateTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*lambda.EventSourceMappingConfiguration); ok {
 		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateTransitionReason)))
@@ -1015,15 +1176,15 @@ func waitEventSourceMappingCreate(conn *lambda.Lambda, id string) (*lambda.Event
 	return nil, err
 }
 
-func waitEventSourceMappingDelete(conn *lambda.Lambda, id string) (*lambda.EventSourceMappingConfiguration, error) {
-	stateConf := &resource.StateChangeConf{
+func waitEventSourceMappingDelete(ctx context.Context, conn *lambda.Lambda, id string) (*lambda.EventSourceMappingConfiguration, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{eventSourceMappingStateDeleting},
 		Target:  []string{},
-		Refresh: statusEventSourceMappingState(conn, id),
+		Refresh: statusEventSourceMappingState(ctx, conn, id),
 		Timeout: eventSourceMappingDeleteTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*lambda.EventSourceMappingConfiguration); ok {
 		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateTransitionReason)))
@@ -1034,15 +1195,15 @@ func waitEventSourceMappingDelete(conn *lambda.Lambda, id string) (*lambda.Event
 	return nil, err
 }
 
-func waitEventSourceMappingUpdate(conn *lambda.Lambda, id string) (*lambda.EventSourceMappingConfiguration, error) {
-	stateConf := &resource.StateChangeConf{
+func waitEventSourceMappingUpdate(ctx context.Context, conn *lambda.Lambda, id string) (*lambda.EventSourceMappingConfiguration, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{eventSourceMappingStateDisabling, eventSourceMappingStateEnabling, eventSourceMappingStateUpdating},
 		Target:  []string{eventSourceMappingStateDisabled, eventSourceMappingStateEnabled},
-		Refresh: statusEventSourceMappingState(conn, id),
+		Refresh: statusEventSourceMappingState(ctx, conn, id),
 		Timeout: eventSourceMappingUpdateTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*lambda.EventSourceMappingConfiguration); ok {
 		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateTransitionReason)))

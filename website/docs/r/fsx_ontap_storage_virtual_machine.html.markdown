@@ -11,7 +11,6 @@ description: |-
 Manages a FSx Storage Virtual Machine.
 See the [FSx ONTAP User Guide](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/managing-svms.html) for more information.
 
-
 ## Example Usage
 
 ### Basic Usage
@@ -97,12 +96,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_fsx_ontap_storage_virtual_machine` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
-configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30m`) How long to wait for the storage virtual machine to be created.
-* `delete` - (Default `30m`) How long to wait for the storage virtual machine to be deleted.
-* `update` - (Default `30m`) How long to wait for the storage virtual machine to be updated.
+* `create` - (Default `30m`)
+* `delete` - (Default `30m`)
+* `update` - (Default `30m`)
 
 ## Import
 

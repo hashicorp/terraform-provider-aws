@@ -1,6 +1,7 @@
 package inspector_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -16,20 +17,21 @@ import (
 )
 
 func TestAccInspectorAssessmentTemplate_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v inspector.AssessmentTemplate
 	resourceName := "aws_inspector_assessment_template.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, inspector.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTemplateDestroy,
+		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAssessmentTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTemplateExists(resourceName, &v),
+					testAccCheckTemplateExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexp.MustCompile(`target/.+/template/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "duration", "3600"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -48,21 +50,22 @@ func TestAccInspectorAssessmentTemplate_basic(t *testing.T) {
 }
 
 func TestAccInspectorAssessmentTemplate_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v inspector.AssessmentTemplate
 	resourceName := "aws_inspector_assessment_template.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, inspector.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTemplateDestroy,
+		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAssessmentTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTemplateExists(resourceName, &v),
-					testAccCheckTemplateDisappears(&v),
+					testAccCheckTemplateExists(ctx, resourceName, &v),
+					testAccCheckTemplateDisappears(ctx, &v),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -71,20 +74,21 @@ func TestAccInspectorAssessmentTemplate_disappears(t *testing.T) {
 }
 
 func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v inspector.AssessmentTemplate
 	resourceName := "aws_inspector_assessment_template.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, inspector.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTemplateDestroy,
+		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAssessmentTemplateConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTemplateExists(resourceName, &v),
+					testAccCheckTemplateExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -97,7 +101,7 @@ func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
 			{
 				Config: testAccAssessmentTemplateConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTemplateExists(resourceName, &v),
+					testAccCheckTemplateExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -106,7 +110,7 @@ func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
 			{
 				Config: testAccAssessmentTemplateConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTemplateExists(resourceName, &v),
+					testAccCheckTemplateExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -114,7 +118,7 @@ func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
 			{
 				Config: testAccAssessmentTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTemplateExists(resourceName, &v),
+					testAccCheckTemplateExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -122,52 +126,109 @@ func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckTemplateDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn
+func TestAccInspectorAssessmentTemplate_eventSubscription(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v inspector.AssessmentTemplate
+	resourceName := "aws_inspector_assessment_template.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_inspector_assessment_template" {
-			continue
-		}
+	event1 := "ASSESSMENT_RUN_STARTED"
+	event1Updated := "ASSESSMENT_RUN_COMPLETED"
+	event2 := "ASSESSMENT_RUN_STATE_CHANGED"
 
-		resp, err := conn.DescribeAssessmentTemplates(&inspector.DescribeAssessmentTemplatesInput{
-			AssessmentTemplateArns: []*string{
-				aws.String(rs.Primary.ID),
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, inspector.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAssessmentTemplateConfig_eventSubscription(rName, event1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTemplateExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "event_subscription.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_subscription.0.event", event1),
+				),
 			},
-		})
-
-		if tfawserr.ErrCodeEquals(err, inspector.ErrCodeInvalidInputException) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("Error finding Inspector Assessment Template: %s", err)
-		}
-
-		if len(resp.AssessmentTemplates) > 0 {
-			return fmt.Errorf("Found Template, expected none: %s", resp)
-		}
-	}
-
-	return nil
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAssessmentTemplateConfig_eventSubscription(rName, event1Updated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTemplateExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "event_subscription.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_subscription.0.event", event1Updated),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAssessmentTemplateConfig_eventSubscriptionMultiple(rName, event1, event2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTemplateExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "event_subscription.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
 }
 
-func testAccCheckTemplateDisappears(v *inspector.AssessmentTemplate) resource.TestCheckFunc {
+func testAccCheckTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn()
 
-		_, err := conn.DeleteAssessmentTemplate(&inspector.DeleteAssessmentTemplateInput{
-			AssessmentTemplateArn: v.Arn,
-		})
-		if err != nil {
-			return err
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_inspector_assessment_template" {
+				continue
+			}
+
+			resp, err := conn.DescribeAssessmentTemplatesWithContext(ctx, &inspector.DescribeAssessmentTemplatesInput{
+				AssessmentTemplateArns: []*string{
+					aws.String(rs.Primary.ID),
+				},
+			})
+
+			if tfawserr.ErrCodeEquals(err, inspector.ErrCodeInvalidInputException) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("Error finding Inspector Assessment Template: %s", err)
+			}
+
+			if len(resp.AssessmentTemplates) > 0 {
+				return fmt.Errorf("Found Template, expected none: %s", resp)
+			}
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckTemplateExists(name string, v *inspector.AssessmentTemplate) resource.TestCheckFunc {
+func testAccCheckTemplateDisappears(ctx context.Context, v *inspector.AssessmentTemplate) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn()
+
+		_, err := conn.DeleteAssessmentTemplateWithContext(ctx, &inspector.DeleteAssessmentTemplateInput{
+			AssessmentTemplateArn: v.Arn,
+		})
+
+		return err
+	}
+}
+
+func testAccCheckTemplateExists(ctx context.Context, name string, v *inspector.AssessmentTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -178,9 +239,9 @@ func testAccCheckTemplateExists(name string, v *inspector.AssessmentTemplate) re
 			return fmt.Errorf("No Inspector assessment template ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn()
 
-		resp, err := conn.DescribeAssessmentTemplates(&inspector.DescribeAssessmentTemplatesInput{
+		resp, err := conn.DescribeAssessmentTemplatesWithContext(ctx, &inspector.DescribeAssessmentTemplatesInput{
 			AssessmentTemplateArns: aws.StringSlice([]string{rs.Primary.ID}),
 		})
 		if err != nil {
@@ -257,4 +318,82 @@ resource "aws_inspector_assessment_template" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccAssessmentTemplateBase_eventSubscription(rName string) string {
+	return acctest.ConfigCompose(
+		testAccTemplateAssessmentBase(rName),
+		fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+
+    actions = [
+      "SNS:Publish"
+    ]
+
+    resources = [aws_sns_topic.test.arn]
+  }
+}
+
+resource "aws_sns_topic_policy" "test" {
+  arn    = aws_sns_topic.test.arn
+  policy = data.aws_iam_policy_document.test.json
+}
+		`, rName),
+	)
+}
+
+func testAccAssessmentTemplateConfig_eventSubscription(rName, event string) string {
+	return acctest.ConfigCompose(
+		testAccAssessmentTemplateBase_eventSubscription(rName),
+		fmt.Sprintf(`
+resource "aws_inspector_assessment_template" "test" {
+  name       = %[1]q
+  target_arn = aws_inspector_assessment_target.test.arn
+  duration   = 3600
+
+  rules_package_arns = data.aws_inspector_rules_packages.available.arns
+
+  event_subscription {
+    event     = %[2]q
+    topic_arn = aws_sns_topic.test.arn
+  }
+}
+		`, rName, event),
+	)
+}
+
+func testAccAssessmentTemplateConfig_eventSubscriptionMultiple(rName, event1, event2 string) string {
+	return acctest.ConfigCompose(
+		testAccAssessmentTemplateBase_eventSubscription(rName),
+		fmt.Sprintf(`
+resource "aws_inspector_assessment_template" "test" {
+  name       = %[1]q
+  target_arn = aws_inspector_assessment_target.test.arn
+  duration   = 3600
+
+  rules_package_arns = data.aws_inspector_rules_packages.available.arns
+
+  event_subscription {
+    event     = %[2]q
+    topic_arn = aws_sns_topic.test.arn
+  }
+
+  event_subscription {
+    event     = %[3]q
+    topic_arn = aws_sns_topic.test.arn
+  }
+}
+		`, rName, event1, event2),
+	)
 }

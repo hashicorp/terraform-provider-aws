@@ -81,7 +81,6 @@ $ terraform import aws_route53recoveryreadiness_resource_set.my-cw-alarm-set
 
 ## Timeouts
 
-`aws_route53recoveryreadiness_resource_set` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
-configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `delete` - (Default `5m`) Used when deleting the Resource Set
+- `delete` - (Default `5m`)

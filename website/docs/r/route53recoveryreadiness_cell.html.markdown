@@ -37,6 +37,12 @@ In addition to all arguments above, the following attributes are exported:
 * `parent_readiness_scopes` - List of readiness scopes (recovery groups or cells) that contain this cell.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `delete` - (Default `5m`)
+
 ## Import
 
 Route53 Recovery Readiness cells can be imported via the cell name, e.g.,
@@ -44,10 +50,3 @@ Route53 Recovery Readiness cells can be imported via the cell name, e.g.,
 ```
 $ terraform import aws_route53recoveryreadiness_cell.us-west-2-failover-cell us-west-2-failover-cell
 ```
-
-## Timeouts
-
-`aws_route53recoveryreadiness_cell` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
-configuration options:
-
-- `delete` - (Default `5m`) Used when deleting the Cell

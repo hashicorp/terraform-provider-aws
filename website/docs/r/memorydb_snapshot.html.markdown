@@ -56,10 +56,10 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_memorydb_snapshot` provides the following [timeout configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `120 minutes`) Used when taking the snapshot of a cluster.
-- `delete` - (Default `120 minutes`) Used when deleting a snapshot.
+- `create` - (Default `120m`)
+- `delete` - (Default `120m`)
 
 ## Import
 

@@ -73,28 +73,28 @@ resource "aws_cloudwatch_log_group" "example" {
   name = "example"
 }
 
-resource "aws_cloudwatch_log_resource_policy" "example" {
-  policy_name = "example"
+data "aws_iam_policy_document" "example" {
+  statement {
+    effect = "Allow"
 
-  policy_document = <<CONFIG
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "es.amazonaws.com"
-      },
-      "Action": [
-        "logs:PutLogEvents",
-        "logs:PutLogEventsBatch",
-        "logs:CreateLogStream"
-      ],
-      "Resource": "arn:aws:logs:*"
+    principals {
+      type        = "Service"
+      identifiers = ["es.amazonaws.com"]
     }
-  ]
+
+    actions = [
+      "logs:PutLogEvents",
+      "logs:PutLogEventsBatch",
+      "logs:CreateLogStream",
+    ]
+
+    resources = ["arn:aws:logs:*"]
+  }
 }
-CONFIG
+
+resource "aws_cloudwatch_log_resource_policy" "example" {
+  policy_name     = "example"
+  policy_document = data.aws_iam_policy_document.example.json
 }
 
 resource "aws_elasticsearch_domain" "example" {
@@ -293,7 +293,8 @@ AWS documentation: [Amazon Cognito Authentication for Kibana](https://docs.aws.a
 ### ebs_options
 
 * `ebs_enabled` - (Required) Whether EBS volumes are attached to data nodes in the domain.
-* `iops` - (Optional) Baseline input/output (I/O) performance of EBS volumes attached to data nodes. Applicable only for the Provisioned IOPS EBS volume type.
+* `iops` - (Optional) Baseline input/output (I/O) performance of EBS volumes attached to data nodes. Applicable only for the GP3 and Provisioned IOPS EBS volume types.
+* `throughput` - (Required if `volume_type` is set to `gp3`) Specifies the throughput (in MiB/s) of the EBS volumes attached to data nodes. Applicable only for the gp3 volume type.
 * `volume_size` - (Required if `ebs_enabled` is set to `true`.) Size of EBS volumes attached to data nodes (in GiB).
 * `volume_type` - (Optional) Type of EBS volumes attached to data nodes.
 
@@ -346,11 +347,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_elasticsearch_domain` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Optional, Default: `60m`) How long to wait for creation.
-* `update` - (Optional, Default: `60m`) How long to wait for updates.
-* `delete` - (Optional, Default: `90m`) How long to wait for deletion.
+* `create` - (Default `60m`)
+* `update` - (Default `60m`)
+* `delete` - (Default `90m`)
 
 ## Import
 

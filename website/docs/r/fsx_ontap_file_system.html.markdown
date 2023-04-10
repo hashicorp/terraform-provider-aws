@@ -74,12 +74,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_fsx_ontap_file_system` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
-configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`) How long to wait for the file system to be created.
-* `update` - (Default `60m`) How long to wait for the file system to be updated.
-* `delete` - (Default `60m`) How long to wait for the file system to be deleted.
+* `create` - (Default `60m`)
+* `update` - (Default `60m`)
+* `delete` - (Default `60m`)
 
 ## Import
 

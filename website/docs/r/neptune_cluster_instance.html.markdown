@@ -13,7 +13,6 @@ A Cluster Instance Resource defines attributes that are specific to a single ins
 You can simply add neptune instances and Neptune manages the replication. You can use the [count][1]
 meta-parameter to make multiple instances and join them all to the same Neptune Cluster, or you may specify different Cluster Instance resources with various `instance_class` sizes.
 
-
 ## Example Usage
 
 The following example will create a neptune cluster with two neptune instances(one writer and one reader).
@@ -80,12 +79,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_neptune_cluster_instance` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `90 minutes`) How long to wait for creating instances to become available.
-- `update` - (Default `90 minutes`) How long to wait for updating instances to complete updates.
-- `delete` - (Default `90 minutes`) How long to wait for deleting instances to become fully deleted.
+- `create` - (Default `90m`)
+- `update` - (Default `90m`)
+- `delete` - (Default `90m`)
 
 ## Import
 

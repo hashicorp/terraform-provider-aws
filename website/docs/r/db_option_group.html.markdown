@@ -48,7 +48,7 @@ resource "aws_db_option_group" "example" {
 }
 ```
 
-~> **Note**: Any modifications to the `aws_db_option_group` are set to happen immediately as we default to applying immediately.
+~> **Note:** Any modifications to the `aws_db_option_group` are set to happen immediately as we default to applying immediately.
 
 ~> **WARNING:** You can perform a destroy on a `aws_db_option_group`, as long as it is not associated with any Amazon RDS resource. An option group can be associated with a DB instance, a manual DB snapshot, or an automated DB snapshot.
 
@@ -94,10 +94,9 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_db_option_group` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `delete` - (Default `15 minutes`)
+- `delete` - (Default `15m`)
 
 ## Import
 

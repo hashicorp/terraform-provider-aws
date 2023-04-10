@@ -66,12 +66,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_route53_resolver_endpoint` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10 minutes`) Used for creating Route 53 Resolver endpoint
-- `update` - (Default `10 minutes`) Used for updating Route 53 Resolver endpoint
-- `delete` - (Default `10 minutes`) Used for destroying Route 53 Resolver endpoint
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 

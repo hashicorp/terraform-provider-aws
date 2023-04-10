@@ -34,15 +34,15 @@ COIP Pool whose data will be exported as attributes.
 
 * `local_gateway_route_table_id` - (Optional) Local Gateway Route Table Id assigned to desired COIP Pool
 
-* `pool_id` - (Optional) The id of the specific COIP Pool to retrieve.
+* `pool_id` - (Optional) ID of the specific COIP Pool to retrieve.
 
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match
+* `tags` - (Optional) Mapping of tags, each pair of which must exactly match
   a pair on the desired COIP Pool.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,
 which take the following arguments:
 
-* `name` - (Required) The name of the field to filter by, as defined by
+* `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeCoipPools.html).
 
 * `values` - (Required) Set of values that are accepted for the given field.
@@ -59,3 +59,9 @@ In addition, the following attributes are exported:
 
 * `arn` - ARN of the COIP pool
 * `pool_cidrs` - Set of CIDR blocks in pool
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

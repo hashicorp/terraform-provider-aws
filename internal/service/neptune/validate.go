@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -34,7 +34,7 @@ func validEventSubscriptionNamePrefix(v interface{}, k string) (ws []string, err
 		errors = append(errors, fmt.Errorf(
 			"only alphanumeric characters and hyphens allowed in %q", k))
 	}
-	prefixMaxLength := 255 - resource.UniqueIDSuffixLength
+	prefixMaxLength := 255 - id.UniqueIDSuffixLength
 	if len(value) > prefixMaxLength {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be greater than %d characters", k, prefixMaxLength))
@@ -59,6 +59,27 @@ func validIdentifier(v interface{}, k string) (ws []string, errors []error) {
 	if regexp.MustCompile(`-$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot end with a hyphen", k))
+	}
+	return
+}
+
+func validGlobalCusterIdentifier(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters and hyphens allowed in %q", k))
+	}
+	if !regexp.MustCompile(`^[A-Za-z]`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"first character of %q must be a letter", k))
+	}
+	if regexp.MustCompile(`--`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot contain two consecutive hyphens", k))
+	}
+	if len(value) > 255 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be greater than 255 characters", k))
 	}
 	return
 }
@@ -119,7 +140,7 @@ func validParamGroupNamePrefix(v interface{}, k string) (ws []string, errors []e
 		errors = append(errors, fmt.Errorf(
 			"%q cannot contain two consecutive hyphens", k))
 	}
-	prefixMaxLength := 255 - resource.UniqueIDSuffixLength
+	prefixMaxLength := 255 - id.UniqueIDSuffixLength
 	if len(value) > prefixMaxLength {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be greater than %d characters", k, prefixMaxLength))
@@ -150,7 +171,7 @@ func validSubnetGroupNamePrefix(v interface{}, k string) (ws []string, errors []
 		errors = append(errors, fmt.Errorf(
 			"only lowercase alphanumeric characters, hyphens, underscores, periods, and spaces allowed in %q", k))
 	}
-	prefixMaxLength := 255 - resource.UniqueIDSuffixLength
+	prefixMaxLength := 255 - id.UniqueIDSuffixLength
 	if len(value) > prefixMaxLength {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be longer than %d characters", k, prefixMaxLength))

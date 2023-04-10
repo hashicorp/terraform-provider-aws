@@ -20,28 +20,32 @@ resource "aws_cloudformation_stack" "network" {
     VPCCidr = "10.0.0.0/16"
   }
 
-  template_body = <<STACK
-{
-  "Parameters" : {
-    "VPCCidr" : {
-      "Type" : "String",
-      "Default" : "10.0.0.0/16",
-      "Description" : "Enter the CIDR block for the VPC. Default is 10.0.0.0/16."
-    }
-  },
-  "Resources" : {
-    "myVpc": {
-      "Type" : "AWS::EC2::VPC",
-      "Properties" : {
-        "CidrBlock" : { "Ref" : "VPCCidr" },
-        "Tags" : [
-          {"Key": "Name", "Value": "Primary_CF_VPC"}
-        ]
+  template_body = jsonencode({
+    Parameters = {
+      VPCCidr = {
+        Type        = "String"
+        Default     = "10.0.0.0/16"
+        Description = "Enter the CIDR block for the VPC. Default is 10.0.0.0/16."
       }
     }
-  }
-}
-STACK
+
+    Resources = {
+      myVpc = {
+        Type = "AWS::EC2::VPC"
+        Properties = {
+          CidrBlock = {
+            "Ref" = "VPCCidr"
+          }
+          Tags = [
+            {
+              Key   = "Name"
+              Value = "Primary_CF_VPC"
+            }
+          ]
+        }
+      }
+    }
+  })
 }
 ```
 
@@ -76,6 +80,13 @@ In addition to all arguments above, the following attributes are exported:
 * `outputs` - A map of outputs from the stack.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `30m`)
+- `update` - (Default `30m`)
+- `delete` - (Default `30m`)
 
 ## Import
 
@@ -84,12 +95,3 @@ Cloudformation Stacks can be imported using the `name`, e.g.,
 ```
 $ terraform import aws_cloudformation_stack.stack networking-stack
 ```
-
-## Timeouts
-
-`aws_cloudformation_stack` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
-
-- `create` - (Default `30 minutes`) Used for Creating Stacks
-- `update` - (Default `30 minutes`) Used for Stack modifications
-- `delete` - (Default `30 minutes`) Used for destroying stacks.

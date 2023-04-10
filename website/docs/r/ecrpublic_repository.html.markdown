@@ -10,7 +10,7 @@ description: |-
 
 Provides a Public Elastic Container Registry Repository.
 
-~> **NOTE:** This resource can only be used with `us-east-1` region.
+~> **NOTE:** This resource can only be used in the `us-east-1` region.
 
 ## Example Usage
 
@@ -69,10 +69,9 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_ecrpublic_repository` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
-configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `delete` - (Default `20 minutes`) How long to wait for a repository to be deleted.
+- `delete` - (Default `20m`)
 
 ## Import
 

@@ -10,8 +10,9 @@ import (
 )
 
 func TestAccELBHostedZoneIDDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -35,7 +36,7 @@ const testAccHostedZoneIDDataSourceConfig_basic = `
 data "aws_elb_hosted_zone_id" "main" {}
 `
 
-//lintignore:AWSAT003
+// lintignore:AWSAT003
 const testAccHostedZoneIDDataSourceConfig_explicitRegion = `
 data "aws_elb_hosted_zone_id" "regional" {
   region = "eu-west-1"

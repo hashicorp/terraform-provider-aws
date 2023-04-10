@@ -36,12 +36,12 @@ The following arguments are supported:
 * `tags` - (Optional) Tags to apply to the vocabulary. If configured with a provider
 [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Timeouts
+## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Defaults to 5 mins) Used when creating the vocabulary.
-* `delete` - (Defaults to 100 mins) Used when deleting the vocabulary. From the [documentation on adding custom vocabularies](https://docs.aws.amazon.com/connect/latest/adminguide/add-custom-vocabulary.html), deletes can take about 90 minutes.
+* `create` - (Default `5m`)
+* `delete` - (Default `100m`)
 
 ## Attributes Reference
 

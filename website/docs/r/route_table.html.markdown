@@ -115,11 +115,11 @@ attribute once the route resource is created.
 
 ## Timeouts
 
-`aws_route_table` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `5 minutes`) Used for route creation
-- `update` - (Default `2 minutes`) Used for route creation
-- `delete` - (Default `5 minutes`) Used for route deletion
+- `create` - (Default `5m`)
+- `update` - (Default `2m`)
+- `delete` - (Default `5m`)
 
 ## Import
 

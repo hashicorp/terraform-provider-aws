@@ -24,16 +24,16 @@ data "aws_ecs_service" "example" {
 
 The following arguments are supported:
 
-* `service_name` - (Required) The name of the ECS Service
-* `cluster_arn` - (Required) The arn of the ECS Cluster
+* `service_name` - (Required) Name of the ECS Service
+* `cluster_arn` - (Required) ARN of the ECS Cluster
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN of the ECS Service
-* `desired_count` - The number of tasks for the ECS Service
-* `launch_type` - The launch type for the ECS Service
-* `scheduling_strategy` - The scheduling strategy for the ECS Service
-* `task_definition` - The family for the latest ACTIVE revision
+* `arn` - ARN of the ECS Service
+* `desired_count` - Number of tasks for the ECS Service
+* `launch_type` - Launch type for the ECS Service
+* `scheduling_strategy` - Scheduling strategy for the ECS Service
+* `task_definition` - Family for the latest ACTIVE revision
 * `tags` - Resource tags.

@@ -164,10 +164,10 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_ec2_transit_gateway_multicast_domain` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10 minutes`) Used for multicast domain creation
-- `delete` - (Default `10 minutes`) Used for multicast domain deletion
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 

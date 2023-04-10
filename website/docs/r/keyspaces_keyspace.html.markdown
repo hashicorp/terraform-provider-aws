@@ -40,10 +40,10 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_keyspaces_keyspace` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `1 minute`) Used for keyspace creation
-- `delete` - (Default `1 minute`) Used for keyspace deletion
+- `create` - (Default `1m`)
+- `delete` - (Default `1m`)
 
 ## Import
 

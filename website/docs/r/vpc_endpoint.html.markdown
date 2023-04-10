@@ -133,14 +133,13 @@ If no security groups are specified, the VPC's [default security group](https://
 
 * `dns_record_ip_type` - (Optional) The DNS records created for the endpoint. Valid values are `ipv4`, `dualstack`, `service-defined`, and `ipv6`.
 
-### Timeouts
+## Timeouts
 
-`aws_vpc_endpoint` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10 minutes`) Used for creating a VPC endpoint
-- `update` - (Default `10 minutes`) Used for VPC endpoint modifications
-- `delete` - (Default `10 minutes`) Used for destroying VPC endpoints
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Attributes Reference
 

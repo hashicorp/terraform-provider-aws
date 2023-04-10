@@ -94,7 +94,7 @@ The following arguments are supported:
 The `pre_provisioning_hook` configuration block supports the following:
 
 * `payload_version` - (Optional) The version of the payload that was sent to the target function. The only valid (and the default) payload version is `"2020-04-01"`.
-* `target_arb` - (Optional) The ARN of the target function.
+* `target_arn` - (Optional) The ARN of the target function.
 
 ## Attributes Reference
 

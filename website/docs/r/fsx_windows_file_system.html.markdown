@@ -105,12 +105,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_fsx_windows_file_system` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
-configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `45m`) How long to wait for the file system to be created.
-* `delete` - (Default `30m`) How long to wait for the file system to be deleted.
-* `update` - (Default `45m`) How long to wait for the file system to be updated.
+* `create` - (Default `45m`)
+* `delete` - (Default `30m`)
+* `update` - (Default `45m`)
 
 ## Import
 

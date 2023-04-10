@@ -48,11 +48,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_dms_event_subscription` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10m`) Used for creating event subscriptions.
-- `update` - (Default `10m`) Used for event subscription modifications.
-- `delete` - (Default `10m`) Used for destroying event descriptions.
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 

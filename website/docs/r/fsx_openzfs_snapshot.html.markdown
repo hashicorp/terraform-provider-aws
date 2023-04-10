@@ -11,7 +11,6 @@ description: |-
 Manages an Amazon FSx for OpenZFS volume.
 See the [FSx OpenZFS User Guide](https://docs.aws.amazon.com/fsx/latest/OpenZFSGuide/what-is-fsx.html) for more information.
 
-
 ## Example Usage
 
 ### Root volume Example
@@ -51,7 +50,6 @@ resource "aws_fsx_openzfs_file_system" "example" {
 }
 ```
 
-
 ## Argument Reference
 
 The following arguments are supported:
@@ -70,12 +68,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_fsx_openzfs_snapshot` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
-configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30m`) How long to wait for the backup to be created.
-* `delete` - (Default `30m`) How long to wait for the backup to be deleted.
-* `update` - (Default `30m`) How long to wait for the backup to be deleted.
+* `create` - (Default `30m`)
+* `delete` - (Default `30m`)
+* `update` - (Default `30m`)
 
 ## Import
 

@@ -84,12 +84,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_neptune_event_subscription` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
-configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `40m`) How long to wait for creating event subscription to become available.
-- `delete` - (Default `40m`) How long to wait for deleting event subscription to become fully deleted.
-- `update` - (Default `40m`) How long to wait for updating event subscription to complete updates.
+- `create` - (Default `40m`)
+- `delete` - (Default `40m`)
+- `update` - (Default `40m`)
 
 ## Import
 

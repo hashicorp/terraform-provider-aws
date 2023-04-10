@@ -100,10 +100,10 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_default_route_table` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `2 minutes`) Used for route creation
-- `update` - (Default `2 minutes`) Used for route creation
+- `create` - (Default `2m`)
+- `update` - (Default `2m`)
 
 ## Import
 

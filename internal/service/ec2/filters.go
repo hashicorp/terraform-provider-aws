@@ -1,11 +1,16 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	datasourceschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 // BuildTagFilterList takes a []*ec2.Tag and produces a []*ec2.Filter that
@@ -25,9 +30,9 @@ import (
 // In Terraform configuration this would then look like this, to constrain
 // results by name:
 //
-// tags {
-//   Name = "my-awesome-subnet"
-// }
+//	tags {
+//	  Name = "my-awesome-subnet"
+//	}
 func BuildTagFilterList(tags []*ec2.Tag) []*ec2.Filter {
 	filters := make([]*ec2.Filter, len(tags))
 
@@ -76,10 +81,10 @@ func attributeFiltersFromMultimap(m map[string][]string) []*ec2.Filter {
 // attributes or tags. In Terraform configuration, the custom filter blocks
 // then look like this:
 //
-// filter {
-//   name   = "availabilityZone"
-//   values = ["us-west-2a", "us-west-2b"]
-// }
+//	filter {
+//	  name   = "availabilityZone"
+//	  values = ["us-west-2a", "us-west-2b"]
+//	}
 func CustomFiltersSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
@@ -100,6 +105,29 @@ func CustomFiltersSchema() *schema.Schema {
 			},
 		},
 	}
+}
+
+// CustomFiltersBlock is the Plugin Framework variant of CustomFiltersSchema.
+func CustomFiltersBlock() datasourceschema.Block {
+	return datasourceschema.SetNestedBlock{
+		NestedObject: datasourceschema.NestedBlockObject{
+			Attributes: map[string]datasourceschema.Attribute{
+				"name": datasourceschema.StringAttribute{
+					Required: true,
+				},
+				"values": datasourceschema.SetAttribute{
+					ElementType: types.StringType,
+					Required:    true,
+				},
+			},
+		},
+	}
+}
+
+// customFilterData represents a single configured filter.
+type customFilterData struct {
+	Name   types.String `tfsdk:"name"`
+	Values types.Set    `tfsdk:"values"`
 }
 
 // BuildCustomFilterList takes the set value extracted from a schema
@@ -131,6 +159,35 @@ func BuildCustomFilterList(filterSet *schema.Set) []*ec2.Filter {
 		filters[filterIdx] = &ec2.Filter{
 			Name:   &name,
 			Values: values,
+		}
+	}
+
+	return filters
+}
+
+func BuildCustomFilters(ctx context.Context, filterSet types.Set) []*ec2.Filter {
+	if filterSet.IsNull() || filterSet.IsUnknown() {
+		return nil
+	}
+
+	var filters []*ec2.Filter
+
+	for _, v := range filterSet.Elements() {
+		var data customFilterData
+
+		if tfsdk.ValueAs(ctx, v, &data).HasError() {
+			continue
+		}
+
+		if data.Name.IsNull() || data.Name.IsUnknown() {
+			continue
+		}
+
+		if v := flex.ExpandFrameworkStringSet(ctx, data.Values); v != nil {
+			filters = append(filters, &ec2.Filter{
+				Name:   flex.StringFromFramework(ctx, data.Name),
+				Values: v,
+			})
 		}
 	}
 

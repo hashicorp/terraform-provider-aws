@@ -65,6 +65,46 @@ resource "aws_backup_framework" "Example" {
     name = "BACKUP_RECOVERY_POINT_MANUAL_DELETION_DISABLED"
   }
 
+  control {
+    name = "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_VAULT_LOCK"
+
+    input_parameter {
+      name  = "maxRetentionDays"
+      value = "100"
+    }
+
+    input_parameter {
+      name  = "minRetentionDays"
+      value = "1"
+    }
+
+    scope {
+      compliance_resource_types = [
+        "EBS"
+      ]
+    }
+  }
+
+  control {
+    name = "BACKUP_LAST_RECOVERY_POINT_CREATED"
+
+    input_parameter {
+      name  = "recoveryPointAgeUnit"
+      value = "days"
+    }
+
+    input_parameter {
+      name  = "recoveryPointAgeValue"
+      value = "1"
+    }
+
+    scope {
+      compliance_resource_types = [
+        "EBS"
+      ]
+    }
+  }
+
   tags = {
     "Name" = "Example Framework"
   }
@@ -100,14 +140,6 @@ For **scope** the following attributes are supported:
 * `compliance_resource_types` - (Optional) Describes whether the control scope includes one or more types of resources, such as EFS or RDS.
 * `tags` - (Optional) The tag key-value pair applied to those AWS resources that you want to trigger an evaluation for a rule. A maximum of one key-value pair can be provided.
 
-### Timeouts
-
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
-
-* `create` - (Defaults to 2 mins) Used when creating the framework
-* `update` - (Defaults to 2 mins) Used when updating the framework
-* `delete` - (Defaults to 2 mins) Used when deleting the framework
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -118,6 +150,14 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The id of the backup framework.
 * `status` - A framework consists of one or more controls. Each control governs a resource, such as backup plans, backup selections, backup vaults, or recovery points. You can also turn AWS Config recording on or off for each resource. For more information refer to the [AWS documentation for Framework Status](https://docs.aws.amazon.com/aws-backup/latest/devguide/API_DescribeFramework.html#Backup-DescribeFramework-response-FrameworkStatus)
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `2m`)
+* `update` - (Default `2m`)
+* `delete` - (Default `2m`)
 
 ## Import
 

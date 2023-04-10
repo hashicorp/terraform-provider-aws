@@ -2,19 +2,19 @@ package cloudcontrol
 
 import (
 	"context"
-	"fmt"
 	"regexp"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_cloudcontrolapi_resource")
 func DataSourceResource() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceResourceRead,
+		ReadWithoutTimeout: dataSourceResourceRead,
 
 		Schema: map[string]*schema.Schema{
 			"identifier": {
@@ -43,21 +43,22 @@ func DataSourceResource() *schema.Resource {
 }
 
 func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudControlConn
+	conn := meta.(*conns.AWSClient).CloudControlClient()
 
 	identifier := d.Get("identifier").(string)
-	resourceDescription, err := FindResourceByID(ctx, conn,
+	typeName := d.Get("type_name").(string)
+	resourceDescription, err := FindResource(ctx, conn,
 		identifier,
-		d.Get("type_name").(string),
+		typeName,
 		d.Get("type_version_id").(string),
 		d.Get("role_arn").(string),
 	)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Cloud Control API Resource (%s): %w", identifier, err))
+		return diag.Errorf("reading Cloud Control API (%s) Resource (%s): %s", typeName, identifier, err)
 	}
 
-	d.SetId(aws.StringValue(resourceDescription.Identifier))
+	d.SetId(aws.ToString(resourceDescription.Identifier))
 
 	d.Set("properties", resourceDescription.Properties)
 

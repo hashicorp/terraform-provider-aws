@@ -12,8 +12,9 @@ func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_basic(t *testing.T
 	// This really ought to be able to be a unit test rather than an
 	// acceptance test, but just instantiating the AWS provider requires
 	// some AWS API calls, and so this needs valid AWS credentials to work.
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -29,7 +30,7 @@ func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_basic(t *testing.T
 	})
 }
 
-//lintignore:AWSAT003
+// lintignore:AWSAT003
 var testAccCoreNetworkPolicyDocumentDataSourceConfig_basic = `
 data "aws_networkmanager_core_network_policy_document" "test" {
   core_network_configuration {
@@ -271,7 +272,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 }
 `
 
-//lintignore:AWSAT003
+// lintignore:AWSAT003
 func testAccPolicyDocumentExpectedJSON() string {
 	return `{
   "version": "2021.12",

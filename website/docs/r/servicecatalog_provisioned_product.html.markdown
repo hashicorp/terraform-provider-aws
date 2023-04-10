@@ -14,6 +14,8 @@ A provisioned product is a resourced instance of a product. For example, provisi
 
 Like this resource, the `aws_servicecatalog_record` data source also provides information about a provisioned product. Although a Service Catalog record provides some overlapping information with this resource, a record is tied to a provisioned product event, such as provisioning, termination, and updating.
 
+~> **NOTE:** This resource will continue to function normally, _not_ returning an error unless AWS does, if a stack has a `status` of `TAINTED`. "`TAINTED`" means that Service Catalog, from its perspective, completed an update but the stack is not exactly what you requested. For example, if you request to update a stack to a new version but the request fails, AWS will roll back the stack to the current version and give a `TAINTED` status. (`status_message` also provides more information.) This is a little different than Terraform's typical declarative way. However, the approach aligns with AWS's. When `TAINTED`, the stack is in a "stable state" and "ready to perform any operation."  
+
 -> **Tip:** If you include conflicted keys as tags, AWS will report an error, "Parameter validation failed: Missing required parameter in Tags[N]:Value".
 
 -> **Tip:** A "provisioning artifact" is also referred to as a "version." A "distributor" is also referred to as a "vendor."
@@ -103,7 +105,7 @@ In addition to all arguments above, the following attributes are exported:
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `type` - Type of provisioned product. Valid values are `CFN_STACK` and `CFN_STACKSET`.
 
-### status Meanings
+### `status` Meanings
 
 ~> **NOTE:** [Enable logging](https://www.terraform.io/plugin/log/managing) to `WARN` verbosity to further investigate error messages associated with a provisioned product in the `ERROR` or `TAINTED` state which can occur during resource creation or update.
 
@@ -116,13 +118,12 @@ valid results. Wait for an `AVAILABLE` status before performing operations.
 
 ## Timeouts
 
-`aws_servicecatalog_provisioned_product` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `30 minutes`)
-- `read` - (Default `10 minutes`)
-- `update` - (Default `30 minutes`)
-- `delete` - (Default `30 minutes`)
+- `create` - (Default `30m`)
+- `read` - (Default `10m`)
+- `update` - (Default `30m`)
+- `delete` - (Default `30m`)
 
 ## Import
 

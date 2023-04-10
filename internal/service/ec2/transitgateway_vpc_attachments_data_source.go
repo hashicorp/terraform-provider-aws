@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"context"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -10,9 +11,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_ec2_transit_gateway_vpc_attachments")
 func DataSourceTransitGatewayVPCAttachments() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayVPCAttachmentsRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"filter": DataSourceFiltersSchema(),
@@ -26,7 +32,7 @@ func DataSourceTransitGatewayVPCAttachments() *schema.Resource {
 }
 
 func dataSourceTransitGatewayVPCAttachmentsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeTransitGatewayVpcAttachmentsInput{}
 
@@ -38,7 +44,7 @@ func dataSourceTransitGatewayVPCAttachmentsRead(ctx context.Context, d *schema.R
 		input.Filters = nil
 	}
 
-	output, err := FindTransitGatewayVPCAttachments(conn, input)
+	output, err := FindTransitGatewayVPCAttachments(ctx, conn, input)
 
 	if err != nil {
 		return diag.Errorf("reading EC2 Transit Gateway VPC Attachments: %s", err)

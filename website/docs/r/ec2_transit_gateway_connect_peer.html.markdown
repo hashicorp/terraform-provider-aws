@@ -20,7 +20,7 @@ resource "aws_ec2_transit_gateway_connect" "example" {
 
 resource "aws_ec2_transit_gateway_connect_peer" "example" {
   peer_address                  = "10.1.2.3"
-  inside_cidr_blocks            = "169.254.100.0/29"
+  inside_cidr_blocks            = ["169.254.100.0/29"]
   transit_gateway_attachment_id = aws_ec2_transit_gateway_connect.example.id
 }
 ```
@@ -46,10 +46,10 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_ec2_transit_gateway_connect_peer` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10 minutes`) Used for EC2 Transit Gateway Connect Peer creation
-- `delete` - (Default `10 minutes`) Used for EC2 Transit Gateway Connect Peer deletion
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
