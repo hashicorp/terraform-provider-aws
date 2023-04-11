@@ -34,7 +34,6 @@ const testAccOrganizationalPoliciesDataSourceConfig_basic = `
 data "aws_organizations_organization" "current" {}
 
 resource "aws_organizations_organizational_unit" "test" {
-  name      = "test"
   target_id = data.aws_organizations_organization.current.roots[0].id
 }
 `
