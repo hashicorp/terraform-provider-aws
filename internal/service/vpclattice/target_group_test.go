@@ -442,7 +442,7 @@ resource "aws_vpclattice_target_group" "test" {
 
       matcher {
         value = "200-299"
-	  }
+      }
 
       path             = "/health"
       port             = 8443
@@ -475,7 +475,7 @@ resource "aws_vpclattice_target_group" "test" {
 
       matcher {
         value = "202"
-	  }
+      }
 
       path             = "/health"
       port             = 8443
