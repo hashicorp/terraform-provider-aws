@@ -30,8 +30,9 @@ resource "aws_vpclattice_target_group" "example" {
 
 ```terraform
 resource "aws_vpclattice_target_group" "example" {
-  name         = "example"
-  type         = "ALB"
+  name = "example"
+  type = "ALB"
+
   config {
     port             = 443
     protocol         = "HTTPS"
