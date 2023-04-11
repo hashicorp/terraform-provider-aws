@@ -28,7 +28,7 @@ const (
 )
 
 // @SDKResource("aws_ssmincidents_replication_set", name="Replication Set")
-// @Tags(identifierAttribute="arn")
+// @Tags(identifierAttribute="id")
 func ResourceReplicationSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationSetCreate,
@@ -183,6 +183,15 @@ func resourceReplicationSetUpdate(ctx context.Context, d *schema.ResourceData, m
 
 		if err := ssmincidents.NewWaitForReplicationSetActiveWaiter(client).Wait(ctx, getReplicationSetInput, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return create.DiagError(names.SSMIncidents, create.ErrActionWaitingForUpdate, ResNameReplicationSet, d.Id(), err)
+		}
+	}
+
+	// tags_all does not detect changes when tag value is "" while this change is detected by tags
+	if d.HasChanges("tags_all", "tags") {
+		log.Printf("[DEBUG] Updating SSMIncidents ReplicationSet tags")
+
+		if err := updateResourceTags(ctx, client, d); err != nil {
+			return create.DiagError(names.SSMIncidents, create.ErrActionUpdating, ResNameReplicationSet, d.Id(), err)
 		}
 	}
 
