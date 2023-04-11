@@ -49,10 +49,6 @@ func ResourceTargetGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"client_token": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 			"config": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -193,9 +189,9 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
 	in := &vpclattice.CreateTargetGroupInput{
+		ClientToken: aws.String(id.UniqueId()),
 		Name:        aws.String(d.Get("name").(string)),
 		Type:        types.TargetGroupType(d.Get("type").(string)),
-		ClientToken: aws.String(id.UniqueId()),
 		Tags:        GetTagsIn(ctx),
 	}
 
@@ -443,10 +439,6 @@ func flattenTargetGroupConfig(apiObject *types.TargetGroupConfig) []map[string]i
 }
 
 func flattenHealthCheckConfig(apiObject *types.HealthCheckConfig, port int32) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
 	m := map[string]interface{}{
 		"enabled":             aws.Bool(*apiObject.Enabled),
 		"interval":            aws.Int32(*apiObject.HealthCheckIntervalSeconds),
@@ -502,10 +494,6 @@ func expandConfigAttributes(tfMap map[string]interface{}) *types.TargetGroupConf
 }
 
 func expandHealthCheckConfigAttributes(tfMap map[string]interface{}) *types.HealthCheckConfig {
-	if tfMap == nil {
-		return nil
-	}
-
 	apiObject := &types.HealthCheckConfig{}
 
 	if v, ok := tfMap["enabled"].(bool); ok {

@@ -191,9 +191,8 @@ resource "aws_vpc" "test" {
 func testAccTargetGroupConfig_fullInstance(rName, rType string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpclattice_target_group" "test" {
-  name         = %[1]q
-  type         = %[2]q
-  client_token = "tstclienttoken"
+  name = %[1]q
+  type = %[2]q
 
   config {
     port             = 80

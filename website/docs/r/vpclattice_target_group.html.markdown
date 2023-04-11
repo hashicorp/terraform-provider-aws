@@ -32,7 +32,6 @@ Basic usage with Health check
 resource "aws_vpclattice_target_group" "example" {
   name         = "example"
   type         = "INSTANCE/ALB/IP"
-  client_token = "tstclienttoken"
   config {
     port             = 443
     protocol         = "HTTPS"
@@ -78,8 +77,6 @@ The following arguments are required:
 - `vpc_identifier` - (Required) The ID of the VPC.
 
 The following arguments are optional:
-
-- `client_token` - (Optional) A unique, case-sensitive identifier that you provide to ensure the idempotency of the request. If you retry a request that completed successfully using the same client token and parameters, the retry succeeds without performing any actions. If the parameters aren't identical, the retry fails.
 
 - `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
