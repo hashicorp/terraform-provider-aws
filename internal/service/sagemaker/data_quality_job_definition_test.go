@@ -776,7 +776,7 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
     initial_sampling_percentage = 100
 
     destination_s3_uri = "s3://${aws_s3_bucket.test.bucket_regional_domain_name}/capture"
-  
+
     capture_options {
       capture_mode = "Input"
     }
@@ -832,7 +832,7 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 func testAccDataQualityJobDefinitionConfig_appSpecificationOptional(rName string) string {
 	return acctest.ConfigCompose(testAccDataQualityJobDefinitionConfig_batchTransformBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
-  name                 = %[1]q
+  name = %[1]q
   data_quality_app_specification {
     image_uri = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
     environment = {
@@ -956,7 +956,7 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
       data_captured_destination_s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/captured"
       dataset_format {
         csv {
-	        header = true
+          header = true
         }
       }
     }
@@ -1026,7 +1026,7 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
       data_captured_destination_s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/captured"
       dataset_format {
         json {
-	        line = true
+          line = true
         }
       }
     }
@@ -1040,8 +1040,8 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
   }
   job_resources {
     cluster_config {
-      instance_count = 1
-      instance_type = "ml.t3.medium"
+      instance_count    = 1
+      instance_type     = "ml.t3.medium"
       volume_size_in_gb = 20
     }
   }
