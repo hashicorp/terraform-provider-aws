@@ -152,7 +152,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	if v, ok := d.Get("api_passthrough").(string); ok && v != "" {
 		ap := &acmpca.ApiPassthrough{}
 		if err := json.Unmarshal([]byte(v), ap); err != nil {
-			return sdkdiag.AppendErrorf(diags, "error decoding api_passthrough: %w", err)
+			return sdkdiag.AppendErrorf(diags, "decoding api_passthrough: %s", err)
 		}
 		input.ApiPassthrough = ap
 	}
@@ -237,10 +237,11 @@ func resourceCertificateRevoke(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	// Certificate can contain invalid extension values that will prevent full certificate parsing hence revocation
-	// but still have serial number that we need in order to revoke it
+	// but still have serial number that we need in order to revoke it.
 	serial, err := getCertificateSerial(block.Bytes)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Failed to get Certificate serial number (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting ACM PCA Certificate (%s) serial number: %s", d.Id(), err)
 	}
 
 	input := &acmpca.RevokeCertificateInput{
