@@ -869,13 +869,13 @@ func flattenMonitoringNetworkConfig(config *sagemaker.MonitoringNetworkConfig) [
 	}
 
 	if config.VpcConfig != nil {
-		m["vpc_config"] = flattenVpcConfig(config.VpcConfig)
+		m["vpc_config"] = flattenVPCConfig(config.VpcConfig)
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenVpcConfig(config *sagemaker.VpcConfig) []map[string]interface{} {
+func flattenVPCConfig(config *sagemaker.VpcConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -1282,13 +1282,13 @@ func expandMonitoringNetworkConfig(configured []interface{}) *sagemaker.Monitori
 	}
 
 	if v, ok := m["vpc_config"].([]interface{}); ok && len(v) > 0 {
-		c.VpcConfig = expandVpcConfig(v)
+		c.VpcConfig = expandVPCConfig(v)
 	}
 
 	return c
 }
 
-func expandVpcConfig(configured []interface{}) *sagemaker.VpcConfig {
+func expandVPCConfig(configured []interface{}) *sagemaker.VpcConfig {
 	if len(configured) == 0 {
 		return nil
 	}
