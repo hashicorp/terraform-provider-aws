@@ -2407,9 +2407,9 @@ resource "aws_wafv2_web_acl" "test" {
       sampled_requests_enabled   = false
     }
 
-	captcha_config {
-      immunity_time_property {
-        immunity_time = 240
+      captcha_config {
+        immunity_time_property {
+          immunity_time = 240
       }
     }
   }
