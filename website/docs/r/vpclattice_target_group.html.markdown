@@ -1,7 +1,7 @@
 ---
-subcategory: 'VPC Lattice'
-layout: 'aws'
-page_title: 'AWS: aws_vpclattice_target_group'
+subcategory: "VPC Lattice"
+layout: "aws"
+page_title: "AWS: aws_vpclattice_target_group"
 description: |-
   Terraform resource for managing an AWS VPC Lattice Target Group.
 ---
