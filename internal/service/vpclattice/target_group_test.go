@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
-
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,7 +36,7 @@ func TestAccVPCLatticeTargetGroup_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCLatticeTargetGroupConfig_basic(rName, "INSTANCE"),
+				Config: testAccTargetGroupConfig_basic(rName, "INSTANCE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile("targetgroup/.+$")),
@@ -67,7 +66,7 @@ func TestAccVPCLatticeTargetGroup_full(t *testing.T) {
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCLatticeTargetGroupConfig_fullIP(rName, "IP"),
+				Config: testAccTargetGroupConfig_fullIP(rName, "IP"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -82,7 +81,7 @@ func TestAccVPCLatticeTargetGroup_full(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccVPCLatticeTargetGroupConfig_fulllambda(rName),
+				Config: testAccTargetGroupConfig_fulllambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -90,7 +89,7 @@ func TestAccVPCLatticeTargetGroup_full(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccVPCLatticeTargetGroupConfig_fullInstance(rName, "INSTANCE"),
+				Config: testAccTargetGroupConfig_fullInstance(rName, "INSTANCE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -100,7 +99,7 @@ func TestAccVPCLatticeTargetGroup_full(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccVPCLatticeTargetGroupConfig_fullAlb(rName, "ALB"),
+				Config: testAccTargetGroupConfig_fullAlb(rName, "ALB"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -135,7 +134,7 @@ func TestAccVPCLatticeTargetGroup_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCLatticeTargetGroupConfig_fulllambda(rName),
+				Config: testAccTargetGroupConfig_fulllambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceTargetGroup(), resourceName),
@@ -146,9 +145,8 @@ func TestAccVPCLatticeTargetGroup_disappears(t *testing.T) {
 	})
 }
 
-func testAccVPCLatticeTargetGroupConfig_fulllambda(rName string) string {
+func testAccTargetGroupConfig_fulllambda(rName string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {}
 resource "aws_vpclattice_target_group" "test" {
   name = %[1]q
   type = "LAMBDA"
@@ -156,10 +154,8 @@ resource "aws_vpclattice_target_group" "test" {
 `, rName)
 }
 
-func testAccVPCLatticeTargetGroupConfig_fullIP(rName, rType string) string {
+func testAccTargetGroupConfig_fullIP(rName, rType string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-data "aws_region" "current" {}
-
 resource "aws_vpclattice_target_group" "test" {
 	name     = %[1]q
 	type     = %[2]q
@@ -186,16 +182,14 @@ resource "aws_vpclattice_target_group" "test" {
 	}
   }
 
-  resource "aws_vpc" "test" {
+resource "aws_vpc" "test" {
 	cidr_block = "10.0.0.0/16"
  }
 `, rName, rType))
 }
 
-func testAccVPCLatticeTargetGroupConfig_fullInstance(rName, rType string) string {
+func testAccTargetGroupConfig_fullInstance(rName, rType string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-data "aws_region" "current" {}
-
 resource "aws_vpclattice_target_group" "test" {
 	name     	 = %[1]q
 	type     	 = %[2]q
@@ -222,16 +216,14 @@ resource "aws_vpclattice_target_group" "test" {
 	}
   }
 
-  resource "aws_vpc" "test" {
+resource "aws_vpc" "test" {
 	cidr_block = "10.0.0.0/16"
  }
 `, rName, rType))
 }
 
-func testAccVPCLatticeTargetGroupConfig_fullAlb(rName, rType string) string {
+func testAccTargetGroupConfig_fullAlb(rName, rType string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-data "aws_region" "current" {}
-
 resource "aws_vpclattice_target_group" "test" {
 	name     = %[1]q
 	type     = %[2]q
@@ -244,16 +236,14 @@ resource "aws_vpclattice_target_group" "test" {
 	}
   }
 
-  resource "aws_vpc" "test" {
+resource "aws_vpc" "test" {
 	cidr_block = "10.0.0.0/16"
  }
 `, rName, rType))
 }
 
-func testAccVPCLatticeTargetGroupConfig_basic(rName, rType string) string {
+func testAccTargetGroupConfig_basic(rName, rType string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-data "aws_region" "current" {}
-
 resource "aws_vpclattice_target_group" "test" {
 	name     = %[1]q
 	type     = %[2]q
@@ -265,7 +255,7 @@ resource "aws_vpclattice_target_group" "test" {
 	}
   }
 
-  resource "aws_vpc" "test" {
+resource "aws_vpc" "test" {
 	cidr_block = "10.0.0.0/16"
  }
 `, rName, rType))
