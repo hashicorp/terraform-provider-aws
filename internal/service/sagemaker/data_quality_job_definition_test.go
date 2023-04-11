@@ -680,11 +680,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 data "aws_sagemaker_prebuilt_ecr_image" "monitor" {
   repository_name = "sagemaker-model-monitor-analyzer"
   image_tag       = "latest"
@@ -743,11 +738,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.id
   key    = "model.tar.gz"
@@ -784,7 +774,9 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
 
   data_capture_config {
     initial_sampling_percentage = 100
+
     destination_s3_uri = "s3://${aws_s3_bucket.test.bucket_regional_domain_name}/capture"
+  
     capture_options {
       capture_mode = "Input"
     }
@@ -807,9 +799,9 @@ data "aws_sagemaker_prebuilt_ecr_image" "monitor" {
 }
 
 func testAccDataQualityJobDefinitionConfig_endpointBasic(rName string) string {
-	return testAccDataQualityJobDefinitionConfig_endpointBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataQualityJobDefinitionConfig_endpointBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
-  name                 = %[1]q
+  name = %[1]q
   data_quality_app_specification {
     image_uri = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
   }
@@ -821,24 +813,24 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
   data_quality_job_output_config {
     monitoring_outputs {
       s3_output {
-	s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+        s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
       }
     }
   }
   job_resources {
     cluster_config {
-      instance_count = 1
-      instance_type = "ml.t3.medium"
+      instance_count    = 1
+      instance_type     = "ml.t3.medium"
       volume_size_in_gb = 20
     }
   }
   role_arn = aws_iam_role.test.arn
 }
-`, rName)
+`, rName))
 }
 
 func testAccDataQualityJobDefinitionConfig_appSpecificationOptional(rName string) string {
-	return testAccDataQualityJobDefinitionConfig_batchTransformBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataQualityJobDefinitionConfig_batchTransformBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
   name                 = %[1]q
   data_quality_app_specification {
@@ -846,7 +838,7 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
     environment = {
       foo = "bar"
     }
-    record_preprocessor_source_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/pre.sh"
+    record_preprocessor_source_uri      = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/pre.sh"
     post_analytics_processor_source_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/post.sh"
   }
   data_quality_job_input {
@@ -860,26 +852,26 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
   data_quality_job_output_config {
     monitoring_outputs {
       s3_output {
-	s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+        s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
       }
     }
   }
   job_resources {
     cluster_config {
-      instance_count = 1
-      instance_type = "ml.t3.medium"
+      instance_count    = 1
+      instance_type     = "ml.t3.medium"
       volume_size_in_gb = 20
     }
   }
   role_arn = aws_iam_role.test.arn
 }
-`, rName)
+`, rName))
 }
 
 func testAccDataQualityJobDefinitionConfig_baselineConfig(rName string) string {
-	return testAccDataQualityJobDefinitionConfig_batchTransformBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataQualityJobDefinitionConfig_batchTransformBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
-  name                 = %[1]q
+  name = %[1]q
   data_quality_app_specification {
     image_uri = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
   }
@@ -902,26 +894,26 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
   data_quality_job_output_config {
     monitoring_outputs {
       s3_output {
-	s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+        s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
       }
     }
   }
   job_resources {
     cluster_config {
-      instance_count = 1
-      instance_type = "ml.t3.medium"
+      instance_count    = 1
+      instance_type     = "ml.t3.medium"
       volume_size_in_gb = 20
     }
   }
   role_arn = aws_iam_role.test.arn
 }
-`, rName)
+`, rName))
 }
 
 func testAccDataQualityJobDefinitionConfig_batchTransformBasic(rName string) string {
 	return acctest.ConfigCompose(testAccDataQualityJobDefinitionConfig_batchTransformBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
-  name                 = %[1]q
+  name = %[1]q
   data_quality_app_specification {
     image_uri = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
   }
@@ -936,14 +928,14 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
   data_quality_job_output_config {
     monitoring_outputs {
       s3_output {
-	s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+        s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
       }
     }
   }
   job_resources {
     cluster_config {
-      instance_count = 1
-      instance_type = "ml.t3.medium"
+      instance_count    = 1
+      instance_type     = "ml.t3.medium"
       volume_size_in_gb = 20
     }
   }
@@ -955,7 +947,7 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 func testAccDataQualityJobDefinitionConfig_batchTransformCsvHeader(rName string) string {
 	return acctest.ConfigCompose(testAccDataQualityJobDefinitionConfig_batchTransformBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
-  name                 = %[1]q
+  name = %[1]q
   data_quality_app_specification {
     image_uri = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
   }
@@ -964,22 +956,22 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
       data_captured_destination_s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/captured"
       dataset_format {
         csv {
-	  header = true
-	}
+	        header = true
+        }
       }
     }
   }
   data_quality_job_output_config {
     monitoring_outputs {
       s3_output {
-	s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+        s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
       }
     }
   }
   job_resources {
     cluster_config {
-      instance_count = 1
-      instance_type = "ml.t3.medium"
+      instance_count    = 1
+      instance_type     = "ml.t3.medium"
       volume_size_in_gb = 20
     }
   }
@@ -991,7 +983,7 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 func testAccDataQualityJobDefinitionConfig_batchTransformJson(rName string) string {
 	return acctest.ConfigCompose(testAccDataQualityJobDefinitionConfig_batchTransformBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
-  name                 = %[1]q
+  name = %[1]q
   data_quality_app_specification {
     image_uri = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
   }
@@ -1006,14 +998,14 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
   data_quality_job_output_config {
     monitoring_outputs {
       s3_output {
-	s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+        s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
       }
     }
   }
   job_resources {
     cluster_config {
-      instance_count = 1
-      instance_type = "ml.t3.medium"
+      instance_count    = 1
+      instance_type     = "ml.t3.medium"
       volume_size_in_gb = 20
     }
   }
@@ -1025,7 +1017,7 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 func testAccDataQualityJobDefinitionConfig_batchTransformJsonLine(rName string) string {
 	return acctest.ConfigCompose(testAccDataQualityJobDefinitionConfig_batchTransformBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
-  name                 = %[1]q
+  name = %[1]q
   data_quality_app_specification {
     image_uri = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
   }
@@ -1034,15 +1026,15 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
       data_captured_destination_s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/captured"
       dataset_format {
         json {
-	  line = true
-	}
+	        line = true
+        }
       }
     }
   }
   data_quality_job_output_config {
     monitoring_outputs {
       s3_output {
-	s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+        s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
       }
     }
   }
@@ -1061,7 +1053,7 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 func testAccDataQualityJobDefinitionConfig_batchTransformOptional(rName string) string {
 	return acctest.ConfigCompose(testAccDataQualityJobDefinitionConfig_batchTransformBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
-  name                 = %[1]q
+  name = %[1]q
   data_quality_app_specification {
     image_uri = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
   }
@@ -1071,22 +1063,22 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
       dataset_format {
         csv {}
       }
-      local_path = "/opt/ml/processing/local_path"
+      local_path                = "/opt/ml/processing/local_path"
       s3_data_distribution_type = "ShardedByS3Key"
-      s3_input_mode = "Pipe"
+      s3_input_mode             = "Pipe"
     }
   }
   data_quality_job_output_config {
     monitoring_outputs {
       s3_output {
-	s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+        s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
       }
     }
   }
   job_resources {
     cluster_config {
-      instance_count = 1
-      instance_type = "ml.t3.medium"
+      instance_count    = 1
+      instance_type     = "ml.t3.medium"
       volume_size_in_gb = 20
     }
   }
@@ -1096,37 +1088,37 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 }
 
 func testAccDataQualityJobDefinitionConfig_endpointOptional(rName string) string {
-	return testAccDataQualityJobDefinitionConfig_endpointBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataQualityJobDefinitionConfig_endpointBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
-  name                 = %[1]q
+  name = %[1]q
   data_quality_app_specification {
     image_uri = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
   }
   data_quality_job_input {
     endpoint_input {
-      endpoint_name = aws_sagemaker_endpoint.test.name
-      local_path = "/opt/ml/processing/local_path"
+      endpoint_name             = aws_sagemaker_endpoint.test.name
+      local_path                = "/opt/ml/processing/local_path"
       s3_data_distribution_type = "ShardedByS3Key"
-      s3_input_mode = "Pipe"
+      s3_input_mode             = "Pipe"
     }
   }
   data_quality_job_output_config {
     monitoring_outputs {
       s3_output {
-	s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+        s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
       }
     }
   }
   job_resources {
     cluster_config {
-      instance_count = 1
-      instance_type = "ml.t3.medium"
+      instance_count    = 1
+      instance_type     = "ml.t3.medium"
       volume_size_in_gb = 20
     }
   }
   role_arn = aws_iam_role.test.arn
 }
-`, rName)
+`, rName))
 }
 
 func testAccDataQualityJobDefinitionConfig_outputConfigKmsKeyId(rName string) string {
@@ -1137,7 +1129,7 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_sagemaker_data_quality_job_definition" "test" {
-  name                 = %[1]q
+  name = %[1]q
   data_quality_app_specification {
     image_uri = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
   }
@@ -1153,14 +1145,14 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
     kms_key_id = aws_kms_key.test.arn
     monitoring_outputs {
       s3_output {
-	s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+        s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
       }
     }
   }
   job_resources {
     cluster_config {
-      instance_count = 1
-      instance_type = "ml.t3.medium"
+      instance_count    = 1
+      instance_type     = "ml.t3.medium"
       volume_size_in_gb = 20
     }
   }
@@ -1172,7 +1164,7 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 func testAccDataQualityJobDefinitionConfig_outputConfigOptional(rName string) string {
 	return acctest.ConfigCompose(testAccDataQualityJobDefinitionConfig_batchTransformBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
-  name                 = %[1]q
+  name = %[1]q
   data_quality_app_specification {
     image_uri = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
   }
@@ -1187,16 +1179,16 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
   data_quality_job_output_config {
     monitoring_outputs {
       s3_output {
-	s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
-	s3_upload_mode = "Continuous"
-	local_path = "/opt/ml/processing/local_path"
+        s3_uri         = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+        s3_upload_mode = "Continuous"
+        local_path     = "/opt/ml/processing/local_path"
       }
     }
   }
   job_resources {
     cluster_config {
-      instance_count = 1
-      instance_type = "ml.t3.medium"
+      instance_count    = 1
+      instance_type     = "ml.t3.medium"
       volume_size_in_gb = 20
     }
   }
@@ -1213,7 +1205,7 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_sagemaker_data_quality_job_definition" "test" {
-  name                 = %[1]q
+  name = %[1]q
   data_quality_app_specification {
     image_uri = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
   }
@@ -1228,14 +1220,14 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
   data_quality_job_output_config {
     monitoring_outputs {
       s3_output {
-	s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+        s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
       }
     }
   }
   job_resources {
     cluster_config {
-      instance_count = 1
-      instance_type = "ml.t3.medium"
+      instance_count    = 1
+      instance_type     = "ml.t3.medium"
       volume_size_in_gb = 20
       volume_kms_key_id = aws_kms_key.test.arn
     }
@@ -1248,7 +1240,7 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 func testAccDataQualityJobDefinitionConfig_stoppingCondition(rName string) string {
 	return acctest.ConfigCompose(testAccDataQualityJobDefinitionConfig_batchTransformBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
-  name                 = %[1]q
+  name = %[1]q
   data_quality_app_specification {
     image_uri = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
   }
@@ -1263,14 +1255,14 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
   data_quality_job_output_config {
     monitoring_outputs {
       s3_output {
-	s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+        s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
       }
     }
   }
   job_resources {
     cluster_config {
-      instance_count = 1
-      instance_type = "ml.t3.medium"
+      instance_count    = 1
+      instance_type     = "ml.t3.medium"
       volume_size_in_gb = 20
     }
   }
@@ -1285,7 +1277,7 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 func testAccDataQualityJobDefinitionConfig_tags1(rName string, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccDataQualityJobDefinitionConfig_batchTransformBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
-  name                 = %[1]q
+  name = %[1]q
   data_quality_app_specification {
     image_uri = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
   }
@@ -1300,14 +1292,14 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
   data_quality_job_output_config {
     monitoring_outputs {
       s3_output {
-	s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+        s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
       }
     }
   }
   job_resources {
     cluster_config {
-      instance_count = 1
-      instance_type = "ml.t3.medium"
+      instance_count    = 1
+      instance_type     = "ml.t3.medium"
       volume_size_in_gb = 20
     }
   }
@@ -1323,7 +1315,7 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 func testAccDataQualityJobDefinitionConfig_tags2(rName string, tagKey1, tagValue1 string, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccDataQualityJobDefinitionConfig_batchTransformBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
-  name                 = %[1]q
+  name = %[1]q
   data_quality_app_specification {
     image_uri = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
   }
@@ -1338,14 +1330,14 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
   data_quality_job_output_config {
     monitoring_outputs {
       s3_output {
-	s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+        s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
       }
     }
   }
   job_resources {
     cluster_config {
-      instance_count = 1
-      instance_type = "ml.t3.medium"
+      instance_count    = 1
+      instance_type     = "ml.t3.medium"
       volume_size_in_gb = 20
     }
   }
@@ -1364,15 +1356,18 @@ func testAccDataQualityJobDefinitionConfig_networkConfig(rName string) string {
 		acctest.ConfigVPCWithSubnets(rName, 1),
 		testAccDataQualityJobDefinitionConfig_batchTransformBase(rName),
 		fmt.Sprintf(`
-
 resource "aws_security_group" "test" {
   count = 1
 
   name = "%[1]s-${count.index}"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_sagemaker_data_quality_job_definition" "test" {
-  name                 = %[1]q
+  name = %[1]q
   data_quality_app_specification {
     image_uri = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
   }
@@ -1387,20 +1382,20 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
   data_quality_job_output_config {
     monitoring_outputs {
       s3_output {
-	s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+        s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
       }
     }
   }
   job_resources {
     cluster_config {
-      instance_count = 1
-      instance_type = "ml.t3.medium"
+      instance_count    = 1
+      instance_type     = "ml.t3.medium"
       volume_size_in_gb = 20
     }
   }
   network_config {
     vpc_config {
-      subnets = aws_subnet.test[*].id
+      subnets            = aws_subnet.test[*].id
       security_group_ids = aws_security_group.test[*].id
     }
   }
@@ -1414,15 +1409,18 @@ func testAccDataQualityJobDefinitionConfig_networkConfigTrafficEncryption(rName 
 		acctest.ConfigVPCWithSubnets(rName, 1),
 		testAccDataQualityJobDefinitionConfig_batchTransformBase(rName),
 		fmt.Sprintf(`
-
 resource "aws_security_group" "test" {
   count = 1
 
   name = "%[1]s-${count.index}"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_sagemaker_data_quality_job_definition" "test" {
-  name                 = %[1]q
+  name = %[1]q
   data_quality_app_specification {
     image_uri = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
   }
@@ -1437,21 +1435,21 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
   data_quality_job_output_config {
     monitoring_outputs {
       s3_output {
-	s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+        s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
       }
     }
   }
   job_resources {
     cluster_config {
-      instance_count = 1
-      instance_type = "ml.t3.medium"
+      instance_count    = 1
+      instance_type     = "ml.t3.medium"
       volume_size_in_gb = 20
     }
   }
   network_config {
     enable_inter_container_traffic_encryption = true
     vpc_config {
-      subnets = aws_subnet.test[*].id
+      subnets            = aws_subnet.test[*].id
       security_group_ids = aws_security_group.test[*].id
     }
   }
@@ -1465,15 +1463,18 @@ func testAccDataQualityJobDefinitionConfig_networkConfigEnableNetworkIsolation(r
 		acctest.ConfigVPCWithSubnets(rName, 1),
 		testAccDataQualityJobDefinitionConfig_batchTransformBase(rName),
 		fmt.Sprintf(`
-
 resource "aws_security_group" "test" {
   count = 1
 
   name = "%[1]s-${count.index}"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_sagemaker_data_quality_job_definition" "test" {
-  name                 = %[1]q
+  name = %[1]q
   data_quality_app_specification {
     image_uri = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
   }
@@ -1488,21 +1489,21 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
   data_quality_job_output_config {
     monitoring_outputs {
       s3_output {
-	s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+        s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
       }
     }
   }
   job_resources {
     cluster_config {
-      instance_count = 1
-      instance_type = "ml.t3.medium"
+      instance_count    = 1
+      instance_type     = "ml.t3.medium"
       volume_size_in_gb = 20
     }
   }
   network_config {
     enable_network_isolation = true
     vpc_config {
-      subnets = aws_subnet.test[*].id
+      subnets            = aws_subnet.test[*].id
       security_group_ids = aws_security_group.test[*].id
     }
   }
