@@ -157,107 +157,107 @@ resource "aws_vpclattice_target_group" "test" {
 func testAccTargetGroupConfig_fullIP(rName, rType string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpclattice_target_group" "test" {
-	name     = %[1]q
-	type     = %[2]q
+  name = %[1]q
+  type = %[2]q
 
-	config {
-	  port             = 443
-	  protocol         = "HTTPS"
-	  vpc_identifier   =  aws_vpc.test.id
-	  ip_address_type  = "IPV4"
-	  protocol_version = "HTTP1"
+  config {
+    port             = 443
+    protocol         = "HTTPS"
+    vpc_identifier   = aws_vpc.test.id
+    ip_address_type  = "IPV4"
+    protocol_version = "HTTP1"
 
-	  health_check {
-		enabled             	  = false
-		interval            	  = 30
-		timeout             	  = 5
-		healthy_threshold   	  = 2
-		unhealthy_threshold 	  = 2
-		matcher 		 		  = "200-299"
-		path             		  = "/"
-		port             		  = 80
-		protocol         		  = "HTTP"
-		protocol_version 		  = "HTTP1"
-	  }
-	}
+    health_check {
+      enabled             = false
+      interval            = 30
+      timeout             = 5
+      healthy_threshold   = 2
+      unhealthy_threshold = 2
+      matcher             = "200-299"
+      path                = "/"
+      port                = 80
+      protocol            = "HTTP"
+      protocol_version    = "HTTP1"
+    }
   }
+}
 
 resource "aws_vpc" "test" {
-	cidr_block = "10.0.0.0/16"
- }
+  cidr_block = "10.0.0.0/16"
+}
 `, rName, rType))
 }
 
 func testAccTargetGroupConfig_fullInstance(rName, rType string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpclattice_target_group" "test" {
-	name     	 = %[1]q
-	type     	 = %[2]q
-	client_token = "tstclienttoken"
+  name         = %[1]q
+  type         = %[2]q
+  client_token = "tstclienttoken"
 
-	config {
-	  port             = 80
-	  protocol         = "HTTP"
-	  vpc_identifier   =  aws_vpc.test.id
-	  protocol_version = "GRPC"
+  config {
+    port             = 80
+    protocol         = "HTTP"
+    vpc_identifier   = aws_vpc.test.id
+    protocol_version = "GRPC"
 
-	  health_check {
-		enabled             = true
-		interval            = 20
-		timeout             = 10
-		healthy_threshold   = 2
-		unhealthy_threshold = 2
-		matcher 		    = "200-299"
-		path             	= "/instance"
-		port             	= 80
-		protocol         	= "HTTP"
-		protocol_version 	= "HTTP1"
-	  }
-	}
+    health_check {
+      enabled             = true
+      interval            = 20
+      timeout             = 10
+      healthy_threshold   = 2
+      unhealthy_threshold = 2
+      matcher             = "200-299"
+      path                = "/instance"
+      port                = 80
+      protocol            = "HTTP"
+      protocol_version    = "HTTP1"
+    }
   }
+}
 
 resource "aws_vpc" "test" {
-	cidr_block = "10.0.0.0/16"
- }
+  cidr_block = "10.0.0.0/16"
+}
 `, rName, rType))
 }
 
 func testAccTargetGroupConfig_fullAlb(rName, rType string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpclattice_target_group" "test" {
-	name     = %[1]q
-	type     = %[2]q
+  name = %[1]q
+  type = %[2]q
 
-	config {
-		port             = 443
-		protocol         = "HTTPS"
-		vpc_identifier   = aws_vpc.test.id
-		protocol_version = "HTTP1"
-	}
+  config {
+    port             = 443
+    protocol         = "HTTPS"
+    vpc_identifier   = aws_vpc.test.id
+    protocol_version = "HTTP1"
   }
+}
 
 resource "aws_vpc" "test" {
-	cidr_block = "10.0.0.0/16"
- }
+  cidr_block = "10.0.0.0/16"
+}
 `, rName, rType))
 }
 
 func testAccTargetGroupConfig_basic(rName, rType string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpclattice_target_group" "test" {
-	name     = %[1]q
-	type     = %[2]q
+  name = %[1]q
+  type = %[2]q
 
-	config {
-		port             = 443
-		protocol         = "HTTPS"
-	  	vpc_identifier   = aws_vpc.test.id
-	}
+  config {
+    port           = 443
+    protocol       = "HTTPS"
+    vpc_identifier = aws_vpc.test.id
   }
+}
 
 resource "aws_vpc" "test" {
-	cidr_block = "10.0.0.0/16"
- }
+  cidr_block = "10.0.0.0/16"
+}
 `, rName, rType))
 }
 
@@ -319,10 +319,10 @@ resource "aws_vpclattice_target_group" "test" {
   type = "INSTANCE"
 
   config {
-	port             = 80
-	protocol         = "HTTP"
-	vpc_identifier   = aws_vpc.test.id
-	protocol_version = "HTTP1"
+    port             = 80
+    protocol         = "HTTP"
+    vpc_identifier   = aws_vpc.test.id
+    protocol_version = "HTTP1"
   }
 
   tags = {
@@ -331,8 +331,8 @@ resource "aws_vpclattice_target_group" "test" {
   }
 }
 resource "aws_vpc" "test" {
-	cidr_block = "10.0.0.0/16"
- }
+  cidr_block = "10.0.0.0/16"
+}
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
