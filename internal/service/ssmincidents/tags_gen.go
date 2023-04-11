@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists ssmincidents service tags.
@@ -86,7 +87,7 @@ func UpdateTags(ctx context.Context, conn *ssmincidents.Client, identifier strin
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &ssmincidents.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     removedTags.IgnoreAWS().Keys(),
+			TagKeys:     removedTags.IgnoreSystem(names.SSMIncidents).Keys(),
 		}
 
 		_, err := conn.UntagResource(ctx, input)
@@ -99,7 +100,7 @@ func UpdateTags(ctx context.Context, conn *ssmincidents.Client, identifier strin
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &ssmincidents.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreAWS()),
+			Tags:        Tags(updatedTags.IgnoreSystem(names.SSMIncidents)),
 		}
 
 		_, err := conn.TagResource(ctx, input)
