@@ -41,7 +41,7 @@ func FindOrganizationConfigRule(ctx aws.Context, conn *configservice.ConfigServi
 
 	output, err := conn.DescribeOrganizationConfigRulesWithContext(ctx, input)
 	if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
