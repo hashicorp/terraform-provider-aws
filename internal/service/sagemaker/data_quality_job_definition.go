@@ -19,9 +19,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_sagemaker_data_quality_job_definition")
+// @SDKResource("aws_sagemaker_data_quality_job_definition", name="Data Quality Job Definition")
+// @Tags(identifierAttribute="arn")
 func ResourceDataQualityJobDefinition() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataQualityJobDefinitionCreate,
@@ -442,9 +444,10 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
@@ -452,8 +455,6 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 func resourceDataQualityJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	var name string
 	if v, ok := d.GetOk("name"); ok {
@@ -468,12 +469,13 @@ func resourceDataQualityJobDefinitionCreate(ctx context.Context, d *schema.Resou
 	}
 
 	createOpts := &sagemaker.CreateDataQualityJobDefinitionInput{
-		JobDefinitionName:           aws.String(name),
 		DataQualityAppSpecification: expandDataQualityAppSpecification(d.Get("data_quality_app_specification").([]interface{})),
 		DataQualityJobInput:         expandDataQualityJobInput(d.Get("data_quality_job_input").([]interface{})),
 		DataQualityJobOutputConfig:  expandMonitoringOutputConfig(d.Get("data_quality_job_output_config").([]interface{})),
+		JobDefinitionName:           aws.String(name),
 		JobResources:                expandMonitoringResources(d.Get("job_resources").([]interface{})),
 		RoleArn:                     aws.String(roleArn),
+		Tags:                        GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("data_quality_baseline_config"); ok && len(v.([]interface{})) > 0 {
@@ -488,15 +490,12 @@ func resourceDataQualityJobDefinitionCreate(ctx context.Context, d *schema.Resou
 		createOpts.StoppingCondition = expandMonitoringStoppingCondition(v.([]interface{}))
 	}
 
-	if len(tags) > 0 {
-		createOpts.Tags = Tags(tags.IgnoreAWS())
+	_, err := conn.CreateDataQualityJobDefinitionWithContext(ctx, createOpts)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker Data Quality Job Definition (%s): %s", name, err)
 	}
 
-	log.Printf("[DEBUG] SageMaker Data Quality Job Definition create config: %#v", *createOpts)
-	_, err := conn.CreateDataQualityJobDefinitionWithContext(ctx, createOpts)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Data Quality Job Definition: %s", err)
-	}
 	d.SetId(name)
 
 	return append(diags, resourceDataQualityJobDefinitionRead(ctx, d, meta)...)
@@ -505,8 +504,6 @@ func resourceDataQualityJobDefinitionCreate(ctx context.Context, d *schema.Resou
 func resourceDataQualityJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	jobDefinition, err := FindDataQualityJobDefinitionByName(ctx, conn, d.Id())
 
@@ -552,36 +549,14 @@ func resourceDataQualityJobDefinitionRead(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "setting stopping_condition for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
-	tags, err := ListTags(ctx, conn, aws.StringValue(jobDefinition.JobDefinitionArn))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceDataQualityJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	// Tags only.
 
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Data Quality Job Definition (%s) tags: %s", d.Id(), err)
-		}
-	}
 	return append(diags, resourceDataQualityJobDefinitionRead(ctx, d, meta)...)
 }
 

@@ -57,6 +57,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDataQualityJobDefinition,
 			TypeName: "aws_sagemaker_data_quality_job_definition",
+			Name:     "Data Quality Job Definition",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceDevice,
