@@ -1145,78 +1145,6 @@ func TestAccRDSCluster_engineMode(t *testing.T) {
 	})
 }
 
-//func TestAccRDSCluster_EngineMode_global(t *testing.T) {
-//	ctx := acctest.Context(t)
-//	var dbCluster1 rds.DBCluster
-//
-//	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-//	resourceName := "aws_rds_cluster.test"
-//
-//	resource.ParallelTest(t, resource.TestCase{
-//		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
-//		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-//		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-//		CheckDestroy:             testAccCheckClusterDestroy(ctx),
-//		Steps: []resource.TestStep{
-//			{
-//				Config: testAccClusterConfig_EngineMode_global(rName),
-//				Check: resource.ComposeTestCheckFunc(
-//					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
-//					resource.TestCheckResourceAttr(resourceName, "engine_mode", "global"),
-//				),
-//			},
-//		},
-//	})
-//}
-
-//func TestAccRDSCluster_EngineMode_multiMaster(t *testing.T) {
-//	ctx := acctest.Context(t)
-//	var dbCluster1 rds.DBCluster
-//
-//	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-//	resourceName := "aws_rds_cluster.test"
-//
-//	resource.ParallelTest(t, resource.TestCase{
-//		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-//		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-//		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-//		CheckDestroy:             testAccCheckClusterDestroy(ctx),
-//		Steps: []resource.TestStep{
-//			{
-//				Config: testAccClusterConfig_EngineMode_multimaster(rName),
-//				Check: resource.ComposeTestCheckFunc(
-//					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
-//					resource.TestCheckResourceAttr(resourceName, "engine_mode", "multimaster"),
-//				),
-//			},
-//		},
-//	})
-//}
-
-//func TestAccRDSCluster_EngineMode_parallelQuery(t *testing.T) {
-//	ctx := acctest.Context(t)
-//	var dbCluster1 rds.DBCluster
-//
-//	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-//	resourceName := "aws_rds_cluster.test"
-//
-//	resource.ParallelTest(t, resource.TestCase{
-//		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-//		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-//		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-//		CheckDestroy:             testAccCheckClusterDestroy(ctx),
-//		Steps: []resource.TestStep{
-//			{
-//				Config: testAccClusterConfig_engineMode(rName, "parallelquery"),
-//				Check: resource.ComposeTestCheckFunc(
-//					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
-//					resource.TestCheckResourceAttr(resourceName, "engine_mode", "parallelquery"),
-//				),
-//			},
-//		},
-//	})
-//}
-
 func TestAccRDSCluster_engineVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -1903,39 +1831,6 @@ func TestAccRDSCluster_SnapshotIdentifier_deletionProtection(t *testing.T) {
 		},
 	})
 }
-
-//func TestAccRDSCluster_SnapshotIdentifierEngineMode_parallelQuery(t *testing.T) {
-//	ctx := acctest.Context(t)
-//	if testing.Short() {
-//		t.Skip("skipping long-running test in short mode")
-//	}
-//
-//	var dbCluster, sourceDbCluster rds.DBCluster
-//	var dbClusterSnapshot rds.DBClusterSnapshot
-//
-//	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-//	sourceDbResourceName := "aws_rds_cluster.source"
-//	snapshotResourceName := "aws_db_cluster_snapshot.test"
-//	resourceName := "aws_rds_cluster.test"
-//
-//	resource.ParallelTest(t, resource.TestCase{
-//		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-//		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-//		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-//		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
-//		Steps: []resource.TestStep{
-//			{
-//				Config: testAccClusterConfig_SnapshotID_engineMode(rName, "parallelquery"),
-//				Check: resource.ComposeTestCheckFunc(
-//					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
-//					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
-//					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-//					resource.TestCheckResourceAttr(resourceName, "engine_mode", "parallelquery"),
-//				),
-//			},
-//		},
-//	})
-//}
 
 func TestAccRDSCluster_SnapshotIdentifierEngineMode_provisioned(t *testing.T) {
 	ctx := acctest.Context(t)
