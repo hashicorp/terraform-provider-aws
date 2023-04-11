@@ -16,18 +16,54 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newResourceIAMPolicyAssignment,
+		},
+		{
+			Factory: newResourceIngestion,
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{}
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceDataSet,
+			TypeName: "aws_quicksight_data_set",
+		},
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
+			Factory:  ResourceAccountSubscription,
+			TypeName: "aws_quicksight_account_subscription",
+		},
+		{
+			Factory:  ResourceDataSet,
+			TypeName: "aws_quicksight_data_set",
+			Name:     "Data Set",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceDataSource,
 			TypeName: "aws_quicksight_data_source",
+			Name:     "Data Source",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceFolder,
+			TypeName: "aws_quicksight_folder",
+			Name:     "Folder",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceGroup,

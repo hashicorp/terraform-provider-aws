@@ -50,17 +50,17 @@ The following arguments are supported:
 
 ### Cookies Config
 
-`cookie_behavior` - (Required) Determines whether any cookies in viewer requests are included in the origin request key and automatically included in requests that CloudFront sends to the origin. Valid values are `none`, `whitelist` `all`.
+`cookie_behavior` - (Required) Determines whether any cookies in viewer requests are included in the origin request key and automatically included in requests that CloudFront sends to the origin. Valid values are `none`, `whitelist`, `all`, `allExcept`.
 `cookies` - (Optional) Object that contains a list of cookie names. See [Items](#items) for more information.
 
 ### Headers Config
 
-`header_behavior` - (Required) Determines whether any HTTP headers are included in the origin request key and automatically included in requests that CloudFront sends to the origin. Valid values are `none`, `whitelist`, `allViewer`, `allViewerAndWhitelistCloudFront`.
+`header_behavior` - (Required) Determines whether any HTTP headers are included in the origin request key and automatically included in requests that CloudFront sends to the origin. Valid values are `none`, `whitelist`, `allViewer`, `allViewerAndWhitelistCloudFront`, `allExcept`.
 `headers` - (Optional) Object that contains a list of header names. See [Items](#items) for more information.
 
 ### Query String Config
 
-`query_string_behavior` - (Required) Determines whether any URL query strings in viewer requests are included in the origin request key and automatically included in requests that CloudFront sends to the origin. Valid values are `none`, `whitelist`, `all`.
+`query_string_behavior` - (Required) Determines whether any URL query strings in viewer requests are included in the origin request key and automatically included in requests that CloudFront sends to the origin. Valid values are `none`, `whitelist`, `all`, `allExcept`.
 `query_strings` - (Optional) Object that contains a list of query string names. See [Items](#items) for more information.
 
 ### Items

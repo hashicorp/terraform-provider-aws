@@ -21,15 +21,54 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccLightsailLoadBalancer_basic(t *testing.T) {
+// LightSail only allows 5 load balancers per account. Serializing these tests simplifies running all
+// LoadBalancer tests without risk of hitting the account limit.
+func TestAccLightsailLoadBalancer_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]map[string]func(t *testing.T){
+		"lb": {
+			"basic":             testAccLoadBalancer_basic,
+			"disappears":        testAccLoadBalancer_disappears,
+			"name":              testAccLoadBalancer_name,
+			"health_check_path": testAccLoadBalancer_healthCheckPath,
+			"tags":              testAccLoadBalancer_tags,
+		},
+		"lb_attachment": {
+			"basic":      testAccLoadBalancerAttachment_basic,
+			"disappears": testAccLoadBalancerAttachment_disappears,
+		},
+		"lb_certificate": {
+			"basic":                     testAccLoadBalancerCertificate_basic,
+			"disappears":                testAccLoadBalancerCertificate_disappears,
+			"domain_validation_records": testAccLoadBalancerCertificate_domainValidationRecords,
+			"subject_alternative_names": testAccLoadBalancerCertificate_subjectAlternativeNames,
+		},
+		"lb_certificate_attachment": {
+			"basic": testAccLoadBalancerCertificateAttachment_basic,
+		},
+		"lb_https_redirection_policy": {
+			"basic": testAccLoadBalancerHTTPSRedirectionPolicy_basic,
+		},
+		"lb_stickiness_policy": {
+			"basic":           testAccLoadBalancerStickinessPolicy_basic,
+			"cookie_duration": testAccLoadBalancerStickinessPolicy_cookieDuration,
+			"enabled":         testAccLoadBalancerStickinessPolicy_enabled,
+			"disappears":      testAccLoadBalancerStickinessPolicy_disappears,
+		},
+	}
+
+	acctest.RunSerialTests2Levels(t, testCases, 0)
+}
+func testAccLoadBalancer_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var lb lightsail.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_lb.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -55,7 +94,7 @@ func TestAccLightsailLoadBalancer_basic(t *testing.T) {
 	})
 }
 
-func TestAccLightsailLoadBalancer_Name(t *testing.T) {
+func testAccLoadBalancer_name(t *testing.T) {
 	ctx := acctest.Context(t)
 	var lb lightsail.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -64,9 +103,9 @@ func TestAccLightsailLoadBalancer_Name(t *testing.T) {
 	lightsailNameWithUnderscore := fmt.Sprintf("%s_123456", rName)
 	resourceName := "aws_lightsail_lb.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -102,15 +141,15 @@ func TestAccLightsailLoadBalancer_Name(t *testing.T) {
 	})
 }
 
-func TestAccLightsailLoadBalancer_HealthCheckPath(t *testing.T) {
+func testAccLoadBalancer_healthCheckPath(t *testing.T) {
 	ctx := acctest.Context(t)
 	var lb lightsail.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_lb.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -141,15 +180,15 @@ func TestAccLightsailLoadBalancer_HealthCheckPath(t *testing.T) {
 	})
 }
 
-func TestAccLightsailLoadBalancer_Tags(t *testing.T) {
+func testAccLoadBalancer_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var lb1, lb2, lb3 lightsail.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_lb.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -220,7 +259,7 @@ func testAccCheckLoadBalancerExists(ctx context.Context, n string, lb *lightsail
 	}
 }
 
-func TestAccLightsailLoadBalancer_disappears(t *testing.T) {
+func testAccLoadBalancer_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var lb lightsail.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -243,9 +282,9 @@ func TestAccLightsailLoadBalancer_disappears(t *testing.T) {
 		return nil
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},

@@ -28,7 +28,7 @@ func TestAccACMPCACertificate_rootCertificate(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
@@ -72,7 +72,7 @@ func TestAccACMPCACertificate_rootCertificateWithApiPassthrough(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
@@ -118,7 +118,7 @@ func TestAccACMPCACertificate_subordinateCertificate(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
@@ -163,7 +163,7 @@ func TestAccACMPCACertificate_endEntityCertificate(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
@@ -208,7 +208,7 @@ func TestAccACMPCACertificate_Validity_endDate(t *testing.T) {
 	later := time.Now().Add(time.Minute * 10).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
@@ -253,7 +253,7 @@ func TestAccACMPCACertificate_Validity_absolute(t *testing.T) {
 	later := time.Now().Add(time.Minute * 10).Unix()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
@@ -427,9 +427,9 @@ resource "aws_acmpca_certificate" "test" {
     Extensions = {
       CustomExtensions = [
         {
-		  ObjectIdentifier = "2.5.29.30",
-		  Value            = "MBWgEzARgg8ucGVybWl0dGVkLnRlc3Q=",
-		  Critical         = true
+          ObjectIdentifier = "2.5.29.30",
+          Value            = "MBWgEzARgg8ucGVybWl0dGVkLnRlc3Q=",
+          Critical         = true
         },
       ]
     }

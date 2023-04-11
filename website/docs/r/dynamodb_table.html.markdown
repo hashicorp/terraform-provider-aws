@@ -176,6 +176,7 @@ Required arguments:
 Optional arguments:
 
 * `billing_mode` - (Optional) Controls how you are charged for read and write throughput and how you manage capacity. The valid values are `PROVISIONED` and `PAY_PER_REQUEST`. Defaults to `PROVISIONED`.
+* `deletion_protection_enabled` - (Optional) Enables deletion protection for table. Defaults to `false`.
 * `global_secondary_index` - (Optional) Describe a GSI for the table; subject to the normal limits on the number of GSIs, projected attributes, etc. See below.
 * `local_secondary_index` - (Optional, Forces new resource) Describe an LSI on the table; these can only be allocated _at creation_ so you cannot change this definition after you have created the resource. See below.
 * `point_in_time_recovery` - (Optional) Enable point-in-time recovery options. See below.

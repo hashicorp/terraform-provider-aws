@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -21,7 +21,7 @@ const (
 )
 
 // StatusNotebookInstance fetches the NotebookInstance and its Status
-func StatusNotebookInstance(ctx context.Context, conn *sagemaker.SageMaker, notebookName string) resource.StateRefreshFunc {
+func StatusNotebookInstance(ctx context.Context, conn *sagemaker.SageMaker, notebookName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindNotebookInstanceByName(ctx, conn, notebookName)
 
@@ -38,7 +38,7 @@ func StatusNotebookInstance(ctx context.Context, conn *sagemaker.SageMaker, note
 }
 
 // StatusModelPackageGroup fetches the ModelPackageGroup and its Status
-func StatusModelPackageGroup(ctx context.Context, conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
+func StatusModelPackageGroup(ctx context.Context, conn *sagemaker.SageMaker, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &sagemaker.DescribeModelPackageGroupInput{
 			ModelPackageGroupName: aws.String(name),
@@ -63,7 +63,7 @@ func StatusModelPackageGroup(ctx context.Context, conn *sagemaker.SageMaker, nam
 }
 
 // StatusImage fetches the Image and its Status
-func StatusImage(ctx context.Context, conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
+func StatusImage(ctx context.Context, conn *sagemaker.SageMaker, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &sagemaker.DescribeImageInput{
 			ImageName: aws.String(name),
@@ -92,7 +92,7 @@ func StatusImage(ctx context.Context, conn *sagemaker.SageMaker, name string) re
 }
 
 // StatusImageVersion fetches the ImageVersion and its Status
-func StatusImageVersion(ctx context.Context, conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
+func StatusImageVersion(ctx context.Context, conn *sagemaker.SageMaker, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &sagemaker.DescribeImageVersionInput{
 			ImageName: aws.String(name),
@@ -121,7 +121,7 @@ func StatusImageVersion(ctx context.Context, conn *sagemaker.SageMaker, name str
 }
 
 // StatusDomain fetches the Domain and its Status
-func StatusDomain(ctx context.Context, conn *sagemaker.SageMaker, domainID string) resource.StateRefreshFunc {
+func StatusDomain(ctx context.Context, conn *sagemaker.SageMaker, domainID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDomainByName(ctx, conn, domainID)
 
@@ -137,7 +137,7 @@ func StatusDomain(ctx context.Context, conn *sagemaker.SageMaker, domainID strin
 	}
 }
 
-func StatusFeatureGroup(ctx context.Context, conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
+func StatusFeatureGroup(ctx context.Context, conn *sagemaker.SageMaker, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindFeatureGroupByName(ctx, conn, name)
 
@@ -153,7 +153,7 @@ func StatusFeatureGroup(ctx context.Context, conn *sagemaker.SageMaker, name str
 	}
 }
 
-func StatusFlowDefinition(ctx context.Context, conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
+func StatusFlowDefinition(ctx context.Context, conn *sagemaker.SageMaker, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindFlowDefinitionByName(ctx, conn, name)
 
@@ -170,7 +170,7 @@ func StatusFlowDefinition(ctx context.Context, conn *sagemaker.SageMaker, name s
 }
 
 // StatusUserProfile fetches the UserProfile and its Status
-func StatusUserProfile(ctx context.Context, conn *sagemaker.SageMaker, domainID, userProfileName string) resource.StateRefreshFunc {
+func StatusUserProfile(ctx context.Context, conn *sagemaker.SageMaker, domainID, userProfileName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindUserProfileByName(ctx, conn, domainID, userProfileName)
 
@@ -187,7 +187,7 @@ func StatusUserProfile(ctx context.Context, conn *sagemaker.SageMaker, domainID,
 }
 
 // StatusApp fetches the App and its Status
-func StatusApp(ctx context.Context, conn *sagemaker.SageMaker, domainID, userProfileOrSpaceName, appType, appName string) resource.StateRefreshFunc {
+func StatusApp(ctx context.Context, conn *sagemaker.SageMaker, domainID, userProfileOrSpaceName, appType, appName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindAppByName(ctx, conn, domainID, userProfileOrSpaceName, appType, appName)
 
@@ -203,7 +203,7 @@ func StatusApp(ctx context.Context, conn *sagemaker.SageMaker, domainID, userPro
 	}
 }
 
-func StatusProject(ctx context.Context, conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
+func StatusProject(ctx context.Context, conn *sagemaker.SageMaker, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindProjectByName(ctx, conn, name)
 
@@ -219,7 +219,7 @@ func StatusProject(ctx context.Context, conn *sagemaker.SageMaker, name string) 
 	}
 }
 
-func StatusWorkforce(ctx context.Context, conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
+func StatusWorkforce(ctx context.Context, conn *sagemaker.SageMaker, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindWorkforceByName(ctx, conn, name)
 
@@ -235,7 +235,7 @@ func StatusWorkforce(ctx context.Context, conn *sagemaker.SageMaker, name string
 	}
 }
 
-func StatusSpace(ctx context.Context, conn *sagemaker.SageMaker, domainId, name string) resource.StateRefreshFunc {
+func StatusSpace(ctx context.Context, conn *sagemaker.SageMaker, domainId, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSpaceByName(ctx, conn, domainId, name)
 

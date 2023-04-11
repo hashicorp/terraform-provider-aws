@@ -26,7 +26,7 @@ func TestAccLightsailBucketAccessKey_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -61,7 +61,7 @@ func TestAccLightsailBucketAccessKey_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},

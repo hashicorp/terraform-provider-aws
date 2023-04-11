@@ -41,6 +41,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceCertificateAuthority,
 			TypeName: "aws_acmpca_certificate_authority",
+			Name:     "Certificate Authority",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceCertificateAuthorityCertificate,

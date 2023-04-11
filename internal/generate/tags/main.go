@@ -28,7 +28,6 @@ var (
 	serviceTagsSlice   = flag.Bool("ServiceTagsSlice", false, "whether to generate service tags for slice")
 	untagInNeedTagType = flag.Bool("UntagInNeedTagType", false, "whether Untag input needs tag type")
 	updateTags         = flag.Bool("UpdateTags", false, "whether to generate UpdateTags")
-	contextOnly        = flag.Bool("ContextOnly", false, "whether to only generate Context-aware functions")
 
 	getTagFunc            = flag.String("GetTagFunc", "GetTag", "getTagFunc")
 	listTagsFunc          = flag.String("ListTagsFunc", "ListTags", "listTagsFunc")
@@ -62,6 +61,7 @@ var (
 
 	sdkVersion   = flag.Int("AWSSDKVersion", sdkV1, "Version of the AWS SDK Go to use i.e. 1 or 2")
 	kvtValues    = flag.Bool("KVTValues", false, "Whether KVT string map is of string pointers")
+	skipNamesImp = flag.Bool("SkipNamesImp", false, "Whether to skip importing names")
 	skipTypesImp = flag.Bool("SkipTypesImp", false, "Whether to skip importing types")
 )
 
@@ -155,17 +155,17 @@ type TemplateData struct {
 	UntagInTagsElem         string
 	UntagOp                 string
 	UpdateTagsFunc          string
-	ContextOnly             bool
 
 	// The following are specific to writing import paths in the `headerBody`;
 	// to include the package, set the corresponding field's value to true
-	ConnsPkg        bool
-	ContextPkg      bool
-	FmtPkg          bool
-	HelperSchemaPkg bool
-	SkipTypesImp    bool
-	StrConvPkg      bool
-	TfResourcePkg   bool
+	ConnsPkg         bool
+	FmtPkg           bool
+	HelperSchemaPkg  bool
+	InternalTypesPkg bool
+	NamesPkg         bool
+	SkipTypesImp     bool
+	StrConvPkg       bool
+	TfResourcePkg    bool
 }
 
 func main() {
@@ -230,13 +230,14 @@ func main() {
 		ProviderNameUpper:      providerNameUpper,
 		ServicePackage:         servicePackage,
 
-		ConnsPkg:        *listTags || *updateTags,
-		ContextPkg:      *sdkVersion == sdkV2 || (*getTag || *listTags || *serviceTagsMap || *serviceTagsSlice || *updateTags),
-		FmtPkg:          *updateTags,
-		HelperSchemaPkg: awsPkg == "autoscaling",
-		SkipTypesImp:    *skipTypesImp,
-		StrConvPkg:      awsPkg == "autoscaling",
-		TfResourcePkg:   *getTag,
+		ConnsPkg:         *listTags || *updateTags,
+		FmtPkg:           *updateTags,
+		HelperSchemaPkg:  awsPkg == "autoscaling",
+		InternalTypesPkg: *listTags || *serviceTagsMap || *serviceTagsSlice,
+		NamesPkg:         *updateTags && !*skipNamesImp,
+		SkipTypesImp:     *skipTypesImp,
+		StrConvPkg:       awsPkg == "autoscaling",
+		TfResourcePkg:    *getTag,
 
 		GetTagFunc:              *getTagFunc,
 		ListTagsFunc:            *listTagsFunc,
@@ -269,7 +270,6 @@ func main() {
 		UntagInTagsElem:         *untagInTagsElem,
 		UntagOp:                 *untagOp,
 		UpdateTagsFunc:          *updateTagsFunc,
-		ContextOnly:             *contextOnly,
 	}
 
 	templateBody := newTemplateBody(*sdkVersion, *kvtValues)

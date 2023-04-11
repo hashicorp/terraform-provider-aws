@@ -18,13 +18,15 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
 	directoryApplicationDeauthorizedPropagationTimeout = 2 * time.Minute
 )
 
-// @SDKResource("aws_directory_service_directory")
+// @SDKResource("aws_directory_service_directory", name="Directory")
+// @Tags(identifierAttribute="id")
 func ResourceDirectory() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDirectoryCreate,
@@ -154,8 +156,8 @@ func ResourceDirectory() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(directoryservice.DirectorySize_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -198,8 +200,6 @@ func ResourceDirectory() *schema.Resource {
 func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	switch directoryType := d.Get("type").(string); directoryType {
@@ -207,7 +207,7 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input := &directoryservice.ConnectDirectoryInput{
 			Name:     aws.String(name),
 			Password: aws.String(d.Get("password").(string)),
-			Tags:     Tags(tags.IgnoreAWS()),
+			Tags:     GetTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("connect_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -241,7 +241,7 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input := &directoryservice.CreateMicrosoftADInput{
 			Name:     aws.String(name),
 			Password: aws.String(d.Get("password").(string)),
-			Tags:     Tags(tags.IgnoreAWS()),
+			Tags:     GetTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("description"); ok {
@@ -272,7 +272,7 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input := &directoryservice.CreateDirectoryInput{
 			Name:     aws.String(name),
 			Password: aws.String(d.Get("password").(string)),
-			Tags:     Tags(tags.IgnoreAWS()),
+			Tags:     GetTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("description"); ok {
@@ -331,8 +331,6 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	dir, err := FindDirectoryByID(ctx, conn, d.Id())
 
@@ -381,23 +379,6 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta int
 		d.Set("vpc_settings", nil)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id())
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Directory Service Directory (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -420,14 +401,6 @@ func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			if err := disableSSO(ctx, conn, d.Id()); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Directory Service Directory (%s) tags: %s", d.Id(), err)
 		}
 	}
 

@@ -21,17 +21,20 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/oam"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/pipes"
+	"github.com/aws/aws-sdk-go-v2/service/rbin"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
+	"github.com/aws/aws-sdk-go-v2/service/securitylake"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
+	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
 	"github.com/aws/aws-sdk-go/service/account"
@@ -69,6 +72,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/aws/aws-sdk-go/service/chime"
 	"github.com/aws/aws-sdk-go/service/chimesdkidentity"
+	"github.com/aws/aws-sdk-go/service/chimesdkmediapipelines"
 	"github.com/aws/aws-sdk-go/service/chimesdkmeetings"
 	"github.com/aws/aws-sdk-go/service/chimesdkmessaging"
 	"github.com/aws/aws-sdk-go/service/cloud9"
@@ -254,7 +258,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/rdsdataservice"
-	"github.com/aws/aws-sdk-go/service/recyclebin"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/redshiftdataapiservice"
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
@@ -332,7 +335,7 @@ type AWSClient struct {
 	Partition               string
 	Region                  string
 	ReverseDNSPrefix        string
-	ServicePackages         []ServicePackage
+	ServicePackages         map[string]ServicePackage
 	Session                 *session.Session
 	TerraformVersion        string
 
@@ -382,6 +385,7 @@ type AWSClient struct {
 	curConn                          *costandusagereportservice.CostandUsageReportService
 	chimeConn                        *chime.Chime
 	chimesdkidentityConn             *chimesdkidentity.ChimeSDKIdentity
+	chimesdkmediapipelinesConn       *chimesdkmediapipelines.ChimeSDKMediaPipelines
 	chimesdkmeetingsConn             *chimesdkmeetings.ChimeSDKMeetings
 	chimesdkmessagingConn            *chimesdkmessaging.ChimeSDKMessaging
 	cloud9Conn                       *cloud9.Cloud9
@@ -574,7 +578,7 @@ type AWSClient struct {
 	qldbsessionConn                  *qldbsession.QLDBSession
 	quicksightConn                   *quicksight.QuickSight
 	ramConn                          *ram.RAM
-	rbinConn                         *recyclebin.RecycleBin
+	rbinClient                       *rbin.Client
 	rdsConn                          *rds.RDS
 	rdsdataConn                      *rdsdataservice.RDSDataService
 	rumConn                          *cloudwatchrum.CloudWatchRUM
@@ -621,6 +625,7 @@ type AWSClient struct {
 	schemasConn                      *schemas.Schemas
 	secretsmanagerConn               *secretsmanager.SecretsManager
 	securityhubConn                  *securityhub.SecurityHub
+	securitylakeClient               *securitylake.Client
 	serverlessrepoConn               *serverlessapplicationrepository.ServerlessApplicationRepository
 	servicecatalogConn               *servicecatalog.ServiceCatalog
 	servicecatalogappregistryConn    *appregistry.AppRegistry
@@ -641,6 +646,7 @@ type AWSClient struct {
 	transcribestreamingConn          *transcribestreamingservice.TranscribeStreamingService
 	transferConn                     *transfer.Transfer
 	translateConn                    *translate.Translate
+	vpclatticeClient                 *vpclattice.Client
 	voiceidConn                      *voiceid.VoiceID
 	wafConn                          *waf.WAF
 	wafregionalConn                  *wafregional.WAFRegional
@@ -804,6 +810,10 @@ func (client *AWSClient) ChimeConn() *chime.Chime {
 
 func (client *AWSClient) ChimeSDKIdentityConn() *chimesdkidentity.ChimeSDKIdentity {
 	return client.chimesdkidentityConn
+}
+
+func (client *AWSClient) ChimeSDKMediaPipelinesConn() *chimesdkmediapipelines.ChimeSDKMediaPipelines {
+	return client.chimesdkmediapipelinesConn
 }
 
 func (client *AWSClient) ChimeSDKMeetingsConn() *chimesdkmeetings.ChimeSDKMeetings {
@@ -1586,8 +1596,8 @@ func (client *AWSClient) RAMConn() *ram.RAM {
 	return client.ramConn
 }
 
-func (client *AWSClient) RBinConn() *recyclebin.RecycleBin {
-	return client.rbinConn
+func (client *AWSClient) RBinClient() *rbin.Client {
+	return client.rbinClient
 }
 
 func (client *AWSClient) RDSConn() *rds.RDS {
@@ -1786,6 +1796,10 @@ func (client *AWSClient) SecurityHubConn() *securityhub.SecurityHub {
 	return client.securityhubConn
 }
 
+func (client *AWSClient) SecurityLakeClient() *securitylake.Client {
+	return client.securitylakeClient
+}
+
 func (client *AWSClient) ServerlessRepoConn() *serverlessapplicationrepository.ServerlessApplicationRepository {
 	return client.serverlessrepoConn
 }
@@ -1864,6 +1878,10 @@ func (client *AWSClient) TransferConn() *transfer.Transfer {
 
 func (client *AWSClient) TranslateConn() *translate.Translate {
 	return client.translateConn
+}
+
+func (client *AWSClient) VPCLatticeClient() *vpclattice.Client {
+	return client.vpclatticeClient
 }
 
 func (client *AWSClient) VoiceIDConn() *voiceid.VoiceID {

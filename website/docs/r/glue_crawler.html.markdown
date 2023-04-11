@@ -194,6 +194,7 @@ The following arguments are supported:
 ### Delta Target
 
 * `connection_name` - (Optional) The name of the connection to use to connect to the Delta table target.
+* `create_native_delta_table` (Optional) Specifies whether the crawler will create native tables, to allow integration with query engines that support querying of the Delta transaction log directly.
 * `delta_tables` - (Required) A list of the Amazon S3 paths to the Delta tables.
 * `write_manifest` - (Required) Specifies whether to write the manifest files to the Delta table path.
 

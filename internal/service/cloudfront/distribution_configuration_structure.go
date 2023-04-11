@@ -14,20 +14,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
-
-// route53ZoneID defines the route 53 zone ID for CloudFront. This
-// is used to set the zone_id attribute.
-const route53ZoneID = "Z2FDTNDATAQYW2"
-
-// cnRoute53ZoneID defines the route 53 zone ID for CloudFront in AWS CN.
-// This is used to set the zone_id attribute.
-// ref: https://docs.amazonaws.cn/en_us/aws/latest/userguide/route53.html
-const cnRoute53ZoneID = "Z3RFFRIM2A3IF5"
 
 // Assemble the *cloudfront.DistributionConfig variable. Calls out to various
 // expander functions to convert attributes and sub-attributes to the various
@@ -38,7 +29,7 @@ const cnRoute53ZoneID = "Z3RFFRIM2A3IF5"
 func expandDistributionConfig(d *schema.ResourceData) *cloudfront.DistributionConfig {
 	distributionConfig := &cloudfront.DistributionConfig{
 		CacheBehaviors:       expandCacheBehaviors(d.Get("ordered_cache_behavior").([]interface{})),
-		CallerReference:      aws.String(resource.UniqueId()),
+		CallerReference:      aws.String(id.UniqueId()),
 		Comment:              aws.String(d.Get("comment").(string)),
 		CustomErrorResponses: ExpandCustomErrorResponses(d.Get("custom_error_response").(*schema.Set)),
 		DefaultCacheBehavior: ExpandDefaultCacheBehavior(d.Get("default_cache_behavior").([]interface{})[0].(map[string]interface{})),
@@ -90,7 +81,6 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloud
 	d.Set("enabled", distributionConfig.Enabled)
 	d.Set("is_ipv6_enabled", distributionConfig.IsIPV6Enabled)
 	d.Set("price_class", distributionConfig.PriceClass)
-	d.Set("hosted_zone_id", route53ZoneID)
 
 	err = d.Set("default_cache_behavior", []interface{}{flattenDefaultCacheBehavior(distributionConfig.DefaultCacheBehavior)})
 	if err != nil {

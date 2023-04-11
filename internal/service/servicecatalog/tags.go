@@ -9,12 +9,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
+	"github.com/aws/aws-sdk-go/service/servicecatalog/servicecatalogiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // Custom Service Catalog tag service update functions using the same format as generated code.
 
-func productUpdateTags(ctx context.Context, conn *servicecatalog.ServiceCatalog, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func productUpdateTags(ctx context.Context, conn servicecatalogiface.ServiceCatalogAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -33,7 +34,7 @@ func productUpdateTags(ctx context.Context, conn *servicecatalog.ServiceCatalog,
 	_, err := conn.UpdateProductWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error updating tags for Service Catalog Product (%s): %w", identifier, err)
+		return fmt.Errorf("updating tags for Service Catalog Product (%s): %w", identifier, err)
 	}
 
 	return nil
