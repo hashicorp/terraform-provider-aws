@@ -12,6 +12,7 @@ FEATURES:
 * **New Resource:** `aws_quicksight_ingestion` ([#30487](https://github.com/hashicorp/terraform-provider-aws/issues/30487))
 * **New Resource:** `aws_vpclattice_service_network_service_association` ([#30410](https://github.com/hashicorp/terraform-provider-aws/issues/30410))
 * **New Resource:** `aws_vpclattice_service_network_vpc_association` ([#30411](https://github.com/hashicorp/terraform-provider-aws/issues/30411))
+* **New Resource:** `aws_vpclattice_target_group` ([#30455](https://github.com/hashicorp/terraform-provider-aws/issues/30455))
 
 ENHANCEMENTS:
 
