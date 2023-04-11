@@ -102,7 +102,7 @@ Health Check (`health_check`) supports the following:
 * `path` - (Optional) The destination for health checks on the targets. If the protocol version is HTTP/1.1 or HTTP/2, specify a valid URI (for example, /path?query). The default path is `/`. Health checks are not supported if the protocol version is gRPC, however, you can choose HTTP/1.1 or HTTP/2 and specify a valid URI.
 * `port` - (Optional) The port used when performing health checks on targets. The default setting is the port that a target receives traffic on.
 * `protocol` - (Optional) The protocol used when performing health checks on targets. The possible protocols are `HTTP` and `HTTPS`. The default is `HTTP`.
-* `protocol_version` - (Optional) The protocol version used when performing health checks on targets. The possible protocol versions are `HTTP1` and `HTTP2`.
+* `protocol_version` - (Optional) The protocol version used when performing health checks on targets. The possible protocol versions are `HTTP1` and `HTTP2`. The default is `HTTP1`.
 * `unhealthy_threshold_count` - (Optional) The number of consecutive failed health checks required before considering a target unhealthy. The range is 2–10. The default is 2.
 
 ## Attributes Reference
