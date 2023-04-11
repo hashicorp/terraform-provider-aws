@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists firehose service tags.
@@ -105,7 +106,7 @@ func UpdateTags(ctx context.Context, conn firehoseiface.FirehoseAPI, identifier 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &firehose.UntagDeliveryStreamInput{
 			DeliveryStreamName: aws.String(identifier),
-			TagKeys:            aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:            aws.StringSlice(removedTags.IgnoreSystem(names.Firehose).Keys()),
 		}
 
 		_, err := conn.UntagDeliveryStreamWithContext(ctx, input)
@@ -118,7 +119,7 @@ func UpdateTags(ctx context.Context, conn firehoseiface.FirehoseAPI, identifier 
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &firehose.TagDeliveryStreamInput{
 			DeliveryStreamName: aws.String(identifier),
-			Tags:               Tags(updatedTags.IgnoreAWS()),
+			Tags:               Tags(updatedTags.IgnoreSystem(names.Firehose)),
 		}
 
 		_, err := conn.TagDeliveryStreamWithContext(ctx, input)
