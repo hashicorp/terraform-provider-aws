@@ -3513,7 +3513,7 @@ data "aws_region" "current" {}
 
 resource "aws_rds_cluster_parameter_group" "test" {
   name        = %[1]q
-  family      = "aurora5.6"
+  family      = "aurora-mysql5.7"
   description = "RDS default cluster parameter group"
 
   parameter {
@@ -3658,9 +3658,9 @@ resource "aws_rds_cluster" "test" {
   master_username     = "foo"
   skip_final_snapshot = true
 
-  #   scaling_configuration {
-  # 	min_capacity = 2
-  #   }
+  scaling_configuration {
+    min_capacity = 2
+  }
 }
 `, rName, engineMode)
 }
@@ -3676,25 +3676,6 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot = true
 }
 `, rName)
-}
-
-func testAccClusterConfig_EngineMode_multimaster(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
-resource "aws_db_subnet_group" "test" {
-  name       = %[1]q
-  subnet_ids = aws_subnet.test[*].id
-}
-
-resource "aws_rds_cluster" "test" {
-  cluster_identifier   = %[1]q
-  db_subnet_group_name = aws_db_subnet_group.test.name
-  engine               = "aurora-mysql"
-  engine_mode          = "multimaster"
-  master_password      = "avoid-plaintext-passwords"
-  master_username      = "tfacctest"
-  skip_final_snapshot  = true
-}
-`, rName))
 }
 
 func testAccClusterConfig_GlobalClusterID_EngineMode_global(rName string) string {
