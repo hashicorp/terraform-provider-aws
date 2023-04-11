@@ -232,6 +232,87 @@ func TestAccVPCLatticeTargetGroup_ip(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccTargetGroupConfig_ipUpdated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile("targetgroup/.+$")),
+					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.health_check_interval_seconds", "180"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.health_check_timeout_seconds", "90"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.healthy_threshold_count", "8"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.matcher.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.matcher.0.value", "202"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.path", "/health"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.port", "8443"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.protocol", "HTTPS"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.protocol_version", "HTTP2"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.unhealthy_threshold_count", "3"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.ip_address_type", "IPV6"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.protocol", "HTTPS"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.protocol_version", "HTTP2"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "IP"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVPCLatticeTargetGroup_alb(t *testing.T) {
+	ctx := acctest.Context(t)
+	var targetGroup vpclattice.GetTargetGroupOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_alb(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile("targetgroup/.+$")),
+					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.health_check_interval_seconds", "30"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.health_check_timeout_seconds", "5"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.healthy_threshold_count", "5"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.matcher.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.matcher.0.value", "200"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.path", "/"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.port", "0"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.protocol", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.protocol_version", "HTTP1"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.unhealthy_threshold_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.ip_address_type", ""),
+					resource.TestCheckResourceAttr(resourceName, "config.0.port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.protocol", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.protocol_version", "HTTP1"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "ALB"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -368,6 +449,54 @@ resource "aws_vpclattice_target_group" "test" {
       protocol         = "HTTPS"
       protocol_version = "HTTP1"
     }
+  }
+}
+`, rName))
+}
+
+func testAccTargetGroupConfig_ipUpdated(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 0), fmt.Sprintf(`
+resource "aws_vpclattice_target_group" "test" {
+  name = %[1]q
+  type = "IP"
+
+  config {
+    port             = 443
+    protocol         = "HTTPS"
+    vpc_identifier   = aws_vpc.test.id
+    ip_address_type  = "IPV6"
+    protocol_version = "HTTP2"
+
+    health_check {
+      health_check_interval_seconds = 180
+      health_check_timeout_seconds  = 90
+      healthy_threshold_count       = 8
+      unhealthy_threshold_count     = 3
+
+      matcher {
+        value = "202"
+	  }
+
+      path             = "/health"
+      port             = 8443
+      protocol         = "HTTPS"
+      protocol_version = "HTTP2"
+    }
+  }
+}
+`, rName))
+}
+
+func testAccTargetGroupConfig_alb(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 0), fmt.Sprintf(`
+resource "aws_vpclattice_target_group" "test" {
+  name = %[1]q
+  type = "ALB"
+
+  config {
+    port           = 80
+    protocol       = "HTTP"
+    vpc_identifier = aws_vpc.test.id
   }
 }
 `, rName))
