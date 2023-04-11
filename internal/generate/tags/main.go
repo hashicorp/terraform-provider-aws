@@ -161,6 +161,7 @@ type TemplateData struct {
 	FmtPkg           bool
 	HelperSchemaPkg  bool
 	InternalTypesPkg bool
+	NamesPkg         bool
 	SkipTypesImp     bool
 	StrConvPkg       bool
 	TfResourcePkg    bool
@@ -232,6 +233,7 @@ func main() {
 		FmtPkg:           *updateTags,
 		HelperSchemaPkg:  awsPkg == "autoscaling",
 		InternalTypesPkg: *listTags || *serviceTagsMap || *serviceTagsSlice,
+		NamesPkg:         *updateTags,
 		SkipTypesImp:     *skipTypesImp,
 		StrConvPkg:       awsPkg == "autoscaling",
 		TfResourcePkg:    *getTag,
