@@ -46,6 +46,7 @@ func TestAccACMPCACertificate_rootCertificate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "validity.0.type", "YEARS"),
 					resource.TestCheckResourceAttr(resourceName, "signing_algorithm", "SHA512WITHRSA"),
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "template_arn", "acm-pca", "template/RootCACertificate/V1"),
+					resource.TestCheckResourceAttr(resourceName, "api_passthrough", ""),
 				),
 			},
 			{
