@@ -27,7 +27,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.8.9
 	github.com/aws/aws-sdk-go-v2/service/rds v1.42.2
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.9
-	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.1.7
+	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.1.9
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.14.7
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.31.2
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.9
