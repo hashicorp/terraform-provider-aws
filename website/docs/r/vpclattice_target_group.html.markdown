@@ -89,7 +89,7 @@ Config (`config`) supports the following:
 * `port` - (Required) The port on which the targets are listening.
 * `protocol` - (Required) The protocol to use for routing traffic to the targets. Valid Values are `HTTP` | `HTTPS`
 * `protocol_version` - (Optional) The protocol version. Valid Values are `HTTP1` | `HTTP2` | `GRPC`. Default value is `HTTP1`.
-* `vpc_identifier` - (Optional) The ID of the VPC.
+* `vpc_identifier` - (Required) The ID of the VPC.
 
 Health Check (`health_check`) supports the following:
 

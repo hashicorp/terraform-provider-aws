@@ -160,7 +160,7 @@ func ResourceTargetGroup() *schema.Resource {
 						},
 						"vpc_identifier": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 							ForceNew: true,
 						},
 					},
