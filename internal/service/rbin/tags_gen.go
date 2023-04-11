@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists rbin service tags.
@@ -104,7 +105,7 @@ func UpdateTags(ctx context.Context, conn *rbin.Client, identifier string, oldTa
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &rbin.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     removedTags.IgnoreAWS().Keys(),
+			TagKeys:     removedTags.IgnoreSystem(names.RBin).Keys(),
 		}
 
 		_, err := conn.UntagResource(ctx, input)
@@ -117,7 +118,7 @@ func UpdateTags(ctx context.Context, conn *rbin.Client, identifier string, oldTa
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &rbin.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreAWS()),
+			Tags:        Tags(updatedTags.IgnoreSystem(names.RBin)),
 		}
 
 		_, err := conn.TagResource(ctx, input)

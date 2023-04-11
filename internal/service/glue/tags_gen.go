@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists glue service tags.
@@ -88,7 +89,7 @@ func UpdateTags(ctx context.Context, conn glueiface.GlueAPI, identifier string, 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &glue.UntagResourceInput{
 			ResourceArn:  aws.String(identifier),
-			TagsToRemove: aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagsToRemove: aws.StringSlice(removedTags.IgnoreSystem(names.Glue).Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -101,7 +102,7 @@ func UpdateTags(ctx context.Context, conn glueiface.GlueAPI, identifier string, 
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &glue.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagsToAdd:   Tags(updatedTags.IgnoreAWS()),
+			TagsToAdd:   Tags(updatedTags.IgnoreSystem(names.Glue)),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)

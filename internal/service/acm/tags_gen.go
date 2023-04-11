@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists acm service tags.
@@ -105,7 +106,7 @@ func UpdateTags(ctx context.Context, conn acmiface.ACMAPI, identifier string, ol
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &acm.RemoveTagsFromCertificateInput{
 			CertificateArn: aws.String(identifier),
-			Tags:           Tags(removedTags.IgnoreAWS()),
+			Tags:           Tags(removedTags.IgnoreSystem(names.ACM)),
 		}
 
 		_, err := conn.RemoveTagsFromCertificateWithContext(ctx, input)
@@ -118,7 +119,7 @@ func UpdateTags(ctx context.Context, conn acmiface.ACMAPI, identifier string, ol
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &acm.AddTagsToCertificateInput{
 			CertificateArn: aws.String(identifier),
-			Tags:           Tags(updatedTags.IgnoreAWS()),
+			Tags:           Tags(updatedTags.IgnoreSystem(names.ACM)),
 		}
 
 		_, err := conn.AddTagsToCertificateWithContext(ctx, input)

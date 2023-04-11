@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists cloudwatch service tags.
@@ -105,7 +106,7 @@ func UpdateTags(ctx context.Context, conn cloudwatchiface.CloudWatchAPI, identif
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &cloudwatch.UntagResourceInput{
 			ResourceARN: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreSystem(names.CloudWatch).Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -118,7 +119,7 @@ func UpdateTags(ctx context.Context, conn cloudwatchiface.CloudWatchAPI, identif
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &cloudwatch.TagResourceInput{
 			ResourceARN: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreAWS()),
+			Tags:        Tags(updatedTags.IgnoreSystem(names.CloudWatch)),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)
