@@ -158,7 +158,7 @@ The following arguments are optional:
 
 The `alarms` configuration block supports the following:
 
-* `alarms_names` - (Required) One or more CloudWatch alarm names.
+* `alarm_names` - (Required) One or more CloudWatch alarm names.
 * `enable` - (Required) Determines whether to use the CloudWatch alarm option in the service deployment process.
 * `rollback` - (Required) Determines whether to configure Amazon ECS to roll back the service if a service deployment fails. If rollback is used, when a service deployment fails, the service is rolled back to the last deployment that completed successfully.
 
