@@ -8,6 +8,7 @@ FEATURES:
 
 * **New Data Source:** `aws_dms_certificate` ([#30498](https://github.com/hashicorp/terraform-provider-aws/issues/30498))
 * **New Resource:** `aws_pipes_pipe` ([#30538](https://github.com/hashicorp/terraform-provider-aws/issues/30538))
+* **New Resource:** `aws_quicksight_iam_policy_assignment` ([#30653](https://github.com/hashicorp/terraform-provider-aws/issues/30653))
 * **New Resource:** `aws_quicksight_ingestion` ([#30487](https://github.com/hashicorp/terraform-provider-aws/issues/30487))
 * **New Resource:** `aws_vpclattice_service_network_service_association` ([#30410](https://github.com/hashicorp/terraform-provider-aws/issues/30410))
 * **New Resource:** `aws_vpclattice_service_network_vpc_association` ([#30411](https://github.com/hashicorp/terraform-provider-aws/issues/30411))
