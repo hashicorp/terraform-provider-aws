@@ -275,6 +275,16 @@ func (w *wrappedResource) ValidateConfig(ctx context.Context, request resource.V
 	}
 }
 
+func (w *wrappedResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	if v, ok := w.inner.(resource.ResourceWithUpgradeState); ok {
+		ctx = w.bootstrapContext(ctx, w.meta)
+
+		return v.UpgradeState(ctx)
+	}
+
+	return nil
+}
+
 // tagsInterceptor implements transparent tagging.
 type tagsInterceptor struct {
 	tags *types.ServicePackageResourceTags
@@ -282,6 +292,11 @@ type tagsInterceptor struct {
 
 func (r tagsInterceptor) create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse, meta *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 	if r.tags == nil {
+		return ctx, diags
+	}
+
+	inContext, ok := conns.FromContext(ctx)
+	if !ok {
 		return ctx, diags
 	}
 
@@ -302,14 +317,14 @@ func (r tagsInterceptor) create(ctx context.Context, request resource.CreateRequ
 		// Merge the resource's configured tags with any provider configured default_tags.
 		tags := tagsInContext.DefaultConfig.MergeTags(tftags.New(ctx, planTags))
 		// Remove system tags.
-		tags = tags.IgnoreAWS()
+		tags = tags.IgnoreSystem(inContext.ServicePackageName)
 
 		tagsInContext.TagsIn = types.Some(tags)
 	case After:
 		// Set values for unknowns.
 		// Remove any provider configured ignore_tags and system tags from those passed to the service API.
 		// Computed tags_all include any provider configured default_tags.
-		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, tagsInContext.TagsIn.MustUnwrap().IgnoreAWS().IgnoreConfig(tagsInContext.IgnoreConfig).Map())
+		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, tagsInContext.TagsIn.MustUnwrap().IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig).Map())
 		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), &stateTagsAll)...)
 
 		if diags.HasError() {
@@ -326,25 +341,21 @@ func (r tagsInterceptor) read(ctx context.Context, request resource.ReadRequest,
 	}
 
 	inContext, ok := conns.FromContext(ctx)
-
 	if !ok {
 		return ctx, diags
 	}
 
 	sp, ok := meta.ServicePackages[inContext.ServicePackageName]
-
 	if !ok {
 		return ctx, diags
 	}
 
 	serviceName, err := names.HumanFriendly(inContext.ServicePackageName)
-
 	if err != nil {
 		serviceName = "<service>"
 	}
 
 	resourceName := inContext.ResourceName
-
 	if resourceName == "" {
 		resourceName = "<thing>"
 	}
@@ -363,18 +374,27 @@ func (r tagsInterceptor) read(ctx context.Context, request resource.ReadRequest,
 
 		// If the R handler didn't set tags, try and read them from the service API.
 		if tagsInContext.TagsOut.IsNone() {
-			// If the service package has a generic resource list tags methods, call it.
-			if v, ok := sp.(interface {
-				ListTags(context.Context, any, string) error
-			}); ok {
+			if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute != "" {
 				var identifier string
-				diags.Append(request.State.GetAttribute(ctx, path.Root(r.tags.IdentifierAttribute), &identifier)...)
+
+				diags.Append(request.State.GetAttribute(ctx, path.Root(identifierAttribute), &identifier)...)
 
 				if diags.HasError() {
 					return ctx, diags
 				}
 
-				err := v.ListTags(ctx, meta, identifier) // Sets tags in Context
+				// If the service package has a generic resource list tags methods, call it.
+				var err error
+
+				if v, ok := sp.(interface {
+					ListTags(context.Context, any, string) error
+				}); ok {
+					err = v.ListTags(ctx, meta, identifier) // Sets tags in Context
+				} else if v, ok := sp.(interface {
+					ListTags(context.Context, any, string, string) error
+				}); ok && r.tags.ResourceType != "" {
+					err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
+				}
 
 				if err != nil {
 					diags.AddError(fmt.Sprintf("listing tags for %s %s (%s)", serviceName, resourceName, identifier), err.Error())
@@ -390,7 +410,7 @@ func (r tagsInterceptor) read(ctx context.Context, request resource.ReadRequest,
 		stateTags := tftags.Null
 		// Remove any provider configured ignore_tags and system tags from those returned from the service API.
 		// The resource's configured tags do not include any provider configured default_tags.
-		if v := apiTags.IgnoreAWS().IgnoreConfig(tagsInContext.IgnoreConfig).RemoveDefaultConfig(tagsInContext.DefaultConfig).Map(); len(v) > 0 {
+		if v := apiTags.IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig).RemoveDefaultConfig(tagsInContext.DefaultConfig).Map(); len(v) > 0 {
 			stateTags = flex.FlattenFrameworkStringValueMapLegacy(ctx, v)
 		}
 		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTags), &stateTags)...)
@@ -400,7 +420,7 @@ func (r tagsInterceptor) read(ctx context.Context, request resource.ReadRequest,
 		}
 
 		// Computed tags_all do.
-		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, apiTags.IgnoreAWS().IgnoreConfig(tagsInContext.IgnoreConfig).Map())
+		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, apiTags.IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig).Map())
 		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), &stateTagsAll)...)
 
 		if diags.HasError() {
@@ -417,59 +437,82 @@ func (r tagsInterceptor) update(ctx context.Context, request resource.UpdateRequ
 	}
 
 	inContext, ok := conns.FromContext(ctx)
-
 	if !ok {
 		return ctx, diags
 	}
 
 	sp, ok := meta.ServicePackages[inContext.ServicePackageName]
-
 	if !ok {
 		return ctx, diags
 	}
 
 	serviceName, err := names.HumanFriendly(inContext.ServicePackageName)
-
 	if err != nil {
 		serviceName = "<service>"
 	}
 
 	resourceName := inContext.ResourceName
-
 	if resourceName == "" {
 		resourceName = "<thing>"
 	}
 
+	tagsInContext, ok := tftags.FromContext(ctx)
+	if !ok {
+		return ctx, diags
+	}
+
 	switch when {
 	case Before:
-		// If the service package has a generic resource update tags methods, call it.
-		if v, ok := sp.(interface {
-			UpdateTags(context.Context, any, string, any, any) error
-		}); ok {
-			var oldTagsAll, newTagsAll fwtypes.Map
+		var planTags fwtypes.Map
+		diags.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrTags), &planTags)...)
 
-			diags.Append(request.State.GetAttribute(ctx, path.Root(names.AttrTagsAll), &oldTagsAll)...)
+		if diags.HasError() {
+			return ctx, diags
+		}
 
-			if diags.HasError() {
-				return ctx, diags
-			}
+		// Merge the resource's configured tags with any provider configured default_tags.
+		tags := tagsInContext.DefaultConfig.MergeTags(tftags.New(ctx, planTags))
+		// Remove system tags.
+		tags = tags.IgnoreSystem(inContext.ServicePackageName)
 
-			diags.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrTagsAll), &newTagsAll)...)
+		tagsInContext.TagsIn = types.Some(tags)
 
-			if diags.HasError() {
-				return ctx, diags
-			}
+		var oldTagsAll, newTagsAll fwtypes.Map
 
-			if !newTagsAll.Equal(oldTagsAll) {
+		diags.Append(request.State.GetAttribute(ctx, path.Root(names.AttrTagsAll), &oldTagsAll)...)
+
+		if diags.HasError() {
+			return ctx, diags
+		}
+
+		diags.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrTagsAll), &newTagsAll)...)
+
+		if diags.HasError() {
+			return ctx, diags
+		}
+
+		if !newTagsAll.Equal(oldTagsAll) {
+			if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute != "" {
 				var identifier string
 
-				diags.Append(request.Plan.GetAttribute(ctx, path.Root(r.tags.IdentifierAttribute), &identifier)...)
+				diags.Append(request.Plan.GetAttribute(ctx, path.Root(identifierAttribute), &identifier)...)
 
 				if diags.HasError() {
 					return ctx, diags
 				}
 
-				err := v.UpdateTags(ctx, meta, identifier, oldTagsAll, newTagsAll)
+				// If the service package has a generic resource update tags methods, call it.
+				var err error
+
+				if v, ok := sp.(interface {
+					UpdateTags(context.Context, any, string, any, any) error
+				}); ok {
+					err = v.UpdateTags(ctx, meta, identifier, oldTagsAll, newTagsAll)
+				} else if v, ok := sp.(interface {
+					UpdateTags(context.Context, any, string, string, any, any) error
+				}); ok && r.tags.ResourceType != "" {
+					err = v.UpdateTags(ctx, meta, identifier, r.tags.ResourceType, oldTagsAll, newTagsAll)
+				}
 
 				if verify.ErrorISOUnsupported(meta.Partition, err) {
 					// ISO partitions may not support tagging, giving error

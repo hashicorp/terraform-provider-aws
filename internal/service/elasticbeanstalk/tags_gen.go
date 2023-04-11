@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists elasticbeanstalk service tags.
@@ -114,7 +115,7 @@ func UpdateTags(ctx context.Context, conn elasticbeanstalkiface.ElasticBeanstalk
 	}
 
 	if len(updatedTags) > 0 {
-		input.TagsToAdd = Tags(updatedTags.IgnoreAWS())
+		input.TagsToAdd = Tags(updatedTags.IgnoreSystem(names.ElasticBeanstalk))
 	}
 
 	if len(removedTags) > 0 {

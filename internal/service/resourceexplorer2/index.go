@@ -15,7 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -82,7 +83,7 @@ func (r *resourceIndex) Create(ctx context.Context, request resource.CreateReque
 	conn := r.Meta().ResourceExplorer2Client()
 
 	input := &resourceexplorer2.CreateIndexInput{
-		ClientToken: aws.String(sdkresource.UniqueId()),
+		ClientToken: aws.String(id.UniqueId()),
 		Tags:        GetTagsIn(ctx),
 	}
 
@@ -262,7 +263,7 @@ func findIndex(ctx context.Context, conn *resourceexplorer2.Client) (*resourceex
 	output, err := conn.GetIndex(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkresource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -277,7 +278,7 @@ func findIndex(ctx context.Context, conn *resourceexplorer2.Client) (*resourceex
 	}
 
 	if state := output.State; state == awstypes.IndexStateDeleted {
-		return nil, &sdkresource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     string(state),
 			LastRequest: input,
 		}
@@ -286,7 +287,7 @@ func findIndex(ctx context.Context, conn *resourceexplorer2.Client) (*resourceex
 	return output, nil
 }
 
-func statusIndex(ctx context.Context, conn *resourceexplorer2.Client) sdkresource.StateRefreshFunc {
+func statusIndex(ctx context.Context, conn *resourceexplorer2.Client) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findIndex(ctx, conn)
 
@@ -303,7 +304,7 @@ func statusIndex(ctx context.Context, conn *resourceexplorer2.Client) sdkresourc
 }
 
 func waitIndexCreated(ctx context.Context, conn *resourceexplorer2.Client, timeout time.Duration) (*resourceexplorer2.GetIndexOutput, error) {
-	stateConf := &sdkresource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.IndexStateCreating),
 		Target:  enum.Slice(awstypes.IndexStateActive),
 		Refresh: statusIndex(ctx, conn),
@@ -320,7 +321,7 @@ func waitIndexCreated(ctx context.Context, conn *resourceexplorer2.Client, timeo
 }
 
 func waitIndexUpdated(ctx context.Context, conn *resourceexplorer2.Client, timeout time.Duration) (*resourceexplorer2.GetIndexOutput, error) { //nolint:unparam
-	stateConf := &sdkresource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.IndexStateUpdating),
 		Target:  enum.Slice(awstypes.IndexStateActive),
 		Refresh: statusIndex(ctx, conn),
@@ -337,7 +338,7 @@ func waitIndexUpdated(ctx context.Context, conn *resourceexplorer2.Client, timeo
 }
 
 func waitIndexDeleted(ctx context.Context, conn *resourceexplorer2.Client, timeout time.Duration) (*resourceexplorer2.GetIndexOutput, error) {
-	stateConf := &sdkresource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.IndexStateDeleting),
 		Target:  []string{},
 		Refresh: statusIndex(ctx, conn),

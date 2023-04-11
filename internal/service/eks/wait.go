@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -15,7 +15,7 @@ const (
 )
 
 func waitAddonCreated(ctx context.Context, conn *eks.EKS, clusterName, addonName string, timeout time.Duration) (*eks.Addon, error) {
-	stateConf := resource.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: []string{eks.AddonStatusCreating, eks.AddonStatusDegraded},
 		Target:  []string{eks.AddonStatusActive},
 		Refresh: statusAddon(ctx, conn, clusterName, addonName),
@@ -36,7 +36,7 @@ func waitAddonCreated(ctx context.Context, conn *eks.EKS, clusterName, addonName
 }
 
 func waitAddonDeleted(ctx context.Context, conn *eks.EKS, clusterName, addonName string, timeout time.Duration) (*eks.Addon, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{eks.AddonStatusActive, eks.AddonStatusDeleting},
 		Target:  []string{},
 		Refresh: statusAddon(ctx, conn, clusterName, addonName),
@@ -57,7 +57,7 @@ func waitAddonDeleted(ctx context.Context, conn *eks.EKS, clusterName, addonName
 }
 
 func waitAddonUpdateSuccessful(ctx context.Context, conn *eks.EKS, clusterName, addonName, id string, timeout time.Duration) (*eks.Update, error) {
-	stateConf := resource.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: []string{eks.UpdateStatusInProgress},
 		Target:  []string{eks.UpdateStatusSuccessful},
 		Refresh: statusAddonUpdate(ctx, conn, clusterName, addonName, id),
@@ -78,7 +78,7 @@ func waitAddonUpdateSuccessful(ctx context.Context, conn *eks.EKS, clusterName, 
 }
 
 func waitFargateProfileCreated(ctx context.Context, conn *eks.EKS, clusterName, fargateProfileName string, timeout time.Duration) (*eks.FargateProfile, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{eks.FargateProfileStatusCreating},
 		Target:  []string{eks.FargateProfileStatusActive},
 		Refresh: statusFargateProfile(ctx, conn, clusterName, fargateProfileName),
@@ -95,7 +95,7 @@ func waitFargateProfileCreated(ctx context.Context, conn *eks.EKS, clusterName, 
 }
 
 func waitFargateProfileDeleted(ctx context.Context, conn *eks.EKS, clusterName, fargateProfileName string, timeout time.Duration) (*eks.FargateProfile, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{eks.FargateProfileStatusActive, eks.FargateProfileStatusDeleting},
 		Target:  []string{},
 		Refresh: statusFargateProfile(ctx, conn, clusterName, fargateProfileName),
@@ -112,7 +112,7 @@ func waitFargateProfileDeleted(ctx context.Context, conn *eks.EKS, clusterName, 
 }
 
 func waitNodegroupCreated(ctx context.Context, conn *eks.EKS, clusterName, nodeGroupName string, timeout time.Duration) (*eks.Nodegroup, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{eks.NodegroupStatusCreating},
 		Target:  []string{eks.NodegroupStatusActive},
 		Refresh: statusNodegroup(ctx, conn, clusterName, nodeGroupName),
@@ -133,7 +133,7 @@ func waitNodegroupCreated(ctx context.Context, conn *eks.EKS, clusterName, nodeG
 }
 
 func waitNodegroupDeleted(ctx context.Context, conn *eks.EKS, clusterName, nodeGroupName string, timeout time.Duration) (*eks.Nodegroup, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{eks.NodegroupStatusActive, eks.NodegroupStatusDeleting},
 		Target:  []string{},
 		Refresh: statusNodegroup(ctx, conn, clusterName, nodeGroupName),
@@ -154,7 +154,7 @@ func waitNodegroupDeleted(ctx context.Context, conn *eks.EKS, clusterName, nodeG
 }
 
 func waitNodegroupUpdateSuccessful(ctx context.Context, conn *eks.EKS, clusterName, nodeGroupName, id string, timeout time.Duration) (*eks.Update, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{eks.UpdateStatusInProgress},
 		Target:  []string{eks.UpdateStatusSuccessful},
 		Refresh: statusNodegroupUpdate(ctx, conn, clusterName, nodeGroupName, id),
@@ -175,7 +175,7 @@ func waitNodegroupUpdateSuccessful(ctx context.Context, conn *eks.EKS, clusterNa
 }
 
 func waitOIDCIdentityProviderConfigCreated(ctx context.Context, conn *eks.EKS, clusterName, configName string, timeout time.Duration) (*eks.OidcIdentityProviderConfig, error) {
-	stateConf := resource.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: []string{eks.ConfigStatusCreating},
 		Target:  []string{eks.ConfigStatusActive},
 		Refresh: statusOIDCIdentityProviderConfig(ctx, conn, clusterName, configName),
@@ -192,7 +192,7 @@ func waitOIDCIdentityProviderConfigCreated(ctx context.Context, conn *eks.EKS, c
 }
 
 func waitOIDCIdentityProviderConfigDeleted(ctx context.Context, conn *eks.EKS, clusterName, configName string, timeout time.Duration) (*eks.OidcIdentityProviderConfig, error) {
-	stateConf := resource.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: []string{eks.ConfigStatusActive, eks.ConfigStatusDeleting},
 		Target:  []string{},
 		Refresh: statusOIDCIdentityProviderConfig(ctx, conn, clusterName, configName),
