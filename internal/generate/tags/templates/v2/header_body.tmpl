@@ -34,4 +34,7 @@ import (
 	{{- if .InternalTypesPkg }}
     "github.com/hashicorp/terraform-provider-aws/internal/types"
 	{{- end }}
+	{{- if .NamesPkg }}
+    "github.com/hashicorp/terraform-provider-aws/names"
+	{{- end }}
 )

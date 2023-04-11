@@ -61,6 +61,7 @@ var (
 
 	sdkVersion   = flag.Int("AWSSDKVersion", sdkV1, "Version of the AWS SDK Go to use i.e. 1 or 2")
 	kvtValues    = flag.Bool("KVTValues", false, "Whether KVT string map is of string pointers")
+	skipNamesImp = flag.Bool("SkipNamesImp", false, "Whether to skip importing names")
 	skipTypesImp = flag.Bool("SkipTypesImp", false, "Whether to skip importing types")
 )
 
@@ -161,6 +162,7 @@ type TemplateData struct {
 	FmtPkg           bool
 	HelperSchemaPkg  bool
 	InternalTypesPkg bool
+	NamesPkg         bool
 	SkipTypesImp     bool
 	StrConvPkg       bool
 	TfResourcePkg    bool
@@ -232,6 +234,7 @@ func main() {
 		FmtPkg:           *updateTags,
 		HelperSchemaPkg:  awsPkg == "autoscaling",
 		InternalTypesPkg: *listTags || *serviceTagsMap || *serviceTagsSlice,
+		NamesPkg:         *updateTags && !*skipNamesImp,
 		SkipTypesImp:     *skipTypesImp,
 		StrConvPkg:       awsPkg == "autoscaling",
 		TfResourcePkg:    *getTag,

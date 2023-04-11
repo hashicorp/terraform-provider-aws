@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists apigatewayv2 service tags.
@@ -88,7 +89,7 @@ func UpdateTags(ctx context.Context, conn apigatewayv2iface.ApiGatewayV2API, ide
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &apigatewayv2.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreSystem(names.APIGatewayV2).Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -101,7 +102,7 @@ func UpdateTags(ctx context.Context, conn apigatewayv2iface.ApiGatewayV2API, ide
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &apigatewayv2.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreAWS()),
+			Tags:        Tags(updatedTags.IgnoreSystem(names.APIGatewayV2)),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)
