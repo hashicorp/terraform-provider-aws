@@ -571,6 +571,40 @@ func resourceDataQualityJobDefinitionRead(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
+func resourceDataQualityJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker Data Quality Job Definition (%s) tags: %s", d.Id(), err)
+		}
+	}
+	return append(diags, resourceDataQualityJobDefinitionRead(ctx, d, meta)...)
+}
+
+func resourceDataQualityJobDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
+
+	log.Printf("[INFO] Deleting SageMaker Data Quality Job Definition: %s", d.Id())
+	_, err := conn.DeleteDataQualityJobDefinitionWithContext(ctx, &sagemaker.DeleteDataQualityJobDefinitionInput{
+		JobDefinitionName: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
 func FindDataQualityJobDefinitionByName(ctx context.Context, conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeDataQualityJobDefinitionOutput, error) {
 	input := &sagemaker.DescribeDataQualityJobDefinitionInput{
 		JobDefinitionName: aws.String(name),
@@ -932,42 +966,6 @@ func flattenMonitoringStoppingCondition(config *sagemaker.MonitoringStoppingCond
 	}
 
 	return []map[string]interface{}{m}
-}
-
-func resourceDataQualityJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Data Quality Job Definition (%s) tags: %s", d.Id(), err)
-		}
-	}
-	return append(diags, resourceDataQualityJobDefinitionRead(ctx, d, meta)...)
-}
-
-func resourceDataQualityJobDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
-
-	deleteOpts := &sagemaker.DeleteDataQualityJobDefinitionInput{
-		JobDefinitionName: aws.String(d.Id()),
-	}
-	log.Printf("[INFO] Deleting SageMaker Data Quality Job Definition : %s", d.Id())
-
-	_, err := conn.DeleteDataQualityJobDefinitionWithContext(ctx, deleteOpts)
-
-	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
-	}
-
-	return diags
 }
 
 func expandDataQualityAppSpecification(configured []interface{}) *sagemaker.DataQualityAppSpecification {
