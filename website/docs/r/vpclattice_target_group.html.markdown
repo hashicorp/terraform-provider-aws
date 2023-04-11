@@ -16,51 +16,51 @@ Terraform resource for managing an AWS VPC Lattice Target Group.
 
 ```terraform
 resource "aws_vpclattice_target_group" "example" {
-	name     = "example"
-	type     = "INSTANCE|ALB|IP"
-	config {
-		port             = 443
-		protocol         = "HTTPS"
-	  	vpc_identifier   = aws_vpc.example.id
-	}
+  name = "example"
+  type = "INSTANCE|ALB|IP"
+  config {
+    port           = 443
+    protocol       = "HTTPS"
+    vpc_identifier = aws_vpc.example.id
   }
+}
 ```
 
 Basic usage with Health check
 
 ```terraform
 resource "aws_vpclattice_target_group" "example" {
-	name     = "example"
-	type     = "INSTANCE/ALB/IP"
-    client_token = "tstclienttoken"
-	config {
-		port             = 443
-		protocol         = "HTTPS"
-	  	vpc_identifier   = aws_vpc.example.id
-        protocol_version = "GRPC|HPPT1|HTTP2"
-	    health_check {
-		    enabled             = true
-		    interval            = 20
-		    timeout             = 10
-		    healthy_threshold   = 2
-		    unhealthy_threshold = 2
-		    matcher 		 		  = "200-299"
-		    path             		  = "/instance"
-		    port             		  = 80
-		    protocol         		  = "HTTP"
-		    protocol_version 		  = "HTTP1|HTTP2"
-	    }
-	}
+  name         = "example"
+  type         = "INSTANCE/ALB/IP"
+  client_token = "tstclienttoken"
+  config {
+    port             = 443
+    protocol         = "HTTPS"
+    vpc_identifier   = aws_vpc.example.id
+    protocol_version = "GRPC|HPPT1|HTTP2"
+    health_check {
+      enabled             = true
+      interval            = 20
+      timeout             = 10
+      healthy_threshold   = 2
+      unhealthy_threshold = 2
+      matcher             = "200-299"
+      path                = "/instance"
+      port                = 80
+      protocol            = "HTTP"
+      protocol_version    = "HTTP1|HTTP2"
+    }
   }
+}
 ```
 
 If the type is Lambda config block is not required
 
 ```terraform
 resource "aws_vpclattice_target_group" "example" {
-	name     = "example"
-	type     = "LAMBDA"
-  }
+  name = "example"
+  type = "LAMBDA"
+}
 ```
 
 ## Argument Reference
