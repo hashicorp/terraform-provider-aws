@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -292,7 +292,6 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 		if _, err := waitTargetGroupUpdated(ctx, conn, aws.ToString(out.Id), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return create.DiagError(names.VPCLattice, create.ErrActionWaitingForUpdate, ResNameTargetGroup, d.Id(), err)
 		}
-
 	}
 
 	return resourceTargetGroupRead(ctx, d, meta)
@@ -323,7 +322,7 @@ func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func waitTargetGroupCreated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.CreateTargetGroupOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.TargetGroupStatusCreateInProgress),
 		Target:                    enum.Slice(types.TargetGroupStatusActive),
 		Refresh:                   statusTargetGroup(ctx, conn, id),
@@ -341,7 +340,7 @@ func waitTargetGroupCreated(ctx context.Context, conn *vpclattice.Client, id str
 }
 
 func waitTargetGroupUpdated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.UpdateTargetGroupOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.TargetGroupStatusCreateInProgress),
 		Target:                    enum.Slice(types.TargetGroupStatusActive),
 		Refresh:                   statusTargetGroup(ctx, conn, id),
@@ -359,7 +358,7 @@ func waitTargetGroupUpdated(ctx context.Context, conn *vpclattice.Client, id str
 }
 
 func waitTargetGroupDeleted(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.DeleteTargetGroupOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.TargetGroupStatusDeleteInProgress, types.TargetGroupStatusActive),
 		Target:  []string{},
 		Refresh: statusTargetGroup(ctx, conn, id),
@@ -374,7 +373,7 @@ func waitTargetGroupDeleted(ctx context.Context, conn *vpclattice.Client, id str
 	return nil, err
 }
 
-func statusTargetGroup(ctx context.Context, conn *vpclattice.Client, id string) resource.StateRefreshFunc {
+func statusTargetGroup(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := FindTargetGroupByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -397,7 +396,7 @@ func FindTargetGroupByID(ctx context.Context, conn *vpclattice.Client, id string
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}

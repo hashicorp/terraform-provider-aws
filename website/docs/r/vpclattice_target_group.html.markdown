@@ -3,7 +3,7 @@ subcategory: 'VPC Lattice'
 layout: 'aws'
 page_title: 'AWS: aws_vpclattice_target_group'
 description: |-
-  Terraform resource for managing an AWS VPC Lattice Service.
+  Terraform resource for managing an AWS VPC Lattice Target Group.
 ---
 
 # Resource: aws_vpclattice_target_group
@@ -124,5 +124,5 @@ In addition to all arguments above, the following attributes are exported:
 VPC Lattice Target Group can be imported using the `id`, e.g.,
 
 ```
-$ terraform import aws_vpclattice_service.example tg-0c11d4dc16ed96bdb
+$ terraform import aws_vpclattice_target_group.example tg-0c11d4dc16ed96bdb
 ```
