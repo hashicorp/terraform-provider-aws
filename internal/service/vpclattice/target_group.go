@@ -189,9 +189,15 @@ func ResourceTargetGroup() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			verify.SetTagsDiff,
 			func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+				targetGroupType := types.TargetGroupType(d.Get("type").(string))
+
 				if v, ok := d.GetOk("config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-					if targetGroupType := types.TargetGroupType(d.Get("type").(string)); targetGroupType == types.TargetGroupTypeLambda {
+					if targetGroupType == types.TargetGroupTypeLambda {
 						return fmt.Errorf(`config not supported for type = %q`, targetGroupType)
+					}
+				} else {
+					if targetGroupType != types.TargetGroupTypeLambda {
+						return fmt.Errorf(`config required for type = %q`, targetGroupType)
 					}
 				}
 
