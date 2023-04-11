@@ -29,14 +29,14 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
   data_quality_job_output_config {
     monitoring_outputs {
       s3_output {
-	s3_uri = "https://${aws_s3_bucket.my_bucket.bucket_regional_domain_name}/output"
+        s3_uri = "https://${aws_s3_bucket.my_bucket.bucket_regional_domain_name}/output"
       }
     }
   }
   job_resources {
     cluster_config {
-      instance_count = 1
-      instance_type = "ml.t3.medium"
+      instance_count    = 1
+      instance_type     = "ml.t3.medium"
       volume_size_in_gb = 20
     }
   }
