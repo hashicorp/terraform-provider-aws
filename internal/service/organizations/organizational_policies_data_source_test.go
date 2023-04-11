@@ -10,8 +10,7 @@ import (
 
 func testAccOrganizationalPoliciesDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	topPolicyDataSourceName := "data.aws_organizations_organizational_policies.current"
-	newPolicyDataSourceName := "data.aws_organizations_organizational_policies.test"
+	organizationPolicyDataSourceName := "data.aws_organizations_organizational_policies.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -24,8 +23,7 @@ func testAccOrganizationalPoliciesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccOrganizationalPoliciesDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(topPolicyDataSourceName, "policies.#", "0"),
-					resource.TestCheckResourceAttr(newPolicyDataSourceName, "policies.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(organizationPolicyDataSourceName, "policies.#", "0"),
 				),
 			},
 		},
@@ -38,13 +36,5 @@ data "aws_organizations_organization" "current" {}
 resource "aws_organizations_organizational_unit" "test" {
   name      = "test"
   target_id = data.aws_organizations_organization.current.roots[0].id
-}
-
-data "aws_organizations_organizational_units" "current" {
-  target_id = aws_organizations_organizational_policies.test.target_id
-}
-
-data "aws_organizations_organizational_units" "test" {
-  target_id = aws_organizations_organizational_policies.test.id
 }
 `

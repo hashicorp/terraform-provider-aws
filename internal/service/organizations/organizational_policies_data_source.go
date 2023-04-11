@@ -58,7 +58,7 @@ func DataSourceOrganizationPolicies() *schema.Resource {
 }
 
 const (
-	DSNameOrganizationPolicies = "Organization Policies Data Source"
+	DSNameOrganizationalPolicies = "Organizational Policies Data Source"
 )
 
 func dataSourceOrganizationPoliciesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
