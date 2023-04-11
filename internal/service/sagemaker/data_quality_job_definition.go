@@ -26,9 +26,11 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 		ReadWithoutTimeout:   resourceDataQualityJobDefinitionRead,
 		UpdateWithoutTimeout: resourceDataQualityJobDefinitionUpdate,
 		DeleteWithoutTimeout: resourceDataQualityJobDefinitionDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -467,8 +469,8 @@ func resourceDataQualityJobDefinitionCreate(ctx context.Context, d *schema.Resou
 		JobDefinitionName:           aws.String(name),
 		DataQualityAppSpecification: expandDataQualityAppSpecification(d.Get("data_quality_app_specification").([]interface{})),
 		DataQualityJobInput:         expandDataQualityJobInput(d.Get("data_quality_job_input").([]interface{})),
-		DataQualityJobOutputConfig:  expandDataQualityJobOutputConfig(d.Get("data_quality_job_output_config").([]interface{})),
-		JobResources:                expandJobResources(d.Get("job_resources").([]interface{})),
+		DataQualityJobOutputConfig:  expandMonitoringOutputConfig(d.Get("data_quality_job_output_config").([]interface{})),
+		JobResources:                expandMonitoringResources(d.Get("job_resources").([]interface{})),
 		RoleArn:                     aws.String(roleArn),
 	}
 
@@ -477,11 +479,11 @@ func resourceDataQualityJobDefinitionCreate(ctx context.Context, d *schema.Resou
 	}
 
 	if v, ok := d.GetOk("network_config"); ok && len(v.([]interface{})) > 0 {
-		createOpts.NetworkConfig = expandNetworkConfig(v.([]interface{}))
+		createOpts.NetworkConfig = expandMonitoringNetworkConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("stopping_condition"); ok && len(v.([]interface{})) > 0 {
-		createOpts.StoppingCondition = expandStoppingCondition(v.([]interface{}))
+		createOpts.StoppingCondition = expandMonitoringStoppingCondition(v.([]interface{}))
 	}
 
 	if len(tags) > 0 {
@@ -532,19 +534,19 @@ func resourceDataQualityJobDefinitionRead(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "setting data_quality_job_input for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("data_quality_job_output_config", flattenDataQualityJobOutputConfig(jobDefinition.DataQualityJobOutputConfig)); err != nil {
+	if err := d.Set("data_quality_job_output_config", flattenMonitoringOutputConfig(jobDefinition.DataQualityJobOutputConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting data_quality_job_output_config for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("job_resources", flattenJobResources(jobDefinition.JobResources)); err != nil {
+	if err := d.Set("job_resources", flattenMonitoringResources(jobDefinition.JobResources)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting job_resources for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("network_config", flattenNetworkConfig(jobDefinition.NetworkConfig)); err != nil {
+	if err := d.Set("network_config", flattenMonitoringNetworkConfig(jobDefinition.NetworkConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_config for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("stopping_condition", flattenStoppingCondition(jobDefinition.StoppingCondition)); err != nil {
+	if err := d.Set("stopping_condition", flattenMonitoringStoppingCondition(jobDefinition.StoppingCondition)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting stopping_condition for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
@@ -605,7 +607,7 @@ func flattenDataQualityBaselineConfig(config *sagemaker.DataQualityBaselineConfi
 	}
 
 	if config.StatisticsResource != nil {
-		m["statistics_resource"] = flattenStatisticsResource(config.StatisticsResource)
+		m["statistics_resource"] = flattenMonitoringStatisticsResource(config.StatisticsResource)
 	}
 
 	return []map[string]interface{}{m}
@@ -625,7 +627,7 @@ func flattenConstraintsResource(config *sagemaker.MonitoringConstraintsResource)
 	return []map[string]interface{}{m}
 }
 
-func flattenStatisticsResource(config *sagemaker.MonitoringStatisticsResource) []map[string]interface{} {
+func flattenMonitoringStatisticsResource(config *sagemaker.MonitoringStatisticsResource) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -673,7 +675,7 @@ func flattenBatchTransformInput(config *sagemaker.BatchTransformInput_) []map[st
 	}
 
 	if config.DatasetFormat != nil {
-		m["dataset_format"] = flattenDatasetFormat(config.DatasetFormat)
+		m["dataset_format"] = flattenMonitoringDatasetFormat(config.DatasetFormat)
 	}
 
 	if config.S3DataDistributionType != nil {
@@ -687,7 +689,7 @@ func flattenBatchTransformInput(config *sagemaker.BatchTransformInput_) []map[st
 	return []map[string]interface{}{m}
 }
 
-func flattenDatasetFormat(config *sagemaker.MonitoringDatasetFormat) []map[string]interface{} {
+func flattenMonitoringDatasetFormat(config *sagemaker.MonitoringDatasetFormat) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -695,17 +697,17 @@ func flattenDatasetFormat(config *sagemaker.MonitoringDatasetFormat) []map[strin
 	m := map[string]interface{}{}
 
 	if config.Csv != nil {
-		m["csv"] = flattenCsv(config.Csv)
+		m["csv"] = flattenMonitoringCSVDatasetFormat(config.Csv)
 	}
 
 	if config.Json != nil {
-		m["json"] = flattenJson(config.Json)
+		m["json"] = flattenMonitoringJSONDatasetFormat(config.Json)
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenCsv(config *sagemaker.MonitoringCsvDatasetFormat) []map[string]interface{} {
+func flattenMonitoringCSVDatasetFormat(config *sagemaker.MonitoringCsvDatasetFormat) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -719,7 +721,7 @@ func flattenCsv(config *sagemaker.MonitoringCsvDatasetFormat) []map[string]inter
 	return []map[string]interface{}{m}
 }
 
-func flattenJson(config *sagemaker.MonitoringJsonDatasetFormat) []map[string]interface{} {
+func flattenMonitoringJSONDatasetFormat(config *sagemaker.MonitoringJsonDatasetFormat) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -759,7 +761,7 @@ func flattenEndpointInput(config *sagemaker.EndpointInput) []map[string]interfac
 	return []map[string]interface{}{m}
 }
 
-func flattenDataQualityJobOutputConfig(config *sagemaker.MonitoringOutputConfig) []map[string]interface{} {
+func flattenMonitoringOutputConfig(config *sagemaker.MonitoringOutputConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -782,14 +784,14 @@ func flattenMonitoringOutputs(list []*sagemaker.MonitoringOutput) []map[string]i
 
 	for _, lRaw := range list {
 		m := make(map[string]interface{})
-		m["s3_output"] = flattenS3Output(lRaw.S3Output)
+		m["s3_output"] = flattenMonitoringS3Output(lRaw.S3Output)
 		outputs = append(outputs, m)
 	}
 
 	return outputs
 }
 
-func flattenS3Output(config *sagemaker.MonitoringS3Output) []map[string]interface{} {
+func flattenMonitoringS3Output(config *sagemaker.MonitoringS3Output) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -811,7 +813,7 @@ func flattenS3Output(config *sagemaker.MonitoringS3Output) []map[string]interfac
 	return []map[string]interface{}{m}
 }
 
-func flattenJobResources(config *sagemaker.MonitoringResources) []map[string]interface{} {
+func flattenMonitoringResources(config *sagemaker.MonitoringResources) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -819,13 +821,13 @@ func flattenJobResources(config *sagemaker.MonitoringResources) []map[string]int
 	m := map[string]interface{}{}
 
 	if config.ClusterConfig != nil {
-		m["cluster_config"] = flattenClusterConfig(config.ClusterConfig)
+		m["cluster_config"] = flattenMonitoringClusterConfig(config.ClusterConfig)
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenClusterConfig(config *sagemaker.MonitoringClusterConfig) []map[string]interface{} {
+func flattenMonitoringClusterConfig(config *sagemaker.MonitoringClusterConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -851,7 +853,7 @@ func flattenClusterConfig(config *sagemaker.MonitoringClusterConfig) []map[strin
 	return []map[string]interface{}{m}
 }
 
-func flattenNetworkConfig(config *sagemaker.MonitoringNetworkConfig) []map[string]interface{} {
+func flattenMonitoringNetworkConfig(config *sagemaker.MonitoringNetworkConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -891,7 +893,7 @@ func flattenVpcConfig(config *sagemaker.VpcConfig) []map[string]interface{} {
 	return []map[string]interface{}{m}
 }
 
-func flattenStoppingCondition(config *sagemaker.MonitoringStoppingCondition) []map[string]interface{} {
+func flattenMonitoringStoppingCondition(config *sagemaker.MonitoringStoppingCondition) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -979,17 +981,17 @@ func expandDataQualityBaselineConfig(configured []interface{}) *sagemaker.DataQu
 	c := &sagemaker.DataQualityBaselineConfig{}
 
 	if v, ok := m["constraints_resource"].([]interface{}); ok && len(v) > 0 {
-		c.ConstraintsResource = expandConstraintsResource(v)
+		c.ConstraintsResource = expandMonitoringConstraintsResource(v)
 	}
 
 	if v, ok := m["statistics_resource"].([]interface{}); ok && len(v) > 0 {
-		c.StatisticsResource = expandStatisticsResource(v)
+		c.StatisticsResource = expandMonitoringStatisticsResource(v)
 	}
 
 	return c
 }
 
-func expandConstraintsResource(configured []interface{}) *sagemaker.MonitoringConstraintsResource {
+func expandMonitoringConstraintsResource(configured []interface{}) *sagemaker.MonitoringConstraintsResource {
 	if len(configured) == 0 {
 		return nil
 	}
@@ -1005,7 +1007,7 @@ func expandConstraintsResource(configured []interface{}) *sagemaker.MonitoringCo
 	return c
 }
 
-func expandStatisticsResource(configured []interface{}) *sagemaker.MonitoringStatisticsResource {
+func expandMonitoringStatisticsResource(configured []interface{}) *sagemaker.MonitoringStatisticsResource {
 	if len(configured) == 0 {
 		return nil
 	}
@@ -1083,7 +1085,7 @@ func expandBatchTransformInput(configured []interface{}) *sagemaker.BatchTransfo
 	}
 
 	if v, ok := m["dataset_format"].([]interface{}); ok && len(v) > 0 {
-		c.DatasetFormat = expandDatasetFormat(v)
+		c.DatasetFormat = expandMonitoringDatasetFormat(v)
 	}
 
 	if v, ok := m["local_path"].(string); ok && v != "" {
@@ -1101,7 +1103,7 @@ func expandBatchTransformInput(configured []interface{}) *sagemaker.BatchTransfo
 	return c
 }
 
-func expandDatasetFormat(configured []interface{}) *sagemaker.MonitoringDatasetFormat {
+func expandMonitoringDatasetFormat(configured []interface{}) *sagemaker.MonitoringDatasetFormat {
 	if len(configured) == 0 {
 		return nil
 	}
@@ -1111,17 +1113,17 @@ func expandDatasetFormat(configured []interface{}) *sagemaker.MonitoringDatasetF
 	c := &sagemaker.MonitoringDatasetFormat{}
 
 	if v, ok := m["csv"].([]interface{}); ok && len(v) > 0 {
-		c.Csv = expandCsv(v)
+		c.Csv = expandMonitoringCSVDatasetFormat(v)
 	}
 
 	if v, ok := m["json"].([]interface{}); ok && len(v) > 0 {
-		c.Json = expandJson(v)
+		c.Json = expandMonitoringJSONDatasetFormat(v)
 	}
 
 	return c
 }
 
-func expandJson(configured []interface{}) *sagemaker.MonitoringJsonDatasetFormat {
+func expandMonitoringJSONDatasetFormat(configured []interface{}) *sagemaker.MonitoringJsonDatasetFormat {
 	if len(configured) == 0 {
 		return nil
 	}
@@ -1140,7 +1142,7 @@ func expandJson(configured []interface{}) *sagemaker.MonitoringJsonDatasetFormat
 	return c
 }
 
-func expandCsv(configured []interface{}) *sagemaker.MonitoringCsvDatasetFormat {
+func expandMonitoringCSVDatasetFormat(configured []interface{}) *sagemaker.MonitoringCsvDatasetFormat {
 	if len(configured) == 0 {
 		return nil
 	}
@@ -1159,7 +1161,7 @@ func expandCsv(configured []interface{}) *sagemaker.MonitoringCsvDatasetFormat {
 	return c
 }
 
-func expandDataQualityJobOutputConfig(configured []interface{}) *sagemaker.MonitoringOutputConfig {
+func expandMonitoringOutputConfig(configured []interface{}) *sagemaker.MonitoringOutputConfig {
 	if len(configured) == 0 {
 		return nil
 	}
@@ -1186,7 +1188,7 @@ func expandMonitoringOutputs(configured []interface{}) []*sagemaker.MonitoringOu
 		data := lRaw.(map[string]interface{})
 
 		l := &sagemaker.MonitoringOutput{
-			S3Output: expandS3Output(data["s3_output"].([]interface{})),
+			S3Output: expandMonitoringS3Output(data["s3_output"].([]interface{})),
 		}
 		containers = append(containers, l)
 	}
@@ -1194,7 +1196,7 @@ func expandMonitoringOutputs(configured []interface{}) []*sagemaker.MonitoringOu
 	return containers
 }
 
-func expandS3Output(configured []interface{}) *sagemaker.MonitoringS3Output {
+func expandMonitoringS3Output(configured []interface{}) *sagemaker.MonitoringS3Output {
 	if len(configured) == 0 {
 		return nil
 	}
@@ -1218,7 +1220,7 @@ func expandS3Output(configured []interface{}) *sagemaker.MonitoringS3Output {
 	return c
 }
 
-func expandJobResources(configured []interface{}) *sagemaker.MonitoringResources {
+func expandMonitoringResources(configured []interface{}) *sagemaker.MonitoringResources {
 	if len(configured) == 0 {
 		return nil
 	}
@@ -1228,13 +1230,13 @@ func expandJobResources(configured []interface{}) *sagemaker.MonitoringResources
 	c := &sagemaker.MonitoringResources{}
 
 	if v, ok := m["cluster_config"].([]interface{}); ok && len(v) > 0 {
-		c.ClusterConfig = expandClusterConfig(v)
+		c.ClusterConfig = expandMonitoringClusterConfig(v)
 	}
 
 	return c
 }
 
-func expandClusterConfig(configured []interface{}) *sagemaker.MonitoringClusterConfig {
+func expandMonitoringClusterConfig(configured []interface{}) *sagemaker.MonitoringClusterConfig {
 	if len(configured) == 0 {
 		return nil
 	}
@@ -1262,7 +1264,7 @@ func expandClusterConfig(configured []interface{}) *sagemaker.MonitoringClusterC
 	return c
 }
 
-func expandNetworkConfig(configured []interface{}) *sagemaker.MonitoringNetworkConfig {
+func expandMonitoringNetworkConfig(configured []interface{}) *sagemaker.MonitoringNetworkConfig {
 	if len(configured) == 0 {
 		return nil
 	}
@@ -1306,7 +1308,7 @@ func expandVpcConfig(configured []interface{}) *sagemaker.VpcConfig {
 	return c
 }
 
-func expandStoppingCondition(configured []interface{}) *sagemaker.MonitoringStoppingCondition {
+func expandMonitoringStoppingCondition(configured []interface{}) *sagemaker.MonitoringStoppingCondition {
 	if len(configured) == 0 {
 		return nil
 	}

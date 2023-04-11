@@ -162,7 +162,7 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransform(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerDataQualityJobDefinition_batchTransformCsvHeader(t *testing.T) {
+func TestAccSageMakerDataQualityJobDefinition_batchTransformCSVHeader(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
@@ -174,7 +174,7 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransformCsvHeader(t *testing
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataQualityJobDefinitionConfig_batchTransformCsvHeader(rName),
+				Config: testAccDataQualityJobDefinitionConfig_batchTransformCSVHeader(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.#", "1"),
@@ -192,7 +192,7 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransformCsvHeader(t *testing
 	})
 }
 
-func TestAccSageMakerDataQualityJobDefinition_batchTransformJson(t *testing.T) {
+func TestAccSageMakerDataQualityJobDefinition_batchTransformJSON(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
@@ -204,7 +204,7 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransformJson(t *testing.T) {
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataQualityJobDefinitionConfig_batchTransformJson(rName),
+				Config: testAccDataQualityJobDefinitionConfig_batchTransformJSON(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.batch_transform_input.#", "1"),
@@ -221,7 +221,7 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransformJson(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerDataQualityJobDefinition_batchTransformJsonLine(t *testing.T) {
+func TestAccSageMakerDataQualityJobDefinition_batchTransformJSONLine(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
@@ -233,7 +233,7 @@ func TestAccSageMakerDataQualityJobDefinition_batchTransformJsonLine(t *testing.
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataQualityJobDefinitionConfig_batchTransformJsonLine(rName),
+				Config: testAccDataQualityJobDefinitionConfig_batchTransformJSONLine(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.#", "1"),
@@ -944,7 +944,7 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 `, rName))
 }
 
-func testAccDataQualityJobDefinitionConfig_batchTransformCsvHeader(rName string) string {
+func testAccDataQualityJobDefinitionConfig_batchTransformCSVHeader(rName string) string {
 	return acctest.ConfigCompose(testAccDataQualityJobDefinitionConfig_batchTransformBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
   name = %[1]q
@@ -980,7 +980,7 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 `, rName))
 }
 
-func testAccDataQualityJobDefinitionConfig_batchTransformJson(rName string) string {
+func testAccDataQualityJobDefinitionConfig_batchTransformJSON(rName string) string {
 	return acctest.ConfigCompose(testAccDataQualityJobDefinitionConfig_batchTransformBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
   name = %[1]q
@@ -1014,7 +1014,7 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 `, rName))
 }
 
-func testAccDataQualityJobDefinitionConfig_batchTransformJsonLine(rName string) string {
+func testAccDataQualityJobDefinitionConfig_batchTransformJSONLine(rName string) string {
 	return acctest.ConfigCompose(testAccDataQualityJobDefinitionConfig_batchTransformBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_data_quality_job_definition" "test" {
   name = %[1]q
