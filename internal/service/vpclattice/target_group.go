@@ -468,7 +468,7 @@ func flattenHealthCheckConfig(apiObject *types.HealthCheckConfig) map[string]int
 	}
 
 	if v := apiObject.Matcher; v != nil {
-		tfMap["matcher"] = []interface{}{flattenMatcherMemberHttpCode(v.(*types.MatcherMemberHttpCode))}
+		tfMap["matcher"] = []interface{}{flattenMatcherMemberHTTPCode(v.(*types.MatcherMemberHttpCode))}
 	}
 
 	if v := apiObject.Path; v != nil {
@@ -486,7 +486,7 @@ func flattenHealthCheckConfig(apiObject *types.HealthCheckConfig) map[string]int
 	return tfMap
 }
 
-func flattenMatcherMemberHttpCode(apiObject *types.MatcherMemberHttpCode) map[string]interface{} {
+func flattenMatcherMemberHTTPCode(apiObject *types.MatcherMemberHttpCode) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -552,7 +552,7 @@ func expandHealthCheckConfig(tfMap map[string]interface{}) *types.HealthCheckCon
 	}
 
 	if v, ok := tfMap["matcher"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Matcher = expandMatcherMemberHttpCode(v[0].(map[string]interface{}))
+		apiObject.Matcher = expandMatcherMemberHTTPCode(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["path"].(string); ok && v != "" {
@@ -578,7 +578,7 @@ func expandHealthCheckConfig(tfMap map[string]interface{}) *types.HealthCheckCon
 	return apiObject
 }
 
-func expandMatcherMemberHttpCode(tfMap map[string]interface{}) types.Matcher {
+func expandMatcherMemberHTTPCode(tfMap map[string]interface{}) types.Matcher {
 	apiObject := &types.MatcherMemberHttpCode{}
 
 	if v, ok := tfMap["value"].(string); ok && v != "" {
