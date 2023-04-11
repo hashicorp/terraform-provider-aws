@@ -108,12 +108,13 @@ func ResourceTargetGroup() *schema.Resource {
 									"port": {
 										Type:         schema.TypeInt,
 										Optional:     true,
+										Computed:     true,
 										ValidateFunc: validation.IsPortNumber,
 									},
 									"protocol": {
 										Type:             schema.TypeString,
 										Optional:         true,
-										Default:          types.TargetGroupProtocolHttp,
+										Computed:         true,
 										ValidateDiagFunc: enum.Validate[types.TargetGroupProtocol](),
 									},
 									"protocol_version": {
@@ -138,8 +139,8 @@ func ResourceTargetGroup() *schema.Resource {
 						"ip_address_type": {
 							Type:             schema.TypeString,
 							Optional:         true,
+							Computed:         true,
 							ForceNew:         true,
-							Default:          types.IpAddressTypeIpv4,
 							ValidateDiagFunc: enum.Validate[types.IpAddressType](),
 						},
 						"port": {
@@ -440,7 +441,7 @@ func flattenTargetGroupConfig(apiObject *types.TargetGroupConfig) map[string]int
 	}
 
 	if v := apiObject.HealthCheck; v != nil {
-		tfMap["health_check"] = []interface{}{flattenHealthCheckConfig(v, apiObject.Port)}
+		tfMap["health_check"] = []interface{}{flattenHealthCheckConfig(v)}
 	}
 
 	if v := apiObject.Port; v != nil {
@@ -454,7 +455,7 @@ func flattenTargetGroupConfig(apiObject *types.TargetGroupConfig) map[string]int
 	return tfMap
 }
 
-func flattenHealthCheckConfig(apiObject *types.HealthCheckConfig, configPort *int32) map[string]interface{} {
+func flattenHealthCheckConfig(apiObject *types.HealthCheckConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -490,8 +491,6 @@ func flattenHealthCheckConfig(apiObject *types.HealthCheckConfig, configPort *in
 
 	if v := apiObject.Port; v != nil {
 		tfMap["port"] = aws.ToInt32(v)
-	} else if configPort != nil {
-		tfMap["port"] = aws.ToInt32(configPort)
 	}
 
 	if v := apiObject.UnhealthyThresholdCount; v != nil {
@@ -518,21 +517,18 @@ func expandTargetGroupConfig(tfMap map[string]interface{}) *types.TargetGroupCon
 		return nil
 	}
 
-	var port int32
-	if v, ok := tfMap["port"].(int); ok && v != 0 {
-		port = int32(v)
-	}
-
-	apiObject := &types.TargetGroupConfig{
-		Port: aws.Int32(port),
-	}
+	apiObject := &types.TargetGroupConfig{}
 
 	if v, ok := tfMap["health_check"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.HealthCheck = expandHealthCheckConfig(v[0].(map[string]interface{}), port)
+		apiObject.HealthCheck = expandHealthCheckConfig(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["ip_address_type"].(string); ok && v != "" {
 		apiObject.IpAddressType = types.IpAddressType(v)
+	}
+
+	if v, ok := tfMap["port"].(int); ok && v != 0 {
+		apiObject.Port = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["protocol"].(string); ok && v != "" {
@@ -550,7 +546,7 @@ func expandTargetGroupConfig(tfMap map[string]interface{}) *types.TargetGroupCon
 	return apiObject
 }
 
-func expandHealthCheckConfig(tfMap map[string]interface{}, configPort int32) *types.HealthCheckConfig {
+func expandHealthCheckConfig(tfMap map[string]interface{}) *types.HealthCheckConfig {
 	apiObject := &types.HealthCheckConfig{}
 
 	if v, ok := tfMap["enabled"].(bool); ok {
@@ -579,8 +575,6 @@ func expandHealthCheckConfig(tfMap map[string]interface{}, configPort int32) *ty
 
 	if v, ok := tfMap["port"].(int); ok && v != 0 {
 		apiObject.Port = aws.Int32(int32(v))
-	} else {
-		apiObject.Port = aws.Int32(configPort)
 	}
 
 	if v, ok := tfMap["protocol"].(string); ok && v != "" {

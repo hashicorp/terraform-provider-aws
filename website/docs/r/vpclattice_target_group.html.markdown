@@ -85,7 +85,7 @@ The following arguments are optional:
 Config (`config`) supports the following:
 
 * `health_check` - (Optional) The health check configuration.
-* `ip_address_type` - (Optional) The type of IP address used for the target group. Valid values: `IPV4` | `IPV6`. If not specified, the IP address type defaults to `IPV4`.
+* `ip_address_type` - (Optional) The type of IP address used for the target group. Valid values: `IPV4` | `IPV6`
 * `port` - (Required) The port on which the targets are listening.
 * `protocol` - (Required) The protocol to use for routing traffic to the targets. Valid Values are `HTTP` | `HTTPS`
 * `protocol_version` - (Optional) The protocol version. Valid Values are `HTTP1` | `HTTP2` | `GRPC`. Default value is `HTTP1`.
@@ -101,7 +101,7 @@ Health Check (`health_check`) supports the following:
   * `value` - (Optional) The HTTP codes to use when checking for a successful response from a target.
 * `path` - (Optional) The destination for health checks on the targets. If the protocol version is HTTP/1.1 or HTTP/2, specify a valid URI (for example, /path?query). The default path is `/`. Health checks are not supported if the protocol version is gRPC, however, you can choose HTTP/1.1 or HTTP/2 and specify a valid URI.
 * `port` - (Optional) The port used when performing health checks on targets. The default setting is the port that a target receives traffic on.
-* `protocol` - (Optional) The protocol used when performing health checks on targets. The possible protocols are `HTTP` and `HTTPS`. The default is `HTTP`.
+* `protocol` - (Optional) The protocol used when performing health checks on targets. The possible protocols are `HTTP` and `HTTPS`.
 * `protocol_version` - (Optional) The protocol version used when performing health checks on targets. The possible protocol versions are `HTTP1` and `HTTP2`. The default is `HTTP1`.
 * `unhealthy_threshold_count` - (Optional) The number of consecutive failed health checks required before considering a target unhealthy. The range is 2–10. The default is 2.
 
