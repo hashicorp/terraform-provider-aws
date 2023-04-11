@@ -247,8 +247,27 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/24574
-func TestAccServiceCatalogProvisionedProduct_tainted(t *testing.T) {
+func TestAccServiceCatalogProvisionedProduct_taintedCreate(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccProvisionedProductConfig_error(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
+				ExpectError: regexp.MustCompile(`AmazonCloudFormationException  Unresolved resource dependencies \[MyVPC\] in the Outputs block of the template`),
+			},
+		},
+	})
+}
+
+func TestAccServiceCatalogProvisionedProduct_taintedUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 
@@ -268,16 +287,15 @@ func TestAccServiceCatalogProvisionedProduct_tainted(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccProvisionedProductConfig_updateTainted(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "status", servicecatalog.ProvisionedProductStatusTainted),
-				),
+				Config:      testAccProvisionedProductConfig_error(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
+				ExpectError: regexp.MustCompile(`AmazonCloudFormationException  Unresolved resource dependencies \[MyVPC\] in the Outputs block of the template`),
 			},
 			{
-				// Check we can still run a complete plan after the previous update error
-				Config:   testAccProvisionedProductConfig_updateTainted(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
-				PlanOnly: true,
+				// Check we can still run a complete apply after the previous update error
+				Config: testAccProvisionedProductConfig_basic(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProvisionedProductExists(ctx, resourceName),
+				),
 			},
 		},
 	})
@@ -584,7 +602,10 @@ resource "aws_servicecatalog_provisioned_product" "test" {
 `, rName, vpcCidr))
 }
 
-func testAccProvisionedProductConfig_updateTainted(rName, domain, email, vpcCidr string) string {
+// Because the `provisioning_parameter` "LeaveMeEmpty" is not empty, this configuration results in an error.
+// The `status_message` will be:
+// AmazonCloudFormationException  Unresolved resource dependencies [MyVPC] in the Outputs block of the template
+func testAccProvisionedProductConfig_error(rName, domain, email, vpcCidr string) string {
 	return acctest.ConfigCompose(testAccProvisionedProductTemplateURLBaseConfig(rName, domain, email),
 		fmt.Sprintf(`
 resource "aws_servicecatalog_provisioned_product" "test" {

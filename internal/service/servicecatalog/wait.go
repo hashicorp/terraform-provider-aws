@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 const (
@@ -496,7 +495,7 @@ func WaitLaunchPathsReady(ctx context.Context, conn *servicecatalog.ServiceCatal
 func WaitProvisionedProductReady(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, id, name string, timeout time.Duration) (*servicecatalog.DescribeProvisionedProductOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{StatusNotFound, StatusUnavailable, servicecatalog.ProvisionedProductStatusUnderChange, servicecatalog.ProvisionedProductStatusPlanInProgress},
-		Target:                    []string{servicecatalog.StatusAvailable, servicecatalog.ProvisionedProductStatusTainted}, // Note: "TAINTED" is a stable state, ready for any operation, but is not exactly what was requested (new version failed and rolled back to current version)
+		Target:                    []string{servicecatalog.StatusAvailable},
 		Refresh:                   StatusProvisionedProduct(ctx, conn, acceptLanguage, id, name),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: ContinuousTargetOccurrence,
@@ -508,11 +507,14 @@ func WaitProvisionedProductReady(ctx context.Context, conn *servicecatalog.Servi
 
 	if output, ok := outputRaw.(*servicecatalog.DescribeProvisionedProductOutput); ok {
 		if detail := output.ProvisionedProductDetail; detail != nil {
-			status := aws.StringValue(detail.Status)
-
-			if status == servicecatalog.ProvisionedProductStatusError || status == servicecatalog.ProvisionedProductStatusTainted {
-				// for TAINTED, this may be ineffectual since err is likely nil
-				tfresource.SetLastError(err, errors.New(aws.StringValue(detail.StatusMessage)))
+			var foo *retry.UnexpectedStateError
+			if errors.As(err, &foo) {
+				// The statuses `ERROR` and `TAINTED` are equivalent: the application of the requested change has failed.
+				// The difference is that, in the case of `TAINTED`, there is a previous version to roll back to.
+				status := aws.StringValue(detail.Status)
+				if status == servicecatalog.ProvisionedProductStatusError || status == servicecatalog.ProvisionedProductStatusTainted {
+					return output, errors.New(aws.StringValue(detail.StatusMessage))
+				}
 			}
 		}
 		return output, err
@@ -523,7 +525,7 @@ func WaitProvisionedProductReady(ctx context.Context, conn *servicecatalog.Servi
 
 func WaitProvisionedProductTerminated(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, id, name string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{servicecatalog.StatusAvailable, servicecatalog.ProvisionedProductStatusUnderChange, servicecatalog.ProvisionedProductStatusTainted},
+		Pending: []string{servicecatalog.StatusAvailable, servicecatalog.ProvisionedProductStatusUnderChange},
 		Target:  []string{StatusNotFound, StatusUnavailable},
 		Refresh: StatusProvisionedProduct(ctx, conn, acceptLanguage, id, name),
 		Timeout: timeout,
