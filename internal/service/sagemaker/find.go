@@ -497,31 +497,6 @@ func FindEndpointConfigByName(ctx context.Context, conn *sagemaker.SageMaker, na
 	return output, nil
 }
 
-func FindDataQualityJobDefinitionByName(ctx context.Context, conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeDataQualityJobDefinitionOutput, error) {
-	input := &sagemaker.DescribeDataQualityJobDefinitionInput{
-		JobDefinitionName: aws.String(name),
-	}
-
-	output, err := conn.DescribeDataQualityJobDefinitionWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
 func FindFlowDefinitionByName(ctx context.Context, conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeFlowDefinitionOutput, error) {
 	input := &sagemaker.DescribeFlowDefinitionInput{
 		FlowDefinitionName: aws.String(name),
