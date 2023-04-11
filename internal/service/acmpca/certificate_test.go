@@ -64,7 +64,7 @@ func TestAccACMPCACertificate_rootCertificate(t *testing.T) {
 	})
 }
 
-func TestAccACMPCACertificate_rootCertificateWithApiPassthrough(t *testing.T) {
+func TestAccACMPCACertificate_rootCertificateWithAPIPassthrough(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acmpca_certificate.test"
 	certificateAuthorityResourceName := "aws_acmpca_certificate_authority.test"
