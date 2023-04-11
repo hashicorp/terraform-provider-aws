@@ -315,7 +315,7 @@ func TestAccSageMakerDataQualityJobDefinition_endpointOptional(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerDataQualityJobDefinition_ouputConfigKmsKeyId(t *testing.T) {
+func TestAccSageMakerDataQualityJobDefinition_outputConfigKMSKeyID(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
@@ -327,7 +327,7 @@ func TestAccSageMakerDataQualityJobDefinition_ouputConfigKmsKeyId(t *testing.T) 
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataQualityJobDefinitionConfig_outputConfigKmsKeyId(rName),
+				Config: testAccDataQualityJobDefinitionConfig_outputConfigKMSKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.#", "1"),
@@ -374,7 +374,7 @@ func TestAccSageMakerDataQualityJobDefinition_outputConfigOptional(t *testing.T)
 	})
 }
 
-func TestAccSageMakerDataQualityJobDefinition_jobResourcesVolumeKmsKeyId(t *testing.T) {
+func TestAccSageMakerDataQualityJobDefinition_jobResourcesVolumeKMSKeyID(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_data_quality_job_definition.test"
@@ -386,7 +386,7 @@ func TestAccSageMakerDataQualityJobDefinition_jobResourcesVolumeKmsKeyId(t *test
 		CheckDestroy:             testAccCheckDataQualityJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataQualityJobDefinitionConfig_jobResourcesVolumeKey(rName),
+				Config: testAccDataQualityJobDefinitionConfig_jobResourcesVolumeKMSKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "job_resources.#", "1"),
@@ -1121,7 +1121,7 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 `, rName))
 }
 
-func testAccDataQualityJobDefinitionConfig_outputConfigKmsKeyId(rName string) string {
+func testAccDataQualityJobDefinitionConfig_outputConfigKMSKeyID(rName string) string {
 	return acctest.ConfigCompose(testAccDataQualityJobDefinitionConfig_batchTransformBase(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -1197,7 +1197,7 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 `, rName))
 }
 
-func testAccDataQualityJobDefinitionConfig_jobResourcesVolumeKey(rName string) string {
+func testAccDataQualityJobDefinitionConfig_jobResourcesVolumeKMSKeyID(rName string) string {
 	return acctest.ConfigCompose(testAccDataQualityJobDefinitionConfig_batchTransformBase(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
