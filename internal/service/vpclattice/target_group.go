@@ -3,8 +3,8 @@ package vpclattice
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
-	"reflect"
 	"strings"
 	"time"
 
@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -25,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpclattice_target_group")
+// @SDKResource("aws_vpclattice_target_group", name="Target Group")
 // @Tags(identifierAttribute="arn")
 func ResourceTargetGroup() *schema.Resource {
 	return &schema.Resource{
@@ -59,7 +60,6 @@ func ResourceTargetGroup() *schema.Resource {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Optional: true,
-							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"enabled": {
@@ -67,30 +67,36 @@ func ResourceTargetGroup() *schema.Resource {
 										Optional: true,
 										Default:  true,
 									},
-									"interval": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										Default:  30,
+									"health_check_interval_seconds": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      30,
+										ValidateFunc: validation.IntBetween(5, 300),
 									},
-									"timeout": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										Computed: true,
+									"health_check_timeout_seconds": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      5,
+										ValidateFunc: validation.IntBetween(1, 120),
 									},
-									"healthy_threshold": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										Default:  5,
-									},
-									"unhealthy_threshold": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										Default:  2,
+									"healthy_threshold_count": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      5,
+										ValidateFunc: validation.IntBetween(2, 10),
 									},
 									"matcher": {
-										Type:     schema.TypeString,
-										Computed: true,
+										Type:     schema.TypeList,
+										MaxItems: 1,
 										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"value": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
 									},
 									"path": {
 										Type:     schema.TypeString,
@@ -100,11 +106,14 @@ func ResourceTargetGroup() *schema.Resource {
 									"port": {
 										Type:         schema.TypeInt,
 										Optional:     true,
+										Computed:     true,
 										ValidateFunc: validation.IsPortNumber,
 									},
 									"protocol": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:             schema.TypeString,
+										Optional:         true,
+										Default:          types.TargetGroupProtocolHttp,
+										ValidateDiagFunc: enum.Validate[types.TargetGroupProtocol](),
 									},
 									"protocol_version": {
 										Type:     schema.TypeString,
@@ -112,41 +121,42 @@ func ResourceTargetGroup() *schema.Resource {
 										StateFunc: func(v interface{}) string {
 											return strings.ToUpper(v.(string))
 										},
-										ValidateFunc: validation.StringInSlice([]string{
-											"GRPC",
-											"HTTP1",
-											"HTTP2",
-										}, true),
+										ValidateDiagFunc: enum.Validate[types.HealthCheckProtocolVersion](),
+									},
+									"unhealthy_threshold_count": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      2,
+										ValidateFunc: validation.IntBetween(2, 10),
 									},
 								},
 							},
 						},
 						"ip_address_type": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          types.IpAddressTypeIpv4,
+							ValidateDiagFunc: enum.Validate[types.IpAddressType](),
 						},
 						"port": {
 							Type:         schema.TypeInt,
-							Optional:     true,
+							Required:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.IsPortNumber,
 						},
 						"protocol": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.TargetGroupProtocol](),
 						},
 						"protocol_version": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Computed: true,
+							Default:  types.TargetGroupProtocolVersionHttp1,
 							StateFunc: func(v interface{}) string {
 								return strings.ToUpper(v.(string))
 							},
-							ValidateFunc: validation.StringInSlice([]string{
-								"GRPC",
-								"HTTP1",
-								"HTTP2",
-							}, true),
+							ValidateDiagFunc: enum.Validate[types.TargetGroupProtocolVersion](),
 						},
 						"vpc_identifier": {
 							Type:     schema.TypeString,
@@ -156,28 +166,38 @@ func ResourceTargetGroup() *schema.Resource {
 					},
 				},
 			},
-			"type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(3, 128),
 			},
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"type": {
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.TargetGroupType](),
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
+
+		CustomizeDiff: customdiff.All(
+			verify.SetTagsDiff,
+			func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+				if v, ok := d.GetOk("config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+					if targetGroupType := types.TargetGroupType(d.Get("type").(string)); targetGroupType == types.TargetGroupTypeLambda {
+						return fmt.Errorf(`config not supported for type = %q`, targetGroupType)
+					}
+				}
+
+				return nil
+			},
+		),
 	}
 }
 
@@ -188,34 +208,22 @@ const (
 func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
+	name := d.Get("name").(string)
 	in := &vpclattice.CreateTargetGroupInput{
 		ClientToken: aws.String(id.UniqueId()),
-		Name:        aws.String(d.Get("name").(string)),
-		Type:        types.TargetGroupType(d.Get("type").(string)),
+		Name:        aws.String(name),
 		Tags:        GetTagsIn(ctx),
+		Type:        types.TargetGroupType(d.Get("type").(string)),
 	}
 
-	if d.Get("type") != string(types.TargetGroupTypeLambda) {
-		if v, ok := d.GetOk("config"); ok && len(v.([]interface{})) > 0 {
-			config := expandConfigAttributes(v.([]interface{})[0].(map[string]interface{}))
-			in.Config = &types.TargetGroupConfig{
-				Port:            config.Port,
-				Protocol:        config.Protocol,
-				VpcIdentifier:   config.VpcIdentifier,
-				IpAddressType:   config.IpAddressType,
-				ProtocolVersion: config.ProtocolVersion,
-				HealthCheck:     config.HealthCheck,
-			}
-		}
+	if v, ok := d.GetOk("config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		in.Config = expandTargetGroupConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	out, err := conn.CreateTargetGroup(ctx, in)
-	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameService, d.Get("name").(string), err)
-	}
 
-	if out == nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameService, d.Get("name").(string), errors.New("empty output"))
+	if err != nil {
+		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameService, name, err)
 	}
 
 	d.SetId(aws.ToString(out.Id))
@@ -233,7 +241,7 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	out, err := FindTargetGroupByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] VpcLattice TargetGroup (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] VpcLattice Target Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -243,16 +251,16 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set("arn", out.Arn)
-	d.Set("name", out.Name)
-	d.Set("status", out.Status)
-	d.Set("type", out.Type)
 	if out.Config != nil {
-		if err := d.Set("config", flattenTargetGroupConfig(out.Config)); err != nil {
+		if err := d.Set("config", []interface{}{flattenTargetGroupConfig(out.Config)}); err != nil {
 			return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameTargetGroup, d.Id(), err)
 		}
 	} else {
 		d.Set("config", nil)
 	}
+	d.Set("name", out.Name)
+	d.Set("status", out.Status)
+	d.Set("type", out.Type)
 
 	return nil
 }
@@ -266,12 +274,12 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if d.HasChange("config") {
-			oldConfig, newConfig := d.GetChange("config")
-			oldConfigMap := expandConfigAttributes(oldConfig.([]interface{})[0].(map[string]interface{}))
-			newConfigMap := expandConfigAttributes(newConfig.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				config := expandTargetGroupConfig(v.([]interface{})[0].(map[string]interface{}))
 
-			if !reflect.DeepEqual(oldConfigMap.HealthCheck, newConfigMap.HealthCheck) {
-				in.HealthCheck = newConfigMap.HealthCheck
+				if v := config.HealthCheck; v != nil {
+					in.HealthCheck = v
+				}
 			}
 		}
 
@@ -279,8 +287,8 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 			return nil
 		}
 
-		log.Printf("[DEBUG] Updating VpcLattice TargetGroup (%s): %#v", d.Id(), in)
 		out, err := conn.UpdateTargetGroup(ctx, in)
+
 		if err != nil {
 			return create.DiagError(names.VPCLattice, create.ErrActionUpdating, ResNameTargetGroup, d.Id(), err)
 		}
@@ -296,11 +304,11 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
-	log.Printf("[INFO] Deleting VpcLattice TargetGroup %s", d.Id())
-
+	log.Printf("[INFO] Deleting VpcLattice TargetGroup: %s", d.Id())
 	_, err := conn.DeleteTargetGroup(ctx, &vpclattice.DeleteTargetGroupInput{
 		TargetGroupIdentifier: aws.String(d.Id()),
 	})
+
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
@@ -408,133 +416,173 @@ func FindTargetGroupByID(ctx context.Context, conn *vpclattice.Client, id string
 	return out, nil
 }
 
-func flattenTargetGroupConfig(apiObject *types.TargetGroupConfig) []map[string]interface{} {
+func flattenTargetGroupConfig(apiObject *types.TargetGroupConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
-		"port":           aws.Int32(*apiObject.Port),
-		"protocol":       string(apiObject.Protocol),
-		"vpc_identifier": aws.String(*apiObject.VpcIdentifier),
+	tfMap := map[string]interface{}{
+		"ip_address_type": apiObject.IpAddressType,
+		"protocol":        apiObject.Protocol,
 	}
 
-	if apiObject.IpAddressType != "" {
-		m["ip_address_type"] = string(apiObject.IpAddressType)
+	if v := apiObject.HealthCheck; v != nil {
+		tfMap["health_check"] = []interface{}{flattenHealthCheckConfig(v)}
 	}
 
-	if apiObject.ProtocolVersion != "" {
-		m["protocol_version"] = string(apiObject.ProtocolVersion)
+	if v := apiObject.Port; v != nil {
+		tfMap["port"] = aws.ToInt32(v)
 	}
 
-	if apiObject.HealthCheck != nil {
-		port := apiObject.Port
-		if apiObject.HealthCheck.Port != nil {
-			port = apiObject.HealthCheck.Port
-		}
-		m["health_check"] = []map[string]interface{}{flattenHealthCheckConfig(apiObject.HealthCheck, *port)}
+	if v := apiObject.VpcIdentifier; v != nil {
+		tfMap["vpc_identifier"] = aws.ToString(v)
 	}
 
-	return []map[string]interface{}{m}
+	return tfMap
 }
 
-func flattenHealthCheckConfig(apiObject *types.HealthCheckConfig, port int32) map[string]interface{} {
-	m := map[string]interface{}{
-		"enabled":             aws.Bool(*apiObject.Enabled),
-		"interval":            aws.Int32(*apiObject.HealthCheckIntervalSeconds),
-		"timeout":             aws.Int32(*apiObject.HealthCheckTimeoutSeconds),
-		"healthy_threshold":   aws.Int32(*apiObject.HealthyThresholdCount),
-		"unhealthy_threshold": aws.Int32(*apiObject.UnhealthyThresholdCount),
-		"path":                aws.String(*apiObject.Path),
-		"port":                aws.Int32(port),
-		"protocol":            string(apiObject.Protocol),
-		"protocol_version":    string(apiObject.ProtocolVersion),
+func flattenHealthCheckConfig(apiObject *types.HealthCheckConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	if matcher, ok := apiObject.Matcher.(*types.MatcherMemberHttpCode); ok {
-		m["matcher"] = matcher.Value
+	tfMap := map[string]interface{}{
+		"protocol":         apiObject.Protocol,
+		"protocol_version": apiObject.ProtocolVersion,
 	}
 
-	return m
+	if v := apiObject.Enabled; v != nil {
+		tfMap["enabled"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.HealthCheckIntervalSeconds; v != nil {
+		tfMap["health_check_interval_seconds"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.HealthCheckTimeoutSeconds; v != nil {
+		tfMap["health_check_timeout_seconds"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.HealthyThresholdCount; v != nil {
+		tfMap["healthy_threshold_count"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.Matcher; v != nil {
+		tfMap["matcher"] = []interface{}{flattenMatcherMemberHttpCode(v.(*types.MatcherMemberHttpCode))}
+	}
+
+	if v := apiObject.Path; v != nil {
+		tfMap["path"] = aws.ToString(v)
+	}
+
+	if v := apiObject.Port; v != nil {
+		tfMap["port"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.UnhealthyThresholdCount; v != nil {
+		tfMap["unhealthy_threshold_count"] = aws.ToInt32(v)
+	}
+
+	return tfMap
 }
 
-func expandConfigAttributes(tfMap map[string]interface{}) *types.TargetGroupConfig {
+func flattenMatcherMemberHttpCode(apiObject *types.MatcherMemberHttpCode) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"value": apiObject.Value,
+	}
+
+	return tfMap
+}
+
+func expandTargetGroupConfig(tfMap map[string]interface{}) *types.TargetGroupConfig {
 	if tfMap == nil {
 		return nil
 	}
+
 	apiObject := &types.TargetGroupConfig{}
 
-	if v, ok := tfMap["port"].(int); ok {
+	if v, ok := tfMap["health_check"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.HealthCheck = expandHealthCheckConfig(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["ip_address_type"].(string); ok && v != "" {
+		apiObject.IpAddressType = types.IpAddressType(v)
+	}
+
+	if v, ok := tfMap["port"].(int); ok && v != 0 {
 		apiObject.Port = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["protocol"].(string); ok {
-		protocol := types.TargetGroupProtocol(v)
-		apiObject.Protocol = protocol
+	if v, ok := tfMap["protocol"].(string); ok && v != "" {
+		apiObject.Protocol = types.TargetGroupProtocol(v)
 	}
 
-	if v, ok := tfMap["vpc_identifier"].(string); ok {
+	if v, ok := tfMap["vpc_identifier"].(string); ok && v != "" {
 		apiObject.VpcIdentifier = aws.String(v)
 	}
-	if v, ok := tfMap["health_check"].([]interface{}); ok && len(v) > 0 {
-		apiObject.HealthCheck = expandHealthCheckConfigAttributes(v[0].(map[string]interface{}))
-	}
 
-	if v, ok := tfMap["ip_address_type"].(string); ok {
-		ipAddressType := types.IpAddressType(v)
-		apiObject.IpAddressType = ipAddressType
-	}
-
-	if v, ok := tfMap["protocol_version"].(string); ok {
-		protocolVersion := types.TargetGroupProtocolVersion(v)
-		apiObject.ProtocolVersion = protocolVersion
+	if v, ok := tfMap["protocol_version"].(string); ok && v != "" {
+		apiObject.ProtocolVersion = types.TargetGroupProtocolVersion(v)
 	}
 
 	return apiObject
 }
 
-func expandHealthCheckConfigAttributes(tfMap map[string]interface{}) *types.HealthCheckConfig {
+func expandHealthCheckConfig(tfMap map[string]interface{}) *types.HealthCheckConfig {
 	apiObject := &types.HealthCheckConfig{}
 
 	if v, ok := tfMap["enabled"].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["interval"].(int); ok {
+	if v, ok := tfMap["health_check_interval_seconds"].(int); ok && v != 0 {
 		apiObject.HealthCheckIntervalSeconds = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["timeout"].(int); ok {
+	if v, ok := tfMap["health_check_timeout_seconds"].(int); ok && v != 0 {
 		apiObject.HealthCheckTimeoutSeconds = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["healthy_threshold"].(int); ok {
+	if v, ok := tfMap["healthy_threshold_count"].(int); ok && v != 0 {
 		apiObject.HealthyThresholdCount = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["unhealthy_threshold"].(int); ok {
-		apiObject.UnhealthyThresholdCount = aws.Int32(int32(v))
+	if v, ok := tfMap["matcher"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Matcher = expandMatcherMemberHttpCode(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["path"].(string); ok {
+	if v, ok := tfMap["path"].(string); ok && v != "" {
 		apiObject.Path = aws.String(v)
 	}
 
-	if v, ok := tfMap["port"].(int); ok {
+	if v, ok := tfMap["port"].(int); ok && v != 0 {
 		apiObject.Port = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["protocol"].(string); ok {
+	if v, ok := tfMap["protocol"].(string); ok && v != "" {
 		apiObject.Protocol = types.TargetGroupProtocol(v)
 	}
 
-	if v, ok := tfMap["protocol_version"].(string); ok {
+	if v, ok := tfMap["protocol_version"].(string); ok && v != "" {
 		apiObject.ProtocolVersion = types.HealthCheckProtocolVersion(v)
 	}
 
-	if v, ok := tfMap["matcher"].(string); ok {
-		apiObject.Matcher = &types.MatcherMemberHttpCode{Value: v}
+	if v, ok := tfMap["unhealthy_threshold_count"].(int); ok && v != 0 {
+		apiObject.UnhealthyThresholdCount = aws.Int32(int32(v))
 	}
 
+	return apiObject
+}
+
+func expandMatcherMemberHttpCode(tfMap map[string]interface{}) types.Matcher {
+	apiObject := &types.MatcherMemberHttpCode{}
+
+	if v, ok := tfMap["value"].(string); ok && v != "" {
+		apiObject.Value = v
+	}
 	return apiObject
 }
