@@ -84,7 +84,7 @@ func main() {
 	if templateData.ServicePackage == "ec2" {
 		templateData.ParentNotFoundError = `
 if tfawserr.ErrCodeContains(err, ".NotFound") {
-	err = &resource.NotFoundError{
+	err = &retry.NotFoundError{
 		LastError:   err,
 		LastRequest: input,
 	}

@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3outposts"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -14,7 +14,7 @@ const (
 )
 
 // statusEndpoint fetches the Endpoint and its Status
-func statusEndpoint(ctx context.Context, conn *s3outposts.S3Outposts, endpointArn string) resource.StateRefreshFunc {
+func statusEndpoint(ctx context.Context, conn *s3outposts.S3Outposts, endpointArn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		endpoint, err := FindEndpoint(ctx, conn, endpointArn)
 

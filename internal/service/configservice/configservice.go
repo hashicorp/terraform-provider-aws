@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -249,7 +249,7 @@ func getOrganizationConformancePackDetailedStatus(ctx context.Context, conn *con
 	return statuses, nil
 }
 
-func refreshConformancePackStatus(ctx context.Context, conn *configservice.ConfigService, name string) resource.StateRefreshFunc {
+func refreshConformancePackStatus(ctx context.Context, conn *configservice.ConfigService, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		status, err := describeConformancePackStatus(ctx, conn, name)
 
@@ -269,7 +269,7 @@ func refreshConformancePackStatus(ctx context.Context, conn *configservice.Confi
 	}
 }
 
-func refreshOrganizationConfigRuleStatus(ctx context.Context, conn *configservice.ConfigService, name string, target string) resource.StateRefreshFunc {
+func refreshOrganizationConfigRuleStatus(ctx context.Context, conn *configservice.ConfigService, name string, target string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		status, err := describeOrganizationConfigRuleStatus(ctx, conn, name)
 
@@ -313,7 +313,7 @@ func refreshOrganizationConfigRuleStatus(ctx context.Context, conn *configservic
 	}
 }
 
-func refreshOrganizationConformancePackCreationStatus(ctx context.Context, conn *configservice.ConfigService, name string) resource.StateRefreshFunc {
+func refreshOrganizationConformancePackCreationStatus(ctx context.Context, conn *configservice.ConfigService, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		status, err := describeOrganizationConformancePackStatus(ctx, conn, name)
 
@@ -344,7 +344,7 @@ func refreshOrganizationConformancePackCreationStatus(ctx context.Context, conn 
 	}
 }
 
-func refreshOrganizationConformancePackStatus(ctx context.Context, conn *configservice.ConfigService, name string) resource.StateRefreshFunc {
+func refreshOrganizationConformancePackStatus(ctx context.Context, conn *configservice.ConfigService, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		status, err := describeOrganizationConformancePackStatus(ctx, conn, name)
 
@@ -386,7 +386,7 @@ func organizationConformancePackDetailedStatusError(ctx context.Context, conn *c
 }
 
 func waitForConformancePackStateCreateComplete(ctx context.Context, conn *configservice.ConfigService, name string) error {
-	stateChangeConf := resource.StateChangeConf{
+	stateChangeConf := retry.StateChangeConf{
 		Pending: []string{configservice.ConformancePackStateCreateInProgress},
 		Target:  []string{configservice.ConformancePackStateCreateComplete},
 		Timeout: conformancePackCreateTimeout,
@@ -403,7 +403,7 @@ func waitForConformancePackStateCreateComplete(ctx context.Context, conn *config
 }
 
 func waitForConformancePackStateDeleteComplete(ctx context.Context, conn *configservice.ConfigService, name string) error {
-	stateChangeConf := resource.StateChangeConf{
+	stateChangeConf := retry.StateChangeConf{
 		Pending: []string{configservice.ConformancePackStateDeleteInProgress},
 		Target:  []string{},
 		Timeout: conformancePackDeleteTimeout,
@@ -420,7 +420,7 @@ func waitForConformancePackStateDeleteComplete(ctx context.Context, conn *config
 }
 
 func waitForOrganizationConformancePackStatusCreateSuccessful(ctx context.Context, conn *configservice.ConfigService, name string, timeout time.Duration) error {
-	stateChangeConf := resource.StateChangeConf{
+	stateChangeConf := retry.StateChangeConf{
 		Pending: []string{configservice.OrganizationResourceStatusCreateInProgress},
 		Target:  []string{configservice.OrganizationResourceStatusCreateSuccessful},
 		Timeout: timeout,
@@ -435,7 +435,7 @@ func waitForOrganizationConformancePackStatusCreateSuccessful(ctx context.Contex
 }
 
 func waitForOrganizationConformancePackStatusUpdateSuccessful(ctx context.Context, conn *configservice.ConfigService, name string, timeout time.Duration) error {
-	stateChangeConf := resource.StateChangeConf{
+	stateChangeConf := retry.StateChangeConf{
 		Pending: []string{configservice.OrganizationResourceStatusUpdateInProgress},
 		Target:  []string{configservice.OrganizationResourceStatusUpdateSuccessful},
 		Timeout: timeout,
@@ -448,7 +448,7 @@ func waitForOrganizationConformancePackStatusUpdateSuccessful(ctx context.Contex
 }
 
 func waitForOrganizationConformancePackStatusDeleteSuccessful(ctx context.Context, conn *configservice.ConfigService, name string, timeout time.Duration) error {
-	stateChangeConf := resource.StateChangeConf{
+	stateChangeConf := retry.StateChangeConf{
 		Pending: []string{configservice.OrganizationResourceStatusDeleteInProgress},
 		Target:  []string{configservice.OrganizationResourceStatusDeleteSuccessful},
 		Timeout: timeout,
@@ -461,7 +461,7 @@ func waitForOrganizationConformancePackStatusDeleteSuccessful(ctx context.Contex
 }
 
 func waitForOrganizationRuleStatusCreateSuccessful(ctx context.Context, conn *configservice.ConfigService, name string, timeout time.Duration) error {
-	stateChangeConf := &resource.StateChangeConf{
+	stateChangeConf := &retry.StateChangeConf{
 		Pending:        []string{configservice.OrganizationRuleStatusCreateInProgress},
 		Target:         []string{configservice.OrganizationRuleStatusCreateSuccessful},
 		Refresh:        refreshOrganizationConfigRuleStatus(ctx, conn, name, configservice.OrganizationRuleStatusCreateSuccessful),
@@ -476,7 +476,7 @@ func waitForOrganizationRuleStatusCreateSuccessful(ctx context.Context, conn *co
 }
 
 func waitForOrganizationRuleStatusDeleteSuccessful(ctx context.Context, conn *configservice.ConfigService, name string, timeout time.Duration) error {
-	stateChangeConf := &resource.StateChangeConf{
+	stateChangeConf := &retry.StateChangeConf{
 		Pending: []string{configservice.OrganizationRuleStatusDeleteInProgress},
 		Target:  []string{configservice.OrganizationRuleStatusDeleteSuccessful},
 		Refresh: refreshOrganizationConfigRuleStatus(ctx, conn, name, configservice.OrganizationRuleStatusDeleteSuccessful),
@@ -494,7 +494,7 @@ func waitForOrganizationRuleStatusDeleteSuccessful(ctx context.Context, conn *co
 }
 
 func waitForOrganizationRuleStatusUpdateSuccessful(ctx context.Context, conn *configservice.ConfigService, name string, timeout time.Duration) error {
-	stateChangeConf := &resource.StateChangeConf{
+	stateChangeConf := &retry.StateChangeConf{
 		Pending: []string{configservice.OrganizationRuleStatusUpdateInProgress},
 		Target:  []string{configservice.OrganizationRuleStatusUpdateSuccessful},
 		Refresh: refreshOrganizationConfigRuleStatus(ctx, conn, name, configservice.OrganizationRuleStatusUpdateSuccessful),

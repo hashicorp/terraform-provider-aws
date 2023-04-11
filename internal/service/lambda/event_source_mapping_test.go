@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1174,7 +1175,7 @@ func testAccCheckEventSourceMappingIsBeingDisabled(ctx context.Context, conf *la
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 		// Disable enabled state
-		err := resource.RetryContext(ctx, 10*time.Minute, func() *resource.RetryError {
+		err := retry.RetryContext(ctx, 10*time.Minute, func() *retry.RetryError {
 			params := &lambda.UpdateEventSourceMappingInput{
 				UUID:    conf.UUID,
 				Enabled: aws.Bool(false),
@@ -1184,11 +1185,11 @@ func testAccCheckEventSourceMappingIsBeingDisabled(ctx context.Context, conf *la
 
 			if err != nil {
 				if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceInUseException) {
-					return resource.RetryableError(fmt.Errorf(
+					return retry.RetryableError(fmt.Errorf(
 						"Waiting for Lambda Event Source Mapping to be ready to be updated: %v", conf.UUID))
 				}
 
-				return resource.NonRetryableError(
+				return retry.NonRetryableError(
 					fmt.Errorf("Error updating Lambda Event Source Mapping: %w", err))
 			}
 
@@ -1200,18 +1201,18 @@ func testAccCheckEventSourceMappingIsBeingDisabled(ctx context.Context, conf *la
 		}
 
 		// wait for state to be propagated
-		return resource.RetryContext(ctx, 10*time.Minute, func() *resource.RetryError {
+		return retry.RetryContext(ctx, 10*time.Minute, func() *retry.RetryError {
 			params := &lambda.GetEventSourceMappingInput{
 				UUID: conf.UUID,
 			}
 			newConf, err := conn.GetEventSourceMappingWithContext(ctx, params)
 			if err != nil {
-				return resource.NonRetryableError(
+				return retry.NonRetryableError(
 					fmt.Errorf("Error getting Lambda Event Source Mapping: %s", err))
 			}
 
 			if *newConf.State != "Disabled" {
-				return resource.RetryableError(fmt.Errorf(
+				return retry.RetryableError(fmt.Errorf(
 					"Waiting to get Lambda Event Source Mapping to be fully enabled, it's currently %s: %v", *newConf.State, conf.UUID))
 			}
 

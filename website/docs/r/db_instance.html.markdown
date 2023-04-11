@@ -77,6 +77,49 @@ resource "aws_db_instance" "example" {
 }
 ```
 
+### Managed Master Passwords via Secrets Manager, default KMS Key
+
+-> More information about RDS/Aurora Aurora integrates with Secrets Manager to manage master user passwords for your DB clusters can be found in the [RDS User Guide](https://aws.amazon.com/about-aws/whats-new/2022/12/amazon-rds-integration-aws-secrets-manager/) and [Aurora User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/rds-secrets-manager.html).
+
+You can specify the `manage_master_user_password` attribute to enable managing the master password with Secrets Manager. You can also update an existing cluster to use Secrets Manager by specify the `manage_master_user_password` attribute and removing the `password` attribute (removal is required).
+
+```terraform
+resource "aws_db_instance" "default" {
+  allocated_storage           = 10
+  db_name                     = "mydb"
+  engine                      = "mysql"
+  engine_version              = "5.7"
+  instance_class              = "db.t3.micro"
+  manage_master_user_password = true
+  username                    = "foo"
+  parameter_group_name        = "default.mysql5.7"
+}
+```
+
+### Managed Master Passwords via Secrets Manager, specific KMS Key
+
+-> More information about RDS/Aurora Aurora integrates with Secrets Manager to manage master user passwords for your DB clusters can be found in the [RDS User Guide](https://aws.amazon.com/about-aws/whats-new/2022/12/amazon-rds-integration-aws-secrets-manager/) and [Aurora User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/rds-secrets-manager.html).
+
+You can specify the `master_user_secret_kms_key_id` attribute to specify a specific KMS Key.
+
+```terraform
+resource "aws_kms_key" "example" {
+  description = "Example KMS Key"
+}
+
+resource "aws_db_instance" "default" {
+  allocated_storage             = 10
+  db_name                       = "mydb"
+  engine                        = "mysql"
+  engine_version                = "5.7"
+  instance_class                = "db.t3.micro"
+  manage_master_user_password   = true
+  master_user_secret_kms_key_id = aws_kms_key.example.key_id
+  username                      = "foo"
+  parameter_group_name          = "default.mysql5.7"
+}
+```
+
 ## Argument Reference
 
 For more detailed documentation about each argument, refer to the [AWS official
@@ -160,6 +203,8 @@ Syntax: "ddd:hh24:mi-ddd:hh24:mi". Eg: "Mon:00:00-Mon:03:00". See [RDS
 Maintenance Window
 docs](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Maintenance.html#AdjustingTheMaintenanceWindow)
 for more information.
+* `manage_master_user_password` - (Optional) Set to true to allow RDS to manage the master user password in Secrets Manager. Cannot be set if `password` is provided.
+* `master_user_secret_kms_key_id` - (Optional) The Amazon Web Services KMS key identifier is the key ARN, key ID, alias ARN, or alias name for the KMS key. To use a KMS key in a different Amazon Web Services account, specify the key ARN or alias ARN. If not specified, the default KMS key for your Amazon Web Services account is used.
 * `max_allocated_storage` - (Optional) When configured, the upper limit to which Amazon RDS can automatically scale the storage of the DB instance. Configuring this will automatically ignore differences to `allocated_storage`. Must be greater than or equal to `allocated_storage` or `0` to disable Storage Autoscaling.
 * `monitoring_interval` - (Optional) The interval, in seconds, between points
 when Enhanced Monitoring metrics are collected for the DB instance. To disable
@@ -178,9 +223,9 @@ Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/
 * `option_group_name` - (Optional) Name of the DB option group to associate.
 * `parameter_group_name` - (Optional) Name of the DB parameter group to
 associate.
-* `password` - (Required unless a `snapshot_identifier` or `replicate_source_db`
-is provided) Password for the master DB user. Note that this may show up in
-logs, and it will be stored in the state file.
+* `password` - (Required unless `manage_master_user_password` is set to true or unless a `snapshot_identifier` or `replicate_source_db`
+is provided or `manage_master_user_password` is set.) Password for the master DB user. Note that this may show up in
+logs, and it will be stored in the state file. Cannot be set if `manage_master_user_password` is set to `true`.
 * `performance_insights_enabled` - (Optional) Specifies whether Performance Insights are enabled. Defaults to false.
 * `performance_insights_kms_key_id` - (Optional) The ARN for the KMS key to encrypt Performance Insights data. When specifying `performance_insights_kms_key_id`, `performance_insights_enabled` needs to be set to true. Once KMS key is set, it can never be changed.
 * `performance_insights_retention_period` - (Optional) Amount of time in days to retain Performance Insights data. Valid values are `7`, `731` (2 years) or a multiple of `31`. When specifying `performance_insights_retention_period`, `performance_insights_enabled` needs to be set to true. Defaults to '7'.
@@ -311,6 +356,7 @@ in a Route 53 Alias record).
 * `latest_restorable_time` - The latest time, in UTC [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8), to which a database can be restored with point-in-time restore.
 * `listener_endpoint` - Specifies the listener connection endpoint for SQL Server Always On. See [endpoint](#endpoint) below.
 * `maintenance_window` - The instance maintenance window.
+* `master_user_secret` - A block that specifies the master user secret. Only available when `manage_master_user_password` is set to true. [Documented below](#master_user_secret).
 * `multi_az` - If the RDS instance is multi AZ enabled.
 * `name` - The database name.
 * `port` - The database port.
@@ -329,6 +375,14 @@ On Oracle and Microsoft SQL instances the following is exported additionally:
 * `address` - Specifies the DNS address of the DB instance.
 * `hosted_zone_id` - Specifies the ID that Amazon Route 53 assigns when you create a hosted zone.
 * `port` - Specifies the port that the database engine is listening on.
+
+### master_user_secret
+
+The `master_user_secret` configuration block supports the following attributes:
+
+* `kms_key_id` - The Amazon Web Services KMS key identifier that is used to encrypt the secret.
+* `secret_arn` - The Amazon Resource Name (ARN) of the secret.
+* `secret_status` - The status of the secret. Valid Values: `creating` | `active` | `rotating` | `impaired`.
 
 ## Timeouts
 

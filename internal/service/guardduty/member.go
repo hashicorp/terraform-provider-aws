@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -248,21 +248,21 @@ func inviteMemberWaiter(ctx context.Context, accountID, detectorID string, timeo
 
 	// wait until e-mail verification finishes
 	var out *guardduty.GetMembersOutput
-	err := resource.RetryContext(ctx, timeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		log.Printf("[DEBUG] Reading GuardDuty Member: %s", input)
 		var err error
 		out, err = conn.GetMembersWithContext(ctx, &input)
 
 		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("error reading GuardDuty Member %q: %s", accountID, err))
+			return retry.NonRetryableError(fmt.Errorf("error reading GuardDuty Member %q: %s", accountID, err))
 		}
 
 		retryable, err := memberInvited(out, accountID)
 		if err != nil {
 			if retryable {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil

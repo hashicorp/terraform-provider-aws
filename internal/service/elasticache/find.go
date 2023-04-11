@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -19,7 +19,7 @@ func FindReplicationGroupByID(ctx context.Context, conn *elasticache.ElastiCache
 	}
 	output, err := conn.DescribeReplicationGroupsWithContext(ctx, input)
 	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeReplicationGroupNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -29,7 +29,7 @@ func FindReplicationGroupByID(ctx context.Context, conn *elasticache.ElastiCache
 	}
 
 	if output == nil || len(output.ReplicationGroups) == 0 || output.ReplicationGroups[0] == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     "empty result",
 			LastRequest: input,
 		}
@@ -50,7 +50,7 @@ func FindReplicationGroupMemberClustersByID(ctx context.Context, conn *elasticac
 		return clusters, err
 	}
 	if len(clusters) == 0 {
-		return clusters, &resource.NotFoundError{
+		return clusters, &retry.NotFoundError{
 			Message: fmt.Sprintf("No Member Clusters found in Replication Group (%s)", id),
 		}
 	}
@@ -79,7 +79,7 @@ func FindCacheClusterWithNodeInfoByID(ctx context.Context, conn *elasticache.Ela
 func FindCacheCluster(ctx context.Context, conn *elasticache.ElastiCache, input *elasticache.DescribeCacheClustersInput) (*elasticache.CacheCluster, error) {
 	result, err := conn.DescribeCacheClustersWithContext(ctx, input)
 	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheClusterNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -89,7 +89,7 @@ func FindCacheCluster(ctx context.Context, conn *elasticache.ElastiCache, input 
 	}
 
 	if result == nil || len(result.CacheClusters) == 0 || result.CacheClusters[0] == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     "empty result",
 			LastRequest: input,
 		}
@@ -137,7 +137,7 @@ func FindGlobalReplicationGroupByID(ctx context.Context, conn *elasticache.Elast
 	}
 	output, err := conn.DescribeGlobalReplicationGroupsWithContext(ctx, input)
 	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeGlobalReplicationGroupNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -147,7 +147,7 @@ func FindGlobalReplicationGroupByID(ctx context.Context, conn *elasticache.Elast
 	}
 
 	if output == nil || len(output.GlobalReplicationGroups) == 0 || output.GlobalReplicationGroups[0] == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     "empty result",
 			LastRequest: input,
 		}
@@ -160,14 +160,14 @@ func FindGlobalReplicationGroupByID(ctx context.Context, conn *elasticache.Elast
 func FindGlobalReplicationGroupMemberByID(ctx context.Context, conn *elasticache.ElastiCache, globalReplicationGroupID string, id string) (*elasticache.GlobalReplicationGroupMember, error) {
 	globalReplicationGroup, err := FindGlobalReplicationGroupByID(ctx, conn, globalReplicationGroupID)
 	if err != nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:   "unable to retrieve enclosing Global Replication Group",
 			LastError: err,
 		}
 	}
 
 	if globalReplicationGroup == nil || len(globalReplicationGroup.Members) == 0 {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message: "empty result",
 		}
 	}
@@ -178,27 +178,8 @@ func FindGlobalReplicationGroupMemberByID(ctx context.Context, conn *elasticache
 		}
 	}
 
-	return nil, &resource.NotFoundError{
+	return nil, &retry.NotFoundError{
 		Message: fmt.Sprintf("Replication Group (%s) not found in Global Replication Group (%s)", id, globalReplicationGroupID),
-	}
-}
-
-func FindUserGroupByID(ctx context.Context, conn *elasticache.ElastiCache, groupID string) (*elasticache.UserGroup, error) {
-	input := &elasticache.DescribeUserGroupsInput{
-		UserGroupId: aws.String(groupID),
-	}
-	out, err := conn.DescribeUserGroupsWithContext(ctx, input)
-	if err != nil {
-		return nil, err
-	}
-
-	switch count := len(out.UserGroups); count {
-	case 0:
-		return nil, tfresource.NewEmptyResultError(input)
-	case 1:
-		return out.UserGroups[0], nil
-	default:
-		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 }
 
@@ -209,7 +190,7 @@ func FindParameterGroupByName(ctx context.Context, conn *elasticache.ElastiCache
 	out, err := conn.DescribeCacheParameterGroupsWithContext(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -293,7 +274,7 @@ func FindCacheSubnetGroupByName(ctx context.Context, conn *elasticache.ElastiCac
 	output, err := conn.DescribeCacheSubnetGroupsWithContext(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheSubnetGroupNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
