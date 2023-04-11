@@ -1123,7 +1123,7 @@ func TestAccRDSCluster_engineMode(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_engineMode(rName, "serverless"),
+				Config: testAccClusterConfig_engineMode_serverless(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "engine_mode", "serverless"),
@@ -3433,6 +3433,8 @@ resource "aws_rds_cluster_instance" "test" {
   identifier         = "%[1]s-primary"
   cluster_identifier = aws_rds_cluster.test.id
   instance_class     = "db.t2.small"
+  engine             = aws_rds_cluster.test.engine
+  engine_version     = aws_rds_cluster.test.engine_version
 }
 
 resource "aws_kms_key" "test" {
@@ -3552,12 +3554,25 @@ resource "aws_rds_cluster" "test" {
   master_password     = "barbarbarbar"
   master_username     = "foo"
   skip_final_snapshot = true
+}
+`, rName, engineMode)
+}
+
+func testAccClusterConfig_engineMode_serverless(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %q
+  engine              = "aurora-mysql"
+  engine_mode         = "serverless"
+  master_password     = "barbarbarbar"
+  master_username     = "foo"
+  skip_final_snapshot = true
 
   scaling_configuration {
     min_capacity = 2
   }
 }
-`, rName, engineMode)
+`, rName)
 }
 
 func testAccClusterConfig_EngineMode_global(rName string) string {
