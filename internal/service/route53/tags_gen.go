@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists route53 service tags.
@@ -116,7 +117,7 @@ func UpdateTags(ctx context.Context, conn route53iface.Route53API, identifier, r
 	}
 
 	if len(updatedTags) > 0 {
-		input.AddTags = Tags(updatedTags.IgnoreAWS())
+		input.AddTags = Tags(updatedTags.IgnoreSystem(names.Route53))
 	}
 
 	if len(removedTags) > 0 {

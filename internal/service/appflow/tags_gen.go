@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists appflow service tags.
@@ -88,7 +89,7 @@ func UpdateTags(ctx context.Context, conn appflowiface.AppflowAPI, identifier st
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &appflow.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreSystem(names.AppFlow).Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -101,7 +102,7 @@ func UpdateTags(ctx context.Context, conn appflowiface.AppflowAPI, identifier st
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &appflow.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreAWS()),
+			Tags:        Tags(updatedTags.IgnoreSystem(names.AppFlow)),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)

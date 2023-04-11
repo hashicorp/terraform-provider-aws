@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists glacier service tags.
@@ -88,7 +89,7 @@ func UpdateTags(ctx context.Context, conn glacieriface.GlacierAPI, identifier st
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &glacier.RemoveTagsFromVaultInput{
 			VaultName: aws.String(identifier),
-			TagKeys:   aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:   aws.StringSlice(removedTags.IgnoreSystem(names.Glacier).Keys()),
 		}
 
 		_, err := conn.RemoveTagsFromVaultWithContext(ctx, input)
@@ -101,7 +102,7 @@ func UpdateTags(ctx context.Context, conn glacieriface.GlacierAPI, identifier st
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &glacier.AddTagsToVaultInput{
 			VaultName: aws.String(identifier),
-			Tags:      Tags(updatedTags.IgnoreAWS()),
+			Tags:      Tags(updatedTags.IgnoreSystem(names.Glacier)),
 		}
 
 		_, err := conn.AddTagsToVaultWithContext(ctx, input)

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists backup service tags.
@@ -88,7 +89,7 @@ func UpdateTags(ctx context.Context, conn backupiface.BackupAPI, identifier stri
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &backup.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeyList:  aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeyList:  aws.StringSlice(removedTags.IgnoreSystem(names.Backup).Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -101,7 +102,7 @@ func UpdateTags(ctx context.Context, conn backupiface.BackupAPI, identifier stri
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &backup.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreAWS()),
+			Tags:        Tags(updatedTags.IgnoreSystem(names.Backup)),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)

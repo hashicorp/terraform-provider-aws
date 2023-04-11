@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists detective service tags.
@@ -88,7 +89,7 @@ func UpdateTags(ctx context.Context, conn detectiveiface.DetectiveAPI, identifie
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &detective.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreSystem(names.Detective).Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -101,7 +102,7 @@ func UpdateTags(ctx context.Context, conn detectiveiface.DetectiveAPI, identifie
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &detective.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreAWS()),
+			Tags:        Tags(updatedTags.IgnoreSystem(names.Detective)),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)

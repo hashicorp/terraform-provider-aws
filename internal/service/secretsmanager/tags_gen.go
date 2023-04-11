@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // []*SERVICE.Tag handling
@@ -72,7 +73,7 @@ func UpdateTags(ctx context.Context, conn secretsmanageriface.SecretsManagerAPI,
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &secretsmanager.UntagResourceInput{
 			SecretId: aws.String(identifier),
-			TagKeys:  aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:  aws.StringSlice(removedTags.IgnoreSystem(names.SecretsManager).Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -85,7 +86,7 @@ func UpdateTags(ctx context.Context, conn secretsmanageriface.SecretsManagerAPI,
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &secretsmanager.TagResourceInput{
 			SecretId: aws.String(identifier),
-			Tags:     Tags(updatedTags.IgnoreAWS()),
+			Tags:     Tags(updatedTags.IgnoreSystem(names.SecretsManager)),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)
