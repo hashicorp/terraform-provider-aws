@@ -377,7 +377,7 @@ func (r tagsInterceptor) read(ctx context.Context, request resource.ReadRequest,
 			if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute != "" {
 				var identifier string
 
-				diags.Append(request.State.GetAttribute(ctx, path.Root(identifierAttribute), &identifier)...)
+				diags.Append(response.State.GetAttribute(ctx, path.Root(identifierAttribute), &identifier)...)
 
 				if diags.HasError() {
 					return ctx, diags
