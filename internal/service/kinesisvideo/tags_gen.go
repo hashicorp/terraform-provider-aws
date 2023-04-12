@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists kinesisvideo service tags.
@@ -88,7 +89,7 @@ func UpdateTags(ctx context.Context, conn kinesisvideoiface.KinesisVideoAPI, ide
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &kinesisvideo.UntagStreamInput{
 			StreamARN:  aws.String(identifier),
-			TagKeyList: aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeyList: aws.StringSlice(removedTags.IgnoreSystem(names.KinesisVideo).Keys()),
 		}
 
 		_, err := conn.UntagStreamWithContext(ctx, input)
@@ -101,7 +102,7 @@ func UpdateTags(ctx context.Context, conn kinesisvideoiface.KinesisVideoAPI, ide
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &kinesisvideo.TagStreamInput{
 			StreamARN: aws.String(identifier),
-			Tags:      Tags(updatedTags.IgnoreAWS()),
+			Tags:      Tags(updatedTags.IgnoreSystem(names.KinesisVideo)),
 		}
 
 		_, err := conn.TagStreamWithContext(ctx, input)

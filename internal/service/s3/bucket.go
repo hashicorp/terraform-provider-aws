@@ -20,7 +20,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -96,7 +97,7 @@ func ResourceBucket() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"bucket"},
-				ValidateFunc:  validation.StringLenBetween(0, 63-resource.UniqueIDSuffixLength),
+				ValidateFunc:  validation.StringLenBetween(0, 63-id.UniqueIDSuffixLength),
 			},
 			"bucket_regional_domain_name": {
 				Type:     schema.TypeString,
@@ -1229,6 +1230,10 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
+	if tfawserr.ErrCodeEquals(err, errCodeNotImplemented, errCodeXNotImplemented) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s): %s", d.Id(), err)
 	}
@@ -1419,7 +1424,7 @@ func FindBucket(ctx context.Context, conn *s3.S3, bucket string) error {
 	_, err := conn.HeadBucketWithContext(ctx, input)
 
 	if tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) || tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
-		return &resource.NotFoundError{
+		return &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1435,7 +1440,7 @@ func BucketRegionalDomainName(bucket string, region string) (string, error) {
 	if region == "" {
 		return fmt.Sprintf("%s.s3.amazonaws.com", bucket), nil //lintignore:AWSR001
 	}
-	endpoint, err := endpoints.DefaultResolver().EndpointFor(endpoints.S3ServiceID, region)
+	endpoint, err := endpoints.DefaultResolver().EndpointFor(s3.EndpointsID, region)
 	if err != nil {
 		return "", err
 	}
@@ -1710,7 +1715,7 @@ func resourceBucketInternalLifecycleUpdate(ctx context.Context, conn *s3.S3, d *
 		if val, ok := r["id"].(string); ok && val != "" {
 			rule.ID = aws.String(val)
 		} else {
-			rule.ID = aws.String(resource.PrefixedUniqueId("tf-s3-lifecycle-"))
+			rule.ID = aws.String(id.PrefixedUniqueId("tf-s3-lifecycle-"))
 		}
 
 		// Enabled
@@ -1894,13 +1899,13 @@ func resourceBucketInternalPolicyUpdate(ctx context.Context, conn *s3.S3, d *sch
 		Policy: aws.String(policy),
 	}
 
-	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
 		_, err := conn.PutBucketPolicyWithContext(ctx, params)
 		if tfawserr.ErrCodeEquals(err, errCodeMalformedPolicy, s3.ErrCodeNoSuchBucket) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -1948,13 +1953,13 @@ func resourceBucketInternalReplicationConfigurationUpdate(ctx context.Context, c
 		ReplicationConfiguration: expandBucketReplicationConfiguration(ctx, replicationConfiguration),
 	}
 
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
 		_, err := conn.PutBucketReplicationWithContext(ctx, input)
 		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrMessageContains(err, errCodeInvalidRequest, "Versioning must be 'Enabled' on the bucket") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})

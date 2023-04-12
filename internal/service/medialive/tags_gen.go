@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists medialive service tags.
@@ -86,7 +87,7 @@ func UpdateTags(ctx context.Context, conn *medialive.Client, identifier string, 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &medialive.DeleteTagsInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     removedTags.IgnoreAWS().Keys(),
+			TagKeys:     removedTags.IgnoreSystem(names.MediaLive).Keys(),
 		}
 
 		_, err := conn.DeleteTags(ctx, input)
@@ -99,7 +100,7 @@ func UpdateTags(ctx context.Context, conn *medialive.Client, identifier string, 
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &medialive.CreateTagsInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreAWS()),
+			Tags:        Tags(updatedTags.IgnoreSystem(names.MediaLive)),
 		}
 
 		_, err := conn.CreateTags(ctx, input)

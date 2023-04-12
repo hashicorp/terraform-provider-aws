@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,7 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_appmesh_virtual_node")
+// @SDKResource("aws_appmesh_virtual_node", name="Virtual Node")
+// @Tags(identifierAttribute="arn")
 func ResourceVirtualNode() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -74,9 +75,7 @@ func ResourceVirtualNode() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"spec": resourceVirtualNodeSpecSchema(),
-
+			"spec":            resourceVirtualNodeSpecSchema(),
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -970,14 +969,12 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 func resourceVirtualNodeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &appmesh.CreateVirtualNodeInput{
 		MeshName:        aws.String(d.Get("mesh_name").(string)),
 		Spec:            expandVirtualNodeSpec(d.Get("spec").([]interface{})),
-		Tags:            Tags(tags.IgnoreAWS()),
+		Tags:            GetTagsIn(ctx),
 		VirtualNodeName: aws.String(name),
 	}
 
@@ -999,8 +996,6 @@ func resourceVirtualNodeCreate(ctx context.Context, d *schema.ResourceData, meta
 func resourceVirtualNodeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindVirtualNodeByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("name").(string))
@@ -1030,23 +1025,6 @@ func resourceVirtualNodeRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh Virtual Node (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -1069,15 +1047,6 @@ func resourceVirtualNodeUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating App Mesh Virtual Node (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		arn := d.Get("arn").(string)
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating App Mesh Virtual Node (%s) tags: %s", arn, err)
 		}
 	}
 
@@ -1150,7 +1119,7 @@ func FindVirtualNodeByThreePartKey(ctx context.Context, conn *appmesh.AppMesh, m
 	}
 
 	if status := aws.StringValue(output.Status.Status); status == appmesh.VirtualNodeStatusCodeDeleted {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
 		}
@@ -1163,7 +1132,7 @@ func findVirtualNode(ctx context.Context, conn *appmesh.AppMesh, input *appmesh.
 	output, err := conn.DescribeVirtualNodeWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

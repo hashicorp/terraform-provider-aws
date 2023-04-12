@@ -20,6 +20,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -172,8 +173,8 @@ func ResourceVPC() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -189,7 +190,7 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	input := &ec2.CreateVpcInput{
 		AmazonProvidedIpv6CidrBlock: aws.Bool(d.Get("assign_generated_ipv6_cidr_block").(bool)),
 		InstanceTenancy:             aws.String(d.Get("instance_tenancy").(string)),
-		TagSpecifications:           tagSpecificationsFromTags(GetTagsIn(ctx), ec2.ResourceTypeVpc),
+		TagSpecifications:           getTagSpecificationsIn(ctx, ec2.ResourceTypeVpc),
 	}
 
 	if v, ok := d.GetOk("cidr_block"); ok {

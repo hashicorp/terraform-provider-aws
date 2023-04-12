@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists elbv2 service tags.
@@ -105,7 +106,7 @@ func UpdateTags(ctx context.Context, conn elbv2iface.ELBV2API, identifier string
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &elbv2.RemoveTagsInput{
 			ResourceArns: aws.StringSlice([]string{identifier}),
-			TagKeys:      aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:      aws.StringSlice(removedTags.IgnoreSystem(names.ELBV2).Keys()),
 		}
 
 		_, err := conn.RemoveTagsWithContext(ctx, input)
@@ -118,7 +119,7 @@ func UpdateTags(ctx context.Context, conn elbv2iface.ELBV2API, identifier string
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &elbv2.AddTagsInput{
 			ResourceArns: aws.StringSlice([]string{identifier}),
-			Tags:         Tags(updatedTags.IgnoreAWS()),
+			Tags:         Tags(updatedTags.IgnoreSystem(names.ELBV2)),
 		}
 
 		_, err := conn.AddTagsWithContext(ctx, input)

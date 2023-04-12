@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,10 +21,12 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"golang.org/x/exp/slices"
 )
 
-// @SDKResource("aws_fsx_openzfs_file_system")
+// @SDKResource("aws_fsx_openzfs_file_system", name="OpenZFS File System")
+// @Tags(identifierAttribute="arn")
 func ResourceOpenzfsFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOpenzfsFileSystemCreate,
@@ -247,8 +249,8 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 				MaxItems: 1,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"throughput_capacity": {
 				Type:     schema.TypeInt,
 				Required: true,
@@ -323,11 +325,9 @@ func validateDiskConfigurationIOPS(_ context.Context, d *schema.ResourceDiff, me
 func resourceOpenzfsFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &fsx.CreateFileSystemInput{
-		ClientRequestToken: aws.String(resource.UniqueId()),
+		ClientRequestToken: aws.String(id.UniqueId()),
 		FileSystemType:     aws.String(fsx.FileSystemTypeOpenzfs),
 		StorageCapacity:    aws.Int64(int64(d.Get("storage_capacity").(int))),
 		StorageType:        aws.String(d.Get("storage_type").(string)),
@@ -336,16 +336,18 @@ func resourceOpenzfsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 			DeploymentType:               aws.String(d.Get("deployment_type").(string)),
 			AutomaticBackupRetentionDays: aws.Int64(int64(d.Get("automatic_backup_retention_days").(int))),
 		},
+		Tags: GetTagsIn(ctx),
 	}
 
 	backupInput := &fsx.CreateFileSystemFromBackupInput{
-		ClientRequestToken: aws.String(resource.UniqueId()),
+		ClientRequestToken: aws.String(id.UniqueId()),
 		StorageType:        aws.String(d.Get("storage_type").(string)),
 		SubnetIds:          flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
 		OpenZFSConfiguration: &fsx.CreateFileSystemOpenZFSConfiguration{
 			DeploymentType:               aws.String(d.Get("deployment_type").(string)),
 			AutomaticBackupRetentionDays: aws.Int64(int64(d.Get("automatic_backup_retention_days").(int))),
 		},
+		Tags: GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("disk_iops_configuration"); ok {
@@ -371,11 +373,6 @@ func resourceOpenzfsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 	if v, ok := d.GetOk("security_group_ids"); ok {
 		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		backupInput.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-		backupInput.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("weekly_maintenance_start_time"); ok {
@@ -430,8 +427,6 @@ func resourceOpenzfsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 func resourceOpenzfsFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	filesystem, err := FindFileSystemByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -481,16 +476,7 @@ func resourceOpenzfsFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "setting subnet_ids: %s", err)
 	}
 
-	tags := KeyValueTags(ctx, filesystem.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, filesystem.Tags)
 
 	if err := d.Set("disk_iops_configuration", flattenOpenzfsFileDiskIopsConfiguration(openzfsConfig.DiskIopsConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting disk_iops_configuration: %s", err)
@@ -520,17 +506,9 @@ func resourceOpenzfsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn()
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating FSx OpenZFS File System (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
-
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &fsx.UpdateFileSystemInput{
-			ClientRequestToken:   aws.String(resource.UniqueId()),
+			ClientRequestToken:   aws.String(id.UniqueId()),
 			FileSystemId:         aws.String(d.Id()),
 			OpenZFSConfiguration: &fsx.UpdateFileSystemOpenZFSConfiguration{},
 		}
@@ -583,7 +561,7 @@ func resourceOpenzfsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 
 		if d.HasChange("root_volume_configuration") {
 			input := &fsx.UpdateVolumeInput{
-				ClientRequestToken:   aws.String(resource.UniqueId()),
+				ClientRequestToken:   aws.String(id.UniqueId()),
 				VolumeId:             aws.String(d.Get("root_volume_id").(string)),
 				OpenZFSConfiguration: &fsx.UpdateOpenZFSVolumeConfiguration{},
 			}

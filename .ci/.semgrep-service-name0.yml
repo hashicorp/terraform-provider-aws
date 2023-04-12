@@ -1683,6 +1683,64 @@ rules:
           patterns:
             - pattern-regex: "(?i)Chime"
     severity: WARNING
+  - id: chimesdkmediapipelines-in-func-name
+    languages:
+      - go
+    message: Do not use "ChimeSDKMediaPipelines" in func name inside chimesdkmediapipelines package
+    paths:
+      include:
+        - internal/service/chimesdkmediapipelines
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ChimeSDKMediaPipelines"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: chimesdkmediapipelines-in-test-name
+    languages:
+      - go
+    message: Include "ChimeSDKMediaPipelines" in test name
+    paths:
+      include:
+        - internal/service/chimesdkmediapipelines/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccChimeSDKMediaPipelines"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: chimesdkmediapipelines-in-const-name
+    languages:
+      - go
+    message: Do not use "ChimeSDKMediaPipelines" in const name inside chimesdkmediapipelines package
+    paths:
+      include:
+        - internal/service/chimesdkmediapipelines
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ChimeSDKMediaPipelines"
+    severity: WARNING
+  - id: chimesdkmediapipelines-in-var-name
+    languages:
+      - go
+    message: Do not use "ChimeSDKMediaPipelines" in var name inside chimesdkmediapipelines package
+    paths:
+      include:
+        - internal/service/chimesdkmediapipelines
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ChimeSDKMediaPipelines"
+    severity: WARNING
   - id: cloud9-in-func-name
     languages:
       - go

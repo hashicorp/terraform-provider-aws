@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists pinpoint service tags.
@@ -88,7 +89,7 @@ func UpdateTags(ctx context.Context, conn pinpointiface.PinpointAPI, identifier 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &pinpoint.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreSystem(names.Pinpoint).Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)

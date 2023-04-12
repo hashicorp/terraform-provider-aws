@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/rds"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -233,7 +234,7 @@ func TestAccRDSInstance_identifierGenerated(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "identifier"),
-					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", resource.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -971,10 +972,10 @@ func TestAccRDSInstance_password(t *testing.T) {
 				ExpectError: regexp.MustCompile(`MasterUserPassword is not a valid password because it is shorter than 8 characters`),
 			},
 			{
-				Config: testAccInstanceConfig_password(rName, "valid-password"),
+				Config: testAccInstanceConfig_password(rName, "valid-password-1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "password", "valid-password"),
+					resource.TestCheckResourceAttr(resourceName, "password", "valid-password-1"),
 				),
 			},
 			{
@@ -987,6 +988,13 @@ func TestAccRDSInstance_password(t *testing.T) {
 					"password",
 					"skip_final_snapshot",
 				},
+			},
+			{
+				Config: testAccInstanceConfig_password(rName, "valid-password-2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "password", "valid-password-2"),
+				),
 			},
 		},
 	})
@@ -1238,7 +1246,7 @@ func TestAccRDSInstance_ReplicateSourceDB_nameGenerated(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "identifier"),
-					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", resource.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -2365,7 +2373,7 @@ func TestAccRDSInstance_SnapshotIdentifier_nameGenerated(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "identifier"),
-					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", resource.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", id.UniqueIdPrefix),
 				),
 			},
 			{

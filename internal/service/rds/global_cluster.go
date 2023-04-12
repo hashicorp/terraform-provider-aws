@@ -9,11 +9,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -359,15 +358,15 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 	} else {
 		timeout = y
 	}
-	err := resource.RetryContext(ctx, timeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		_, err := conn.DeleteGlobalClusterWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidGlobalClusterStateFault, "is not empty") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -476,7 +475,7 @@ func DescribeGlobalClusterFromClusterARN(ctx context.Context, conn *rds.RDS, dbC
 	return globalCluster, err
 }
 
-func globalClusterRefreshFunc(ctx context.Context, conn *rds.RDS, globalClusterID string) resource.StateRefreshFunc {
+func globalClusterRefreshFunc(ctx context.Context, conn *rds.RDS, globalClusterID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		globalCluster, err := DescribeGlobalCluster(ctx, conn, globalClusterID)
 
@@ -497,7 +496,7 @@ func globalClusterRefreshFunc(ctx context.Context, conn *rds.RDS, globalClusterI
 }
 
 func waitForGlobalClusterCreation(ctx context.Context, conn *rds.RDS, globalClusterID string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"creating"},
 		Target:  []string{"available"},
 		Refresh: globalClusterRefreshFunc(ctx, conn, globalClusterID),
@@ -511,7 +510,7 @@ func waitForGlobalClusterCreation(ctx context.Context, conn *rds.RDS, globalClus
 }
 
 func waitForGlobalClusterUpdate(ctx context.Context, conn *rds.RDS, globalClusterID string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"modifying", "upgrading"},
 		Target:  []string{"available"},
 		Refresh: globalClusterRefreshFunc(ctx, conn, globalClusterID),
@@ -526,7 +525,7 @@ func waitForGlobalClusterUpdate(ctx context.Context, conn *rds.RDS, globalCluste
 }
 
 func WaitForGlobalClusterDeletion(ctx context.Context, conn *rds.RDS, globalClusterID string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			"available",
 			"deleting",
@@ -550,17 +549,17 @@ func waitForGlobalClusterRemoval(ctx context.Context, conn *rds.RDS, dbClusterId
 	var globalCluster *rds.GlobalCluster
 	stillExistsErr := fmt.Errorf("RDS DB Cluster still exists in RDS Global Cluster")
 
-	err := resource.RetryContext(ctx, timeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		var err error
 
 		globalCluster, err = DescribeGlobalClusterFromClusterARN(ctx, conn, dbClusterIdentifier)
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if globalCluster != nil {
-			return resource.RetryableError(stillExistsErr)
+			return retry.RetryableError(stillExistsErr)
 		}
 
 		return nil
@@ -591,19 +590,19 @@ func globalClusterUpgradeMajorEngineVersion(ctx context.Context, meta interface{
 	input.AllowMajorVersionUpgrade = aws.Bool(true)
 	input.EngineVersion = aws.String(engineVersion)
 
-	err := resource.RetryContext(ctx, timeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		_, err := conn.ModifyGlobalClusterWithContext(ctx, input)
 
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 
 			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "only supports Major Version Upgrades") {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		return nil
@@ -670,7 +669,7 @@ func ClusterIDRegionFromARN(arnID string) (string, string, error) {
 			return "", "", fmt.Errorf("could not get DB Cluster ID from parsing ARN (%s): %w", arnID, err)
 		}
 
-		if parsedARN.Service != endpoints.RdsServiceID || parts[0] != "cluster" {
+		if parsedARN.Service != rds.EndpointsID || parts[0] != "cluster" {
 			return "", "", fmt.Errorf("wrong ARN (%s) for a DB Cluster", arnID)
 		}
 
@@ -720,23 +719,23 @@ func globalClusterUpgradeMinorEngineVersion(ctx context.Context, meta interface{
 
 		log.Printf("[INFO] Performing RDS Global Cluster (%s) Cluster (%s) minor version (%s) upgrade", clusterID, dbi, engineVersion)
 
-		err = resource.RetryContext(ctx, timeout, func() *resource.RetryError {
+		err = retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 			_, err := useConn.ModifyDBClusterWithContext(ctx, modInput)
 
 			if err != nil {
 				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 
 				if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "Cannot modify engine version without a primary instance in DB cluster") {
-					return resource.NonRetryableError(err)
+					return retry.NonRetryableError(err)
 				}
 
 				if tfawserr.ErrCodeEquals(err, rds.ErrCodeInvalidDBClusterStateFault) {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			return nil
 		})
@@ -813,7 +812,7 @@ var resourceClusterUpdatePendingStates = []string{
 }
 
 func WaitForClusterUpdate(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    resourceClusterUpdatePendingStates,
 		Target:     []string{"available"},
 		Refresh:    resourceClusterStateRefreshFunc(ctx, conn, id),
@@ -826,7 +825,7 @@ func WaitForClusterUpdate(ctx context.Context, conn *rds.RDS, id string, timeout
 	return err
 }
 
-func resourceClusterStateRefreshFunc(ctx context.Context, conn *rds.RDS, dbClusterIdentifier string) resource.StateRefreshFunc {
+func resourceClusterStateRefreshFunc(ctx context.Context, conn *rds.RDS, dbClusterIdentifier string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.DescribeDBClustersWithContext(ctx, &rds.DescribeDBClustersInput{
 			DBClusterIdentifier: aws.String(dbClusterIdentifier),

@@ -16,8 +16,6 @@ import (
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 )
 
-// add sweeper to delete known test servicecat provisioned products
-
 func TestAccServiceCatalogProvisionedProduct_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_provisioned_product.test"
@@ -270,8 +268,11 @@ func TestAccServiceCatalogProvisionedProduct_tainted(t *testing.T) {
 				),
 			},
 			{
-				Config:      testAccProvisionedProductConfig_updateTainted(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
-				ExpectError: regexp.MustCompile(`unexpected state 'TAINTED', wanted target 'AVAILABLE'`),
+				Config: testAccProvisionedProductConfig_updateTainted(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProvisionedProductExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "status", servicecatalog.ProvisionedProductStatusTainted),
+				),
 			},
 			{
 				// Check we can still run a complete plan after the previous update error
@@ -377,11 +378,6 @@ func testAccProvisionedProductTemplateURLBaseConfig(rName, domain, email string)
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_object" "test" {

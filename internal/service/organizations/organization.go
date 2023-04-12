@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -498,7 +498,7 @@ func getOrganizationDefaultRoot(ctx context.Context, conn *organizations.Organiz
 	return roots[0], nil
 }
 
-func getOrganizationDefaultRootPolicyTypeRefreshFunc(ctx context.Context, conn *organizations.Organizations, policyType string) resource.StateRefreshFunc {
+func getOrganizationDefaultRootPolicyTypeRefreshFunc(ctx context.Context, conn *organizations.Organizations, policyType string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		defaultRoot, err := getOrganizationDefaultRoot(ctx, conn)
 
@@ -517,7 +517,7 @@ func getOrganizationDefaultRootPolicyTypeRefreshFunc(ctx context.Context, conn *
 }
 
 func waitForOrganizationDefaultRootPolicyTypeDisable(ctx context.Context, conn *organizations.Organizations, policyType string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			organizations.PolicyTypeStatusEnabled,
 			organizations.PolicyTypeStatusPendingDisable,
@@ -533,7 +533,7 @@ func waitForOrganizationDefaultRootPolicyTypeDisable(ctx context.Context, conn *
 }
 
 func waitForOrganizationDefaultRootPolicyTypeEnable(ctx context.Context, conn *organizations.Organizations, policyType string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			policyTypeStatusDisabled,
 			organizations.PolicyTypeStatusPendingEnable,

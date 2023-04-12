@@ -7,12 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func waitAssociationSuccess(ctx context.Context, conn *ssm.SSM, id string, timeout time.Duration) (*ssm.AssociationDescription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{ssm.AssociationStatusNamePending},
 		Target:  []string{ssm.AssociationStatusNameSuccess},
 		Refresh: statusAssociation(ctx, conn, id),
@@ -32,7 +32,7 @@ func waitAssociationSuccess(ctx context.Context, conn *ssm.SSM, id string, timeo
 }
 
 func waitServiceSettingUpdated(ctx context.Context, conn *ssm.SSM, id string, timeout time.Duration) (*ssm.ServiceSetting, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"PendingUpdate", ""},
 		Target:  []string{"Customized", "Default"},
 		Refresh: statusServiceSetting(ctx, conn, id),
@@ -49,7 +49,7 @@ func waitServiceSettingUpdated(ctx context.Context, conn *ssm.SSM, id string, ti
 }
 
 func waitServiceSettingReset(ctx context.Context, conn *ssm.SSM, id string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"Customized", "PendingUpdate", ""},
 		Target:  []string{"Default"},
 		Refresh: statusServiceSetting(ctx, conn, id),

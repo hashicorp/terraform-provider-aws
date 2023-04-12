@@ -17,9 +17,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_dataexchange_revision")
+// @SDKResource("aws_dataexchange_revision", name="Revision")
+// @Tags(identifierAttribute="arn")
 func ResourceRevision() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRevisionCreate,
@@ -49,8 +51,8 @@ func ResourceRevision() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
@@ -59,16 +61,11 @@ func ResourceRevision() *schema.Resource {
 func resourceRevisionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataExchangeConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &dataexchange.CreateRevisionInput{
 		DataSetId: aws.String(d.Get("data_set_id").(string)),
 		Comment:   aws.String(d.Get("comment").(string)),
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
+		Tags:      GetTagsIn(ctx),
 	}
 
 	out, err := conn.CreateRevisionWithContext(ctx, input)
@@ -84,8 +81,6 @@ func resourceRevisionCreate(ctx context.Context, d *schema.ResourceData, meta in
 func resourceRevisionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataExchangeConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	dataSetId, revisionId, err := RevisionParseResourceID(d.Id())
 	if err != nil {
@@ -109,15 +104,7 @@ func resourceRevisionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("arn", revision.Arn)
 	d.Set("revision_id", revision.Id)
 
-	tags := KeyValueTags(ctx, revision.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, revision.Tags)
 
 	return diags
 }
@@ -140,14 +127,6 @@ func resourceRevisionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		_, err := conn.UpdateRevisionWithContext(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "Error Updating DataExchange Revision: %s", err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating DataExchange Revision (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 

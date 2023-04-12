@@ -10,9 +10,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_default_security_group")
+// @SDKResource("aws_default_security_group", name="Security Group")
+// @Tags(identifierAttribute="id")
 func ResourceDefaultSecurityGroup() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -61,8 +63,8 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 				Default:  false,
 				Optional: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -77,8 +79,6 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 
 func resourceDefaultSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeSecurityGroupsInput{
 		Filters: BuildAttributeFilterList(
@@ -110,11 +110,12 @@ func resourceDefaultSecurityGroupCreate(ctx context.Context, d *schema.ResourceD
 
 	d.SetId(aws.StringValue(sg.GroupId))
 
-	oTagsAll := KeyValueTags(ctx, sg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	nTagsAll := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	newTags := KeyValueTags(ctx, GetTagsIn(ctx))
+	oldTags := KeyValueTags(ctx, sg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	if !nTagsAll.Equal(oTagsAll) {
-		if err := UpdateTags(ctx, conn, d.Id(), oTagsAll.Map(), nTagsAll.Map()); err != nil {
+	if !newTags.Equal(oldTags) {
+		if err := UpdateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {
 			return diag.Errorf("updating Default Security Group (%s) tags: %s", d.Id(), err)
 		}
 	}

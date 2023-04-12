@@ -33,14 +33,14 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 	}
 
 	if len(updatedTags) > 0 {
-		input.{{ .TagInTagsElem }} = Tags(updatedTags.IgnoreAWS())
+		input.{{ .TagInTagsElem }} = Tags(updatedTags.IgnoreSystem(names.{{ .ProviderNameUpper }}))
 	}
 
 	if len(removedTags) > 0 {
 		{{- if .UntagInNeedTagType }}
-		input.{{ .UntagInTagsElem }} = Tags(removedTags.IgnoreAWS())
+		input.{{ .UntagInTagsElem }} = Tags(removedTags.IgnoreSystem(names.{{ .ProviderNameUpper }}))
 		{{- else if .UntagInNeedTagKeyType }}
-		input.{{ .UntagInTagsElem }} = TagKeys(removedTags.IgnoreAWS())
+		input.{{ .UntagInTagsElem }} = TagKeys(removedTags.IgnoreSystem(names.{{ .ProviderNameUpper }}))
 		{{- else if .UntagInCustomVal }}
 		input.{{ .UntagInTagsElem }} = {{ .UntagInCustomVal }}
 		{{- else }}
@@ -72,13 +72,13 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 			{{- end }}
 			{{- end }}
 			{{- if .UntagInNeedTagType }}
-			{{ .UntagInTagsElem }}:       Tags(removedTags.IgnoreAWS()),
+			{{ .UntagInTagsElem }}:       Tags(removedTags.IgnoreSystem(names.{{ .ProviderNameUpper }})),
 			{{- else if .UntagInNeedTagKeyType }}
-			{{ .UntagInTagsElem }}:       TagKeys(removedTags.IgnoreAWS()),
+			{{ .UntagInTagsElem }}:       TagKeys(removedTags.IgnoreSystem(names.{{ .ProviderNameUpper }})),
 			{{- else if .UntagInCustomVal }}
 			{{ .UntagInTagsElem }}:       {{ .UntagInCustomVal }},
 			{{- else }}
-			{{ .UntagInTagsElem }}:       removedTags.IgnoreAWS().Keys(),
+			{{ .UntagInTagsElem }}:       removedTags.IgnoreSystem(names.{{ .ProviderNameUpper }}).Keys(),
 			{{- end }}
 		}
 
@@ -110,7 +110,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 			{{- if .TagInCustomVal }}
 			{{ .TagInTagsElem }}:       {{ .TagInCustomVal }},
 			{{- else }}
-			{{ .TagInTagsElem }}:       Tags(updatedTags.IgnoreAWS()),
+			{{ .TagInTagsElem }}:       Tags(updatedTags.IgnoreSystem(names.{{ .ProviderNameUpper }})),
 			{{- end }}
 		}
 

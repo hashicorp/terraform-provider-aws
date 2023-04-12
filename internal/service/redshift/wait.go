@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -21,7 +21,7 @@ const (
 )
 
 func waitClusterCreated(ctx context.Context, conn *redshift.Redshift, id string, timeout time.Duration) (*redshift.Cluster, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{clusterAvailabilityStatusModifying, clusterAvailabilityStatusUnavailable},
 		Target:     []string{clusterAvailabilityStatusAvailable},
 		Refresh:    statusClusterAvailability(ctx, conn, id),
@@ -41,7 +41,7 @@ func waitClusterCreated(ctx context.Context, conn *redshift.Redshift, id string,
 }
 
 func waitClusterDeleted(ctx context.Context, conn *redshift.Redshift, id string, timeout time.Duration) (*redshift.Cluster, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{clusterAvailabilityStatusModifying},
 		Target:  []string{},
 		Refresh: statusClusterAvailability(ctx, conn, id),
@@ -60,7 +60,7 @@ func waitClusterDeleted(ctx context.Context, conn *redshift.Redshift, id string,
 }
 
 func waitClusterUpdated(ctx context.Context, conn *redshift.Redshift, id string, timeout time.Duration) (*redshift.Cluster, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{clusterAvailabilityStatusMaintenance, clusterAvailabilityStatusModifying, clusterAvailabilityStatusUnavailable},
 		Target:  []string{clusterAvailabilityStatusAvailable},
 		Refresh: statusClusterAvailability(ctx, conn, id),
@@ -79,7 +79,7 @@ func waitClusterUpdated(ctx context.Context, conn *redshift.Redshift, id string,
 }
 
 func waitClusterRelocationStatusResolved(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.Cluster, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: clusterAvailabilityZoneRelocationStatus_PendingValues(),
 		Target:  clusterAvailabilityZoneRelocationStatus_TerminalValues(),
 		Refresh: statusClusterAvailabilityZoneRelocation(ctx, conn, id),
@@ -96,7 +96,7 @@ func waitClusterRelocationStatusResolved(ctx context.Context, conn *redshift.Red
 }
 
 func waitClusterRebooted(ctx context.Context, conn *redshift.Redshift, id string, timeout time.Duration) (*redshift.Cluster, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{clusterStatusRebooting, clusterStatusModifying},
 		Target:     []string{clusterStatusAvailable},
 		Refresh:    statusCluster(ctx, conn, id),
@@ -116,7 +116,7 @@ func waitClusterRebooted(ctx context.Context, conn *redshift.Redshift, id string
 }
 
 func waitClusterAquaApplied(ctx context.Context, conn *redshift.Redshift, id string, timeout time.Duration) (*redshift.Cluster, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{redshift.AquaStatusApplying},
 		Target:     []string{redshift.AquaStatusDisabled, redshift.AquaStatusEnabled},
 		Refresh:    statusClusterAqua(ctx, conn, id),
@@ -136,7 +136,7 @@ func waitClusterAquaApplied(ctx context.Context, conn *redshift.Redshift, id str
 }
 
 func WaitScheduleAssociationActive(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.ClusterAssociatedToSchedule, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{redshift.ScheduleStateModifying},
 		Target:     []string{redshift.ScheduleStateActive},
 		Refresh:    statusScheduleAssociation(ctx, conn, id),
@@ -157,7 +157,7 @@ func WaitScheduleAssociationActive(ctx context.Context, conn *redshift.Redshift,
 }
 
 func waitScheduleAssociationDeleted(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.ClusterAssociatedToSchedule, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{redshift.ScheduleStateModifying, redshift.ScheduleStateActive},
 		Target:     []string{},
 		Refresh:    statusScheduleAssociation(ctx, conn, id),
@@ -176,7 +176,7 @@ func waitScheduleAssociationDeleted(ctx context.Context, conn *redshift.Redshift
 }
 
 func waitEndpointAccessActive(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.EndpointAccess, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{endpointAccessStatusCreating, endpointAccessStatusModifying},
 		Target:     []string{endpointAccessStatusActive},
 		Refresh:    statusEndpointAccess(ctx, conn, id),
@@ -197,7 +197,7 @@ func waitEndpointAccessActive(ctx context.Context, conn *redshift.Redshift, id s
 }
 
 func waitEndpointAccessDeleted(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.EndpointAccess, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{endpointAccessStatusDeleting},
 		Target:     []string{},
 		Refresh:    statusEndpointAccess(ctx, conn, id),
@@ -218,7 +218,7 @@ func waitEndpointAccessDeleted(ctx context.Context, conn *redshift.Redshift, id 
 }
 
 func waitClusterSnapshotCreated(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.Snapshot, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{clusterSnapshotStatusCreating},
 		Target:     []string{clusterSnapshotStatusAvailable},
 		Refresh:    statusClusterSnapshot(ctx, conn, id),
@@ -239,7 +239,7 @@ func waitClusterSnapshotCreated(ctx context.Context, conn *redshift.Redshift, id
 }
 
 func waitClusterSnapshotDeleted(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.Snapshot, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{clusterSnapshotStatusAvailable},
 		Target:     []string{},
 		Refresh:    statusClusterSnapshot(ctx, conn, id),

@@ -19,7 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_codestarconnections_connection")
+// @SDKResource("aws_codestarconnections_connection", name="Connection")
+// @Tags(identifierAttribute="arn")
 func ResourceConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectionCreate,
@@ -60,8 +61,8 @@ func ResourceConnection() *schema.Resource {
 				ValidateFunc:  validation.StringInSlice(codestarconnections.ProviderType_Values(), false),
 				ConflictsWith: []string{"host_arn"},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -71,12 +72,11 @@ func ResourceConnection() *schema.Resource {
 func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &codestarconnections.CreateConnectionInput{
 		ConnectionName: aws.String(name),
+		Tags:           GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("host_arn"); ok {
@@ -85,10 +85,6 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk("provider_type"); ok {
 		input.ProviderType = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating CodeStar Connections Connection: %s", input)
@@ -106,8 +102,6 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	connection, err := FindConnectionByARN(ctx, conn, d.Id())
 
@@ -129,39 +123,15 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("name", connection.ConnectionName)
 	d.Set("provider_type", connection.ProviderType)
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for CodeStar Connections Connection (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	// Tags only.
 
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating CodeStar Connections Connection (%s) tags: %s", d.Id(), err)
-		}
-	}
-
-	return diags
+	return append(diags, resourceConnectionRead(ctx, d, meta)...)
 }
 
 func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
