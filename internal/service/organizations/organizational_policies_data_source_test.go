@@ -35,6 +35,6 @@ data "aws_organizations_organization" "current" {}
 
 data "aws_organizations_organizational_policies" "test" {
   target_id = data.aws_organizations_organization.current.roots[0].id
-  filter = "SERVICE_CONTROL_POLICY""
+  filter = "SERVICE_CONTROL_POLICY"
 }
 `
