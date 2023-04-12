@@ -86,6 +86,7 @@ variable "service_labels" {
     "dlm",
     "dms",
     "docdb",
+    "docdbelastic",
     "drs",
     "ds",
     "dynamodb",

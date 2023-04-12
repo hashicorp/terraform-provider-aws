@@ -89,6 +89,7 @@ const (
 	DirectConnect                = "directconnect"
 	Discovery                    = "discovery"
 	DocDB                        = "docdb"
+	DocDBElastic                 = "docdbelastic"
 	DynamoDB                     = "dynamodb"
 	DynamoDBStreams              = "dynamodbstreams"
 	EBS                          = "ebs"
