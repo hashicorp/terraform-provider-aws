@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_quicksight_data_set")
+// @SDKDataSource("aws_quicksight_data_set", name="Data Set")
 func DataSourceDataSet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDataSetRead,
