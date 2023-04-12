@@ -175,7 +175,6 @@ func resourceSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	output, err := conn.CopyDBSnapshotWithContext(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating RDS DB Snapshot Copy (%s): %s", targetDBSnapshotID, err)
 	}

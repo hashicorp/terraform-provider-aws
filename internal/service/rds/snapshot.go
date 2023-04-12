@@ -140,7 +140,6 @@ func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	output, err := conn.CreateDBSnapshotWithContext(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating RDS DB Snapshot (%s): %s", dbSnapshotID, err)
 	}
@@ -159,7 +158,6 @@ func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		_, err := conn.ModifyDBSnapshotAttributeWithContext(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying RDS DB Snapshot (%s) attribute: %s", d.Id(), err)
 		}
@@ -209,7 +207,6 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	output, err := conn.DescribeDBSnapshotAttributesWithContext(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Snapshot (%s) attribute: %s", d.Id(), err)
 	}
@@ -239,7 +236,6 @@ func resourceSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		_, err := conn.ModifyDBSnapshotAttributeWithContext(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying RDS DB Snapshot (%s) attribute: %s", d.Id(), err)
 		}

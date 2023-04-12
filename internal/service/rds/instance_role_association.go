@@ -107,7 +107,6 @@ func resourceInstanceRoleAssociationRead(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).RDSConn()
 
 	dbInstanceIdentifier, roleArn, err := InstanceRoleAssociationDecodeID(d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading resource ID: %s", err)
 	}
@@ -136,7 +135,6 @@ func resourceInstanceRoleAssociationDelete(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.AWSClient).RDSConn()
 
 	dbInstanceIdentifier, roleArn, err := InstanceRoleAssociationDecodeID(d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading resource ID: %s", err)
 	}

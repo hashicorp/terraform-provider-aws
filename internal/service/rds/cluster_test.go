@@ -460,6 +460,7 @@ func TestAccRDSCluster_onlyMajorVersion(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/30605
 func TestAccRDSCluster_minorVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -2155,6 +2156,9 @@ func TestAccRDSCluster_SnapshotIdentifier_preferredMaintenanceWindow(t *testing.
 
 	var dbCluster, sourceDbCluster rds.DBCluster
 	var dbClusterSnapshot rds.DBClusterSnapshot
+
+	// This config is version agnostic. Use it as a model for fixing version errors
+	// in other tests.
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_rds_cluster.source"
