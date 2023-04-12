@@ -460,6 +460,48 @@ func TestAccRDSCluster_onlyMajorVersion(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_minorVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster1, dbCluster2 rds.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+	// If these hardcoded versions become a maintenance burden, use DescribeDBEngineVersions
+	// either by having a new data source created or implementing the testing similar
+	// to TestAccDMSReplicationInstance_engineVersion
+	engine := "aurora-postgresql"
+	engineVersion1 := "14.6"
+	engineVersion2 := "14.7"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_minorVersion(rName, engine, engineVersion1, "aurora-postgresql14"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, "engine", engine),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion1),
+				),
+			},
+			{
+				Config: testAccClusterConfig_minorVersion(rName, engine, engineVersion2, "aurora-postgresql14"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
+					resource.TestCheckResourceAttr(resourceName, "engine", engine),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion2),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSCluster_availabilityZones(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster rds.DBCluster
@@ -1513,6 +1555,7 @@ func TestAccRDSCluster_ManagedMasterPassword_managed(t *testing.T) {
 		},
 	})
 }
+
 func TestAccRDSCluster_ManagedMasterPassword_managedSpecificKMSKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster rds.DBCluster
@@ -2384,7 +2427,6 @@ func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.T
 
 			finalSnapshotID := rs.Primary.Attributes["final_snapshot_identifier"]
 			_, err := tfrds.FindDBClusterSnapshotByID(ctx, conn, finalSnapshotID)
-
 			if err != nil {
 				return err
 			}
@@ -2432,7 +2474,6 @@ func testAccCheckClusterExistsWithProvider(ctx context.Context, n string, v *rds
 		conn := providerF().Meta().(*conns.AWSClient).RDSConn()
 
 		output, err := tfrds.FindDBClusterByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
@@ -2695,6 +2736,51 @@ resource "aws_rds_cluster_instance" "test" {
   instance_class     = "db.r4.large"
 }
 `, allowMajorVersionUpgrade, rName, engine, engineVersion)
+}
+
+func testAccClusterConfig_minorVersion(rName, engine, engineVersion, family string) string {
+	return fmt.Sprintf(`
+resource "aws_db_parameter_group" "test" {
+  name   = %[1]q
+  family = %[4]q
+
+  parameter {
+    name  = "application_name"
+    value = %[1]q
+  }
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier               = %[1]q
+  engine                           = %[2]q
+  engine_version                   = %[3]q
+  db_instance_parameter_group_name = aws_db_parameter_group.test.id
+  master_username                  = "tfacctest"
+  master_password                  = %[1]q
+  skip_final_snapshot              = true
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = aws_rds_cluster.test.engine
+  engine_version             = aws_rds_cluster.test.engine_version
+  preferred_instance_classes = ["db.t3.medium", "db.r5.large", "db.r6g.large"]
+}
+
+# Upgrading requires a healthy primary instance
+resource "aws_rds_cluster_instance" "test" {
+  apply_immediately       = true
+  cluster_identifier      = aws_rds_cluster.test.id
+  db_parameter_group_name = aws_db_parameter_group.test.name
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  identifier              = %[1]q
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+
+  lifecycle {
+    ignore_changes = [engine_version]
+  }
+}
+`, rName, engine, engineVersion, family)
 }
 
 func testAccClusterConfig_availabilityZones(rName string) string {
@@ -4230,12 +4316,17 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_SnapshotID_preferredMaintenanceWindow(rName, preferredMaintenanceWindow string) string {
 	return fmt.Sprintf(`
+data "aws_rds_engine_version" "test" {
+  engine = "aurora-mysql"
+}
+
 resource "aws_rds_cluster" "source" {
   cluster_identifier  = "%[1]s-source"
   engine              = "aurora-mysql"
   master_password     = "barbarbarbar"
   master_username     = "foo"
   skip_final_snapshot = true
+  engine              = data.aws_rds_engine_version.test.engine
 }
 
 resource "aws_db_cluster_snapshot" "test" {
@@ -4249,6 +4340,7 @@ resource "aws_rds_cluster" "test" {
   preferred_maintenance_window = %[2]q
   skip_final_snapshot          = true
   snapshot_identifier          = aws_db_cluster_snapshot.test.id
+  engine                       = data.aws_rds_engine_version.test.engine
 }
 `, rName, preferredMaintenanceWindow)
 }

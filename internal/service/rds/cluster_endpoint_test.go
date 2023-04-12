@@ -187,7 +187,6 @@ func testAccCheckClusterEndpointExists(ctx context.Context, n string, v *rds.DBC
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 		output, err := tfrds.FindDBClusterEndpointByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
