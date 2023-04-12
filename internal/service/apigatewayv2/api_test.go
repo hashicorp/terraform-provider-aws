@@ -299,17 +299,18 @@ func TestAccAPIGatewayV2API_openAPI(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIConfig_open(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAPIExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "api_endpoint"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "false"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "version", ""),
+					resource.TestCheckResourceAttr(resourceName, "name", rName+"_DIFFERENT"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1.0"),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/apis/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "protocol_type", apigatewayv2.ProtocolTypeHttp),
 					testAccCheckAPIRoutes(ctx, &v, []string{"GET /test"}),
 				),
+				ExpectNonEmptyPlan: true, // OpenAPI definition overrides HCL configuration.
 			},
 			{
 				ResourceName:            resourceName,
@@ -322,12 +323,13 @@ func TestAccAPIGatewayV2API_openAPI(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "false"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "version", ""),
+					resource.TestCheckResourceAttr(resourceName, "name", rName+"_DIFFERENT"),
+					resource.TestCheckResourceAttr(resourceName, "version", "2.0"),
 					testAccCheckAPIExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "protocol_type", apigatewayv2.ProtocolTypeHttp),
 					testAccCheckAPIRoutes(ctx, &v, []string{"GET /update"}),
 				),
+				ExpectNonEmptyPlan: true, // OpenAPI definition overrides HCL configuration.
 			},
 		},
 	})
@@ -349,14 +351,10 @@ func TestAccAPIGatewayV2API_OpenAPI_withTags(t *testing.T) {
 				Config: testAccAPIConfig_openYAMLTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "api_endpoint"),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/apis/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "protocol_type", apigatewayv2.ProtocolTypeHttp),
-					testAccCheckAPIRoutes(ctx, &v, []string{"GET /test"}),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value3"),
 				),
+				ExpectNonEmptyPlan: true, // OpenAPI definition overrides HCL configuration.
 			},
 			{
 				ResourceName:            resourceName,
@@ -368,12 +366,11 @@ func TestAccAPIGatewayV2API_OpenAPI_withTags(t *testing.T) {
 				Config: testAccAPIConfig_openYAMLTagsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "protocol_type", apigatewayv2.ProtocolTypeHttp),
-					testAccCheckAPIRoutes(ctx, &v, []string{"GET /update"}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1U"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2U"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key4", "Value4"),
 				),
+				ExpectNonEmptyPlan: true, // OpenAPI definition overrides HCL configuration.
 			},
 		},
 	})
@@ -393,7 +390,7 @@ func TestAccAPIGatewayV2API_OpenAPI_withCors(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIConfig_openYAMLCorsConfiguration(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAPIExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "api_endpoint"),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/apis/.+`)),
@@ -403,6 +400,7 @@ func TestAccAPIGatewayV2API_OpenAPI_withCors(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_origins.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_origins.*", "https://www.google.de"),
 				),
+				ExpectNonEmptyPlan: true, // OpenAPI definition overrides HCL configuration.
 			},
 			{
 				ResourceName:            resourceName,
@@ -412,16 +410,17 @@ func TestAccAPIGatewayV2API_OpenAPI_withCors(t *testing.T) {
 			},
 			{
 				Config: testAccAPIConfig_openYAMLCorsConfigurationUpdated(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAPIExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "protocol_type", apigatewayv2.ProtocolTypeHttp),
 					testAccCheckAPIRoutes(ctx, &v, []string{"GET /update"}),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.#", "0"),
 				),
+				ExpectNonEmptyPlan: true, // OpenAPI definition overrides HCL configuration.
 			},
 			{
 				Config: testAccAPIConfig_openYAMLCorsConfigurationUpdated2(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAPIExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "protocol_type", apigatewayv2.ProtocolTypeHttp),
 					testAccCheckAPIRoutes(ctx, &v, []string{"GET /update"}),
@@ -451,17 +450,19 @@ func TestAccAPIGatewayV2API_OpenAPI_withMoreFields(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIConfig_openYAML(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAPIExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "api_endpoint"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "false"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "version", ""),
+					resource.TestCheckResourceAttr(resourceName, "name", rName+"_DIFFERENT"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1.0"),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/apis/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "protocol_type", apigatewayv2.ProtocolTypeHttp),
 					testAccCheckAPIRoutes(ctx, &v, []string{"GET /test"}),
 				),
+				ExpectNonEmptyPlan: true, // OpenAPI definition overrides HCL configuration.
 			},
 			{
 				ResourceName:            resourceName,
@@ -471,15 +472,17 @@ func TestAccAPIGatewayV2API_OpenAPI_withMoreFields(t *testing.T) {
 			},
 			{
 				Config: testAccAPIConfig_updatedOpen2(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "description", "description test"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "description", "description different"),
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "false"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "version", "2017-04-21T04:08:08Z"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName+"_DIFFERENT"),
+					resource.TestCheckResourceAttr(resourceName, "version", "2.0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					testAccCheckAPIExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "protocol_type", apigatewayv2.ProtocolTypeHttp),
 					testAccCheckAPIRoutes(ctx, &v, []string{"GET /update"}),
 				),
+				ExpectNonEmptyPlan: true, // OpenAPI definition overrides HCL configuration.
 			},
 			{
 				ResourceName:            resourceName,
@@ -511,13 +514,14 @@ func TestAccAPIGatewayV2API_OpenAPI_failOnWarnings(t *testing.T) {
 			// Warnings do not break the deployment when fail_on_warnings is disabled
 			{
 				Config: testAccAPIConfig_failOnWarnings(rName, "fail_on_warnings = false"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", "Title test"),
 					testAccCheckAPIExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "protocol_type", apigatewayv2.ProtocolTypeHttp),
 					resource.TestCheckResourceAttr(resourceName, "fail_on_warnings", "false"),
 					testAccCheckAPIRoutes(ctx, &v, []string{"GET /update"}),
 				),
+				ExpectNonEmptyPlan: true, // OpenAPI definition overrides HCL configuration.
 			},
 			{
 				ResourceName:            resourceName,
@@ -528,7 +532,7 @@ func TestAccAPIGatewayV2API_OpenAPI_failOnWarnings(t *testing.T) {
 			// fail_on_warnings should be optional and false by default
 			{
 				Config: testAccAPIConfig_failOnWarnings(rName, ""),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					testAccCheckAPIExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "protocol_type", apigatewayv2.ProtocolTypeHttp),
@@ -1025,13 +1029,13 @@ resource "aws_apigatewayv2_api" "test" {
 func testAccAPIConfig_open(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
-  name          = "%s"
+  name          = %[1]q
   protocol_type = "HTTP"
   body          = <<EOF
 {
   "openapi": "3.0.1",
   "info": {
-    "title": "%s_DIFFERENT",
+    "title": "%[1]s_DIFFERENT",
     "version": "1.0"
   },
   "paths": {
@@ -1049,19 +1053,19 @@ resource "aws_apigatewayv2_api" "test" {
 }
 EOF
 }
-`, rName, rName)
+`, rName)
 }
 
 func testAccAPIConfig_openYAML(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
-  name          = "%s"
+  name          = %[1]q
   protocol_type = "HTTP"
   body          = <<EOF
 ---
 openapi: 3.0.1
 info:
-  title: %s_DIFFERENT
+  title: %[1]s_DIFFERENT
   version: 1.0
 paths:
   "/test":
@@ -1073,13 +1077,13 @@ paths:
         uri: https://www.google.de
 EOF
 }
-`, rName, rName)
+`, rName)
 }
 
 func testAccAPIConfig_openYAMLCorsConfiguration(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
-  name          = "%s"
+  name          = %[1]q
   protocol_type = "HTTP"
   cors_configuration {
     allow_methods = ["delete"]
@@ -1089,7 +1093,7 @@ resource "aws_apigatewayv2_api" "test" {
 ---
 openapi: 3.0.1
 info:
-  title: %s_DIFFERENT
+  title: %[1]s_DIFFERENT
   version: 2.0
 x-amazon-apigateway-cors:
   allow_methods:
@@ -1106,19 +1110,19 @@ paths:
         uri: https://www.google.de
 EOF
 }
-`, rName, rName)
+`, rName)
 }
 
 func testAccAPIConfig_openYAMLCorsConfigurationUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
-  name          = "%s"
+  name          = %[1]q
   protocol_type = "HTTP"
   body          = <<EOF
 ---
 openapi: 3.0.1
 info:
-  title: %s_DIFFERENT
+  title: %[1]s_DIFFERENT
   version: 2.0
 x-amazon-apigateway-cors:
   allow_methods:
@@ -1135,13 +1139,13 @@ paths:
         uri: https://www.google.de
 EOF
 }
-`, rName, rName)
+`, rName)
 }
 
 func testAccAPIConfig_openYAMLCorsConfigurationUpdated2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
-  name          = "%s"
+  name          = %[1]q
   protocol_type = "HTTP"
   cors_configuration {
     allow_methods = ["put", "get"]
@@ -1151,7 +1155,7 @@ resource "aws_apigatewayv2_api" "test" {
 ---
 openapi: 3.0.1
 info:
-  title: %s_DIFFERENT
+  title: %[1]s_DIFFERENT
   version: 2.0
 x-amazon-apigateway-cors:
   allow_methods:
@@ -1168,13 +1172,13 @@ paths:
         uri: https://www.google.de
 EOF
 }
-`, rName, rName)
+`, rName)
 }
 
 func testAccAPIConfig_openYAMLTags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
-  name          = "%s"
+  name          = %[1]q
   protocol_type = "HTTP"
   tags = {
     Key1 = "Value1"
@@ -1184,7 +1188,7 @@ resource "aws_apigatewayv2_api" "test" {
 ---
 openapi: 3.0.1
 info:
-  title: %s_DIFFERENT
+  title: %[1]s_DIFFERENT
   version: 2.0
 tags:
   - name: Key1
@@ -1199,13 +1203,13 @@ paths:
         uri: https://www.google.de
 EOF
 }
-`, rName, rName)
+`, rName)
 }
 
 func testAccAPIConfig_openYAMLTagsUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
-  name          = "%s"
+  name          = %[1]q
   protocol_type = "HTTP"
   tags = {
     Key1 = "Value1U"
@@ -1215,13 +1219,13 @@ resource "aws_apigatewayv2_api" "test" {
 ---
 openapi: 3.0.1
 info:
-  title: %s_DIFFERENT
+  title: %[1]s_DIFFERENT
   version: 2.0
 tags:
   - name: Key3
     x-amazon-apigateway-tag-value: Value3
   - name: Key4
-    x-amazon-apigateway-tag-value: Value3
+    x-amazon-apigateway-tag-value: Value4
 paths:
   "/update":
     get:
@@ -1232,19 +1236,19 @@ paths:
         uri: https://www.google.de
 EOF
 }
-`, rName, rName)
+`, rName)
 }
 
 func testAccAPIConfig_updatedOpenYAML(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
-  name          = "%s"
+  name          = %[1]q
   protocol_type = "HTTP"
   body          = <<EOF
 ---
 openapi: 3.0.1
 info:
-  title: %s_DIFFERENT
+  title: %[1]s_DIFFERENT
   version: 2.0
 paths:
   "/update":
@@ -1256,13 +1260,13 @@ paths:
         uri: https://www.google.de
 EOF
 }
-`, rName, rName)
+`, rName)
 }
 
 func testAccAPIConfig_updatedOpen2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
-  name          = "%s"
+  name          = %[1]q
   protocol_type = "HTTP"
   version       = "2017-04-21T04:08:08Z"
   description   = "description test"
@@ -1270,7 +1274,7 @@ resource "aws_apigatewayv2_api" "test" {
 {
   "openapi": "3.0.1",
   "info": {
-    "title": "%s_DIFFERENT",
+    "title": "%[1]s_DIFFERENT",
     "version": "2.0",
     "description": "description different"
   },
@@ -1289,7 +1293,7 @@ resource "aws_apigatewayv2_api" "test" {
 }
 EOF
 }
-`, rName, rName)
+`, rName)
 }
 
 func testAccAPIConfig_failOnWarnings(rName string, failOnWarnings string) string {
