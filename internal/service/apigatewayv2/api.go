@@ -230,32 +230,32 @@ func resourceAPIRead(ctx context.Context, d *schema.ResourceData, meta interface
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
-	resp, err := conn.GetApiWithContext(ctx, &apigatewayv2.GetApiInput{
-		ApiId: aws.String(d.Id()),
-	})
-	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) && !d.IsNewResource() {
+	output, err := FindAPIByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway v2 API (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 API (%s): %s", d.Id(), err)
 	}
 
-	d.Set("api_endpoint", resp.ApiEndpoint)
-	d.Set("api_key_selection_expression", resp.ApiKeySelectionExpression)
-	apiArn := arn.ARN{
+	d.Set("api_endpoint", output.ApiEndpoint)
+	d.Set("api_key_selection_expression", output.ApiKeySelectionExpression)
+	apiARN := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "apigateway",
 		Region:    meta.(*conns.AWSClient).Region,
 		Resource:  fmt.Sprintf("/apis/%s", d.Id()),
 	}.String()
-	d.Set("arn", apiArn)
-	if err := d.Set("cors_configuration", flattenCORSConfiguration(resp.CorsConfiguration)); err != nil {
+	d.Set("arn", apiARN)
+	if err := d.Set("cors_configuration", flattenCORSConfiguration(output.CorsConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cors_configuration: %s", err)
 	}
-	d.Set("description", resp.Description)
-	d.Set("disable_execute_api_endpoint", resp.DisableExecuteApiEndpoint)
+	d.Set("description", output.Description)
+	d.Set("disable_execute_api_endpoint", output.DisableExecuteApiEndpoint)
 	executionArn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "execute-api",
@@ -264,13 +264,13 @@ func resourceAPIRead(ctx context.Context, d *schema.ResourceData, meta interface
 		Resource:  d.Id(),
 	}.String()
 	d.Set("execution_arn", executionArn)
-	d.Set("name", resp.Name)
-	d.Set("protocol_type", resp.ProtocolType)
-	d.Set("route_selection_expression", resp.RouteSelectionExpression)
+	d.Set("name", output.Name)
+	d.Set("protocol_type", output.ProtocolType)
+	d.Set("route_selection_expression", output.RouteSelectionExpression)
 
-	SetTagsOut(ctx, resp.Tags)
+	SetTagsOut(ctx, output.Tags)
 
-	d.Set("version", resp.Version)
+	d.Set("version", output.Version)
 
 	return diags
 }
