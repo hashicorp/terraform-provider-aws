@@ -53,6 +53,12 @@ func ResourceAPI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"body": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				DiffSuppressFunc: verify.SuppressEquivalentJSONOrYAMLDiffs,
+				ValidateFunc:     verify.ValidStringIsJSONOrYAML,
+			},
 			"cors_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -109,24 +115,18 @@ func ResourceAPI() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"fail_on_warnings": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
 			"execution_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"fail_on_warnings": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
-			"body": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONOrYAMLDiffs,
-				ValidateFunc:     verify.ValidStringIsJSONOrYAML,
 			},
 			"protocol_type": {
 				Type:         schema.TypeString,
@@ -166,50 +166,61 @@ func resourceAPICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
-	protocolType := d.Get("protocol_type").(string)
+	name := d.Get("name").(string)
 	input := &apigatewayv2.CreateApiInput{
-		Name:         aws.String(d.Get("name").(string)),
-		ProtocolType: aws.String(protocolType),
+		Name:         aws.String(name),
+		ProtocolType: aws.String(d.Get("protocol_type").(string)),
 		Tags:         GetTagsIn(ctx),
 	}
+
 	if v, ok := d.GetOk("api_key_selection_expression"); ok {
 		input.ApiKeySelectionExpression = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("cors_configuration"); ok {
 		input.CorsConfiguration = expandCORSConfiguration(v.([]interface{}))
 	}
+
 	if v, ok := d.GetOk("credentials_arn"); ok {
 		input.CredentialsArn = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("disable_execute_api_endpoint"); ok {
 		input.DisableExecuteApiEndpoint = aws.Bool(v.(bool))
 	}
+
 	if v, ok := d.GetOk("route_key"); ok {
 		input.RouteKey = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("route_selection_expression"); ok {
 		input.RouteSelectionExpression = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("target"); ok {
 		input.Target = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("version"); ok {
 		input.Version = aws.String(v.(string))
 	}
 
-	resp, err := conn.CreateApiWithContext(ctx, input)
+	output, err := conn.CreateApiWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating API Gateway v2 API (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating API Gateway v2 API (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.ApiId))
+	d.SetId(aws.StringValue(output.ApiId))
 
 	err = resourceImportOpenAPI(ctx, d, meta)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating API Gateway v2 API (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return append(diags, resourceAPIRead(ctx, d, meta)...)
