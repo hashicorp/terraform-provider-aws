@@ -1015,6 +1015,64 @@ rules:
           patterns:
             - pattern-regex: "(?i)DocDB"
     severity: WARNING
+  - id: docdbelastic-in-func-name
+    languages:
+      - go
+    message: Do not use "DocDBElastic" in func name inside docdbelastic package
+    paths:
+      include:
+        - internal/service/docdbelastic
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)DocDBElastic"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: docdbelastic-in-test-name
+    languages:
+      - go
+    message: Include "DocDBElastic" in test name
+    paths:
+      include:
+        - internal/service/docdbelastic/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccDocDBElastic"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: docdbelastic-in-const-name
+    languages:
+      - go
+    message: Do not use "DocDBElastic" in const name inside docdbelastic package
+    paths:
+      include:
+        - internal/service/docdbelastic
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)DocDBElastic"
+    severity: WARNING
+  - id: docdbelastic-in-var-name
+    languages:
+      - go
+    message: Do not use "DocDBElastic" in var name inside docdbelastic package
+    paths:
+      include:
+        - internal/service/docdbelastic
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)DocDBElastic"
+    severity: WARNING
   - id: ds-in-func-name
     languages:
       - go
@@ -3290,48 +3348,4 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)inspectorv2"
-    severity: WARNING
-  - id: inspectorv2-in-var-name
-    languages:
-      - go
-    message: Do not use "inspectorv2" in var name inside inspector2 package
-    paths:
-      include:
-        - internal/service/inspector2
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)inspectorv2"
-    severity: WARNING
-  - id: iot-in-func-name
-    languages:
-      - go
-    message: Do not use "IoT" in func name inside iot package
-    paths:
-      include:
-        - internal/service/iot
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)IoT"
-            - pattern-not-regex: ^TestAcc.*
-    severity: WARNING
-  - id: iot-in-test-name
-    languages:
-      - go
-    message: Include "IoT" in test name
-    paths:
-      include:
-        - internal/service/iot/*_test.go
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-not-regex: "^TestAccIoT"
-            - pattern-regex: ^TestAcc.*
     severity: WARNING

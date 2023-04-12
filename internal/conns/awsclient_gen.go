@@ -9,6 +9,7 @@ import (
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
+	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	"github.com/aws/aws-sdk-go-v2/service/healthlake"
@@ -435,6 +436,7 @@ type AWSClient struct {
 	directconnectConn                *directconnect.DirectConnect
 	discoveryConn                    *applicationdiscoveryservice.ApplicationDiscoveryService
 	docdbConn                        *docdb.DocDB
+	docdbelasticClient               *docdbelastic.Client
 	dynamodbConn                     *dynamodb.DynamoDB
 	dynamodbstreamsConn              *dynamodbstreams.DynamoDBStreams
 	ebsConn                          *ebs.EBS
@@ -1010,6 +1012,10 @@ func (client *AWSClient) DiscoveryConn() *applicationdiscoveryservice.Applicatio
 
 func (client *AWSClient) DocDBConn() *docdb.DocDB {
 	return client.docdbConn
+}
+
+func (client *AWSClient) DocDBElasticClient() *docdbelastic.Client {
+	return client.docdbelasticClient
 }
 
 func (client *AWSClient) DynamoDBConn() *dynamodb.DynamoDB {

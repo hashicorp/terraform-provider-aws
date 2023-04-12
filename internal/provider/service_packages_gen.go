@@ -67,6 +67,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dlm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/docdbelastic"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ds"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -269,6 +270,7 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		dlm.ServicePackage,
 		dms.ServicePackage,
 		docdb.ServicePackage,
+		docdbelastic.ServicePackage,
 		ds.ServicePackage,
 		dynamodb.ServicePackage,
 		ec2.ServicePackage,

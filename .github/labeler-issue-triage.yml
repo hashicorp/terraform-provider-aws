@@ -197,6 +197,8 @@ service/dms:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_dms_'
 service/docdb:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_docdb_'
+service/docdbelastic:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_docdbelastic_'
 service/drs:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_drs_'
 service/ds:
