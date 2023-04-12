@@ -648,7 +648,7 @@ func WaitSpaceDeleted(ctx context.Context, conn *sagemaker.SageMaker, domainId, 
 }
 
 func WaitMonitoringScheduleScheduled(ctx context.Context, conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeMonitoringScheduleOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{sagemaker.ScheduleStatusPending},
 		Target:  []string{sagemaker.ScheduleStatusScheduled},
 		Refresh: StatusMonitoringSchedule(ctx, conn, name),
@@ -669,7 +669,7 @@ func WaitMonitoringScheduleScheduled(ctx context.Context, conn *sagemaker.SageMa
 }
 
 func WaitMonitoringScheduleNotFound(ctx context.Context, conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeMonitoringScheduleOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{sagemaker.ScheduleStatusScheduled, sagemaker.ScheduleStatusPending, sagemaker.ScheduleStatusStopped},
 		Target:  []string{},
 		Refresh: StatusMonitoringSchedule(ctx, conn, name),

@@ -251,7 +251,7 @@ func StatusSpace(ctx context.Context, conn *sagemaker.SageMaker, domainId, name 
 	}
 }
 
-func StatusMonitoringSchedule(ctx context.Context, conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
+func StatusMonitoringSchedule(ctx context.Context, conn *sagemaker.SageMaker, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindMonitoringScheduleByName(ctx, conn, name)
 
