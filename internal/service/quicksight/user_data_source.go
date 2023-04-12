@@ -16,9 +16,9 @@ import (
 )
 
 // @SDKDataSource("aws_quicksight_user", name="User")
-func DataSourceAwsQuickSightUser() *schema.Resource {
+func DataSourceUser() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceAwsQuickSightUserRead,
+		ReadWithoutTimeout: dataSourceUserRead,
 
 		Schema: map[string]*schema.Schema{
 			"active": {
@@ -67,7 +67,7 @@ func DataSourceAwsQuickSightUser() *schema.Resource {
 	}
 }
 
-func dataSourceAwsQuickSightUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightConn()
 
@@ -91,7 +91,7 @@ func dataSourceAwsQuickSightUserRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountID, namespace, aws.StringValue(out.User.UserName)))
-	d.Set("active", aws.BoolValue(out.User.Active))
+	d.Set("active", out.User.Active)
 	d.Set("arn", out.User.Arn)
 	d.Set("aws_account_id", awsAccountID)
 	d.Set("email", out.User.Email)

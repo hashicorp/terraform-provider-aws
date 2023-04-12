@@ -43,7 +43,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Data Set",
 		},
 		{
-			Factory:  DataSourceAwsQuickSightUser,
+			Factory:  DataSourceUser,
 			TypeName: "aws_quicksight_user",
 			Name:     "User",
 		},

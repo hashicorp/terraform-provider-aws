@@ -2,7 +2,6 @@ package quicksight_test
 
 import (
 	"fmt"
-
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/quicksight"
@@ -26,7 +25,7 @@ func TestAccQuickSightUserDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataSourceQuickSightUserConfig(rName),
+				Config: testAccUserDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_name", resourceName, "user_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
@@ -41,17 +40,17 @@ func TestAccQuickSightUserDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccAWSDataSourceQuickSightUserConfig(rName string) string {
+func testAccUserDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_quicksight_user" "test" {
-  user_name      = %[1]q
-  email          = %[2]q
-  identity_type  = "QUICKSIGHT"
-  user_role      = "READER"
+  user_name     = %[1]q
+  email         = %[2]q
+  identity_type = "QUICKSIGHT"
+  user_role     = "READER"
 }
 
 data "aws_quicksight_user" "test" {
-  user_name 	 = aws_quicksight_user.test.user_name
+  user_name = aws_quicksight_user.test.user_name
 }
 `, rName, acctest.DefaultEmailAddress)
 }
