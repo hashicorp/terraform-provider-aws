@@ -88,7 +88,10 @@ func ResourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			// The MAC Security (MACsec) port link status of the connection.
+			"partner_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"port_encryption_status": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -177,6 +180,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("macsec_capable", connection.MacSecCapable)
 	d.Set("name", connection.ConnectionName)
 	d.Set("owner_account_id", connection.OwnerAccount)
+	d.Set("partner_name", connection.PartnerName)
 	d.Set("port_encryption_status", connection.PortEncryptionStatus)
 	d.Set("provider_name", connection.ProviderName)
 	d.Set("vlan_id", connection.Vlan)
