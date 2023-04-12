@@ -44,6 +44,10 @@ func DataSourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"partner_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"provider_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -104,6 +108,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("location", connection.Location)
 	d.Set("name", connection.ConnectionName)
 	d.Set("owner_account_id", connection.OwnerAccount)
+	d.Set("partner_name", connection.PartnerName)
 	d.Set("provider_name", connection.ProviderName)
 	d.Set("vlan_id", connection.Vlan)
 
