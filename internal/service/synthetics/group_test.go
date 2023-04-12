@@ -123,7 +123,7 @@ func testAccCheckGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 func testAccGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_synthetics_group" "test" {
-  name             		  = %[1]q
+  name = %[1]q
 }
 `, rName)
 }
