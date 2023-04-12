@@ -107,7 +107,7 @@ func resourceTransitGatewayVPCAttachmentAccepterCreate(ctx context.Context, d *s
 	}
 
 	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
-		if err := CreateTags(ctx, conn, d.Id(), tags); err != nil {
+		if err := createTags(ctx, conn, d.Id(), tags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "accepting EC2 Transit Gateway VPC Attachment (%s): setting tags: %s", transitGatewayAttachmentID, err)
 		}
 	}

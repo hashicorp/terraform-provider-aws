@@ -299,7 +299,7 @@ func resourceAMICopyCreate(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("manage_ebs_snapshots", true)
 
 	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
-		if err := CreateTags(ctx, conn, d.Id(), tags); err != nil {
+		if err := createTags(ctx, conn, d.Id(), tags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "adding tags: %s", err)
 		}
 	}

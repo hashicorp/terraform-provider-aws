@@ -17,13 +17,11 @@ import (
 
 const eventualConsistencyTimeout = 5 * time.Minute
 
-// CreateTags creates ec2 service tags for new resources.
-// The identifier is typically the Amazon Resource Name (ARN), although
-// it may also be a different identifier depending on the service.
-func CreateTags(ctx context.Context, conn ec2iface.EC2API, identifier string, tagsMap interface{}) error {
+// createTags creates ec2 service tags for new resources.
+func createTags(ctx context.Context, conn ec2iface.EC2API, id string, tagsMap interface{}) error {
 	tags := tftags.New(ctx, tagsMap)
 	input := &ec2.CreateTagsInput{
-		Resources: aws.StringSlice([]string{identifier}),
+		Resources: aws.StringSlice([]string{id}),
 		Tags:      Tags(tags.IgnoreAWS()),
 	}
 
@@ -41,7 +39,7 @@ func CreateTags(ctx context.Context, conn ec2iface.EC2API, identifier string, ta
 	})
 
 	if err != nil {
-		return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+		return fmt.Errorf("tagging resource (%s): %w", id, err)
 	}
 
 	return nil

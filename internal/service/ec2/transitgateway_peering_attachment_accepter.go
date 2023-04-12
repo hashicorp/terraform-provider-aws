@@ -83,7 +83,7 @@ func resourceTransitGatewayPeeringAttachmentAccepterCreate(ctx context.Context, 
 	}
 
 	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
-		if err := CreateTags(ctx, conn, d.Id(), tags); err != nil {
+		if err := createTags(ctx, conn, d.Id(), tags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Transit Gateway Peering Attachment (%s) tags: %s", d.Id(), err)
 		}
 	}

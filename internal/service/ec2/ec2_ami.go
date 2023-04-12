@@ -365,7 +365,7 @@ func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.SetId(aws.StringValue(output.ImageId))
 
 	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
-		if err := CreateTags(ctx, conn, d.Id(), tags); err != nil {
+		if err := createTags(ctx, conn, d.Id(), tags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "adding tags: %s", err)
 		}
 	}

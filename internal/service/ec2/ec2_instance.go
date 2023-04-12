@@ -928,7 +928,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	for vol, blockDeviceTags := range blockDeviceTagsToCreate {
-		if err := CreateTags(ctx, conn, vol, blockDeviceTags); err != nil {
+		if err := createTags(ctx, conn, vol, blockDeviceTags); err != nil {
 			log.Printf("[ERR] Error creating tags for EBS volume %s: %s", vol, err)
 		}
 	}

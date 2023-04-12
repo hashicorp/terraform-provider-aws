@@ -115,7 +115,7 @@ func resourceVPCPeeringAccepterCreate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
-		if err := CreateTags(ctx, conn, d.Id(), tags.Map()); err != nil {
+		if err := createTags(ctx, conn, d.Id(), tags.Map()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating EC2 VPC Peering Connection (%s) tags: %s", d.Id(), err)
 		}
 	}
