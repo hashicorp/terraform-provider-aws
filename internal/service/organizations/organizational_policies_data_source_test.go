@@ -34,6 +34,7 @@ const testAccOrganizationalPoliciesDataSourceConfig_basic = `
 data "aws_organizations_organization" "current" {}
 
 data "aws_organizations_organizational_policies" "test" {
-  target_id = data.aws_organizations_organization.current.roots[0].id
+  target_id = data.aws_organizations_organization.current.roots[0].id,
+  filter = SERVICE_CONTROL_POLICY
 }
 `
