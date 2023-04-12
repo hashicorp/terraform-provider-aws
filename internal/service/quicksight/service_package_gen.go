@@ -23,6 +23,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		{
 			Factory: newResourceIngestion,
 		},
+		{
+			Factory: newResourceNamespace,
+			Name:    "Namespace",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
 	}
 }
 
