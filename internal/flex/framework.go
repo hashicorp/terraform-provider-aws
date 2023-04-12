@@ -201,18 +201,6 @@ func FlattenFrameworkStringValueSetLegacy(_ context.Context, vs []string) types.
 	return types.SetValueMust(types.StringType, elems)
 }
 
-// FlattenFrameworkStringSetLegacy is the Plugin Framework variant of FlattenStringSet.
-// A nil slice is converted to an empty (non-null) Set.
-func FlattenFrameworkStringSetLegacy(_ context.Context, vs []*string) types.Set {
-	elems := make([]attr.Value, len(vs))
-
-	for i, v := range vs {
-		elems[i] = types.StringValue(aws.ToString(v))
-	}
-
-	return types.SetValueMust(types.StringType, elems)
-}
-
 // FlattenFrameworkStringValueMapLegacy has no Plugin SDK equivalent as schema.ResourceData.Set can be passed string value maps directly.
 // A nil map is converted to an empty (non-null) Map.
 func FlattenFrameworkStringValueMapLegacy(_ context.Context, m map[string]string) types.Map {
