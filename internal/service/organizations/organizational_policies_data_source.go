@@ -73,7 +73,7 @@ func dataSourceOrganizationPoliciesRead(ctx context.Context, d *schema.ResourceD
 	targetID := d.Get("target_id").(string)
 	filter := d.Get("filter").(string)
 
-	policies, err := findPoliciesForTarget(ctx, conn, targetID)
+	policies, err := findPoliciesForTarget(ctx, conn, targetID, filter)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing Organizations Policies for target (%s): %s", targetID, err)
 	}
