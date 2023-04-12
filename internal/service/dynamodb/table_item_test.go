@@ -31,6 +31,10 @@ func TestAccDynamoDBTableItem_basic(t *testing.T) {
 	"four": {"N": "44444"}
 }`
 
+	checkFn := func(s []*terraform.InstanceState) error {
+		return testAccAWSDynamoDbItemCompareItemAttribute(itemContent, s)
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
@@ -46,6 +50,21 @@ func TestAccDynamoDBTableItem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "table_name", tableName),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "item", itemContent+"\n"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:           fmt.Sprintf("%s|%s", tableName, "something"),
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{"item"}
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:           fmt.Sprintf("[\"%s\", \"%s\"]", tableName, "something"),
+				ImportStateCheck:        checkFn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"item"},
 			},
 		},
 	})
@@ -67,6 +86,10 @@ func TestAccDynamoDBTableItem_rangeKey(t *testing.T) {
 	"four": {"N": "44444"}
 }`
 
+	checkFn := func(s []*terraform.InstanceState) error {
+		return testAccAWSDynamoDbItemCompareItemAttribute(itemContent, s)
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
@@ -83,6 +106,22 @@ func TestAccDynamoDBTableItem_rangeKey(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "table_name", tableName),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "item", itemContent+"\n"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:           fmt.Sprintf("%s|%s|%s", tableName, "something", "something-else"),
+				ImportStateCheck:        checkFn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"item"},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:           fmt.Sprintf("[\"%s\", \"%s\", \"%s\"]", tableName, "something", "something-else"),
+				ImportStateCheck:        checkFn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"item"},
 			},
 		},
 	})
@@ -606,4 +645,27 @@ resource "aws_dynamodb_table_item" "test1" {
 ITEM
 }
 `, tableName, hashKey, rangeKey, item)
+}
+
+func testAccADynamoDbItemCompareItemAttribute(item string, s []*terraform.InstanceState) error {
+	if len(s) != 1 {
+		return fmt.Errorf("expected 1 state: %#v", s)
+	}
+	var a, b map[string]interface{}
+
+	err := json.Unmarshal([]byte(item), &a)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal([]byte(s[0].Attributes["item"]), &b)
+	if err != nil {
+		return err
+	}
+
+	if !reflect.DeepEqual(a, b) {
+		return fmt.Errorf("item attributes not equal:\n\texpected: %#v\n\tactual: %#v", a, b)
+	}
+
+	return nil
 }
