@@ -37,6 +37,7 @@ Chime SDK Identity
 Chime SDK Media Pipelines
 Chime SDK Meetings
 Chime SDK Messaging
+Chime SDK Voice
 Cloud Control API
 Cloud Directory
 Cloud Map

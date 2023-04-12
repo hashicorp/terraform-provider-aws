@@ -42,6 +42,7 @@ const (
 	ChimeSDKMediaPipelines       = "chimesdkmediapipelines"
 	ChimeSDKMeetings             = "chimesdkmeetings"
 	ChimeSDKMessaging            = "chimesdkmessaging"
+	ChimeSDKVoice                = "chimesdkvoice"
 	Cloud9                       = "cloud9"
 	CloudControl                 = "cloudcontrol"
 	CloudDirectory               = "clouddirectory"
