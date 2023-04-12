@@ -9,15 +9,16 @@ import (
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_sagemaker_monitoring_schedule")
@@ -82,7 +83,7 @@ func ResourceMonitoringSchedule() *schema.Resource {
 					},
 				},
 			},
-			names.AttrTags:     tftags.TagsSchema(),
+			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
@@ -97,13 +98,13 @@ func resourceMonitoringScheduleCreate(ctx context.Context, d *schema.ResourceDat
 	if v, ok := d.GetOk("name"); ok {
 		name = v.(string)
 	} else {
-		name = resource.UniqueId()
+		name = id.UniqueId()
 	}
 
 	createOpts := &sagemaker.CreateMonitoringScheduleInput{
 		MonitoringScheduleConfig: expandMonitoringScheduleConfig(d.Get("monitoring_schedule_config").([]interface{})),
 		MonitoringScheduleName:   aws.String(name),
-		Tags: GetTagsIn(ctx),
+		Tags:                     GetTagsIn(ctx),
 	}
 
 	_, err := conn.CreateMonitoringScheduleWithContext(ctx, createOpts)
