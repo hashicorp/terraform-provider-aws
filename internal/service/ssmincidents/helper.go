@@ -27,30 +27,30 @@ func getReplicationSetARN(context context.Context, client *ssmincidents.Client) 
 func setResponsePlanResourceData(
 	d *schema.ResourceData,
 	getResponsePlanOutput *ssmincidents.GetResponsePlanOutput,
-) error {
+) (*schema.ResourceData, error) {
 	if err := d.Set("action", flattenAction(getResponsePlanOutput.Actions)); err != nil {
-		return err
+		return d, err
 	}
 	if err := d.Set("arn", getResponsePlanOutput.Arn); err != nil {
-		return err
+		return d, err
 	}
 	if err := d.Set("chat_channel", flattenChatChannel(getResponsePlanOutput.ChatChannel)); err != nil {
-		return err
+		return d, err
 	}
 	if err := d.Set("display_name", getResponsePlanOutput.DisplayName); err != nil {
-		return err
+		return d, err
 	}
 	if err := d.Set("engagements", flex.FlattenStringValueSet(getResponsePlanOutput.Engagements)); err != nil {
-		return err
+		return d, err
 	}
 	if err := d.Set("incident_template", flattenIncidentTemplate(getResponsePlanOutput.IncidentTemplate)); err != nil {
-		return err
+		return d, err
 	}
 	if err := d.Set("integration", flattenIntegration(getResponsePlanOutput.Integrations)); err != nil {
-		return err
+		return d, err
 	}
 	if err := d.Set("name", getResponsePlanOutput.Name); err != nil {
-		return err
+		return d, err
 	}
-	return nil
+	return d, nil
 }

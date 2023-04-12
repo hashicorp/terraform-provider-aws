@@ -20,7 +20,7 @@ func FindResponsePlanByID(context context.Context, client *ssmincidents.Client, 
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}

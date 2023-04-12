@@ -25,7 +25,6 @@ func testResponsePlanDataSource_basic(t *testing.T) {
 
 	displayName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	chatChannelTopic := "aws_sns_topic.channel_topic"
-	engagementContactArn := "arn:aws:ssm-contacts:us-east-2:111122223333:contact/test1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -44,7 +43,6 @@ func testResponsePlanDataSource_basic(t *testing.T) {
 					snsTopic2,
 					displayName,
 					chatChannelTopic,
-					engagementContactArn,
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(dataSourceName),
@@ -61,7 +59,12 @@ func testResponsePlanDataSource_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "incident_template.0.notification_target.*.sns_topic_arn", snsTopic2, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "display_name", dataSourceName, "display_name"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "chat_channel.0", chatChannelTopic, "arn"),
-					resource.TestCheckResourceAttr(dataSourceName, "engagements.0", engagementContactArn),
+					resource.TestCheckTypeSetElemAttrPair(
+						resourceName,
+						"engagements.0",
+						dataSourceName,
+						"engagements.0",
+					),
 					resource.TestCheckTypeSetElemAttrPair(
 						dataSourceName,
 						"action.0.ssm_automation.0.document_name",
@@ -187,8 +190,9 @@ func testAccResponsePlanDataSourceConfig_basic(
 	topic1,
 	topic2,
 	displayName,
-	chatChannelTopic,
-	engagementContactArn string) string {
+	chatChannelTopic string) string {
+	//lintignore:AWSAT003
+	//lintignore:AWSAT005
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "topic1" {}
 resource "aws_sns_topic" "topic2" {}
@@ -249,7 +253,7 @@ DOC
 }
 
 resource "aws_ssmincidents_response_plan" "test" {
-  name                = %[2]q
+  name = %[2]q
 
   incident_template {
     title         = %[3]q
@@ -273,7 +277,8 @@ resource "aws_ssmincidents_response_plan" "test" {
 
   display_name = %[6]q
   chat_channel = [%[7]s]
-  engagements = [%[8]q]
+
+  engagements = ["arn:aws:ssm-contacts:us-east-2:111122223333:contact/test1"]
 
   action {
     ssm_automation {
@@ -281,26 +286,26 @@ resource "aws_ssmincidents_response_plan" "test" {
       role_arn         = aws_iam_role.role.arn
       document_version = "version1"
       target_account   = "RESPONSE_PLAN_OWNER_ACCOUNT"
-	  parameter {
+      parameter {
         name   = "key"
-	    values = ["value1","value2"]
-	  }
+        values = ["value1", "value2"]
+      }
       dynamic_parameters = {
         anotherKey = "INVOLVED_RESOURCES"
-	  }
+      }
     }
   }
 
-  //  Comment out integration section as the configured PagerDuty secretId is invalid and the test will fail,
-  //  as we do not want to expose credentials to public repository.
-  //  Tested locally and PagerDuty integration work with response plan.
-  //integration {
-  // pagerduty {
-  //   name = "pagerduty-test-terraform"
-  //   service_id = "PNDIQ3N"
-  //   secret_id = "PagerdutyPoshchuSecret"
-  // }
-  //}
+  #  Comment out integration section as the configured PagerDuty secretId is invalid and the test will fail,
+  #  as we do not want to expose credentials to public repository.
+  #  Tested locally and PagerDuty integration work with response plan.
+  #  integration {
+  #    pagerduty {
+  #      name = "pagerduty-test-terraform"
+  #      service_id = "PNDIQ3N"
+  #      secret_id = "PagerdutyPoshchuSecret"
+  #    }
+  #  }
 
   tags = {
     a = "tag1"
@@ -321,5 +326,5 @@ data "aws_ssmincidents_response_plan" "test" {
 		topic2+".arn",
 		displayName,
 		chatChannelTopic+".arn",
-		engagementContactArn)
+	)
 }

@@ -46,35 +46,28 @@ The `incident_template` configuration block exports the following attributes:
     * `4` - Low Impact
     * `5` - No Impact
 * `dedupe_string` - A string used to stop Incident Manager from creating multiple incident records for the same incident.
-* `incident_tags` - The tags assigned to an incident template. When an incident starts, Incident Manager assigns the 
-  tags specified in the template to the incident.
+* `incident_tags` - The tags assigned to an incident template. When an incident starts, Incident Manager assigns the tags specified in the template to the incident.
 * `summary` - The summary of an incident.
-* `notification_target` - The Amazon Simple Notification Service (Amazon SNS) targets that this incident
-  notifies when it is updated. The `notification_target` configuration block supports the following argument:
+* `notification_target` - The Amazon Simple Notification Service (Amazon SNS) targets that this incident notifies when it is updated. The `notification_target` configuration block supports the following argument:
     * `sns_topic_arn` - The ARN of the Amazon SNS topic.
 
 The `action` configuration block exports the following attributes:
 
 * `action` - (Optional) The actions that the response plan starts at the beginning of an incident.
-  * `ssm_automation` - The Systems Manager automation document to start as the runbook at the beginning of the incident. The following values are supported:
-    * `document_name` - The automation document's name.
-    * `role_arn` - The Amazon Resource Name (ARN) of the role that the automation document assumes when it runs 
-      commands.
-    * `document_version` - The version of the automation document to use at runtime.
-    * `target_account` - The account that runs the automation document. This can be in either the 
-      management account or an application account.
-    * `parameter` - The key-value pair parameters used when the automation document runs. The following values are 
-      supported:
-      * `name` - The name of parameter.
-      * `values` - The values for the associated parameter name.
-    * `dynamic_parameters` - The key-value pair used to resolve dynamic parameter values when processing a Systems 
-      Manager Automation runbook.
+    * `ssm_automation` - The Systems Manager automation document to start as the runbook at the beginning of the incident. The following values are supported:
+        * `document_name` - The automation document's name.
+        * `role_arn` - The Amazon Resource Name (ARN) of the role that the automation document assumes when it runs commands.
+        * `document_version` - The version of the automation document to use at runtime.
+        * `target_account` - The account that runs the automation document. This can be in either the management account or an application account.
+        * `parameter` - The key-value pair parameters used when the automation document runs. The following values are supported:
+            * `name` - The name of parameter.
+            * `values` - The values for the associated parameter name.
+        * `dynamic_parameters` - The key-value pair used to resolve dynamic parameter values when processing a Systems Manager Automation runbook.
 
 The `integration` configuration block exports the following attributes:
 
 * `integration` - Information about third-party services integrated into the response plan. The following values are supported:
-  * `pagerduty` - Details about the PagerDuty configuration for a response plan. The following values are supported:
-    * `name` - The name of the PagerDuty configuration.
-    * `service_id` - The ID of the PagerDuty service that the response plan associates with an incident when it launches.
-    * `secret_id` - The ID of the AWS Secrets Manager secret that stores your PagerDuty key &mdash; either a General Access 
-      REST API Key or User Token REST API Key &mdash; and other user credentials.
+    * `pagerduty` - Details about the PagerDuty configuration for a response plan. The following values are supported:
+        * `name` - The name of the PagerDuty configuration.
+        * `service_id` - The ID of the PagerDuty service that the response plan associates with an incident when it launches.
+        * `secret_id` - The ID of the AWS Secrets Manager secret that stores your PagerDuty key &mdash; either a General Access REST API Key or User Token REST API Key &mdash; and other user credentials.

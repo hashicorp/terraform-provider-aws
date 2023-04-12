@@ -45,6 +45,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceResponsePlan,
 			TypeName: "aws_ssmincidents_response_plan",
+			Name:     "Response Plan",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 	}
 }

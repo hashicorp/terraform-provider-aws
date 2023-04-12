@@ -22,13 +22,6 @@ func TestAccSSMIncidentsResponsePlan_serial(t *testing.T) {
 			"chatChannel":            testResponsePlan_chatChannel,
 			"engagement":             testResponsePlan_engagement,
 			"action":                 testResponsePlan_action,
-			/*
-				Comment out integration test as the configured PagerDuty secretId is invalid and the test will fail,
-				as we do not want to expose credentials to public repository.
-
-				Tested locally and PagerDuty integration work with response plan.
-			*/
-			//"integration": testResponsePlan_integration,
 		},
 		"Response Plan Data Source Tests": {
 			"basic": testResponsePlanDataSource_basic,

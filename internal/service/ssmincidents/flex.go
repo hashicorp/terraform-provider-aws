@@ -152,7 +152,7 @@ func flattenNotificationTargets(targets []types.NotificationTargetItem) []map[st
 }
 
 func expandChatChannel(chatChannels *schema.Set) types.ChatChannel {
-	chatChannelList := flex.ExpandStringValueList(chatChannels.List())
+	chatChannelList := flex.ExpandStringValueSet(chatChannels)
 
 	if len(chatChannelList) == 0 {
 		return &types.ChatChannelMemberEmpty{
@@ -287,7 +287,7 @@ func expandParameters(parameters *schema.Set) map[string][]string {
 	for _, parameter := range parameters.List() {
 		parameterData := parameter.(map[string]interface{})
 		name := parameterData["name"].(string)
-		values := flex.ExpandStringValueList(parameterData["values"].(*schema.Set).List())
+		values := flex.ExpandStringValueSet(parameterData["values"].(*schema.Set))
 		parameterMap[name] = values
 	}
 	return parameterMap

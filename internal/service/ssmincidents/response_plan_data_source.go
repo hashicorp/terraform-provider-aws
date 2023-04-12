@@ -169,22 +169,22 @@ const (
 	DSNameResponsePlan = "Response Plan Data Source"
 )
 
-func dataSourceResponsePlanRead(context context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*conns.AWSClient).SSMIncidentsClient()
 
 	d.SetId(d.Get("arn").(string))
 
-	responsePlan, err := FindResponsePlanByID(context, client, d.Id())
+	responsePlan, err := FindResponsePlanByID(ctx, client, d.Id())
 
 	if err != nil {
 		return create.DiagError(names.SSMIncidents, create.ErrActionReading, DSNameResponsePlan, d.Id(), err)
 	}
 
-	if err := setResponsePlanResourceData(d, responsePlan); err != nil {
+	if d, err := setResponsePlanResourceData(d, responsePlan); err != nil {
 		return create.DiagError(names.SSMIncidents, create.ErrActionReading, DSNameResponsePlan, d.Id(), err)
 	}
 
-	tags, err := listResourceTags(context, client, d.Id())
+	tags, err := ListTags(ctx, client, d.Id())
 	if err != nil {
 		return create.DiagError(names.SSMIncidents, create.ErrActionReading, DSNameResponsePlan, d.Id(), err)
 	}
