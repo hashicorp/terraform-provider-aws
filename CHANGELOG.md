@@ -10,6 +10,7 @@ FEATURES:
 * **New Resource:** `aws_pipes_pipe` ([#30538](https://github.com/hashicorp/terraform-provider-aws/issues/30538))
 * **New Resource:** `aws_quicksight_iam_policy_assignment` ([#30653](https://github.com/hashicorp/terraform-provider-aws/issues/30653))
 * **New Resource:** `aws_quicksight_ingestion` ([#30487](https://github.com/hashicorp/terraform-provider-aws/issues/30487))
+* **New Resource:** `aws_sagemaker_data_quality_job_definition` ([#30301](https://github.com/hashicorp/terraform-provider-aws/issues/30301))
 * **New Resource:** `aws_vpclattice_service_network_service_association` ([#30410](https://github.com/hashicorp/terraform-provider-aws/issues/30410))
 * **New Resource:** `aws_vpclattice_service_network_vpc_association` ([#30411](https://github.com/hashicorp/terraform-provider-aws/issues/30411))
 * **New Resource:** `aws_vpclattice_target_group` ([#30455](https://github.com/hashicorp/terraform-provider-aws/issues/30455))
@@ -18,6 +19,8 @@ ENHANCEMENTS:
 
 * data-source/aws_lambda_function_url: Add `invoke_mode` attribute ([#30547](https://github.com/hashicorp/terraform-provider-aws/issues/30547))
 * data-source/aws_nat_gateway: Add `association_id` attribute ([#30546](https://github.com/hashicorp/terraform-provider-aws/issues/30546))
+* data-source/aws_sagemaker_prebuilt_ecr_image: Added sagemaker-model-monitor-analyzer images ([#30301](https://github.com/hashicorp/terraform-provider-aws/issues/30301))
+* resource/aws_acmpca_certificate: Add `api_passthrough` argument ([#28142](https://github.com/hashicorp/terraform-provider-aws/issues/28142))
 * resource/aws_api_gateway_rest_api: Added `fail_on_warnings` attribute ([#22300](https://github.com/hashicorp/terraform-provider-aws/issues/22300))
 * resource/aws_ec2_client_vpn_route: Increase Create and Delete timeouts to 4 minutes ([#30552](https://github.com/hashicorp/terraform-provider-aws/issues/30552))
 * resource/aws_lambda_function_url: Add `invoke_mode` attribute ([#30547](https://github.com/hashicorp/terraform-provider-aws/issues/30547))
