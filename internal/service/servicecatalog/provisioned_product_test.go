@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -310,15 +311,21 @@ func testAccCheckProvisionedProductDestroy(ctx context.Context) resource.TestChe
 				continue
 			}
 
-			err := tfservicecatalog.WaitProvisionedProductTerminated(ctx, conn, tfservicecatalog.AcceptLanguageEnglish, rs.Primary.ID, "", tfservicecatalog.ProvisionedProductDeleteTimeout)
+			input := &servicecatalog.DescribeProvisionedProductInput{
+				Id:             aws.String(rs.Primary.ID),
+				AcceptLanguage: aws.String(rs.Primary.Attributes["accept_language"]),
+			}
+			_, err := conn.DescribeProvisionedProductWithContext(ctx, input)
 
 			if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("error getting Service Catalog Provisioned Product (%s): %w", rs.Primary.ID, err)
+				return err
 			}
+
+			return fmt.Errorf("Service Catalog Provisioned Product (%s) still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -338,7 +345,7 @@ func testAccCheckProvisionedProductExists(ctx context.Context, resourceName stri
 		_, err := tfservicecatalog.WaitProvisionedProductReady(ctx, conn, tfservicecatalog.AcceptLanguageEnglish, rs.Primary.ID, "", tfservicecatalog.ProvisionedProductReadyTimeout)
 
 		if err != nil {
-			return fmt.Errorf("error describing Service Catalog Provisioned Product (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("describing Service Catalog Provisioned Product (%s): %w", rs.Primary.ID, err)
 		}
 
 		return nil
