@@ -157,6 +157,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceMonitoringSchedule,
 			TypeName: "aws_sagemaker_monitoring_schedule",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceNotebookInstance,

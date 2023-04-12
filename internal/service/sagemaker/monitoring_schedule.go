@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -20,6 +21,7 @@ import (
 )
 
 // @SDKResource("aws_sagemaker_monitoring_schedule")
+// @Tags(identifierAttribute="arn")
 func ResourceMonitoringSchedule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMonitoringScheduleCreate,
@@ -80,8 +82,8 @@ func ResourceMonitoringSchedule() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:     tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
@@ -90,8 +92,6 @@ func ResourceMonitoringSchedule() *schema.Resource {
 func resourceMonitoringScheduleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	var name string
 	if v, ok := d.GetOk("name"); ok {
@@ -101,19 +101,16 @@ func resourceMonitoringScheduleCreate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	createOpts := &sagemaker.CreateMonitoringScheduleInput{
-		MonitoringScheduleName:   aws.String(name),
 		MonitoringScheduleConfig: expandMonitoringScheduleConfig(d.Get("monitoring_schedule_config").([]interface{})),
+		MonitoringScheduleName:   aws.String(name),
+		Tags: GetTagsIn(ctx),
 	}
 
-	if len(tags) > 0 {
-		createOpts.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] SageMaker Monitoring Schedule create config: %#v", *createOpts)
 	_, err := conn.CreateMonitoringScheduleWithContext(ctx, createOpts)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SageMaker Monitoring Schedule (%s): %s", name, err)
 	}
+
 	d.SetId(name)
 	if _, err := WaitMonitoringScheduleScheduled(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SageMaker Monitoring Schedule (%s): waiting for completion: %s", d.Id(), err)
@@ -125,8 +122,6 @@ func resourceMonitoringScheduleCreate(ctx context.Context, d *schema.ResourceDat
 func resourceMonitoringScheduleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	monitoringSchedule, err := FindMonitoringScheduleByName(ctx, conn, d.Id())
 
@@ -147,36 +142,12 @@ func resourceMonitoringScheduleRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "setting monitoring_schedule_config for SageMaker Monitoring Schedule (%s): %s", d.Id(), err)
 	}
 
-	tags, err := ListTags(ctx, conn, aws.StringValue(monitoringSchedule.MonitoringScheduleArn))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for SageMaker Monitoring Schedule (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceMonitoringScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Monitoring Schedule (%s) tags: %s", d.Id(), err)
-		}
-	}
 
 	if d.HasChanges("monitoring_schedule_config") {
 		modifyOpts := &sagemaker.UpdateMonitoringScheduleInput{
