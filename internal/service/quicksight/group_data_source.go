@@ -1,28 +1,36 @@
-package aws
+package quicksight
 
 import (
+	"context"
 	"fmt"
-	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func dataSourceAwsQuickSightGroup() *schema.Resource {
+// @SDKDataSource("aws_quicksight_group", name="Group")
+func DataSourceGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsQuickSightGroupRead,
+		ReadWithoutTimeout: dataSourceGroupRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			"aws_account_id": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
-			"group_id": {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -32,36 +40,52 @@ func dataSourceAwsQuickSightGroup() *schema.Resource {
 			},
 			"namespace": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Default:  DefaultGroupNamespace,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 63),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._-]*$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
+				),
 			},
-			"aws_account_id": {
+			"principal_id": {
 				Type:     schema.TypeString,
-				Required: true,
+				Computed: true,
 			},
 		},
 	}
 }
 
-func dataSourceAwsQuickSightGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).quicksightconn
+func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).QuickSightConn()
+
+	awsAccountID := meta.(*conns.AWSClient).AccountID
+	if v, ok := d.GetOk("aws_account_id"); ok {
+		awsAccountID = v.(string)
+	}
 	groupName := d.Get("group_name").(string)
-	req := &quicksight.DescribeGroupInput{
+	namespace := d.Get("namespace").(string)
+	in := &quicksight.DescribeGroupInput{
 		GroupName:    aws.String(groupName),
-		AwsAccountId: aws.String(d.Get("aws_account_id").(string)),
-		Namespace:    aws.String(d.Get("namespace").(string)),
+		AwsAccountId: aws.String(awsAccountID),
+		Namespace:    aws.String(namespace),
 	}
 
-	log.Printf("[DEBUG] Reading quicksight group: %s", req)
-	resp, err := conn.DescribeGroup(req)
+	out, err := conn.DescribeGroupWithContext(ctx, in)
 	if err != nil {
-		return fmt.Errorf("error getting group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading QuickSight Group (%s): %s", groupName, err)
+	}
+	if out == nil || out.Group == nil {
+		return sdkdiag.AppendErrorf(diags, "reading QuickSight Group (%s): %s", groupName, tfresource.NewEmptyResultError(in))
 	}
 
-	group := resp.Group
-	d.SetId(aws.StringValue(group.PrincipalId))
+	group := out.Group
+	d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountID, namespace, aws.StringValue(group.GroupName)))
 	d.Set("arn", group.Arn)
+	d.Set("aws_account_id", awsAccountID)
 	d.Set("description", group.Description)
-	d.Set("group_id", group.PrincipalId)
+	d.Set("group_name", group.GroupName)
+	d.Set("principal_id", group.PrincipalId)
 
-	return nil
+	return diags
 }

@@ -3,7 +3,7 @@ subcategory: "QuickSight"
 layout: "aws"
 page_title: "AWS: aws_quicksight_group"
 description: |-
-  Get information on a Amazon QuickSight group
+  Use this data source to fetch information about a QuickSight Group.
 ---
 
 # Data Source: aws_quicksight_group
@@ -14,22 +14,27 @@ properties without having to hard code ARNs or unique IDs as input.
 
 ## Example Usage
 
-```hcl
+### Basic Usage
+
+```terraform
 data "aws_quicksight_group" "example" {
-  group_name 	 = "an_example_group_name"
-  aws_account_id = "aws_account_id"
-  namespace		 = "namespace"
+  group_name = "example"
 }
 ```
 
 ## Argument Reference
 
+The following arguments are required:
+
 * `group_name` - (Required) The name of the group that you want to match.
-* `aws_account_id` - (Required) The ID for the AWS account that the group is in. Currently, you use the ID for the AWS account that contains your Amazon QuickSight account.
-* `namespace` - (Required) The namespace. Currently, you should set this to default.
+
+The following arguments are optional:
+
+* `aws_account_id` - (Optional) AWS account ID.
+* `namespace` - (Optional) QuickSight namespace. Defaults to `default`.
 
 ## Attributes Reference
 
 * `arn` - The Amazon Resource Name (ARN) for the group.
 * `description` - The group description.
-* `group_id` - The principal ID of the group.
+* `principal_id` - The principal ID of the group.
