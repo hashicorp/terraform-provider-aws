@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func testAccOrganizationalPoliciesDataSource_basic(t *testing.T) {
+func TestAccOrganizationalPoliciesDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	organizationPolicyDataSourceName := "data.aws_organizations_organizational_policies.test"
 
