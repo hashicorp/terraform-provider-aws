@@ -10,7 +10,7 @@ import (
 
 func TestAccOrganizationalPoliciesDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	organizationPolicyDataSourceName := "data.aws_organizations_organizational_policies.test"
+	dataSourceName := "data.aws_organizations_organizational_policies.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -23,7 +23,7 @@ func TestAccOrganizationalPoliciesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccOrganizationalPoliciesDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(organizationPolicyDataSourceName, "policies.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "policies.#", "0"),
 				),
 			},
 		},
