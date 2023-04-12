@@ -30,13 +30,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource(name="IAM Policy Assignment")
 func newResourceIAMPolicyAssignment(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceIAMPolicyAssignment{}, nil
 }
 
 const (
-	ResNameIAMPolicyAssignment = "IAMPolicyAssignment"
+	ResNameIAMPolicyAssignment = "IAM Policy Assignment"
 
 	DefaultIAMPolicyAssignmentNamespace = "default"
 	iamPropagationTimeout               = 2 * time.Minute
