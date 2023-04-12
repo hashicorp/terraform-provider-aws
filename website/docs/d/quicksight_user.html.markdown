@@ -3,7 +3,7 @@ subcategory: "QuickSight"
 layout: "aws"
 page_title: "AWS: aws_quicksight_user"
 description: |-
-  Get information on a Amazon QuickSight user
+  Use this data source to fetch information about a QuickSight User.
 ---
 
 # Data Source: aws_quicksight_user
@@ -14,7 +14,9 @@ properties without having to hard code ARNs or unique IDs as input.
 
 ## Example Usage
 
-```hcl
+### Basic Usage
+
+```terraform
 data "aws_quicksight_user" "example" {
   user_name = "example"
 }
