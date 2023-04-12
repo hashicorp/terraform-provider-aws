@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -347,15 +347,15 @@ func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	log.Printf("[DEBUG] Deleting RDS DB Parameter Group: %s", d.Id())
-	err := resource.RetryContext(ctx, 3*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 3*time.Minute, func() *retry.RetryError {
 		_, err := conn.DeleteDBParameterGroup(ctx, input)
 		if errs.IsA[*types.DBParameterGroupNotFoundFault](err) {
 			return nil
 		} else if errs.IsA[*types.InvalidDBParameterGroupStateFault](err) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -376,7 +376,7 @@ func FindDBParameterGroupByName(ctx context.Context, conn *rds.RDS, name string)
 	output, err := conn.DescribeDBParameterGroupsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBParameterGroupNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -398,7 +398,7 @@ func FindDBParameterGroupByName(ctx context.Context, conn *rds.RDS, name string)
 
 	// Eventual consistency check.
 	if aws.StringValue(dbParameterGroup.DBParameterGroupName) != name {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}

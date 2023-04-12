@@ -5,11 +5,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusChangeInfo(ctx context.Context, conn *route53.Route53, changeID string) resource.StateRefreshFunc {
+func statusChangeInfo(ctx context.Context, conn *route53.Route53, changeID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &route53.GetChangeInput{
 			Id: aws.String(changeID),
@@ -29,7 +29,7 @@ func statusChangeInfo(ctx context.Context, conn *route53.Route53, changeID strin
 	}
 }
 
-func statusHostedZoneDNSSEC(ctx context.Context, conn *route53.Route53, hostedZoneID string) resource.StateRefreshFunc {
+func statusHostedZoneDNSSEC(ctx context.Context, conn *route53.Route53, hostedZoneID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		hostedZoneDnssec, err := FindHostedZoneDNSSEC(ctx, conn, hostedZoneID)
 
@@ -45,7 +45,7 @@ func statusHostedZoneDNSSEC(ctx context.Context, conn *route53.Route53, hostedZo
 	}
 }
 
-func statusKeySigningKey(ctx context.Context, conn *route53.Route53, hostedZoneID string, name string) resource.StateRefreshFunc {
+func statusKeySigningKey(ctx context.Context, conn *route53.Route53, hostedZoneID string, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		keySigningKey, err := FindKeySigningKey(ctx, conn, hostedZoneID, name)
 
@@ -61,7 +61,7 @@ func statusKeySigningKey(ctx context.Context, conn *route53.Route53, hostedZoneI
 	}
 }
 
-func statusTrafficPolicyInstanceState(ctx context.Context, conn *route53.Route53, id string) resource.StateRefreshFunc {
+func statusTrafficPolicyInstanceState(ctx context.Context, conn *route53.Route53, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindTrafficPolicyInstanceByID(ctx, conn, id)
 

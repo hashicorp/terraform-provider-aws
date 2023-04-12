@@ -26,7 +26,7 @@ func TestAccTransitGateway_serial(t *testing.T) {
 		"Connect": {
 			"basic":      testAccTransitGatewayConnect_basic,
 			"disappears": testAccTransitGatewayConnect_disappears,
-			"Tags":       testAccTransitGatewayConnect_tags,
+			"tags":       testAccTransitGatewayConnect_tags,
 			"TransitGatewayDefaultRouteTableAssociation":                       testAccTransitGatewayConnect_TransitGatewayDefaultRouteTableAssociation,
 			"TransitGatewayDefaultRouteTableAssociationAndPropagationDisabled": testAccTransitGatewayConnect_TransitGatewayDefaultRouteTableAssociationAndPropagationDisabled,
 			"TransitGatewayDefaultRouteTablePropagation":                       testAccTransitGatewayConnect_TransitGatewayDefaultRouteTablePropagation,
@@ -34,14 +34,15 @@ func TestAccTransitGateway_serial(t *testing.T) {
 		"ConnectPeer": {
 			"basic":                 testAccTransitGatewayConnectPeer_basic,
 			"disappears":            testAccTransitGatewayConnectPeer_disappears,
+			"tags":                  testAccTransitGatewayConnectPeer_tags,
 			"BgpAsn":                testAccTransitGatewayConnectPeer_bgpASN,
 			"InsideCidrBlocks":      testAccTransitGatewayConnectPeer_insideCIDRBlocks,
-			"Tags":                  testAccTransitGatewayConnectPeer_tags,
 			"TransitGatewayAddress": testAccTransitGatewayConnectPeer_TransitGatewayAddress,
 		},
 		"Gateway": {
 			"basic":                       testAccTransitGateway_basic,
 			"disappears":                  testAccTransitGateway_disappears,
+			"tags":                        testAccTransitGateway_tags,
 			"AmazonSideASN":               testAccTransitGateway_AmazonSideASN,
 			"AutoAcceptSharedAttachments": testAccTransitGateway_AutoAcceptSharedAttachments,
 			"CidrBlocks":                  testAccTransitGateway_cidrBlocks,
@@ -50,7 +51,6 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			"DefaultRouteTablePropagation":                       testAccTransitGateway_DefaultRouteTablePropagation,
 			"Description":                                        testAccTransitGateway_Description,
 			"DnsSupport":                                         testAccTransitGateway_DNSSupport,
-			"Tags":                                               testAccTransitGateway_Tags,
 			"VpnEcmpSupport":                                     testAccTransitGateway_VPNECMPSupport,
 		},
 		"MulticastDomain": {
@@ -79,19 +79,19 @@ func TestAccTransitGateway_serial(t *testing.T) {
 		"PeeringAttachment": {
 			"basic":            testAccTransitGatewayPeeringAttachment_basic,
 			"disappears":       testAccTransitGatewayPeeringAttachment_disappears,
+			"tags":             testAccTransitGatewayPeeringAttachment_tags,
 			"DifferentAccount": testAccTransitGatewayPeeringAttachment_differentAccount,
-			"Tags":             testAccTransitGatewayPeeringAttachment_Tags,
 		},
 		"PeeringAttachmentAccepter": {
 			"basic":            testAccTransitGatewayPeeringAttachmentAccepter_basic,
+			"tags":             testAccTransitGatewayPeeringAttachmentAccepter_tags,
 			"DifferentAccount": testAccTransitGatewayPeeringAttachmentAccepter_differentAccount,
-			"Tags":             testAccTransitGatewayPeeringAttachmentAccepter_Tags,
 		},
 		"PolicyTable": {
 			"basic":                    testAccTransitGatewayPolicyTable_basic,
 			"disappears":               testAccTransitGatewayPolicyTable_disappears,
 			"disappearsTransitGateway": testAccTransitGatewayPolicyTable_disappears_TransitGateway,
-			"Tags":                     testAccTransitGatewayPolicyTable_Tags,
+			"tags":                     testAccTransitGatewayPolicyTable_tags,
 		},
 		"PolicyTableAssociation": {
 			"basic":      testAccTransitGatewayPolicyTableAssociation_basic,
@@ -114,7 +114,7 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			"basic":                    testAccTransitGatewayRouteTable_basic,
 			"disappears":               testAccTransitGatewayRouteTable_disappears,
 			"disappearsTransitGateway": testAccTransitGatewayRouteTable_disappears_TransitGateway,
-			"Tags":                     testAccTransitGatewayRouteTable_Tags,
+			"tags":                     testAccTransitGatewayRouteTable_tags,
 		},
 		"RouteTableAssociation": {
 			"basic":      testAccTransitGatewayRouteTableAssociation_basic,
@@ -127,19 +127,19 @@ func TestAccTransitGateway_serial(t *testing.T) {
 		"VpcAttachment": {
 			"basic":                testAccTransitGatewayVPCAttachment_basic,
 			"disappears":           testAccTransitGatewayVPCAttachment_disappears,
+			"tags":                 testAccTransitGatewayVPCAttachment_tags,
 			"ApplianceModeSupport": testAccTransitGatewayVPCAttachment_ApplianceModeSupport,
 			"DnsSupport":           testAccTransitGatewayVPCAttachment_DNSSupport,
 			"Ipv6Support":          testAccTransitGatewayVPCAttachment_IPv6Support,
 			"SharedTransitGateway": testAccTransitGatewayVPCAttachment_SharedTransitGateway,
 			"SubnetIds":            testAccTransitGatewayVPCAttachment_SubnetIDs,
-			"Tags":                 testAccTransitGatewayVPCAttachment_Tags,
 			"TransitGatewayDefaultRouteTableAssociation":                       testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTableAssociation,
 			"TransitGatewayDefaultRouteTableAssociationAndPropagationDisabled": testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTableAssociationAndPropagationDisabled,
 			"TransitGatewayDefaultRouteTablePropagation":                       testAccTransitGatewayVPCAttachment_TransitGatewayDefaultRouteTablePropagation,
 		},
 		"VpcAttachmentAccepter": {
 			"basic": testAccTransitGatewayVPCAttachmentAccepter_basic,
-			"Tags":  testAccTransitGatewayVPCAttachmentAccepter_Tags,
+			"tags":  testAccTransitGatewayVPCAttachmentAccepter_tags,
 			"TransitGatewayDefaultRouteTableAssociationAndPropagation": testAccTransitGatewayVPCAttachmentAccepter_TransitGatewayDefaultRouteTableAssociationAndPropagation,
 		},
 	}
@@ -555,7 +555,7 @@ func testAccTransitGateway_Description(t *testing.T) {
 	})
 }
 
-func testAccTransitGateway_Tags(t *testing.T) {
+func testAccTransitGateway_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var transitGateway1, transitGateway2, transitGateway3 ec2.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"

@@ -12,6 +12,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // GetTag fetches an individual route53domains service tag for a resource.
@@ -124,7 +125,7 @@ func UpdateTags(ctx context.Context, conn *route53domains.Client, identifier str
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &route53domains.DeleteTagsForDomainInput{
 			DomainName:   aws.String(identifier),
-			TagsToDelete: removedTags.IgnoreAWS().Keys(),
+			TagsToDelete: removedTags.IgnoreSystem(names.Route53Domains).Keys(),
 		}
 
 		_, err := conn.DeleteTagsForDomain(ctx, input)
@@ -137,7 +138,7 @@ func UpdateTags(ctx context.Context, conn *route53domains.Client, identifier str
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &route53domains.UpdateTagsForDomainInput{
 			DomainName:   aws.String(identifier),
-			TagsToUpdate: Tags(updatedTags.IgnoreAWS()),
+			TagsToUpdate: Tags(updatedTags.IgnoreSystem(names.Route53Domains)),
 		}
 
 		_, err := conn.UpdateTagsForDomain(ctx, input)

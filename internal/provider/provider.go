@@ -261,6 +261,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 		servicePackageMap[servicePackageName] = sp
 
 		for _, v := range sp.SDKDataSources(ctx) {
+			v := v
 			typeName := v.TypeName
 
 			if _, ok := provider.DataSourcesMap[typeName]; ok {
@@ -299,6 +300,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 		}
 
 		for _, v := range sp.SDKResources(ctx) {
+			v := v
 			typeName := v.TypeName
 
 			if _, ok := provider.ResourcesMap[typeName]; ok {

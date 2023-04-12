@@ -28,10 +28,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceKeyspace,
 			TypeName: "aws_keyspaces_keyspace",
+			Name:     "Keyspace",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceTable,
 			TypeName: "aws_keyspaces_table",
+			Name:     "Table",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }

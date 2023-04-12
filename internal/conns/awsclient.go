@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
@@ -39,7 +40,28 @@ func (client *AWSClient) HTTPClient() *http.Client {
 	return client.httpClient
 }
 
-// CloudFrontDistributionHostedZoneIDForPartition returns for the Route 53 hosted zone ID
+// APIGatewayInvokeURL returns the Amazon API Gateway (REST APIs) invoke URL for the configured AWS Region.
+// See https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-call-api.html.
+func (client *AWSClient) APIGatewayInvokeURL(restAPIID, stageName string) string {
+	return fmt.Sprintf("https://%s/%s", client.RegionalHostname(fmt.Sprintf("%s.execute-api", restAPIID)), stageName)
+}
+
+// APIGatewayV2InvokeURL returns the Amazon API Gateway v2 (WebSocket & HTTP APIs) invoke URL for the configured AWS Region.
+// See https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-publish.html and
+// https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-set-up-websocket-deployment.html.
+func (client *AWSClient) APIGatewayV2InvokeURL(protocolType, apiID, stageName string) string {
+	if protocolType == apigatewayv2.ProtocolTypeWebsocket {
+		return fmt.Sprintf("wss://%s/%s", client.RegionalHostname(fmt.Sprintf("%s.execute-api", apiID)), stageName)
+	}
+
+	if stageName == "$default" {
+		return fmt.Sprintf("https://%s/", client.RegionalHostname(fmt.Sprintf("%s.execute-api", apiID)))
+	}
+
+	return fmt.Sprintf("https://%s/%s", client.RegionalHostname(fmt.Sprintf("%s.execute-api", apiID)), stageName)
+}
+
+// CloudFrontDistributionHostedZoneID returns the Route 53 hosted zone ID
 // for Amazon CloudFront distributions in the configured AWS partition.
 func (client *AWSClient) CloudFrontDistributionHostedZoneID() string {
 	if client.Partition == endpoints.AwsCnPartitionID {
@@ -67,4 +89,10 @@ func (client *AWSClient) DefaultKMSKeyPolicy() string {
 	]
 }	
 `, client.Partition, client.AccountID)
+}
+
+// GlobalAcceleratorHostedZoneID returns the Route 53 hosted zone ID
+// for AWS Global Accelerator accelerators in the configured AWS partition.
+func (client *AWSClient) GlobalAcceleratorHostedZoneID() string {
+	return "Z2BJ6XQ5FK7U4H" // See https://docs.aws.amazon.com/general/latest/gr/global_accelerator.html#global_accelerator_region
 }

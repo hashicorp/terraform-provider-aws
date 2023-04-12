@@ -160,39 +160,42 @@ func resourceLFTagUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	toAdd := ns.Difference(os)
 	toDelete := os.Difference(ns)
 
+	var toAddChunks, toDeleteChunks [][]interface{}
 	if len(toAdd.List()) > 0 {
-		toAddChunks := splitLFTagValues(toAdd.List(), lfTagsValuesMaxBatchSize)
-
-		input := &lakeformation.UpdateLFTagInput{
-			CatalogId: aws.String(catalogID),
-			TagKey:    aws.String(tagKey),
-		}
-
-		for _, v := range toAddChunks {
-			input.TagValuesToAdd = flex.ExpandStringList(v)
-
-			_, err = conn.UpdateLFTagWithContext(ctx, input)
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating Lake Formation LF-Tag (%s): %s", d.Id(), err)
-			}
-		}
+		toAddChunks = splitLFTagValues(toAdd.List(), lfTagsValuesMaxBatchSize)
 	}
 
 	if len(toDelete.List()) > 0 {
-		toDeleteChunks := splitLFTagValues(toDelete.List(), lfTagsValuesMaxBatchSize)
+		toDeleteChunks = splitLFTagValues(toDelete.List(), lfTagsValuesMaxBatchSize)
+	}
+
+	for {
+		if len(toAddChunks) == 0 && len(toDeleteChunks) == 0 {
+			break
+		}
 
 		input := &lakeformation.UpdateLFTagInput{
 			CatalogId: aws.String(catalogID),
 			TagKey:    aws.String(tagKey),
 		}
 
-		for _, v := range toDeleteChunks {
-			input.TagValuesToDelete = flex.ExpandStringList(v)
+		toAddEnd, toDeleteEnd := len(toAddChunks), len(toDeleteChunks)
+		var indexAdd, indexDelete int
+		if indexAdd < toAddEnd {
+			input.TagValuesToAdd = flex.ExpandStringList(toAddChunks[indexAdd])
+			indexAdd++
+		}
+		if indexDelete < toDeleteEnd {
+			input.TagValuesToDelete = flex.ExpandStringList(toDeleteChunks[indexDelete])
+			indexDelete++
+		}
 
-			_, err = conn.UpdateLFTagWithContext(ctx, input)
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating Lake Formation LF-Tag (%s): %s", d.Id(), err)
-			}
+		toAddChunks = toAddChunks[indexAdd:]
+		toDeleteChunks = toDeleteChunks[indexDelete:]
+
+		_, err = conn.UpdateLFTagWithContext(ctx, input)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Lake Formation LF-Tag (%s): %s", d.Id(), err)
 		}
 	}
 

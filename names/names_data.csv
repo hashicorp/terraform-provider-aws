@@ -39,6 +39,7 @@ ce,ce,costexplorer,costexplorer,,ce,,costexplorer,CE,CostExplorer,,1,,,aws_ce_,,
 ,,,,,,,,,,,,,,,,,Chatbot,AWS,x,,,,No SDK support
 chime,chime,chime,chime,,chime,,,Chime,Chime,,1,,,aws_chime_,,chime_,Chime,Amazon,,,,,
 chime-sdk-identity,chimesdkidentity,chimesdkidentity,chimesdkidentity,,chimesdkidentity,,,ChimeSDKIdentity,ChimeSDKIdentity,,1,,,aws_chimesdkidentity_,,chimesdkidentity_,Chime SDK Identity,Amazon,,,,,
+chime-sdk-mediapipelines,chimesdkmediapipelines,chimesdkmediapipelines,chimesdkmediapipelines,,chimesdkmediapipelines,,,ChimeSDKMediaPipelines,ChimeSDKMediaPipelines,,1,,,aws_chimesdkmediapipelines_,,chimesdkmediapipelines_,Chime SDK Media Pipelines,Amazon,,,,,
 chime-sdk-meetings,chimesdkmeetings,chimesdkmeetings,chimesdkmeetings,,chimesdkmeetings,,,ChimeSDKMeetings,ChimeSDKMeetings,,1,,,aws_chimesdkmeetings_,,chimesdkmeetings_,Chime SDK Meetings,Amazon,,,,,
 chime-sdk-messaging,chimesdkmessaging,chimesdkmessaging,chimesdkmessaging,,chimesdkmessaging,,,ChimeSDKMessaging,ChimeSDKMessaging,,1,,,aws_chimesdkmessaging_,,chimesdkmessaging_,Chime SDK Messaging,Amazon,,,,,
 ,,,,,,,,,,,,,,,,,CLI (Command Line Interface),AWS,x,,,,No SDK support
@@ -111,7 +112,7 @@ dlm,dlm,dlm,dlm,,dlm,,,DLM,DLM,,1,,,aws_dlm_,,dlm_,DLM (Data Lifecycle Manager),
 dms,dms,databasemigrationservice,databasemigrationservice,,dms,,databasemigration;databasemigrationservice,DMS,DatabaseMigrationService,,1,,,aws_dms_,,dms_,DMS (Database Migration),AWS,,,,,
 docdb,docdb,docdb,docdb,,docdb,,,DocDB,DocDB,,1,,,aws_docdb_,,docdb_,DocDB (DocumentDB),Amazon,,,,,
 drs,drs,drs,drs,,drs,,,DRS,Drs,,1,,,aws_drs_,,drs_,DRS (Elastic Disaster Recovery),AWS,,,,,
-ds,ds,directoryservice,directoryservice,,ds,,directoryservice,DS,DirectoryService,,1,,aws_directory_service_,aws_ds_,,directory_service_,DS (Directory Service),AWS,,,,,
+ds,ds,directoryservice,directoryservice,,ds,,directoryservice,DS,DirectoryService,,1,,aws_directory_service_,aws_ds_,,directory_service_,Directory Service,AWS,,,,,
 dynamodb,dynamodb,dynamodb,dynamodb,,dynamodb,,,DynamoDB,DynamoDB,,1,,,aws_dynamodb_,,dynamodb_,DynamoDB,Amazon,,,AWS_DYNAMODB_ENDPOINT,TF_AWS_DYNAMODB_ENDPOINT,
 dax,dax,dax,dax,,dax,,,DAX,DAX,,1,,,aws_dax_,,dax_,DynamoDB Accelerator (DAX),Amazon,,,,,
 dynamodbstreams,dynamodbstreams,dynamodbstreams,dynamodbstreams,,dynamodbstreams,,,DynamoDBStreams,DynamoDBStreams,,1,,,aws_dynamodbstreams_,,dynamodbstreams_,DynamoDB Streams,Amazon,,,,,
@@ -313,6 +314,7 @@ sdb,sdb,simpledb,,simpledb,sdb,,sdb,SimpleDB,SimpleDB,,1,,aws_simpledb_,aws_sdb_
 scheduler,scheduler,scheduler,scheduler,,scheduler,,,Scheduler,Scheduler,,,2,,aws_scheduler_,,scheduler_,EventBridge Scheduler,Amazon,,,,,
 secretsmanager,secretsmanager,secretsmanager,secretsmanager,,secretsmanager,,,SecretsManager,SecretsManager,,1,,,aws_secretsmanager_,,secretsmanager_,Secrets Manager,AWS,,,,,
 securityhub,securityhub,securityhub,securityhub,,securityhub,,,SecurityHub,SecurityHub,,1,,,aws_securityhub_,,securityhub_,Security Hub,AWS,,,,,
+securitylake,securitylake,securitylake,securitylake,,securitylake,,,SecurityLake,SecurityLake,,,2,,aws_securitylake_,,securitylake_,Security Lake,Amazon,,,,,
 serverlessrepo,serverlessrepo,serverlessapplicationrepository,serverlessapplicationrepository,,serverlessrepo,,serverlessapprepo;serverlessapplicationrepository,ServerlessRepo,ServerlessApplicationRepository,,1,,aws_serverlessapplicationrepository_,aws_serverlessrepo_,,serverlessapplicationrepository_,Serverless Application Repository,AWS,,,,,
 servicecatalog,servicecatalog,servicecatalog,servicecatalog,,servicecatalog,,,ServiceCatalog,ServiceCatalog,,1,,,aws_servicecatalog_,,servicecatalog_,Service Catalog,AWS,,,,,
 servicecatalog-appregistry,servicecatalogappregistry,appregistry,servicecatalogappregistry,,servicecatalogappregistry,,appregistry,ServiceCatalogAppRegistry,AppRegistry,,1,,,aws_servicecatalogappregistry_,,servicecatalogappregistry_,Service Catalog AppRegistry,AWS,,,,,
@@ -353,6 +355,7 @@ translate,translate,translate,translate,,translate,,,Translate,Translate,,1,,,aw
 ,,,,,,,,,,,,,,,,,Trusted Advisor,AWS,x,,,,Part of Support
 ,,,,,verifiedaccess,ec2,,VerifiedAccess,,,,,aws_verifiedaccess,aws_verifiedaccess_,verifiedaccess_,verifiedaccess,Verified Access,AWS,x,x,,,Part of EC2
 ,,,,,vpc,ec2,,VPC,,,,,aws_((default_)?(network_acl|route_table|security_group|subnet|vpc(?!_ipam))|ec2_(managed|network|subnet|traffic)|egress_only_internet|flow_log|internet_gateway|main_route_table_association|nat_gateway|network_interface|prefix_list|route\b),aws_vpc_,vpc_,default_network_;default_route_;default_security_;default_subnet;default_vpc;ec2_managed_;ec2_network_;ec2_subnet_;ec2_traffic_;egress_only_;flow_log;internet_gateway;main_route_;nat_;network_;prefix_list;route_;route\.;security_group;subnet;vpc_dhcp_;vpc_endpoint;vpc_ipv;vpc_network_performance;vpc_peering_;vpc_security_group_;vpc\.;vpcs\.,VPC (Virtual Private Cloud),Amazon,x,x,,,Part of EC2
+vpc-lattice,vpclattice,vpclattice,vpclattice,,vpclattice,,,VPCLattice,VPCLattice,,,2,,aws_vpclattice_,,vpclattice_,VPC Lattice,Amazon,,,,,
 ,,,,,ipam,ec2,,IPAM,,,,,aws_vpc_ipam,aws_ipam_,ipam_,vpc_ipam,VPC IPAM (IP Address Manager),Amazon,x,x,,,Part of EC2
 ,,,,,vpnclient,ec2,,ClientVPN,,,,,aws_ec2_client_vpn,aws_vpnclient_,vpnclient_,ec2_client_vpn_,VPN (Client),AWS,x,x,,,Part of EC2
 ,,,,,vpnsite,ec2,,SiteVPN,,,,,aws_(customer_gateway|vpn_),aws_vpnsite_,vpnsite_,customer_gateway;vpn_,VPN (Site-to-Site),AWS,x,x,,,Part of EC2

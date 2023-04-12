@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -309,7 +309,7 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 
 	var lastOutput, output *s3.GetBucketLifecycleConfigurationOutput
 
-	err = resource.RetryContext(ctx, lifecycleConfigurationRulesSteadyTimeout, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, lifecycleConfigurationRulesSteadyTimeout, func() *retry.RetryError {
 		var err error
 
 		time.Sleep(lifecycleConfigurationExtraRetryDelay)
@@ -317,16 +317,16 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 		output, err = conn.GetBucketLifecycleConfigurationWithContext(ctx, input)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeNoSuchLifecycleConfiguration, s3.ErrCodeNoSuchBucket) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if lastOutput == nil || !reflect.DeepEqual(*lastOutput, *output) {
 			lastOutput = output
-			return resource.RetryableError(fmt.Errorf("bucket lifecycle configuration has not stablized; trying again"))
+			return retry.RetryableError(fmt.Errorf("bucket lifecycle configuration has not stablized; trying again"))
 		}
 
 		return nil

@@ -102,7 +102,7 @@ func testAccTransitGatewayRouteTable_disappears_TransitGateway(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayRouteTable_Tags(t *testing.T) {
+func testAccTransitGatewayRouteTable_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var transitGatewayRouteTable1, transitGatewayRouteTable2, transitGatewayRouteTable3 ec2.TransitGatewayRouteTable
 	resourceName := "aws_ec2_transit_gateway_route_table.test"

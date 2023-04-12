@@ -26,11 +26,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
+	"github.com/aws/aws-sdk-go-v2/service/securitylake"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
+	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
@@ -69,6 +71,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/aws/aws-sdk-go/service/chime"
 	"github.com/aws/aws-sdk-go/service/chimesdkidentity"
+	"github.com/aws/aws-sdk-go/service/chimesdkmediapipelines"
 	"github.com/aws/aws-sdk-go/service/chimesdkmeetings"
 	"github.com/aws/aws-sdk-go/service/chimesdkmessaging"
 	"github.com/aws/aws-sdk-go/service/cloud9"
@@ -353,6 +356,7 @@ func (c *Config) sdkv1Conns(client *AWSClient, sess *session.Session) {
 	client.curConn = costandusagereportservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CUR])}))
 	client.chimeConn = chime.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Chime])}))
 	client.chimesdkidentityConn = chimesdkidentity.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ChimeSDKIdentity])}))
+	client.chimesdkmediapipelinesConn = chimesdkmediapipelines.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ChimeSDKMediaPipelines])}))
 	client.chimesdkmeetingsConn = chimesdkmeetings.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ChimeSDKMeetings])}))
 	client.chimesdkmessagingConn = chimesdkmessaging.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ChimeSDKMessaging])}))
 	client.cloud9Conn = cloud9.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Cloud9])}))
@@ -705,9 +709,19 @@ func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
 			o.EndpointResolver = scheduler.EndpointResolverFromURL(endpoint)
 		}
 	})
+	client.securitylakeClient = securitylake.NewFromConfig(cfg, func(o *securitylake.Options) {
+		if endpoint := c.Endpoints[names.SecurityLake]; endpoint != "" {
+			o.EndpointResolver = securitylake.EndpointResolverFromURL(endpoint)
+		}
+	})
 	client.transcribeClient = transcribe.NewFromConfig(cfg, func(o *transcribe.Options) {
 		if endpoint := c.Endpoints[names.Transcribe]; endpoint != "" {
 			o.EndpointResolver = transcribe.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.vpclatticeClient = vpclattice.NewFromConfig(cfg, func(o *vpclattice.Options) {
+		if endpoint := c.Endpoints[names.VPCLattice]; endpoint != "" {
+			o.EndpointResolver = vpclattice.EndpointResolverFromURL(endpoint)
 		}
 	})
 }

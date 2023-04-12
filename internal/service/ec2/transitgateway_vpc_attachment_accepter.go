@@ -14,9 +14,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ec2_transit_gateway_vpc_attachment_accepter")
+// @SDKResource("aws_ec2_transit_gateway_vpc_attachment_accepter", name="Transit Gateway VPC Attachment")
+// @Tags(identifierAttribute="id")
 func ResourceTransitGatewayVPCAttachmentAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayVPCAttachmentAccepterCreate,
@@ -48,8 +50,8 @@ func ResourceTransitGatewayVPCAttachmentAccepter() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"transit_gateway_attachment_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -84,8 +86,6 @@ func ResourceTransitGatewayVPCAttachmentAccepter() *schema.Resource {
 func resourceTransitGatewayVPCAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	transitGatewayAttachmentID := d.Get("transit_gateway_attachment_id").(string)
 	input := &ec2.AcceptTransitGatewayVpcAttachmentInput{
@@ -106,7 +106,7 @@ func resourceTransitGatewayVPCAttachmentAccepterCreate(ctx context.Context, d *s
 		return sdkdiag.AppendErrorf(diags, "accepting EC2 Transit Gateway VPC Attachment (%s): waiting for completion: %s", transitGatewayAttachmentID, err)
 	}
 
-	if len(tags) > 0 {
+	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
 		if err := CreateTags(ctx, conn, d.Id(), tags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "accepting EC2 Transit Gateway VPC Attachment (%s): setting tags: %s", transitGatewayAttachmentID, err)
 		}
@@ -132,8 +132,6 @@ func resourceTransitGatewayVPCAttachmentAccepterCreate(ctx context.Context, d *s
 func resourceTransitGatewayVPCAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	transitGatewayVPCAttachment, err := FindTransitGatewayVPCAttachmentByID(ctx, conn, d.Id())
 
@@ -192,16 +190,7 @@ func resourceTransitGatewayVPCAttachmentAccepterRead(ctx context.Context, d *sch
 	d.Set("vpc_id", transitGatewayVPCAttachment.VpcId)
 	d.Set("vpc_owner_id", transitGatewayVPCAttachment.VpcOwnerId)
 
-	tags := KeyValueTags(ctx, transitGatewayVPCAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, transitGatewayVPCAttachment.Tags)
 
 	return diags
 }
@@ -228,14 +217,6 @@ func resourceTransitGatewayVPCAttachmentAccepterUpdate(ctx context.Context, d *s
 			if err := transitGatewayRouteTablePropagationUpdate(ctx, conn, aws.StringValue(transitGateway.Options.PropagationDefaultRouteTableId), d.Id(), d.Get("transit_gateway_default_route_table_propagation").(bool)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EC2 Transit Gateway VPC Attachment (%s): %s", d.Id(), err)
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 Transit Gateway VPC Attachment (%s) tags: %s", d.Id(), err)
 		}
 	}
 
