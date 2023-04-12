@@ -222,7 +222,7 @@ func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
-	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+	if _, ok := d.GetOk("skip_destroy"); ok {
 		return diags
 	}
 
