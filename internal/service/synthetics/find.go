@@ -34,3 +34,27 @@ func FindCanaryByName(ctx context.Context, conn *synthetics.Synthetics, name str
 
 	return output.Canary, nil
 }
+
+func FindGroupByName(ctx context.Context, conn *synthetics.Synthetics, name string) (*synthetics.Group, error) {
+	input := &synthetics.GetGroupInput{
+		GroupIdentifier: aws.String(name),
+	}
+	output, err := conn.GetGroupWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, synthetics.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Group == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Group, nil
+}
