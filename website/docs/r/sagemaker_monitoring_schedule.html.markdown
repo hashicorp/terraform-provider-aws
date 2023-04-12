@@ -6,9 +6,9 @@ description: |-
   Provides a SageMaker Monitoring Schedule resource.
 ---
 
-# Resource: aws_sagemaker_data_quality_job_definition
+# Resource: aws_sagemaker_monitoring_schedule
 
-Provides a SageMaker data quality job definition resource.
+Provides a SageMaker monitoring schedule resource.
 
 ## Example Usage
 
