@@ -38,7 +38,6 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - ARN of the Group.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-
 ## Import
 
 CloudWatch Synthetics Group can be imported using the `name`, e.g.,
