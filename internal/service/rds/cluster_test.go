@@ -4319,6 +4319,8 @@ resource "aws_rds_cluster" "test" {
 }
 
 func testAccClusterConfig_SnapshotID_preferredMaintenanceWindow(rName, preferredMaintenanceWindow string) string {
+	// This config will never need the version updated. Use as a model for changing the other
+	// tests.
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
   engine = "aurora-mysql"
@@ -4326,7 +4328,6 @@ data "aws_rds_engine_version" "test" {
 
 resource "aws_rds_cluster" "source" {
   cluster_identifier  = "%[1]s-source"
-  engine              = "aurora-mysql"
   master_password     = "barbarbarbar"
   master_username     = "foo"
   skip_final_snapshot = true
@@ -4340,7 +4341,6 @@ resource "aws_db_cluster_snapshot" "test" {
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier           = %[1]q
-  engine                       = "aurora-mysql"
   preferred_maintenance_window = %[2]q
   skip_final_snapshot          = true
   snapshot_identifier          = aws_db_cluster_snapshot.test.id
