@@ -131,7 +131,6 @@ func testAccCheckClusterRoleAssociationExists(ctx context.Context, resourceName 
 		}
 
 		dbClusterID, roleARN, err := tfrds.ClusterRoleAssociationParseResourceID(rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
@@ -139,7 +138,6 @@ func testAccCheckClusterRoleAssociationExists(ctx context.Context, resourceName 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 		role, err := tfrds.FindDBClusterRoleByDBClusterIDAndRoleARN(ctx, conn, dbClusterID, roleARN)
-
 		if err != nil {
 			return err
 		}
@@ -160,7 +158,6 @@ func testAccCheckClusterRoleAssociationDestroy(ctx context.Context) resource.Tes
 			}
 
 			dbClusterID, roleARN, err := tfrds.ClusterRoleAssociationParseResourceID(rs.Primary.ID)
-
 			if err != nil {
 				return err
 			}

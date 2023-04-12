@@ -999,6 +999,7 @@ func TestAccRDSInstance_password(t *testing.T) {
 		},
 	})
 }
+
 func TestAccRDSInstance_ManagedMasterPassword_managed(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v rds.DBInstance
@@ -5523,13 +5524,11 @@ func testAccCheckInstanceDestroyWithFinalSnapshot(ctx context.Context) resource.
 
 			finalSnapshotID := rs.Primary.Attributes["final_snapshot_identifier"]
 			output, err := tfrds.FindDBSnapshotByID(ctx, conn, finalSnapshotID)
-
 			if err != nil {
 				return err
 			}
 
 			tags, err := tfrds.ListTags(ctx, conn, aws.StringValue(output.DBSnapshotArn))
-
 			if err != nil {
 				return err
 			}
@@ -5643,7 +5642,6 @@ func testAccCheckInstanceExists(ctx context.Context, n string, v *rds.DBInstance
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 		output, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
@@ -7868,7 +7866,7 @@ resource "aws_db_instance" "test" {
 // When testing needs to distinguish a second region and second account in the same region
 // e.g. cross-region functionality with RAM shared subnets
 func testAccAlternateAccountAndAlternateRegionProviderConfig() string {
-	//lintignore:AT004
+	// lintignore:AT004
 	return fmt.Sprintf(`
 provider "awsalternateaccountalternateregion" {
   access_key = %[1]q

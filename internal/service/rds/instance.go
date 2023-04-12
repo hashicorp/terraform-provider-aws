@@ -75,13 +75,11 @@ func ResourceInstance() *schema.Resource {
 					mas := d.Get("max_allocated_storage").(int)
 
 					newInt, err := strconv.Atoi(new)
-
 					if err != nil {
 						return false
 					}
 
 					oldInt, err := strconv.Atoi(old)
-
 					if err != nil {
 						return false
 					}
@@ -771,7 +769,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				return conn.CreateDBInstanceReadReplicaWithContext(ctx, input)
 			},
 			errCodeInvalidParameterValue, "ENHANCED_MONITORING")
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (read replica) (%s): %s", identifier, err)
 		}
@@ -1008,7 +1005,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				return false, err
 			},
 		)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (restore from S3) (%s): %s", identifier, err)
 		}
@@ -1377,7 +1373,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				return false, err
 			},
 		)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (restore to point-in-time) (%s): %s", identifier, err)
 		}
@@ -1568,7 +1563,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				return false, err
 			},
 		)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (%s): %s", identifier, err)
 		}
@@ -1592,7 +1586,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		modifyDbInstanceInput.DBInstanceIdentifier = aws.String(d.Id())
 
 		_, err := conn.ModifyDBInstanceWithContext(ctx, modifyDbInstanceInput)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Id(), err)
 		}
@@ -1606,7 +1599,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		_, err := conn.RebootDBInstanceWithContext(ctx, &rds.RebootDBInstanceInput{
 			DBInstanceIdentifier: aws.String(d.Id()),
 		})
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "rebooting RDS DB Instance (%s): %s", d.Id(), err)
 		}
@@ -2198,7 +2190,6 @@ func dbInstanceModify(ctx context.Context, conn *rds_sdkv2.Client, input *rds_sd
 			return false, err
 		},
 	)
-
 	if err != nil {
 		return err
 	}
