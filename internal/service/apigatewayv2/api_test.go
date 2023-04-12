@@ -8,13 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccAPIGatewayV2API_basicWebSocket(t *testing.T) {
@@ -778,12 +778,12 @@ func testAccCheckAPIDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := conn.GetApiWithContext(ctx, &apigatewayv2.GetApiInput{
-				ApiId: aws.String(rs.Primary.ID),
-			})
-			if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
+			_, err := tfapigatewayv2.FindAPIByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
 				continue
 			}
+
 			if err != nil {
 				return err
 			}
@@ -808,14 +808,13 @@ func testAccCheckAPIExists(ctx context.Context, n string, v *apigatewayv2.GetApi
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
 
-		resp, err := conn.GetApiWithContext(ctx, &apigatewayv2.GetApiInput{
-			ApiId: aws.String(rs.Primary.ID),
-		})
+		output, err := tfapigatewayv2.FindAPIByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*v = *resp
+		*v = *output
 
 		return nil
 	}
