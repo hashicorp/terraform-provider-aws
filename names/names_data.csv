@@ -42,6 +42,7 @@ chime-sdk-identity,chimesdkidentity,chimesdkidentity,chimesdkidentity,,chimesdki
 chime-sdk-mediapipelines,chimesdkmediapipelines,chimesdkmediapipelines,chimesdkmediapipelines,,chimesdkmediapipelines,,,ChimeSDKMediaPipelines,ChimeSDKMediaPipelines,,1,,,aws_chimesdkmediapipelines_,,chimesdkmediapipelines_,Chime SDK Media Pipelines,Amazon,,,,,
 chime-sdk-meetings,chimesdkmeetings,chimesdkmeetings,chimesdkmeetings,,chimesdkmeetings,,,ChimeSDKMeetings,ChimeSDKMeetings,,1,,,aws_chimesdkmeetings_,,chimesdkmeetings_,Chime SDK Meetings,Amazon,,,,,
 chime-sdk-messaging,chimesdkmessaging,chimesdkmessaging,chimesdkmessaging,,chimesdkmessaging,,,ChimeSDKMessaging,ChimeSDKMessaging,,1,,,aws_chimesdkmessaging_,,chimesdkmessaging_,Chime SDK Messaging,Amazon,,,,,
+cleanrooms,cleanrooms,cleanrooms,cleanrooms,,cleanrooms,,,CleanRooms,CleanRooms,,,2,,aws_cleanrooms_,,cleanrooms_,Clean Rooms,AWS,,,,,
 ,,,,,,,,,,,,,,,,,CLI (Command Line Interface),AWS,x,,,,No SDK support
 configure,configure,,,,,,,,,,,,,,,,CLI Configure options,AWS,x,,,,CLI only
 ddb,ddb,,,,,,,,,,,,,,,,CLI High-level DynamoDB commands,AWS,x,,,,Part of DynamoDB

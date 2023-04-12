@@ -105,6 +105,8 @@ service/chimesdkmeetings:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chimesdkmeetings_'
 service/chimesdkmessaging:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chimesdkmessaging_'
+service/cleanrooms:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cleanrooms_'
 service/cloud9:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloud9_'
 service/cloudcontrol:
