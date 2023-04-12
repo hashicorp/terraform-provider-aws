@@ -21,6 +21,10 @@ func DataSourceOrganizationPolicies() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"filter": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"policies": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -67,6 +71,7 @@ func dataSourceOrganizationPoliciesRead(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	targetID := d.Get("target_id").(string)
+	filter := d.Get("filter").(string)
 
 	policies, err := findPoliciesForTarget(ctx, conn, targetID)
 	if err != nil {
@@ -74,6 +79,7 @@ func dataSourceOrganizationPoliciesRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	d.SetId(targetID)
+	d.Set("filter", filter)
 
 	if err := d.Set("policies", FlattenOrganizationalPolicies(policies)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting policies: %s", err)
@@ -82,9 +88,10 @@ func dataSourceOrganizationPoliciesRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func findPoliciesForTarget(ctx context.Context, conn *organizations.Organizations, id string) ([]*organizations.PolicySummary, error) {
+func findPoliciesForTarget(ctx context.Context, conn *organizations.Organizations, id string, filter string) ([]*organizations.PolicySummary, error) {
 	input := &organizations.ListPoliciesForTargetInput{
 		TargetId: aws.String(id),
+		Filter:   aws.String(filter),
 	}
 	var output []*organizations.PolicySummary
 
