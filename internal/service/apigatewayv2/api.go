@@ -11,12 +11,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -407,6 +409,35 @@ func resourceImportOpenAPI(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	return nil
+}
+
+func FindAPIByID(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, id string) (*apigatewayv2.GetApiOutput, error) {
+	input := &apigatewayv2.GetApiInput{
+		ApiId: aws.String(id),
+	}
+
+	return findAPI(ctx, conn, input)
+}
+
+func findAPI(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetApiInput) (*apigatewayv2.GetApiOutput, error) {
+	output, err := conn.GetApiWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func expandCORSConfiguration(vConfiguration []interface{}) *apigatewayv2.Cors {
