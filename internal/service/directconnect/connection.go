@@ -133,7 +133,6 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.ProviderName = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Direct Connect Connection: %s", input)
 	output, err := conn.CreateConnectionWithContext(ctx, input)
 
 	if err != nil {
@@ -195,20 +194,20 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
-	// Update encryption mode
 	if d.HasChange("encryption_mode") {
 		input := &directconnect.UpdateConnectionInput{
 			ConnectionId:   aws.String(d.Id()),
 			EncryptionMode: aws.String(d.Get("encryption_mode").(string)),
 		}
-		log.Printf("[DEBUG] Modifying Direct Connect connection attributes: %s", input)
+
 		_, err := conn.UpdateConnectionWithContext(ctx, input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "modifying Direct Connect connection (%s) attributes: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Direct Connect Connection (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitConnectionConfirmed(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Direct Connect connection (%s) to become available: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Direct Connect Connection (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -217,16 +216,16 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
+
 	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
-		log.Printf("[DEBUG] Retaining Direct Connect Connection: %s", d.Id())
 		return diags
 	}
 
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
-
 	if err := deleteConnection(ctx, conn, d.Id(), waitConnectionDeleted); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Direct Connect Connection (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
+
 	return diags
 }
 
@@ -241,13 +240,13 @@ func deleteConnection(ctx context.Context, conn *directconnect.DirectConnect, co
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Direct Connect Connection (%s): %w", connectionID, err)
 	}
 
 	_, err = waiter(ctx, conn, connectionID)
 
 	if err != nil {
-		return fmt.Errorf("wating for completion: %w", err)
+		return fmt.Errorf("waiting for Direct Connect Connection (%s): %w", connectionID, err)
 	}
 
 	return nil
