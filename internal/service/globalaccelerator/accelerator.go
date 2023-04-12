@@ -10,7 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,9 +19,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_globalaccelerator_accelerator")
+// @SDKResource("aws_globalaccelerator_accelerator", name="Accelerator")
+// @Tags(identifierAttribute="id")
 func ResourceAccelerator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAcceleratorCreate,
@@ -119,8 +122,8 @@ func ResourceAccelerator() *schema.Resource {
 					validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
 				),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -129,15 +132,13 @@ func ResourceAccelerator() *schema.Resource {
 
 func resourceAcceleratorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &globalaccelerator.CreateAcceleratorInput{
 		Enabled:          aws.Bool(d.Get("enabled").(bool)),
-		IdempotencyToken: aws.String(resource.UniqueId()),
+		IdempotencyToken: aws.String(id.UniqueId()),
 		Name:             aws.String(name),
-		Tags:             Tags(tags.IgnoreAWS()),
+		Tags:             GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("ip_address_type"); ok {
@@ -180,8 +181,6 @@ func resourceAcceleratorCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceAcceleratorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	accelerator, err := FindAcceleratorByARN(ctx, conn, d.Id())
 
@@ -213,23 +212,6 @@ func resourceAcceleratorRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	if err := d.Set("attributes", []interface{}{flattenAcceleratorAttributes(acceleratorAttributes)}); err != nil {
 		return diag.Errorf("setting attributes: %s", err)
-	}
-
-	tags, err := ListTags(ctx, conn, d.Id())
-
-	if err != nil {
-		return diag.Errorf("listing tags for Global Accelerator Accelerator (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	return nil
@@ -297,14 +279,6 @@ func resourceAcceleratorUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("updating Global Accelerator Accelerator (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return resourceAcceleratorRead(ctx, d, meta)
 }
 
@@ -358,7 +332,7 @@ func findAccelerator(ctx context.Context, conn *globalaccelerator.GlobalAccelera
 	output, err := conn.DescribeAcceleratorWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -387,7 +361,7 @@ func findAcceleratorAttributes(ctx context.Context, conn *globalaccelerator.Glob
 	output, err := conn.DescribeAcceleratorAttributesWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -404,7 +378,7 @@ func findAcceleratorAttributes(ctx context.Context, conn *globalaccelerator.Glob
 	return output.AcceleratorAttributes, nil
 }
 
-func statusAccelerator(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) resource.StateRefreshFunc {
+func statusAccelerator(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		accelerator, err := FindAcceleratorByARN(ctx, conn, arn)
 
@@ -421,7 +395,7 @@ func statusAccelerator(ctx context.Context, conn *globalaccelerator.GlobalAccele
 }
 
 func waitAcceleratorDeployed(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string, timeout time.Duration) (*globalaccelerator.Accelerator, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{globalaccelerator.AcceleratorStatusInProgress},
 		Target:  []string{globalaccelerator.AcceleratorStatusDeployed},
 		Refresh: statusAccelerator(ctx, conn, arn),

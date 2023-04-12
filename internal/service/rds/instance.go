@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -30,10 +30,12 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"golang.org/x/exp/slices"
 )
 
-// @SDKResource("aws_db_instance")
+// @SDKResource("aws_db_instance", name="DB Instance")
+// @Tags(identifierAttribute="arn")
 func ResourceInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceCreate,
@@ -583,8 +585,8 @@ func ResourceInstance() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(StorageType_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"timezone": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -637,8 +639,6 @@ func ResourceInstance() *schema.Resource {
 func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if v, ok := d.GetOk("security_group_names"); ok && v.(*schema.Set).Len() > 0 {
 		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic no new RDS DB Instances can be created referencing RDS DB Security Groups`)
@@ -672,7 +672,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			DeletionProtection:         aws.Bool(d.Get("deletion_protection").(bool)),
 			PubliclyAccessible:         aws.Bool(d.Get("publicly_accessible").(bool)),
 			SourceDBInstanceIdentifier: aws.String(sourceDBInstanceID),
-			Tags:                       Tags(tags.IgnoreAWS()),
+			Tags:                       GetTagsIn(ctx),
 		}
 
 		if _, ok := d.GetOk("allocated_storage"); ok {
@@ -887,7 +887,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			SourceEngine:            aws.String(tfMap["source_engine"].(string)),
 			SourceEngineVersion:     aws.String(tfMap["source_engine_version"].(string)),
 			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
-			Tags:                    Tags(tags.IgnoreAWS()),
+			Tags:                    GetTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("availability_zone"); ok {
@@ -1021,7 +1021,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			DBSnapshotIdentifier:    aws.String(v.(string)),
 			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
-			Tags:                    Tags(tags.IgnoreAWS()),
+			Tags:                    GetTagsIn(ctx),
 		}
 
 		engine := strings.ToLower(d.Get("engine").(string))
@@ -1243,7 +1243,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			DBInstanceClass:            aws.String(d.Get("instance_class").(string)),
 			DeletionProtection:         aws.Bool(d.Get("deletion_protection").(bool)),
 			PubliclyAccessible:         aws.Bool(d.Get("publicly_accessible").(bool)),
-			Tags:                       Tags(tags.IgnoreAWS()),
+			Tags:                       GetTagsIn(ctx),
 			TargetDBInstanceIdentifier: aws.String(identifier),
 		}
 
@@ -1414,7 +1414,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			MasterUsername:          aws.String(d.Get("username").(string)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
-			Tags:                    Tags(tags.IgnoreAWS()),
+			Tags:                    GetTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("availability_zone"); ok {
@@ -1621,8 +1621,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
 	conn := meta.(*conns.AWSClient).RDSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	v, err := findDBInstanceByIDSDKv1(ctx, conn, d.Id())
 
@@ -1751,23 +1749,6 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	dbSetResourceDataEngineVersionFromInstance(d, v)
-
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for RDS DB Instance (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
 
 	return diags
 }
@@ -1980,14 +1961,6 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, meta.(*conns.AWSClient).RDSConn(), d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
-
 	return append(diags, resourceInstanceRead(ctx, d, meta)...)
 }
 
@@ -2092,8 +2065,11 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 	}
 
 	if d.HasChange("master_user_secret_kms_key_id") {
-		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok && len(v.([]interface{})) > 0 && v.([]interface{}) != nil {
+		needsModify = true
+		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
 			input.MasterUserSecretKmsKeyId = aws.String(v.(string))
+			// InvalidParameterValue: A ManageMasterUserPassword value is required when MasterUserSecretKmsKeyId is specified.
+			input.ManageMasterUserPassword = aws.Bool(d.Get("manage_master_user_password").(bool))
 		}
 	}
 
@@ -2139,7 +2115,7 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 	if d.HasChange("password") {
 		needsModify = true
 		// With ManageMasterUserPassword set to true, the password is no longer needed, so we omit it from the API call.
-		if v, ok := d.GetOk("password"); ok && len(v.([]interface{})) > 0 && v.([]interface{}) != nil {
+		if v, ok := d.GetOk("password"); ok {
 			input.MasterUserPassword = aws.String(v.(string))
 		}
 	}
@@ -2336,7 +2312,11 @@ func isStorageTypeGP3BelowAllocatedStorageThreshold(d *schema.ResourceData) bool
 func dbSetResourceDataEngineVersionFromInstance(d *schema.ResourceData, c *rds.DBInstance) {
 	oldVersion := d.Get("engine_version").(string)
 	newVersion := aws.StringValue(c.EngineVersion)
-	compareActualEngineVersion(d, oldVersion, newVersion)
+	var pendingVersion string
+	if c.PendingModifiedValues != nil && c.PendingModifiedValues.EngineVersion != nil {
+		pendingVersion = aws.StringValue(c.PendingModifiedValues.EngineVersion)
+	}
+	compareActualEngineVersion(d, oldVersion, newVersion, pendingVersion)
 }
 
 type dbInstanceARN struct {
@@ -2371,7 +2351,7 @@ func findDBInstanceByIDSDKv1(ctx context.Context, conn *rds.RDS, id string) (*rd
 
 	output, err := conn.DescribeDBInstancesWithContext(ctx, input)
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -2396,7 +2376,7 @@ func findDBInstanceByIDSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id str
 
 	output, err := conn.DescribeDBInstances(ctx, input)
 	if errs.IsA[*types.DBInstanceNotFoundFault](err) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -2422,7 +2402,7 @@ func waitDBInstanceAvailableSDKv1(ctx context.Context, conn *rds.RDS, id string,
 		fn(&options)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			InstanceStatusBackingUp,
 			InstanceStatusConfiguringEnhancedMonitoring,
@@ -2465,7 +2445,7 @@ func waitDBInstanceAvailableSDKv2(ctx context.Context, conn *rds_sdkv2.Client, i
 		fn(&options)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			InstanceStatusBackingUp,
 			InstanceStatusConfiguringEnhancedMonitoring,
@@ -2508,7 +2488,7 @@ func waitDBInstanceDeleted(ctx context.Context, conn *rds.RDS, id string, timeou
 		fn(&options)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			InstanceStatusAvailable,
 			InstanceStatusBackingUp,
@@ -2539,7 +2519,7 @@ func waitDBInstanceDeleted(ctx context.Context, conn *rds.RDS, id string, timeou
 	return nil, err
 }
 
-func statusDBInstanceSDKv1(ctx context.Context, conn *rds.RDS, id string) resource.StateRefreshFunc {
+func statusDBInstanceSDKv1(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findDBInstanceByIDSDKv1(ctx, conn, id)
 
@@ -2555,7 +2535,7 @@ func statusDBInstanceSDKv1(ctx context.Context, conn *rds.RDS, id string) resour
 	}
 }
 
-func statusDBInstanceSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id string) resource.StateRefreshFunc {
+func statusDBInstanceSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findDBInstanceByIDSDKv2(ctx, conn, id)
 
@@ -2579,7 +2559,7 @@ func findBlueGreenDeploymentByID(ctx context.Context, conn *rds_sdkv2.Client, id
 	output, err := conn.DescribeBlueGreenDeployments(ctx, input)
 
 	if errs.IsA[*types.BlueGreenDeploymentNotFoundFault](err) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -2595,7 +2575,7 @@ func findBlueGreenDeploymentByID(ctx context.Context, conn *rds_sdkv2.Client, id
 	deployment := output.BlueGreenDeployments[0]
 
 	if aws.StringValue(deployment.BlueGreenDeploymentIdentifier) != id {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -2612,7 +2592,7 @@ func waitBlueGreenDeploymentAvailable(ctx context.Context, conn *rds_sdkv2.Clien
 		fn(&options)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"PROVISIONING"},
 		Target:  []string{"AVAILABLE"},
 		Refresh: statusBlueGreenDeployment(ctx, conn, id),
@@ -2638,7 +2618,7 @@ func waitBlueGreenDeploymentSwitchoverCompleted(ctx context.Context, conn *rds_s
 		fn(&options)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"AVAILABLE", "SWITCHOVER_IN_PROGRESS"},
 		Target:  []string{"SWITCHOVER_COMPLETED"},
 		Refresh: statusBlueGreenDeployment(ctx, conn, id),
@@ -2668,7 +2648,7 @@ func waitBlueGreenDeploymentDeleted(ctx context.Context, conn *rds_sdkv2.Client,
 		fn(&options)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"PROVISIONING", "AVAILABLE", "SWITCHOVER_IN_PROGRESS", "SWITCHOVER_COMPLETED", "INVALID_CONFIGURATION", "SWITCHOVER_FAILED", "DELETING"},
 		Target:  []string{},
 		Refresh: statusBlueGreenDeployment(ctx, conn, id),
@@ -2685,7 +2665,7 @@ func waitBlueGreenDeploymentDeleted(ctx context.Context, conn *rds_sdkv2.Client,
 	return nil, err
 }
 
-func statusBlueGreenDeployment(ctx context.Context, conn *rds_sdkv2.Client, id string) resource.StateRefreshFunc {
+func statusBlueGreenDeployment(ctx context.Context, conn *rds_sdkv2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findBlueGreenDeploymentByID(ctx, conn, id)
 		if tfresource.NotFound(err) {

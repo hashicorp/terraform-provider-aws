@@ -37,6 +37,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceCluster,
 			TypeName: "aws_emr_cluster",
+			Name:     "Cluster",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceInstanceFleet,
@@ -57,6 +61,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceStudio,
 			TypeName: "aws_emr_studio",
+			Name:     "Studio",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceStudioSessionMapping,

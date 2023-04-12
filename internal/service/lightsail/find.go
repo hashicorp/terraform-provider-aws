@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -21,7 +21,7 @@ func FindCertificateByName(ctx context.Context, conn *lightsail.Lightsail, name 
 	out, err := conn.GetCertificatesWithContext(ctx, in)
 
 	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -46,7 +46,7 @@ func FindContainerServiceByName(ctx context.Context, conn *lightsail.Lightsail, 
 	output, err := conn.GetContainerServicesWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -75,7 +75,7 @@ func FindContainerServiceDeploymentByVersion(ctx context.Context, conn *lightsai
 	output, err := conn.GetContainerServiceDeploymentsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -103,7 +103,7 @@ func FindContainerServiceDeploymentByVersion(ctx context.Context, conn *lightsai
 	}
 
 	if result == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
 		}
@@ -120,7 +120,7 @@ func FindDiskById(ctx context.Context, conn *lightsail.Lightsail, id string) (*l
 	out, err := conn.GetDiskWithContext(ctx, in)
 
 	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -154,7 +154,7 @@ func FindDiskAttachmentById(ctx context.Context, conn *lightsail.Lightsail, id s
 	out, err := conn.GetDiskWithContext(ctx, in)
 
 	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -203,7 +203,7 @@ func FindDomainEntryById(ctx context.Context, conn *lightsail.Lightsail, id stri
 	out, err := conn.GetDomainWithContext(ctx, in)
 
 	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -236,7 +236,7 @@ func FindLoadBalancerByName(ctx context.Context, conn *lightsail.Lightsail, name
 	out, err := conn.GetLoadBalancerWithContext(ctx, in)
 
 	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -268,7 +268,7 @@ func FindLoadBalancerAttachmentById(ctx context.Context, conn *lightsail.Lightsa
 	out, err := conn.GetLoadBalancerWithContext(ctx, in)
 
 	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -309,7 +309,7 @@ func FindLoadBalancerCertificateById(ctx context.Context, conn *lightsail.Lights
 	out, err := conn.GetLoadBalancerTlsCertificatesWithContext(ctx, in)
 
 	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -350,7 +350,7 @@ func FindLoadBalancerCertificateAttachmentById(ctx context.Context, conn *lights
 	out, err := conn.GetLoadBalancerTlsCertificatesWithContext(ctx, in)
 
 	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -383,7 +383,7 @@ func FindLoadBalancerStickinessPolicyById(ctx context.Context, conn *lightsail.L
 	out, err := conn.GetLoadBalancerWithContext(ctx, in)
 
 	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -405,7 +405,7 @@ func FindLoadBalancerHTTPSRedirectionPolicyById(ctx context.Context, conn *light
 	out, err := conn.GetLoadBalancerWithContext(ctx, in)
 
 	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -427,7 +427,7 @@ func FindBucketById(ctx context.Context, conn *lightsail.Lightsail, id string) (
 	out, err := conn.GetBucketsWithContext(ctx, in)
 
 	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -449,7 +449,7 @@ func FindInstanceById(ctx context.Context, conn *lightsail.Lightsail, id string)
 	out, err := conn.GetInstanceWithContext(ctx, in)
 
 	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -477,7 +477,7 @@ func FindBucketAccessKeyById(ctx context.Context, conn *lightsail.Lightsail, id 
 	out, err := conn.GetBucketAccessKeysWithContext(ctx, in)
 
 	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -520,7 +520,7 @@ func FindBucketResourceAccessById(ctx context.Context, conn *lightsail.Lightsail
 	out, err := conn.GetBucketsWithContext(ctx, in)
 
 	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}

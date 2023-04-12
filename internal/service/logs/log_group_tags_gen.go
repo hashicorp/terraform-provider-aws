@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListLogGroupTags lists logs service tags.
@@ -57,7 +58,7 @@ func UpdateLogGroupTags(ctx context.Context, conn cloudwatchlogsiface.CloudWatch
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &cloudwatchlogs.UntagLogGroupInput{
 			LogGroupName: aws.String(identifier),
-			Tags:         aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			Tags:         aws.StringSlice(removedTags.IgnoreSystem(names.Logs).Keys()),
 		}
 
 		_, err := conn.UntagLogGroupWithContext(ctx, input)
@@ -70,7 +71,7 @@ func UpdateLogGroupTags(ctx context.Context, conn cloudwatchlogsiface.CloudWatch
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &cloudwatchlogs.TagLogGroupInput{
 			LogGroupName: aws.String(identifier),
-			Tags:         Tags(updatedTags.IgnoreAWS()),
+			Tags:         Tags(updatedTags.IgnoreSystem(names.Logs)),
 		}
 
 		_, err := conn.TagLogGroupWithContext(ctx, input)

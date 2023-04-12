@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists kinesis service tags.
@@ -106,7 +107,7 @@ func UpdateTags(ctx context.Context, conn kinesisiface.KinesisAPI, identifier st
 		for _, removedTags := range removedTags.Chunks(10) {
 			input := &kinesis.RemoveTagsFromStreamInput{
 				StreamName: aws.String(identifier),
-				TagKeys:    aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+				TagKeys:    aws.StringSlice(removedTags.IgnoreSystem(names.Kinesis).Keys()),
 			}
 
 			_, err := conn.RemoveTagsFromStreamWithContext(ctx, input)

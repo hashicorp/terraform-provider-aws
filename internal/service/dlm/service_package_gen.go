@@ -28,6 +28,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceLifecyclePolicy,
 			TypeName: "aws_dlm_lifecycle_policy",
+			Name:     "Lifecycle Policy",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }

@@ -37,30 +37,58 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceCachediSCSIVolume,
 			TypeName: "aws_storagegateway_cached_iscsi_volume",
+			Name:     "Cached iSCSI Volume",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceFileSystemAssociation,
 			TypeName: "aws_storagegateway_file_system_association",
+			Name:     "File System Association",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceGateway,
 			TypeName: "aws_storagegateway_gateway",
+			Name:     "Gateway",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceNFSFileShare,
 			TypeName: "aws_storagegateway_nfs_file_share",
+			Name:     "NFS File Share",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceSMBFileShare,
 			TypeName: "aws_storagegateway_smb_file_share",
+			Name:     "SMB File Share",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceStorediSCSIVolume,
 			TypeName: "aws_storagegateway_stored_iscsi_volume",
+			Name:     "Stored iSCSI Volume",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceTapePool,
 			TypeName: "aws_storagegateway_tape_pool",
+			Name:     "Tape Pool",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceUploadBuffer,

@@ -15,7 +15,8 @@ import (
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -31,7 +32,7 @@ import (
 
 const (
 	roleNameMaxLen       = 64
-	roleNamePrefixMaxLen = roleNameMaxLen - resource.UniqueIDSuffixLength
+	roleNamePrefixMaxLen = roleNameMaxLen - id.UniqueIDSuffixLength
 )
 
 // @SDKResource("aws_iam_role", name="Role")
@@ -559,14 +560,14 @@ func DeleteRole(ctx context.Context, conn *iam.IAM, roleName string, forceDetach
 	deleteRoleInput := &iam.DeleteRoleInput{
 		RoleName: aws.String(roleName),
 	}
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err := conn.DeleteRoleWithContext(ctx, deleteRoleInput)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, iam.ErrCodeDeleteConflictException) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})

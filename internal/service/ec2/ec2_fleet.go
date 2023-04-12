@@ -21,9 +21,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ec2_fleet")
+// @SDKResource("aws_ec2_fleet", name="Fleet")
+// @Tags(identifierAttribute="id")
 func ResourceFleet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFleetCreate,
@@ -578,8 +580,8 @@ func ResourceFleet() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"target_capacity_specification": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -698,14 +700,12 @@ func ResourceFleet() *schema.Resource {
 func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	fleetType := d.Get("type").(string)
 	input := &ec2.CreateFleetInput{
 		LaunchTemplateConfigs:       expandFleetLaunchTemplateConfigRequests(d.Get("launch_template_config").([]interface{})),
 		TargetCapacitySpecification: expandTargetCapacitySpecificationRequest(d.Get("target_capacity_specification").([]interface{})[0].(map[string]interface{})),
-		TagSpecifications:           tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeFleet),
+		TagSpecifications:           getTagSpecificationsIn(ctx, ec2.ResourceTypeFleet),
 		Type:                        aws.String(fleetType),
 	}
 
@@ -777,8 +777,6 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	fleet, err := FindFleetByID(ctx, conn, d.Id())
 
@@ -844,16 +842,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("valid_until", aws.TimeValue(fleet.ValidUntil).Format(time.RFC3339))
 	}
 
-	tags := KeyValueTags(ctx, fleet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, fleet.Tags)
 
 	return diags
 }
@@ -892,14 +881,6 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		if _, err := WaitFleet(ctx, conn, d.Id(), []string{ec2.FleetStateCodeModifying}, []string{ec2.FleetStateCodeActive}, d.Timeout(schema.TimeoutUpdate), 0); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Fleet (%s) update: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 Fleet (%s) tags: %s", d.Id(), err)
 		}
 	}
 

@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rbin/types"
 	awsarn "github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_rbin_rule")
+// @SDKResource("aws_rbin_rule", name="Rule")
 // @Tags(identifierAttribute="arn")
 func ResourceRule() *schema.Resource {
 	return &schema.Resource{
@@ -143,8 +143,8 @@ func ResourceRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -161,6 +161,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	in := &rbin.CreateRuleInput{
 		ResourceType:    types.ResourceType(d.Get("resource_type").(string)),
 		RetentionPeriod: expandRetentionPeriod(d.Get("retention_period").([]interface{})),
+		Tags:            GetTagsIn(ctx),
 	}
 
 	if _, ok := d.GetOk("description"); ok {
@@ -169,13 +170,6 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if v, ok := d.GetOk("resource_tags"); ok && v.(*schema.Set).Len() > 0 {
 		in.ResourceTags = expandResourceTags(v.(*schema.Set).List())
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	out, err := conn.CreateRule(ctx, in)
@@ -302,7 +296,7 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func waitRuleCreated(ctx context.Context, conn *rbin.Client, id string, timeout time.Duration) (*rbin.GetRuleOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.RuleStatusPending),
 		Target:                    enum.Slice(types.RuleStatusAvailable),
 		Refresh:                   statusRule(ctx, conn, id),
@@ -320,7 +314,7 @@ func waitRuleCreated(ctx context.Context, conn *rbin.Client, id string, timeout 
 }
 
 func waitRuleUpdated(ctx context.Context, conn *rbin.Client, id string, timeout time.Duration) (*rbin.GetRuleOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.RuleStatusPending),
 		Target:                    enum.Slice(types.RuleStatusAvailable),
 		Refresh:                   statusRule(ctx, conn, id),
@@ -338,7 +332,7 @@ func waitRuleUpdated(ctx context.Context, conn *rbin.Client, id string, timeout 
 }
 
 func waitRuleDeleted(ctx context.Context, conn *rbin.Client, id string, timeout time.Duration) (*rbin.GetRuleOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.RuleStatusPending, types.RuleStatusAvailable),
 		Target:  []string{},
 		Refresh: statusRule(ctx, conn, id),
@@ -353,7 +347,7 @@ func waitRuleDeleted(ctx context.Context, conn *rbin.Client, id string, timeout 
 	return nil, err
 }
 
-func statusRule(ctx context.Context, conn *rbin.Client, id string) resource.StateRefreshFunc {
+func statusRule(ctx context.Context, conn *rbin.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := findRuleByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -376,7 +370,7 @@ func findRuleByID(ctx context.Context, conn *rbin.Client, id string) (*rbin.GetR
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}

@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -19,7 +19,7 @@ func FindAccessByServerIDAndExternalID(ctx context.Context, conn *transfer.Trans
 	output, err := conn.DescribeAccessWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -44,7 +44,7 @@ func FindServerByID(ctx context.Context, conn *transfer.Transfer, id string) (*t
 	output, err := conn.DescribeServerWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -69,7 +69,7 @@ func FindWorkflowByID(ctx context.Context, conn *transfer.Transfer, id string) (
 	output, err := conn.DescribeWorkflowWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

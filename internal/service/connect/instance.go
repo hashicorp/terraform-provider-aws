@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -120,7 +120,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	input := &connect.CreateInstanceInput{
-		ClientToken:            aws.String(resource.UniqueId()),
+		ClientToken:            aws.String(id.UniqueId()),
 		IdentityManagementType: aws.String(d.Get("identity_management_type").(string)),
 		InboundCallsEnabled:    aws.Bool(d.Get("inbound_calls_enabled").(bool)),
 		OutboundCallsEnabled:   aws.Bool(d.Get("outbound_calls_enabled").(bool)),

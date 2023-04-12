@@ -12,6 +12,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // GetTag fetches an individual route53resolver service tag for a resource.
@@ -125,7 +126,7 @@ func UpdateTags(ctx context.Context, conn route53resolveriface.Route53ResolverAP
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &route53resolver.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreSystem(names.Route53Resolver).Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -138,7 +139,7 @@ func UpdateTags(ctx context.Context, conn route53resolveriface.Route53ResolverAP
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &route53resolver.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreAWS()),
+			Tags:        Tags(updatedTags.IgnoreSystem(names.Route53Resolver)),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)

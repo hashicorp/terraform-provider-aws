@@ -10,8 +10,6 @@ on:
       partner:
         value: ${{ jobs.community_check.outputs.is_partner }}
 
-permissions: {}
-
 jobs:
   community_check:
     name: Check community lists for username

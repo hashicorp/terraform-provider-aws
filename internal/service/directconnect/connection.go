@@ -17,9 +17,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_dx_connection")
+// @SDKResource("aws_dx_connection", name="Connection")
+// @Tags(identifierAttribute="arn")
 func ResourceConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectionCreate,
@@ -102,8 +104,8 @@ func ResourceConnection() *schema.Resource {
 				Default:  false,
 				Optional: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vlan_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -117,8 +119,6 @@ func ResourceConnection() *schema.Resource {
 func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &directconnect.CreateConnectionInput{
@@ -126,14 +126,11 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 		ConnectionName: aws.String(name),
 		Location:       aws.String(d.Get("location").(string)),
 		RequestMACSec:  aws.Bool(d.Get("request_macsec").(bool)),
+		Tags:           GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("provider_name"); ok {
 		input.ProviderName = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating Direct Connect Connection: %s", input)
@@ -151,8 +148,6 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	connection, err := FindConnectionByID(ctx, conn, d.Id())
 
@@ -193,23 +188,6 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 		d.Set("request_macsec", aws.Bool(false))
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Direct Connect Connection (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -231,15 +209,6 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 		if _, err := waitConnectionConfirmed(ctx, conn, d.Id()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Direct Connect connection (%s) to become available: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		arn := d.Get("arn").(string)
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Direct Connect Connection (%s) tags: %s", d.Id(), err)
 		}
 	}
 

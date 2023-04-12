@@ -9,20 +9,6 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-// tagSpecificationsFromKeyValueTags returns the tag specifications for the given KeyValueTags object and resource type.
-func tagSpecificationsFromKeyValueTags(tags tftags.KeyValueTags, t string) []*ec2.TagSpecification {
-	if len(tags) == 0 {
-		return nil
-	}
-
-	return []*ec2.TagSpecification{
-		{
-			ResourceType: aws.String(t),
-			Tags:         Tags(tags.IgnoreAWS()),
-		},
-	}
-}
-
 // tagSpecificationsFromMap returns the tag specifications for the given tag key/value map and resource type.
 func tagSpecificationsFromMap(ctx context.Context, m map[string]interface{}, t string) []*ec2.TagSpecification {
 	if len(m) == 0 {
@@ -37,14 +23,18 @@ func tagSpecificationsFromMap(ctx context.Context, m map[string]interface{}, t s
 	}
 }
 
-func tagSpecificationsFromTags(tags []*ec2.Tag, t string) []*ec2.TagSpecification {
+// getTagSpecificationsIn returns EC2 service tags from Context.
+// nil is returned if there are no input tags.
+func getTagSpecificationsIn(ctx context.Context, resourceType string) []*ec2.TagSpecification {
+	tags := GetTagsIn(ctx)
+
 	if len(tags) == 0 {
 		return nil
 	}
 
 	return []*ec2.TagSpecification{
 		{
-			ResourceType: aws.String(t),
+			ResourceType: aws.String(resourceType),
 			Tags:         tags,
 		},
 	}

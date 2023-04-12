@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists sqs service tags.
@@ -88,7 +89,7 @@ func UpdateTags(ctx context.Context, conn sqsiface.SQSAPI, identifier string, ol
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &sqs.UntagQueueInput{
 			QueueUrl: aws.String(identifier),
-			TagKeys:  aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:  aws.StringSlice(removedTags.IgnoreSystem(names.SQS).Keys()),
 		}
 
 		_, err := conn.UntagQueueWithContext(ctx, input)
@@ -101,7 +102,7 @@ func UpdateTags(ctx context.Context, conn sqsiface.SQSAPI, identifier string, ol
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &sqs.TagQueueInput{
 			QueueUrl: aws.String(identifier),
-			Tags:     Tags(updatedTags.IgnoreAWS()),
+			Tags:     Tags(updatedTags.IgnoreSystem(names.SQS)),
 		}
 
 		_, err := conn.TagQueueWithContext(ctx, input)

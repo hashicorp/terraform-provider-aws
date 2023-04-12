@@ -26,14 +26,14 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 
 	{{ if and ( .ParentNotFoundErrCode ) ( .ParentNotFoundErrMsg ) }}
 			if tfawserr.ErrMessageContains(err, "{{ .ParentNotFoundErrCode }}", "{{ .ParentNotFoundErrMsg }}") {
-				return nil, &resource.NotFoundError{
+				return nil, &retry.NotFoundError{
 					LastError:   err,
 					LastRequest: input,
 				}
 			}
 	{{- else if ( .ParentNotFoundErrCode ) }}
 			if tfawserr.ErrCodeEquals(err, "{{ .ParentNotFoundErrCode }}") {
-				return nil, &resource.NotFoundError{
+				return nil, &retry.NotFoundError{
 					LastError:   err,
 					LastRequest: input,
 				}

@@ -37,6 +37,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDirectory,
 			TypeName: "aws_directory_service_directory",
+			Name:     "Directory",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceLogSubscription,
