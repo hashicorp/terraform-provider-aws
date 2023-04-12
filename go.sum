@@ -58,6 +58,8 @@ github.com/aws/aws-sdk-go-v2/service/comprehend v1.23.2 h1:fik7j3E3LcSmDM8CUcQI3
 github.com/aws/aws-sdk-go-v2/service/comprehend v1.23.2/go.mod h1:wosyuBOnz9m1Oj9F3wuCDRwomUxebSVCNc+PeQCQ5DE=
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.22.2 h1:wgJr0EwZea2E7Xv8nawVIUrf7eam/dLaxHBxC4jbkos=
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.22.2/go.mod h1:d0fe6UNPcZ3FMT7NFdIuKrF4SNXPWDhxSzA8N/z+KP4=
+github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.1.8 h1:Tap169lBqVla3crC6+2l7lkU2XZoZzBa4LnbSdqtWH4=
+github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.1.8/go.mod h1:nQzuGMnFeUNmJshfky2ZF+QSuojEyVIwvxnBjVOYOg0=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.93.2 h1:c6a19AjfhEXKlEX63cnlWtSQ4nzENihHZOG0I3wH6BE=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.93.2/go.mod h1:VX22JN3HQXDtQ3uS4h4TtM+K11vydq58tpHTlsm8TL8=
 github.com/aws/aws-sdk-go-v2/service/fis v1.14.8 h1:P02MaOm7ef9TlAB5n1AgPdYVZ7L7m7c96BuTe14qbgM=

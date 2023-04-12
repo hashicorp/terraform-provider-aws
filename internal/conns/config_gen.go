@@ -8,6 +8,7 @@ import (
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
+	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	"github.com/aws/aws-sdk-go-v2/service/healthlake"
@@ -622,6 +623,11 @@ func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
 	client.computeoptimizerClient = computeoptimizer.NewFromConfig(cfg, func(o *computeoptimizer.Options) {
 		if endpoint := c.Endpoints[names.ComputeOptimizer]; endpoint != "" {
 			o.EndpointResolver = computeoptimizer.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.docdbelasticClient = docdbelastic.NewFromConfig(cfg, func(o *docdbelastic.Options) {
+		if endpoint := c.Endpoints[names.DocDBElastic]; endpoint != "" {
+			o.EndpointResolver = docdbelastic.EndpointResolverFromURL(endpoint)
 		}
 	})
 	client.fisClient = fis.NewFromConfig(cfg, func(o *fis.Options) {

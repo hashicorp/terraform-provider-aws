@@ -91,6 +91,7 @@ Device Farm
 Direct Connect
 Directory Service
 DocDB (DocumentDB)
+DocDB (DocumentDB) Elastic
 DynamoDB
 DynamoDB Accelerator (DAX)
 DynamoDB Streams
