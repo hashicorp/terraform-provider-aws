@@ -279,52 +279,57 @@ func resourceAPIUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
-	deleteCorsConfiguration := false
+	corsConfigurationDeleted := false
 	if d.HasChange("cors_configuration") {
-		v := d.Get("cors_configuration")
-		if len(v.([]interface{})) == 0 {
-			deleteCorsConfiguration = true
+		if v, ok := d.GetOk("cors_configuration"); ok && len(v.([]interface{})) > 0 {
+			corsConfigurationDeleted = true
 
-			log.Printf("[DEBUG] Deleting CORS configuration for API Gateway v2 API (%s)", d.Id())
 			_, err := conn.DeleteCorsConfigurationWithContext(ctx, &apigatewayv2.DeleteCorsConfigurationInput{
 				ApiId: aws.String(d.Id()),
 			})
+
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "deleting CORS configuration for API Gateway v2 API (%s): %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "deleting API Gateway v2 API (%s) CORS configuration: %s", d.Id(), err)
 			}
 		}
 	}
 
 	if d.HasChanges("api_key_selection_expression", "description", "disable_execute_api_endpoint", "name", "route_selection_expression", "version") ||
-		(d.HasChange("cors_configuration") && !deleteCorsConfiguration) {
-		req := &apigatewayv2.UpdateApiInput{
+		(d.HasChange("cors_configuration") && !corsConfigurationDeleted) {
+		input := &apigatewayv2.UpdateApiInput{
 			ApiId: aws.String(d.Id()),
 		}
 
 		if d.HasChange("api_key_selection_expression") {
-			req.ApiKeySelectionExpression = aws.String(d.Get("api_key_selection_expression").(string))
-		}
-		if d.HasChange("cors_configuration") {
-			req.CorsConfiguration = expandCORSConfiguration(d.Get("cors_configuration").([]interface{}))
-		}
-		if d.HasChange("description") {
-			req.Description = aws.String(d.Get("description").(string))
-		}
-		if d.HasChange("disable_execute_api_endpoint") {
-			req.DisableExecuteApiEndpoint = aws.Bool(d.Get("disable_execute_api_endpoint").(bool))
-		}
-		if d.HasChange("name") {
-			req.Name = aws.String(d.Get("name").(string))
-		}
-		if d.HasChange("route_selection_expression") {
-			req.RouteSelectionExpression = aws.String(d.Get("route_selection_expression").(string))
-		}
-		if d.HasChange("version") {
-			req.Version = aws.String(d.Get("version").(string))
+			input.ApiKeySelectionExpression = aws.String(d.Get("api_key_selection_expression").(string))
 		}
 
-		log.Printf("[DEBUG] Updating API Gateway v2 API: %s", req)
-		_, err := conn.UpdateApiWithContext(ctx, req)
+		if d.HasChange("cors_configuration") {
+			input.CorsConfiguration = expandCORSConfiguration(d.Get("cors_configuration").([]interface{}))
+		}
+
+		if d.HasChange("description") {
+			input.Description = aws.String(d.Get("description").(string))
+		}
+
+		if d.HasChange("disable_execute_api_endpoint") {
+			input.DisableExecuteApiEndpoint = aws.Bool(d.Get("disable_execute_api_endpoint").(bool))
+		}
+
+		if d.HasChange("name") {
+			input.Name = aws.String(d.Get("name").(string))
+		}
+
+		if d.HasChange("route_selection_expression") {
+			input.RouteSelectionExpression = aws.String(d.Get("route_selection_expression").(string))
+		}
+
+		if d.HasChange("version") {
+			input.Version = aws.String(d.Get("version").(string))
+		}
+
+		_, err := conn.UpdateApiWithContext(ctx, input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 API (%s): %s", d.Id(), err)
 		}
@@ -332,8 +337,9 @@ func resourceAPIUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if d.HasChange("body") {
 		err := resourceImportOpenAPI(ctx, d, meta)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 API (%s): %s", d.Id(), err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -348,9 +354,11 @@ func resourceAPIDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	_, err := conn.DeleteApiWithContext(ctx, &apigatewayv2.DeleteApiInput{
 		ApiId: aws.String(d.Id()),
 	})
+
 	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 		return diags
 	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting API Gateway v2 API (%s): %s", d.Id(), err)
 	}
