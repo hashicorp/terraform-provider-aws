@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -18,28 +17,27 @@ import (
 const eventualConsistencyTimeout = 5 * time.Minute
 
 // createTags creates ec2 service tags for new resources.
-func createTags(ctx context.Context, conn ec2iface.EC2API, id string, tagsMap interface{}) error {
-	tags := tftags.New(ctx, tagsMap)
-	input := &ec2.CreateTagsInput{
-		Resources: aws.StringSlice([]string{id}),
-		Tags:      Tags(tags.IgnoreAWS()),
+func createTags(ctx context.Context, conn ec2iface.EC2API, identifier string, tags []*ec2.Tag) error {
+	if len(tags) == 0 {
+		return nil
 	}
 
-	_, err := tfresource.RetryWhenNotFound(ctx, eventualConsistencyTimeout, func() (interface{}, error) {
-		output, err := conn.CreateTagsWithContext(ctx, input)
+	newTagsMap := KeyValueTags(ctx, tags)
 
-		if tfawserr.ErrCodeContains(err, ".NotFound") {
-			err = &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+	_, err := tfresource.RetryWhen(ctx, eventualConsistencyTimeout,
+		func() (interface{}, error) {
+			return nil, UpdateTags(ctx, conn, identifier, nil, newTagsMap)
+		},
+		func(err error) (bool, error) {
+			if tfawserr.ErrCodeContains(err, ".NotFound") {
+				return true, err
 			}
-		}
 
-		return output, err
-	})
+			return false, err
+		})
 
 	if err != nil {
-		return fmt.Errorf("tagging resource (%s): %w", id, err)
+		return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 	}
 
 	return nil

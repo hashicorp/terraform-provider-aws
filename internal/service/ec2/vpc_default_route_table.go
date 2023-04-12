@@ -25,7 +25,7 @@ func ResourceDefaultRouteTable() *schema.Resource {
 		CreateWithoutTimeout: resourceDefaultRouteTableCreate,
 		ReadWithoutTimeout:   resourceDefaultRouteTableRead,
 		UpdateWithoutTimeout: resourceRouteTableUpdate,
-		DeleteWithoutTimeout: resourceDefaultRouteTableDelete,
+		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceDefaultRouteTableImport,
@@ -245,10 +245,8 @@ func resourceDefaultRouteTableCreate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
-		if err := createTags(ctx, conn, d.Id(), tags); err != nil {
-			return sdkdiag.AppendErrorf(diags, "adding tags: %s", err)
-		}
+	if err := createTags(ctx, conn, d.Id(), GetTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting EC2 Default Route Table (%s) tags: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceDefaultRouteTableRead(ctx, d, meta)...)
@@ -260,12 +258,6 @@ func resourceDefaultRouteTableRead(ctx context.Context, d *schema.ResourceData, 
 	// re-use regular AWS Route Table READ. This is an extra API call but saves us
 	// from trying to manually keep parity
 	return resourceRouteTableRead(ctx, d, meta)
-}
-
-func resourceDefaultRouteTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	log.Printf("[WARN] Cannot destroy Default Route Table. Terraform will remove this resource from the state file, however resources may remain.")
-	return diags
 }
 
 func resourceDefaultRouteTableImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
