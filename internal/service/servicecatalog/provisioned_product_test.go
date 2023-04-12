@@ -247,7 +247,7 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 	})
 }
 
-func TestAccServiceCatalogProvisionedProduct_taintedCreate(t *testing.T) {
+func TestAccServiceCatalogProvisionedProduct_errorOnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -267,7 +267,7 @@ func TestAccServiceCatalogProvisionedProduct_taintedCreate(t *testing.T) {
 	})
 }
 
-func TestAccServiceCatalogProvisionedProduct_taintedUpdate(t *testing.T) {
+func TestAccServiceCatalogProvisionedProduct_errorOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 
