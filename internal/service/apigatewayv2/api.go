@@ -281,7 +281,7 @@ func resourceAPIUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	corsConfigurationDeleted := false
 	if d.HasChange("cors_configuration") {
-		if v, ok := d.GetOk("cors_configuration"); ok && len(v.([]interface{})) > 0 {
+		if v := d.Get("cors_configuration"); len(v.([]interface{})) == 0 {
 			corsConfigurationDeleted = true
 
 			_, err := conn.DeleteCorsConfigurationWithContext(ctx, &apigatewayv2.DeleteCorsConfigurationInput{
