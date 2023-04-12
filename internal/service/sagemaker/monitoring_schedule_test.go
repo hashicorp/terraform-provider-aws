@@ -302,7 +302,7 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 func testAccMonitoringScheduleConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccMonitoringScheduleConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_monitoring_schedule" "test" {
-  name                 = %[1]q
+  name = %[1]q
 
   monitoring_schedule_config {
     monitoring_job_definition_name = aws_sagemaker_data_quality_job_definition.test.name
