@@ -217,7 +217,7 @@ func resourceAPICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.StringValue(output.ApiId))
 
-	err = resourceImportOpenAPI(ctx, d, meta)
+	err = reimportOpenAPIDefinition(ctx, d, meta)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -336,7 +336,7 @@ func resourceAPIUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if d.HasChange("body") {
-		err := resourceImportOpenAPI(ctx, d, meta)
+		err := reimportOpenAPIDefinition(ctx, d, meta)
 
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -366,9 +366,8 @@ func resourceAPIDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceImportOpenAPI(ctx context.Context, d *schema.ResourceData, meta interface{}) error {
+func reimportOpenAPIDefinition(ctx context.Context, d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 
 	if body, ok := d.GetOk("body"); ok {
 		inputR := &apigatewayv2.ReimportApiInput{
@@ -383,16 +382,13 @@ func resourceImportOpenAPI(ctx context.Context, d *schema.ResourceData, meta int
 		_, err := conn.ReimportApiWithContext(ctx, inputR)
 
 		if err != nil {
-			return fmt.Errorf("importing API Gateway v2 API (%s) OpenAPI specification: %w", d.Id(), err)
+			return fmt.Errorf("reimporting API Gateway v2 API (%s) OpenAPI definition: %w", d.Id(), err)
 		}
-
-		tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 		corsConfiguration := d.Get("cors_configuration")
 
-		diags := resourceAPIRead(ctx, d, meta)
-		if err := sdkdiag.DiagnosticsError(diags); err != nil {
-			return fmt.Errorf("importing API Gateway v2 API (%s) OpenAPI specification: %w", d.Id(), err)
+		if diags := resourceAPIRead(ctx, d, meta); diags.HasError() {
+			return sdkdiag.DiagnosticsError(diags)
 		}
 
 		inputU := &apigatewayv2.UpdateApiInput{
@@ -409,14 +405,14 @@ func resourceImportOpenAPI(ctx context.Context, d *schema.ResourceData, meta int
 				})
 
 				if err != nil {
-					return fmt.Errorf("deleting CORS configuration for API Gateway v2 API (%s): %w", d.Id(), err)
+					return fmt.Errorf("deleting API Gateway v2 API (%s) CORS configuration: %w", d.Id(), err)
 				}
 			} else {
 				inputU.CorsConfiguration = expandCORSConfiguration(corsConfiguration.([]interface{}))
 			}
 		}
 
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), d.Get("tags_all"), tags); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), d.Get("tags_all"), KeyValueTags(ctx, GetTagsIn(ctx))); err != nil {
 			return fmt.Errorf("updating API Gateway v2 API (%s) tags: %w", d.Id(), err)
 		}
 
