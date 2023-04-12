@@ -10,6 +10,7 @@ FEATURES:
 * **New Resource:** `aws_pipes_pipe` ([#30538](https://github.com/hashicorp/terraform-provider-aws/issues/30538))
 * **New Resource:** `aws_quicksight_iam_policy_assignment` ([#30653](https://github.com/hashicorp/terraform-provider-aws/issues/30653))
 * **New Resource:** `aws_quicksight_ingestion` ([#30487](https://github.com/hashicorp/terraform-provider-aws/issues/30487))
+* **New Resource:** `aws_quicksight_namespace` ([#30681](https://github.com/hashicorp/terraform-provider-aws/issues/30681))
 * **New Resource:** `aws_sagemaker_data_quality_job_definition` ([#30301](https://github.com/hashicorp/terraform-provider-aws/issues/30301))
 * **New Resource:** `aws_vpclattice_service_network_service_association` ([#30410](https://github.com/hashicorp/terraform-provider-aws/issues/30410))
 * **New Resource:** `aws_vpclattice_service_network_vpc_association` ([#30411](https://github.com/hashicorp/terraform-provider-aws/issues/30411))
