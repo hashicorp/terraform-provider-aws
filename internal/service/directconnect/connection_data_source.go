@@ -104,8 +104,8 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("location", connection.Location)
 	d.Set("name", connection.ConnectionName)
 	d.Set("owner_account_id", connection.OwnerAccount)
-	d.Set("provider_name", connection.PartnerName)
-	d.Set("vlan_id", connection.VLAN)
+	d.Set("provider_name", connection.ProviderName)
+	d.Set("vlan_id", connection.Vlan)
 
 	tags, err := ListTags(ctx, conn, arn)
 
