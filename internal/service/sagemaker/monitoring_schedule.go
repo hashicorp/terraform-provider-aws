@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -25,9 +26,11 @@ func ResourceMonitoringSchedule() *schema.Resource {
 		ReadWithoutTimeout:   resourceMonitoringScheduleRead,
 		UpdateWithoutTimeout: resourceMonitoringScheduleUpdate,
 		DeleteWithoutTimeout: resourceMonitoringScheduleDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -109,7 +112,7 @@ func resourceMonitoringScheduleCreate(ctx context.Context, d *schema.ResourceDat
 	log.Printf("[DEBUG] SageMaker Monitoring Schedule create config: %#v", *createOpts)
 	_, err := conn.CreateMonitoringScheduleWithContext(ctx, createOpts)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Monitoring Schedule: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker Monitoring Schedule (%s): %s", name, err)
 	}
 	d.SetId(name)
 	if _, err := WaitMonitoringScheduleScheduled(ctx, conn, d.Id()); err != nil {
@@ -117,46 +120,6 @@ func resourceMonitoringScheduleCreate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	return append(diags, resourceMonitoringScheduleRead(ctx, d, meta)...)
-}
-
-func expandMonitoringScheduleConfig(configured []interface{}) *sagemaker.MonitoringScheduleConfig {
-	if len(configured) == 0 {
-		return nil
-	}
-
-	m := configured[0].(map[string]interface{})
-
-	c := &sagemaker.MonitoringScheduleConfig{}
-
-	if v, ok := m["monitoring_job_definition_name"].(string); ok && v != "" {
-		c.MonitoringJobDefinitionName = aws.String(v)
-	}
-
-	if v, ok := m["monitoring_type"].(string); ok && v != "" {
-		c.MonitoringType = aws.String(v)
-	}
-
-	if v, ok := m["schedule_config"].([]interface{}); ok && len(v) > 0 {
-		c.ScheduleConfig = expandScheduleConfig(v)
-	}
-
-	return c
-}
-
-func expandScheduleConfig(configured []interface{}) *sagemaker.ScheduleConfig {
-	if len(configured) == 0 {
-		return nil
-	}
-
-	m := configured[0].(map[string]interface{})
-
-	c := &sagemaker.ScheduleConfig{}
-
-	if v, ok := m["schedule_expression"].(string); ok && v != "" {
-		c.ScheduleExpression = aws.String(v)
-	}
-
-	return c
 }
 
 func resourceMonitoringScheduleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -201,42 +164,6 @@ func resourceMonitoringScheduleRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	return diags
-}
-
-func flattenMonitoringScheduleConfig(config *sagemaker.MonitoringScheduleConfig) []map[string]interface{} {
-	if config == nil {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{}
-
-	if config.MonitoringJobDefinitionName != nil {
-		m["monitoring_job_definition_name"] = aws.StringValue(config.MonitoringJobDefinitionName)
-	}
-
-	if config.MonitoringType != nil {
-		m["monitoring_type"] = aws.StringValue(config.MonitoringType)
-	}
-
-	if config.ScheduleConfig != nil {
-		m["schedule_config"] = flattenScheduleConfig(config.ScheduleConfig)
-	}
-
-	return []map[string]interface{}{m}
-}
-
-func flattenScheduleConfig(config *sagemaker.ScheduleConfig) []map[string]interface{} {
-	if config == nil {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{}
-
-	if config.ScheduleExpression != nil {
-		m["schedule_expression"] = aws.StringValue(config.ScheduleExpression)
-	}
-
-	return []map[string]interface{}{m}
 }
 
 func resourceMonitoringScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -297,4 +224,105 @@ func resourceMonitoringScheduleDelete(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 	return diags
+}
+
+func FindMonitoringScheduleByName(ctx context.Context, conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeMonitoringScheduleOutput, error) {
+	input := &sagemaker.DescribeMonitoringScheduleInput{
+		MonitoringScheduleName: aws.String(name),
+	}
+
+	output, err := conn.DescribeMonitoringScheduleWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func expandMonitoringScheduleConfig(configured []interface{}) *sagemaker.MonitoringScheduleConfig {
+	if len(configured) == 0 {
+		return nil
+	}
+
+	m := configured[0].(map[string]interface{})
+
+	c := &sagemaker.MonitoringScheduleConfig{}
+
+	if v, ok := m["monitoring_job_definition_name"].(string); ok && v != "" {
+		c.MonitoringJobDefinitionName = aws.String(v)
+	}
+
+	if v, ok := m["monitoring_type"].(string); ok && v != "" {
+		c.MonitoringType = aws.String(v)
+	}
+
+	if v, ok := m["schedule_config"].([]interface{}); ok && len(v) > 0 {
+		c.ScheduleConfig = expandScheduleConfig(v)
+	}
+
+	return c
+}
+
+func expandScheduleConfig(configured []interface{}) *sagemaker.ScheduleConfig {
+	if len(configured) == 0 {
+		return nil
+	}
+
+	m := configured[0].(map[string]interface{})
+
+	c := &sagemaker.ScheduleConfig{}
+
+	if v, ok := m["schedule_expression"].(string); ok && v != "" {
+		c.ScheduleExpression = aws.String(v)
+	}
+
+	return c
+}
+
+func flattenMonitoringScheduleConfig(config *sagemaker.MonitoringScheduleConfig) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.MonitoringJobDefinitionName != nil {
+		m["monitoring_job_definition_name"] = aws.StringValue(config.MonitoringJobDefinitionName)
+	}
+
+	if config.MonitoringType != nil {
+		m["monitoring_type"] = aws.StringValue(config.MonitoringType)
+	}
+
+	if config.ScheduleConfig != nil {
+		m["schedule_config"] = flattenScheduleConfig(config.ScheduleConfig)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenScheduleConfig(config *sagemaker.ScheduleConfig) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.ScheduleExpression != nil {
+		m["schedule_expression"] = aws.StringValue(config.ScheduleExpression)
+	}
+
+	return []map[string]interface{}{m}
 }

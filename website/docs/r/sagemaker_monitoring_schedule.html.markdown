@@ -39,6 +39,7 @@ The following arguments are supported:
 * `schedule_config` - (Optional) Configures the monitoring schedule. Fields are documented below.
 
 #### schedule_config
+
 * `schedule_expression` - (Required) A cron expression that describes details about the monitoring schedule. For example, and hourly schedule would be `cron(0 * ? * * *)`.
 
 ## Attributes Reference

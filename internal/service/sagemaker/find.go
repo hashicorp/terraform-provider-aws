@@ -497,31 +497,6 @@ func FindEndpointConfigByName(ctx context.Context, conn *sagemaker.SageMaker, na
 	return output, nil
 }
 
-func FindMonitoringScheduleByName(ctx context.Context, conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeMonitoringScheduleOutput, error) {
-	input := &sagemaker.DescribeMonitoringScheduleInput{
-		MonitoringScheduleName: aws.String(name),
-	}
-
-	output, err := conn.DescribeMonitoringScheduleWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
 func FindFlowDefinitionByName(ctx context.Context, conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeFlowDefinitionOutput, error) {
 	input := &sagemaker.DescribeFlowDefinitionInput{
 		FlowDefinitionName: aws.String(name),
