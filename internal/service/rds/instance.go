@@ -2138,7 +2138,7 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 
 	if d.HasChange("replica_mode") {
 		needsModify = true
-		input.ReplicaMode = d.Get("replica_mode").(types.ReplicaMode)
+		input.ReplicaMode = types.ReplicaMode(d.Get("replica_mode").(string))
 	}
 
 	if d.HasChange("security_group_names") {
