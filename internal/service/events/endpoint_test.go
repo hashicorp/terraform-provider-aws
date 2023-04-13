@@ -18,7 +18,7 @@ func TestAccEndpoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1 eventbridge.DescribeEndpointOutput
 	endpointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cloudwatch_global_endpoint.test"
+	resourceName := "aws_cloudwatch_event_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -48,7 +48,7 @@ func TestAccEndpoint_basic(t *testing.T) {
 func TestAccEndpoint_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1 eventbridge.DescribeEndpointOutput
-	resourceName := "aws_cloudwatch_global_endpoint.test"
+	resourceName := "aws_cloudwatch_event_endpoint.test"
 	endpointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -78,7 +78,7 @@ func TestAccEndpoint_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v eventbridge.DescribeEndpointOutput
 	endpointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cloudwatch_global_endpoint.test"
+	resourceName := "aws_cloudwatch_event_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -102,7 +102,7 @@ func testAccCheckEndpointDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudwatch_global_endpoint" {
+		if rs.Type != "aws_cloudwatch_event_endpoint" {
 			continue
 		}
 
@@ -225,7 +225,7 @@ resource "aws_route53_health_check" "test" {
   disabled         = true
 }
 
-resource "aws_cloudwatch_global_endpoint" "test" {
+resource "aws_cloudwatch_event_endpoint" "test" {
   name        = %[1]q
   role_arn    = aws_iam_role.test.arn
   event_buses = [aws_cloudwatch_event_bus.test.arn, aws_cloudwatch_event_bus.test_secondary.arn]
@@ -326,7 +326,7 @@ resource "aws_route53_health_check" "test" {
   disabled         = true
 }
 
-resource "aws_cloudwatch_global_endpoint" "test" {
+resource "aws_cloudwatch_event_endpoint" "test" {
   name        = %[1]q
   role_arn    = aws_iam_role.test.arn
   event_buses = [aws_cloudwatch_event_bus.test.arn, aws_cloudwatch_event_bus.test_secondary.arn]

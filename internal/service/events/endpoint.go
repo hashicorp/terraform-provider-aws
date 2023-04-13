@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_cloudwatch_global_endpoint", name="Endpoint")
+// @SDKResource("aws_cloudwatch_event_endpoint", name="Endpoint")
 func ResourceEndpoint() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceEndpointCreate,

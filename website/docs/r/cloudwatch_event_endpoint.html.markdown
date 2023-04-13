@@ -1,21 +1,21 @@
 ---
 subcategory: "EventBridge"
 layout: "aws"
-page_title: "AWS: aws_cloudwatch_global_endpoint"
+page_title: "AWS: aws_cloudwatch_event_endpoint"
 description: |-
-  Provides a resource to create an EventBridge Global Endpoint.
+  Provides a resource to create an EventBridge Endpoint.
 ---
 
-# Resource: aws_cloudwatch_event_bus_policy
+# Resource: aws_cloudwatch_event_endpoint
 
-Provides a resource to create an EventBridge Global Endpoint.
+Provides a resource to create an EventBridge Endpoint.
 
 ~> **Note:** EventBridge was formerly known as CloudWatch Events. The functionality is identical.
 
 ## Example Usage
 
 ```hcl
-resource "aws_cloudwatch_global_endpoint" "this" {
+resource "aws_cloudwatch_event_endpoint" "this" {
   name        = "global-endpoint"
   role_arn    = aws_iam_role.replication.arn
   event_buses = [aws_cloudwatch_event_bus.primary.arn, aws_cloudwatch_event_bus.secondary.arn]
@@ -78,8 +78,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EventBridge Global Endpoints can be imported using the `name`, e.g.,
+EventBridge Endpoints can be imported using the `name`, e.g.,
 
 ```shell
-$ terraform import aws_cloudwatch_global_endpoint.imported_endpoint example-endpoint
+$ terraform import aws_cloudwatch_event_endpoint.imported_endpoint example-endpoint
 ```
