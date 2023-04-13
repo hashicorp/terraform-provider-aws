@@ -22,7 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_appmesh_virtual_service")
+// @SDKResource("aws_appmesh_virtual_service", name="Virtual Service")
+// @Tags(identifierAttribute="arn")
 func ResourceVirtualService() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVirtualServiceCreate,
@@ -137,14 +138,12 @@ func resourceVirtualServiceSpecSchema() *schema.Schema {
 func resourceVirtualServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &appmesh.CreateVirtualServiceInput{
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		Spec:               expandVirtualServiceSpec(d.Get("spec").([]interface{})),
-		Tags:               Tags(tags.IgnoreAWS()),
+		Tags:               GetTagsIn(ctx),
 		VirtualServiceName: aws.String(name),
 	}
 
@@ -166,8 +165,6 @@ func resourceVirtualServiceCreate(ctx context.Context, d *schema.ResourceData, m
 func resourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindVirtualServiceByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("name").(string))
@@ -197,23 +194,6 @@ func resourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh Virtual Service (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -236,15 +216,6 @@ func resourceVirtualServiceUpdate(ctx context.Context, d *schema.ResourceData, m
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating App Mesh Virtual Service (%s): %s", d.Id(), err)
-		}
-	}
-
-	arn := d.Get("arn").(string)
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating App Mesh Virtual Service (%s) tags: %s", arn, err)
 		}
 	}
 

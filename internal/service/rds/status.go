@@ -38,7 +38,6 @@ func statusEventSubscription(ctx context.Context, conn *rds.RDS, id string) retr
 func statusDBProxyEndpoint(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDBProxyEndpoint(ctx, conn, id)
-
 		if err != nil {
 			return nil, proxyEndpointStatusUnknown, err
 		}

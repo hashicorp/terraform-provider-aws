@@ -53,10 +53,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceCapacityProvider,
 			TypeName: "aws_ecs_capacity_provider",
+			Name:     "Capacity Provider",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceCluster,
 			TypeName: "aws_ecs_cluster",
+			Name:     "Cluster",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceClusterCapacityProviders,
@@ -65,6 +73,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceService,
 			TypeName: "aws_ecs_service",
+			Name:     "Service",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceTag,
@@ -73,10 +85,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceTaskDefinition,
 			TypeName: "aws_ecs_task_definition",
+			Name:     "Task Definition",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceTaskSet,
 			TypeName: "aws_ecs_task_set",
+			Name:     "Task Set",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 	}
 }

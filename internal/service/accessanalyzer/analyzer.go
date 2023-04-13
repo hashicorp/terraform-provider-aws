@@ -19,6 +19,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -29,7 +30,8 @@ const (
 	organizationCreationTimeout = 10 * time.Minute
 )
 
-// @SDKResource("aws_accessanalyzer_analyzer")
+// @SDKResource("aws_accessanalyzer_analyzer", name="Analyzer")
+// @Tags(identifierAttribute="arn")
 func ResourceAnalyzer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAnalyzerCreate,
@@ -54,8 +56,8 @@ func ResourceAnalyzer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -75,14 +77,12 @@ func ResourceAnalyzer() *schema.Resource {
 func resourceAnalyzerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AccessAnalyzerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-	analyzerName := d.Get("analyzer_name").(string)
 
+	analyzerName := d.Get("analyzer_name").(string)
 	input := &accessanalyzer.CreateAnalyzerInput{
 		AnalyzerName: aws.String(analyzerName),
 		ClientToken:  aws.String(id.UniqueId()),
-		Tags:         Tags(tags.IgnoreAWS()),
+		Tags:         GetTagsIn(ctx),
 		Type:         aws.String(d.Get("type").(string)),
 	}
 
@@ -117,8 +117,6 @@ func resourceAnalyzerCreate(ctx context.Context, d *schema.ResourceData, meta in
 func resourceAnalyzerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AccessAnalyzerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &accessanalyzer.GetAnalyzerInput{
 		AnalyzerName: aws.String(d.Id()),
@@ -143,16 +141,7 @@ func resourceAnalyzerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("analyzer_name", output.Analyzer.Name)
 	d.Set("arn", output.Analyzer.Arn)
 
-	tags := KeyValueTags(ctx, output.Analyzer.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, output.Analyzer.Tags)
 
 	d.Set("type", output.Analyzer.Type)
 
@@ -161,14 +150,8 @@ func resourceAnalyzerRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceAnalyzerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AccessAnalyzerConn()
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Access Analyzer Analyzer (%s) tags: %s", d.Id(), err)
-		}
-	}
+	// Tags only.
 
 	return append(diags, resourceAnalyzerRead(ctx, d, meta)...)
 }

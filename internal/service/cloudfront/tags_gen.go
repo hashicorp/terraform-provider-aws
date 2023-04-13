@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists cloudfront service tags.
@@ -105,7 +106,7 @@ func UpdateTags(ctx context.Context, conn cloudfrontiface.CloudFrontAPI, identif
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &cloudfront.UntagResourceInput{
 			Resource: aws.String(identifier),
-			TagKeys:  &cloudfront.TagKeys{Items: aws.StringSlice(removedTags.IgnoreAWS().Keys())},
+			TagKeys:  &cloudfront.TagKeys{Items: aws.StringSlice(removedTags.IgnoreSystem(names.CloudFront).Keys())},
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)

@@ -329,11 +329,6 @@ func WaitClientVPNNetworkAssociationDeleted(ctx context.Context, conn *ec2.EC2, 
 	return nil, err
 }
 
-const (
-	ClientVPNRouteCreatedTimeout = 1 * time.Minute
-	ClientVPNRouteDeletedTimeout = 1 * time.Minute
-)
-
 func WaitClientVPNRouteCreated(ctx context.Context, conn *ec2.EC2, endpointID, targetSubnetID, destinationCIDR string, timeout time.Duration) (*ec2.ClientVpnRoute, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{ec2.ClientVpnRouteStatusCodeCreating},

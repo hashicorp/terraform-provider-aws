@@ -30,10 +30,12 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"golang.org/x/exp/slices"
 )
 
-// @SDKResource("aws_db_instance")
+// @SDKResource("aws_db_instance", name="DB Instance")
+// @Tags(identifierAttribute="arn")
 func ResourceInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceCreate,
@@ -73,13 +75,11 @@ func ResourceInstance() *schema.Resource {
 					mas := d.Get("max_allocated_storage").(int)
 
 					newInt, err := strconv.Atoi(new)
-
 					if err != nil {
 						return false
 					}
 
 					oldInt, err := strconv.Atoi(old)
-
 					if err != nil {
 						return false
 					}
@@ -224,13 +224,11 @@ func ResourceInstance() *schema.Resource {
 					value := v.(string)
 					return strings.ToLower(value)
 				},
-				ConflictsWith: []string{"replicate_source_db"},
 			},
 			"engine_version": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"replicate_source_db"},
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"engine_version_actual": {
 				Type:     schema.TypeString,
@@ -583,8 +581,8 @@ func ResourceInstance() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(StorageType_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"timezone": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -637,8 +635,6 @@ func ResourceInstance() *schema.Resource {
 func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if v, ok := d.GetOk("security_group_names"); ok && v.(*schema.Set).Len() > 0 {
 		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic no new RDS DB Instances can be created referencing RDS DB Security Groups`)
@@ -672,7 +668,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			DeletionProtection:         aws.Bool(d.Get("deletion_protection").(bool)),
 			PubliclyAccessible:         aws.Bool(d.Get("publicly_accessible").(bool)),
 			SourceDBInstanceIdentifier: aws.String(sourceDBInstanceID),
-			Tags:                       Tags(tags.IgnoreAWS()),
+			Tags:                       GetTagsIn(ctx),
 		}
 
 		if _, ok := d.GetOk("allocated_storage"); ok {
@@ -771,7 +767,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				return conn.CreateDBInstanceReadReplicaWithContext(ctx, input)
 			},
 			errCodeInvalidParameterValue, "ENHANCED_MONITORING")
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (read replica) (%s): %s", identifier, err)
 		}
@@ -887,7 +882,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			SourceEngine:            aws.String(tfMap["source_engine"].(string)),
 			SourceEngineVersion:     aws.String(tfMap["source_engine_version"].(string)),
 			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
-			Tags:                    Tags(tags.IgnoreAWS()),
+			Tags:                    GetTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("availability_zone"); ok {
@@ -1008,7 +1003,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				return false, err
 			},
 		)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (restore from S3) (%s): %s", identifier, err)
 		}
@@ -1021,7 +1015,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			DBSnapshotIdentifier:    aws.String(v.(string)),
 			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
-			Tags:                    Tags(tags.IgnoreAWS()),
+			Tags:                    GetTagsIn(ctx),
 		}
 
 		engine := strings.ToLower(d.Get("engine").(string))
@@ -1243,7 +1237,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			DBInstanceClass:            aws.String(d.Get("instance_class").(string)),
 			DeletionProtection:         aws.Bool(d.Get("deletion_protection").(bool)),
 			PubliclyAccessible:         aws.Bool(d.Get("publicly_accessible").(bool)),
-			Tags:                       Tags(tags.IgnoreAWS()),
+			Tags:                       GetTagsIn(ctx),
 			TargetDBInstanceIdentifier: aws.String(identifier),
 		}
 
@@ -1377,7 +1371,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				return false, err
 			},
 		)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (restore to point-in-time) (%s): %s", identifier, err)
 		}
@@ -1414,7 +1407,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			MasterUsername:          aws.String(d.Get("username").(string)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
-			Tags:                    Tags(tags.IgnoreAWS()),
+			Tags:                    GetTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("availability_zone"); ok {
@@ -1568,7 +1561,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				return false, err
 			},
 		)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (%s): %s", identifier, err)
 		}
@@ -1592,7 +1584,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		modifyDbInstanceInput.DBInstanceIdentifier = aws.String(d.Id())
 
 		_, err := conn.ModifyDBInstanceWithContext(ctx, modifyDbInstanceInput)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Id(), err)
 		}
@@ -1606,7 +1597,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		_, err := conn.RebootDBInstanceWithContext(ctx, &rds.RebootDBInstanceInput{
 			DBInstanceIdentifier: aws.String(d.Id()),
 		})
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "rebooting RDS DB Instance (%s): %s", d.Id(), err)
 		}
@@ -1621,8 +1611,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
 	conn := meta.(*conns.AWSClient).RDSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	v, err := findDBInstanceByIDSDKv1(ctx, conn, d.Id())
 
@@ -1751,23 +1739,6 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	dbSetResourceDataEngineVersionFromInstance(d, v)
-
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for RDS DB Instance (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
 
 	return diags
 }
@@ -1967,6 +1938,9 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			if d.HasChange("engine_version") {
 				input.EngineVersion = aws.String(d.Get("engine_version").(string))
 				input.AllowMajorVersionUpgrade = d.Get("allow_major_version_upgrade").(bool)
+				// if we were to make life easier for practitioners, we could loop through
+				// replicas at this point to update them first, prior to dbInstanceModify()
+				// for the source
 			}
 
 			if d.HasChange("parameter_group_name") {
@@ -1977,14 +1951,6 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Id(), err)
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, meta.(*conns.AWSClient).RDSConn(), d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
@@ -2225,7 +2191,6 @@ func dbInstanceModify(ctx context.Context, conn *rds_sdkv2.Client, input *rds_sd
 			return false, err
 		},
 	)
-
 	if err != nil {
 		return err
 	}

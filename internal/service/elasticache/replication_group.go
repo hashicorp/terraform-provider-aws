@@ -24,9 +24,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_elasticache_replication_group")
+// @SDKResource("aws_elasticache_replication_group", name="Replication Group")
+// @Tags(identifierAttribute="arn")
 func ResourceReplicationGroup() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -349,8 +351,8 @@ func ResourceReplicationGroup() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"transit_encryption_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -408,129 +410,124 @@ func ResourceReplicationGroup() *schema.Resource {
 func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-	params := &elasticache.CreateReplicationGroupInput{
+	input := &elasticache.CreateReplicationGroupInput{
 		ReplicationGroupId: aws.String(d.Get("replication_group_id").(string)),
-	}
-
-	if len(tags) > 0 {
-		params.Tags = Tags(tags.IgnoreAWS())
+		Tags:               GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
-		params.ReplicationGroupDescription = aws.String(v.(string))
+		input.ReplicationGroupDescription = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("replication_group_description"); ok {
-		params.ReplicationGroupDescription = aws.String(v.(string))
+		input.ReplicationGroupDescription = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("data_tiering_enabled"); ok {
-		params.DataTieringEnabled = aws.Bool(v.(bool))
+		input.DataTieringEnabled = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("global_replication_group_id"); ok {
-		params.GlobalReplicationGroupId = aws.String(v.(string))
+		input.GlobalReplicationGroupId = aws.String(v.(string))
 	} else {
 		// This cannot be handled at plan-time
 		nodeType := d.Get("node_type").(string)
 		if nodeType == "" {
 			return sdkdiag.AppendErrorf(diags, `"node_type" is required unless "global_replication_group_id" is set.`)
 		}
-		params.AutomaticFailoverEnabled = aws.Bool(d.Get("automatic_failover_enabled").(bool))
-		params.CacheNodeType = aws.String(nodeType)
-		params.Engine = aws.String(d.Get("engine").(string))
+		input.AutomaticFailoverEnabled = aws.Bool(d.Get("automatic_failover_enabled").(bool))
+		input.CacheNodeType = aws.String(nodeType)
+		input.Engine = aws.String(d.Get("engine").(string))
 	}
 
 	if v, ok := d.GetOk("engine_version"); ok {
-		params.EngineVersion = aws.String(v.(string))
+		input.EngineVersion = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("auto_minor_version_upgrade"); ok {
 		if v, null, _ := nullable.Bool(v.(string)).Value(); !null {
-			params.AutoMinorVersionUpgrade = aws.Bool(v)
+			input.AutoMinorVersionUpgrade = aws.Bool(v)
 		}
 	}
 
 	if preferredAZs, ok := d.GetOk("preferred_cache_cluster_azs"); ok {
-		params.PreferredCacheClusterAZs = flex.ExpandStringList(preferredAZs.([]interface{}))
+		input.PreferredCacheClusterAZs = flex.ExpandStringList(preferredAZs.([]interface{}))
 	}
 	if availabilityZones := d.Get("availability_zones").(*schema.Set); availabilityZones.Len() > 0 {
-		params.PreferredCacheClusterAZs = flex.ExpandStringSet(availabilityZones)
+		input.PreferredCacheClusterAZs = flex.ExpandStringSet(availabilityZones)
 	}
 
 	if v, ok := d.GetOk("parameter_group_name"); ok {
-		params.CacheParameterGroupName = aws.String(v.(string))
+		input.CacheParameterGroupName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("port"); ok {
-		params.Port = aws.Int64(int64(v.(int)))
+		input.Port = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("subnet_group_name"); ok {
-		params.CacheSubnetGroupName = aws.String(v.(string))
+		input.CacheSubnetGroupName = aws.String(v.(string))
 	}
 
 	if SGNames := d.Get("security_group_names").(*schema.Set); SGNames.Len() > 0 {
-		params.CacheSecurityGroupNames = flex.ExpandStringSet(SGNames)
+		input.CacheSecurityGroupNames = flex.ExpandStringSet(SGNames)
 	}
 
 	if SGIds := d.Get("security_group_ids").(*schema.Set); SGIds.Len() > 0 {
-		params.SecurityGroupIds = flex.ExpandStringSet(SGIds)
+		input.SecurityGroupIds = flex.ExpandStringSet(SGIds)
 	}
 
 	if snaps := d.Get("snapshot_arns").(*schema.Set); snaps.Len() > 0 {
-		params.SnapshotArns = flex.ExpandStringSet(snaps)
+		input.SnapshotArns = flex.ExpandStringSet(snaps)
 	}
 
 	if v, ok := d.GetOk("log_delivery_configuration"); ok {
-		params.LogDeliveryConfigurations = []*elasticache.LogDeliveryConfigurationRequest{}
+		input.LogDeliveryConfigurations = []*elasticache.LogDeliveryConfigurationRequest{}
 		v := v.(*schema.Set).List()
 		for _, v := range v {
 			logDeliveryConfigurationRequest := expandLogDeliveryConfigurations(v.(map[string]interface{}))
-			params.LogDeliveryConfigurations = append(params.LogDeliveryConfigurations, &logDeliveryConfigurationRequest)
+			input.LogDeliveryConfigurations = append(input.LogDeliveryConfigurations, &logDeliveryConfigurationRequest)
 		}
 	}
 
 	if v, ok := d.GetOk("maintenance_window"); ok {
-		params.PreferredMaintenanceWindow = aws.String(v.(string))
+		input.PreferredMaintenanceWindow = aws.String(v.(string))
 	}
 
 	if _, ok := d.GetOk("multi_az_enabled"); ok {
-		params.MultiAZEnabled = aws.Bool(d.Get("multi_az_enabled").(bool))
+		input.MultiAZEnabled = aws.Bool(d.Get("multi_az_enabled").(bool))
 	}
 
 	if v, ok := d.GetOk("notification_topic_arn"); ok {
-		params.NotificationTopicArn = aws.String(v.(string))
+		input.NotificationTopicArn = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("kms_key_id"); ok {
-		params.KmsKeyId = aws.String(v.(string))
+		input.KmsKeyId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("snapshot_retention_limit"); ok {
-		params.SnapshotRetentionLimit = aws.Int64(int64(v.(int)))
+		input.SnapshotRetentionLimit = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("snapshot_window"); ok {
-		params.SnapshotWindow = aws.String(v.(string))
+		input.SnapshotWindow = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("snapshot_name"); ok {
-		params.SnapshotName = aws.String(v.(string))
+		input.SnapshotName = aws.String(v.(string))
 	}
 
 	if _, ok := d.GetOk("transit_encryption_enabled"); ok {
-		params.TransitEncryptionEnabled = aws.Bool(d.Get("transit_encryption_enabled").(bool))
+		input.TransitEncryptionEnabled = aws.Bool(d.Get("transit_encryption_enabled").(bool))
 	}
 
 	if _, ok := d.GetOk("at_rest_encryption_enabled"); ok {
-		params.AtRestEncryptionEnabled = aws.Bool(d.Get("at_rest_encryption_enabled").(bool))
+		input.AtRestEncryptionEnabled = aws.Bool(d.Get("at_rest_encryption_enabled").(bool))
 	}
 
 	if v, ok := d.GetOk("auth_token"); ok {
-		params.AuthToken = aws.String(v.(string))
+		input.AuthToken = aws.String(v.(string))
 	}
 
 	if clusterMode, ok := d.GetOk("cluster_mode"); ok {
@@ -538,41 +535,41 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		attributes := clusterModeList[0].(map[string]interface{})
 
 		if v, ok := attributes["num_node_groups"]; ok && v != 0 {
-			params.NumNodeGroups = aws.Int64(int64(v.(int)))
+			input.NumNodeGroups = aws.Int64(int64(v.(int)))
 		}
 
 		if v, ok := attributes["replicas_per_node_group"]; ok {
-			params.ReplicasPerNodeGroup = aws.Int64(int64(v.(int)))
+			input.ReplicasPerNodeGroup = aws.Int64(int64(v.(int)))
 		}
 	}
 
 	if v, ok := d.GetOk("num_node_groups"); ok && v != 0 {
-		params.NumNodeGroups = aws.Int64(int64(v.(int)))
+		input.NumNodeGroups = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("replicas_per_node_group"); ok {
-		params.ReplicasPerNodeGroup = aws.Int64(int64(v.(int)))
+		input.ReplicasPerNodeGroup = aws.Int64(int64(v.(int)))
 	}
 
 	if cacheClusters, ok := d.GetOk("number_cache_clusters"); ok {
-		params.NumCacheClusters = aws.Int64(int64(cacheClusters.(int)))
+		input.NumCacheClusters = aws.Int64(int64(cacheClusters.(int)))
 	}
 
 	if numCacheClusters, ok := d.GetOk("num_cache_clusters"); ok {
-		params.NumCacheClusters = aws.Int64(int64(numCacheClusters.(int)))
+		input.NumCacheClusters = aws.Int64(int64(numCacheClusters.(int)))
 	}
 
 	if userGroupIds := d.Get("user_group_ids").(*schema.Set); userGroupIds.Len() > 0 {
-		params.UserGroupIds = flex.ExpandStringSet(userGroupIds)
+		input.UserGroupIds = flex.ExpandStringSet(userGroupIds)
 	}
 
-	resp, err := conn.CreateReplicationGroupWithContext(ctx, params)
+	resp, err := conn.CreateReplicationGroupWithContext(ctx, input)
 
-	if params.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating ElastiCache Replication Group with tags: %s. Trying create without tags.", err)
 
-		params.Tags = nil
-		resp, err = conn.CreateReplicationGroupWithContext(ctx, params)
+		input.Tags = nil
+		resp, err = conn.CreateReplicationGroupWithContext(ctx, input)
 	}
 
 	if err != nil {
@@ -597,7 +594,7 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	// In some partitions, only post-create tagging supported
-	if params.Tags == nil && len(tags) > 0 {
+	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); input.Tags == nil && len(tags) > 0 {
 		err := UpdateTags(ctx, conn, aws.StringValue(resp.ReplicationGroup.ARN), nil, tags)
 
 		if err != nil {
@@ -616,8 +613,6 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	rgp, err := FindReplicationGroupByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -710,32 +705,6 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 	_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group to be available (%s): %s", aws.StringValue(rgp.ARN), err)
-	}
-
-	log.Printf("[DEBUG] Listing tags for ElastiCache Replication Group (%s)", d.Id())
-
-	tags, err := ListTags(ctx, conn, aws.StringValue(rgp.ARN))
-
-	if err != nil && !verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		return sdkdiag.AppendErrorf(diags, "listing tags for ElastiCache Replication Group (%s): %s", aws.StringValue(rgp.ARN), err)
-	}
-
-	// tags not supported in all partitions
-	if err != nil {
-		log.Printf("[WARN] failed listing tags for ElastiCache Replication Group (%s): %s", aws.StringValue(rgp.ARN), err)
-	}
-
-	if tags != nil {
-		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-		//lintignore:AWSR002
-		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-		}
-
-		if err := d.Set("tags_all", tags.Map()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-		}
 	}
 
 	log.Printf("[DEBUG] ElastiCache Replication Group (%s): Checking underlying cache clusters", d.Id())
@@ -959,21 +928,6 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 		_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group (%s) auth_token change: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n)
-
-		if err != nil {
-			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.ErrorISOUnsupported(conn.PartitionID, err) {
-				// explicitly setting tags or not an iso-unsupported error
-				return sdkdiag.AppendErrorf(diags, "updating ElastiCache Replication Group (%s) tags: %s", d.Id(), err)
-			}
-
-			log.Printf("[WARN] failed updating tags for ElastiCache Replication Group (%s): %s", d.Id(), err)
 		}
 	}
 

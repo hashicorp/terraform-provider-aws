@@ -18,13 +18,15 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // We can only modify 20 parameters at a time, so walk them until
 // we've got them all.
 const maxParams = 20
 
-// @SDKResource("aws_neptune_parameter_group")
+// @SDKResource("aws_neptune_parameter_group", name="Parameter Group")
+// @Tags(identifierAttribute="arn")
 func ResourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterGroupCreate,
@@ -83,8 +85,8 @@ func ResourceParameterGroup() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -94,14 +96,12 @@ func ResourceParameterGroup() *schema.Resource {
 func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	createOpts := neptune.CreateDBParameterGroupInput{
 		DBParameterGroupName:   aws.String(d.Get("name").(string)),
 		DBParameterGroupFamily: aws.String(d.Get("family").(string)),
 		Description:            aws.String(d.Get("description").(string)),
-		Tags:                   Tags(tags.IgnoreAWS()),
+		Tags:                   GetTagsIn(ctx),
 	}
 
 	log.Printf("[DEBUG] Create Neptune Parameter Group: %#v", createOpts)
@@ -120,8 +120,6 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	describeOpts := neptune.DescribeDBParameterGroupsInput{
 		DBParameterGroupName: aws.String(d.Id()),
@@ -170,23 +168,6 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 
 	if err := d.Set("parameter", flattenParameters(parameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
-	}
-
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Neptune Parameter Group (%s): %s", d.Get("arn").(string), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	return diags
@@ -264,14 +245,6 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "modifying Neptune Parameter Group: %s", err)
 			}
-		}
-	}
-
-	if !d.IsNewResource() && d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Neptune Parameter Group (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 

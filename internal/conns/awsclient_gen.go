@@ -9,6 +9,7 @@ import (
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
+	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	"github.com/aws/aws-sdk-go-v2/service/healthlake"
@@ -75,6 +76,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/chimesdkmediapipelines"
 	"github.com/aws/aws-sdk-go/service/chimesdkmeetings"
 	"github.com/aws/aws-sdk-go/service/chimesdkmessaging"
+	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
 	"github.com/aws/aws-sdk-go/service/cloud9"
 	"github.com/aws/aws-sdk-go/service/clouddirectory"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
@@ -388,6 +390,7 @@ type AWSClient struct {
 	chimesdkmediapipelinesConn       *chimesdkmediapipelines.ChimeSDKMediaPipelines
 	chimesdkmeetingsConn             *chimesdkmeetings.ChimeSDKMeetings
 	chimesdkmessagingConn            *chimesdkmessaging.ChimeSDKMessaging
+	chimesdkvoiceConn                *chimesdkvoice.ChimeSDKVoice
 	cloud9Conn                       *cloud9.Cloud9
 	cloudcontrolClient               *cloudcontrol.Client
 	clouddirectoryConn               *clouddirectory.CloudDirectory
@@ -435,6 +438,7 @@ type AWSClient struct {
 	directconnectConn                *directconnect.DirectConnect
 	discoveryConn                    *applicationdiscoveryservice.ApplicationDiscoveryService
 	docdbConn                        *docdb.DocDB
+	docdbelasticClient               *docdbelastic.Client
 	dynamodbConn                     *dynamodb.DynamoDB
 	dynamodbstreamsConn              *dynamodbstreams.DynamoDBStreams
 	ebsConn                          *ebs.EBS
@@ -824,6 +828,10 @@ func (client *AWSClient) ChimeSDKMessagingConn() *chimesdkmessaging.ChimeSDKMess
 	return client.chimesdkmessagingConn
 }
 
+func (client *AWSClient) ChimeSDKVoiceConn() *chimesdkvoice.ChimeSDKVoice {
+	return client.chimesdkvoiceConn
+}
+
 func (client *AWSClient) Cloud9Conn() *cloud9.Cloud9 {
 	return client.cloud9Conn
 }
@@ -1010,6 +1018,10 @@ func (client *AWSClient) DiscoveryConn() *applicationdiscoveryservice.Applicatio
 
 func (client *AWSClient) DocDBConn() *docdb.DocDB {
 	return client.docdbConn
+}
+
+func (client *AWSClient) DocDBElasticClient() *docdbelastic.Client {
+	return client.docdbelasticClient
 }
 
 func (client *AWSClient) DynamoDBConn() *dynamodb.DynamoDB {

@@ -12,6 +12,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // GetTag fetches an individual ec2 service tag for a resource.
@@ -162,7 +163,7 @@ func UpdateTags(ctx context.Context, conn ec2iface.EC2API, identifier string, ol
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &ec2.DeleteTagsInput{
 			Resources: aws.StringSlice([]string{identifier}),
-			Tags:      Tags(removedTags.IgnoreAWS()),
+			Tags:      Tags(removedTags.IgnoreSystem(names.EC2)),
 		}
 
 		_, err := conn.DeleteTagsWithContext(ctx, input)
@@ -175,7 +176,7 @@ func UpdateTags(ctx context.Context, conn ec2iface.EC2API, identifier string, ol
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &ec2.CreateTagsInput{
 			Resources: aws.StringSlice([]string{identifier}),
-			Tags:      Tags(updatedTags.IgnoreAWS()),
+			Tags:      Tags(updatedTags.IgnoreSystem(names.EC2)),
 		}
 
 		_, err := conn.CreateTagsWithContext(ctx, input)

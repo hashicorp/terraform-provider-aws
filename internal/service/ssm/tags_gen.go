@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists ssm service tags.
@@ -107,7 +108,7 @@ func UpdateTags(ctx context.Context, conn ssmiface.SSMAPI, identifier, resourceT
 		input := &ssm.RemoveTagsFromResourceInput{
 			ResourceId:   aws.String(identifier),
 			ResourceType: aws.String(resourceType),
-			TagKeys:      aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:      aws.StringSlice(removedTags.IgnoreSystem(names.SSM).Keys()),
 		}
 
 		_, err := conn.RemoveTagsFromResourceWithContext(ctx, input)
@@ -121,7 +122,7 @@ func UpdateTags(ctx context.Context, conn ssmiface.SSMAPI, identifier, resourceT
 		input := &ssm.AddTagsToResourceInput{
 			ResourceId:   aws.String(identifier),
 			ResourceType: aws.String(resourceType),
-			Tags:         Tags(updatedTags.IgnoreAWS()),
+			Tags:         Tags(updatedTags.IgnoreSystem(names.SSM)),
 		}
 
 		_, err := conn.AddTagsToResourceWithContext(ctx, input)

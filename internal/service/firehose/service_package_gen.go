@@ -33,6 +33,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDeliveryStream,
 			TypeName: "aws_kinesis_firehose_delivery_stream",
+			Name:     "Delivery Stream",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "name",
+			},
 		},
 	}
 }

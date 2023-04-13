@@ -16,9 +16,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ec2_managed_prefix_list")
+// @SDKResource("aws_ec2_managed_prefix_list", name="Managed Prefix List")
+// @Tags(identifierAttribute="id")
 func ResourceManagedPrefixList() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceManagedPrefixListCreate,
@@ -81,8 +83,8 @@ func ResourceManagedPrefixList() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"version": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -93,10 +95,10 @@ func ResourceManagedPrefixList() *schema.Resource {
 
 func resourceManagedPrefixListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-	input := &ec2.CreateManagedPrefixListInput{}
+	input := &ec2.CreateManagedPrefixListInput{
+		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypePrefixList),
+	}
 
 	if v, ok := d.GetOk("address_family"); ok {
 		input.AddressFamily = aws.String(v.(string))
@@ -112,10 +114,6 @@ func resourceManagedPrefixListCreate(ctx context.Context, d *schema.ResourceData
 
 	if v, ok := d.GetOk("name"); ok {
 		input.PrefixListName = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypePrefixList)
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Managed Prefix List: %s", input)
@@ -136,8 +134,6 @@ func resourceManagedPrefixListCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	pl, err := FindManagedPrefixListByID(ctx, conn, d.Id())
 
@@ -167,16 +163,7 @@ func resourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("owner_id", pl.OwnerId)
 	d.Set("version", pl.Version)
 
-	tags := KeyValueTags(ctx, pl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, pl.Tags)
 
 	return nil
 }
@@ -304,14 +291,6 @@ func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData
 		err := updateMaxEntry(ctx, conn, d.Id(), newMaxEntryInt)
 		if err != nil {
 			return diag.Errorf("updating EC2 Managed Prefix List (%s) decreased MaxEntries : %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("updating EC2 Managed Prefix List (%s) tags: %s", d.Id(), err)
 		}
 	}
 

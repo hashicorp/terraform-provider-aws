@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists ds service tags.
@@ -105,7 +106,7 @@ func UpdateTags(ctx context.Context, conn directoryserviceiface.DirectoryService
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &directoryservice.RemoveTagsFromResourceInput{
 			ResourceId: aws.String(identifier),
-			TagKeys:    aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:    aws.StringSlice(removedTags.IgnoreSystem(names.DS).Keys()),
 		}
 
 		_, err := conn.RemoveTagsFromResourceWithContext(ctx, input)
@@ -118,7 +119,7 @@ func UpdateTags(ctx context.Context, conn directoryserviceiface.DirectoryService
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &directoryservice.AddTagsToResourceInput{
 			ResourceId: aws.String(identifier),
-			Tags:       Tags(updatedTags.IgnoreAWS()),
+			Tags:       Tags(updatedTags.IgnoreSystem(names.DS)),
 		}
 
 		_, err := conn.AddTagsToResourceWithContext(ctx, input)
@@ -129,6 +130,15 @@ func UpdateTags(ctx context.Context, conn directoryserviceiface.DirectoryService
 	}
 
 	return nil
+}
+
+// createTags creates ds service tags for new resources.
+func createTags(ctx context.Context, conn directoryserviceiface.DirectoryServiceAPI, identifier string, tags []*directoryservice.Tag) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return UpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
 }
 
 // UpdateTags updates ds service tags.

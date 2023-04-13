@@ -26,6 +26,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -37,7 +38,8 @@ const (
 	cacheClusterCreatedTimeout = 40 * time.Minute
 )
 
-// @SDKResource("aws_elasticache_cluster")
+// @SDKResource("aws_elasticache_cluster", name="Cluster")
+// @Tags(identifierAttribute="arn")
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
@@ -328,8 +330,8 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -347,129 +349,125 @@ func ResourceCluster() *schema.Resource {
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if v, ok := d.GetOk("security_group_names"); ok && v.(*schema.Set).Len() > 0 {
 		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic no new ElastiCache Clusters can be created referencing ElastiCache Security Groups`)
 	}
 
-	req := &elasticache.CreateCacheClusterInput{}
+	input := &elasticache.CreateCacheClusterInput{
+		Tags: GetTagsIn(ctx),
+	}
 
 	if v, ok := d.GetOk("replication_group_id"); ok {
-		req.ReplicationGroupId = aws.String(v.(string))
+		input.ReplicationGroupId = aws.String(v.(string))
 	} else {
-		req.SecurityGroupIds = flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set))
-
-		if len(tags) > 0 {
-			req.Tags = Tags(tags.IgnoreAWS())
-		}
+		input.SecurityGroupIds = flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("cluster_id"); ok {
-		req.CacheClusterId = aws.String(v.(string))
+		input.CacheClusterId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("node_type"); ok {
-		req.CacheNodeType = aws.String(v.(string))
+		input.CacheNodeType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("num_cache_nodes"); ok {
-		req.NumCacheNodes = aws.Int64(int64(v.(int)))
+		input.NumCacheNodes = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("outpost_mode"); ok {
-		req.OutpostMode = aws.String(v.(string))
+		input.OutpostMode = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("preferred_outpost_arn"); ok {
-		req.PreferredOutpostArn = aws.String(v.(string))
+		input.PreferredOutpostArn = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("engine"); ok {
-		req.Engine = aws.String(v.(string))
+		input.Engine = aws.String(v.(string))
 	}
 
 	version := d.Get("engine_version").(string)
 	if version != "" {
-		req.EngineVersion = aws.String(version)
+		input.EngineVersion = aws.String(version)
 	}
 
 	if v, ok := d.GetOk("auto_minor_version_upgrade"); ok {
 		if v, null, _ := nullable.Bool(v.(string)).Value(); !null {
-			req.AutoMinorVersionUpgrade = aws.Bool(v)
+			input.AutoMinorVersionUpgrade = aws.Bool(v)
 		}
 	}
 
 	if v, ok := d.GetOk("port"); ok {
-		req.Port = aws.Int64(int64(v.(int)))
+		input.Port = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("subnet_group_name"); ok {
-		req.CacheSubnetGroupName = aws.String(v.(string))
+		input.CacheSubnetGroupName = aws.String(v.(string))
 	}
 
 	// parameter groups are optional and can be defaulted by AWS
 	if v, ok := d.GetOk("parameter_group_name"); ok {
-		req.CacheParameterGroupName = aws.String(v.(string))
+		input.CacheParameterGroupName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("snapshot_retention_limit"); ok {
-		req.SnapshotRetentionLimit = aws.Int64(int64(v.(int)))
+		input.SnapshotRetentionLimit = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("snapshot_window"); ok {
-		req.SnapshotWindow = aws.String(v.(string))
+		input.SnapshotWindow = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("log_delivery_configuration"); ok {
-		req.LogDeliveryConfigurations = []*elasticache.LogDeliveryConfigurationRequest{}
+		input.LogDeliveryConfigurations = []*elasticache.LogDeliveryConfigurationRequest{}
 		v := v.(*schema.Set).List()
 		for _, v := range v {
 			logDeliveryConfigurationRequest := expandLogDeliveryConfigurations(v.(map[string]interface{}))
-			req.LogDeliveryConfigurations = append(req.LogDeliveryConfigurations, &logDeliveryConfigurationRequest)
+			input.LogDeliveryConfigurations = append(input.LogDeliveryConfigurations, &logDeliveryConfigurationRequest)
 		}
 	}
 
 	if v, ok := d.GetOk("maintenance_window"); ok {
-		req.PreferredMaintenanceWindow = aws.String(v.(string))
+		input.PreferredMaintenanceWindow = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("notification_topic_arn"); ok {
-		req.NotificationTopicArn = aws.String(v.(string))
+		input.NotificationTopicArn = aws.String(v.(string))
 	}
 
 	snaps := d.Get("snapshot_arns").([]interface{})
 	if len(snaps) > 0 {
-		req.SnapshotArns = flex.ExpandStringList(snaps)
+		input.SnapshotArns = flex.ExpandStringList(snaps)
 		log.Printf("[DEBUG] Restoring Redis cluster from S3 snapshot: %#v", snaps)
 	}
 
 	if v, ok := d.GetOk("snapshot_name"); ok {
-		req.SnapshotName = aws.String(v.(string))
+		input.SnapshotName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("az_mode"); ok {
-		req.AZMode = aws.String(v.(string))
+		input.AZMode = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("availability_zone"); ok {
-		req.PreferredAvailabilityZone = aws.String(v.(string))
+		input.PreferredAvailabilityZone = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("preferred_availability_zones"); ok && len(v.([]interface{})) > 0 {
-		req.PreferredAvailabilityZones = flex.ExpandStringList(v.([]interface{}))
+		input.PreferredAvailabilityZones = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("ip_discovery"); ok {
-		req.IpDiscovery = aws.String(v.(string))
+		input.IpDiscovery = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("network_type"); ok {
-		req.NetworkType = aws.String(v.(string))
+		input.NetworkType = aws.String(v.(string))
 	}
 
-	id, arn, err := createCacheCluster(ctx, conn, req)
+	id, arn, err := createCacheCluster(ctx, conn, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ElastiCache Cache Cluster: %s", err)
 	}
@@ -482,7 +480,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	// Only post-create tagging supported in some partitions
-	if req.Tags == nil && len(tags) > 0 {
+	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); input.Tags == nil && len(tags) > 0 {
 		err := UpdateTags(ctx, conn, arn, nil, tags)
 
 		if err != nil {
@@ -501,8 +499,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	c, err := FindCacheClusterWithNodeInfoByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -557,29 +553,6 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("ip_discovery", c.IpDiscovery)
 	d.Set("network_type", c.NetworkType)
 	d.Set("preferred_outpost_arn", c.PreferredOutpostArn)
-
-	tags, err := ListTags(ctx, conn, aws.StringValue(c.ARN))
-
-	if err != nil && !verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		return sdkdiag.AppendErrorf(diags, "listing tags for ElastiCache Cache Cluster (%s): %s", d.Id(), err)
-	}
-
-	if err != nil {
-		log.Printf("[WARN] error listing tags for ElastiCache Cache Cluster (%s): %s", d.Id(), err)
-	}
-
-	if tags != nil {
-		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-		//lintignore:AWSR002
-		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-		}
-
-		if err := d.Set("tags_all", tags.Map()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-		}
-	}
 
 	return diags
 }
@@ -754,23 +727,6 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		_, err = waitCacheClusterAvailable(ctx, conn, d.Id(), CacheClusterUpdatedTimeout)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Cache Cluster (%s) to update: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n)
-
-		// ISO partitions may not support tagging, giving error
-		if err != nil {
-			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.ErrorISOUnsupported(conn.PartitionID, err) {
-				// explicitly setting tags or not an iso-unsupported error
-				return sdkdiag.AppendErrorf(diags, "updating ElastiCache Cache Cluster (%s) tags: %s", d.Get("arn").(string), err)
-			}
-
-			// no non-default tags and iso-unsupported error
-			log.Printf("[WARN] failed updating tags for ElastiCache Cache Cluster (%s): %s", d.Get("arn").(string), err)
 		}
 	}
 

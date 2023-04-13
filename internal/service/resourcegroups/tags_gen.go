@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists resourcegroups service tags.
@@ -88,7 +89,7 @@ func UpdateTags(ctx context.Context, conn resourcegroupsiface.ResourceGroupsAPI,
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &resourcegroups.UntagInput{
 			Arn:  aws.String(identifier),
-			Keys: aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			Keys: aws.StringSlice(removedTags.IgnoreSystem(names.ResourceGroups).Keys()),
 		}
 
 		_, err := conn.UntagWithContext(ctx, input)
@@ -101,7 +102,7 @@ func UpdateTags(ctx context.Context, conn resourcegroupsiface.ResourceGroupsAPI,
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &resourcegroups.TagInput{
 			Arn:  aws.String(identifier),
-			Tags: Tags(updatedTags.IgnoreAWS()),
+			Tags: Tags(updatedTags.IgnoreSystem(names.ResourceGroups)),
 		}
 
 		_, err := conn.TagWithContext(ctx, input)

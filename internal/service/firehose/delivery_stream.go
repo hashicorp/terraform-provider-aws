@@ -22,6 +22,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -842,7 +843,8 @@ func flattenHTTPEndpointConfiguration(description *firehose.HttpEndpointDestinat
 	return []map[string]interface{}{m}
 }
 
-// @SDKResource("aws_kinesis_firehose_delivery_stream")
+// @SDKResource("aws_kinesis_firehose_delivery_stream", name="Delivery Stream")
+// @Tags(identifierAttribute="name")
 func ResourceDeliveryStream() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -885,9 +887,8 @@ func ResourceDeliveryStream() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
 
-			"tags": tftags.TagsSchema(),
-
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 
 			"server_side_encryption": {
 				Type:             schema.TypeList,
@@ -2575,62 +2576,56 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	conn := meta.(*conns.AWSClient).FirehoseConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	createInput := &firehose.CreateDeliveryStreamInput{
+	input := &firehose.CreateDeliveryStreamInput{
 		DeliveryStreamName: aws.String(sn),
+		Tags:               GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("kinesis_source_configuration"); ok {
 		sourceConfig := createSourceConfig(v.([]interface{})[0].(map[string]interface{}))
-		createInput.KinesisStreamSourceConfiguration = sourceConfig
-		createInput.DeliveryStreamType = aws.String(firehose.DeliveryStreamTypeKinesisStreamAsSource)
+		input.KinesisStreamSourceConfiguration = sourceConfig
+		input.DeliveryStreamType = aws.String(firehose.DeliveryStreamTypeKinesisStreamAsSource)
 	} else {
-		createInput.DeliveryStreamType = aws.String(firehose.DeliveryStreamTypeDirectPut)
+		input.DeliveryStreamType = aws.String(firehose.DeliveryStreamTypeDirectPut)
 	}
 
 	if d.Get("destination").(string) == destinationTypeExtendedS3 {
 		extendedS3Config := createExtendedS3Config(d)
-		createInput.ExtendedS3DestinationConfiguration = extendedS3Config
+		input.ExtendedS3DestinationConfiguration = extendedS3Config
 	} else {
 		s3Config := createS3Config(d)
 
 		if d.Get("destination").(string) == destinationTypeS3 {
-			createInput.S3DestinationConfiguration = s3Config
+			input.S3DestinationConfiguration = s3Config
 		} else if d.Get("destination").(string) == destinationTypeElasticsearch {
 			esConfig, err := createElasticsearchConfig(d, s3Config)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "creating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 			}
-			createInput.ElasticsearchDestinationConfiguration = esConfig
+			input.ElasticsearchDestinationConfiguration = esConfig
 		} else if d.Get("destination").(string) == destinationTypeRedshift {
 			rc, err := createRedshiftConfig(d, s3Config)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "creating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 			}
-			createInput.RedshiftDestinationConfiguration = rc
+			input.RedshiftDestinationConfiguration = rc
 		} else if d.Get("destination").(string) == destinationTypeSplunk {
 			rc, err := createSplunkConfig(d, s3Config)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "creating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 			}
-			createInput.SplunkDestinationConfiguration = rc
+			input.SplunkDestinationConfiguration = rc
 		} else if d.Get("destination").(string) == destinationTypeHTTPEndpoint {
 			rc, err := createHTTPEndpointConfig(d, s3Config)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "creating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 			}
-			createInput.HttpEndpointDestinationConfiguration = rc
+			input.HttpEndpointDestinationConfiguration = rc
 		}
 	}
 
-	if len(tags) > 0 {
-		createInput.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		_, err := conn.CreateDeliveryStreamWithContext(ctx, createInput)
+		_, err := conn.CreateDeliveryStreamWithContext(ctx, input)
 		if err != nil {
 			// Access was denied when calling Glue. Please ensure that the role specified in the data format conversion configuration has the necessary permissions.
 			if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Access was denied") {
@@ -2660,7 +2655,7 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		_, err = conn.CreateDeliveryStreamWithContext(ctx, createInput)
+		_, err = conn.CreateDeliveryStreamWithContext(ctx, input)
 	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
@@ -2824,14 +2819,6 @@ func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, sn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Kinesis Firehose Delivery Stream (%s): updating tags: %s", sn, err)
-		}
-	}
-
 	if d.HasChange("server_side_encryption") {
 		_, n := d.GetChange("server_side_encryption")
 		if isDeliveryStreamOptionDisabled(n) {
@@ -2870,8 +2857,6 @@ func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, m
 func resourceDeliveryStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FirehoseConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	sn := d.Get("name").(string)
 	s, err := FindDeliveryStreamByName(ctx, conn, sn)
@@ -2888,22 +2873,6 @@ func resourceDeliveryStreamRead(ctx context.Context, d *schema.ResourceData, met
 
 	if err := flattenDeliveryStream(d, s); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Kinesis Firehose Delivery Stream (%s): %s", sn, err)
-	}
-
-	tags, err := ListTags(ctx, conn, sn)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Kinesis Firehose Delivery Stream (%s): listing tags: %s", sn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	return diags

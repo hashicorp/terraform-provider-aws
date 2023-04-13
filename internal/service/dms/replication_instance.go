@@ -17,9 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_dms_replication_instance")
+// @SDKResource("aws_dms_replication_instance", name="Replication Instance")
+// @Tags(identifierAttribute="replication_instance_arn")
 func ResourceReplicationInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationInstanceCreate,
@@ -124,8 +126,8 @@ func ResourceReplicationInstance() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -142,8 +144,6 @@ func ResourceReplicationInstance() *schema.Resource {
 func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	request := &dms.CreateReplicationInstanceInput{
 		AutoMinorVersionUpgrade:       aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
@@ -151,7 +151,7 @@ func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceDa
 		MultiAZ:                       aws.Bool(d.Get("multi_az").(bool)),
 		ReplicationInstanceClass:      aws.String(d.Get("replication_instance_class").(string)),
 		ReplicationInstanceIdentifier: aws.String(d.Get("replication_instance_id").(string)),
-		Tags:                          Tags(tags.IgnoreAWS()),
+		Tags:                          GetTagsIn(ctx),
 	}
 
 	// WARNING: GetOk returns the zero value for the type if the key is omitted in config. This means for optional
@@ -210,8 +210,6 @@ func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceDa
 func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	response, err := conn.DescribeReplicationInstancesWithContext(ctx, &dms.DescribeReplicationInstancesInput{
 		Filters: []*dms.Filter{
@@ -269,23 +267,6 @@ func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData
 
 	if err := d.Set("vpc_security_group_ids", vpc_security_group_ids); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_security_group_ids: %s", err)
-	}
-
-	tags, err := ListTags(ctx, conn, d.Get("replication_instance_arn").(string))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for DMS Replication Instance (%s): %s", d.Get("replication_instance_arn").(string), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	return diags
@@ -347,15 +328,6 @@ func resourceReplicationInstanceUpdate(ctx context.Context, d *schema.ResourceDa
 		if v, ok := d.GetOk("vpc_security_group_ids"); ok {
 			request.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 			hasChanges = true
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		arn := d.Get("replication_instance_arn").(string)
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating DMS Replication Instance (%s) tags: %s", arn, err)
 		}
 	}
 

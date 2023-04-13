@@ -14,9 +14,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_rolesanywhere_profile")
+// @SDKResource("aws_rolesanywhere_profile", name="Profile")
+// @Tags(identifierAttribute="arn")
 func ResourceProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProfileCreate,
@@ -67,8 +69,8 @@ func ResourceProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
@@ -76,14 +78,12 @@ func ResourceProfile() *schema.Resource {
 
 func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-	name := d.Get("name").(string)
 
+	name := d.Get("name").(string)
 	input := &rolesanywhere.CreateProfileInput{
 		Name:     aws.String(name),
 		RoleArns: expandStringList(d.Get("role_arns").(*schema.Set).List()),
-		Tags:     Tags(tags.IgnoreAWS()),
+		Tags:     GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("duration_seconds"); ok {
@@ -120,8 +120,6 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	profile, err := FindProfileByID(ctx, conn, d.Id())
 
@@ -143,22 +141,6 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("require_instance_properties", profile.RequireInstanceProperties)
 	d.Set("role_arns", profile.RoleArns)
 	d.Set("session_policy", profile.SessionPolicy)
-
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-	if err != nil {
-		return diag.Errorf("listing tags for RolesAnywhere Profile (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
 
 	return nil
 }
@@ -210,13 +192,6 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			if err != nil {
 				diag.Errorf("disabling RolesAnywhere Profile (%s): %s", d.Id(), err)
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating tags: %s", err)
 		}
 	}
 

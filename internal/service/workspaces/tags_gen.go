@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists workspaces service tags.
@@ -105,7 +106,7 @@ func UpdateTags(ctx context.Context, conn workspacesiface.WorkSpacesAPI, identif
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &workspaces.DeleteTagsInput{
 			ResourceId: aws.String(identifier),
-			TagKeys:    aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:    aws.StringSlice(removedTags.IgnoreSystem(names.WorkSpaces).Keys()),
 		}
 
 		_, err := conn.DeleteTagsWithContext(ctx, input)
@@ -118,7 +119,7 @@ func UpdateTags(ctx context.Context, conn workspacesiface.WorkSpacesAPI, identif
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &workspaces.CreateTagsInput{
 			ResourceId: aws.String(identifier),
-			Tags:       Tags(updatedTags.IgnoreAWS()),
+			Tags:       Tags(updatedTags.IgnoreSystem(names.WorkSpaces)),
 		}
 
 		_, err := conn.CreateTagsWithContext(ctx, input)

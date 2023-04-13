@@ -94,7 +94,6 @@ func resourceClusterRoleAssociationRead(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).RDSConn()
 
 	dbClusterID, roleARN, err := ClusterRoleAssociationParseResourceID(d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "parsing RDS DB Cluster IAM Role Association ID: %s", err)
 	}
@@ -123,7 +122,6 @@ func resourceClusterRoleAssociationDelete(ctx context.Context, d *schema.Resourc
 	conn := meta.(*conns.AWSClient).RDSConn()
 
 	dbClusterID, roleARN, err := ClusterRoleAssociationParseResourceID(d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "parsing RDS DB Cluster IAM Role Association ID: %s", err)
 	}

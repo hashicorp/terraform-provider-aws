@@ -21,10 +21,6 @@ issues:
     - linters:
         - staticcheck
       text: "SA1019: acctest.ConfigAlternateRegionProvider is deprecated: Use ConfigMultipleRegionProvider instead"
-      # tfsdk: schema.ImportStatePassthrough
-    - linters:
-        - staticcheck
-      text: "SA1019: schema.ImportStatePassthrough is deprecated: Please use the context aware ImportStatePassthroughContext instead"
       # tfsdk: MigrateState
     - linters:
         - staticcheck
@@ -37,14 +33,6 @@ issues:
     - linters:
         - staticcheck
       text: "SA1019: strings.Title has been deprecated since Go 1.18 and an alternative has been available since Go 1.0"
-      # AWS Endpoint constants
-    - linters:
-        - staticcheck
-      text: "SA1019: endpoints.\\w+ is deprecated: Use client package's EndpointsID value instead of these ServiceIDs. These IDs are not maintained, and are out of date."
-      # AWS Session creation
-    - linters:
-        - staticcheck
-      text: "SA1019: session.New is deprecated: Use NewSession functions to create sessions instead"
     # Per-Service
     - linters:
         - staticcheck

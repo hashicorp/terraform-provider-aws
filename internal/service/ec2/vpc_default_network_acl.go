@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ACL Network ACLs all contain explicit deny-all rules that cannot be
@@ -21,7 +22,8 @@ const (
 	defaultACLRuleNumberIPv6 = 32768
 )
 
-// @SDKResource("aws_default_network_acl")
+// @SDKResource("aws_default_network_acl", name="Network ACL")
+// @Tags(identifierAttribute="id")
 func ResourceDefaultNetworkACL() *schema.Resource {
 	networkACLRuleSetNestedBlock := &schema.Schema{
 		Type:     schema.TypeSet,
@@ -79,8 +81,8 @@ func ResourceDefaultNetworkACL() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -118,9 +120,8 @@ func resourceDefaultNetworkACLCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	// Configure tags.
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	newTags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))).IgnoreConfig(ignoreTagsConfig)
+	newTags := KeyValueTags(ctx, GetTagsIn(ctx))
 	oldTags := KeyValueTags(ctx, nacl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if !oldTags.Equal(newTags) {

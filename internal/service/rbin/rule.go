@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_rbin_rule")
+// @SDKResource("aws_rbin_rule", name="Rule")
 // @Tags(identifierAttribute="arn")
 func ResourceRule() *schema.Resource {
 	return &schema.Resource{
@@ -143,8 +143,8 @@ func ResourceRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -161,6 +161,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	in := &rbin.CreateRuleInput{
 		ResourceType:    types.ResourceType(d.Get("resource_type").(string)),
 		RetentionPeriod: expandRetentionPeriod(d.Get("retention_period").([]interface{})),
+		Tags:            GetTagsIn(ctx),
 	}
 
 	if _, ok := d.GetOk("description"); ok {
@@ -169,13 +170,6 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if v, ok := d.GetOk("resource_tags"); ok && v.(*schema.Set).Len() > 0 {
 		in.ResourceTags = expandResourceTags(v.(*schema.Set).List())
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	out, err := conn.CreateRule(ctx, in)
