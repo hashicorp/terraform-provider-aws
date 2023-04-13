@@ -224,13 +224,11 @@ func ResourceInstance() *schema.Resource {
 					value := v.(string)
 					return strings.ToLower(value)
 				},
-				ConflictsWith: []string{"replicate_source_db"},
 			},
 			"engine_version": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"replicate_source_db"},
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"engine_version_actual": {
 				Type:     schema.TypeString,
@@ -1940,6 +1938,9 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			if d.HasChange("engine_version") {
 				input.EngineVersion = aws.String(d.Get("engine_version").(string))
 				input.AllowMajorVersionUpgrade = d.Get("allow_major_version_upgrade").(bool)
+
+				// update read replicas first
+
 			}
 
 			if d.HasChange("parameter_group_name") {

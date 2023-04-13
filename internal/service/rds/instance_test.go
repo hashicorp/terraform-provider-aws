@@ -7673,6 +7673,8 @@ resource "aws_db_instance" "test" {
   instance_class             = aws_db_instance.source.instance_class
   replicate_source_db        = aws_db_instance.source.id
   skip_final_snapshot        = true
+  engine = data.aws_rds_orderable_db_instance.test.engine
+  engine_version = data.aws_rds_orderable_db_instance.test.engine_version
 }
 `, rName, autoMinorVersionUpgrade))
 }
