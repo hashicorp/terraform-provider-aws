@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_organizations_policy")
 func DataSourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePolicyRead,
@@ -78,7 +79,7 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).OrganizationsClient()
 	policyID := d.Get("policy_id").(string)
 
-	out, err := findPolicyByPolicyID(ctx, conn, policyID)
+	policy, err := findPolicyByPolicyID(ctx, conn, policyID)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "describing Policy (%s): %s", policyID, err)
 	}
@@ -92,14 +93,12 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 func findPolicyByPolicyID(ctx context.Context, conn *organizations.Organizations, id string) ([]*organizations.Policy, error) {
 	input := &organizations.DescribePolicyInput{
-		TargetId: aws.String(id),
+		PolicyId: aws.String(id),
 	}
 	var output []*organizations.Policy
 
-	err := conn.DescribePolicyWithContext(ctx, input, func(page *organizations.DescribePolicyOutput, lastPage bool) bool {
+	err := conn.DescribePolicyWithContext(ctx, input, func(page *organizations.DescribePolicyOutput) {
 		output = append(output, page.Policy...)
-
-		return !lastPage
 	})
 
 	if err != nil {
