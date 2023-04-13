@@ -40,6 +40,8 @@ BUG FIXES:
 
 * resource/aws_api_gateway_stage: `cache_cluster_size` is not updated if `cache_cluster_size` is `false` ([#30588](https://github.com/hashicorp/terraform-provider-aws/issues/30588))
 * resource/aws_batch_compute_environment: Fix crash when `compute_resources.launch_template` is empty ([#30537](https://github.com/hashicorp/terraform-provider-aws/issues/30537))
+* resource/aws_cognito_managed_user_pool_client: Allow removing `token_validity_units` ([#30662](https://github.com/hashicorp/terraform-provider-aws/issues/30662))
+* resource/aws_cognito_user_pool_client: Allow removing `token_validity_units` ([#30662](https://github.com/hashicorp/terraform-provider-aws/issues/30662))
 * resource/aws_elasticache_user_group: Change `user_group_id` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#30533](https://github.com/hashicorp/terraform-provider-aws/issues/30533))
 * resource/aws_launch_template: Fix crash when `instance_market_options.spot_options` is empty ([#30539](https://github.com/hashicorp/terraform-provider-aws/issues/30539))
 * resource/aws_msk_serverless_cluster: Change `vpc_config.security_group_ids` to Computed ([#30535](https://github.com/hashicorp/terraform-provider-aws/issues/30535))
