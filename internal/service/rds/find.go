@@ -68,7 +68,6 @@ func FindDBProxyEndpoint(ctx context.Context, conn *rds.RDS, id string) (*rds.DB
 
 func FindDBClusterRoleByDBClusterIDAndRoleARN(ctx context.Context, conn *rds.RDS, dbClusterID, roleARN string) (*rds.DBClusterRole, error) {
 	dbCluster, err := FindDBClusterByID(ctx, conn, dbClusterID)
-
 	if err != nil {
 		return nil, err
 	}
@@ -275,7 +274,6 @@ func FindDBInstanceAutomatedBackupByARN(ctx context.Context, conn *rds.RDS, arn 
 	}
 
 	output, err := findDBInstanceAutomatedBackup(ctx, conn, input)
-
 	if err != nil {
 		return nil, err
 	}
@@ -300,7 +298,6 @@ func FindDBInstanceAutomatedBackupByARN(ctx context.Context, conn *rds.RDS, arn 
 
 func findDBInstanceAutomatedBackup(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBInstanceAutomatedBackupsInput) (*rds.DBInstanceAutomatedBackup, error) {
 	output, err := findDBInstanceAutomatedBackups(ctx, conn, input)
-
 	if err != nil {
 		return nil, err
 	}
@@ -350,7 +347,6 @@ func findDBInstanceAutomatedBackups(ctx context.Context, conn *rds.RDS, input *r
 func FindGlobalClusterByDBClusterARN(ctx context.Context, conn *rds.RDS, dbClusterARN string) (*rds.GlobalCluster, error) {
 	input := &rds.DescribeGlobalClustersInput{}
 	globalClusters, err := findGlobalClusters(ctx, conn, input)
-
 	if err != nil {
 		return nil, err
 	}
@@ -372,7 +368,6 @@ func FindGlobalClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.
 	}
 
 	output, err := findGlobalCluster(ctx, conn, input)
-
 	if err != nil {
 		return nil, err
 	}
@@ -389,7 +384,6 @@ func FindGlobalClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.
 
 func findGlobalCluster(ctx context.Context, conn *rds.RDS, input *rds.DescribeGlobalClustersInput) (*rds.GlobalCluster, error) {
 	output, err := findGlobalClusters(ctx, conn, input)
-
 	if err != nil {
 		return nil, err
 	}

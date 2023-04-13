@@ -632,7 +632,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 				return conn.RestoreDBClusterFromSnapshotWithContext(ctx, input)
 			},
 			errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS Cluster (restore from snapshot) (%s): %s", identifier, err)
 		}
@@ -757,7 +756,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 				return false, err
 			},
 		)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS Cluster (restore from S3) (%s): %s", identifier, err)
 		}
@@ -869,7 +867,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		log.Printf("[DEBUG] Creating RDS Cluster: %s", input)
 		_, err := conn.RestoreDBClusterToPointInTimeWithContext(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS Cluster (restore to point-in-time) (%s): %s", identifier, err)
 		}
@@ -1016,7 +1013,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 				return conn.CreateDBClusterWithContext(ctx, input)
 			},
 			errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS Cluster (%s): %s", identifier, err)
 		}
@@ -1221,6 +1217,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		// DB instance parameter group name is not currently returned from the
 		// DescribeDBClusters API. This means there is no drift detection, so when
 		// set, the configured attribute should always be sent on modify.
+		// Except, this causes an error on a minor version upgrade, so it is
+		// removed during update retry, if necessary.
 		if v, ok := d.GetOk("db_instance_parameter_group_name"); ok || d.HasChange("db_instance_parameter_group_name") {
 			input.DBInstanceParameterGroupName = aws.String(v.(string))
 		}
@@ -1334,10 +1332,14 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 					return true, err
 				}
 
+				if tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "db-instance-parameter-group-name can only be specified for a major") {
+					input.DBInstanceParameterGroupName = nil
+					return true, err
+				}
+
 				return false, err
 			},
 		)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster (%s): %s", d.Id(), err)
 		}
@@ -1464,7 +1466,6 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 							return false, err
 						},
 					)
-
 					if err != nil {
 						return false, fmt.Errorf("modifying RDS Cluster (%s) DeletionProtection=false: %s", d.Id(), err)
 					}
@@ -1519,7 +1520,6 @@ func addIAMRoleToCluster(ctx context.Context, conn *rds.RDS, clusterID, roleARN 
 	}
 
 	_, err := conn.AddRoleToDBClusterWithContext(ctx, input)
-
 	if err != nil {
 		return fmt.Errorf("adding IAM Role (%s) to RDS Cluster (%s): %s", roleARN, clusterID, err)
 	}
@@ -1534,7 +1534,6 @@ func removeIAMRoleFromCluster(ctx context.Context, conn *rds.RDS, clusterID, rol
 	}
 
 	_, err := conn.RemoveRoleFromDBClusterWithContext(ctx, input)
-
 	if err != nil {
 		return fmt.Errorf("removing IAM Role (%s) from RDS Cluster (%s): %s", roleARN, clusterID, err)
 	}

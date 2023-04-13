@@ -192,7 +192,6 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 	opts := rds.DeleteDBSecurityGroupInput{DBSecurityGroupName: aws.String(d.Id())}
 
 	_, err := conn.DeleteDBSecurityGroupWithContext(ctx, &opts)
-
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, "InvalidDBSecurityGroup.NotFound") {
 			return diags
@@ -213,7 +212,6 @@ func resourceSecurityGroupRetrieve(ctx context.Context, d *schema.ResourceData, 
 	log.Printf("[DEBUG] DB Security Group describe configuration: %#v", opts)
 
 	resp, err := conn.DescribeDBSecurityGroupsWithContext(ctx, &opts)
-
 	if err != nil {
 		return nil, fmt.Errorf("Error retrieving DB Security Groups: %s", err)
 	}
@@ -253,7 +251,6 @@ func resourceSecurityGroupAuthorizeRule(ctx context.Context, ingress interface{}
 	log.Printf("[DEBUG] Authorize ingress rule configuration: %#v", opts)
 
 	_, err := conn.AuthorizeDBSecurityGroupIngressWithContext(ctx, &opts)
-
 	if err != nil {
 		return fmt.Errorf("Error authorizing security group ingress: %s", err)
 	}
@@ -288,7 +285,6 @@ func resourceSecurityGroupRevokeRule(ctx context.Context, ingress interface{}, d
 	log.Printf("[DEBUG] Revoking ingress rule configuration: %#v", opts)
 
 	_, err := conn.RevokeDBSecurityGroupIngressWithContext(ctx, &opts)
-
 	if err != nil {
 		return fmt.Errorf("Error revoking security group ingress: %s", err)
 	}

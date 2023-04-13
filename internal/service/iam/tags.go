@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Custom IAM tag service update functions using the same format as generated code.
@@ -37,7 +38,7 @@ func roleUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &iam.TagRoleInput{
 			RoleName: aws.String(identifier),
-			Tags:     Tags(updatedTags.IgnoreAWS()),
+			Tags:     Tags(updatedTags.IgnoreSystem(names.IAM)),
 		}
 
 		_, err := conn.TagRoleWithContext(ctx, input)
@@ -72,7 +73,7 @@ func userUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &iam.TagUserInput{
 			UserName: aws.String(identifier),
-			Tags:     Tags(updatedTags.IgnoreAWS()),
+			Tags:     Tags(updatedTags.IgnoreSystem(names.IAM)),
 		}
 
 		_, err := conn.TagUserWithContext(ctx, input)
@@ -107,7 +108,7 @@ func instanceProfileUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identi
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &iam.TagInstanceProfileInput{
 			InstanceProfileName: aws.String(identifier),
-			Tags:                Tags(updatedTags.IgnoreAWS()),
+			Tags:                Tags(updatedTags.IgnoreSystem(names.IAM)),
 		}
 
 		_, err := conn.TagInstanceProfileWithContext(ctx, input)
@@ -142,7 +143,7 @@ func openIDConnectProviderUpdateTags(ctx context.Context, conn iamiface.IAMAPI, 
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &iam.TagOpenIDConnectProviderInput{
 			OpenIDConnectProviderArn: aws.String(identifier),
-			Tags:                     Tags(updatedTags.IgnoreAWS()),
+			Tags:                     Tags(updatedTags.IgnoreSystem(names.IAM)),
 		}
 
 		_, err := conn.TagOpenIDConnectProviderWithContext(ctx, input)
@@ -177,7 +178,7 @@ func policyUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier stri
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &iam.TagPolicyInput{
 			PolicyArn: aws.String(identifier),
-			Tags:      Tags(updatedTags.IgnoreAWS()),
+			Tags:      Tags(updatedTags.IgnoreSystem(names.IAM)),
 		}
 
 		_, err := conn.TagPolicyWithContext(ctx, input)
@@ -212,7 +213,7 @@ func samlProviderUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifie
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &iam.TagSAMLProviderInput{
 			SAMLProviderArn: aws.String(identifier),
-			Tags:            Tags(updatedTags.IgnoreAWS()),
+			Tags:            Tags(updatedTags.IgnoreSystem(names.IAM)),
 		}
 
 		_, err := conn.TagSAMLProviderWithContext(ctx, input)
@@ -247,7 +248,7 @@ func serverCertificateUpdateTags(ctx context.Context, conn iamiface.IAMAPI, iden
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &iam.TagServerCertificateInput{
 			ServerCertificateName: aws.String(identifier),
-			Tags:                  Tags(updatedTags.IgnoreAWS()),
+			Tags:                  Tags(updatedTags.IgnoreSystem(names.IAM)),
 		}
 
 		_, err := conn.TagServerCertificateWithContext(ctx, input)
@@ -282,7 +283,7 @@ func virtualMFAUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier 
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &iam.TagMFADeviceInput{
 			SerialNumber: aws.String(identifier),
-			Tags:         Tags(updatedTags.IgnoreAWS()),
+			Tags:         Tags(updatedTags.IgnoreSystem(names.IAM)),
 		}
 
 		_, err := conn.TagMFADeviceWithContext(ctx, input)

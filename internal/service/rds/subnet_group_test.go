@@ -319,7 +319,6 @@ func testAccCheckSubnetGroupExists(ctx context.Context, n string, v *rds.DBSubne
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 		output, err := tfrds.FindDBSubnetGroupByName(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
