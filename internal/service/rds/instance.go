@@ -1938,9 +1938,9 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			if d.HasChange("engine_version") {
 				input.EngineVersion = aws.String(d.Get("engine_version").(string))
 				input.AllowMajorVersionUpgrade = d.Get("allow_major_version_upgrade").(bool)
-
-				// update read replicas first
-
+				// if we were to make life easier for practitioners, we could loop through
+				// replicas at this point to update them first, prior to dbInstanceModify()
+				// for the source
 			}
 
 			if d.HasChange("parameter_group_name") {
