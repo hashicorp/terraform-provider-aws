@@ -41,6 +41,7 @@ variable "service_labels" {
     "chimesdkmeetings",
     "chimesdkmessaging",
     "chimesdkvoice",
+    "cleanrooms",
     "cloud9",
     "cloudcontrol",
     "clouddirectory",
