@@ -7,6 +7,7 @@ NOTES:
 FEATURES:
 
 * **New Data Source:** `aws_dms_certificate` ([#30498](https://github.com/hashicorp/terraform-provider-aws/issues/30498))
+* **New Data Source:** `aws_quicksight_user` ([#12310](https://github.com/hashicorp/terraform-provider-aws/issues/12310))
 * **New Resource:** `aws_pipes_pipe` ([#30538](https://github.com/hashicorp/terraform-provider-aws/issues/30538))
 * **New Resource:** `aws_quicksight_iam_policy_assignment` ([#30653](https://github.com/hashicorp/terraform-provider-aws/issues/30653))
 * **New Resource:** `aws_quicksight_ingestion` ([#30487](https://github.com/hashicorp/terraform-provider-aws/issues/30487))
@@ -18,11 +19,13 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_dx_connection: Add `partner_name` attribute ([#30385](https://github.com/hashicorp/terraform-provider-aws/issues/30385))
 * data-source/aws_lambda_function_url: Add `invoke_mode` attribute ([#30547](https://github.com/hashicorp/terraform-provider-aws/issues/30547))
 * data-source/aws_nat_gateway: Add `association_id` attribute ([#30546](https://github.com/hashicorp/terraform-provider-aws/issues/30546))
 * data-source/aws_sagemaker_prebuilt_ecr_image: Added sagemaker-model-monitor-analyzer images ([#30301](https://github.com/hashicorp/terraform-provider-aws/issues/30301))
 * resource/aws_acmpca_certificate: Add `api_passthrough` argument ([#28142](https://github.com/hashicorp/terraform-provider-aws/issues/28142))
 * resource/aws_api_gateway_rest_api: Added `fail_on_warnings` attribute ([#22300](https://github.com/hashicorp/terraform-provider-aws/issues/22300))
+* resource/aws_dx_connection: Add `partner_name` attribute ([#30385](https://github.com/hashicorp/terraform-provider-aws/issues/30385))
 * resource/aws_ec2_client_vpn_route: Increase Create and Delete timeouts to 4 minutes ([#30552](https://github.com/hashicorp/terraform-provider-aws/issues/30552))
 * resource/aws_lambda_function_url: Add `invoke_mode` attribute ([#30547](https://github.com/hashicorp/terraform-provider-aws/issues/30547))
 * resource/aws_mwaa_environment: Add `startup_script_s3_path` and `startup_script_s3_object_version` attributes ([#30549](https://github.com/hashicorp/terraform-provider-aws/issues/30549))
@@ -36,6 +39,7 @@ BUG FIXES:
 * resource/aws_elasticache_user_group: Change `user_group_id` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#30533](https://github.com/hashicorp/terraform-provider-aws/issues/30533))
 * resource/aws_launch_template: Fix crash when `instance_market_options.spot_options` is empty ([#30539](https://github.com/hashicorp/terraform-provider-aws/issues/30539))
 * resource/aws_msk_serverless_cluster: Change `vpc_config.security_group_ids` to Computed ([#30535](https://github.com/hashicorp/terraform-provider-aws/issues/30535))
+* resource/aws_rds_cluster: Prevent `db_instance_parameter_group_name` from causing errors on minor upgrades ([#30679](https://github.com/hashicorp/terraform-provider-aws/issues/30679))
 * resource/aws_rds_cluster_parameter_group: Fixes differences being reported on every apply when setting system-source parameters ([#30536](https://github.com/hashicorp/terraform-provider-aws/issues/30536))
 * resource/aws_servicecatalog_provisioned_product: Allow the waiting that comes with updating and deleting to not error due to a `status` of `TAINTED` ([#30522](https://github.com/hashicorp/terraform-provider-aws/issues/30522))
 
