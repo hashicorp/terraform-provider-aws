@@ -96,8 +96,8 @@ func ResourceMediaInsightsPipelineConfiguration() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			"real_time_alert_configuration": RealTimeAlertConfigurationSchema(),
-			"tags":                          tftags.TagsSchema(),
-			"tags_all":                      tftags.TagsSchemaComputed(),
+			names.AttrTags:                  tftags.TagsSchema(),
+			names.AttrTagsAll:               tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -552,7 +552,7 @@ func resourceMediaInsightsPipelineConfigurationRead(ctx context.Context, d *sche
 func resourceMediaInsightsPipelineConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ChimeSDKMediaPipelinesConn()
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		elements, err := expandElements(d.Get("elements").([]interface{}))
 		if err != nil {
 			return create.DiagError(names.ChimeSDKMediaPipelines, create.ErrActionUpdating, ResNameMediaInsightsPipelineConfiguration, d.Id(), err)
