@@ -29,6 +29,11 @@ const (
 	ResNameMediaInsightsPipelineConfiguration = "Media Insights Pipeline Configuration"
 )
 
+var (
+	errConvertingElement           = errors.New("unable to convert element")
+	errConvertingRuleConfiguration = errors.New("unable to convert rule configuration")
+)
+
 // @SDKResource("aws_chimesdkmediapipelines_media_insights_pipeline_configuration")
 func ResourceMediaInsightsPipelineConfiguration() *schema.Resource {
 	return &schema.Resource{
@@ -462,14 +467,25 @@ func RealTimeAlertConfigurationSchema() *schema.Schema {
 func resourceMediaInsightsPipelineConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ChimeSDKMediaPipelinesConn()
 
+	elements, err := expandElements(d.Get("elements").([]interface{}))
+	if err != nil {
+		return create.DiagError(names.ChimeSDKMediaPipelines, create.ErrActionCreating,
+			ResNameMediaInsightsPipelineConfiguration, d.Get("name").(string), err)
+	}
+
 	in := &chimesdkmediapipelines.CreateMediaInsightsPipelineConfigurationInput{
 		MediaInsightsPipelineConfigurationName: aws.String(d.Get("name").(string)),
 		ResourceAccessRoleArn:                  aws.String(d.Get("resource_access_role_arn").(string)),
-		Elements:                               expandElements(d.Get("elements").([]interface{})),
+		Elements:                               elements,
 	}
 
 	if realTimeAlertConfiguration, ok := d.GetOk("real_time_alert_configuration"); ok && len(realTimeAlertConfiguration.([]interface{})) > 0 {
-		in.RealTimeAlertConfiguration = expandRealTimeAlertConfiguration(realTimeAlertConfiguration.([]interface{})[0].(map[string]interface{}))
+		rtac, err := expandRealTimeAlertConfiguration(realTimeAlertConfiguration.([]interface{})[0].(map[string]interface{}))
+		if err != nil {
+			return create.DiagError(names.ChimeSDKMediaPipelines, create.ErrActionCreating,
+				ResNameMediaInsightsPipelineConfiguration, d.Get("name").(string), err)
+		}
+		in.RealTimeAlertConfiguration = rtac
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -559,13 +575,22 @@ func resourceMediaInsightsPipelineConfigurationUpdate(ctx context.Context, d *sc
 	conn := meta.(*conns.AWSClient).ChimeSDKMediaPipelinesConn()
 
 	if d.HasChangesExcept("tags", "tags_All") {
+		elements, err := expandElements(d.Get("elements").([]interface{}))
+		if err != nil {
+			return create.DiagError(names.ChimeSDKMediaPipelines, create.ErrActionUpdating, ResNameMediaInsightsPipelineConfiguration, d.Id(), err)
+		}
+
 		in := &chimesdkmediapipelines.UpdateMediaInsightsPipelineConfigurationInput{
 			Identifier:            aws.String(d.Id()),
 			ResourceAccessRoleArn: aws.String(d.Get("resource_access_role_arn").(string)),
-			Elements:              expandElements(d.Get("elements").([]interface{})),
+			Elements:              elements,
 		}
 		if realTimeAlertConfiguration, ok := d.GetOk("real_time_alert_configuration"); ok && len(realTimeAlertConfiguration.([]interface{})) > 0 {
-			in.RealTimeAlertConfiguration = expandRealTimeAlertConfiguration(realTimeAlertConfiguration.([]interface{})[0].(map[string]interface{}))
+			rtac, err := expandRealTimeAlertConfiguration(realTimeAlertConfiguration.([]interface{})[0].(map[string]interface{}))
+			if err != nil {
+				return create.DiagError(names.ChimeSDKMediaPipelines, create.ErrActionUpdating, ResNameMediaInsightsPipelineConfiguration, d.Id(), err)
+			}
+			in.RealTimeAlertConfiguration = rtac
 		}
 
 		log.Printf("[DEBUG] Updating ChimeSDKMediaPipelines MediaInsightsPipelineConfiguration (%s): %#v", d.Id(), in)
@@ -585,14 +610,14 @@ func resourceMediaInsightsPipelineConfigurationUpdate(ctx context.Context, d *sc
 			return nil
 		})
 		if updateError != nil {
-			return create.DiagError(names.ChimeSDKMediaPipelines, create.ErrActionCreating, ResNameMediaInsightsPipelineConfiguration, d.Id(), updateError)
+			return create.DiagError(names.ChimeSDKMediaPipelines, create.ErrActionUpdating, ResNameMediaInsightsPipelineConfiguration, d.Id(), updateError)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		oldTags, newTags := d.GetChange("tags_all")
 		if err := UpdateTags(ctx, conn, d.Get("arn").(string), oldTags, newTags); err != nil {
-			return create.DiagError(names.ChimeSDKMediaPipelines, create.ErrActionCreating, ResNameMediaInsightsPipelineConfiguration, d.Id(), err)
+			return create.DiagError(names.ChimeSDKMediaPipelines, create.ErrActionUpdating, ResNameMediaInsightsPipelineConfiguration, d.Id(), err)
 		}
 	}
 
@@ -642,26 +667,28 @@ func findMediaInsightsPipelineConfigurationByID(ctx context.Context, conn *chime
 	return out.MediaInsightsPipelineConfiguration, nil
 }
 
-func expandElements(inputElements []interface{}) []*chimesdkmediapipelines.MediaInsightsPipelineConfigurationElement {
+func expandElements(inputElements []interface{}) ([]*chimesdkmediapipelines.MediaInsightsPipelineConfigurationElement, error) {
 	if len(inputElements) == 0 || inputElements[0] == nil {
-		return nil
+		return nil, nil
 	}
 	elements := make([]*chimesdkmediapipelines.MediaInsightsPipelineConfigurationElement, 0, len(inputElements))
 	for _, inputElement := range inputElements {
-		apiElement := expandElement(inputElement)
+		apiElement, err := expandElement(inputElement)
+		if err != nil {
+			return nil, err
+		}
 		if apiElement == nil {
 			continue
 		}
 		elements = append(elements, apiElement)
 	}
-	return elements
+	return elements, nil
 }
 
-func expandElement(inputElement interface{}) *chimesdkmediapipelines.MediaInsightsPipelineConfigurationElement {
+func expandElement(inputElement interface{}) (*chimesdkmediapipelines.MediaInsightsPipelineConfigurationElement, error) {
 	inputMapRaw, ok := inputElement.(map[string]interface{})
 	if !ok {
-		log.Fatal("Unable to convert element")
-		return nil
+		return nil, errConvertingElement
 	}
 	element := &chimesdkmediapipelines.MediaInsightsPipelineConfigurationElement{
 		Type: aws.String(inputMapRaw["type"].(string)),
@@ -670,8 +697,7 @@ func expandElement(inputElement interface{}) *chimesdkmediapipelines.MediaInsigh
 	case aws.StringValue(element.Type) == chimesdkmediapipelines.MediaInsightsPipelineConfigurationElementTypeAmazonTranscribeCallAnalyticsProcessor:
 		var configuration []interface{}
 		if configuration, ok = inputMapRaw["amazon_transcribe_call_analytics_processor_configuration"].([]interface{}); !ok || len(configuration) != 1 {
-			log.Fatal("Unable to convert element")
-			return nil
+			return nil, errConvertingElement
 		}
 
 		rawConfiguration := configuration[0].(map[string]interface{})
@@ -729,8 +755,7 @@ func expandElement(inputElement interface{}) *chimesdkmediapipelines.MediaInsigh
 	case aws.StringValue(element.Type) == chimesdkmediapipelines.MediaInsightsPipelineConfigurationElementTypeAmazonTranscribeProcessor:
 		var configuration []interface{}
 		if configuration, ok = inputMapRaw["amazon_transcribe_processor_configuration"].([]interface{}); !ok || len(configuration) != 1 {
-			log.Fatal("Unable to convert element")
-			return nil
+			return nil, errConvertingElement
 		}
 
 		rawConfiguration := configuration[0].(map[string]interface{})
@@ -773,8 +798,7 @@ func expandElement(inputElement interface{}) *chimesdkmediapipelines.MediaInsigh
 	case aws.StringValue(element.Type) == chimesdkmediapipelines.MediaInsightsPipelineConfigurationElementTypeKinesisDataStreamSink:
 		var configuration []interface{}
 		if configuration, ok = inputMapRaw["kinesis_data_stream_sink_configuration"].([]interface{}); !ok || len(configuration) != 1 {
-			log.Fatal("Unable to convert element")
-			return nil
+			return nil, errConvertingElement
 		}
 		rawConfiguration := configuration[0].(map[string]interface{})
 		element.KinesisDataStreamSinkConfiguration = &chimesdkmediapipelines.KinesisDataStreamSinkConfiguration{
@@ -783,8 +807,7 @@ func expandElement(inputElement interface{}) *chimesdkmediapipelines.MediaInsigh
 	case aws.StringValue(element.Type) == chimesdkmediapipelines.MediaInsightsPipelineConfigurationElementTypeSnsTopicSink:
 		var configuration []interface{}
 		if configuration, ok = inputMapRaw["sns_topic_sink_configuration"].([]interface{}); !ok || len(configuration) != 1 {
-			log.Fatal("Unable to convert element")
-			return nil
+			return nil, errConvertingElement
 		}
 		rawConfiguration := configuration[0].(map[string]interface{})
 		element.SnsTopicSinkConfiguration = &chimesdkmediapipelines.SnsTopicSinkConfiguration{
@@ -793,8 +816,7 @@ func expandElement(inputElement interface{}) *chimesdkmediapipelines.MediaInsigh
 	case aws.StringValue(element.Type) == chimesdkmediapipelines.MediaInsightsPipelineConfigurationElementTypeSqsQueueSink:
 		var configuration []interface{}
 		if configuration, ok = inputMapRaw["sqs_queue_sink_configuration"].([]interface{}); !ok || len(configuration) != 1 {
-			log.Fatal("Unable to convert element")
-			return nil
+			return nil, errConvertingElement
 		}
 		rawConfiguration := configuration[0].(map[string]interface{})
 		element.SqsQueueSinkConfiguration = &chimesdkmediapipelines.SqsQueueSinkConfiguration{
@@ -803,8 +825,7 @@ func expandElement(inputElement interface{}) *chimesdkmediapipelines.MediaInsigh
 	case aws.StringValue(element.Type) == chimesdkmediapipelines.MediaInsightsPipelineConfigurationElementTypeLambdaFunctionSink:
 		var configuration []interface{}
 		if configuration, ok = inputMapRaw["lambda_function_sink_configuration"].([]interface{}); !ok || len(configuration) != 1 {
-			log.Fatal("Unable to convert element")
-			return nil
+			return nil, errConvertingElement
 		}
 		rawConfiguration := configuration[0].(map[string]interface{})
 		element.LambdaFunctionSinkConfiguration = &chimesdkmediapipelines.LambdaFunctionSinkConfiguration{
@@ -813,8 +834,7 @@ func expandElement(inputElement interface{}) *chimesdkmediapipelines.MediaInsigh
 	case aws.StringValue(element.Type) == chimesdkmediapipelines.MediaInsightsPipelineConfigurationElementTypeS3recordingSink:
 		var configuration []interface{}
 		if configuration, ok = inputMapRaw["s3_recording_sink_configuration"].([]interface{}); !ok || len(configuration) != 1 {
-			log.Fatal("Unable to convert element")
-			return nil
+			return nil, errConvertingElement
 		}
 		rawConfiguration := configuration[0].(map[string]interface{})
 		element.S3RecordingSinkConfiguration = &chimesdkmediapipelines.S3RecordingSinkConfiguration{
@@ -823,8 +843,7 @@ func expandElement(inputElement interface{}) *chimesdkmediapipelines.MediaInsigh
 	case aws.StringValue(element.Type) == chimesdkmediapipelines.MediaInsightsPipelineConfigurationElementTypeVoiceAnalyticsProcessor:
 		var configuration []interface{}
 		if configuration, ok = inputMapRaw["voice_analytics_processor_configuration"].([]interface{}); !ok || len(configuration) != 1 {
-			log.Fatal("Unable to convert element")
-			return nil
+			return nil, errConvertingElement
 		}
 		rawConfiguration := configuration[0].(map[string]interface{})
 		element.VoiceAnalyticsProcessorConfiguration = &chimesdkmediapipelines.VoiceAnalyticsProcessorConfiguration{
@@ -832,27 +851,31 @@ func expandElement(inputElement interface{}) *chimesdkmediapipelines.MediaInsigh
 			VoiceToneAnalysisStatus: aws.String(rawConfiguration["voice_tone_analysis_status"].(string)),
 		}
 	}
-	return element
+	return element, nil
 }
 
-func expandRealTimeAlertConfiguration(inputConfiguration map[string]interface{}) *chimesdkmediapipelines.RealTimeAlertConfiguration {
+func expandRealTimeAlertConfiguration(inputConfiguration map[string]interface{}) (*chimesdkmediapipelines.RealTimeAlertConfiguration, error) {
 	apiConfiguration := &chimesdkmediapipelines.RealTimeAlertConfiguration{
 		Disabled: aws.Bool(inputConfiguration["disabled"].(bool)),
 	}
 	if inputRules, ok := inputConfiguration["rules"].([]interface{}); ok && len(inputRules) > 0 {
 		rules := make([]*chimesdkmediapipelines.RealTimeAlertRule, 0, len(inputRules))
 		for _, inputRule := range inputRules {
-			rules = append(rules, expandRealTimeAlertRule(inputRule))
+			rule, err := expandRealTimeAlertRule(inputRule)
+			if err != nil {
+				return apiConfiguration, err
+			}
+			rules = append(rules, rule)
 		}
 		apiConfiguration.Rules = rules
 	}
-	return apiConfiguration
+	return apiConfiguration, nil
 }
 
-func expandRealTimeAlertRule(inputRule interface{}) *chimesdkmediapipelines.RealTimeAlertRule {
+func expandRealTimeAlertRule(inputRule interface{}) (*chimesdkmediapipelines.RealTimeAlertRule, error) {
 	inputRuleRaw, ok := inputRule.(map[string]interface{})
 	if !ok {
-		return nil
+		return nil, nil
 	}
 	ruleType := aws.String(inputRuleRaw["type"].(string))
 	apiRule := &chimesdkmediapipelines.RealTimeAlertRule{
@@ -862,8 +885,7 @@ func expandRealTimeAlertRule(inputRule interface{}) *chimesdkmediapipelines.Real
 	case aws.StringValue(ruleType) == chimesdkmediapipelines.RealTimeAlertRuleTypeIssueDetection:
 		var configuration []interface{}
 		if configuration, ok = inputRuleRaw["issue_detection_configuration"].([]interface{}); !ok || len(configuration) != 1 {
-			log.Fatal("Unable to convert rule configuration")
-			return nil
+			return nil, errConvertingRuleConfiguration
 		}
 		rawConfiguration := configuration[0].(map[string]interface{})
 		apiConfiguration := &chimesdkmediapipelines.IssueDetectionConfiguration{
@@ -874,8 +896,7 @@ func expandRealTimeAlertRule(inputRule interface{}) *chimesdkmediapipelines.Real
 	case aws.StringValue(ruleType) == chimesdkmediapipelines.RealTimeAlertRuleTypeKeywordMatch:
 		var configuration []interface{}
 		if configuration, ok = inputRuleRaw["keyword_match_configuration"].([]interface{}); !ok || len(configuration) != 1 {
-			log.Fatal("Unable to convert rule configuration")
-			return nil
+			return nil, errConvertingRuleConfiguration
 		}
 		rawConfiguration := configuration[0].(map[string]interface{})
 		apiConfiguration := &chimesdkmediapipelines.KeywordMatchConfiguration{
@@ -889,8 +910,7 @@ func expandRealTimeAlertRule(inputRule interface{}) *chimesdkmediapipelines.Real
 	case aws.StringValue(ruleType) == chimesdkmediapipelines.RealTimeAlertRuleTypeSentiment:
 		var configuration []interface{}
 		if configuration, ok = inputRuleRaw["sentiment_configuration"].([]interface{}); !ok || len(configuration) != 1 {
-			log.Fatal("Unable to convert rule configuration")
-			return nil
+			return nil, errConvertingRuleConfiguration
 		}
 		rawConfiguration := configuration[0].(map[string]interface{})
 		apiConfiguration := &chimesdkmediapipelines.SentimentConfiguration{
@@ -901,7 +921,7 @@ func expandRealTimeAlertRule(inputRule interface{}) *chimesdkmediapipelines.Real
 
 		apiRule.SentimentConfiguration = apiConfiguration
 	}
-	return apiRule
+	return apiRule, nil
 }
 
 func flattenElements(apiElements []*chimesdkmediapipelines.MediaInsightsPipelineConfigurationElement) []interface{} {
