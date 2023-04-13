@@ -13,7 +13,8 @@ type InContext struct {
 	// TagsIn holds tags specified in configuration. Typically this field includes any default tags and excludes system tags.
 	TagsIn types.Option[KeyValueTags]
 	// TagsOut holds tags returned from AWS, including any ignored or system tags.
-	TagsOut types.Option[KeyValueTags]
+	TagsOut     types.Option[KeyValueTags]
+	TagsAllDiff types.Option[KeyValueTags]
 }
 
 // NewContext returns a Context enhanced with tagging information.
@@ -23,6 +24,7 @@ func NewContext(ctx context.Context, defaultConfig *DefaultConfig, ignoreConfig 
 		IgnoreConfig:  ignoreConfig,
 		TagsIn:        types.None[KeyValueTags](),
 		TagsOut:       types.None[KeyValueTags](),
+		TagsAllDiff:   types.None[KeyValueTags](),
 	}
 
 	return context.WithValue(ctx, tagKey, &v)

@@ -228,44 +228,46 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 				break
 			}
 
-			if d.HasChange(names.AttrTagsAll) {
-				if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute != "" {
-					var identifier string
-					if identifierAttribute == "id" {
-						identifier = d.Id()
-					} else {
-						identifier = d.Get(identifierAttribute).(string)
+			if d.GetRawPlan().GetAttr("tags_all").IsWhollyKnown() {
+				if d.HasChange(names.AttrTagsAll) {
+					if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute != "" {
+						var identifier string
+						if identifierAttribute == "id" {
+							identifier = d.Id()
+						} else {
+							identifier = d.Get(identifierAttribute).(string)
+						}
+						o, n := d.GetChange(names.AttrTagsAll)
+
+						// If the service package has a generic resource update tags methods, call it.
+						var err error
+
+						if v, ok := sp.(interface {
+							UpdateTags(context.Context, any, string, any, any) error
+						}); ok {
+							err = v.UpdateTags(ctx, meta, identifier, o, n)
+						} else if v, ok := sp.(interface {
+							UpdateTags(context.Context, any, string, string, any, any) error
+						}); ok && r.tags.ResourceType != "" {
+							err = v.UpdateTags(ctx, meta, identifier, r.tags.ResourceType, o, n)
+						}
+
+						if verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
+							// ISO partitions may not support tagging, giving error
+							tflog.Warn(ctx, "failed updating tags for resource", map[string]interface{}{
+								r.tags.IdentifierAttribute: identifier,
+								"error":                    err.Error(),
+							})
+
+							return ctx, diags
+						}
+
+						if err != nil {
+							return ctx, sdkdiag.AppendErrorf(diags, "updating tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
+						}
 					}
-					o, n := d.GetChange(names.AttrTagsAll)
-
-					// If the service package has a generic resource update tags methods, call it.
-					var err error
-
-					if v, ok := sp.(interface {
-						UpdateTags(context.Context, any, string, any, any) error
-					}); ok {
-						err = v.UpdateTags(ctx, meta, identifier, o, n)
-					} else if v, ok := sp.(interface {
-						UpdateTags(context.Context, any, string, string, any, any) error
-					}); ok && r.tags.ResourceType != "" {
-						err = v.UpdateTags(ctx, meta, identifier, r.tags.ResourceType, o, n)
-					}
-
-					if verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
-						// ISO partitions may not support tagging, giving error
-						tflog.Warn(ctx, "failed updating tags for resource", map[string]interface{}{
-							r.tags.IdentifierAttribute: identifier,
-							"error":                    err.Error(),
-						})
-
-						return ctx, diags
-					}
-
-					if err != nil {
-						return ctx, sdkdiag.AppendErrorf(diags, "updating tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
-					}
+					// TODO If the only change was to tags it would be nice to not call the resource's U handler.
 				}
-				// TODO If the only change was to tags it would be nice to not call the resource's U handler.
 			}
 		}
 	case After:
@@ -336,6 +338,132 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 			// Computed tags_all do.
 			if err := d.Set(names.AttrTagsAll, tags.Map()); err != nil {
 				return ctx, sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTagsAll, err)
+			}
+
+			if why == Create {
+				break
+			}
+		}
+		fallthrough
+	case Finally:
+		switch why {
+		case Update:
+			// Merge the resource's configured tags with any provider configured default_tags.
+			tags := tagsInContext.DefaultConfig.MergeTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})))
+			// Remove system tags.
+			tags = tags.IgnoreSystem(inContext.ServicePackageName)
+
+			tagsInContext.TagsIn = types.Some(tags)
+
+			if !d.GetRawPlan().GetAttr("tags_all").IsWhollyKnown() {
+
+				configTags := make(map[string]string)
+				if config := d.GetRawConfig(); !config.IsNull() && config.IsKnown() {
+					c := config.GetAttr("tags")
+					for k, v := range c.AsValueMap() {
+						configTags[k] = v.AsString()
+					}
+				}
+
+				stateTags := make(map[string]string)
+				if state := d.GetRawState(); !state.IsNull() && state.IsKnown() {
+					s := state.GetAttr("tags_all")
+					for k, v := range s.AsValueMap() {
+						stateTags[k] = v.AsString()
+					}
+				}
+
+				tagsAll := stateTags
+				// if tags_all was computed because not wholly known
+				// Merge the resource's configured tags with any provider configured default_tags.
+				toAdd := tagsInContext.DefaultConfig.MergeTags(tftags.New(ctx, configTags))
+				// Remove system tags.
+				toAdd = toAdd.IgnoreSystem(inContext.ServicePackageName)
+
+				tflog.Debug(ctx, "all_tags", map[string]interface{}{
+					"to_add":    configTags,
+					"to_remove": tagsAll,
+				})
+
+				var identifier string
+				if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute == "id" {
+					identifier = d.Id()
+				} else {
+					identifier = d.Get(identifierAttribute).(string)
+				}
+				// If the service package has a generic resource update tags methods, call it.
+				var err error
+
+				if v, ok := sp.(interface {
+					UpdateTags(context.Context, any, string, any, any) error
+				}); ok {
+					tflog.Debug(ctx, "finally_not_getting_here", map[string]interface{}{
+						"to_add":    configTags,
+						"to_remove": tagsAll,
+					})
+					err = v.UpdateTags(ctx, meta, identifier, tagsAll, toAdd)
+				} else if v, ok := sp.(interface {
+					UpdateTags(context.Context, any, string, string, any, any) error
+				}); ok && r.tags.ResourceType != "" {
+					err = v.UpdateTags(ctx, meta, identifier, r.tags.ResourceType, tagsAll, toAdd)
+				}
+
+				if verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
+					// ISO partitions may not support tagging, giving error
+					tflog.Warn(ctx, "failed updating tags for resource", map[string]interface{}{
+						r.tags.IdentifierAttribute: identifier,
+						"error":                    err.Error(),
+					})
+
+					return ctx, diags
+				}
+
+				if err != nil {
+					return ctx, sdkdiag.AppendErrorf(diags, "updating tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
+				}
+				//
+				//if v, ok := sp.(interface {
+				//	ListTags(context.Context, any, string) error
+				//}); ok {
+				//	err = v.ListTags(ctx, meta, identifier) // Sets tags in Context
+				//} else if v, ok := sp.(interface {
+				//	ListTags(context.Context, any, string, string) error
+				//}); ok && r.tags.ResourceType != "" {
+				//	err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
+				//}
+				//
+				//if verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
+				//	// ISO partitions may not support tagging, giving error
+				//	tflog.Warn(ctx, "failed listing tags for resource", map[string]interface{}{
+				//		r.tags.IdentifierAttribute: d.Id(),
+				//		"error":                    err.Error(),
+				//	})
+				//	return ctx, diags
+				//}
+				//
+				//if inContext.ServicePackageName == names.DynamoDB && err != nil {
+				//	// When a DynamoDB Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`.
+				//	if tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
+				//		err = nil
+				//	}
+				//}
+				//
+				//if err != nil {
+				//	return ctx, sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
+				//}
+
+				//// Remove any provider configured ignore_tags and system tags from those returned from the service API.
+				// tags = tagsInContext.TagsOut.UnwrapOrDefault().IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig)
+
+				// The resource's configured tags do not include any provider configured default_tags.
+				if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(tagsInContext.DefaultConfig).Map()); err != nil {
+					return ctx, sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTags, err)
+				}
+
+				// Computed tags_all do.
+				if err := d.Set(names.AttrTagsAll, tags.Map()); err != nil {
+					return ctx, sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTagsAll, err)
+				}
 			}
 		}
 	}
