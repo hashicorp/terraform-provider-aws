@@ -453,7 +453,7 @@ func TestAccDynamoDBTableItem_mapOutOfBandUpdate(t *testing.T) {
 						}
 					}
 
-					newQueryKey := tfdynamodb.BuildTableItemqueryKey(attributes, hashKey, "")
+					newQueryKey := tfdynamodb.BuildTableItemQueryKey(attributes, hashKey, "")
 					_, err = conn.UpdateItemWithContext(ctx, &dynamodb.UpdateItemInput{
 						AttributeUpdates: updates,
 						TableName:        aws.String(tableName),
@@ -485,7 +485,7 @@ func testAccCheckTableItemDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			key := tfdynamodb.BuildTableItemqueryKey(attributes, attrs["hash_key"], attrs["range_key"])
+			key := tfdynamodb.BuildTableItemQueryKey(attributes, attrs["hash_key"], attrs["range_key"])
 
 			_, err = tfdynamodb.FindTableItem(ctx, conn, attrs["table_name"], key)
 
@@ -523,7 +523,7 @@ func testAccCheckTableItemExists(ctx context.Context, n string, item *dynamodb.G
 			return err
 		}
 
-		key := tfdynamodb.BuildTableItemqueryKey(attributes, attrs["hash_key"], attrs["range_key"])
+		key := tfdynamodb.BuildTableItemQueryKey(attributes, attrs["hash_key"], attrs["range_key"])
 
 		result, err := tfdynamodb.FindTableItem(ctx, conn, attrs["table_name"], key)
 
