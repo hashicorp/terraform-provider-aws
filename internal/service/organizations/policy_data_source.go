@@ -2,12 +2,13 @@ package organizations
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go/service/organizations"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourcePolicy() *schema.Resource {
@@ -81,7 +82,7 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.SetId(policyID)
-	if err := d.Set("policy", FlattenPolicy(policy)); err != nil {
+	if err := d.Set("policy", FlattenOrganizationPolicy(policy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting policy: %s", err)
 	}
 
