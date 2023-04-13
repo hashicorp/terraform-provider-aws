@@ -97,7 +97,7 @@ func findPolicyByPolicyID(ctx context.Context, conn *organizations.Organizations
 	}
 	var output []*organizations.Policy
 
-	err := conn.DescribePolicyWithContext(ctx, input, func(page *organizations.DescribePolicyOutput, err error) {
+	output, err := conn.DescribePolicyWithContext(ctx, input, func(page *organizations.DescribePolicyOutput, error) {
 		output = append(output, page.Policies...)
 
 		return !lastPage
