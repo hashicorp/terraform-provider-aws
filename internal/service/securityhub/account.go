@@ -2,6 +2,7 @@ package securityhub
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -9,6 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -21,6 +23,7 @@ func ResourceAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountCreate,
 		ReadWithoutTimeout:   resourceAccountRead,
+		UpdateWithoutTimeout: resourceAccountUpdate,
 		DeleteWithoutTimeout: resourceAccountDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -49,6 +52,21 @@ func ResourceAccount() *schema.Resource {
 				ForceNew: true,
 				Default:  true,
 			},
+			"control_finding_generator": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(securityhub.ControlFindingGenerator_Values(), false),
+				Default:      "SECURITY_CONTROL",
+			},
+			"auto_enable_controls": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -61,6 +79,10 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 		EnableDefaultStandards: aws.Bool(d.Get("enable_default_standards").(bool)),
 	}
 
+	if v, ok := d.GetOk("control_finding_generator"); ok {
+		input.ControlFindingGenerator = aws.String(v.(string))
+	}
+
 	_, err := conn.EnableSecurityHubWithContext(ctx, input)
 
 	if err != nil {
@@ -69,7 +91,8 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
 
-	return append(diags, resourceAccountRead(ctx, d, meta)...)
+	// auto_enable_controls has to be done from the update API
+	return append(diags, resourceAccountUpdate(ctx, d, meta)...)
 }
 
 func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -77,20 +100,47 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	_, err := FindStandardsSubscriptions(ctx, conn, &securityhub.GetEnabledStandardsInput{})
-
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Account %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Security Hub Account (%s): %s", d.Id(), err)
 	}
 
+	hub, err := conn.DescribeHub(&securityhub.DescribeHubInput{
+		HubArn: aws.String(accountHubArn(meta.(*conns.AWSClient))),
+	})
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Security Hub Account (%s): %s", d.Id(), err)
+	}
+
+	// enable_default_standards is never returned
 	d.Set("enable_default_standards", d.Get("enable_default_standards"))
+	d.Set("auto_enable_controls", hub.AutoEnableControls)
+	d.Set("control_finding_generator", hub.ControlFindingGenerator)
+	d.Set("arn", hub.HubArn)
 
 	return diags
+}
+
+func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
+
+	input := &securityhub.UpdateSecurityHubConfigurationInput{
+		ControlFindingGenerator: aws.String(d.Get("control_finding_generator").(string)),
+		AutoEnableControls:      aws.Bool(d.Get("auto_enable_controls").(bool)),
+	}
+
+	_, err := conn.UpdateSecurityHubConfiguration(input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Security Hub Account configuration: %s", err)
+	}
+
+	return append(diags, resourceAccountRead(ctx, d, meta)...)
 }
 
 func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -111,4 +161,9 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	return diags
+}
+
+// Security Hub ARN: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awssecurityhub.html#awssecurityhub-resources-for-iam-policies
+func accountHubArn(conn *conns.AWSClient) string {
+	return fmt.Sprintf("arn:%s:securityhub:%s:%s:hub/default", conn.Partition, conn.Region, conn.AccountID)
 }
