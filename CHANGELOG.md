@@ -40,6 +40,7 @@ BUG FIXES:
 * resource/aws_cognito_managed_user_pool_client: Allow removing `token_validity_units` ([#30662](https://github.com/hashicorp/terraform-provider-aws/issues/30662))
 * resource/aws_cognito_user_pool_client: Allow removing `token_validity_units` ([#30662](https://github.com/hashicorp/terraform-provider-aws/issues/30662))
 * resource/aws_db_instance: Allow `engine` and `engine_version` to be set when `replicate_source_db` is set ([#30703](https://github.com/hashicorp/terraform-provider-aws/issues/30703))
+* resource/aws_db_instance: Fixes panic when updating `replica_mode` ([#30714](https://github.com/hashicorp/terraform-provider-aws/issues/30714))
 * resource/aws_dynamodb_table_item: Would report spurious diffs when List and Map attributes were changed out-of-band ([#30712](https://github.com/hashicorp/terraform-provider-aws/issues/30712))
 * resource/aws_elasticache_user_group: Change `user_group_id` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#30533](https://github.com/hashicorp/terraform-provider-aws/issues/30533))
 * resource/aws_launch_template: Fix crash when `instance_market_options.spot_options` is empty ([#30539](https://github.com/hashicorp/terraform-provider-aws/issues/30539))
