@@ -27,11 +27,11 @@ func flattenTableItemAttributes(attrs map[string]*dynamodb.AttributeValue) (stri
 	buf := bytes.NewBufferString("")
 	encoder := json.NewEncoder(buf)
 
-	bar := make(map[string]foo, len(attrs))
+	a := make(map[string]attributeValue, len(attrs))
 	for k, v := range attrs {
-		bar[k] = foo(*v)
+		a[k] = attributeValue(*v)
 	}
-	err := encoder.Encode(bar)
+	err := encoder.Encode(a)
 	if err != nil {
 		return "", fmt.Errorf("Encoding failed: %s", err)
 	}
@@ -39,28 +39,28 @@ func flattenTableItemAttributes(attrs map[string]*dynamodb.AttributeValue) (stri
 	return buf.String(), nil
 }
 
-type foo dynamodb.AttributeValue
+type attributeValue dynamodb.AttributeValue
 
-func (f foo) MarshalJSON() ([]byte, error) {
+func (f attributeValue) MarshalJSON() ([]byte, error) {
 	thing := map[string]any{}
 
 	if f.B != nil {
 		thing["B"] = f.B
 	}
-	if f.BS != nil {
-		thing["BS"] = f.BS
-	}
 	if f.BOOL != nil {
 		thing["BOOL"] = f.BOOL
 	}
+	if f.BS != nil {
+		thing["BS"] = f.BS
+	}
 	if f.L != nil {
-		thing["L"] = slices.ApplyToAll(f.L, func(t *dynamodb.AttributeValue) foo {
-			return foo(*t)
+		thing["L"] = slices.ApplyToAll(f.L, func(t *dynamodb.AttributeValue) attributeValue {
+			return attributeValue(*t)
 		})
 	}
 	if f.M != nil {
-		thing["M"] = maps.ApplyToAll(f.M, func(t *dynamodb.AttributeValue) foo {
-			return foo(*t)
+		thing["M"] = maps.ApplyToAll(f.M, func(t *dynamodb.AttributeValue) attributeValue {
+			return attributeValue(*t)
 		})
 	}
 	if f.N != nil {
