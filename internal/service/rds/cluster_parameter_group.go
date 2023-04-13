@@ -113,7 +113,6 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 	}
 
 	output, err := conn.CreateDBClusterParameterGroupWithContext(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating DB Cluster Parameter Group (%s): %s", groupName, err)
 	}
@@ -249,7 +248,6 @@ func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.Resource
 				}
 
 				_, err := conn.ModifyDBClusterParameterGroupWithContext(ctx, input)
-
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "modifying DB Cluster Parameter Group (%s): %s", d.Id(), err)
 				}

@@ -114,7 +114,6 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	output, err := conn.CreateDBParameterGroupWithContext(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creatingDB Parameter Group (%s): %s", name, err)
 	}
@@ -224,14 +223,13 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	tags, err := ListTags(ctx, conn, arn)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for RDS DB Parameter Group (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	//lintignore:AWSR002
+	// lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
@@ -279,7 +277,6 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 				}
 
 				_, err := conn.ModifyDBParameterGroupWithContext(ctx, input)
-
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "modifying DB Parameter Group (%s): %s", d.Id(), err)
 				}
@@ -321,7 +318,6 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 				}
 
 				_, err := conn.ResetDBParameterGroupWithContext(ctx, input)
-
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "resetting DB Parameter Group (%s): %s", d.Id(), err)
 				}

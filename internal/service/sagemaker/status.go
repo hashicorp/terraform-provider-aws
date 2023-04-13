@@ -250,3 +250,19 @@ func StatusSpace(ctx context.Context, conn *sagemaker.SageMaker, domainId, name 
 		return output, aws.StringValue(output.Status), nil
 	}
 }
+
+func StatusMonitoringSchedule(ctx context.Context, conn *sagemaker.SageMaker, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindMonitoringScheduleByName(ctx, conn, name)
+
+		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.MonitoringScheduleStatus), nil
+	}
+}
