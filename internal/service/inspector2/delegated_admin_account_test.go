@@ -150,7 +150,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 
 	_, err := conn.ListDelegatedAdminAccounts(ctx, &inspector2.ListDelegatedAdminAccountsInput{})
 
-	if acctest.PreCheckSkipError(err) {
+	if errs.IsA[*types.AccessDeniedException](err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
