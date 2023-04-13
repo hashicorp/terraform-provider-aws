@@ -24,19 +24,3 @@ func statusConnectionState(ctx context.Context, conn *eventbridge.EventBridge, n
 		return output, aws.StringValue(output.ConnectionState), nil
 	}
 }
-
-func statusEndpointState(conn *eventbridge.EventBridge, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindEndpointByName(conn, name)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.State), nil
-	}
-}

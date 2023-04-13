@@ -119,28 +119,3 @@ func FindTargetByThreePartKey(ctx context.Context, conn *eventbridge.EventBridge
 
 	return output, nil
 }
-
-func FindEndpointByName(conn *eventbridge.EventBridge, name string) (*eventbridge.DescribeEndpointOutput, error) {
-	input := &eventbridge.DescribeEndpointInput{
-		Name: aws.String(name),
-	}
-
-	output, err := conn.DescribeEndpoint(input)
-
-	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}

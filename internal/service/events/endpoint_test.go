@@ -1,10 +1,10 @@
 package events_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccEndpoint_basic(t *testing.T) {
@@ -24,12 +25,12 @@ func TestAccEndpoint_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointDestroy,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_basic(endpointName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointExists(resourceName, &v1),
+					testAccCheckEndpointExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", endpointName),
 					resource.TestCheckResourceAttr(resourceName, "routing_config.0.failover_config.0.secondary.0.route", "us-east-2"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("endpoint/%s", endpointName)),
@@ -55,18 +56,18 @@ func TestAccEndpoint_update(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointDestroy,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_basic(endpointName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointExists(resourceName, &v1),
+					testAccCheckEndpointExists(ctx, resourceName, &v1),
 				),
 			},
 			{
 				Config: testAccEndpointConfig_updateAttributes(endpointName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointExists(resourceName, &v1),
+					testAccCheckEndpointExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "description", "some description"),
 				),
 			},
@@ -84,12 +85,12 @@ func TestAccEndpoint_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointDestroy,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_basic(endpointName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointExists(resourceName, &v),
+					testAccCheckEndpointExists(ctx, resourceName, &v),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfevents.ResourceEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -98,29 +99,33 @@ func TestAccEndpoint_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckEndpointDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
+func testAccCheckEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudwatch_event_endpoint" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_cloudwatch_event_endpoint" {
+				continue
+			}
+
+			_, err := tfevents.FindEndpointByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("EventBridge Global Endpoint %s still exists", rs.Primary.ID)
 		}
 
-		params := eventbridge.DescribeEndpointInput{
-			Name: aws.String(rs.Primary.ID),
-		}
-
-		resp, err := conn.DescribeEndpoint(&params)
-
-		if err == nil {
-			return fmt.Errorf("EventBridge event bus endpoint (%s) still exists: %s", rs.Primary.ID, resp)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckEndpointExists(n string, v *eventbridge.DescribeEndpointOutput) resource.TestCheckFunc {
+func testAccCheckEndpointExists(ctx context.Context, n string, v *eventbridge.DescribeEndpointOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -128,20 +133,14 @@ func testAccCheckEndpointExists(n string, v *eventbridge.DescribeEndpointOutput)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
-		params := eventbridge.DescribeEndpointInput{
-			Name: aws.String(rs.Primary.ID),
-		}
 
-		resp, err := conn.DescribeEndpoint(&params)
+		output, err := tfevents.FindEndpointByName(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if resp == nil {
-			return fmt.Errorf("EventBridge endpoint (%s) not found", n)
-		}
-
-		*v = *resp
+		*v = *output
 
 		return nil
 	}

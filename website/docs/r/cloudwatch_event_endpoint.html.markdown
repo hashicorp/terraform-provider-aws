@@ -3,12 +3,12 @@ subcategory: "EventBridge"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_event_endpoint"
 description: |-
-  Provides a resource to create an EventBridge Endpoint.
+  Provides a resource to create an EventBridge Global Endpoint.
 ---
 
 # Resource: aws_cloudwatch_event_endpoint
 
-Provides a resource to create an EventBridge Endpoint.
+Provides a resource to create an EventBridge Global Endpoint.
 
 ~> **Note:** EventBridge was formerly known as CloudWatch Events. The functionality is identical.
 
@@ -78,7 +78,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EventBridge Endpoints can be imported using the `name`, e.g.,
+EventBridge Global Endpoints can be imported using the `name`, e.g.,
 
 ```shell
 $ terraform import aws_cloudwatch_event_endpoint.imported_endpoint example-endpoint

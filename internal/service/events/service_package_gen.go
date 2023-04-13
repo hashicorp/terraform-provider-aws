@@ -65,7 +65,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceEndpoint,
 			TypeName: "aws_cloudwatch_event_endpoint",
-			Name:     "Endpoint",
+			Name:     "Global Endpoint",
 		},
 		{
 			Factory:  ResourcePermission,
