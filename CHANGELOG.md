@@ -7,12 +7,14 @@ NOTES:
 FEATURES:
 
 * **New Data Source:** `aws_dms_certificate` ([#30498](https://github.com/hashicorp/terraform-provider-aws/issues/30498))
+* **New Data Source:** `aws_quicksight_group` ([#12311](https://github.com/hashicorp/terraform-provider-aws/issues/12311))
 * **New Data Source:** `aws_quicksight_user` ([#12310](https://github.com/hashicorp/terraform-provider-aws/issues/12310))
 * **New Resource:** `aws_pipes_pipe` ([#30538](https://github.com/hashicorp/terraform-provider-aws/issues/30538))
 * **New Resource:** `aws_quicksight_iam_policy_assignment` ([#30653](https://github.com/hashicorp/terraform-provider-aws/issues/30653))
 * **New Resource:** `aws_quicksight_ingestion` ([#30487](https://github.com/hashicorp/terraform-provider-aws/issues/30487))
 * **New Resource:** `aws_quicksight_namespace` ([#30681](https://github.com/hashicorp/terraform-provider-aws/issues/30681))
 * **New Resource:** `aws_sagemaker_data_quality_job_definition` ([#30301](https://github.com/hashicorp/terraform-provider-aws/issues/30301))
+* **New Resource:** `aws_sagemaker_monitoring_schedule` ([#30684](https://github.com/hashicorp/terraform-provider-aws/issues/30684))
 * **New Resource:** `aws_vpclattice_service_network_service_association` ([#30410](https://github.com/hashicorp/terraform-provider-aws/issues/30410))
 * **New Resource:** `aws_vpclattice_service_network_vpc_association` ([#30411](https://github.com/hashicorp/terraform-provider-aws/issues/30411))
 * **New Resource:** `aws_vpclattice_target_group` ([#30455](https://github.com/hashicorp/terraform-provider-aws/issues/30455))
@@ -26,6 +28,8 @@ ENHANCEMENTS:
 * resource/aws_acmpca_certificate: Add `api_passthrough` argument ([#28142](https://github.com/hashicorp/terraform-provider-aws/issues/28142))
 * resource/aws_api_gateway_rest_api: Added `fail_on_warnings` attribute ([#22300](https://github.com/hashicorp/terraform-provider-aws/issues/22300))
 * resource/aws_dx_connection: Add `partner_name` attribute ([#30385](https://github.com/hashicorp/terraform-provider-aws/issues/30385))
+* resource/aws_dx_gateway: Add plan time validation to `name` argument ([#30375](https://github.com/hashicorp/terraform-provider-aws/issues/30375))
+* resource/aws_dx_gateway: Allow updates to `name` without forcing resource replacement ([#30375](https://github.com/hashicorp/terraform-provider-aws/issues/30375))
 * resource/aws_ec2_client_vpn_route: Increase Create and Delete timeouts to 4 minutes ([#30552](https://github.com/hashicorp/terraform-provider-aws/issues/30552))
 * resource/aws_lambda_function_url: Add `invoke_mode` attribute ([#30547](https://github.com/hashicorp/terraform-provider-aws/issues/30547))
 * resource/aws_mwaa_environment: Add `startup_script_s3_path` and `startup_script_s3_object_version` attributes ([#30549](https://github.com/hashicorp/terraform-provider-aws/issues/30549))

@@ -40,6 +40,7 @@ variable "service_labels" {
     "chimesdkmediapipelines",
     "chimesdkmeetings",
     "chimesdkmessaging",
+    "chimesdkvoice",
     "cleanrooms",
     "cloud9",
     "cloudcontrol",

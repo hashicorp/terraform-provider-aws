@@ -77,6 +77,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/chimesdkmediapipelines"
 	"github.com/aws/aws-sdk-go/service/chimesdkmeetings"
 	"github.com/aws/aws-sdk-go/service/chimesdkmessaging"
+	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
 	"github.com/aws/aws-sdk-go/service/cloud9"
 	"github.com/aws/aws-sdk-go/service/clouddirectory"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
@@ -390,6 +391,7 @@ type AWSClient struct {
 	chimesdkmediapipelinesConn       *chimesdkmediapipelines.ChimeSDKMediaPipelines
 	chimesdkmeetingsConn             *chimesdkmeetings.ChimeSDKMeetings
 	chimesdkmessagingConn            *chimesdkmessaging.ChimeSDKMessaging
+	chimesdkvoiceConn                *chimesdkvoice.ChimeSDKVoice
 	cleanroomsClient                 *cleanrooms.Client
 	cloud9Conn                       *cloud9.Cloud9
 	cloudcontrolClient               *cloudcontrol.Client
@@ -826,6 +828,10 @@ func (client *AWSClient) ChimeSDKMeetingsConn() *chimesdkmeetings.ChimeSDKMeetin
 
 func (client *AWSClient) ChimeSDKMessagingConn() *chimesdkmessaging.ChimeSDKMessaging {
 	return client.chimesdkmessagingConn
+}
+
+func (client *AWSClient) ChimeSDKVoiceConn() *chimesdkvoice.ChimeSDKVoice {
+	return client.chimesdkvoiceConn
 }
 
 func (client *AWSClient) CleanRoomsClient() *cleanrooms.Client {
