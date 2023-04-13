@@ -31,7 +31,7 @@ func ResourceTableItem() *schema.Resource {
 		UpdateWithoutTimeout: resourceTableItemUpdate,
 		DeleteWithoutTimeout: resourceTableItemDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsDynamoDbTableItemImport,
+			State: resourceTableItemImport,
 		},
 
 		Schema: map[string]*schema.Schema{
