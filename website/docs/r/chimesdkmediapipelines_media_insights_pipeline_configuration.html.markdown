@@ -357,8 +357,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Chime SDK Media Pipelines Media Insights Pipeline Configuration can be imported using the `example_id_arg`, e.g.,
+Chime SDK Media Pipelines Media Insights Pipeline Configuration can be imported using the `id`, e.g.,
 
 ```
-$ terraform import aws_chimesdkmediapipelines_media_insights_pipeline_configuration.example rft-8012925589
+$ terraform import aws_chimesdkmediapipelines_media_insights_pipeline_configuration.example abcdef123456
 ```
