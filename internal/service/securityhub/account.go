@@ -109,8 +109,8 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading Security Hub Account (%s): %s", d.Id(), err)
 	}
 
-	hub, err := conn.DescribeHub(&securityhub.DescribeHubInput{
-		HubArn: aws.String(accountHubArn(meta.(*conns.AWSClient))),
+	hub, err := conn.DescribeHubWithContext(ctx, &securityhub.DescribeHubInput{
+		HubArn: aws.String(accountHubARN(meta.(*conns.AWSClient))),
 	})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Security Hub Account (%s): %s", d.Id(), err)
@@ -134,7 +134,7 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		AutoEnableControls:      aws.Bool(d.Get("auto_enable_controls").(bool)),
 	}
 
-	_, err := conn.UpdateSecurityHubConfiguration(input)
+	_, err := conn.UpdateSecurityHubConfigurationWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Security Hub Account configuration: %s", err)
@@ -164,6 +164,6 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 // Security Hub ARN: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awssecurityhub.html#awssecurityhub-resources-for-iam-policies
-func accountHubArn(conn *conns.AWSClient) string {
+func accountHubARN(conn *conns.AWSClient) string {
 	return fmt.Sprintf("arn:%s:securityhub:%s:%s:hub/default", conn.Partition, conn.Region, conn.AccountID)
 }
