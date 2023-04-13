@@ -73,6 +73,8 @@ const (
 )
 
 func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).OrganizationsClient()
 	policyID := d.Get("policy_id").(string)
 
