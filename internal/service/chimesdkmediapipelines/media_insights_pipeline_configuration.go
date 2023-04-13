@@ -34,7 +34,8 @@ var (
 	errConvertingRuleConfiguration = errors.New("unable to convert rule configuration")
 )
 
-// @SDKResource("aws_chimesdkmediapipelines_media_insights_pipeline_configuration")
+// @SDKResource("aws_chimesdkmediapipelines_media_insights_pipeline_configuration", name="Media Insights Pipeline Configuration")
+// @Tags(identifierAttribute="arn")
 func ResourceMediaInsightsPipelineConfiguration() *schema.Resource {
 	return &schema.Resource{
 
@@ -477,6 +478,7 @@ func resourceMediaInsightsPipelineConfigurationCreate(ctx context.Context, d *sc
 		MediaInsightsPipelineConfigurationName: aws.String(d.Get("name").(string)),
 		ResourceAccessRoleArn:                  aws.String(d.Get("resource_access_role_arn").(string)),
 		Elements:                               elements,
+		Tags:                                   GetTagsIn(ctx),
 	}
 
 	if realTimeAlertConfiguration, ok := d.GetOk("real_time_alert_configuration"); ok && len(realTimeAlertConfiguration.([]interface{})) > 0 {
@@ -486,13 +488,6 @@ func resourceMediaInsightsPipelineConfigurationCreate(ctx context.Context, d *sc
 				ResNameMediaInsightsPipelineConfiguration, d.Get("name").(string), err)
 		}
 		in.RealTimeAlertConfiguration = rtac
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	// Retry when forbidden exception is received; iam role propagation is eventually consistent
@@ -551,30 +546,13 @@ func resourceMediaInsightsPipelineConfigurationRead(ctx context.Context, d *sche
 		}
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id())
-	if err != nil {
-		return create.DiagError(names.ChimeSDKMediaPipelines, create.ErrActionReading, ResNameMediaInsightsPipelineConfiguration, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.ChimeSDKMediaPipelines, create.ErrActionSetting, ResNameMediaInsightsPipelineConfiguration, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.ChimeSDKMediaPipelines, create.ErrActionSetting, ResNameMediaInsightsPipelineConfiguration, d.Id(), err)
-	}
-
 	return nil
 }
 
 func resourceMediaInsightsPipelineConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ChimeSDKMediaPipelinesConn()
 
-	if d.HasChangesExcept("tags", "tags_All") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		elements, err := expandElements(d.Get("elements").([]interface{}))
 		if err != nil {
 			return create.DiagError(names.ChimeSDKMediaPipelines, create.ErrActionUpdating, ResNameMediaInsightsPipelineConfiguration, d.Id(), err)
@@ -593,8 +571,6 @@ func resourceMediaInsightsPipelineConfigurationUpdate(ctx context.Context, d *sc
 			in.RealTimeAlertConfiguration = rtac
 		}
 
-		log.Printf("[DEBUG] Updating ChimeSDKMediaPipelines MediaInsightsPipelineConfiguration (%s): %#v", d.Id(), in)
-
 		// Retry when forbidden exception is received; iam role propagation is eventually consistent
 		updateError := tfresource.Retry(ctx, iamPropagationTimeout, func() *retry.RetryError {
 			var err error
@@ -611,13 +587,6 @@ func resourceMediaInsightsPipelineConfigurationUpdate(ctx context.Context, d *sc
 		})
 		if updateError != nil {
 			return create.DiagError(names.ChimeSDKMediaPipelines, create.ErrActionUpdating, ResNameMediaInsightsPipelineConfiguration, d.Id(), updateError)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		oldTags, newTags := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), oldTags, newTags); err != nil {
-			return create.DiagError(names.ChimeSDKMediaPipelines, create.ErrActionUpdating, ResNameMediaInsightsPipelineConfiguration, d.Id(), err)
 		}
 	}
 

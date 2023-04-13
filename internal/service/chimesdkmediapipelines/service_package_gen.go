@@ -28,6 +28,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceMediaInsightsPipelineConfiguration,
 			TypeName: "aws_chimesdkmediapipelines_media_insights_pipeline_configuration",
+			Name:     "Media Insights Pipeline Configuration",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }
