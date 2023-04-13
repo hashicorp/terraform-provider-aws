@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/aws/aws-sdk-go/service/servicecatalog/servicecatalogiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Custom Service Catalog tag service update functions using the same format as generated code.
@@ -24,11 +25,11 @@ func productUpdateTags(ctx context.Context, conn servicecatalogiface.ServiceCata
 	}
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
-		input.RemoveTags = aws.StringSlice(removedTags.IgnoreAWS().Keys())
+		input.RemoveTags = aws.StringSlice(removedTags.IgnoreSystem(names.ServiceCatalog).Keys())
 	}
 
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
-		input.AddTags = Tags(updatedTags.IgnoreAWS())
+		input.AddTags = Tags(updatedTags.IgnoreSystem(names.ServiceCatalog))
 	}
 
 	_, err := conn.UpdateProductWithContext(ctx, input)
