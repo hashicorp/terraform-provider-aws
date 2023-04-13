@@ -1,0 +1,21 @@
+name: YAML Linting
+on:
+  push:
+    branches:
+      - main
+      - "release/**"
+  pull_request:
+    paths:
+      - "**/*.yml"
+      - ".yamllint"
+jobs:
+  yamllint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@83b7061638ee4956cf7545a6f7efe594e5ad0247
+      - name: Run yamllint
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          format: github
+        env:
+          LANG: C.UTF-8

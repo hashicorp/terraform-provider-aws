@@ -79,27 +79,18 @@ The following arguments are supported:
 * `maintenance_track_name` - (Optional) The name of the maintenance track for the restored cluster. When you take a snapshot, the snapshot inherits the MaintenanceTrack value from the cluster. The snapshot might be on a different track than the cluster that was the source for the snapshot. For example, suppose that you take a snapshot of  a cluster that is on the current track and then change the cluster to be on the trailing track. In this case, the snapshot and the source cluster are on different tracks. Default value is `current`.
 * `manual_snapshot_retention_period` - (Optional)  The default number of days to retain a manual snapshot. If the value is -1, the snapshot is retained indefinitely. This setting doesn't change the retention period of existing snapshots. Valid values are between `-1` and `3653`. Default value is `-1`.
 * `snapshot_copy` - (Optional) Configuration of automatic copy of snapshots from one region to another. Documented below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-
-### Timeouts
-
-`aws_redshift_cluster` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
-
-- `create` - (Default `75 minutes`) Used for creating Clusters.
-- `update` - (Default `75 minutes`) Used for updating Clusters.
-- `delete` - (Default `40 minutes`) Used for destroying Clusters.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Nested Blocks
 
 #### `logging`
 
 * `enable` - (Required) Enables logging information such as queries and connection attempts, for the specified Amazon Redshift cluster.
-* `bucket_name` - (Optional, required when `enable` is `true`) The name of an existing S3 bucket where the log files are to be stored. Must be in the same region as the cluster and the cluster must have read bucket and put object permissions.
+* `bucket_name` - (Optional, required when `enable` is `true` and `log_destination_type` is `s3`) The name of an existing S3 bucket where the log files are to be stored. Must be in the same region as the cluster and the cluster must have read bucket and put object permissions.
 For more information on the permissions required for the bucket, please read the AWS [documentation](http://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-enable-logging)
 * `s3_key_prefix` - (Optional) The prefix applied to the log file names.
 * `log_destination_type` - (Optional) The log destination type. An enum with possible values of `s3` and `cloudwatch`.
-* `log_exports` - (Optional) The collection of exported log types. Log types include the connection log, user log and user activity log. Required when `log_destination_type` is `cloudwatch`.
+* `log_exports` - (Optional) The collection of exported log types. Log types include the connection log, user log and user activity log. Required when `log_destination_type` is `cloudwatch`. Valid log types are `connectionlog`, `userlog`, and `useractivitylog`.
 
 #### `snapshot_copy`
 
@@ -132,13 +123,21 @@ In addition to all arguments above, the following attributes are exported:
 * `cluster_public_key` - The public key for the cluster
 * `cluster_revision_number` - The specific revision number of the database in the cluster
 * `cluster_nodes` - The nodes in the cluster. Cluster node blocks are documented below
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 Cluster nodes (for `cluster_nodes`) support the following attributes:
 
 * `node_role` - Whether the node is a leader node or a compute node
 * `private_ip_address` - The private IP address of a node within a cluster
 * `public_ip_address` - The public IP address of a node within a cluster
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `75m`)
+- `update` - (Default `75m`)
+- `delete` - (Default `40m`)
 
 ## Import
 

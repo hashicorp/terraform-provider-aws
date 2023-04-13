@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// TODO: tests/formatting, docs
+// @SDKResource("aws_cloudwatch_global_endpoint", name="Endpoint")
 func ResourceEndpoint() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceEndpointCreate,
@@ -128,7 +128,7 @@ func ResourceEndpoint() *schema.Resource {
 }
 
 func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	name := d.Get("name").(string)
 	input := &eventbridge.CreateEndpointInput{
@@ -195,7 +195,7 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	output, err := FindEndpointByName(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -233,7 +233,7 @@ func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	input := &eventbridge.UpdateEndpointInput{
 		Name: aws.String(d.Id()),
@@ -294,7 +294,7 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 	log.Printf("[INFO] Deleting EventBridge endpoint (%s)", d.Id())
 	_, err := conn.DeleteEndpoint(&eventbridge.DeleteEndpointInput{
 		Name: aws.String(d.Id()),

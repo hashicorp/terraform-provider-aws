@@ -13,6 +13,8 @@ import (
 )
 
 func TestPolicySearchDetails(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		Name       string
 		PathPrefix string
@@ -41,7 +43,10 @@ func TestPolicySearchDetails(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
 			got := tfiam.PolicySearchDetails(testCase.Name, testCase.PathPrefix)
 
 			if got != testCase.Expected {
@@ -52,14 +57,15 @@ func TestPolicySearchDetails(t *testing.T) {
 }
 
 func TestAccIAMPolicyDataSource_arn(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_iam_policy.test"
 	resourceName := "aws_iam_policy.test"
 	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyDataSourceConfig_arn(policyName, "/"),
@@ -78,14 +84,15 @@ func TestAccIAMPolicyDataSource_arn(t *testing.T) {
 }
 
 func TestAccIAMPolicyDataSource_arnTags(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_iam_policy.test"
 	resourceName := "aws_iam_policy.test"
 	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyDataSourceConfig_arnTags(policyName, "/"),
@@ -105,14 +112,15 @@ func TestAccIAMPolicyDataSource_arnTags(t *testing.T) {
 }
 
 func TestAccIAMPolicyDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_iam_policy.test"
 	resourceName := "aws_iam_policy.test"
 	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyDataSourceConfig_name(policyName, "/"),
@@ -131,14 +139,15 @@ func TestAccIAMPolicyDataSource_name(t *testing.T) {
 }
 
 func TestAccIAMPolicyDataSource_nameTags(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_iam_policy.test"
 	resourceName := "aws_iam_policy.test"
 	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyDataSourceConfig_nameTags(policyName, "/"),
@@ -158,6 +167,7 @@ func TestAccIAMPolicyDataSource_nameTags(t *testing.T) {
 }
 
 func TestAccIAMPolicyDataSource_nameAndPathPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_iam_policy.test"
 	resourceName := "aws_iam_policy.test"
 
@@ -165,9 +175,9 @@ func TestAccIAMPolicyDataSource_nameAndPathPrefix(t *testing.T) {
 	policyPath := "/test-path/"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyDataSourceConfig_pathPrefix(policyName, policyPath),
@@ -186,6 +196,7 @@ func TestAccIAMPolicyDataSource_nameAndPathPrefix(t *testing.T) {
 }
 
 func TestAccIAMPolicyDataSource_nameAndPathPrefixTags(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_iam_policy.test"
 	resourceName := "aws_iam_policy.test"
 
@@ -193,9 +204,9 @@ func TestAccIAMPolicyDataSource_nameAndPathPrefixTags(t *testing.T) {
 	policyPath := "/test-path/"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyDataSourceConfig_pathPrefixTags(policyName, policyPath),
@@ -215,13 +226,14 @@ func TestAccIAMPolicyDataSource_nameAndPathPrefixTags(t *testing.T) {
 }
 
 func TestAccIAMPolicyDataSource_nonExistent(t *testing.T) {
+	ctx := acctest.Context(t)
 	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyPath := "/test-path/"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPolicyDataSourceConfig_nonExistent(policyName, policyPath),

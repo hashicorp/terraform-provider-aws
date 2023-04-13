@@ -1,39 +1,40 @@
 package ds_test
 
 import (
+	"context"
 	"errors"
-	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDSSharedDirectoryAccepter_basic(t *testing.T) {
-	var providers []*schema.Provider
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ctx := acctest.Context(t)
 	resourceName := "aws_directory_service_shared_directory_accepter.test"
-
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, directoryservice.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckSharedDirectoryAccepterDestroy,
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSharedDirectoryAccepterConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSharedDirectoryAccepterExists(resourceName),
+					testAccCheckSharedDirectoryAccepterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "method", directoryservice.ShareMethodHandshake),
 					resource.TestCheckResourceAttr(resourceName, "notes", "There were hints and allegations"),
 					resource.TestCheckResourceAttrPair(resourceName, "owner_account_id", "data.aws_caller_identity.current", "account_id"),
@@ -51,53 +52,25 @@ func TestAccDSSharedDirectoryAccepter_basic(t *testing.T) {
 			},
 		},
 	})
-
 }
 
-func testAccCheckSharedDirectoryAccepterExists(name string) resource.TestCheckFunc {
+func testAccCheckSharedDirectoryAccepterExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return names.Error(names.DS, names.ErrActionCheckingExistence, tfds.ResourceNameSharedDirectoryAccepter, name, errors.New("not found"))
+			return create.Error(names.DS, create.ErrActionCheckingExistence, tfds.ResNameSharedDirectoryAccepter, n, errors.New("not found"))
 		}
 
 		if rs.Primary.ID == "" {
-			return names.Error(names.DS, names.ErrActionCheckingExistence, tfds.ResourceNameSharedDirectoryAccepter, name, errors.New("no ID is set"))
+			return create.Error(names.DS, create.ErrActionCheckingExistence, tfds.ResNameSharedDirectoryAccepter, n, errors.New("no ID is set"))
 		}
 
-		ownerId := rs.Primary.Attributes["owner_directory_id"]
-		sharedId := rs.Primary.Attributes["shared_directory_id"]
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn()
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
-		out, err := conn.DescribeSharedDirectories(&directoryservice.DescribeSharedDirectoriesInput{
-			OwnerDirectoryId:   aws.String(ownerId),
-			SharedDirectoryIds: aws.StringSlice([]string{sharedId}),
-		})
+		_, err := tfds.FindSharedDirectory(ctx, conn, rs.Primary.Attributes["owner_directory_id"], rs.Primary.Attributes["shared_directory_id"])
 
-		if err != nil {
-			return names.Error(names.DS, names.ErrActionCheckingExistence, tfds.ResourceNameSharedDirectoryAccepter, name, err)
-		}
-
-		if len(out.SharedDirectories) < 1 {
-			return names.Error(names.DS, names.ErrActionCheckingExistence, tfds.ResourceNameSharedDirectoryAccepter, name, errors.New("not found"))
-		}
-
-		if aws.StringValue(out.SharedDirectories[0].SharedDirectoryId) != sharedId {
-			return names.Error(names.DS, names.ErrActionCheckingExistence, tfds.ResourceNameSharedDirectoryAccepter, rs.Primary.ID, fmt.Errorf("shared directory ID mismatch - existing: %q, state: %q", aws.StringValue(out.SharedDirectories[0].SharedDirectoryId), sharedId))
-		}
-
-		if aws.StringValue(out.SharedDirectories[0].OwnerDirectoryId) != ownerId {
-			return names.Error(names.DS, names.ErrActionCheckingExistence, tfds.ResourceNameSharedDirectoryAccepter, rs.Primary.ID, fmt.Errorf("owner directory ID mismatch - existing: %q, state: %q", aws.StringValue(out.SharedDirectories[0].OwnerDirectoryId), ownerId))
-		}
-
-		return nil
+		return err
 	}
-
-}
-
-func testAccCheckSharedDirectoryAccepterDestroy(s *terraform.State) error {
-	// cannot be destroyed from consumer account
-	return nil
 }
 
 func testAccSharedDirectoryAccepterConfig_basic(rName, domain string) string {

@@ -23,15 +23,14 @@ resource "aws_appsync_domain_name_api_association" "example" {
 
 The following arguments are supported:
 
-* `api_id` - (Required) The API ID.
-* `domain_name` - (Required) The Appsync domain name.
+* `api_id` - (Required) API ID.
+* `domain_name` - (Required) Appsync domain name.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The Appsync domain name.
-
+* `id` - Appsync domain name.
 
 ## Import
 

@@ -1,14 +1,14 @@
-// UpdateTags updates {{ .ServicePackage }} service tags.
+// {{ .UpdateTagsFunc }} updates {{ .ServicePackage }} service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 {{- if  .TagTypeAddBoolElem }}
-func UpdateTags(ctx context.Context, conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, oldTagsSet interface{}, newTagsSet interface{}) error {
-	oldTags := KeyValueTags(oldTagsSet, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
-	newTags := KeyValueTags(newTagsSet, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
+func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, oldTagsSet, newTagsSet any) error {
+	oldTags := KeyValueTags(ctx, oldTagsSet, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
+	newTags := KeyValueTags(ctx, newTagsSet, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
 {{- else }}
-func UpdateTags(ctx context.Context, conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, oldTagsMap, newTagsMap any) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 {{- end }}
 	{{- if eq (.TagOp) (.UntagOp) }}
 	removedTags := oldTags.Removed(newTags)
@@ -33,14 +33,14 @@ func UpdateTags(ctx context.Context, conn {{ .ClientType }}, identifier string{{
 	}
 
 	if len(updatedTags) > 0 {
-		input.{{ .TagInTagsElem }} = Tags(updatedTags.IgnoreAWS())
+		input.{{ .TagInTagsElem }} = Tags(updatedTags.IgnoreSystem(names.{{ .ProviderNameUpper }}))
 	}
 
 	if len(removedTags) > 0 {
 		{{- if .UntagInNeedTagType }}
-		input.{{ .UntagInTagsElem }} = Tags(removedTags.IgnoreAWS())
+		input.{{ .UntagInTagsElem }} = Tags(removedTags.IgnoreSystem(names.{{ .ProviderNameUpper }}))
 		{{- else if .UntagInNeedTagKeyType }}
-		input.{{ .UntagInTagsElem }} = TagKeys(removedTags.IgnoreAWS())
+		input.{{ .UntagInTagsElem }} = TagKeys(removedTags.IgnoreSystem(names.{{ .ProviderNameUpper }}))
 		{{- else if .UntagInCustomVal }}
 		input.{{ .UntagInTagsElem }} = {{ .UntagInCustomVal }}
 		{{- else }}
@@ -51,7 +51,7 @@ func UpdateTags(ctx context.Context, conn {{ .ClientType }}, identifier string{{
 	_, err := conn.{{ .TagOp }}(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 	}
 
 	{{- else }}
@@ -72,20 +72,20 @@ func UpdateTags(ctx context.Context, conn {{ .ClientType }}, identifier string{{
 			{{- end }}
 			{{- end }}
 			{{- if .UntagInNeedTagType }}
-			{{ .UntagInTagsElem }}:       Tags(removedTags.IgnoreAWS()),
+			{{ .UntagInTagsElem }}:       Tags(removedTags.IgnoreSystem(names.{{ .ProviderNameUpper }})),
 			{{- else if .UntagInNeedTagKeyType }}
-			{{ .UntagInTagsElem }}:       TagKeys(removedTags.IgnoreAWS()),
+			{{ .UntagInTagsElem }}:       TagKeys(removedTags.IgnoreSystem(names.{{ .ProviderNameUpper }})),
 			{{- else if .UntagInCustomVal }}
 			{{ .UntagInTagsElem }}:       {{ .UntagInCustomVal }},
 			{{- else }}
-			{{ .UntagInTagsElem }}:       removedTags.IgnoreAWS().Keys(),
+			{{ .UntagInTagsElem }}:       removedTags.IgnoreSystem(names.{{ .ProviderNameUpper }}).Keys(),
 			{{- end }}
 		}
 
 		_, err := conn.{{ .UntagOp }}(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 		{{- if .TagOpBatchSize }}
 		}
@@ -110,14 +110,14 @@ func UpdateTags(ctx context.Context, conn {{ .ClientType }}, identifier string{{
 			{{- if .TagInCustomVal }}
 			{{ .TagInTagsElem }}:       {{ .TagInCustomVal }},
 			{{- else }}
-			{{ .TagInTagsElem }}:       Tags(updatedTags.IgnoreAWS()),
+			{{ .TagInTagsElem }}:       Tags(updatedTags.IgnoreSystem(names.{{ .ProviderNameUpper }})),
 			{{- end }}
 		}
 
 		_, err := conn.{{ .TagOp }}(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 		{{- if .TagOpBatchSize }}
 		}
@@ -127,4 +127,10 @@ func UpdateTags(ctx context.Context, conn {{ .ClientType }}, identifier string{{
 	{{- end }}
 
 	return nil
+}
+
+// {{ .UpdateTagsFunc }} updates {{ .ServicePackage }} service tags.
+// It is called from outside this package.
+func (p *servicePackage) {{ .UpdateTagsFunc }}(ctx context.Context, meta any, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, oldTags, newTags any) error {
+	return  {{ .UpdateTagsFunc }}(ctx, meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Client(), identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, oldTags, newTags)
 }

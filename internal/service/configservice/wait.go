@@ -1,18 +1,19 @@
 package configservice
 
 import (
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
 	ruleDeletedTimeout = 5 * time.Minute
 )
 
-func waitRuleDeleted(conn *configservice.ConfigService, name string) (*configservice.ConfigRule, error) {
-	stateConf := &resource.StateChangeConf{
+func waitRuleDeleted(ctx context.Context, conn *configservice.ConfigService, name string) (*configservice.ConfigRule, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			configservice.ConfigRuleStateActive,
 			configservice.ConfigRuleStateDeleting,
@@ -20,11 +21,11 @@ func waitRuleDeleted(conn *configservice.ConfigService, name string) (*configser
 			configservice.ConfigRuleStateEvaluating,
 		},
 		Target:  []string{},
-		Refresh: statusRule(conn, name),
+		Refresh: statusRule(ctx, conn, name),
 		Timeout: ruleDeletedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*configservice.ConfigRule); ok {
 		return v, err

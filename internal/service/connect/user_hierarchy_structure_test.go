@@ -1,6 +1,7 @@
 package connect_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,22 +16,8 @@ import (
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 )
 
-//Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
-func TestAccConnectUserHierarchyStructure_serial(t *testing.T) {
-	testCases := map[string]func(t *testing.T){
-		"basic":      testAccUserHierarchyStructure_basic,
-		"disappears": testAccUserHierarchyStructure_disappears,
-	}
-
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
-}
-
 func testAccUserHierarchyStructure_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v connect.DescribeUserHierarchyStructureOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	levelOneName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -41,15 +28,15 @@ func testAccUserHierarchyStructure_basic(t *testing.T) {
 	resourceName := "aws_connect_user_hierarchy_structure.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserHierarchyStructureDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserHierarchyStructureDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserHierarchyStructureConfig_basic(rName, levelOneName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserHierarchyStructureExists(resourceName, &v),
+					testAccCheckUserHierarchyStructureExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.0.level_one.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "hierarchy_structure.0.level_one.0.arn"),
@@ -67,7 +54,7 @@ func testAccUserHierarchyStructure_basic(t *testing.T) {
 			{
 				Config: testAccUserHierarchyStructureConfig_twoLevels(rName, levelOneName, levelTwoName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserHierarchyStructureExists(resourceName, &v),
+					testAccCheckUserHierarchyStructureExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.0.level_one.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "hierarchy_structure.0.level_one.0.arn"),
@@ -89,7 +76,7 @@ func testAccUserHierarchyStructure_basic(t *testing.T) {
 			{
 				Config: testAccUserHierarchyStructureConfig_threeLevels(rName, levelOneName, levelTwoName, levelThreeName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserHierarchyStructureExists(resourceName, &v),
+					testAccCheckUserHierarchyStructureExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.0.level_one.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "hierarchy_structure.0.level_one.0.arn"),
@@ -115,7 +102,7 @@ func testAccUserHierarchyStructure_basic(t *testing.T) {
 			{
 				Config: testAccUserHierarchyStructureConfig_fourLevels(rName, levelOneName, levelTwoName, levelThreeName, levelFourName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserHierarchyStructureExists(resourceName, &v),
+					testAccCheckUserHierarchyStructureExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.0.level_one.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "hierarchy_structure.0.level_one.0.arn"),
@@ -145,7 +132,7 @@ func testAccUserHierarchyStructure_basic(t *testing.T) {
 			{
 				Config: testAccUserHierarchyStructureConfig_fiveLevels(rName, levelOneName, levelTwoName, levelThreeName, levelFourName, levelFiveName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserHierarchyStructureExists(resourceName, &v),
+					testAccCheckUserHierarchyStructureExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.0.level_one.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "hierarchy_structure.0.level_one.0.arn"),
@@ -180,7 +167,7 @@ func testAccUserHierarchyStructure_basic(t *testing.T) {
 				// test removing 4 levels
 				Config: testAccUserHierarchyStructureConfig_basic(rName, levelOneName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserHierarchyStructureExists(resourceName, &v),
+					testAccCheckUserHierarchyStructureExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.0.level_one.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "hierarchy_structure.0.level_one.0.arn"),
@@ -195,22 +182,23 @@ func testAccUserHierarchyStructure_basic(t *testing.T) {
 }
 
 func testAccUserHierarchyStructure_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v connect.DescribeUserHierarchyStructureOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_user_hierarchy_structure.test"
 	levelOneName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserHierarchyStructureDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserHierarchyStructureDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserHierarchyStructureConfig_basic(rName, levelOneName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserHierarchyStructureExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceUserHierarchyStructure(), resourceName),
+					testAccCheckUserHierarchyStructureExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceUserHierarchyStructure(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -218,7 +206,7 @@ func testAccUserHierarchyStructure_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckUserHierarchyStructureExists(resourceName string, function *connect.DescribeUserHierarchyStructureOutput) resource.TestCheckFunc {
+func testAccCheckUserHierarchyStructureExists(ctx context.Context, resourceName string, function *connect.DescribeUserHierarchyStructureOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -230,13 +218,13 @@ func testAccCheckUserHierarchyStructureExists(resourceName string, function *con
 		}
 		instanceID := rs.Primary.ID
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
 
 		params := &connect.DescribeUserHierarchyStructureInput{
 			InstanceId: aws.String(instanceID),
 		}
 
-		getFunction, err := conn.DescribeUserHierarchyStructure(params)
+		getFunction, err := conn.DescribeUserHierarchyStructureWithContext(ctx, params)
 		if err != nil {
 			return err
 		}
@@ -247,40 +235,42 @@ func testAccCheckUserHierarchyStructureExists(resourceName string, function *con
 	}
 }
 
-func testAccCheckUserHierarchyStructureDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_connect_user_hierarchy_structure" {
-			continue
+func testAccCheckUserHierarchyStructureDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_connect_user_hierarchy_structure" {
+				continue
+			}
+
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+
+			instanceID := rs.Primary.ID
+
+			params := &connect.DescribeUserHierarchyStructureInput{
+				InstanceId: aws.String(instanceID),
+			}
+
+			resp, err := conn.DescribeUserHierarchyStructureWithContext(ctx, params)
+
+			if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			// API returns an empty list for HierarchyStructure if there are none
+			if resp.HierarchyStructure == nil {
+				continue
+			}
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
-
-		instanceID := rs.Primary.ID
-
-		params := &connect.DescribeUserHierarchyStructureInput{
-			InstanceId: aws.String(instanceID),
-		}
-
-		resp, err := conn.DescribeUserHierarchyStructure(params)
-
-		if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		// API returns an empty list for HierarchyStructure if there are none
-		if resp.HierarchyStructure == nil {
-			continue
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccUserHierarchyStructureBaseConfig(rName string) string {
+func testAccUserHierarchyStructureConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   identity_management_type = "CONNECT_MANAGED"
@@ -293,7 +283,7 @@ resource "aws_connect_instance" "test" {
 
 func testAccUserHierarchyStructureConfig_basic(rName, levelOneName string) string {
 	return acctest.ConfigCompose(
-		testAccUserHierarchyStructureBaseConfig(rName),
+		testAccUserHierarchyStructureConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_user_hierarchy_structure" "test" {
   instance_id = aws_connect_instance.test.id
@@ -309,7 +299,7 @@ resource "aws_connect_user_hierarchy_structure" "test" {
 
 func testAccUserHierarchyStructureConfig_twoLevels(rName, levelOneName, levelTwoName string) string {
 	return acctest.ConfigCompose(
-		testAccUserHierarchyStructureBaseConfig(rName),
+		testAccUserHierarchyStructureConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_user_hierarchy_structure" "test" {
   instance_id = aws_connect_instance.test.id
@@ -329,7 +319,7 @@ resource "aws_connect_user_hierarchy_structure" "test" {
 
 func testAccUserHierarchyStructureConfig_threeLevels(rName, levelOneName, levelTwoName, levelThreeName string) string {
 	return acctest.ConfigCompose(
-		testAccUserHierarchyStructureBaseConfig(rName),
+		testAccUserHierarchyStructureConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_user_hierarchy_structure" "test" {
   instance_id = aws_connect_instance.test.id
@@ -353,7 +343,7 @@ resource "aws_connect_user_hierarchy_structure" "test" {
 
 func testAccUserHierarchyStructureConfig_fourLevels(rName, levelOneName, levelTwoName, levelThreeName, levelFourName string) string {
 	return acctest.ConfigCompose(
-		testAccUserHierarchyStructureBaseConfig(rName),
+		testAccUserHierarchyStructureConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_user_hierarchy_structure" "test" {
   instance_id = aws_connect_instance.test.id
@@ -381,7 +371,7 @@ resource "aws_connect_user_hierarchy_structure" "test" {
 
 func testAccUserHierarchyStructureConfig_fiveLevels(rName, levelOneName, levelTwoName, levelThreeName, levelFourName, levelFiveName string) string {
 	return acctest.ConfigCompose(
-		testAccUserHierarchyStructureBaseConfig(rName),
+		testAccUserHierarchyStructureConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_user_hierarchy_structure" "test" {
   instance_id = aws_connect_instance.test.id

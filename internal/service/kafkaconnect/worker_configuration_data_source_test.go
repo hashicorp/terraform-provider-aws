@@ -11,15 +11,16 @@ import (
 )
 
 func TestAccKafkaConnectWorkerConfigurationDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mskconnect_worker_configuration.test"
 	dataSourceName := "data.aws_mskconnect_worker_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		CheckDestroy:      nil,
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, kafkaconnect.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		CheckDestroy:             nil,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkerConfigurationDataSourceConfig_basic(rName),

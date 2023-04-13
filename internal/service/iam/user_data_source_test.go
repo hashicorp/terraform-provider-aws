@@ -11,15 +11,16 @@ import (
 )
 
 func TestAccIAMUserDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_iam_user.test"
 	dataSourceName := "data.aws_iam_user.test"
 
 	userName := fmt.Sprintf("test-datasource-user-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDataSourceConfig_basic(userName),
@@ -37,15 +38,16 @@ func TestAccIAMUserDataSource_basic(t *testing.T) {
 }
 
 func TestAccIAMUserDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_iam_user.test"
 	dataSourceName := "data.aws_iam_user.test"
 
 	userName := fmt.Sprintf("test-datasource-user-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDataSourceConfig_tags(userName),

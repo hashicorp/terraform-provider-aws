@@ -56,3 +56,9 @@ In addition to all arguments above, the following attributes are exported:
 * `tags` - Key-value tags for the EC2 Transit Gateway VPC Attachment
 * `vpc_id` - Identifier of EC2 VPC.
 * `vpc_owner_id` - Identifier of the AWS account that owns the EC2 VPC.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

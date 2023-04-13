@@ -12,6 +12,8 @@ import (
 )
 
 func TestFetchKeybasePubkeys(t *testing.T) {
+	t.Parallel()
+
 	testset := []string{"keybase:jefferai", "keybase:hashicorp"}
 	ret, err := FetchKeybasePubkeys(testset)
 	if err != nil {

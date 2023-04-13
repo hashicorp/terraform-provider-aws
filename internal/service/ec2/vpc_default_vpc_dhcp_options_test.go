@@ -11,34 +11,32 @@ import (
 )
 
 func TestAccVPCDefaultVPCDHCPOptions_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]func(t *testing.T){
 		"basic":              testAccDefaultVPCDHCPOptions_basic,
 		"owner":              testAccDefaultVPCDHCPOptions_owner,
 		"v4.20.0_regression": testAccDefaultVPCDHCPOptions_v420Regression,
 	}
 
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
 func testAccDefaultVPCDHCPOptions_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var d ec2.DhcpOptions
 	resourceName := "aws_default_vpc_dhcp_options.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.CheckDestroyNoop,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCDefaultVPCDHCPOptionsConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDHCPOptionsExists(resourceName, &d),
+					testAccCheckDHCPOptionsExists(ctx, resourceName, &d),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`dhcp-options/dopt-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", tfec2.RegionalPrivateDNSSuffix(acctest.Region())),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_servers", "AmazonProvidedDNS"),
@@ -52,19 +50,20 @@ func testAccDefaultVPCDHCPOptions_basic(t *testing.T) {
 }
 
 func testAccDefaultVPCDHCPOptions_owner(t *testing.T) {
+	ctx := acctest.Context(t)
 	var d ec2.DhcpOptions
 	resourceName := "aws_default_vpc_dhcp_options.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.CheckDestroyNoop,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCDefaultVPCDHCPOptionsConfig_owner,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDHCPOptionsExists(resourceName, &d),
+					testAccCheckDHCPOptionsExists(ctx, resourceName, &d),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`dhcp-options/dopt-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", tfec2.RegionalPrivateDNSSuffix(acctest.Region())),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_servers", "AmazonProvidedDNS"),
@@ -80,11 +79,12 @@ func testAccDefaultVPCDHCPOptions_owner(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/25561.
 // Don't forget to unset TF_CLI_CONFIG_FILE.
 func testAccDefaultVPCDHCPOptions_v420Regression(t *testing.T) {
+	ctx := acctest.Context(t)
 	var d ec2.DhcpOptions
 	resourceName := "aws_default_vpc_dhcp_options.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		CheckDestroy: acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -97,13 +97,13 @@ func testAccDefaultVPCDHCPOptions_v420Regression(t *testing.T) {
 				},
 				Config: testAccVPCDefaultVPCDHCPOptionsConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDHCPOptionsExists(resourceName, &d),
+					testAccCheckDHCPOptionsExists(ctx, resourceName, &d),
 				),
 			},
 			{
-				ProviderFactories: acctest.ProviderFactories,
-				Config:            testAccVPCDefaultVPCDHCPOptionsConfig_basic,
-				PlanOnly:          true,
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccVPCDefaultVPCDHCPOptionsConfig_basic,
+				PlanOnly:                 true,
 			},
 		},
 	})

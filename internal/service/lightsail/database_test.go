@@ -1,6 +1,7 @@
 package lightsail_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -16,29 +17,31 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLightsailDatabase_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var db lightsail.RelationalDatabase
 	resourceName := "aws_lightsail_database.test"
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDatabaseDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDatabaseConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(ctx, resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "relational_database_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "blueprint_id", "mysql_8_0"),
 					resource.TestCheckResourceAttr(resourceName, "bundle_id", "micro_1_0"),
@@ -72,10 +75,11 @@ func TestAccLightsailDatabase_basic(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_RelationalDatabaseName(t *testing.T) {
+func TestAccLightsailDatabase_relationalDatabaseName(t *testing.T) {
+	ctx := acctest.Context(t)
 	var db lightsail.RelationalDatabase
 	resourceName := "aws_lightsail_database.test"
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameTooShort := "s"
 	rNameTooLong := fmt.Sprintf("%s-%s", rName, sdkacctest.RandString(255))
 	rNameContainsUnderscore := fmt.Sprintf("%s-%s", rName, "_test")
@@ -84,13 +88,13 @@ func TestAccLightsailDatabase_RelationalDatabaseName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDatabaseDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDatabaseConfig_basic(rNameTooShort),
@@ -115,7 +119,7 @@ func TestAccLightsailDatabase_RelationalDatabaseName(t *testing.T) {
 			{
 				Config: testAccDatabaseConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(ctx, resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "relational_database_name", rName),
 				),
 			},
@@ -134,9 +138,10 @@ func TestAccLightsailDatabase_RelationalDatabaseName(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_MasterDatabaseName(t *testing.T) {
+func TestAccLightsailDatabase_masterDatabaseName(t *testing.T) {
+	ctx := acctest.Context(t)
 	var db lightsail.RelationalDatabase
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 	dbName := "randomdatabasename"
 	dbNameTooShort := ""
@@ -147,13 +152,13 @@ func TestAccLightsailDatabase_MasterDatabaseName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDatabaseDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDatabaseConfig_masterDatabaseName(rName, dbNameTooShort),
@@ -174,7 +179,7 @@ func TestAccLightsailDatabase_MasterDatabaseName(t *testing.T) {
 			{
 				Config: testAccDatabaseConfig_masterDatabaseName(rName, dbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(ctx, resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "master_database_name", dbName),
 				),
 			},
@@ -192,7 +197,7 @@ func TestAccLightsailDatabase_MasterDatabaseName(t *testing.T) {
 			{
 				Config: testAccDatabaseConfig_masterDatabaseName(rName, dbNameContainsUnderscore),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(ctx, resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "master_database_name", dbNameContainsUnderscore),
 				),
 			},
@@ -200,9 +205,10 @@ func TestAccLightsailDatabase_MasterDatabaseName(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_MasterUsername(t *testing.T) {
+func TestAccLightsailDatabase_masterUsername(t *testing.T) {
+	ctx := acctest.Context(t)
 	var db lightsail.RelationalDatabase
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 	username := "username1"
 	usernameTooShort := ""
@@ -214,13 +220,13 @@ func TestAccLightsailDatabase_MasterUsername(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDatabaseDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDatabaseConfig_masterUsername(rName, usernameTooShort),
@@ -245,7 +251,7 @@ func TestAccLightsailDatabase_MasterUsername(t *testing.T) {
 			{
 				Config: testAccDatabaseConfig_masterUsername(rName, username),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(ctx, resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "master_username", username),
 				),
 			},
@@ -263,7 +269,7 @@ func TestAccLightsailDatabase_MasterUsername(t *testing.T) {
 			{
 				Config: testAccDatabaseConfig_masterUsername(rName, usernameContainsUndercore),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(ctx, resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "master_username", usernameContainsUndercore),
 				),
 			},
@@ -271,8 +277,9 @@ func TestAccLightsailDatabase_MasterUsername(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_MasterPassword(t *testing.T) {
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+func TestAccLightsailDatabase_masterPassword(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	password := "testpassword"
 	passwordTooShort := "short"
 	passwordTooLong := fmt.Sprintf("%s-%s", password, sdkacctest.RandString(128))
@@ -283,13 +290,13 @@ func TestAccLightsailDatabase_MasterPassword(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDatabaseDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDatabaseConfig_masterPassword(rName, passwordTooShort),
@@ -319,22 +326,23 @@ func TestAccLightsailDatabase_MasterPassword(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_PreferredBackupWindow(t *testing.T) {
+func TestAccLightsailDatabase_preferredBackupWindow(t *testing.T) {
+	ctx := acctest.Context(t)
 	var db lightsail.RelationalDatabase
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 	backupWindowInvalidHour := "25:30-10:00"
 	backupWindowInvalidMinute := "10:00-10:70"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDatabaseDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDatabaseConfig_preferredBackupWindow(rName, backupWindowInvalidHour),
@@ -347,7 +355,7 @@ func TestAccLightsailDatabase_PreferredBackupWindow(t *testing.T) {
 			{
 				Config: testAccDatabaseConfig_preferredBackupWindow(rName, "09:30-10:00"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(ctx, resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "preferred_backup_window", "09:30-10:00"),
 				),
 			},
@@ -365,7 +373,7 @@ func TestAccLightsailDatabase_PreferredBackupWindow(t *testing.T) {
 			{
 				Config: testAccDatabaseConfig_preferredBackupWindow(rName, "09:45-10:15"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(ctx, resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "preferred_backup_window", "09:45-10:15"),
 				),
 			},
@@ -373,9 +381,10 @@ func TestAccLightsailDatabase_PreferredBackupWindow(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_PreferredMaintenanceWindow(t *testing.T) {
+func TestAccLightsailDatabase_preferredMaintenanceWindow(t *testing.T) {
+	ctx := acctest.Context(t)
 	var db lightsail.RelationalDatabase
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 	maintenanceWindowInvalidDay := "tuesday:04:30-tue:05:00"
 	maintenanceWindowInvalidHour := "tue:04:30-tue:30:00"
@@ -383,13 +392,13 @@ func TestAccLightsailDatabase_PreferredMaintenanceWindow(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDatabaseDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDatabaseConfig_preferredMaintenanceWindow(rName, maintenanceWindowInvalidDay),
@@ -406,7 +415,7 @@ func TestAccLightsailDatabase_PreferredMaintenanceWindow(t *testing.T) {
 			{
 				Config: testAccDatabaseConfig_preferredMaintenanceWindow(rName, "tue:04:30-tue:05:00"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(ctx, resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "tue:04:30-tue:05:00"),
 				),
 			},
@@ -424,7 +433,7 @@ func TestAccLightsailDatabase_PreferredMaintenanceWindow(t *testing.T) {
 			{
 				Config: testAccDatabaseConfig_preferredMaintenanceWindow(rName, "wed:06:00-wed:07:30"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(ctx, resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "wed:06:00-wed:07:30"),
 				),
 			},
@@ -432,25 +441,26 @@ func TestAccLightsailDatabase_PreferredMaintenanceWindow(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_PubliclyAccessible(t *testing.T) {
+func TestAccLightsailDatabase_publiclyAccessible(t *testing.T) {
+	ctx := acctest.Context(t)
 	var db lightsail.RelationalDatabase
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDatabaseDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseConfig_publiclyAccessible(rName, "true"),
+				Config: testAccDatabaseConfig_publiclyAccessible(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(ctx, resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
 				),
 			},
@@ -466,9 +476,9 @@ func TestAccLightsailDatabase_PubliclyAccessible(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDatabaseConfig_publiclyAccessible(rName, "false"),
+				Config: testAccDatabaseConfig_publiclyAccessible(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(ctx, resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
 				),
 			},
@@ -476,25 +486,26 @@ func TestAccLightsailDatabase_PubliclyAccessible(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_BackupRetentionEnabled(t *testing.T) {
+func TestAccLightsailDatabase_backupRetentionEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
 	var db lightsail.RelationalDatabase
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDatabaseDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseConfig_backupRetentionEnabled(rName, "true"),
+				Config: testAccDatabaseConfig_backupRetentionEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(ctx, resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_enabled", "true"),
 				),
 			},
@@ -510,9 +521,9 @@ func TestAccLightsailDatabase_BackupRetentionEnabled(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDatabaseConfig_backupRetentionEnabled(rName, "false"),
+				Config: testAccDatabaseConfig_backupRetentionEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(ctx, resourceName, &db),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_enabled", "false"),
 				),
 			},
@@ -520,9 +531,10 @@ func TestAccLightsailDatabase_BackupRetentionEnabled(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_FinalSnapshotName(t *testing.T) {
+func TestAccLightsailDatabase_finalSnapshotName(t *testing.T) {
+	ctx := acctest.Context(t)
 	var db lightsail.RelationalDatabase
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 	sName := fmt.Sprintf("%s-snapshot", rName)
 	sNameTooShort := "s"
@@ -532,13 +544,13 @@ func TestAccLightsailDatabase_FinalSnapshotName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDatabaseSnapshotDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDatabaseConfig_finalSnapshotName(rName, sNameTooShort),
@@ -559,7 +571,7 @@ func TestAccLightsailDatabase_FinalSnapshotName(t *testing.T) {
 			{
 				Config: testAccDatabaseConfig_finalSnapshotName(rName, sName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(ctx, resourceName, &db),
 				),
 			},
 			{
@@ -577,25 +589,26 @@ func TestAccLightsailDatabase_FinalSnapshotName(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_Tags(t *testing.T) {
+func TestAccLightsailDatabase_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var db1, db2, db3 lightsail.RelationalDatabase
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDatabaseDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDatabaseConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDatabaseExists(resourceName, &db1),
+					testAccCheckDatabaseExists(ctx, resourceName, &db1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -614,7 +627,7 @@ func TestAccLightsailDatabase_Tags(t *testing.T) {
 			{
 				Config: testAccDatabaseConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDatabaseExists(resourceName, &db2),
+					testAccCheckDatabaseExists(ctx, resourceName, &db2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -623,7 +636,7 @@ func TestAccLightsailDatabase_Tags(t *testing.T) {
 			{
 				Config: testAccDatabaseConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists(resourceName, &db3),
+					testAccCheckDatabaseExists(ctx, resourceName, &db3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -632,16 +645,57 @@ func TestAccLightsailDatabase_Tags(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_disappears(t *testing.T) {
+func TestAccLightsailDatabase_ha(t *testing.T) {
+	ctx := acctest.Context(t)
 	var db lightsail.RelationalDatabase
-	rName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
+	resourceName := "aws_lightsail_database.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDatabaseConfig_ha(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDatabaseExists(ctx, resourceName, &db),
+					resource.TestCheckResourceAttr(resourceName, "relational_database_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "bundle_id", "micro_ha_1_0"),
+					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"master_password",
+					"skip_final_snapshot",
+					"final_snapshot_name",
+				},
+			},
+		},
+	})
+}
+
+func TestAccLightsailDatabase_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var db lightsail.RelationalDatabase
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 
 	testDestroy := func(*terraform.State) error {
 		// reach out and DELETE the Database
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
-		_, err := conn.DeleteRelationalDatabase(&lightsail.DeleteRelationalDatabaseInput{
+		_, err := conn.DeleteRelationalDatabaseWithContext(ctx, &lightsail.DeleteRelationalDatabaseInput{
 			RelationalDatabaseName: aws.String(rName),
 			SkipFinalSnapshot:      aws.Bool(true),
 		})
@@ -658,18 +712,18 @@ func TestAccLightsailDatabase_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
-		CheckDestroy:      testAccCheckDatabaseDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDatabaseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatabaseExists(resourceName, &db),
+					testAccCheckDatabaseExists(ctx, resourceName, &db),
 					testDestroy),
 				ExpectNonEmptyPlan: true,
 			},
@@ -677,7 +731,7 @@ func TestAccLightsailDatabase_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDatabaseExists(n string, res *lightsail.RelationalDatabase) resource.TestCheckFunc {
+func testAccCheckDatabaseExists(ctx context.Context, n string, res *lightsail.RelationalDatabase) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -688,13 +742,13 @@ func testAccCheckDatabaseExists(n string, res *lightsail.RelationalDatabase) res
 			return errors.New("No Lightsail Database ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 		params := lightsail.GetRelationalDatabaseInput{
 			RelationalDatabaseName: aws.String(rs.Primary.ID),
 		}
 
-		resp, err := conn.GetRelationalDatabase(&params)
+		resp, err := conn.GetRelationalDatabaseWithContext(ctx, &params)
 
 		if err != nil {
 			return err
@@ -708,95 +762,89 @@ func testAccCheckDatabaseExists(n string, res *lightsail.RelationalDatabase) res
 	}
 }
 
-func testAccCheckDatabaseDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+func testAccCheckDatabaseDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_lightsail_database" {
-			continue
-		}
-
-		params := lightsail.GetRelationalDatabaseInput{
-			RelationalDatabaseName: aws.String(rs.Primary.ID),
-		}
-
-		respDatabase, err := conn.GetRelationalDatabase(&params)
-
-		if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
-			continue
-		}
-
-		if err == nil {
-			if respDatabase.RelationalDatabase != nil {
-				return names.Error(names.Lightsail, names.ErrActionCheckingDestroyed, tflightsail.ResDatabase, rs.Primary.ID, errors.New("still exists"))
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_lightsail_database" {
+				continue
 			}
+
+			params := lightsail.GetRelationalDatabaseInput{
+				RelationalDatabaseName: aws.String(rs.Primary.ID),
+			}
+
+			respDatabase, err := conn.GetRelationalDatabaseWithContext(ctx, &params)
+
+			if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+				continue
+			}
+
+			if err == nil {
+				if respDatabase.RelationalDatabase != nil {
+					return create.Error(names.Lightsail, create.ErrActionCheckingDestroyed, tflightsail.ResNameDatabase, rs.Primary.ID, errors.New("still exists"))
+				}
+			}
+
+			return create.Error(names.Lightsail, create.ErrActionCheckingDestroyed, tflightsail.ResNameDatabase, rs.Primary.ID, errors.New("still exists"))
 		}
 
-		return names.Error(names.Lightsail, names.ErrActionCheckingDestroyed, tflightsail.ResDatabase, rs.Primary.ID, errors.New("still exists"))
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckDatabaseSnapshotDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+func testAccCheckDatabaseSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_lightsail_database" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_lightsail_database" {
+				continue
+			}
 
-		// Try and delete the snapshot before we check for the cluster not found
-		snapshot_identifier := rs.Primary.Attributes["final_snapshot_name"]
+			// Try and delete the snapshot before we check for the cluster not found
+			snapshot_identifier := rs.Primary.Attributes["final_snapshot_name"]
 
-		log.Printf("[INFO] Deleting the Snapshot %s", snapshot_identifier)
-		_, err := conn.DeleteRelationalDatabaseSnapshot(
-			&lightsail.DeleteRelationalDatabaseSnapshotInput{
+			log.Printf("[INFO] Deleting the Snapshot %s", snapshot_identifier)
+			_, err := conn.DeleteRelationalDatabaseSnapshotWithContext(ctx, &lightsail.DeleteRelationalDatabaseSnapshotInput{
 				RelationalDatabaseSnapshotName: aws.String(snapshot_identifier),
 			})
 
-		if err != nil {
-			return err
-		}
-
-		params := lightsail.GetRelationalDatabaseInput{
-			RelationalDatabaseName: aws.String(rs.Primary.ID),
-		}
-
-		respDatabase, err := conn.GetRelationalDatabase(&params)
-
-		if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
-			continue
-		}
-
-		if err == nil {
-			if respDatabase.RelationalDatabase != nil {
-				return names.Error(names.Lightsail, names.ErrActionCheckingDestroyed, tflightsail.ResDatabase, rs.Primary.ID, errors.New("still exists"))
+			if err != nil {
+				return err
 			}
+
+			params := lightsail.GetRelationalDatabaseInput{
+				RelationalDatabaseName: aws.String(rs.Primary.ID),
+			}
+
+			respDatabase, err := conn.GetRelationalDatabaseWithContext(ctx, &params)
+
+			if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+				continue
+			}
+
+			if err == nil {
+				if respDatabase.RelationalDatabase != nil {
+					return create.Error(names.Lightsail, create.ErrActionCheckingDestroyed, tflightsail.ResNameDatabase, rs.Primary.ID, errors.New("still exists"))
+				}
+			}
+
+			return create.Error(names.Lightsail, create.ErrActionCheckingDestroyed, tflightsail.ResNameDatabase, rs.Primary.ID, errors.New("still exists"))
 		}
 
-		return names.Error(names.Lightsail, names.ErrActionCheckingDestroyed, tflightsail.ResDatabase, rs.Primary.ID, errors.New("still exists"))
+		return nil
 	}
-
-	return nil
 }
 
-func testAccDatabaseConfigBase() string {
-	return `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-`
+func testAccDatabaseConfig_base() string {
+	return acctest.ConfigAvailableAZsNoOptIn()
 }
 
 func testAccDatabaseConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name = %[1]q
@@ -813,7 +861,7 @@ resource "aws_lightsail_database" "test" {
 
 func testAccDatabaseConfig_masterDatabaseName(rName string, masterDatabaseName string) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name = %[1]q
@@ -830,7 +878,7 @@ resource "aws_lightsail_database" "test" {
 
 func testAccDatabaseConfig_masterUsername(rName string, masterUsername string) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name = %[1]q
@@ -847,7 +895,7 @@ resource "aws_lightsail_database" "test" {
 
 func testAccDatabaseConfig_masterPassword(rName string, masterPassword string) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name = %[1]q
@@ -864,7 +912,7 @@ resource "aws_lightsail_database" "test" {
 
 func testAccDatabaseConfig_preferredBackupWindow(rName string, preferredBackupWindow string) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name = %[1]q
@@ -883,7 +931,7 @@ resource "aws_lightsail_database" "test" {
 
 func testAccDatabaseConfig_preferredMaintenanceWindow(rName string, preferredMaintenanceWindow string) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name     = %[1]q
@@ -900,9 +948,9 @@ resource "aws_lightsail_database" "test" {
 `, rName, preferredMaintenanceWindow))
 }
 
-func testAccDatabaseConfig_publiclyAccessible(rName string, publiclyAccessible string) string {
+func testAccDatabaseConfig_publiclyAccessible(rName string, publiclyAccessible bool) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name = %[1]q
@@ -912,16 +960,16 @@ resource "aws_lightsail_database" "test" {
   master_username          = "test"
   blueprint_id             = "mysql_8_0"
   bundle_id                = "micro_1_0"
-  publicly_accessible      = %[2]q
+  publicly_accessible      = %[2]t
   apply_immediately        = true
   skip_final_snapshot      = true
 }
 `, rName, publiclyAccessible))
 }
 
-func testAccDatabaseConfig_backupRetentionEnabled(rName string, backupRetentionEnabled string) string {
+func testAccDatabaseConfig_backupRetentionEnabled(rName string, backupRetentionEnabled bool) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name = %[1]q
@@ -931,7 +979,7 @@ resource "aws_lightsail_database" "test" {
   master_username          = "test"
   blueprint_id             = "mysql_8_0"
   bundle_id                = "micro_1_0"
-  backup_retention_enabled = %[2]q
+  backup_retention_enabled = %[2]t
   apply_immediately        = true
   skip_final_snapshot      = true
 }
@@ -940,7 +988,7 @@ resource "aws_lightsail_database" "test" {
 
 func testAccDatabaseConfig_finalSnapshotName(rName string, sName string) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name = %[1]q
@@ -957,7 +1005,7 @@ resource "aws_lightsail_database" "test" {
 
 func testAccDatabaseConfig_tags1(rName string, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name = %[1]q
@@ -977,7 +1025,7 @@ resource "aws_lightsail_database" "test" {
 
 func testAccDatabaseConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		testAccDatabaseConfigBase(),
+		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_database" "test" {
   relational_database_name = %[1]q
@@ -994,4 +1042,20 @@ resource "aws_lightsail_database" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccDatabaseConfig_ha(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDatabaseConfig_base(),
+		fmt.Sprintf(`	
+resource "aws_lightsail_database" "test" {
+  relational_database_name = %[1]q
+  master_database_name     = "testdatabasename"
+  master_password          = "testdatabasepassword"
+  master_username          = "test"
+  blueprint_id             = "mysql_8_0"
+  bundle_id                = "micro_ha_1_0"
+  skip_final_snapshot      = true
+}
+`, rName))
 }

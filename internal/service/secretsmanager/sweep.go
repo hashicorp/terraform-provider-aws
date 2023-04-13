@@ -28,13 +28,14 @@ func init() {
 }
 
 func sweepSecretPolicies(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SecretsManagerConn
+	conn := client.(*conns.AWSClient).SecretsManagerConn()
 
-	err = conn.ListSecretsPages(&secretsmanager.ListSecretsInput{}, func(page *secretsmanager.ListSecretsOutput, lastPage bool) bool {
+	err = conn.ListSecretsPagesWithContext(ctx, &secretsmanager.ListSecretsInput{}, func(page *secretsmanager.ListSecretsOutput, lastPage bool) bool {
 		if len(page.SecretList) == 0 {
 			log.Print("[DEBUG] No Secrets Manager Secrets to sweep")
 			return true
@@ -48,7 +49,7 @@ func sweepSecretPolicies(region string) error {
 				SecretId: aws.String(name),
 			}
 
-			_, err := conn.DeleteResourcePolicy(input)
+			_, err := conn.DeleteResourcePolicyWithContext(ctx, input)
 			if err != nil {
 				if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
 					continue
@@ -70,13 +71,14 @@ func sweepSecretPolicies(region string) error {
 }
 
 func sweepSecrets(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SecretsManagerConn
+	conn := client.(*conns.AWSClient).SecretsManagerConn()
 
-	err = conn.ListSecretsPages(&secretsmanager.ListSecretsInput{}, func(page *secretsmanager.ListSecretsOutput, lastPage bool) bool {
+	err = conn.ListSecretsPagesWithContext(ctx, &secretsmanager.ListSecretsInput{}, func(page *secretsmanager.ListSecretsOutput, lastPage bool) bool {
 		if len(page.SecretList) == 0 {
 			log.Print("[DEBUG] No Secrets Manager Secrets to sweep")
 			return true
@@ -91,7 +93,7 @@ func sweepSecrets(region string) error {
 				SecretId:                   aws.String(name),
 			}
 
-			_, err := conn.DeleteSecret(input)
+			_, err := conn.DeleteSecretWithContext(ctx, input)
 			if err != nil {
 				if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
 					continue

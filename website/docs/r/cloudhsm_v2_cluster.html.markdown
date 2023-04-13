@@ -52,7 +52,7 @@ resource "aws_subnet" "cloudhsm_v2_subnets" {
 
 resource "aws_cloudhsm_v2_cluster" "cloudhsm_v2_cluster" {
   hsm_type   = "hsm1.medium"
-  subnet_ids = aws_subnet.cloudhsm_v2_subnets.*.id
+  subnet_ids = aws_subnet.cloudhsm_v2_subnets[*].id
 
   tags = {
     Name = "example-aws_cloudhsm_v2_cluster"
@@ -64,10 +64,10 @@ resource "aws_cloudhsm_v2_cluster" "cloudhsm_v2_cluster" {
 
 The following arguments are supported:
 
-* `source_backup_identifier` - (Optional) The id of Cloud HSM v2 cluster backup to be restored.
+* `source_backup_identifier` - (Optional) ID of Cloud HSM v2 cluster backup to be restored.
 * `hsm_type` - (Required) The type of HSM module in the cluster. Currently, only `hsm1.medium` is supported.
 * `subnet_ids` - (Required) The IDs of subnets in which cluster will operate.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
@@ -83,7 +83,7 @@ In addition to all arguments above, the following attributes are exported:
     * `cluster_certificates.0.aws_hardware_certificate` - The HSM hardware certificate issued (signed) by AWS CloudHSM.
     * `cluster_certificates.0.hsm_certificate` - The HSM certificate issued (signed) by the HSM hardware.
     * `cluster_certificates.0.manufacturer_hardware_certificate` - The HSM hardware certificate issued (signed) by the hardware manufacturer.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 [1]: https://docs.aws.amazon.com/cloudhsm/latest/userguide/introduction.html
 [2]: https://docs.aws.amazon.com/cloudhsm/latest/APIReference/Welcome.html

@@ -11,18 +11,19 @@ import (
 )
 
 func TestAccServiceDiscoveryServiceDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_service_discovery_service.test"
 	resourceName := "aws_service_discovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDataSourceConfig_basic(rName),
@@ -42,18 +43,19 @@ func TestAccServiceDiscoveryServiceDataSource_basic(t *testing.T) {
 }
 
 func TestAccServiceDiscoveryServiceDataSource_private(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_service_discovery_service.test"
 	resourceName := "aws_service_discovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDataSourceConfig_private(rName),
@@ -73,18 +75,19 @@ func TestAccServiceDiscoveryServiceDataSource_private(t *testing.T) {
 }
 
 func TestAccServiceDiscoveryServiceDataSource_public(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_service_discovery_service.test"
 	resourceName := "aws_service_discovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDataSourceConfig_public(rName),

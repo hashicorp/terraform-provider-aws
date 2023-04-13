@@ -8,17 +8,16 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glacier"
 	"github.com/aws/aws-sdk-go/service/glacier/glacieriface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists glacier service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn glacieriface.GlacierAPI, identifier string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier)
-}
-
-func ListTagsWithContext(ctx context.Context, conn glacieriface.GlacierAPI, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn glacieriface.GlacierAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &glacier.ListTagsForVaultInput{
 		VaultName: aws.String(identifier),
 	}
@@ -26,10 +25,26 @@ func ListTagsWithContext(ctx context.Context, conn glacieriface.GlacierAPI, iden
 	output, err := conn.ListTagsForVaultWithContext(ctx, input)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.Tags), nil
+	return KeyValueTags(ctx, output.Tags), nil
+}
+
+// ListTags lists glacier service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).GlacierConn(), identifier)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(tags)
+	}
+
+	return nil
 }
 
 // map[string]*string handling
@@ -40,45 +55,68 @@ func Tags(tags tftags.KeyValueTags) map[string]*string {
 }
 
 // KeyValueTags creates KeyValueTags from glacier service tags.
-func KeyValueTags(tags map[string]*string) tftags.KeyValueTags {
-	return tftags.New(tags)
+func KeyValueTags(ctx context.Context, tags map[string]*string) tftags.KeyValueTags {
+	return tftags.New(ctx, tags)
+}
+
+// GetTagsIn returns glacier service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) map[string]*string {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets glacier service tags in Context.
+func SetTagsOut(ctx context.Context, tags map[string]*string) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
 }
 
 // UpdateTags updates glacier service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn glacieriface.GlacierAPI, identifier string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn glacieriface.GlacierAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+
+func UpdateTags(ctx context.Context, conn glacieriface.GlacierAPI, identifier string, oldTagsMap, newTagsMap any) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &glacier.RemoveTagsFromVaultInput{
 			VaultName: aws.String(identifier),
-			TagKeys:   aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:   aws.StringSlice(removedTags.IgnoreSystem(names.Glacier).Keys()),
 		}
 
 		_, err := conn.RemoveTagsFromVaultWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &glacier.AddTagsToVaultInput{
 			VaultName: aws.String(identifier),
-			Tags:      Tags(updatedTags.IgnoreAWS()),
+			Tags:      Tags(updatedTags.IgnoreSystem(names.Glacier)),
 		}
 
 		_, err := conn.AddTagsToVaultWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 	}
 
 	return nil
+}
+
+// UpdateTags updates glacier service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).GlacierConn(), identifier, oldTags, newTags)
 }

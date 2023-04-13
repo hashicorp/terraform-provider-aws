@@ -11,7 +11,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func testAccFaqDataSource_basic(t *testing.T) {
+func TestAccKendraFaqDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_kendra_faq.test"
 	resourceName := "aws_kendra_faq.test"
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -20,10 +21,10 @@ func testAccFaqDataSource_basic(t *testing.T) {
 	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccFaqDataSourceConfig_nonExistent,

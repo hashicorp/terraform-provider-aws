@@ -69,7 +69,7 @@ The following arguments are supported:
 * `kms_key_id` - (Optional) The AWS Key Management Service (AWS KMS) key that Amazon SageMaker uses to encrypt the model artifacts at rest using Amazon S3 server-side encryption.
 * `lifecycle_config_name` - (Optional) The name of a lifecycle configuration to associate with the notebook instance.
 * `root_access` - (Optional) Whether root access is `Enabled` or `Disabled` for users of the notebook instance. The default value is `Enabled`.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### instance_metadata_service_configuration
 
@@ -83,7 +83,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this notebook instance.
 * `url` - The URL that you use to connect to the Jupyter notebook that is running in your notebook instance.
 * `network_interface_id` - The network interface ID that Amazon SageMaker created at the time of creating the instance. Only available when setting `subnet_id`.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
