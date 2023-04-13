@@ -45,9 +45,11 @@ func ResourceTableItem() *schema.Resource {
 				Optional: true,
 			},
 			"item": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validateTableItem,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validateTableItem,
+				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
+				DiffSuppressOnRefresh: true,
 			},
 		},
 	}
