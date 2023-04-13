@@ -310,14 +310,6 @@ func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.Resource
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster Parameter Group (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceClusterParameterGroupRead(ctx, d, meta)...)
 }
 
