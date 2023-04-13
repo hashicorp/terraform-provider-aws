@@ -11,6 +11,7 @@ import (
 const (
 	propagationTimeout            = 2 * time.Minute
 	replicationTaskRunningTimeout = 5 * time.Minute
+	moveTaskTimeout               = 10 * time.Minute
 )
 
 func waitEndpointDeleted(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) error {
@@ -45,6 +46,22 @@ func waitReplicationTaskDeleted(ctx context.Context, conn *dms.DatabaseMigration
 func waitReplicationTaskModified(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusModifying},
+		Target:     []string{replicationTaskStatusReady, replicationTaskStatusStopped, replicationTaskStatusFailed},
+		Refresh:    statusReplicationTask(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second, // Wait 30 secs before starting
+	}
+
+	// Wait, catching any errors
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+func waitReplicationTaskMoved(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{replicationTaskStatusModifying, replicationTaskStatusMoving},
 		Target:     []string{replicationTaskStatusReady, replicationTaskStatusStopped, replicationTaskStatusFailed},
 		Refresh:    statusReplicationTask(ctx, conn, id),
 		Timeout:    timeout,

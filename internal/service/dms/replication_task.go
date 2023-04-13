@@ -60,7 +60,6 @@ func ResourceReplicationTask() *schema.Resource {
 			"replication_instance_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
 			"replication_task_arn": {
@@ -212,7 +211,7 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn()
 
-	if d.HasChangesExcept("tags", "tags_all", "start_replication_task") {
+	if d.HasChangesExcept("tags", "tags_all", "start_replication_task", "replication_instance_arn") {
 		input := &dms.ModifyReplicationTaskInput{
 			ReplicationTaskArn: aws.String(d.Get("replication_task_arn").(string)),
 			MigrationType:      aws.String(d.Get("migration_type").(string)),
@@ -250,6 +249,36 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		if err := waitReplicationTaskModified(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Task (%s) update: %s", d.Id(), err)
+		}
+
+		if d.Get("start_replication_task").(bool) {
+			err := startReplicationTask(ctx, d.Id(), conn)
+			if err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+		}
+	}
+
+	if d.HasChange("replication_instance_arn") {
+		input := &dms.MoveReplicationTaskInput{
+			ReplicationTaskArn:           aws.String(d.Get("replication_task_arn").(string)),
+			TargetReplicationInstanceArn: aws.String(d.Get("replication_instance_arn").(string)),
+		}
+		status := d.Get("status").(string)
+		if status == replicationTaskStatusRunning {
+			log.Println("[DEBUG] stopping DMS replication task:", input)
+			if err := stopReplicationTask(ctx, d.Id(), conn); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+		}
+		log.Println("[DEBUG] moving DMS replication task:", input)
+		_, err := conn.MoveReplicationTaskWithContext(ctx, input)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "moving DMS Replication Task (%s): %s", d.Id(), err)
+		}
+
+		if err := waitReplicationTaskMoved(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Task (%s) update: %s", d.Id(), err)
 		}
 
