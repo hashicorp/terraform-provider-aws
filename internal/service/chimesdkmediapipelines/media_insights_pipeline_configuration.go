@@ -526,7 +526,7 @@ func resourceMediaInsightsPipelineConfigurationCreate(ctx context.Context, d *sc
 func resourceMediaInsightsPipelineConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ChimeSDKMediaPipelinesConn()
 
-	out, err := findMediaInsightsPipelineConfigurationByID(ctx, conn, d.Id())
+	out, err := FindMediaInsightsPipelineConfigurationByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ChimeSDKMediaPipelines MediaInsightsPipelineConfiguration (%s) not found, removing from state", d.Id())
@@ -644,7 +644,7 @@ func resourceMediaInsightsPipelineConfigurationDelete(ctx context.Context, d *sc
 	return nil
 }
 
-func findMediaInsightsPipelineConfigurationByID(ctx context.Context, conn *chimesdkmediapipelines.ChimeSDKMediaPipelines, id string) (*chimesdkmediapipelines.MediaInsightsPipelineConfiguration, error) {
+func FindMediaInsightsPipelineConfigurationByID(ctx context.Context, conn *chimesdkmediapipelines.ChimeSDKMediaPipelines, id string) (*chimesdkmediapipelines.MediaInsightsPipelineConfiguration, error) {
 	in := &chimesdkmediapipelines.GetMediaInsightsPipelineConfigurationInput{
 		Identifier: aws.String(id),
 	}
