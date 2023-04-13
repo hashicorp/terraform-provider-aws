@@ -1,24 +1,4 @@
 package vpclattice_test
-// **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
-//
-// Remember to register this new resource in the provider
-// (internal/provider/provider.go) once you finish. Otherwise, Terraform won't
-// know about it.
 
 import (
 	// TIP: ==== IMPORTS ====
@@ -34,9 +14,8 @@ import (
 	// need to import types and reference the nested types, e.g., as
 	// types.<Type Name>.
 	"context"
-	"fmt"
+	"errors"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -44,15 +23,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 
 	// TIP: You will often need to import the package that this test file lives
-    // in. Since it is in the "test" context, it must import the package to use
-    // any normal context constants, variables, or functions.
+	// in. Since it is in the "test" context, it must import the package to use
+	// any normal context constants, variables, or functions.
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -69,7 +47,6 @@ import (
 // 6. All the other tests
 // 7. Helper functions (exists, destroy, check, etc.)
 // 8. Functions that return Terraform configurations
-
 
 // TIP: ==== UNIT TESTS ====
 // This is an example of a unit test. Its name is not prefixed with
@@ -131,7 +108,6 @@ func TestListenerExampleUnitTest(t *testing.T) {
 	}
 }
 
-
 // TIP: ==== ACCEPTANCE TESTS ====
 // This is an example of a basic acceptance test. This should test as much of
 // standard functionality of the resource as possible, and test importing, if
@@ -141,8 +117,8 @@ func TestListenerExampleUnitTest(t *testing.T) {
 // Acceptance test access AWS and cost money to run.
 func TestAccVPCLatticeListener_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-    // TIP: This is a long-running test guard for tests that run longer than
-    // 300s (5 min) generally.
+	// TIP: This is a long-running test guard for tests that run longer than
+	// 300s (5 min) generally.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -220,7 +196,7 @@ func TestAccVPCLatticeListener_disappears(t *testing.T) {
 
 func testAccCheckListenerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpclattice_listener" {
@@ -299,29 +275,72 @@ func testAccCheckListenerNotRecreated(before, after *vpclattice.DescribeListener
 	}
 }
 
-func testAccListenerConfig_basic(rName, version string) string {
-	return fmt.Sprintf(`
-resource "aws_security_group" "test" {
+func testAccListenerConfig_basic(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 0), `
+resource "aws_vpclattice_service" "test" {
   name = %[1]q
 }
 
-resource "aws_vpclattice_listener" "test" {
-  listener_name             = %[1]q
-  engine_type             = "ActiveVPCLattice"
-  engine_version          = %[2]q
-  host_instance_type      = "vpclattice.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
+resource "aws_vpclattice_target_group" "test" {
+  name = %[1]q
+  type = "INSTANCE"
 
-  logs {
-    general = true
-  }
-
-  user {
-    username = "Test"
-    password = "TestTest1234"
+  config {
+    port           = 80
+    protocol       = "HTTP"
+    vpc_identifier = aws_vpc.test.id
   }
 }
-`, rName, version)
+
+
+`, rName)
+}
+
+func testAccListenerConfig_httpForwardRuleToArn(rName string) string {
+	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), `
+resource "aws_vpclattice_listener" "test" {
+  name        = "test"
+  service_arn = aws_vpclattice_service.test.arn
+  default_action {
+    forward {
+      target_groups = [{
+        target_group_identifier = aws_vpclattice_target_group.test.arn
+        weight                  = 100
+        }
+      ]
+    }
+  }
+}`, rName)
+}
+
+func testAccListenerConfig_httpForwardRuleToId(rName string) string {
+	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), `
+resource "aws_vpclattice_listener" "test" {
+  name        = "test"
+  protocol    = "HTTP"
+  service_arn = aws_vpclattice_service.test.arn
+  default_action {
+    forward {
+      target_groups = [{
+        target_group_identifier = aws_vpclattice_target_group.test.id
+        weight                  = 100
+        }
+      ]
+    }
+  }
+}`, rName)
+}
+
+func testAccListenerConfig_httpFixedResponse(rName string) string {
+	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), `
+resource "aws_vpclattice_listener" "test" {
+  name        = "test"
+  protocol    = "HTTP"
+  service_arn = aws_vpclattice_service.test.arn
+  default_action {
+    fixed_response {
+      status_code = 404
+    }
+  }
+}`, rName)
 }
