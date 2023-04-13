@@ -38,6 +38,7 @@ Chime SDK Media Pipelines
 Chime SDK Meetings
 Chime SDK Messaging
 Chime SDK Voice
+Clean Rooms
 Cloud Control API
 Cloud Directory
 Cloud Map

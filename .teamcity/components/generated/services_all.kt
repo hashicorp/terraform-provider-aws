@@ -29,6 +29,7 @@ val services = mapOf(
     "chime" to ServiceSpec("Chime"),
     "chimesdkmediapipelines" to ServiceSpec("Chime SDK Media Pipelines"),
     "chimesdkvoice" to ServiceSpec("Chime SDK Voice"),
+    "cleanrooms" to ServiceSpec("Clean Rooms"),
     "cloud9" to ServiceSpec("Cloud9"),
     "cloudcontrol" to ServiceSpec("Cloud Control API"),
     "cloudformation" to ServiceSpec("CloudFormation", vpcLock = true),
