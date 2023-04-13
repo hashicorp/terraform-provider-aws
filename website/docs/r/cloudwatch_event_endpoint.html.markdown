@@ -18,17 +18,24 @@ Provides a resource to create an EventBridge Global Endpoint.
 resource "aws_cloudwatch_event_endpoint" "this" {
   name        = "global-endpoint"
   role_arn    = aws_iam_role.replication.arn
-  event_buses = [aws_cloudwatch_event_bus.primary.arn, aws_cloudwatch_event_bus.secondary.arn]
+
+  event_bus {
+    event_bus_arn = aws_cloudwatch_event_bus.primary.arn
+  }
+  event_bus {
+    event_bus_arn = aws_cloudwatch_event_bus.secondary.arn
+  }
 
   replication_config {
-    is_enabled = false
+    state = "DISABLED"
   }
 
   routing_config {
     failover_config {
       primary {
-        health_check_arn = aws_route53_health_check.primary.arn
+        health_check= aws_route53_health_check.primary.arn
       }
+
       secondary {
         route = "us-east-2"
       }
@@ -41,33 +48,37 @@ resource "aws_cloudwatch_event_endpoint" "this" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the global endpoint.
 * `description` - (Optional) A description of the global endpoint.
-* `role_arn` - (Required) The ARN of the role used for replication between event buses.
-* `event_buses` - (Required) The event buses to use. The names of the event buses must be identical in each Region. Minimum of two event buses are required.
-* `replication_config` - (Optional) Parameters used for replication. A maximum of 1 are allowed. Documented below.
-* `routing_config` - (Required) Parameters used for routing. A maximum of 1 are allowed. Documented below.
+* `event_bus` - (Required) The event buses to use. The names of the event buses must be identical in each Region. Exactly two event buses are required. Documented below.
+* `name` - (Required) The name of the global endpoint.
+* `replication_config` - (Optional) Parameters used for replication. Documented below.
+* `role_arn` - (Optional) The ARN of the IAM role used for replication between event buses.
+* `routing_config` - (Required) Parameters used for routing, including the health check and secondary Region. Documented below.
 
-`replication_config` support the following:
+`event_bus` supports the following:
 
-* `is_enabled` - (Optional) Enable or disable event replication between buses. The default state is DISABLED. If you want event replication enabled, set the state to ENABLED. You will need a `role_arn` if replication is ENABLED.
+* `event_bus_arn` - (Required) The ARN of the event bus the endpoint is associated with.
+
+`replication_config` supports the following:
+
+* `state` - (Optional) The state of event replication. Valid values: `ENABLED`, `DISABLED`. The default state is `ENABLED`, which means you must supply a `role_arn`. If you don't have a `role_arn` or you don't want event replication enabled, set `state` to `DISABLED`.
 
 `routing_config` support the following:
 
-* `failover_config` - (Required) Parameters used for failover. This includes what triggers failover and what happens when it's triggered. A maximum of 1 are allowed. Documented below.
+* `failover_config` - (Required) Parameters used for failover. This includes what triggers failover and what happens when it's triggered. Documented below.
 
 `failover_config` support the following:
 
-* `primary` - (Required) Parameters used for primary region. A maximum of 1 are allowed. Documented below.
-* `secondary` - (Required) Parameters used for secondary region. The Region that events are routed to when failover is triggered or event replication is enabled. A maximum of 1 are allowed. Documented below.
+* `primary` - (Required) Parameters used for the primary Region. Documented below.
+* `secondary` - (Required) Parameters used for the secondary Region, the Region that events are routed to when failover is triggered or event replication is enabled. Documented below.
 
 `primary` support the following:
 
-* `health_check_arn` - (Required) The ARN of the health check used by the endpoint to determine whether failover is triggered.
+* `health_check` - (Required) The ARN of the health check used by the endpoint to determine whether failover is triggered.
 
 `secondary` support the following:
 
-* `route` - (Required) The name of the secondary region.
+* `route` - (Required) The name of the secondary Region.
 
 ## Attributes Reference
 

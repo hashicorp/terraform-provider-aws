@@ -29,27 +29,3 @@ func RuleStateFromEnabled(enabled bool) string {
 
 	return eventbridge.RuleStateDisabled
 }
-
-// EndpointReplicationEnabledFromState infers from its state whether or not endpoint replication is enabled.
-func EndpointReplicationEnabledFromState(state string) (bool, error) {
-	if state == eventbridge.ReplicationStateEnabled {
-		return true, nil
-	}
-
-	if state == eventbridge.ReplicationStateDisabled {
-		return false, nil
-	}
-
-	// We don't just blindly trust AWS as they tend to return
-	// unexpected values in similar cases (different casing etc.)
-	return false, fmt.Errorf("unable to infer enabled from state: %s", state)
-}
-
-// RuleStateFromEnabled returns a endpoints replication state based on whether or not it is enabled.
-func EndpointReplicationStateFromEnabled(enabled bool) string {
-	if enabled {
-		return eventbridge.ReplicationStateEnabled
-	}
-
-	return eventbridge.ReplicationStateDisabled
-}
