@@ -53,6 +53,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceRegion,
 			TypeName: "aws_directory_service_region",
+			Name:     "Region",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  ResourceSharedDirectory,
