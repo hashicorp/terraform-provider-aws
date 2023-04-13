@@ -146,6 +146,12 @@ func TestRuleParseResourceID(t *testing.T) {
 			ExpectedPart1: "TestRule",
 		},
 		{
+			TestName:      "ARN based partner event bus",
+			InputID:       "arn:aws:events:us-east-2:123456789012:event-bus/aws.partner/genesys.com/cloud/a12bc345-d678-90e1-2f34-gh5678i9012ej/_genesys/TestRule",
+			ExpectedPart0: "arn:aws:events:us-east-2:123456789012:event-bus/aws.partner/genesys.com/cloud/a12bc345-d678-90e1-2f34-gh5678i9012ej/_genesys",
+			ExpectedPart1: "TestRule",
+		},
+		{
 			TestName:      "empty both parts",
 			InputID:       "/",
 			ExpectedError: true,
