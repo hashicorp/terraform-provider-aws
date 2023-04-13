@@ -1,9 +1,5 @@
 ## 4.63.0 (Unreleased)
 
-NOTES:
-
-* resource/aws_servicecatalog_provisioned_product: Previously, this resource would error or hang until timeout and then error, if a stack had a `status` of `TAINTED`. Now, the resource will continue functioning normally if the `status` is `TAINTED`. This is because the stack is in a "stable state" and "ready to perform any operation." However, although "the stack has completed the requested operation," it "is not exactly what was requested." The `status` will reflect `TAINTED` and `status_message` will provide clues as to what happened. See the `aws_servicecatalog_provisioned_product` documentation for more information and ways to use logging with this. ([#30522](https://github.com/hashicorp/terraform-provider-aws/issues/30522))
-
 FEATURES:
 
 * **New Data Source:** `aws_dms_certificate` ([#30498](https://github.com/hashicorp/terraform-provider-aws/issues/30498))
@@ -34,20 +30,20 @@ ENHANCEMENTS:
 * resource/aws_lambda_function_url: Add `invoke_mode` attribute ([#30547](https://github.com/hashicorp/terraform-provider-aws/issues/30547))
 * resource/aws_mwaa_environment: Add `startup_script_s3_path` and `startup_script_s3_object_version` attributes ([#30549](https://github.com/hashicorp/terraform-provider-aws/issues/30549))
 * resource/aws_nat_gateway: Add `association_id` attribute ([#30546](https://github.com/hashicorp/terraform-provider-aws/issues/30546))
+* resource/aws_servicecatalog_provisioned_product: Surfaces more clear error message when resource fails to apply ([#30663](https://github.com/hashicorp/terraform-provider-aws/issues/30663))
 * resource/aws_wafv2_web_acl: Add `aws_managed_rules_atp_rule_set` to `managed_rule_group_configs` configuration block ([#30518](https://github.com/hashicorp/terraform-provider-aws/issues/30518))
 
 BUG FIXES:
 
-* resource/aws_api_gateway_stage: `cache_cluster_size` is not updated if `cache_cluster_size` is `false` ([#30588](https://github.com/hashicorp/terraform-provider-aws/issues/30588))
 * resource/aws_batch_compute_environment: Fix crash when `compute_resources.launch_template` is empty ([#30537](https://github.com/hashicorp/terraform-provider-aws/issues/30537))
 * resource/aws_cognito_managed_user_pool_client: Allow removing `token_validity_units` ([#30662](https://github.com/hashicorp/terraform-provider-aws/issues/30662))
 * resource/aws_cognito_user_pool_client: Allow removing `token_validity_units` ([#30662](https://github.com/hashicorp/terraform-provider-aws/issues/30662))
+* resource/aws_db_instance: Allow `engine` and `engine_version` to be set when `replicate_source_db` is set ([#30703](https://github.com/hashicorp/terraform-provider-aws/issues/30703))
 * resource/aws_elasticache_user_group: Change `user_group_id` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#30533](https://github.com/hashicorp/terraform-provider-aws/issues/30533))
 * resource/aws_launch_template: Fix crash when `instance_market_options.spot_options` is empty ([#30539](https://github.com/hashicorp/terraform-provider-aws/issues/30539))
 * resource/aws_msk_serverless_cluster: Change `vpc_config.security_group_ids` to Computed ([#30535](https://github.com/hashicorp/terraform-provider-aws/issues/30535))
 * resource/aws_rds_cluster: Prevent `db_instance_parameter_group_name` from causing errors on minor upgrades ([#30679](https://github.com/hashicorp/terraform-provider-aws/issues/30679))
 * resource/aws_rds_cluster_parameter_group: Fixes differences being reported on every apply when setting system-source parameters ([#30536](https://github.com/hashicorp/terraform-provider-aws/issues/30536))
-* resource/aws_servicecatalog_provisioned_product: Allow the waiting that comes with updating and deleting to not error due to a `status` of `TAINTED` ([#30522](https://github.com/hashicorp/terraform-provider-aws/issues/30522))
 
 ## 4.62.0 (April  6, 2023)
 
