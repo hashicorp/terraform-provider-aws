@@ -1,0 +1,734 @@
+package vpclattice
+
+import (
+	"context"
+	"errors"
+	//"fmt"
+	"log"
+	//"reflect"
+	//"regexp"
+	//"strings"
+	"time"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
+	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	//"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	//"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
+	//"github.com/hashicorp/terraform/helper/schema"
+)
+
+// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
+// @SDKResource("aws_vpclattice_listener")
+func ResourceListener() *schema.Resource {
+	return &schema.Resource{
+		CreateWithoutTimeout: resourceListenerCreate,
+		ReadWithoutTimeout:   resourceListenerRead,
+		UpdateWithoutTimeout: resourceListenerUpdate,
+		DeleteWithoutTimeout: resourceListenerDelete,
+		
+		// TIP: ==== TERRAFORM IMPORTING ====
+		// If Read can get all the information it needs from the Identifier
+		// (i.e., d.Id()), you can use the Passthrough importer. Otherwise,
+		// you'll need a custom import function.
+		//
+		// See more:
+		// https://hashicorp.github.io/terraform-provider-aws/add-import-support/
+		// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#implicit-state-passthrough
+		// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#virtual-attributes
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
+		},
+		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"created_at": {
+				Type: schema.TypeString,
+				Computed: true,
+			},
+			"default_action": {
+				Type:     schema.TypeList,
+				Required: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"fixed_response": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							MaxItems:         1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"status_code": {
+										Type:         schema.TypeInt,
+										Required: true,
+										Computed:     true,
+									},
+								},
+							},
+						},
+						"forward": {
+							Type: schema.TypeList,
+							Optional: true,
+							MinItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"target_groups": {
+										Type: schema.TypeList,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"target_group_identifier": {
+													Type: schema.TypeString,
+													Required: true,
+												},
+												"weight": {
+													Type: schema.TypeInt,
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"last_updated_at": {
+				Type: schema.TypeString,
+				Computed: true,
+			},
+			"name": {
+				Type: schema.TypeString,
+				ForceNew: true,
+				Required: true,
+			},
+			"port": {
+				Type: schema.TypeInt,
+				Optional: true,
+				ValidateFunc: validation.IsPortNumber,
+			},
+			"protocol": {
+				Type: schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringInSlice([]string{"HTTP", "HTTPS"}, true),
+			},
+			"service_arn": {
+				Type: schema.TypeString,
+				Computed: true,
+				Optional: true,
+				AtLeastOneOf: []string{"service_arn", "service_id"},
+				ValidateFunc: verify.ValidARN,
+			},
+			"service_id": {
+				Type: schema.TypeString,
+				Computed: true,
+				Optional: true,
+				AtLeastOneOf: []string{"service_arn", "service_id"},
+			},
+			"tags":         tftags.TagsSchema(), // TIP: Many, but not all, resources have `tags` and `tags_all` attributes.
+			"tags_all":     tftags.TagsSchemaComputed(),
+		},
+
+		CustomizeDiff: verify.SetTagsDiff,
+	}
+}
+
+const (
+	ResNameListener = "Listener"
+)
+
+func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	// TIP: ==== RESOURCE CREATE ====
+	// Generally, the Create function should do the following things. Make
+	// sure there is a good reason if you don't do one of these.
+	//
+	// 1. Get a client connection to the relevant service
+	// 2. Populate a create input structure
+	// 3. Call the AWS create/put function
+	// 4. Using the output from the create function, set the minimum arguments
+	//    and attributes for the Read function to work. At a minimum, set the
+	//    resource ID. E.g., d.SetId(<Identifier, such as AWS ID or ARN>)
+	// 5. Use a waiter to wait for create to complete
+	// 6. Call the Read function in the Create return
+
+	// TIP: -- 1. Get a client connection to the relevant service
+	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	
+	// TIP: -- 2. Populate a create input structure
+	in := &vpclattice.CreateListenerInput{
+		// TIP: Mandatory or fields that will always be present can be set when
+		// you create the Input structure. (Replace these with real fields.)
+		Name: aws.String(d.Get("name").(string)),
+		Protocol: types.ListenerProtocol(d.Get("protocol").(string)),
+		ServiceIdentifier: aws.String(d.Get("service_id").(string)),
+	}
+
+	if v, ok := d.GetOk("port"); ok {
+		// For HTTP, the default is 80. For HTTPS, the default is 443.
+		in.Port = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := d.GetOk("default_action"); ok && len(v.([]interface{})) > 0 {
+		// TIP: Use an expander to assign a complex argument.
+		in.DefaultAction = expandListenerRuleActions(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	// TIP: Not all resources support tags and tags don't always make sense. If
+	// your resource doesn't need tags, you can remove the tags lines here and
+	// below. Many resources do include tags so this a reminder to include them
+	// where possible.
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+
+	if len(tags) > 0 {
+		in.Tags = Tags(tags.IgnoreAWS())
+	}
+	
+	// TIP: -- 3. Call the AWS create function
+	out, err := conn.CreateListener(ctx, in)
+	if err != nil {
+		// TIP: Since d.SetId() has not been called yet, you cannot use d.Id()
+		// in error messages at this point.
+		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameListener, d.Get("name").(string), err)
+	}
+
+	if out == nil || out.Arn == nil {
+		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameListener, d.Get("name").(string), errors.New("empty output"))
+	}
+	
+	// TIP: -- 4. Set the minimum arguments and/or attributes for the Read function to
+	// work.
+	d.SetId(aws.ToString(out.Id))
+	
+	// TIP: -- 5. Use a waiter to wait for create to complete
+	// if _, err := waitListenerCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	// 	return create.DiagError(names.VPCLattice, create.ErrActionWaitingForCreation, ResNameListener, d.Id(), err)
+	// }
+	
+	// TIP: -- 6. Call the Read function in the Create return
+	return resourceListenerRead(ctx, d, meta)
+}
+
+func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	
+	out, err := findListenerByID(ctx, conn, d.Id())
+	
+	// TIP: -- 3. Set ID to empty where resource is not new and not found
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] VPCLattice Listener (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameListener, d.Id(), err)
+	}
+	
+	// TIP: -- 4. Set the arguments and attributes
+	d.Set("arn", out.Arn)
+	d.Set("created_at", out.CreatedAt)
+	d.Set("last_updated_at", out.LastUpdatedAt)
+	d.Set("name", out.Name)
+	d.Set("port", out.Port)
+	d.Set("service_arn", out.ServiceArn)
+	d.Set("service_id", out.ServiceId)
+	
+	// TIP: Setting a complex type.
+	// For more information, see:
+	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#data-handling-and-conversion
+	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#flatten-functions-for-blocks
+	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#root-typeset-of-resource-and-aws-list-of-structure
+	
+	if err := d.Set("default_action", flattenListenerRuleActions(out.DefaultAction)); err != nil {
+		return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameListener, d.Id(), err)
+	}
+
+	// TIP: -- 5. Set the tags
+	//
+	// TIP: Not all resources support tags and tags don't always make sense. If
+	// your resource doesn't need tags, you can remove the tags lines here and
+	// below. Many resources do include tags so this a reminder to include them
+	// where possible.
+	tags, err := ListTags(ctx, conn, d.Id())
+	if err != nil {
+		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameListener, d.Id(), err)
+	}
+
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameListener, d.Id(), err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameListener, d.Id(), err)
+	}
+
+	return nil
+}
+
+func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	// TIP: ==== RESOURCE UPDATE ====
+	// Not all resources have Update functions. There are a few reasons:
+	// a. The AWS API does not support changing a resource
+	// b. All arguments have ForceNew: true, set
+	// c. The AWS API uses a create call to modify an existing resource
+	//
+	// In the cases of a. and b., the main resource function will not have a
+	// UpdateWithoutTimeout defined. In the case of c., Update and Create are
+	// the same.
+	//
+	// The rest of the time, there should be an Update function and it should
+	// do the following things. Make sure there is a good reason if you don't
+	// do one of these.
+	//
+	// 1. Get a client connection to the relevant service
+	// 2. Populate a modify input structure and check for changes
+	// 3. Call the AWS modify/update function
+	// 4. Use a waiter to wait for update to complete
+	// 5. Call the Read function in the Update return
+
+	// TIP: -- 1. Get a client connection to the relevant service
+	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	
+	// TIP: -- 2. Populate a modify input structure and check for changes
+	//
+	// When creating the input structure, only include mandatory fields. Other
+	// fields are set as needed. You can use a flag, such as update below, to
+	// determine if a certain portion of arguments have been changed and
+	// whether to call the AWS update function.
+	update := false
+
+	in := &vpclattice.UpdateListenerInput{
+		ListenerIdentifier: aws.String(d.Id()),
+	}
+
+	if d.HasChanges("service_id") {
+		in.ServiceIdentifier = aws.String(d.Get("service_id").(string))
+		update = true
+	}
+
+	if d.HasChanges("default_action") {
+		// Expander function here
+		// in.DefaultAction = aws.String(d.Get("default_action").(string))
+		update = true
+	}
+
+
+	if !update {
+		// TIP: If update doesn't do anything at all, which is rare, you can
+		// return nil. Otherwise, return a read call, as below.
+		return nil
+	}
+	
+	// TIP: -- 3. Call the AWS modify/update function
+	log.Printf("[DEBUG] Updating VPC Lattice Listener (%s): %#v", d.Id(), in)
+	_, err := conn.UpdateListener(ctx, in)
+	if err != nil {
+		return create.DiagError(names.VPCLattice, create.ErrActionUpdating, ResNameListener, d.Id(), err)
+	}
+	
+	// TIP: -- 4. Use a waiter to wait for update to complete
+	// if _, err := waitListenerUpdated(ctx, conn, aws.ToString(out.Id), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	// 	return create.DiagError(names.VPCLattice, create.ErrActionWaitingForUpdate, ResNameListener, d.Id(), err)
+	// }
+	
+	// TIP: -- 5. Call the Read function in the Update return
+	return resourceListenerRead(ctx, d, meta)
+}
+
+func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	// TIP: ==== RESOURCE DELETE ====
+	// Most resources have Delete functions. There are rare situations
+	// where you might not need a delete:
+	// a. The AWS API does not provide a way to delete the resource
+	// b. The point of your resource is to perform an action (e.g., reboot a
+	//    server) and deleting serves no purpose.
+	//
+	// The Delete function should do the following things. Make sure there
+	// is a good reason if you don't do one of these.
+	//
+	// 1. Get a client connection to the relevant service
+	// 2. Populate a delete input structure
+	// 3. Call the AWS delete function
+	// 4. Use a waiter to wait for delete to complete
+	// 5. Return nil
+
+	// TIP: -- 1. Get a client connection to the relevant service
+	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	
+	// TIP: -- 2. Populate a delete input structure
+	log.Printf("[INFO] Deleting VPC Lattice Listener %s", d.Id())
+	
+	// TIP: -- 3. Call the AWS delete function
+	_, err := conn.DeleteListener(ctx, &vpclattice.DeleteListenerInput{
+		ListenerIdentifier: aws.String(d.Id()),
+	})
+	
+	// TIP: On rare occassions, the API returns a not found error after deleting a
+	// resource. If that happens, we don't want it to show up as an error.
+	if err != nil {
+		var nfe *types.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return nil
+		}
+
+		return create.DiagError(names.VPCLattice, create.ErrActionDeleting, ResNameListener, d.Id(), err)
+	}
+	
+	// TIP: -- 4. Use a waiter to wait for delete to complete
+	// if _, err := waitListenerDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	// 	return create.DiagError(names.VPCLattice, create.ErrActionWaitingForDeletion, ResNameListener, d.Id(), err)
+	// }
+	
+	// TIP: -- 5. Return nil
+	return nil
+}
+
+// TIP: ==== STATUS CONSTANTS ====
+// Create constants for states and statuses if the service does not
+// already have suitable constants. We prefer that you use the constants
+// provided in the service if available (e.g., amp.WorkspaceStatusCodeActive).
+// const (
+// 	statusChangePending = "Pending"
+// 	statusDeleting      = "Deleting"
+// 	statusNormal        = "Normal"
+// 	statusUpdated       = "Updated"
+// )
+
+// TIP: ==== WAITERS ====
+// Some resources of some services have waiters provided by the AWS API.
+// Unless they do not work properly, use them rather than defining new ones
+// here.
+//
+// Sometimes we define the wait, status, and find functions in separate
+// files, wait.go, status.go, and find.go. Follow the pattern set out in the
+// service and define these where it makes the most sense.
+//
+// If these functions are used in the _test.go file, they will need to be
+// exported (i.e., capitalized).
+//
+// You will need to adjust the parameters and names to fit the service.
+
+// func waitListenerCreated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.Listener, error) {
+// 	stateConf := &retry.StateChangeConf{
+// 		Pending:                   []string{},
+// 		Target:                    []string{statusNormal},
+// 		Refresh:                   statusListener(ctx, conn, id),
+// 		Timeout:                   timeout,
+// 		NotFoundChecks:            20,
+// 		ContinuousTargetOccurence: 2,
+// 	}
+
+// 	outputRaw, err := stateConf.WaitForStateContext(ctx)
+// 	if out, ok := outputRaw.(*vpclattice.Listener); ok {
+// 		return out, err
+// 	}
+
+// 	return nil, err
+// }
+
+// // TIP: It is easier to determine whether a resource is updated for some
+// // resources than others. The best case is a status flag that tells you when
+// // the update has been fully realized. Other times, you can check to see if a
+// // key resource argument is updated to a new value or not.
+
+// func waitListenerUpdated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.Listener, error) {
+// 	stateConf := &retry.StateChangeConf{
+// 		Pending:                   []string{statusChangePending},
+// 		Target:                    []string{statusUpdated},
+// 		Refresh:                   statusListener(ctx, conn, id),
+// 		Timeout:                   timeout,
+// 		NotFoundChecks:            20,
+// 		ContinuousTargetOccurence: 2,
+// 	}
+
+// 	outputRaw, err := stateConf.WaitForStateContext(ctx)
+// 	if out, ok := outputRaw.(*vpclattice.Listener); ok {
+// 		return out, err
+// 	}
+
+// 	return nil, err
+// }
+
+// // TIP: A deleted waiter is almost like a backwards created waiter. There may
+// // be additional pending states, however.
+
+// func waitListenerDeleted(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.Listener, error) {
+// 	stateConf := &retry.StateChangeConf{
+// 		Pending:                   []string{statusDeleting, statusNormal},
+// 		Target:                    []string{},
+// 		Refresh:                   statusListener(ctx, conn, id),
+// 		Timeout:                   timeout,
+// 	}
+
+// 	outputRaw, err := stateConf.WaitForStateContext(ctx)
+// 	if out, ok := outputRaw.(*vpclattice.Listener); ok {
+// 		return out, err
+// 	}
+
+// 	return nil, err
+// }
+
+// TIP: ==== STATUS ====
+// The status function can return an actual status when that field is
+// available from the API (e.g., out.Status). Otherwise, you can use custom
+// statuses to communicate the states of the resource.
+//
+// Waiters consume the values returned by status functions. Design status so
+// that it can be reused by a create, update, and delete waiter, if possible.
+
+// func statusListener(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
+// 	return func() (interface{}, string, error) {
+// 		out, err := findListenerByID(ctx, conn, id)
+// 		if tfresource.NotFound(err) {
+// 			return nil, "", nil
+// 		}
+
+// 		if err != nil {
+// 			return nil, "", err
+// 		}
+
+// 		return out, aws.ToString(out.), nil
+// 	}
+// }
+
+// TIP: ==== FINDERS ====
+// The find function is not strictly necessary. You could do the API
+// request from the status function. However, we have found that find often
+// comes in handy in other places besides the status function. As a result, it
+// is good practice to define it separately.
+
+func findListenerByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetListenerOutput, error) {
+	in := &vpclattice.GetListenerInput{
+		ListenerIdentifier: aws.String(id),
+	}
+	out, err := conn.GetListener(ctx, in)
+	if err != nil {
+		var nfe *types.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
+		}
+
+		return nil, err
+	}
+
+	if out == nil || out.Id == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
+}
+
+
+// flattenListenerRuleActions 
+func flattenListenerRuleActions(config types.RuleAction) []interface{} {
+	// Create an empty map with key type `string` and value of `interface{}`
+	m := map[string]interface{}{}
+	
+	if config == nil {
+		return []interface{}{}
+	}
+
+	var union types.RuleAction
+
+	switch v := union.(type) {
+	case *types.RuleActionMemberFixedResponse:
+		m["default_action"] = flattenRuleActionMemberFixedResponse(v)
+	case *types.RuleActionMemberForward:
+		m["default_action"] = flattenComplexDefaultActionForward(v)
+	}
+
+	return []interface{}{m}
+}
+
+//
+// Flatten functions for fixed response
+//
+
+func flattenRuleActionMemberFixedResponse(response *types.RuleActionMemberFixedResponse) map[string]interface{} {
+	if response == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := response.Value.StatusCode; v != nil {
+		tfMap["fixed_response"] = flattenFixedResponseAction(v)
+	}
+
+	return tfMap
+}
+
+func flattenFixedResponseAction(statusCode *int32) map[string]interface{} {
+	tfMap := map[string]interface{}{}
+
+ 	if v := statusCode; v != nil {
+ 		tfMap["status_code"] = aws.ToInt32(v)
+ 	}
+
+	return tfMap
+
+}
+
+//
+// Flatten functions for forward action
+//
+
+func flattenComplexDefaultActionForward(forwardAction *types.RuleActionMemberForward) map[string]interface{} {
+	// Create an empty map with key type `string` and value of `interface{}`
+	m := map[string]interface{}{}
+
+	// Create slice with `interface{}` type based on length of target group list
+	targetGroups := make([]interface{}, len(forwardAction.Value.TargetGroups))
+
+	// Flatten each target group
+	for i, tg := range forwardAction.Value.TargetGroups {
+		targetGroup := map[string]interface{}{
+			"target_group_identifier": aws.ToString(tg.TargetGroupIdentifier),
+			"weight": aws.ToInt32(tg.Weight),
+		}
+		targetGroups[i] = targetGroup
+
+	}
+
+	forward := map[string]interface{}{}
+	forward["target_groups"] = targetGroups
+	m["forward"] = forward
+
+	return m
+
+}
+
+func expandListenerRuleActions(tfMap map[string]interface{}) types.RuleAction {
+	if tfMap == nil {
+        return nil
+    }
+
+	if v, ok := tfMap["forward"].(map[string]interface{}); ok && len(v) > 0 {
+		return &types.RuleActionMemberForward{
+			Value: expandForwardAction(v),
+		}	
+	} else if v, ok := tfMap["fixed_response"].(map[string]interface{}); ok && len(v) > 0 {
+		return &types.RuleActionMemberFixedResponse{
+			Value: expandFixedResponseStatus(v),
+		}
+	} else {
+		return nil
+	}
+}
+
+
+//
+// Expand functions for forward
+//
+
+// func expandDefaultActionForward(tfMap map[string]interface{}) *types.RuleActionMemberForward {
+// 	if tfMap == nil {
+// 		return nil
+// 	}
+
+// 	forward := &types.RuleActionMemberForward{}
+
+// 	if v, ok := tfMap["forward"].(map[string]interface{}); ok && len(v) > 0 {
+// 		forward.Value = expandForwardAction(v)
+// 	}
+
+// 	return forward
+// }
+
+func expandForwardAction(tfMap map[string]interface{}) types.ForwardAction {
+	action := &types.ForwardAction{}
+
+	if v, ok := tfMap["target_groups"].([]interface{}); ok && len(v) > 0 {
+		action.TargetGroups = expandForwardTargetGroupList(v)
+	}
+
+	return *action
+}
+
+func expandForwardTargetGroupList(tfList []interface{}) []types.WeightedTargetGroup{
+	var weightedTargetGroups []types.WeightedTargetGroup
+	
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		targetGroup := expandForwardTargetGroup(tfMap)
+
+		weightedTargetGroups = append(weightedTargetGroups, *targetGroup)
+
+	}
+
+	return weightedTargetGroups
+}
+
+func expandForwardTargetGroup(tfMap map[string]interface{}) *types.WeightedTargetGroup {
+	if tfMap == nil {
+		return nil
+	}
+
+	targetGroup := &types.WeightedTargetGroup{}
+
+	if v, ok := tfMap["target_group_identifier"].(string); ok && v != "" {
+		targetGroup.TargetGroupIdentifier = aws.String(v)
+	}
+	if v, ok := tfMap["weight"].(int32); ok && v != 0 {
+		targetGroup.Weight = aws.Int32(v)
+	}
+
+	return targetGroup
+}
+
+//
+// Expand functions for fixed_response
+//
+
+// func expandDefaultActionFixedResponse(tfMap map[string]interface{}) *types.RuleActionMemberFixedResponse {
+// 	if tfMap == nil {
+// 		return nil
+// 	}
+
+// 	fixedResponse := &types.RuleActionMemberFixedResponse{}
+
+// 	if v, ok := tfMap["fixed_response"].([]interface{}); ok && len(v) > 0 {
+// 		fixedResponse.Value = expandFixedResponseStatus(v[0].(map[string]interface{}))
+// 	}
+
+// 	return fixedResponse
+// }
+
+func expandFixedResponseStatus(tfMap map[string]interface{}) types.FixedResponseAction {
+	responseAction := &types.FixedResponseAction{}
+
+	if v, ok := tfMap["status_code"].(int32); ok && v != 0 {
+		responseAction.StatusCode = aws.Int32(int32(v))
+	}
+
+	return *responseAction
+}
+
