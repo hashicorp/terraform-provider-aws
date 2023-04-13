@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/chimesdkmediapipelines"
-	"github.com/aws/smithy-go/ptr"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -17,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -502,7 +502,7 @@ func resourceMediaInsightsPipelineConfigurationCreate(ctx context.Context, d *sc
 		return create.DiagError(names.ChimeSDKMediaPipelines, create.ErrActionCreating, ResNameMediaInsightsPipelineConfiguration, d.Get("name").(string), errors.New("empty output"))
 	}
 
-	d.SetId(ptr.ToString(out.MediaInsightsPipelineConfiguration.MediaInsightsPipelineConfigurationArn))
+	d.SetId(aws.StringValue(out.MediaInsightsPipelineConfiguration.MediaInsightsPipelineConfigurationArn))
 
 	return resourceMediaInsightsPipelineConfigurationRead(ctx, d, meta)
 }
@@ -679,7 +679,7 @@ func expandElement(inputElement interface{}) *chimesdkmediapipelines.MediaInsigh
 			LanguageCode: aws.String(rawConfiguration["language_code"].(string)),
 		}
 		if callAnalyticsStreamCategories, ok := rawConfiguration["call_analytics_stream_categories"].([]interface{}); ok && len(callAnalyticsStreamCategories) > 0 {
-			element.AmazonTranscribeCallAnalyticsProcessorConfiguration.CallAnalyticsStreamCategories = convertToStringPointers(callAnalyticsStreamCategories)
+			element.AmazonTranscribeCallAnalyticsProcessorConfiguration.CallAnalyticsStreamCategories = flex.ExpandStringList(callAnalyticsStreamCategories)
 		}
 		if contentIdentificationType, ok := rawConfiguration["content_identification_type"].(string); ok && contentIdentificationType != "" {
 			element.AmazonTranscribeCallAnalyticsProcessorConfiguration.ContentIdentificationType = aws.String(contentIdentificationType)
@@ -879,7 +879,7 @@ func expandRealTimeAlertRule(inputRule interface{}) *chimesdkmediapipelines.Real
 		}
 		rawConfiguration := configuration[0].(map[string]interface{})
 		apiConfiguration := &chimesdkmediapipelines.KeywordMatchConfiguration{
-			Keywords: convertToStringPointers(rawConfiguration["keywords"].([]interface{})),
+			Keywords: flex.ExpandStringList((rawConfiguration["keywords"].([]interface{}))),
 			RuleName: aws.String(rawConfiguration["rule_name"].(string)),
 		}
 		if negate, ok := rawConfiguration["negate"]; ok {
@@ -1046,16 +1046,4 @@ func flattenRealTimeAlertRule(apiRule *chimesdkmediapipelines.RealTimeAlertRule)
 		tfMap["sentiment_configuration"] = []interface{}{configuration}
 	}
 	return tfMap
-}
-
-func convertToStringPointers(input []interface{}) []*string {
-	if input == nil {
-		return nil
-	}
-
-	output := make([]*string, len(input))
-	for i, rawString := range input {
-		output[i] = aws.String(rawString.(string))
-	}
-	return output
 }
