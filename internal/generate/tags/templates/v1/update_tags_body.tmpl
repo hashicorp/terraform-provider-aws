@@ -33,14 +33,14 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 	}
 
 	if len(updatedTags) > 0 {
-		input.{{ .TagInTagsElem }} = Tags(updatedTags.IgnoreAWS())
+		input.{{ .TagInTagsElem }} = Tags(updatedTags.IgnoreSystem(names.{{ .ProviderNameUpper }}))
 	}
 
 	if len(removedTags) > 0 {
 		{{- if .UntagInNeedTagType }}
-		input.{{ .UntagInTagsElem }} = Tags(removedTags.IgnoreAWS())
+		input.{{ .UntagInTagsElem }} = Tags(removedTags.IgnoreSystem(names.{{ .ProviderNameUpper }}))
 		{{- else if .UntagInNeedTagKeyType }}
-		input.{{ .UntagInTagsElem }} = TagKeys(removedTags.IgnoreAWS())
+		input.{{ .UntagInTagsElem }} = TagKeys(removedTags.IgnoreSystem(names.{{ .ProviderNameUpper }}))
 		{{- else if .UntagInCustomVal }}
 		input.{{ .UntagInTagsElem }} = {{ .UntagInCustomVal }}
 		{{- else }}
@@ -72,13 +72,13 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 			{{- end }}
 			{{- end }}
 			{{- if .UntagInNeedTagType }}
-			{{ .UntagInTagsElem }}:       Tags(removedTags.IgnoreAWS()),
+			{{ .UntagInTagsElem }}:       Tags(removedTags.IgnoreSystem(names.{{ .ProviderNameUpper }})),
 			{{- else if .UntagInNeedTagKeyType }}
-			{{ .UntagInTagsElem }}:       TagKeys(removedTags.IgnoreAWS()),
+			{{ .UntagInTagsElem }}:       TagKeys(removedTags.IgnoreSystem(names.{{ .ProviderNameUpper }})),
 			{{- else if .UntagInCustomVal }}
 			{{ .UntagInTagsElem }}:       {{ .UntagInCustomVal }},
 			{{- else }}
-			{{ .UntagInTagsElem }}:       aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			{{ .UntagInTagsElem }}:       aws.StringSlice(removedTags.IgnoreSystem(names.{{ .ProviderNameUpper }}).Keys()),
 			{{- end }}
 		}
 
@@ -110,7 +110,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 			{{- if .TagInCustomVal }}
 			{{ .TagInTagsElem }}:       {{ .TagInCustomVal }},
 			{{- else }}
-			{{ .TagInTagsElem }}:       Tags(updatedTags.IgnoreAWS()),
+			{{ .TagInTagsElem }}:       Tags(updatedTags.IgnoreSystem(names.{{ .ProviderNameUpper }})),
 			{{- end }}
 		}
 
@@ -128,6 +128,17 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 
 	return nil
 }
+
+{{- if ne .CreateTagsFunc "" }}
+// {{ .CreateTagsFunc }} creates {{ .ServicePackage }} service tags for new resources.
+func {{ .CreateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, tags []*{{ .TagPackage }}.{{ .TagType }}) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return  {{ .UpdateTagsFunc }}(ctx, conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, nil, KeyValueTags(ctx, tags))
+}
+{{- end }}
 
 // {{ .UpdateTagsFunc }} updates {{ .ServicePackage }} service tags.
 // It is called from outside this package.

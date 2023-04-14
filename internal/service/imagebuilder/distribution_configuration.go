@@ -17,9 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_imagebuilder_distribution_configuration")
+// @SDKResource("aws_imagebuilder_distribution_configuration", name="Distribution Configuration")
+// @Tags(identifierAttribute="id")
 func ResourceDistributionConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDistributionConfigurationCreate,
@@ -279,8 +281,8 @@ func ResourceDistributionConfiguration() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 126),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -290,11 +292,10 @@ func ResourceDistributionConfiguration() *schema.Resource {
 func resourceDistributionConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &imagebuilder.CreateDistributionConfigurationInput{
 		ClientToken: aws.String(id.UniqueId()),
+		Tags:        GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -307,10 +308,6 @@ func resourceDistributionConfigurationCreate(ctx context.Context, d *schema.Reso
 
 	if v, ok := d.GetOk("name"); ok {
 		input.Name = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	output, err := conn.CreateDistributionConfigurationWithContext(ctx, input)
@@ -331,8 +328,6 @@ func resourceDistributionConfigurationCreate(ctx context.Context, d *schema.Reso
 func resourceDistributionConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &imagebuilder.GetDistributionConfigurationInput{
 		DistributionConfigurationArn: aws.String(d.Id()),
@@ -362,16 +357,8 @@ func resourceDistributionConfigurationRead(ctx context.Context, d *schema.Resour
 	d.Set("description", distributionConfiguration.Description)
 	d.Set("distribution", flattenDistributions(distributionConfiguration.Distributions))
 	d.Set("name", distributionConfiguration.Name)
-	tags := KeyValueTags(ctx, distributionConfiguration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, distributionConfiguration.Tags)
 
 	return diags
 }
@@ -398,14 +385,6 @@ func resourceDistributionConfigurationUpdate(ctx context.Context, d *schema.Reso
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Image Builder Distribution Configuration (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags for Image Builder Distribution Configuration (%s): %s", d.Id(), err)
 		}
 	}
 

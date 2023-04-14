@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists cloudhsmv2 service tags.
@@ -105,7 +106,7 @@ func UpdateTags(ctx context.Context, conn cloudhsmv2iface.CloudHSMV2API, identif
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &cloudhsmv2.UntagResourceInput{
 			ResourceId: aws.String(identifier),
-			TagKeyList: aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeyList: aws.StringSlice(removedTags.IgnoreSystem(names.CloudHSMV2).Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -118,7 +119,7 @@ func UpdateTags(ctx context.Context, conn cloudhsmv2iface.CloudHSMV2API, identif
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &cloudhsmv2.TagResourceInput{
 			ResourceId: aws.String(identifier),
-			TagList:    Tags(updatedTags.IgnoreAWS()),
+			TagList:    Tags(updatedTags.IgnoreSystem(names.CloudHSMV2)),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)

@@ -28,10 +28,12 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"golang.org/x/exp/slices"
 )
 
-// @SDKResource("aws_emr_cluster")
+// @SDKResource("aws_emr_cluster", name="Cluster")
+// @Tags(identifierAttribute="id")
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
@@ -541,8 +543,8 @@ func ResourceCluster() *schema.Resource {
 				Default:      1,
 				ValidateFunc: validation.IntBetween(1, 256),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"termination_protection": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -740,12 +742,8 @@ func instanceFleetConfigSchema() *schema.Resource {
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-	log.Printf("[DEBUG] Creating EMR cluster")
 	applications := d.Get("applications").(*schema.Set).List()
-
 	keepJobFlowAliveWhenNoSteps := true
 	if v, ok := d.GetOkExists("keep_job_flow_alive_when_no_steps"); ok {
 		keepJobFlowAliveWhenNoSteps = v.(bool)
@@ -884,7 +882,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		ReleaseLabel:      aws.String(d.Get("release_label").(string)),
 		ServiceRole:       aws.String(d.Get("service_role").(string)),
 		VisibleToAllUsers: aws.Bool(d.Get("visible_to_all_users").(bool)),
-		Tags:              Tags(tags.IgnoreAWS()),
+		Tags:              GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("additional_info"); ok {
@@ -1018,8 +1016,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	cluster, err := FindClusterByID(ctx, conn, d.Id())
 
@@ -1074,16 +1070,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	tags := KeyValueTags(ctx, cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, cluster.Tags)
 
 	d.Set("name", cluster.Name)
 
@@ -1376,14 +1363,6 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 					break
 				}
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EMR Cluster (%s): setting tags: %s", d.Id(), err)
 		}
 	}
 

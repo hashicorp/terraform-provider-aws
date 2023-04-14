@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists codestarnotifications service tags.
@@ -88,7 +89,7 @@ func UpdateTags(ctx context.Context, conn codestarnotificationsiface.CodeStarNot
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &codestarnotifications.UntagResourceInput{
 			Arn:     aws.String(identifier),
-			TagKeys: aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys: aws.StringSlice(removedTags.IgnoreSystem(names.CodeStarNotifications).Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -101,7 +102,7 @@ func UpdateTags(ctx context.Context, conn codestarnotificationsiface.CodeStarNot
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &codestarnotifications.TagResourceInput{
 			Arn:  aws.String(identifier),
-			Tags: Tags(updatedTags.IgnoreAWS()),
+			Tags: Tags(updatedTags.IgnoreSystem(names.CodeStarNotifications)),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)

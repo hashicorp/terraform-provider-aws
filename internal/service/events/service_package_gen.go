@@ -49,6 +49,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceBus,
 			TypeName: "aws_cloudwatch_event_bus",
+			Name:     "Event Bus",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceBusPolicy,
@@ -65,6 +69,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceRule,
 			TypeName: "aws_cloudwatch_event_rule",
+			Name:     "Rule",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceTarget,

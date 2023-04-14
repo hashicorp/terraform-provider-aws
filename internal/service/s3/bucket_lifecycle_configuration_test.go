@@ -1117,11 +1117,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
   rule {
@@ -1140,11 +1135,6 @@ func testAccBucketLifecycleConfigurationConfig_multipleRulesNoFilterOrPrefix(rNa
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -1177,11 +1167,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
   rule {
@@ -1200,11 +1185,6 @@ func testAccBucketLifecycleConfigurationConfig_basicUpdate(rName, date, prefix s
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -1232,11 +1212,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
   rule {
@@ -1258,11 +1233,6 @@ func testAccBucketLifecycleConfigurationConfig_filterTag(rName, key, value strin
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -1292,11 +1262,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
 
@@ -1318,11 +1283,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
 
@@ -1340,11 +1300,6 @@ func testAccBucketLifecycleConfigurationConfig_ruleAbortIncompleteMultipartUploa
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -1366,11 +1321,6 @@ func testAccBucketLifecycleConfigurationConfig_multipleRules(rName, date string)
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -1430,11 +1380,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
 
@@ -1460,11 +1405,6 @@ func testAccBucketLifecycleConfigurationConfig_nonCurrentVersionTransition(rName
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -1500,11 +1440,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
 
@@ -1534,11 +1469,6 @@ func testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName, storage
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -1573,11 +1503,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
 
@@ -1610,11 +1535,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
 
@@ -1645,11 +1565,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
 
@@ -1676,11 +1591,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
 
@@ -1705,11 +1615,6 @@ func testAccBucketLifecycleConfigurationConfig_filterObjectSizeRange(rName, date
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -1739,11 +1644,6 @@ func testAccBucketLifecycleConfigurationConfig_filterObjectSizeRangeAndPrefix(rN
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -1776,11 +1676,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
   bucket = aws_s3_bucket.test.id
 
@@ -1809,11 +1704,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
   bucket = aws_s3_bucket.test.id
 
@@ -1839,11 +1729,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
 
@@ -1864,11 +1749,6 @@ func testAccBucketLifecycleConfigurationConfig_migrateChange(rName string) strin
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {

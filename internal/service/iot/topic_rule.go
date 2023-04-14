@@ -15,9 +15,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_iot_topic_rule")
+// @SDKResource("aws_iot_topic_rule", name="Topic Rule")
+// @Tags(identifierAttribute="arn")
 func ResourceTopicRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicRuleCreate,
@@ -1070,8 +1072,8 @@ func ResourceTopicRule() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"timestream": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -1165,13 +1167,11 @@ var timestreamDimensionResource *schema.Resource = &schema.Resource{
 func resourceTopicRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	ruleName := d.Get("name").(string)
 	input := &iot.CreateTopicRuleInput{
 		RuleName:         aws.String(ruleName),
-		Tags:             aws.String(tags.IgnoreAWS().URLQueryString()),
+		Tags:             aws.String(KeyValueTags(ctx, GetTagsIn(ctx)).URLQueryString()),
 		TopicRulePayload: expandTopicRulePayload(d),
 	}
 
@@ -1194,8 +1194,6 @@ func resourceTopicRuleCreate(ctx context.Context, d *schema.ResourceData, meta i
 func resourceTopicRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := FindTopicRuleByName(ctx, conn, d.Id())
 
@@ -1296,23 +1294,6 @@ func resourceTopicRuleRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "setting error_action: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, aws.StringValue(output.RuleArn))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for IoT Topic Rule (%s): %s", aws.StringValue(output.RuleArn), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -1331,14 +1312,6 @@ func resourceTopicRuleUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "replacing IoT Topic Rule (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 

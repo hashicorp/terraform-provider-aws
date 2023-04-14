@@ -33,6 +33,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceReplicationSet,
 			TypeName: "aws_ssmincidents_replication_set",
+			Name:     "Replication Set",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 	}
 }

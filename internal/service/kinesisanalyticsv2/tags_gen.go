@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists kinesisanalyticsv2 service tags.
@@ -105,7 +106,7 @@ func UpdateTags(ctx context.Context, conn kinesisanalyticsv2iface.KinesisAnalyti
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &kinesisanalyticsv2.UntagResourceInput{
 			ResourceARN: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreSystem(names.KinesisAnalyticsV2).Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -118,7 +119,7 @@ func UpdateTags(ctx context.Context, conn kinesisanalyticsv2iface.KinesisAnalyti
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &kinesisanalyticsv2.TagResourceInput{
 			ResourceARN: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreAWS()),
+			Tags:        Tags(updatedTags.IgnoreSystem(names.KinesisAnalyticsV2)),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)

@@ -34,7 +34,7 @@ func vpcLinkStatus(ctx context.Context, conn *apigateway.APIGateway, vpcLinkId s
 
 func stageCacheStatus(ctx context.Context, conn *apigateway.APIGateway, restApiId, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindStageByName(ctx, conn, restApiId, name)
+		output, err := FindStageByTwoPartKey(ctx, conn, restApiId, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
