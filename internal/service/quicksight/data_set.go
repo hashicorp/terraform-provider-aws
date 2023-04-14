@@ -1396,8 +1396,8 @@ func expandDataSetProjectOperation(tfList []interface{}) *quicksight.ProjectOper
 	}
 
 	projectOperation := &quicksight.ProjectOperation{}
-	if v, ok := tfMap["projected_columns"].([]string); ok && len(v) > 0 {
-		projectOperation.ProjectedColumns = aws.StringSlice(v)
+	if v, ok := tfMap["projected_columns"].([]interface{}); ok && len(v) > 0 {
+		projectOperation.ProjectedColumns = flex.ExpandStringList(v)
 	}
 
 	return projectOperation
