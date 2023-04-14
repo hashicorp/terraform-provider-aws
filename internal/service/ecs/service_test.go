@@ -30,9 +30,9 @@ func Test_GetRoleNameFromARN(t *testing.T) {
 		want string
 	}{
 		{"empty", "", ""},
-		{"role", "arn:aws:iam::0123456789:role/EcsService", "EcsService"},                                            // lintignore:AWSAT005
-		{"role with path", "arn:aws:iam::0123456789:role/group/EcsService", "/group/EcsService"},                     // lintignore:AWSAT005
-		{"role with complex path", "arn:aws:iam::0123456789:role/group/subgroup/my-role", "/group/subgroup/my-role"}, // lintignore:AWSAT005
+		{"role", "arn:aws:iam::0123456789:role/EcsService", "EcsService"},                                            //lintignore:AWSAT005
+		{"role with path", "arn:aws:iam::0123456789:role/group/EcsService", "/group/EcsService"},                     //lintignore:AWSAT005
+		{"role with complex path", "arn:aws:iam::0123456789:role/group/subgroup/my-role", "/group/subgroup/my-role"}, //lintignore:AWSAT005
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -54,7 +54,7 @@ func Test_GetClustereNameFromARN(t *testing.T) {
 		want string
 	}{
 		{"empty", "", ""},
-		{"cluster", "arn:aws:ecs:us-west-2:0123456789:cluster/my-cluster", "my-cluster"}, // lintignore:AWSAT003,AWSAT005
+		{"cluster", "arn:aws:ecs:us-west-2:0123456789:cluster/my-cluster", "my-cluster"}, //lintignore:AWSAT003,AWSAT005
 	}
 	for _, tt := range tests {
 		tt := tt
