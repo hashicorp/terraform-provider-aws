@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicequotas"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -68,7 +68,7 @@ func findServiceQuotaByID(ctx context.Context, conn *servicequotas.ServiceQuotas
 	output, err := conn.GetServiceQuotaWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, servicequotas.ErrCodeNoSuchResourceException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -82,14 +82,14 @@ func findServiceQuotaByID(ctx context.Context, conn *servicequotas.ServiceQuotas
 	}
 
 	if output.Quota.ErrorReason != nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     fmt.Sprintf("%s: %s", aws.StringValue(output.Quota.ErrorReason.ErrorCode), aws.StringValue(output.Quota.ErrorReason.ErrorMessage)),
 			LastRequest: input,
 		}
 	}
 
 	if output.Quota.Value == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     "empty value",
 			LastRequest: input,
 		}

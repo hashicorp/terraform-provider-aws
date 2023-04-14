@@ -173,12 +173,21 @@ service/chime:
 service/chimesdkidentity:
   - 'internal/service/chimesdkidentity/**/*'
   - 'website/**/chimesdkidentity_*'
+service/chimesdkmediapipelines:
+  - 'internal/service/chimesdkmediapipelines/**/*'
+  - 'website/**/chimesdkmediapipelines_*'
 service/chimesdkmeetings:
   - 'internal/service/chimesdkmeetings/**/*'
   - 'website/**/chimesdkmeetings_*'
 service/chimesdkmessaging:
   - 'internal/service/chimesdkmessaging/**/*'
   - 'website/**/chimesdkmessaging_*'
+service/chimesdkvoice:
+  - 'internal/service/chimesdkvoice/**/*'
+  - 'website/**/chimesdkvoice_*'
+service/cleanrooms:
+  - 'internal/service/cleanrooms/**/*'
+  - 'website/**/cleanrooms_*'
 service/cloud9:
   - 'internal/service/cloud9/**/*'
   - 'website/**/cloud9_*'
@@ -244,6 +253,7 @@ service/cognitoidentity:
 service/cognitoidp:
   - 'internal/service/cognitoidp/**/*'
   - 'website/**/cognito_identity_provider*'
+  - 'website/**/cognito_managed_user*'
   - 'website/**/cognito_resource_*'
   - 'website/**/cognito_user*'
   - 'website/**/cognito_risk*'
@@ -322,6 +332,9 @@ service/dms:
 service/docdb:
   - 'internal/service/docdb/**/*'
   - 'website/**/docdb_*'
+service/docdbelastic:
+  - 'internal/service/docdbelastic/**/*'
+  - 'website/**/docdbelastic_*'
 service/drs:
   - 'internal/service/drs/**/*'
   - 'website/**/drs_*'
@@ -916,6 +929,9 @@ service/secretsmanager:
 service/securityhub:
   - 'internal/service/securityhub/**/*'
   - 'website/**/securityhub_*'
+service/securitylake:
+  - 'internal/service/securitylake/**/*'
+  - 'website/**/securitylake_*'
 service/serverlessrepo:
   - 'internal/service/serverlessrepo/**/*'
   - 'website/**/serverlessapplicationrepository_*'
@@ -1057,6 +1073,9 @@ service/vpc:
   - 'website/**/vpc_security_group_*'
   - 'website/**/vpc\.*'
   - 'website/**/vpcs\.*'
+service/vpclattice:
+  - 'internal/service/vpclattice/**/*'
+  - 'website/**/vpclattice_*'
 service/vpnclient:
   - 'internal/service/ec2/**/vpnclient_*'
   - 'website/**/ec2_client_vpn_*'

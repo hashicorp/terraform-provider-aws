@@ -10,6 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticache/elasticacheiface"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists elasticache service tags.
@@ -29,8 +31,20 @@ func ListTags(ctx context.Context, conn elasticacheiface.ElastiCacheAPI, identif
 	return KeyValueTags(ctx, output.TagList), nil
 }
 
-func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
-	return ListTags(ctx, meta.(*conns.AWSClient).ElastiCacheConn(), identifier)
+// ListTags lists elasticache service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).ElastiCacheConn(), identifier)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(tags)
+	}
+
+	return nil
 }
 
 // []*SERVICE.Tag handling
@@ -62,6 +76,25 @@ func KeyValueTags(ctx context.Context, tags []*elasticache.Tag) tftags.KeyValueT
 	return tftags.New(ctx, m)
 }
 
+// GetTagsIn returns elasticache service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*elasticache.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets elasticache service tags in Context.
+func SetTagsOut(ctx context.Context, tags []*elasticache.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
+}
+
 // UpdateTags updates elasticache service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -73,7 +106,7 @@ func UpdateTags(ctx context.Context, conn elasticacheiface.ElastiCacheAPI, ident
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &elasticache.RemoveTagsFromResourceInput{
 			ResourceName: aws.String(identifier),
-			TagKeys:      aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:      aws.StringSlice(removedTags.IgnoreSystem(names.ElastiCache).Keys()),
 		}
 
 		_, err := conn.RemoveTagsFromResourceWithContext(ctx, input)
@@ -86,7 +119,7 @@ func UpdateTags(ctx context.Context, conn elasticacheiface.ElastiCacheAPI, ident
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &elasticache.AddTagsToResourceInput{
 			ResourceName: aws.String(identifier),
-			Tags:         Tags(updatedTags.IgnoreAWS()),
+			Tags:         Tags(updatedTags.IgnoreSystem(names.ElastiCache)),
 		}
 
 		_, err := conn.AddTagsToResourceWithContext(ctx, input)
@@ -99,6 +132,8 @@ func UpdateTags(ctx context.Context, conn elasticacheiface.ElastiCacheAPI, ident
 	return nil
 }
 
+// UpdateTags updates elasticache service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).ElastiCacheConn(), identifier, oldTags, newTags)
 }

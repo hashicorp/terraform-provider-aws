@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -32,7 +32,7 @@ const (
 
 // waitStackStateDeleted waits for a deleted stack
 func waitStackStateDeleted(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Stack, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:  []string{"NotFound", "Unknown"},
 		Refresh: statusStackState(ctx, conn, name),
 		Timeout: stackOperationTimeout,
@@ -59,7 +59,7 @@ func waitStackStateDeleted(ctx context.Context, conn *appstream.AppStream, name 
 
 // waitFleetStateRunning waits for a fleet running
 func waitFleetStateRunning(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Fleet, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{appstream.FleetStateStarting},
 		Target:  []string{appstream.FleetStateRunning},
 		Refresh: statusFleetState(ctx, conn, name),
@@ -87,7 +87,7 @@ func waitFleetStateRunning(ctx context.Context, conn *appstream.AppStream, name 
 
 // waitFleetStateStopped waits for a fleet stopped
 func waitFleetStateStopped(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Fleet, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{appstream.FleetStateStopping},
 		Target:  []string{appstream.FleetStateStopped},
 		Refresh: statusFleetState(ctx, conn, name),
@@ -114,7 +114,7 @@ func waitFleetStateStopped(ctx context.Context, conn *appstream.AppStream, name 
 }
 
 func waitImageBuilderStateRunning(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.ImageBuilder, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{appstream.ImageBuilderStatePending},
 		Target:  []string{appstream.ImageBuilderStateRunning},
 		Refresh: statusImageBuilderState(ctx, conn, name),
@@ -141,7 +141,7 @@ func waitImageBuilderStateRunning(ctx context.Context, conn *appstream.AppStream
 }
 
 func waitImageBuilderStateDeleted(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.ImageBuilder, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{appstream.ImageBuilderStatePending, appstream.ImageBuilderStateDeleting},
 		Target:  []string{},
 		Refresh: statusImageBuilderState(ctx, conn, name),
@@ -169,7 +169,7 @@ func waitImageBuilderStateDeleted(ctx context.Context, conn *appstream.AppStream
 
 // waitUserAvailable waits for a user be available
 func waitUserAvailable(ctx context.Context, conn *appstream.AppStream, username, authType string) (*appstream.User, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:  []string{userAvailable},
 		Refresh: statusUserAvailable(ctx, conn, username, authType),
 		Timeout: userOperationTimeout,

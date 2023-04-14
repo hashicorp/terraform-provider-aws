@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -72,7 +72,6 @@ func resourceClusterActivityStreamCreate(ctx context.Context, d *schema.Resource
 	}
 
 	_, err := conn.StartActivityStreamWithContext(ctx, input)
-
 	if err != nil {
 		return diag.Errorf("creating RDS Cluster Activity Stream (%s): %s", arn, err)
 	}
@@ -117,7 +116,6 @@ func resourceClusterActivityStreamDelete(ctx context.Context, d *schema.Resource
 		ApplyImmediately: aws.Bool(true),
 		ResourceArn:      aws.String(d.Id()),
 	})
-
 	if err != nil {
 		return diag.Errorf("stopping RDS Cluster Activity Stream (%s): %s", d.Id(), err)
 	}
@@ -131,13 +129,12 @@ func resourceClusterActivityStreamDelete(ctx context.Context, d *schema.Resource
 
 func FindDBClusterWithActivityStream(ctx context.Context, conn *rds.RDS, arn string) (*rds.DBCluster, error) {
 	output, err := FindDBClusterByID(ctx, conn, arn)
-
 	if err != nil {
 		return nil, err
 	}
 
 	if status := aws.StringValue(output.ActivityStreamStatus); status == rds.ActivityStreamStatusStopped {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message: status,
 		}
 	}
@@ -145,7 +142,7 @@ func FindDBClusterWithActivityStream(ctx context.Context, conn *rds.RDS, arn str
 	return output, nil
 }
 
-func statusDBClusterActivityStream(ctx context.Context, conn *rds.RDS, arn string) resource.StateRefreshFunc {
+func statusDBClusterActivityStream(ctx context.Context, conn *rds.RDS, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDBClusterWithActivityStream(ctx, conn, arn)
 
@@ -167,7 +164,7 @@ const (
 )
 
 func waitActivityStreamStarted(ctx context.Context, conn *rds.RDS, arn string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{rds.ActivityStreamStatusStarting},
 		Target:     []string{rds.ActivityStreamStatusStarted},
 		Refresh:    statusDBClusterActivityStream(ctx, conn, arn),
@@ -182,7 +179,7 @@ func waitActivityStreamStarted(ctx context.Context, conn *rds.RDS, arn string) e
 }
 
 func waitActivityStreamStopped(ctx context.Context, conn *rds.RDS, arn string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{rds.ActivityStreamStatusStopping},
 		Target:     []string{},
 		Refresh:    statusDBClusterActivityStream(ctx, conn, arn),

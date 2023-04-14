@@ -28,7 +28,7 @@ func ResourceBucketResourceAccess() *schema.Resource {
 		ReadWithoutTimeout:   resourceBucketResourceAccessRead,
 		DeleteWithoutTimeout: resourceBucketResourceAccessDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{

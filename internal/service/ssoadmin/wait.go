@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -18,7 +18,7 @@ const (
 )
 
 func waitAccountAssignmentCreated(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceArn, requestID string) (*ssoadmin.AccountAssignmentOperationStatus, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{ssoadmin.StatusValuesInProgress},
 		Target:     []string{ssoadmin.StatusValuesSucceeded},
 		Refresh:    statusAccountAssignmentCreation(ctx, conn, instanceArn, requestID),
@@ -36,7 +36,7 @@ func waitAccountAssignmentCreated(ctx context.Context, conn *ssoadmin.SSOAdmin, 
 }
 
 func waitAccountAssignmentDeleted(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceArn, requestID string) (*ssoadmin.AccountAssignmentOperationStatus, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{ssoadmin.StatusValuesInProgress},
 		Target:     []string{ssoadmin.StatusValuesSucceeded},
 		Refresh:    statusAccountAssignmentDeletion(ctx, conn, instanceArn, requestID),
@@ -54,7 +54,7 @@ func waitAccountAssignmentDeleted(ctx context.Context, conn *ssoadmin.SSOAdmin, 
 }
 
 func waitPermissionSetProvisioned(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceArn, requestID string) (*ssoadmin.PermissionSetProvisioningStatus, error) {
-	stateConf := resource.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Delay:   permissionSetProvisioningRetryDelay,
 		Pending: []string{ssoadmin.StatusValuesInProgress},
 		Target:  []string{ssoadmin.StatusValuesSucceeded},
