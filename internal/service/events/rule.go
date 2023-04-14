@@ -24,6 +24,7 @@ import (
 )
 
 const (
+	ruleCreateRetryTimeout = 2 * time.Minute
 	ruleDeleteRetryTimeout = 5 * time.Minute
 )
 
@@ -128,7 +129,16 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "creating EventBridge Rule (%s): %s", name, err)
 	}
 
-	d.SetId(RuleCreateResourceID(aws.StringValue(input.EventBusName), aws.StringValue(input.Name)))
+	eventBusName, ruleName := aws.StringValue(input.EventBusName), aws.StringValue(input.Name)
+	d.SetId(RuleCreateResourceID(eventBusName, ruleName))
+
+	_, err = tfresource.RetryWhenNotFound(ctx, ruleCreateRetryTimeout, func() (interface{}, error) {
+		return FindRuleByTwoPartKey(ctx, conn, eventBusName, ruleName)
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EventBridge Rule (%s) create: %s", d.Id(), err)
+	}
 
 	// Post-create tagging supported in some partitions
 	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); input.Tags == nil && len(tags) > 0 {
