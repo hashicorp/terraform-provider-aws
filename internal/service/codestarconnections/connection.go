@@ -1,31 +1,35 @@
 package codestarconnections
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_codestarconnections_connection", name="Connection")
+// @Tags(identifierAttribute="arn")
 func ResourceConnection() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceConnectionCreate,
-		Read:   resourceConnectionRead,
-		Update: resourceConnectionUpdate,
-		Delete: resourceConnectionDelete,
+		CreateWithoutTimeout: resourceConnectionCreate,
+		ReadWithoutTimeout:   resourceConnectionRead,
+		UpdateWithoutTimeout: resourceConnectionUpdate,
+		DeleteWithoutTimeout: resourceConnectionDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -57,22 +61,22 @@ func ResourceConnection() *schema.Resource {
 				ValidateFunc:  validation.StringInSlice(codestarconnections.ProviderType_Values(), false),
 				ConflictsWith: []string{"host_arn"},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
 
 	name := d.Get("name").(string)
 	input := &codestarconnections.CreateConnectionInput{
 		ConnectionName: aws.String(name),
+		Tags:           GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("host_arn"); ok {
@@ -83,37 +87,32 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 		input.ProviderType = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	log.Printf("[DEBUG] Creating CodeStar Connections Connection: %s", input)
-	output, err := conn.CreateConnection(input)
+	output, err := conn.CreateConnectionWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating CodeStar Connections Connection (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating CodeStar Connections Connection (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.ConnectionArn))
 
-	return resourceConnectionRead(d, meta)
+	return append(diags, resourceConnectionRead(ctx, d, meta)...)
 }
 
-func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
 
-	connection, err := FindConnectionByARN(conn, d.Id())
+	connection, err := FindConnectionByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.CodeStarConnections, create.ErrActionReading, ResNameConnection, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.Error(names.CodeStarConnections, create.ErrActionReading, ResNameConnection, d.Id(), err)
+		return create.DiagError(names.CodeStarConnections, create.ErrActionReading, ResNameConnection, d.Id(), err)
 	}
 
 	arn := aws.StringValue(connection.ConnectionArn)
@@ -124,55 +123,33 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", connection.ConnectionName)
 	d.Set("provider_type", connection.ProviderType)
 
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return fmt.Errorf("listing tags for CodeStar Connections Connection (%s): %w", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
+func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	// Tags only.
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating CodeStar Connections Connection (%s) tags: %w", d.Id(), err)
-		}
-	}
-
-	return nil
+	return append(diags, resourceConnectionRead(ctx, d, meta)...)
 }
 
-func resourceConnectionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
+func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
 
 	log.Printf("[DEBUG] Deleting CodeStar Connections Connection: %s", d.Id())
-	_, err := conn.DeleteConnection(&codestarconnections.DeleteConnectionInput{
+	_, err := conn.DeleteConnectionWithContext(ctx, &codestarconnections.DeleteConnectionInput{
 		ConnectionArn: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, codestarconnections.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting CodeStar Connections Connection (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CodeStar Connections Connection (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

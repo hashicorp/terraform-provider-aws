@@ -234,8 +234,7 @@ The following arguments are available:
 
 `segment_actions` have differnet outcomes based on their `action` argument value. There are 2 valid values for `action`: `create-route` & `share`. Behaviors of the below arguments changed depending on the `action` you specify. For more details on their use see the [AWS documentation](https://docs.aws.amazon.com/vpc/latest/cloudwan/cloudwan-policies-json.html#cloudwan-segment-actions-json).
 
-~> **NOTE**: `share_with` and `share_with_except` break from the AWS API specification. The API has 1 argument `share-with` and it can accept 3 input types as valid (`"*"`, `["<segment-name>"]`, or `{ except: ["<segment-name>"]}`). To emulate this behavior, `share_with` is always a list that can accept the argument `["*"]` as valid for `"*"` and `share_with_except` is a that can accept `["<segment-name>"]` as valid for `{ except: ["<segment-name>"]}`. You may only specify one of: `share_with` or `share_with_except`.
-
+~> **NOTE:** `share_with` and `share_with_except` break from the AWS API specification. The API has 1 argument `share-with` and it can accept 3 input types as valid (`"*"`, `["<segment-name>"]`, or `{ except: ["<segment-name>"]}`). To emulate this behavior, `share_with` is always a list that can accept the argument `["*"]` as valid for `"*"` and `share_with_except` is a that can accept `["<segment-name>"]` as valid for `{ except: ["<segment-name>"]}`. You may only specify one of: `share_with` or `share_with_except`.
 
 The following arguments are available:
 

@@ -19,7 +19,9 @@ rules:
           patterns:
             - pattern-not-regex: "testAcc[a-zA-Z0-9]+Config(_[a-zA-Z0-9_]+_|_)[a-z0-9].*"
             - pattern-not: acctest.ConfigCompose(...)
+            - pattern-not: "..."
     severity: WARNING
+
   - id: test-configcompose-funcs-correct-form
     languages:
       - go
@@ -40,6 +42,7 @@ rules:
             - pattern-not-regex: "testAcc[a-zA-Z0-9]+Config(_[a-zA-Z0-9_]+_|_)[a-z0-9].*"
             - pattern-not-regex: "acctest\\..*"
     severity: WARNING
+
   - id: test-config-funcs-check
     languages:
       - go
@@ -59,6 +62,7 @@ rules:
           patterns:
             - pattern-regex: "testAccCheck.*"
     severity: WARNING
+
   - id: test-configcompose-funcs-check
     languages:
       - go

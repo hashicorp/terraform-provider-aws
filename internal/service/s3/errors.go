@@ -4,29 +4,30 @@ package s3
 // https://docs.aws.amazon.com/sdk-for-go/api/service/s3/#pkg-constants
 
 const (
-	ErrCodeAccessDenied                              = "AccessDenied"
-	ErrCodeBucketNotEmpty                            = "BucketNotEmpty"
-	ErrCodeInvalidBucketState                        = "InvalidBucketState"
-	ErrCodeInvalidRequest                            = "InvalidRequest"
-	ErrCodeMalformedPolicy                           = "MalformedPolicy"
-	ErrCodeMethodNotAllowed                          = "MethodNotAllowed"
+	errCodeAccessDenied                              = "AccessDenied"
+	errCodeBucketNotEmpty                            = "BucketNotEmpty"
+	errCodeInvalidBucketState                        = "InvalidBucketState"
+	errCodeInvalidRequest                            = "InvalidRequest"
+	errCodeMalformedPolicy                           = "MalformedPolicy"
+	errCodeMethodNotAllowed                          = "MethodNotAllowed"
 	ErrCodeNoSuchBucketPolicy                        = "NoSuchBucketPolicy"
-	ErrCodeNoSuchConfiguration                       = "NoSuchConfiguration"
+	errCodeNoSuchConfiguration                       = "NoSuchConfiguration"
 	ErrCodeNoSuchCORSConfiguration                   = "NoSuchCORSConfiguration"
 	ErrCodeNoSuchLifecycleConfiguration              = "NoSuchLifecycleConfiguration"
 	ErrCodeNoSuchPublicAccessBlockConfiguration      = "NoSuchPublicAccessBlockConfiguration"
+	errCodeNoSuchTagSet                              = "NoSuchTagSet"
+	errCodeNoSuchTagSetError                         = "NoSuchTagSetError"
 	ErrCodeNoSuchWebsiteConfiguration                = "NoSuchWebsiteConfiguration"
-	ErrCodeNotImplemented                            = "NotImplemented"
-	ErrCodeObjectLockConfigurationNotFound           = "ObjectLockConfigurationNotFound"
-	ErrCodeOperationAborted                          = "OperationAborted"
+	errCodeNotImplemented                            = "NotImplemented"
+	ErrCodeObjectLockConfigurationNotFound           = "ObjectLockConfigurationNotFoundError"
+	errCodeOperationAborted                          = "OperationAborted"
 	ErrCodeReplicationConfigurationNotFound          = "ReplicationConfigurationNotFoundError"
 	ErrCodeServerSideEncryptionConfigurationNotFound = "ServerSideEncryptionConfigurationNotFoundError"
-	ErrCodeUnsupportedArgument                       = "UnsupportedArgument"
-
-	// ErrCodeXNotImplemented is returned from Third Party S3 implementations
+	errCodeUnsupportedArgument                       = "UnsupportedArgument"
+	// errCodeXNotImplemented is returned from Third Party S3 implementations
 	// and so far has been noticed with calls to GetBucketWebsite.
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14645
-	ErrCodeXNotImplemented = "XNotImplemented"
+	errCodeXNotImplemented = "XNotImplemented"
 )
 
 const (

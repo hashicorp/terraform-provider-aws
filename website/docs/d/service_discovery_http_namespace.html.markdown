@@ -8,7 +8,6 @@ description: |-
 
 # Data Source: aws_service_discovery_http_namespace
 
-
 ## Example Usage
 
 ```terraform
@@ -32,4 +31,3 @@ In addition to all arguments above, the following attributes are exported:
 * `description` - Description that you specify for the namespace when you create it.
 * `http_name` - Name of an HTTP namespace.
 * `tags` - Map of tags for the resource.
-

@@ -33,11 +33,23 @@ resource "aws_appstream_stack" "example" {
     permission = "ENABLED"
   }
   user_settings {
+    action     = "DOMAIN_PASSWORD_SIGNIN"
+    permission = "ENABLED"
+  }
+  user_settings {
+    action     = "DOMAIN_SMART_CARD_SIGNIN"
+    permission = "DISABLED"
+  }
+  user_settings {
+    action     = "FILE_DOWNLOAD"
+    permission = "ENABLED"
+  }
+  user_settings {
     action     = "FILE_UPLOAD"
     permission = "ENABLED"
   }
   user_settings {
-    action     = "FILE_DOWNLOAD"
+    action     = "PRINTING_TO_LOCAL_DEVICE"
     permission = "ENABLED"
   }
 
@@ -60,31 +72,47 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `access_endpoints` - (Optional) Set of configuration blocks defining the interface VPC endpoints. Users of the stack can connect to AppStream 2.0 only through the specified endpoints. See below.
+* `access_endpoints` - (Optional) Set of configuration blocks defining the interface VPC endpoints. Users of the stack can connect to AppStream 2.0 only through the specified endpoints.
+  See [`access_endpoints`](#access_endpoints) below.
 * `application_settings` - (Optional) Settings for application settings persistence.
+  See [`application_settings`](#application_settings) below.
 * `description` - (Optional) Description for the AppStream stack.
 * `display_name` - (Optional) Stack name to display.
 * `embed_host_domains` - (Optional) Domains where AppStream 2.0 streaming sessions can be embedded in an iframe. You must approve the domains that you want to host embedded AppStream 2.0 streaming sessions.
 * `feedback_url` - (Optional) URL that users are redirected to after they click the Send Feedback link. If no URL is specified, no Send Feedback link is displayed. .
 * `redirect_url` - (Optional) URL that users are redirected to after their streaming session ends.
-* `storage_connectors` - (Optional) Configuration block for the storage connectors to enable. See below.
-* `user_settings` - (Optional) Configuration block for the actions that are enabled or disabled for users during their streaming sessions. By default, these actions are enabled. See below.
+* `storage_connectors` - (Optional) Configuration block for the storage connectors to enable.
+  See [`storage_connectors`](#storage_connectors) below.
+* `user_settings` - (Optional) Configuration block for the actions that are enabled or disabled for users during their streaming sessions. If not provided, these settings are configured automatically by AWS. If provided, the terraform configuration should include a block for each configurable action.
+  See [`user_settings`](#user_settings) below.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `access_endpoints`
 
-* `endpoint_type` - (Required) Type of the interface endpoint. See the [`AccessEndpoint` AWS API documentation](https://docs.aws.amazon.com/appstream2/latest/APIReference/API_AccessEndpoint.html) for valid values.
+* `endpoint_type` - (Required) Type of the interface endpoint.
+  See the [`AccessEndpoint` AWS API documentation](https://docs.aws.amazon.com/appstream2/latest/APIReference/API_AccessEndpoint.html) for valid values.
 * `vpce_id` - (Optional) ID of the VPC in which the interface endpoint is used.
+
+### `application_settings`
+
+* `enabled` - (Required) Whether application settings should be persisted.
+* `settings_group` - (Optional) Name of the settings group.
+  Required when `enabled` is `true`.
+  Can be up to 100 characters.
 
 ### `storage_connectors`
 
-* `connector_type` - (Required) Type of storage connector. Valid values are: `HOMEFOLDERS`, `GOOGLE_DRIVE`, `ONE_DRIVE`.
+* `connector_type` - (Required) Type of storage connector.
+  Valid values are `HOMEFOLDERS`, `GOOGLE_DRIVE`, or `ONE_DRIVE`.
 * `domains` - (Optional) Names of the domains for the account.
 * `resource_identifier` - (Optional) ARN of the storage connector.
 
 ### `user_settings`
 
-* `action` - (Required) Action that is enabled or disabled. Valid values are: `CLIPBOARD_COPY_FROM_LOCAL_DEVICE`,  `CLIPBOARD_COPY_TO_LOCAL_DEVICE`, `FILE_UPLOAD`, `FILE_DOWNLOAD`, `PRINTING_TO_LOCAL_DEVICE`, `DOMAIN_PASSWORD_SIGNIN`, `DOMAIN_SMART_CARD_SIGNIN`.
-* `permission` - (Required) Whether the action is enabled or disabled. Valid values are: `ENABLED`, `DISABLED`.
+* `action` - (Required) Action that is enabled or disabled.
+  Valid values are `CLIPBOARD_COPY_FROM_LOCAL_DEVICE`,  `CLIPBOARD_COPY_TO_LOCAL_DEVICE`, `FILE_UPLOAD`, `FILE_DOWNLOAD`, `PRINTING_TO_LOCAL_DEVICE`, `DOMAIN_PASSWORD_SIGNIN`, or `DOMAIN_SMART_CARD_SIGNIN`.
+* `permission` - (Required) Whether the action is enabled or disabled.
+  Valid values are `ENABLED` or `DISABLED`.
 
 ## Attributes Reference
 
@@ -93,7 +121,6 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - ARN of the appstream stack.
 * `created_time` - Date and time, in UTC and extended RFC 3339 format, when the stack was created.
 * `id` - Unique ID of the appstream stack.
-
 
 ## Import
 

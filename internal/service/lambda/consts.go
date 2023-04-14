@@ -1,6 +1,8 @@
 package lambda
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	eventSourceMappingStateCreating  = "Creating"

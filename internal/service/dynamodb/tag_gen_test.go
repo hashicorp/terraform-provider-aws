@@ -3,6 +3,7 @@
 package dynamodb_test
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -15,43 +16,44 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func testAccCheckTagDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
+func testAccCheckTagDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_dynamodb_tag" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_dynamodb_tag" {
+				continue
+			}
+
+			identifier, key, err := tftags.GetResourceID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			_, err = tfdynamodb.GetTag(ctx, conn, identifier, key)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("%s resource (%s) tag (%s) still exists", dynamodb.ServiceID, identifier, key)
 		}
 
-		identifier, key, err := tftags.GetResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		_, err = tfdynamodb.GetTag(conn, identifier, key)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("%s resource (%s) tag (%s) still exists", dynamodb.ServiceID, identifier, key)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckTagExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckTagExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("not found: %s", resourceName)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("%s: missing resource ID", resourceName)
 		}
@@ -62,9 +64,9 @@ func testAccCheckTagExists(resourceName string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
 
-		_, err = tfdynamodb.GetTag(conn, identifier, key)
+		_, err = tfdynamodb.GetTag(ctx, conn, identifier, key)
 
 		return err
 	}

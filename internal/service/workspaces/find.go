@@ -1,24 +1,26 @@
 package workspaces
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workspaces"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
-func FindDirectoryByID(conn *workspaces.WorkSpaces, id string) (*workspaces.WorkspaceDirectory, error) {
+func FindDirectoryByID(ctx context.Context, conn *workspaces.WorkSpaces, id string) (*workspaces.WorkspaceDirectory, error) {
 	input := &workspaces.DescribeWorkspaceDirectoriesInput{
 		DirectoryIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := conn.DescribeWorkspaceDirectories(input)
+	output, err := conn.DescribeWorkspaceDirectoriesWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
 	}
 
 	if output == nil || len(output.Directories) == 0 || output.Directories[0] == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
 		}
@@ -30,7 +32,7 @@ func FindDirectoryByID(conn *workspaces.WorkSpaces, id string) (*workspaces.Work
 	directory := output.Directories[0]
 
 	if state := aws.StringValue(directory.State); state == workspaces.WorkspaceDirectoryStateDeregistered {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     state,
 			LastRequest: input,
 		}

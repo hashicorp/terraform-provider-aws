@@ -1,5 +1,7 @@
 package rds
 
 const (
-	errCodeInvalidParameterValue = "InvalidParameterValue"
+	errCodeInvalidParameterValue       = "InvalidParameterValue"
+	errCodeValidationError             = "ValidationError"
+	errCodeInvalidParameterCombination = "InvalidParameterCombination"
 )
