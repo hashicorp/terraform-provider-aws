@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -284,25 +283,9 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	// Retry for eventual consistency; if ABAC is in use, this takes some time
 	// usually about 10s, presumably for tags really to be there, and we get a
 	// permissions error.
-	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		log.Printf("[DEBUG] Putting Topic Attributes on SNS topic: %s", name)
-		err := putTopicAttributes(ctx, conn, d.Id(), attributes)
-
-		if tfawserr.ErrMessageContains(err, "AuthorizationError", "authorized") {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	// If we timed out, try one more time before erroring for real.
-	if tfresource.TimedOut(err) {
-		err = putTopicAttributes(ctx, conn, d.Id(), attributes)
-	}
+	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		return nil, putTopicAttributes(ctx, conn, d.Id(), attributes)
+	}, sns.ErrCodeAuthorizationErrorException, "no identity-based policy allows")
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
