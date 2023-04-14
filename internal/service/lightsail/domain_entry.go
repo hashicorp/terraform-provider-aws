@@ -22,6 +22,7 @@ const (
 	DomainEntryIdPartsCount = 4
 )
 
+// @SDKResource("aws_lightsail_domain_entry")
 func ResourceDomainEntry() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainEntryCreate,
