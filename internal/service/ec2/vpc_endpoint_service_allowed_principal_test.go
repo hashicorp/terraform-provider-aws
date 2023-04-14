@@ -40,6 +40,37 @@ func TestAccVPCEndpointServiceAllowedPrincipal_basic(t *testing.T) {
 	})
 }
 
+func TestAccVPCEndpointServiceAllowedPrincipal_migrateID(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_vpc_endpoint_service_allowed_principal.test"
+	rName := sdkacctest.RandomWithPrefix("tfacctest")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		CheckDestroy: testAccCheckVPCEndpointServiceAllowedPrincipalDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "4.63.0",
+					},
+				},
+				Config: testAccVPCEndpointServiceAllowedPrincipalConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointServiceAllowedPrincipalExists(ctx, resourceName),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccVPCEndpointServiceAllowedPrincipalConfig_basic(rName),
+				PlanOnly:                 true,
+			},
+		},
+	})
+}
+
 func testAccCheckVPCEndpointServiceAllowedPrincipalDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
