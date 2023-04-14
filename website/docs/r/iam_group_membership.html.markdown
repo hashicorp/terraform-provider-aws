@@ -60,7 +60,6 @@ In addition to all arguments above, the following attributes are exported:
 * `users` - list of IAM User names
 * `group` – IAM Group name
 
-
 [1]: /docs/providers/aws/r/iam_group.html
 [2]: /docs/providers/aws/r/iam_user.html
 [3]: /docs/providers/aws/r/iam_user_group_membership.html

@@ -11,13 +11,14 @@ import (
 )
 
 func TestAccACMPCACertificateAuthorityDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_acmpca_certificate_authority.test"
 	datasourceName := "data.aws_acmpca_certificate_authority.test"
 
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -27,7 +28,7 @@ func TestAccACMPCACertificateAuthorityDataSource_basic(t *testing.T) {
 			},
 			{
 				Config: testAccCertificateAuthorityDataSourceConfig_arn(commonName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate", resourceName, "certificate"),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate_chain", resourceName, "certificate_chain"),
@@ -41,6 +42,7 @@ func TestAccACMPCACertificateAuthorityDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "status", resourceName, "status"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(datasourceName, "type", resourceName, "type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "usage_mode", resourceName, "usage_mode"),
 				),
 			},
 		},
@@ -48,13 +50,14 @@ func TestAccACMPCACertificateAuthorityDataSource_basic(t *testing.T) {
 }
 
 func TestAccACMPCACertificateAuthorityDataSource_s3ObjectACL(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_acmpca_certificate_authority.test"
 	datasourceName := "data.aws_acmpca_certificate_authority.test"
 
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -64,7 +67,7 @@ func TestAccACMPCACertificateAuthorityDataSource_s3ObjectACL(t *testing.T) {
 			},
 			{
 				Config: testAccCertificateAuthorityDataSourceConfig_s3ObjectACLARN(commonName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate", resourceName, "certificate"),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate_chain", resourceName, "certificate_chain"),
@@ -82,6 +85,7 @@ func TestAccACMPCACertificateAuthorityDataSource_s3ObjectACL(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "status", resourceName, "status"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(datasourceName, "type", resourceName, "type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "usage_mode", resourceName, "usage_mode"),
 				),
 			},
 		},

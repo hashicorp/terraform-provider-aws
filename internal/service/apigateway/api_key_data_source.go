@@ -1,19 +1,21 @@
 package apigateway
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_api_gateway_api_key")
 func DataSourceAPIKey() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAPIKeyRead,
+		ReadWithoutTimeout: dataSourceAPIKeyRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeString,
@@ -49,17 +51,16 @@ func DataSourceAPIKey() *schema.Resource {
 	}
 }
 
-func dataSourceAPIKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func dataSourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	apiKey, err := conn.GetApiKey(&apigateway.GetApiKeyInput{
-		ApiKey:       aws.String(d.Get("id").(string)),
-		IncludeValue: aws.Bool(true),
-	})
+	id := d.Get("id").(string)
+	apiKey, err := FindAPIKeyByID(ctx, conn, id)
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway API Key (%s): %s", id, err)
 	}
 
 	d.SetId(aws.StringValue(apiKey.Id))
@@ -70,8 +71,9 @@ func dataSourceAPIKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("enabled", apiKey.Enabled)
 	d.Set("last_updated_date", aws.TimeValue(apiKey.LastUpdatedDate).Format(time.RFC3339))
 
-	if err := d.Set("tags", KeyValueTags(apiKey.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	if err := d.Set("tags", KeyValueTags(ctx, apiKey.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
-	return nil
+
+	return diags
 }

@@ -1,6 +1,8 @@
 package codebuild
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	ResNameReportGroup = "Report Group"

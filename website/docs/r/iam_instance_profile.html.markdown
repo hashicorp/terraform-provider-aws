@@ -18,25 +18,23 @@ resource "aws_iam_instance_profile" "test_profile" {
   role = aws_iam_role.role.name
 }
 
-resource "aws_iam_role" "role" {
-  name = "test_role"
-  path = "/"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Action": "sts:AssumeRole",
-            "Principal": {
-               "Service": "ec2.amazonaws.com"
-            },
-            "Effect": "Allow",
-            "Sid": ""
-        }
-    ]
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-EOF
+
+resource "aws_iam_role" "role" {
+  name               = "test_role"
+  path               = "/"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 ```
 
@@ -61,7 +59,6 @@ In addition to all arguments above, the following attributes are exported:
 * `unique_id` - [Unique ID][1] assigned by AWS.
 
   [1]: https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html#GUIDs
-
 
 ## Import
 

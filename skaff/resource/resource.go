@@ -25,16 +25,18 @@ var resourceTestTmpl string
 var websiteTmpl string
 
 type TemplateData struct {
-	Resource          string
-	ResourceLower     string
-	ResourceSnake     string
-	IncludeComments   bool
-	ServicePackage    string
-	Service           string
-	ServiceLower      string
-	AWSServiceName    string
-	AWSGoSDKV2        bool
-	HumanResourceName string
+	Resource             string
+	ResourceLower        string
+	ResourceSnake        string
+	HumanFriendlyService string
+	IncludeComments      bool
+	ServicePackage       string
+	Service              string
+	ServiceLower         string
+	AWSServiceName       string
+	AWSGoSDKV2           bool
+	HumanResourceName    string
+	ProviderResourceName string
 }
 
 func ToSnakeCase(upper string, snakeName string) string {
@@ -55,6 +57,10 @@ func HumanResName(upper string) string {
 
 	re2 := regexp.MustCompile(`([A-Z][a-z])`)
 	return strings.TrimPrefix(re2.ReplaceAllString(upper, ` $1`), " ")
+}
+
+func ProviderResourceName(servicePackage, snakeName string) string {
+	return fmt.Sprintf("aws_%s_%s", servicePackage, snakeName)
 }
 
 func Create(resName, snakeName string, comments, force, v2 bool) error {
@@ -89,17 +95,24 @@ func Create(resName, snakeName string, comments, force, v2 bool) error {
 		return fmt.Errorf("error getting AWS service name: %w", err)
 	}
 
+	hf, err := names.HumanFriendly(servicePackage)
+	if err != nil {
+		return fmt.Errorf("error getting human-friendly name: %w", err)
+	}
+
 	templateData := TemplateData{
-		Resource:          resName,
-		ResourceLower:     strings.ToLower(resName),
-		ResourceSnake:     snakeName,
-		IncludeComments:   comments,
-		ServicePackage:    servicePackage,
-		Service:           s,
-		ServiceLower:      strings.ToLower(s),
-		AWSServiceName:    sn,
-		AWSGoSDKV2:        v2,
-		HumanResourceName: HumanResName(resName),
+		Resource:             resName,
+		ResourceLower:        strings.ToLower(resName),
+		ResourceSnake:        snakeName,
+		HumanFriendlyService: hf,
+		IncludeComments:      comments,
+		ServicePackage:       servicePackage,
+		Service:              s,
+		ServiceLower:         strings.ToLower(s),
+		AWSServiceName:       sn,
+		AWSGoSDKV2:           v2,
+		HumanResourceName:    HumanResName(resName),
+		ProviderResourceName: ProviderResourceName(servicePackage, snakeName),
 	}
 
 	f := fmt.Sprintf("%s.go", snakeName)

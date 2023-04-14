@@ -60,10 +60,11 @@ several valid keys, for a full reference, check out
 * `ids` - IDs of instances found through the filter
 * `private_ips` - Private IP addresses of instances found through the filter
 * `public_ips` - Public IP addresses of instances found through the filter
+* `ipv6_addresses` - IPv6 addresses of instances found through the filter
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)
 

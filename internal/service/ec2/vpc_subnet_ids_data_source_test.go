@@ -11,14 +11,15 @@ import (
 )
 
 func TestAccVPCSubnetIDsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandIntRange(0, 256)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy,
+		CheckDestroy:             testAccCheckVPCDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetIDsDataSourceConfig_basic(rName, rInt),
@@ -35,14 +36,15 @@ func TestAccVPCSubnetIDsDataSource_basic(t *testing.T) {
 }
 
 func TestAccVPCSubnetIDsDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandIntRange(0, 256)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy,
+		CheckDestroy:             testAccCheckVPCDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetIdsDataSourceConfig_filter(rName, rInt),

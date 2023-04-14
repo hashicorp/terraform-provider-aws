@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_route53_resolver_endpoint: Fix deduplication with multiple IPs on the same subnet
+```

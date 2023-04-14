@@ -52,6 +52,9 @@ func init() {
 	resource.AddTestSweepers("aws_opsworks_rds_db_instance", &resource.Sweeper{
 		Name: "aws_opsworks_rds_db_instance",
 		F:    sweepRDSDBInstance,
+		Dependencies: []string{
+			"aws_db_instance",
+		},
 	})
 
 	resource.AddTestSweepers("aws_opsworks_user_profile", &resource.Sweeper{
@@ -61,15 +64,16 @@ func init() {
 }
 
 func sweepApplication(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).OpsWorksConn
+	conn := client.(*conns.AWSClient).OpsWorksConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	output, err := conn.DescribeStacks(&opsworks.DescribeStacksInput{})
+	output, err := conn.DescribeStacksWithContext(ctx, &opsworks.DescribeStacksInput{})
 
 	if err != nil {
 		if sweep.SkipSweepError(err) {
@@ -86,7 +90,7 @@ func sweepApplication(region string) error {
 			StackId: stack.StackId,
 		}
 
-		appOutput, err := conn.DescribeApps(input)
+		appOutput, err := conn.DescribeAppsWithContext(ctx, input)
 
 		if err != nil {
 			sweeperErr := fmt.Errorf("describing OpsWorks Applications for Stack (%s): %w", aws.StringValue(stack.StackId), err)
@@ -108,19 +112,20 @@ func sweepApplication(region string) error {
 		}
 	}
 
-	return sweep.SweepOrchestrator(sweepResources)
+	return sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 }
 
 func sweepInstance(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).OpsWorksConn
+	conn := client.(*conns.AWSClient).OpsWorksConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	output, err := conn.DescribeStacks(&opsworks.DescribeStacksInput{})
+	output, err := conn.DescribeStacksWithContext(ctx, &opsworks.DescribeStacksInput{})
 
 	if err != nil {
 		if sweep.SkipSweepError(err) {
@@ -137,7 +142,7 @@ func sweepInstance(region string) error {
 			StackId: stack.StackId,
 		}
 
-		instanceOutput, err := conn.DescribeInstances(input)
+		instanceOutput, err := conn.DescribeInstancesWithContext(ctx, input)
 
 		if err != nil {
 			sweeperErr := fmt.Errorf("describing OpsWorks Instances for Stack (%s): %w", aws.StringValue(stack.StackId), err)
@@ -160,19 +165,20 @@ func sweepInstance(region string) error {
 		}
 	}
 
-	return sweep.SweepOrchestrator(sweepResources)
+	return sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 }
 
 func sweepRDSDBInstance(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).OpsWorksConn
+	conn := client.(*conns.AWSClient).OpsWorksConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	output, err := conn.DescribeStacks(&opsworks.DescribeStacksInput{})
+	output, err := conn.DescribeStacksWithContext(ctx, &opsworks.DescribeStacksInput{})
 
 	if err != nil {
 		if sweep.SkipSweepError(err) {
@@ -189,7 +195,7 @@ func sweepRDSDBInstance(region string) error {
 			StackId: stack.StackId,
 		}
 
-		dbInstOutput, err := conn.DescribeRdsDbInstances(input)
+		dbInstOutput, err := conn.DescribeRdsDbInstancesWithContext(ctx, input)
 
 		if err != nil {
 			sweeperErr := fmt.Errorf("describing OpsWorks RDS DB Instances for Stack (%s): %w", aws.StringValue(stack.StackId), err)
@@ -212,19 +218,20 @@ func sweepRDSDBInstance(region string) error {
 		}
 	}
 
-	return sweep.SweepOrchestrator(sweepResources)
+	return sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 }
 
 func sweepStacks(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).OpsWorksConn
+	conn := client.(*conns.AWSClient).OpsWorksConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	output, err := conn.DescribeStacks(&opsworks.DescribeStacksInput{})
+	output, err := conn.DescribeStacksWithContext(ctx, &opsworks.DescribeStacksInput{})
 
 	if err != nil {
 		if sweep.SkipSweepError(err) {
@@ -254,19 +261,20 @@ func sweepStacks(region string) error {
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	return sweep.SweepOrchestrator(sweepResources)
+	return sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 }
 
 func sweepLayers(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).OpsWorksConn
+	conn := client.(*conns.AWSClient).OpsWorksConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	output, err := conn.DescribeStacks(&opsworks.DescribeStacksInput{})
+	output, err := conn.DescribeStacksWithContext(ctx, &opsworks.DescribeStacksInput{})
 
 	if err != nil {
 		if sweep.SkipSweepError(err) {
@@ -283,7 +291,7 @@ func sweepLayers(region string) error {
 			StackId: stack.StackId,
 		}
 
-		layerOutput, err := conn.DescribeLayers(input)
+		layerOutput, err := conn.DescribeLayersWithContext(ctx, input)
 
 		if err != nil {
 			sweeperErr := fmt.Errorf("describing OpsWorks Layers for Stack (%s): %w", aws.StringValue(stack.StackId), err)
@@ -298,7 +306,7 @@ func sweepLayers(region string) error {
 			}
 
 			l := &opsworksLayerType{}
-			r := l.SchemaResource()
+			r := l.resourceSchema()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(layer.LayerId))
 
@@ -315,19 +323,20 @@ func sweepLayers(region string) error {
 		}
 	}
 
-	return sweep.SweepOrchestrator(sweepResources)
+	return sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 }
 
 func sweepUserProfiles(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).OpsWorksConn
+	conn := client.(*conns.AWSClient).OpsWorksConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	output, err := conn.DescribeUserProfiles(&opsworks.DescribeUserProfilesInput{})
+	output, err := conn.DescribeUserProfilesWithContext(ctx, &opsworks.DescribeUserProfilesInput{})
 
 	if err != nil {
 		if sweep.SkipSweepError(err) {
@@ -344,7 +353,7 @@ func sweepUserProfiles(region string) error {
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	var errs *multierror.Error
 	if errors.As(err, &errs) {

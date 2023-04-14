@@ -35,6 +35,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the EKS add-on.
 * `addon_version` - Version of EKS add-on.
+* `configuration_values` - Configuration values for the addon with a single JSON string.
 * `service_account_role_arn` - ARN of IAM role used for EKS add-on. If value is empty -
   then add-on uses the IAM role assigned to the EKS Cluster node.
 * `id` - EKS Cluster name and EKS add-on name separated by a colon (`:`).

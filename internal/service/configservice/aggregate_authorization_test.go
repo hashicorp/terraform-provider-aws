@@ -6,7 +6,7 @@ package configservice_test
 // 	dataSourceName := "data.aws_region.current"
 
 // 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:     func() { acctest.PreCheck(t) },
+// 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 // 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 // 		ProtoV5ProviderFactories:acctest.ProtoV5ProviderFactories,
 // 		CheckDestroy: testAccCheckAggregateAuthorizationDestroy,
@@ -33,7 +33,7 @@ package configservice_test
 // 	resourceName := "aws_config_aggregate_authorization.example"
 
 // 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:     func() { acctest.PreCheck(t) },
+// 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 // 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 // 		ProtoV5ProviderFactories:acctest.ProtoV5ProviderFactories,
 // 		CheckDestroy: testAccCheckAggregateAuthorizationDestroy,
@@ -72,7 +72,7 @@ package configservice_test
 // }
 
 // func testAccCheckAggregateAuthorizationDestroy(s *terraform.State) error {
-// 	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
+// 	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn()
 
 // 	for _, rs := range s.RootModule().Resources {
 // 		if rs.Type != "aws_config_aggregate_authorization" {

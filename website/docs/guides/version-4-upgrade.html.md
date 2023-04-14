@@ -21,8 +21,6 @@ See [Changes to Authentication](#changes-to-authentication) for more details.
 
 ~> **NOTE:** Version 4.0.0 of the AWS Provider will be the last major version to support [EC2-Classic resources](#ec2-classic-resource-and-data-source-support) as AWS plans to fully retire EC2-Classic Networking. See the [AWS News Blog](https://aws.amazon.com/blogs/aws/ec2-classic-is-retiring-heres-how-to-prepare/) for additional details.
 
-~> **NOTE:** Version 4.0.0 and 4.x.x versions of the AWS Provider will be the last versions compatible with Terraform 0.12-0.15.
-
 Upgrade topics:
 
 <!-- TOC depthFrom:2 depthTo:2 -->
@@ -85,7 +83,6 @@ Additional Topics:
 - [EC2-Classic resource and data source support](#ec2-classic-resource-and-data-source-support)
 
 <!-- /TOC -->
-
 
 ## Provider Version Configuration
 
@@ -908,7 +905,7 @@ resource "aws_s3_bucket" "example" {
 }
 
 resource "aws_s3_bucket_policy" "example" {
-  bucket = aws_s3_bucket.accesslogs_bucket.id
+  bucket = aws_s3_bucket.example.id
   policy = <<EOF
 {
   "Id": "Policy1446577137248",
@@ -1202,7 +1199,7 @@ When you create an object whose `version_id` you need and an `aws_s3_bucket_vers
 
 ~> **NOTE:** For critical and/or production S3 objects, do not create a bucket, enable versioning, and create an object in the bucket within the same configuration. Doing so will not allow the AWS-recommended 15 minutes between enabling versioning and writing to the bucket.
 
-This example shows the `aws_s3_object.example` depending implicitly on the versioning resource through the reference to `aws_s3_bucket_versioning.example.bucket` to define `bucket`:
+This example shows the `aws_s3_object.example` depending implicitly on the versioning resource through the reference to `aws_s3_bucket_versioning.example.id` to define `bucket`:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
@@ -1218,7 +1215,7 @@ resource "aws_s3_bucket_versioning" "example" {
 }
 
 resource "aws_s3_object" "example" {
-  bucket = aws_s3_bucket_versioning.example.bucket
+  bucket = aws_s3_bucket_versioning.example.id
   key    = "droeloe"
   source = "example.txt"
 }
@@ -2207,9 +2204,9 @@ You will get the following error after upgrading:
 ```
 │ Error: Value for unconfigurable attribute
 │
-│   with aws_s3_bucket.accesslogs_bucket,
-│   on main.tf line 1, in resource "aws_s3_bucket" "accesslogs_bucket":
-│    1: resource "aws_s3_bucket" "accesslogs_bucket" {
+│   with aws_s3_bucket.example,
+│   on main.tf line 1, in resource "aws_s3_bucket" "example":
+│    1: resource "aws_s3_bucket" "example" {
 │
 │ Can't configure a value for "policy": its value will be decided automatically based on the result of applying this configuration.
 ```
@@ -2225,7 +2222,7 @@ resource "aws_s3_bucket" "example" {
 }
 
 resource "aws_s3_bucket_policy" "example" {
-  bucket = aws_s3_bucket.accesslogs_bucket.id
+  bucket = aws_s3_bucket.example.id
   policy = <<EOF
 {
   "Id": "Policy1446577137248",
@@ -2304,9 +2301,9 @@ You will get the following error after upgrading:
 ```
 │ Error: Value for unconfigurable attribute
 │
-│   with aws_s3_bucket.source,
-│   on main.tf line 1, in resource "aws_s3_bucket" "source":
-│    1: resource "aws_s3_bucket" "source" {
+│   with aws_s3_bucket.example,
+│   on main.tf line 1, in resource "aws_s3_bucket" "example":
+│    1: resource "aws_s3_bucket" "example" {
 │
 │ Can't configure a value for "replication_configuration": its value will be decided automatically based on the result of applying this configuration.
 ```
@@ -2323,7 +2320,7 @@ resource "aws_s3_bucket" "example" {
 }
 
 resource "aws_s3_bucket_replication_configuration" "example" {
-  bucket = aws_s3_bucket.source.id
+  bucket = aws_s3_bucket.example.id
   role   = aws_iam_role.replication.arn
 
   rule {
@@ -2698,7 +2695,7 @@ resource "aws_s3_bucket_versioning" "example" {
 }
 
 resource "aws_s3_object" "example" {
-  bucket = aws_s3_bucket_versioning.example.bucket
+  bucket = aws_s3_bucket_versioning.example.id
   key    = "droeloe"
   source = "example.txt"
 }
@@ -3484,7 +3481,6 @@ output "elasticache_global_replication_group_version_result" {
 We removed the misspelled argument `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguidshed_name` that we previously deprecated. Use `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name` now instead. Terraform will automatically migrate the state to `active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name` during planning.
 
 ## Resource: aws_lb_target_group
-
 
 For `protocol = "TCP"`, you can no longer set `stickiness.type` to `lb_cookie` even when `enabled = false`. Instead, either change the `protocol` to `"HTTP"` or `"HTTPS"`, or change `stickiness.type` to `"source_ip"`.
 

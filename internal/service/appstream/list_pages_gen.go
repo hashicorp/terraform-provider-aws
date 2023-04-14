@@ -7,13 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
+	"github.com/aws/aws-sdk-go/service/appstream/appstreamiface"
 )
 
-func describeDirectoryConfigsPages(conn *appstream.AppStream, input *appstream.DescribeDirectoryConfigsInput, fn func(*appstream.DescribeDirectoryConfigsOutput, bool) bool) error {
-	return describeDirectoryConfigsPagesWithContext(context.Background(), conn, input, fn)
-}
-
-func describeDirectoryConfigsPagesWithContext(ctx context.Context, conn *appstream.AppStream, input *appstream.DescribeDirectoryConfigsInput, fn func(*appstream.DescribeDirectoryConfigsOutput, bool) bool) error {
+func describeDirectoryConfigsPages(ctx context.Context, conn appstreamiface.AppStreamAPI, input *appstream.DescribeDirectoryConfigsInput, fn func(*appstream.DescribeDirectoryConfigsOutput, bool) bool) error {
 	for {
 		output, err := conn.DescribeDirectoryConfigsWithContext(ctx, input)
 		if err != nil {
@@ -29,11 +26,7 @@ func describeDirectoryConfigsPagesWithContext(ctx context.Context, conn *appstre
 	}
 	return nil
 }
-func describeFleetsPages(conn *appstream.AppStream, input *appstream.DescribeFleetsInput, fn func(*appstream.DescribeFleetsOutput, bool) bool) error {
-	return describeFleetsPagesWithContext(context.Background(), conn, input, fn)
-}
-
-func describeFleetsPagesWithContext(ctx context.Context, conn *appstream.AppStream, input *appstream.DescribeFleetsInput, fn func(*appstream.DescribeFleetsOutput, bool) bool) error {
+func describeFleetsPages(ctx context.Context, conn appstreamiface.AppStreamAPI, input *appstream.DescribeFleetsInput, fn func(*appstream.DescribeFleetsOutput, bool) bool) error {
 	for {
 		output, err := conn.DescribeFleetsWithContext(ctx, input)
 		if err != nil {
@@ -49,11 +42,7 @@ func describeFleetsPagesWithContext(ctx context.Context, conn *appstream.AppStre
 	}
 	return nil
 }
-func describeImageBuildersPages(conn *appstream.AppStream, input *appstream.DescribeImageBuildersInput, fn func(*appstream.DescribeImageBuildersOutput, bool) bool) error {
-	return describeImageBuildersPagesWithContext(context.Background(), conn, input, fn)
-}
-
-func describeImageBuildersPagesWithContext(ctx context.Context, conn *appstream.AppStream, input *appstream.DescribeImageBuildersInput, fn func(*appstream.DescribeImageBuildersOutput, bool) bool) error {
+func describeImageBuildersPages(ctx context.Context, conn appstreamiface.AppStreamAPI, input *appstream.DescribeImageBuildersInput, fn func(*appstream.DescribeImageBuildersOutput, bool) bool) error {
 	for {
 		output, err := conn.DescribeImageBuildersWithContext(ctx, input)
 		if err != nil {
@@ -69,11 +58,7 @@ func describeImageBuildersPagesWithContext(ctx context.Context, conn *appstream.
 	}
 	return nil
 }
-func describeStacksPages(conn *appstream.AppStream, input *appstream.DescribeStacksInput, fn func(*appstream.DescribeStacksOutput, bool) bool) error {
-	return describeStacksPagesWithContext(context.Background(), conn, input, fn)
-}
-
-func describeStacksPagesWithContext(ctx context.Context, conn *appstream.AppStream, input *appstream.DescribeStacksInput, fn func(*appstream.DescribeStacksOutput, bool) bool) error {
+func describeStacksPages(ctx context.Context, conn appstreamiface.AppStreamAPI, input *appstream.DescribeStacksInput, fn func(*appstream.DescribeStacksOutput, bool) bool) error {
 	for {
 		output, err := conn.DescribeStacksWithContext(ctx, input)
 		if err != nil {
@@ -89,11 +74,7 @@ func describeStacksPagesWithContext(ctx context.Context, conn *appstream.AppStre
 	}
 	return nil
 }
-func describeUsersPages(conn *appstream.AppStream, input *appstream.DescribeUsersInput, fn func(*appstream.DescribeUsersOutput, bool) bool) error {
-	return describeUsersPagesWithContext(context.Background(), conn, input, fn)
-}
-
-func describeUsersPagesWithContext(ctx context.Context, conn *appstream.AppStream, input *appstream.DescribeUsersInput, fn func(*appstream.DescribeUsersOutput, bool) bool) error {
+func describeUsersPages(ctx context.Context, conn appstreamiface.AppStreamAPI, input *appstream.DescribeUsersInput, fn func(*appstream.DescribeUsersOutput, bool) bool) error {
 	for {
 		output, err := conn.DescribeUsersWithContext(ctx, input)
 		if err != nil {
@@ -109,11 +90,7 @@ func describeUsersPagesWithContext(ctx context.Context, conn *appstream.AppStrea
 	}
 	return nil
 }
-func listAssociatedStacksPages(conn *appstream.AppStream, input *appstream.ListAssociatedStacksInput, fn func(*appstream.ListAssociatedStacksOutput, bool) bool) error {
-	return listAssociatedStacksPagesWithContext(context.Background(), conn, input, fn)
-}
-
-func listAssociatedStacksPagesWithContext(ctx context.Context, conn *appstream.AppStream, input *appstream.ListAssociatedStacksInput, fn func(*appstream.ListAssociatedStacksOutput, bool) bool) error {
+func listAssociatedStacksPages(ctx context.Context, conn appstreamiface.AppStreamAPI, input *appstream.ListAssociatedStacksInput, fn func(*appstream.ListAssociatedStacksOutput, bool) bool) error {
 	for {
 		output, err := conn.ListAssociatedStacksWithContext(ctx, input)
 		if err != nil {

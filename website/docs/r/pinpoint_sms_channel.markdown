@@ -20,7 +20,6 @@ resource "aws_pinpoint_sms_channel" "sms" {
 resource "aws_pinpoint_app" "app" {}
 ```
 
-
 ## Argument Reference
 
 The following arguments are supported:
