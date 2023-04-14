@@ -60,7 +60,7 @@ The `monitor` block supports the following:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the AppConfig Environment.
-* `id` - AppConfig environment ID and application ID separated by a colon (`:`).
+* `id` - AppConfig environment ID and application ID separated by a comma (`,`).
 * `environment_id` - AppConfig environment ID.
 * `state` - State of the environment. Possible values are `READY_FOR_DEPLOYMENT`, `DEPLOYING`, `ROLLING_BACK`
   or `ROLLED_BACK`.
@@ -68,8 +68,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-AppConfig Environments can be imported by using the environment ID and application ID separated by a colon (`:`), e.g.,
+AppConfig Environments can be imported by using the environment ID and application ID separated by a comma (`,`), e.g.,
 
 ```
-$ terraform import aws_appconfig_environment.example 71abcde:11xxxxx
+$ terraform import aws_appconfig_environment.example 71abcde,11xxxxx
 ```
