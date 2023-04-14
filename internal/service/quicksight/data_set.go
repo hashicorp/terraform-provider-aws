@@ -1976,7 +1976,7 @@ func flattenCastColumnTypeOperation(apiObject *quicksight.CastColumnTypeOperatio
 		tfMap["column_name"] = aws.StringValue(apiObject.ColumnName)
 	}
 	if apiObject.Format != nil {
-		tfMap["cast_column_type_operation"] = aws.StringValue(apiObject.ColumnName)
+		tfMap["format"] = aws.StringValue(apiObject.Format)
 	}
 	if apiObject.NewColumnType != nil {
 		tfMap["new_column_type"] = aws.StringValue(apiObject.NewColumnType)
