@@ -3,10 +3,8 @@ package cognitoidp
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"regexp"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -19,6 +17,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	IdentityProviderIdPartsCount = 2
 )
 
 // @SDKResource("aws_cognito_identity_provider")
@@ -118,7 +120,18 @@ func resourceIdentityProviderCreate(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "Error creating Cognito Identity Provider: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", userPoolID, providerName))
+	idParts := []string{
+		userPoolID,
+		providerName,
+	}
+
+	id, err := flex.FlattenResourceId(idParts, IdentityProviderIdPartsCount)
+
+	if err != nil {
+		return create.DiagError(names.CognitoIDP, create.ErrActionFlatteningResourceId, ResNameIdentityProvider, userPoolID, err)
+	}
+
+	d.SetId(id)
 
 	return append(diags, resourceIdentityProviderRead(ctx, d, meta)...)
 }
@@ -130,7 +143,7 @@ func resourceIdentityProviderRead(ctx context.Context, d *schema.ResourceData, m
 
 	userPoolID, providerName, err := DecodeIdentityProviderID(d.Id())
 	if err != nil {
-		return create.DiagError(names.CognitoIDP, create.ErrActionReading, ResNameIdentityProvider, d.Id(), err)
+		return create.DiagError(names.CognitoIDP, create.ErrActionExpandingResourceId, ResNameIdentityProvider, d.Id(), err)
 	}
 
 	ret, err := conn.DescribeIdentityProviderWithContext(ctx, &cognitoidentityprovider.DescribeIdentityProviderInput{
@@ -185,7 +198,7 @@ func resourceIdentityProviderUpdate(ctx context.Context, d *schema.ResourceData,
 
 	userPoolID, providerName, err := DecodeIdentityProviderID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Cognito Identity Provider (%s): %s", d.Id(), err)
+		return create.DiagError(names.CognitoIDP, create.ErrActionExpandingResourceId, ResNameIdentityProvider, d.Id(), err)
 	}
 
 	params := &cognitoidentityprovider.UpdateIdentityProviderInput{
@@ -220,7 +233,7 @@ func resourceIdentityProviderDelete(ctx context.Context, d *schema.ResourceData,
 
 	userPoolID, providerName, err := DecodeIdentityProviderID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Cognito Identity Provider (%s): %s", d.Id(), err)
+		return create.DiagError(names.CognitoIDP, create.ErrActionExpandingResourceId, ResNameIdentityProvider, d.Id(), err)
 	}
 
 	_, err = conn.DeleteIdentityProviderWithContext(ctx, &cognitoidentityprovider.DeleteIdentityProviderInput{
@@ -239,9 +252,11 @@ func resourceIdentityProviderDelete(ctx context.Context, d *schema.ResourceData,
 }
 
 func DecodeIdentityProviderID(id string) (string, string, error) {
-	idParts := strings.Split(id, ":")
-	if len(idParts) != 2 {
-		return "", "", fmt.Errorf("expected ID in format UserPoolID:ProviderName, received: %s", id)
+	idParts, err := flex.ExpandResourceId(id, IdentityProviderIdPartsCount)
+
+	if err != nil {
+		return "", "", err
 	}
+
 	return idParts[0], idParts[1], nil
 }
