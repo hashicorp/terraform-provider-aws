@@ -1,4 +1,17 @@
 ## 4.64.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_fis_experiment_template: Add support for `Subnets` Network Actions to `actions.*.target` ([#30211](https://github.com/hashicorp/terraform-provider-aws/issues/30211))
+
+BUG FIXES:
+
+* resource/aws_dx_gateway: Remove plan time validation from `name` argument ([#30739](https://github.com/hashicorp/terraform-provider-aws/issues/30739))
+* resource/aws_quicksight_data_set: Correctly persist `create_columns_operation.expression` field ([#30708](https://github.com/hashicorp/terraform-provider-aws/issues/30708))
+* resource/aws_quicksight_data_set: Fix to properly expand `project_operation.projected_columns` field ([#30699](https://github.com/hashicorp/terraform-provider-aws/issues/30699))
+* resource/aws_quicksight_data_set: Fix to properly flatten `cast_column_type_operation.format` field ([#30701](https://github.com/hashicorp/terraform-provider-aws/issues/30701))
+* resource/aws_sns_topic: Fix IAM eventual consistency error creating SNS topics with ABAC-controlled permissions ([#30432](https://github.com/hashicorp/terraform-provider-aws/issues/30432))
+
 ## 4.63.0 (April 14, 2023)
 
 FEATURES:
