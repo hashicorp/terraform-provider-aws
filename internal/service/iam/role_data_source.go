@@ -28,6 +28,22 @@ func DataSourceRole() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"create_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"max_session_duration": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"path": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -36,27 +52,6 @@ func DataSourceRole() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"unique_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"create_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"max_session_duration": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"tags": tftags.TagsSchemaComputed(),
 			"role_last_used": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -72,6 +67,11 @@ func DataSourceRole() *schema.Resource {
 						},
 					},
 				},
+			},
+			"tags": tftags.TagsSchemaComputed(),
+			"unique_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
