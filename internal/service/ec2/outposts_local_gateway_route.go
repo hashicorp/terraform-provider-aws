@@ -2,9 +2,7 @@ package ec2
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -14,13 +12,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
 	localGatewayRouteEventualConsistencyTimeout = 1 * time.Minute
+	ResNameOutpostsLocalGatewayRoute            = "Outposts Local Gateway Route"
 )
 
 // @SDKResource("aws_ec2_local_gateway_route")
@@ -73,7 +75,18 @@ func resourceLocalGatewayRouteCreate(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Local Gateway Route: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s_%s", localGatewayRouteTableID, destination))
+	idParts := []string{
+		localGatewayRouteTableID,
+		destination,
+	}
+
+	id, err := flex.FlattenResourceId(idParts, IPAMPreviewNewCIDRIdPartsCount)
+
+	if err != nil {
+		return create.DiagError(names.Lightsail, create.ErrActionFlatteningResourceId, ResNameOutpostsLocalGatewayRoute, localGatewayRouteTableID, err)
+	}
+
+	d.SetId(id)
 
 	return append(diags, resourceLocalGatewayRouteRead(ctx, d, meta)...)
 }
@@ -172,13 +185,13 @@ func resourceLocalGatewayRouteDelete(ctx context.Context, d *schema.ResourceData
 }
 
 func DecodeLocalGatewayRouteID(id string) (string, string, error) {
-	parts := strings.Split(id, "_")
+	idParts, err := flex.ExpandResourceId(id, IPAMPreviewNewCIDRIdPartsCount)
 
-	if len(parts) != 2 {
-		return "", "", fmt.Errorf("Unexpected format of ID (%q), expected tgw-rtb-ID_DESTINATION", id)
+	if err != nil {
+		return "", "", err
 	}
 
-	return parts[0], parts[1], nil
+	return idParts[0], idParts[1], nil
 }
 
 func GetLocalGatewayRoute(ctx context.Context, conn *ec2.EC2, localGatewayRouteTableID, destination string) (*ec2.LocalGatewayRoute, error) {
