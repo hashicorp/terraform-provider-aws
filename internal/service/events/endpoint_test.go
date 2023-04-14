@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEndpoint_basic(t *testing.T) {
+func TestAccEventsEndpoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v eventbridge.DescribeEndpointOutput
 	var providers []*schema.Provider
@@ -60,7 +60,7 @@ func TestAccEndpoint_basic(t *testing.T) {
 	})
 }
 
-func TestAccEndpoint_disappears(t *testing.T) {
+func TestAccEventsEndpoint_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v eventbridge.DescribeEndpointOutput
 	var providers []*schema.Provider
@@ -85,7 +85,7 @@ func TestAccEndpoint_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEndpoint_roleARN(t *testing.T) {
+func TestAccEventsEndpoint_roleARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v eventbridge.DescribeEndpointOutput
 	var providers []*schema.Provider
@@ -129,7 +129,7 @@ func TestAccEndpoint_roleARN(t *testing.T) {
 	})
 }
 
-func TestAccEndpoint_description(t *testing.T) {
+func TestAccEventsEndpoint_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v eventbridge.DescribeEndpointOutput
 	var providers []*schema.Provider
@@ -195,7 +195,7 @@ func TestAccEndpoint_description(t *testing.T) {
 	})
 }
 
-func TestAccEndpoint_updateRoutingConfig(t *testing.T) {
+func TestAccEventsEndpoint_updateRoutingConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v eventbridge.DescribeEndpointOutput
 	var providers []*schema.Provider
