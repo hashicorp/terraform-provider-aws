@@ -21,6 +21,31 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+func Test_GetNameFromARN(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		arn  string
+		want string
+	}{
+		{"emtpy", "", ""},
+		{"role", "arn:aws:iam::0123456789:role/EcsService", "EcsService"},
+		{"role with path", "arn:aws:iam::0123456789:role/group/EcsService", "EcsService"},
+		{"role with complex path", "arn:aws:iam::0123456789:role/group/subgroup/my-role", "my-role"},
+		{"cluster", "arn:aws:ecs:us-west-2:0123456789:cluster/my-cluster", "my-cluster"},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			if got := tfecs.GetNameFromARN(tt.arn); got != tt.want {
+				t.Errorf("GetNameFromARN() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestAccECSService_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service ecs.Service
