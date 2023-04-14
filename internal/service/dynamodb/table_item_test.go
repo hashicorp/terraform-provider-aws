@@ -52,14 +52,14 @@ func TestAccDynamoDBTableItem_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
+				ResourceName:      "aws_dynamodb_table_item.test",
 				ImportStateId:           fmt.Sprintf("%s|%s", tableName, "something"),
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{"item"}
 			},
 			{
-				ResourceName:      resourceName,
+				ResourceName:      "aws_dynamodb_table_item.test",
 				ImportStateId:           fmt.Sprintf("[\"%s\", \"%s\"]", tableName, "something"),
 				ImportStateCheck:        checkFn,
 				ImportState:             true,
@@ -108,7 +108,7 @@ func TestAccDynamoDBTableItem_rangeKey(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
+				ResourceName:      "aws_dynamodb_table_item.test",
 				ImportStateId:           fmt.Sprintf("%s|%s|%s", tableName, "something", "something-else"),
 				ImportStateCheck:        checkFn,
 				ImportState:             true,
@@ -116,7 +116,7 @@ func TestAccDynamoDBTableItem_rangeKey(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"item"},
 			},
 			{
-				ResourceName:      resourceName,
+				ResourceName:      "aws_dynamodb_table_item.test",
 				ImportStateId:           fmt.Sprintf("[\"%s\", \"%s\", \"%s\"]", tableName, "something", "something-else"),
 				ImportStateCheck:        checkFn,
 				ImportState:             true,
