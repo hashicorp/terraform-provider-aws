@@ -113,3 +113,14 @@ GuardDuty detectors can be imported using the detector ID, e.g.,
 ```
 $ terraform import aws_guardduty_detector.MyDetector 00b00fd5aecc0ab60a708659477e9617
 ```
+
+The ID of the detector can be retrieved via the [AWS CLI](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/guardduty/list-detectors.html)
+
+```
+$ aws guardduty list-detectors
+{
+  "DetectorIds": [
+    "00b00fd5aecc0ab60a708659477e9617"
+  ]
+}
+```
