@@ -406,7 +406,7 @@ resource "aws_cloudwatch_event_endpoint" "test" {
   routing_config {
     failover_config {
       primary {
-        health_check= aws_route53_health_check.test.arn
+        health_check = aws_route53_health_check.test.arn
       }
 
       secondary {
@@ -435,7 +435,7 @@ resource "aws_cloudwatch_event_endpoint" "test" {
   routing_config {
     failover_config {
       primary {
-        health_check= aws_route53_health_check.test.arn
+        health_check = aws_route53_health_check.test.arn
       }
 
       secondary {
@@ -467,7 +467,7 @@ resource "aws_cloudwatch_event_endpoint" "test" {
   routing_config {
     failover_config {
       primary {
-        health_check= aws_route53_health_check.test.arn
+        health_check = aws_route53_health_check.test.arn
       }
 
       secondary {
@@ -510,7 +510,7 @@ resource "aws_cloudwatch_event_endpoint" "test" {
   routing_config {
     failover_config {
       primary {
-        health_check= aws_route53_health_check.test2.arn
+        health_check = aws_route53_health_check.test2.arn
       }
 
       secondary {
