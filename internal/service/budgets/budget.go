@@ -21,11 +21,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/shopspring/decimal"
 )
 
 const (
 	BudgetIdPartsCount = 2
+	ResNameBudget      = "Budget"
 )
 
 // @SDKResource("aws_budgets_budget")
@@ -324,7 +326,19 @@ func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("creating Budget (%s): %s", name, err)
 	}
 
-	d.SetId(BudgetCreateResourceID(accountID, aws.StringValue(budget.BudgetName)))
+	// Generate an ID
+	idParts := []string{
+		accountID,
+		aws.StringValue(budget.BudgetName),
+	}
+
+	id, err := flex.FlattenResourceId(idParts, BudgetIdPartsCount)
+
+	if err != nil {
+		return create.DiagError(names.Lightsail, create.ErrActionFlatteningResourceId, ResNameBudget, name, err)
+	}
+
+	d.SetId(id)
 
 	notificationsRaw := d.Get("notification").(*schema.Set).List()
 	notifications, subscribers := expandBudgetNotificationsUnmarshal(notificationsRaw)
@@ -521,13 +535,6 @@ func resourceBudgetDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	return nil
-}
-
-func BudgetCreateResourceID(accountID, budgetName string) string {
-	idParts := []string{accountID, budgetName}
-	id := flex.FlattenResourceId(idParts)
-
-	return id
 }
 
 func BudgetParseResourceID(id string) (string, string, error) {
