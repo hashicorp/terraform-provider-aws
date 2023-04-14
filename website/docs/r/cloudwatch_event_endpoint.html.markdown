@@ -14,7 +14,7 @@ Provides a resource to create an EventBridge Global Endpoint.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_cloudwatch_event_endpoint" "this" {
   name        = "global-endpoint"
   role_arn    = aws_iam_role.replication.arn
