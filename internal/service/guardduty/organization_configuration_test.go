@@ -29,6 +29,7 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 				Config: testAccOrganizationConfigurationConfig_autoEnable(true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable_organization_members", "NEW"),
 					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
 				),
 			},
@@ -41,8 +42,107 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 				Config: testAccOrganizationConfigurationConfig_autoEnable(false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable_organization_members", "NONE"),
 					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
 				),
+			},
+		},
+	})
+}
+
+func testAccOrganizationConfiguration_autoEnableOrganizationMembers(t *testing.T) {
+	ctx := acctest.Context(t)
+	detectorResourceName := "aws_guardduty_detector.test"
+	resourceName := "aws_guardduty_organization_configuration.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		// GuardDuty Organization Configuration cannot be deleted separately.
+		// Ensure parent resource is destroyed instead.
+		CheckDestroy: testAccCheckDetectorDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOrganizationConfigurationConfig_autoEnableOrganizationMembers("ALL"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "auto_enable_organization_members", "ALL"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccOrganizationConfigurationConfig_autoEnableOrganizationMembers("NONE"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "auto_enable_organization_members", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccOrganizationConfigurationConfig_autoEnableOrganizationMembers("ALL"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "auto_enable_organization_members", "ALL"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccOrganizationConfigurationConfig_autoEnable(true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "auto_enable_organization_members", "NEW"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccOrganizationConfigurationConfig_autoEnableOrganizationMembers("NONE"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "auto_enable_organization_members", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccOrganizationConfigurationConfig_autoEnable(false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "auto_enable_organization_members", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
