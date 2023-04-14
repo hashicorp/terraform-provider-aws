@@ -151,7 +151,7 @@ IAM Access Analyzer
 IVS (Interactive Video)
 IVS (Interactive Video) Chat
 Inspector
-Inspector V2
+Inspector Classic
 IoT 1-Click Devices
 IoT 1-Click Projects
 IoT Analytics

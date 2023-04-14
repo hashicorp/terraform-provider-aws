@@ -1,14 +1,14 @@
 ---
-subcategory: "Inspector V2"
+subcategory: "Inspector"
 layout: "aws"
 page_title: "AWS: aws_inspector2_member_association"
 description: |-
-  Terraform resource for managing an AWS Inspector V2 Member Association.
+  Terraform resource for managing an Amazon Inspector Member Association.
 ---
 
 # Resource: aws_inspector2_member_association
 
-Terraform resource for associating accounts to existing Inspector2 instances.
+Terraform resource for associating accounts to existing Inspector instances.
 
 ## Example Usage
 
@@ -16,7 +16,7 @@ Terraform resource for associating accounts to existing Inspector2 instances.
 
 ```terraform
 resource "aws_inspector2_member_association" "example" {
-  account_id = "012345678901"
+  account_id = "123456789012"
 }
 ```
 
@@ -25,7 +25,3 @@ resource "aws_inspector2_member_association" "example" {
 The following arguments are required:
 
 * `account_id` - (Required) ID of the account to associate
-
-## Attributes Reference
-
-In addition to all arguments above, the following attributes are exported:
