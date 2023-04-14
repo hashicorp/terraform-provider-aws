@@ -1799,6 +1799,64 @@ rules:
           patterns:
             - pattern-regex: "(?i)ChimeSDKVoice"
     severity: WARNING
+  - id: cleanrooms-in-func-name
+    languages:
+      - go
+    message: Do not use "CleanRooms" in func name inside cleanrooms package
+    paths:
+      include:
+        - internal/service/cleanrooms
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CleanRooms"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: cleanrooms-in-test-name
+    languages:
+      - go
+    message: Include "CleanRooms" in test name
+    paths:
+      include:
+        - internal/service/cleanrooms/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccCleanRooms"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: cleanrooms-in-const-name
+    languages:
+      - go
+    message: Do not use "CleanRooms" in const name inside cleanrooms package
+    paths:
+      include:
+        - internal/service/cleanrooms
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CleanRooms"
+    severity: WARNING
+  - id: cleanrooms-in-var-name
+    languages:
+      - go
+    message: Do not use "CleanRooms" in var name inside cleanrooms package
+    paths:
+      include:
+        - internal/service/cleanrooms
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CleanRooms"
+    severity: WARNING
   - id: cloud9-in-func-name
     languages:
       - go
@@ -3331,48 +3389,4 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)ComputeOptimizer"
-    severity: WARNING
-  - id: configservice-in-func-name
-    languages:
-      - go
-    message: Do not use "ConfigService" in func name inside configservice package
-    paths:
-      include:
-        - internal/service/configservice
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)ConfigService"
-            - pattern-not-regex: ^TestAcc.*
-    severity: WARNING
-  - id: configservice-in-test-name
-    languages:
-      - go
-    message: Include "ConfigService" in test name
-    paths:
-      include:
-        - internal/service/configservice/*_test.go
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-not-regex: "^TestAccConfigService"
-            - pattern-regex: ^TestAcc.*
-    severity: WARNING
-  - id: configservice-in-const-name
-    languages:
-      - go
-    message: Do not use "ConfigService" in const name inside configservice package
-    paths:
-      include:
-        - internal/service/configservice
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)ConfigService"
     severity: WARNING

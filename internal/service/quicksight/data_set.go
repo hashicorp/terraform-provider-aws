@@ -1621,7 +1621,7 @@ func expandDataSetRelationalTable(tfMap map[string]interface{}) *quicksight.Rela
 	if v, ok := tfMap["input_columns"].([]interface{}); ok {
 		relationalTable.InputColumns = expandDataSetInputColumns(v)
 	}
-	if v, ok := tfMap["catelog"].(string); ok {
+	if v, ok := tfMap["catalog"].(string); ok {
 		relationalTable.Catalog = aws.String(v)
 	}
 	if v, ok := tfMap["data_source_arn"].(string); ok {
@@ -1630,8 +1630,8 @@ func expandDataSetRelationalTable(tfMap map[string]interface{}) *quicksight.Rela
 	if v, ok := tfMap["name"].(string); ok {
 		relationalTable.Name = aws.String(v)
 	}
-	if v, ok := tfMap["catelog"].(string); ok {
-		relationalTable.Catalog = aws.String(v)
+	if v, ok := tfMap["schema"].(string); ok {
+		relationalTable.Schema = aws.String(v)
 	}
 
 	return relationalTable

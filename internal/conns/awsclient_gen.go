@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
+	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	"github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
@@ -391,6 +392,7 @@ type AWSClient struct {
 	chimesdkmeetingsConn             *chimesdkmeetings.ChimeSDKMeetings
 	chimesdkmessagingConn            *chimesdkmessaging.ChimeSDKMessaging
 	chimesdkvoiceConn                *chimesdkvoice.ChimeSDKVoice
+	cleanroomsClient                 *cleanrooms.Client
 	cloud9Conn                       *cloud9.Cloud9
 	cloudcontrolClient               *cloudcontrol.Client
 	clouddirectoryConn               *clouddirectory.CloudDirectory
@@ -830,6 +832,10 @@ func (client *AWSClient) ChimeSDKMessagingConn() *chimesdkmessaging.ChimeSDKMess
 
 func (client *AWSClient) ChimeSDKVoiceConn() *chimesdkvoice.ChimeSDKVoice {
 	return client.chimesdkvoiceConn
+}
+
+func (client *AWSClient) CleanRoomsClient() *cleanrooms.Client {
+	return client.cleanroomsClient
 }
 
 func (client *AWSClient) Cloud9Conn() *cloud9.Cloud9 {
