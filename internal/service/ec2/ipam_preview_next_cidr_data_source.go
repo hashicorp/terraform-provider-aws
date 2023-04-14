@@ -105,7 +105,7 @@ func dataSourceIPAMPreviewNextCIDRRead(ctx context.Context, d *schema.ResourceDa
 	id, err := flex.FlattenResourceId(idParts, IPAMPreviewNewCIDRIdPartsCount)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionFlatteningResourceId, ResNameIPAMPreviewNewCIDR, poolId, err)
+		return create.DiagError(names.EC2, create.ErrActionFlatteningResourceId, ResNameIPAMPreviewNewCIDR, poolId, err)
 	}
 
 	d.SetId(id)

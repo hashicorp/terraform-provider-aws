@@ -83,7 +83,7 @@ func resourceLocalGatewayRouteCreate(ctx context.Context, d *schema.ResourceData
 	id, err := flex.FlattenResourceId(idParts, IPAMPreviewNewCIDRIdPartsCount)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionFlatteningResourceId, ResNameOutpostsLocalGatewayRoute, localGatewayRouteTableID, err)
+		return create.DiagError(names.EC2, create.ErrActionFlatteningResourceId, ResNameOutpostsLocalGatewayRoute, localGatewayRouteTableID, err)
 	}
 
 	d.SetId(id)
