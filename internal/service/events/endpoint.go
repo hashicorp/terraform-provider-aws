@@ -161,7 +161,9 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.RoleArn = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateEndpointWithContext(ctx, input)
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.CreateEndpointWithContext(ctx, input)
+	}, "ValidationException", "cannot be assumed by principal")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EventBridge Global Endpoint (%s): %s", name, err)
