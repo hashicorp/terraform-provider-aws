@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -253,6 +254,34 @@ func resourceBucketObjectLockConfigurationDelete(ctx context.Context, d *schema.
 	}
 
 	return nil
+}
+
+func FindObjectLockConfiguration(ctx context.Context, conn *s3.S3, bucket, expectedBucketOwner string) (*s3.ObjectLockConfiguration, error) {
+	input := &s3.GetObjectLockConfigurationInput{
+		Bucket: aws.String(bucket),
+	}
+	if expectedBucketOwner != "" {
+		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
+	}
+
+	output, err := conn.GetObjectLockConfigurationWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket, ErrCodeObjectLockConfigurationNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ObjectLockConfiguration == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ObjectLockConfiguration, nil
 }
 
 func expandBucketObjectLockConfigurationRule(l []interface{}) *s3.ObjectLockRule {
