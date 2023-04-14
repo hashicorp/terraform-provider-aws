@@ -372,11 +372,6 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 				// Remove system tags.
 				toAdd = toAdd.IgnoreSystem(inContext.ServicePackageName)
 
-				tflog.Debug(ctx, "all_tags", map[string]interface{}{
-					"to_add":    configTags,
-					"to_remove": tagsAll,
-				})
-
 				var identifier string
 				if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute == "id" {
 					identifier = d.Id()
@@ -389,10 +384,6 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 				if v, ok := sp.(interface {
 					UpdateTags(context.Context, any, string, any, any) error
 				}); ok {
-					tflog.Debug(ctx, "finally_not_getting_here", map[string]interface{}{
-						"to_add":    configTags,
-						"to_remove": tagsAll,
-					})
 					err = v.UpdateTags(ctx, meta, identifier, tagsAll, toAdd)
 				} else if v, ok := sp.(interface {
 					UpdateTags(context.Context, any, string, string, any, any) error
