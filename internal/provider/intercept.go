@@ -344,17 +344,9 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 				break
 			}
 		}
-		fallthrough
 	case Finally:
 		switch why {
 		case Update:
-			// Merge the resource's configured tags with any provider configured default_tags.
-			tags := tagsInContext.DefaultConfig.MergeTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})))
-			// Remove system tags.
-			tags = tags.IgnoreSystem(inContext.ServicePackageName)
-
-			tagsInContext.TagsIn = types.Some(tags)
-
 			if !d.GetRawPlan().GetAttr("tags_all").IsWhollyKnown() {
 
 				configTags := make(map[string]string)
@@ -421,47 +413,47 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 				if err != nil {
 					return ctx, sdkdiag.AppendErrorf(diags, "updating tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
 				}
-				//
-				//if v, ok := sp.(interface {
-				//	ListTags(context.Context, any, string) error
-				//}); ok {
-				//	err = v.ListTags(ctx, meta, identifier) // Sets tags in Context
-				//} else if v, ok := sp.(interface {
-				//	ListTags(context.Context, any, string, string) error
-				//}); ok && r.tags.ResourceType != "" {
-				//	err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
-				//}
-				//
-				//if verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
-				//	// ISO partitions may not support tagging, giving error
-				//	tflog.Warn(ctx, "failed listing tags for resource", map[string]interface{}{
-				//		r.tags.IdentifierAttribute: d.Id(),
-				//		"error":                    err.Error(),
-				//	})
-				//	return ctx, diags
-				//}
-				//
-				//if inContext.ServicePackageName == names.DynamoDB && err != nil {
-				//	// When a DynamoDB Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`.
-				//	if tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
-				//		err = nil
-				//	}
-				//}
-				//
-				//if err != nil {
-				//	return ctx, sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
-				//}
 
-				//// Remove any provider configured ignore_tags and system tags from those returned from the service API.
-				// tags = tagsInContext.TagsOut.UnwrapOrDefault().IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig)
+				if v, ok := sp.(interface {
+					ListTags(context.Context, any, string) error
+				}); ok {
+					err = v.ListTags(ctx, meta, identifier) // Sets tags in Context
+				} else if v, ok := sp.(interface {
+					ListTags(context.Context, any, string, string) error
+				}); ok && r.tags.ResourceType != "" {
+					err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
+				}
+
+				if verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
+					// ISO partitions may not support tagging, giving error
+					tflog.Warn(ctx, "failed listing tags for resource", map[string]interface{}{
+						r.tags.IdentifierAttribute: d.Id(),
+						"error":                    err.Error(),
+					})
+					return ctx, diags
+				}
+
+				if inContext.ServicePackageName == names.DynamoDB && err != nil {
+					// When a DynamoDB Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`.
+					if tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
+						err = nil
+					}
+				}
+
+				if err != nil {
+					return ctx, sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
+				}
+
+				// Remove any provider configured ignore_tags and system tags from those returned from the service API.
+				toAdd = tagsInContext.TagsOut.UnwrapOrDefault().IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig)
 
 				// The resource's configured tags do not include any provider configured default_tags.
-				if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(tagsInContext.DefaultConfig).Map()); err != nil {
+				if err := d.Set(names.AttrTags, toAdd.RemoveDefaultConfig(tagsInContext.DefaultConfig).Map()); err != nil {
 					return ctx, sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTags, err)
 				}
 
 				// Computed tags_all do.
-				if err := d.Set(names.AttrTagsAll, tags.Map()); err != nil {
+				if err := d.Set(names.AttrTagsAll, toAdd.Map()); err != nil {
 					return ctx, sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTagsAll, err)
 				}
 			}
