@@ -305,6 +305,8 @@ func testAccCheckEndpointExists(ctx context.Context, n string, v *eventbridge.De
 
 func testAccEndpointConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_cloudwatch_event_bus" "primary" {
   name = %[1]q
 }
@@ -321,7 +323,7 @@ data "aws_iam_policy_document" "test_assume" {
 
     principals {
       type        = "Service"
-      identifiers = ["events.amazonaws.com"]
+      identifiers = ["events.${data.aws_partition.current.dns_suffix}"]
     }
   }
 }
@@ -345,7 +347,7 @@ data "aws_iam_policy_document" "test" {
       "events:RemoveTargets",
     ]
 
-    resources = ["arn:aws:events:*:*:rule/%[1]s/GlobalEndpointManagedRule-*"]
+    resources = ["arn:${data.aws_partition.current.partition}:events:*:*:rule/%[1]s/GlobalEndpointManagedRule-*"]
   }
 
   statement {
@@ -360,12 +362,13 @@ data "aws_iam_policy_document" "test" {
   statement {
     actions = ["iam:PassRole"]
 
-    resources = ["arn:aws:iam::*:role/%[1]s"]
+    resources = ["arn:${data.aws_partition.current.partition}:iam::*:role/%[1]s"]
+
     condition {
       test     = "StringLike"
       variable = "iam:PassedToService"
 
-      values = ["events.amazonaws.com"]
+      values = ["events.${data.aws_partition.current.dns_suffix}"]
     }
   }
 }
