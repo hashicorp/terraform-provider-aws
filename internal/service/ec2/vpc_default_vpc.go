@@ -262,8 +262,7 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 		associationID = aws.StringValue(v.AssociationId)
 		oldIPv6CIDRBlock = aws.StringValue(v.Ipv6CidrBlock)
 		oldIPv6CIDRBlockNetworkBorderGroup = aws.StringValue(v.NetworkBorderGroup)
-		ipv6PoolID := aws.StringValue(v.Ipv6Pool)
-		if ipv6PoolID == AmazonIPv6PoolID {
+		if ipv6PoolID := aws.StringValue(v.Ipv6Pool); ipv6PoolID == AmazonIPv6PoolID {
 			oldAssignGeneratedIPv6CIDRBlock = true
 		} else {
 			oldIPv6PoolID = ipv6PoolID
