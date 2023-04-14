@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -15,10 +14,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	EnvironmentIdPartsCount = 2
+	ResNameEnvironment      = "Environment"
 )
 
 // @SDKResource("aws_appconfig_environment", name="Environment")
@@ -120,8 +126,19 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "creating AppConfig Environment for Application (%s): empty response", appId)
 	}
 
+	idParts := []string{
+		aws.StringValue(environment.Id),
+		aws.StringValue(environment.ApplicationId),
+	}
+
+	id, err := flex.FlattenResourceId(idParts, EnvironmentIdPartsCount)
+
+	if err != nil {
+		return create.DiagError(names.AppConfig, create.ErrActionFlatteningResourceId, ResNameEnvironment, appId, err)
+	}
+
+	d.SetId(id)
 	d.Set("environment_id", environment.Id)
-	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(environment.Id), aws.StringValue(environment.ApplicationId)))
 
 	return append(diags, resourceEnvironmentRead(ctx, d, meta)...)
 }
@@ -133,7 +150,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	envID, appID, err := EnvironmentParseID(d.Id())
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading AppConfig Environment (%s): %s", d.Id(), err)
+		return create.DiagError(names.AppConfig, create.ErrActionExpandingResourceId, ResNameEnvironment, d.Id(), err)
 	}
 
 	input := &appconfig.GetEnvironmentInput{
@@ -188,7 +205,7 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 		envID, appID, err := EnvironmentParseID(d.Id())
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating AppConfig Environment (%s): %s", d.Id(), err)
+			return create.DiagError(names.AppConfig, create.ErrActionExpandingResourceId, ResNameEnvironment, d.Id(), err)
 		}
 
 		updateInput := &appconfig.UpdateEnvironmentInput{
@@ -225,7 +242,7 @@ func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta
 	envID, appID, err := EnvironmentParseID(d.Id())
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting AppConfig Environment (%s): %s", d.Id(), err)
+		return create.DiagError(names.AppConfig, create.ErrActionExpandingResourceId, ResNameEnvironment, d.Id(), err)
 	}
 
 	input := &appconfig.DeleteEnvironmentInput{
@@ -247,13 +264,13 @@ func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func EnvironmentParseID(id string) (string, string, error) {
-	parts := strings.Split(id, ":")
+	idParts, err := flex.ExpandResourceId(id, EnvironmentIdPartsCount)
 
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%q), expected EnvironmentID:ApplicationID", id)
+	if err != nil {
+		return "", "", err
 	}
 
-	return parts[0], parts[1], nil
+	return idParts[0], idParts[1], nil
 }
 
 func expandEnvironmentMonitor(tfMap map[string]interface{}) *appconfig.Monitor {
