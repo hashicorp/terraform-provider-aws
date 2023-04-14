@@ -840,7 +840,7 @@ func flattenRoutes(ctx context.Context, conn *ec2.EC2, apiObjects []*ec2.Route) 
 			continue
 		}
 
-		if gatewayID := aws.StringValue(apiObject.GatewayId); gatewayID == "local" || gatewayID == "VpcLattice" {
+		if gatewayID := aws.StringValue(apiObject.GatewayId); gatewayID == gatewayIDLocal || gatewayID == gatewayIDVPCLattice {
 			continue
 		}
 

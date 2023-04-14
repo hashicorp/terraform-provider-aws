@@ -372,6 +372,7 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "updating Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
 
+	localTarget := target == gatewayIDLocal
 	switch target := aws.String(target); targetAttributeKey {
 	case "carrier_gateway_id":
 		input.CarrierGatewayId = target
@@ -380,8 +381,7 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	case "egress_only_gateway_id":
 		input.EgressOnlyInternetGatewayId = target
 	case "gateway_id":
-		// LocalTarget
-		if *target == "local" {
+		if localTarget {
 			input.LocalTarget = aws.Bool(true)
 		} else {
 			input.GatewayId = target
