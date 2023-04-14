@@ -708,7 +708,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if strings.HasPrefix(d.Get("cluster").(string), "arn:"+meta.(*conns.AWSClient).Partition+":ecs:") {
 		d.Set("cluster", service.ClusterArn)
 	} else {
-		clusterARN := GetNameFromARN(aws.StringValue(service.ClusterArn))
+		clusterARN := GetClusterNameFromARN(aws.StringValue(service.ClusterArn))
 		d.Set("cluster", clusterARN)
 	}
 
@@ -717,7 +717,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		if strings.HasPrefix(d.Get("iam_role").(string), "arn:"+meta.(*conns.AWSClient).Partition+":iam:") {
 			d.Set("iam_role", service.RoleArn)
 		} else {
-			roleARN := GetNameFromARN(aws.StringValue(service.RoleArn))
+			roleARN := GetRoleNameFromARN(aws.StringValue(service.RoleArn))
 			d.Set("iam_role", roleARN)
 		}
 	}
@@ -1574,16 +1574,33 @@ func buildFamilyAndRevisionFromARN(arn string) string {
 	return strings.Split(arn, "/")[1]
 }
 
-// GetNameFromARN parses the resource name from a fully qualified ARN
+// GetRoleNameFromARN parses a role name from a fully qualified ARN
 //
-// Expects either an IAM role or ECS cluster ARN:
+// When providing a role name with a path, it must be prefixed with the full path
+// including a leading `/`.
+// See: https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_CreateService.html#ECS-CreateService-request-role
+//
+// Expects an IAM role ARN:
 //
 //	arn:aws:iam::0123456789:role/EcsService
-//	arn:aws:iam::0123456789:role/role_group/EcsService
-//	arn:aws:ecs:us-west-2:0123456789:cluster/radek-cluster
-func GetNameFromARN(arn string) string {
-	if parts := strings.Split(arn, "/"); len(parts) > 1 {
-		return parts[len(parts)-1]
+//	arn:aws:iam::0123456789:role/group/my-role
+func GetRoleNameFromARN(arn string) string {
+	if parts := strings.Split(arn, "/"); len(parts) == 2 {
+		return parts[1]
+	} else if len(parts) > 2 {
+		return fmt.Sprintf("/%s", strings.Join(parts[1:], "/"))
+	}
+	return ""
+}
+
+// GetClusterNameFromARN parses a cluster name from a fully qualified ARN
+//
+// Expects an ECS cluster ARN:
+//
+//	arn:aws:ecs:us-west-2:0123456789:cluster/my-cluster
+func GetClusterNameFromARN(arn string) string {
+	if parts := strings.Split(arn, "/"); len(parts) == 2 {
+		return parts[1]
 	}
 	return ""
 }

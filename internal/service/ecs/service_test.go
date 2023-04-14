@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func Test_GetNameFromARN(t *testing.T) {
+func Test_GetRoleNameFromARN(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -29,18 +29,39 @@ func Test_GetNameFromARN(t *testing.T) {
 		arn  string
 		want string
 	}{
-		{"emtpy", "", ""},
-		{"role", "arn:aws:iam::0123456789:role/EcsService", "EcsService"},
-		{"role with path", "arn:aws:iam::0123456789:role/group/EcsService", "EcsService"},
-		{"role with complex path", "arn:aws:iam::0123456789:role/group/subgroup/my-role", "my-role"},
-		{"cluster", "arn:aws:ecs:us-west-2:0123456789:cluster/my-cluster", "my-cluster"},
+		{"empty", "", ""},
+		{"role", "arn:aws:iam::0123456789:role/EcsService", "EcsService"},                                            // lintignore:AWSAT005
+		{"role with path", "arn:aws:iam::0123456789:role/group/EcsService", "/group/EcsService"},                     // lintignore:AWSAT005
+		{"role with complex path", "arn:aws:iam::0123456789:role/group/subgroup/my-role", "/group/subgroup/my-role"}, // lintignore:AWSAT005
 	}
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			if got := tfecs.GetNameFromARN(tt.arn); got != tt.want {
-				t.Errorf("GetNameFromARN() = %v, want %v", got, tt.want)
+			if got := tfecs.GetRoleNameFromARN(tt.arn); got != tt.want {
+				t.Errorf("GetRoleNameFromARN() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_GetClustereNameFromARN(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		arn  string
+		want string
+	}{
+		{"empty", "", ""},
+		{"cluster", "arn:aws:ecs:us-west-2:0123456789:cluster/my-cluster", "my-cluster"}, // lintignore:AWSAT003,AWSAT005
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			if got := tfecs.GetClusterNameFromARN(tt.arn); got != tt.want {
+				t.Errorf("GetClusterNameFromARN() = %v, want %v", got, tt.want)
 			}
 		})
 	}
