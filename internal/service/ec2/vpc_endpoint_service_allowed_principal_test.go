@@ -40,6 +40,32 @@ func TestAccVPCEndpointServiceAllowedPrincipal_basic(t *testing.T) {
 	})
 }
 
+func TestAccVPCEndpointServiceAllowedPrincipal_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix("tfacctest")
+
+	resourceName := "aws_vpc_endpoint_service_allowed_principal.test"
+	tagResourceName := "aws_ec2_tag.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointServiceAllowedPrincipalDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEndpointServiceAllowedPrincipalConfig_tag(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointServiceAllowedPrincipalExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(tagResourceName, "resource_id", resourceName, "id"),
+					resource.TestCheckResourceAttr(tagResourceName, "key", "Name"),
+					resource.TestCheckResourceAttr(tagResourceName, "value", rName),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVPCEndpointServiceAllowedPrincipal_migrateID(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_endpoint_service_allowed_principal.test"
@@ -134,4 +160,32 @@ resource "aws_vpc_endpoint_service_allowed_principal" "test" {
   principal_arn = data.aws_iam_session_context.current.issuer_arn
 }
 `)
+}
+
+func testAccVPCEndpointServiceAllowedPrincipalConfig_tag(rName string) string {
+	return acctest.ConfigCompose(testAccVPCEndpointServiceConfig_networkLoadBalancerBase(rName, 1), fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
+resource "aws_vpc_endpoint_service" "test" {
+  acceptance_required        = false
+  network_load_balancer_arns = aws_lb.test[*].arn
+}
+
+resource "aws_vpc_endpoint_service_allowed_principal" "test" {
+  vpc_endpoint_service_id = aws_vpc_endpoint_service.test.id
+
+  principal_arn = data.aws_iam_session_context.current.issuer_arn
+}
+
+resource "aws_ec2_tag" "test" {
+  resource_id = aws_vpc_endpoint_service_allowed_principal.test.id
+
+  key   = "Name"
+  value = %[1]q
+}
+`, rName))
 }
