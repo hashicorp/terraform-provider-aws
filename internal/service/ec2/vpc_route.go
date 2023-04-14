@@ -13,15 +13,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
 	routeDestinationCIDRBlock     = "destination_cidr_block"
 	routeDestinationIPv6CIDRBlock = "destination_ipv6_cidr_block"
 	routeDestinationPrefixListID  = "destination_prefix_list_id"
+	VPCRouteIdPartsCount          = 2
+	ResNameVPCRoute               = "VPC Route"
 )
 
 var routeValidDestinations = []string{
@@ -256,7 +261,18 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "creating Route in Route Table (%s) with destination (%s): %s", routeTableID, destination, err)
 	}
 
-	d.SetId(RouteCreateID(routeTableID, destination))
+	idParts := []string{
+		routeTableID,
+		destination,
+	}
+
+	id, err := flex.FlattenResourceId(idParts, VPCRouteIdPartsCount)
+
+	if err != nil {
+		return create.DiagError(names.Budgets, create.ErrActionFlatteningResourceId, ResNameVPCRoute, routeTableID, err)
+	}
+
+	d.SetId(id)
 
 	_, err = WaitRouteReady(ctx, conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutCreate))
 
@@ -473,9 +489,10 @@ func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	idParts := strings.Split(d.Id(), "_")
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("unexpected format of ID (%q), expected ROUTETABLEID_DESTINATION", d.Id())
+	idParts, err := flex.ExpandResourceId(d.Id(), NetworkInterfaceSGAttachmentIdPartsCount)
+
+	if err != nil {
+		return []*schema.ResourceData{}, err
 	}
 
 	routeTableID := idParts[0]
