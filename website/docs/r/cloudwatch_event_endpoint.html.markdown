@@ -16,8 +16,8 @@ Provides a resource to create an EventBridge Global Endpoint.
 
 ```terraform
 resource "aws_cloudwatch_event_endpoint" "this" {
-  name        = "global-endpoint"
-  role_arn    = aws_iam_role.replication.arn
+  name     = "global-endpoint"
+  role_arn = aws_iam_role.replication.arn
 
   event_bus {
     event_bus_arn = aws_cloudwatch_event_bus.primary.arn
@@ -33,7 +33,7 @@ resource "aws_cloudwatch_event_endpoint" "this" {
   routing_config {
     failover_config {
       primary {
-        health_check= aws_route53_health_check.primary.arn
+        health_check = aws_route53_health_check.primary.arn
       }
 
       secondary {
