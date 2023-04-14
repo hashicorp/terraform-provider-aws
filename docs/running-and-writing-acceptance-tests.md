@@ -191,18 +191,20 @@ same type of resource. The definition of a complete test looks like this:
 
 ```go
 func TestAccCloudWatchDashboard_basic(t *testing.T) {
+  ctx := acctest.Context(t)
 	var dashboard cloudwatch.GetDashboardOutput
 	rInt := acctest.RandInt()
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDashboardDestroy,
+		CheckDestroy:             testAccCheckDashboardDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDashboardConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDashboardExists("aws_cloudwatch_dashboard.foobar", &dashboard),
+					testAccCheckDashboardExists(ctx, "aws_cloudwatch_dashboard.foobar", &dashboard),
 					resource.TestCheckResourceAttr("aws_cloudwatch_dashboard.foobar", "dashboard_name", testAccDashboardName(rInt)),
 				),
 			},
@@ -219,7 +221,7 @@ When executing the test, the following steps are taken for each `TestStep`:
 
     ```terraform
     resource "aws_cloudwatch_dashboard" "foobar" {
-      dashboard_name = "terraform-test-dashboard-%d"
+      dashboard_name = "terraform-test-dashboard-%[1]d"
       dashboard_body = <<EOF
       {
         "widgets": [{
@@ -243,19 +245,19 @@ When executing the test, the following steps are taken for each `TestStep`:
    successfully, a test function like this is used:
 
     ```go
-    func testAccCheckDashboardExists(n string, dashboard *cloudwatch.GetDashboardOutput) resource.TestCheckFunc {
+    func testAccCheckDashboardExists(ctx context.Context, n string, dashboard *cloudwatch.GetDashboardOutput) resource.TestCheckFunc {
       return func(s *terraform.State) error {
         rs, ok := s.RootModule().Resources[n]
         if !ok {
           return fmt.Errorf("Not found: %s", n)
         }
 
-        conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
+        conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
         params := cloudwatch.GetDashboardInput{
           DashboardName: aws.String(rs.Primary.ID),
         }
 
-        resp, err := conn.GetDashboard(&params)
+        resp, err := conn.GetDashboardWithContext(ctx, &params)
         if err != nil {
           return err
         }
@@ -285,28 +287,30 @@ When executing the test, the following steps are taken for each `TestStep`:
    above has been destroyed looks like this:
 
     ```go
-    func testAccCheckDashboardDestroy(s *terraform.State) error {
-      conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
+    func testAccCheckDashboardDestroy(ctx context.Context) resource.TestCheckFunc {
+	    return func(s *terraform.State) error {
+        conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
 
-      for _, rs := range s.RootModule().Resources {
-        if rs.Type != "aws_cloudwatch_dashboard" {
-          continue
+        for _, rs := range s.RootModule().Resources {
+          if rs.Type != "aws_cloudwatch_dashboard" {
+            continue
+          }
+
+          params := cloudwatch.GetDashboardInput{
+            DashboardName: aws.String(rs.Primary.ID),
+          }
+
+          _, err := conn.GetDashboardWithContext(ctx, &params)
+          if err == nil {
+            return fmt.Errorf("Dashboard still exists: %s", rs.Primary.ID)
+          }
+          if !isDashboardNotFoundErr(err) {
+            return err
+          }
         }
 
-        params := cloudwatch.GetDashboardInput{
-          DashboardName: aws.String(rs.Primary.ID),
-        }
-
-        _, err := conn.GetDashboard(&params)
-        if err == nil {
-          return fmt.Errorf("Dashboard still exists: %s", rs.Primary.ID)
-        }
-        if !isDashboardNotFoundErr(err) {
-          return err
-        }
+        return nil
       }
-
-      return nil
     }
     ```
 
@@ -357,6 +361,15 @@ For consistency, resources in the test configuration should be named `resource "
 We discourage re-using test configurations across test files (except for some common configuration helpers we provide) as it is much harder to discover potential testing regressions.
 
 Please also note that the newline on the first line of the configuration (before `resource`) and the newline after the last line of configuration (after `}`) are important to allow test configurations to be easily combined without generating Terraform configuration language syntax errors.
+
+#### Test Configuration Independence
+
+_Across the entire provider_, all test configurations should be as indepedent from each other as possible. For example, a common place this concept comes up is with the default VPC. Since we have tests that reconfigure the default VPC, if your configuration requires a VPC, it should not rely on the default VPC. Instead, include a VPC that will be created and destroyed as part of the test.
+
+Make sure that your test configuration:
+
+1. Includes everything required for Terraform to run the test
+1. Does not assume that any user-managed infrastructure will be in place, such as S3 buckets, IAM roles, KMS keys, VPCs, subnets, etc.
 
 #### Combining Test Configurations
 
@@ -409,6 +422,7 @@ For example:
 
 ```go
 func TestAccExampleThing_basic(t *testing.T) {
+  ctx := acctest.Context(t)
   rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
   // ... omitted for brevity ...
 
@@ -458,6 +472,7 @@ For example:
 
 ```go
 func TestAccExampleThing_basic(t *testing.T) {
+  ctx := acctest.Context(t)
   // ... omitted for brevity ...
   resourceName := "aws_example_thing.test"
 
@@ -467,7 +482,7 @@ func TestAccExampleThing_basic(t *testing.T) {
       {
         // ... omitted for brevity ...
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleThingExists(resourceName),
+          testAccCheckExampleThingExists(ctx, resourceName),
           acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "example", fmt.Sprintf("thing/%s", rName)),
           resource.TestCheckResourceAttr(resourceName, "description", ""),
           resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -503,19 +518,20 @@ For example:
 
 ```go
 func TestAccExampleThing_basic(t *testing.T) {
+  ctx := acctest.Context(t)
   rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:                 func() { acctest.PreCheck(t) },
+    PreCheck:                 func() { acctest.PreCheck(ctx, t) },
     ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    CheckDestroy:             testAccCheckExampleThingDestroy,
+    CheckDestroy:             testAccCheckExampleThingDestroy(ctx),
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigName(rName),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleThingExists(resourceName),
+          testAccCheckExampleThingExists(ctx, resourceName),
           acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "example", fmt.Sprintf("thing/%s", rName)),
           resource.TestCheckResourceAttr(resourceName, "description", ""),
           resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -549,11 +565,12 @@ Here is an example of the default PreCheck:
 
 ```go
 func TestAccExampleThing_basic(t *testing.T) {
+  ctx := acctest.Context(t)
   rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:     func() { acctest.PreCheck(t) },
+    PreCheck:     func() { acctest.PreCheck(ctx, t) },
     // ... additional checks follow ...
   })
 }
@@ -567,8 +584,13 @@ If you add a new test that has preconditions which are checked by an existing pr
 
 These are some of the standard provider PreChecks:
 
-* `acctest.PreCheckPartitionHasService(serviceId string, t *testing.T)` checks whether the current partition lists the service as part of its offerings. Note: AWS may not add new or public preview services to the service list immediately. This function will return a false positive in that case.
-* `acctest.PreCheckOrganizationsAccount(t *testing.T)` checks whether the current account can perform AWS Organizations tests.
+* `acctest.PreCheckRegion(t *testing.T, regions ...string)` checks that the test region is one of the specified AWS Regions.
+* `acctest.PreCheckRegionNot(t *testing.T, regions ...string)` checks that the test region is not one of the specified AWS Regions.
+* `acctest.PreCheckAlternateRegionIs(t *testing.T, region string)` checks that the alternate test region is the specified AWS Region.
+* `acctest.PreCheckPartition(t *testing.T, partition string)` checks that the test partition is the specified partition.
+* `acctest.PreCheckPartitionNot(t *testing.T, partitions ...string)` checks that the test partition is not one of the specified partitions.
+* `acctest.PreCheckPartitionHasService(t *testing.T, serviceID string)` checks whether the current partition lists the service as part of its offerings. Note: AWS may not add new or public preview services to the service list immediately. This function will return a false positive in that case.
+* `acctest.PreCheckOrganizationsAccount(ctx context.Context, t *testing.T)` checks whether the current account can perform AWS Organizations tests.
 * `acctest.PreCheckAlternateAccount(t *testing.T)` checks whether the environment is set up for tests across accounts.
 * `acctest.PreCheckMultipleRegion(t *testing.T, regions int)` checks whether the environment is set up for tests across regions.
 
@@ -576,11 +598,12 @@ This is an example of using a standard PreCheck function. For an established ser
 
 ```go
 func TestAccExampleThing_basic(t *testing.T) {
+  ctx := acctest.Context(t)
   rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(waf.EndpointsID, t) },
+    PreCheck:     func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, waf.EndpointsID) },
     // ... additional checks follow ...
   })
 }
@@ -594,19 +617,20 @@ Below is an example of adding a custom PreCheck function. For a new or preview s
 
 ```go
 func TestAccExampleThing_basic(t *testing.T) {
+  ctx := acctest.Context(t)
   rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:     func() { acctest.PreCheck(t), testAccPreCheckExample(t) },
+    PreCheck:     func() { acctest.PreCheck(ctx, t), testAccPreCheckExample(ctx, t) },
     // ... additional checks follow ...
   })
 }
 
-func testAccPreCheckExample(t *testing.T) {
-  conn := acctest.Provider.Meta().(*conns.AWSClient).ExampleConn
+func testAccPreCheckExample(ctx context.Context, t *testing.T) {
+  conn := acctest.Provider.Meta().(*conns.AWSClient).ExampleConn()
 	input := &example.ListThingsInput{}
-	_, err := conn.ListThings(input)
+	_, err := conn.ListThingsWithContext(ctx, input)
 	if testAccPreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
@@ -701,20 +725,21 @@ For example:
 
 ```go
 func TestAccExampleThing_disappears(t *testing.T) {
+  ctx := acctest.Context(t)
   rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:                 func() { acctest.PreCheck(t) },
+    PreCheck:                 func() { acctest.PreCheck(ctx, t) },
     ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    CheckDestroy:             testAccCheckExampleThingDestroy,
+    CheckDestroy:             testAccCheckExampleThingDestroy(ctx),
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigName(rName),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleThingExists(resourceName, &job),
-          acctest.CheckResourceDisappears(acctest.Provider, ResourceExampleThing(), resourceName),
+          testAccCheckExampleThingExists(ctx, resourceName, &job),
+          acctest.CheckResourceDisappears(ctx, acctest.Provider, ResourceExampleThing(), resourceName),
         ),
         ExpectNonEmptyPlan: true,
       },
@@ -728,7 +753,7 @@ If this test does fail, the fix for this is generally adding error handling imme
 ```go
 output, err := conn.GetThing(input)
 
-if isAWSErr(err, example.ErrCodeResourceNotFound, "") {
+if !d.IsNewResource() && tfresource.NotFound(err) {
   log.Printf("[WARN] Example Thing (%s) not found, removing from state", d.Id())
   d.SetId("")
   return nil
@@ -743,21 +768,22 @@ For children resources that are encapsulated by a parent resource, it is also pr
 
 ```go
 func TestAccExampleChildThing_disappears_ParentThing(t *testing.T) {
+  ctx := acctest.Context(t)
   rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
   parentResourceName := "aws_example_parent_thing.test"
   resourceName := "aws_example_child_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:                 func() { acctest.PreCheck(t) },
+    PreCheck:                 func() { acctest.PreCheck(ctx, t) },
     ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    CheckDestroy:             testAccCheckExampleChildThingDestroy,
+    CheckDestroy:             testAccCheckExampleChildThingDestroy(ctx),
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigName(rName),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleThingExists(resourceName),
-          acctest.CheckResourceDisappears(acctest.Provider, ResourceExampleParentThing(), parentResourceName),
+          testAccCheckExampleThingExists(ctx, resourceName),
+          acctest.CheckResourceDisappears(ctx, acctest.Provider, ResourceExampleParentThing(), parentResourceName),
         ),
         ExpectNonEmptyPlan: true,
       },
@@ -774,19 +800,20 @@ For example:
 
 ```go
 func TestAccExampleThing_Description(t *testing.T) {
+  ctx := acctest.Context(t)
   rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:                 func() { acctest.PreCheck(t) },
+    PreCheck:                 func() { acctest.PreCheck(ctx, t) },
     ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    CheckDestroy:             testAccCheckExampleThingDestroy,
+    CheckDestroy:             testAccCheckExampleThingDestroy(ctx),
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigDescription(rName, "description1"),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleThingExists(resourceName),
+          testAccCheckExampleThingExists(ctx, resourceName),
           resource.TestCheckResourceAttr(resourceName, "description", "description1"),
         ),
       },
@@ -798,7 +825,7 @@ func TestAccExampleThing_Description(t *testing.T) {
       {
         Config: testAccExampleThingConfigDescription(rName, "description2"),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleThingExists(resourceName),
+          testAccCheckExampleThingExists(ctx, resourceName),
           resource.TestCheckResourceAttr(resourceName, "description", "description2"),
         ),
       },
@@ -822,8 +849,8 @@ resource "aws_example_thing" "test" {
 
 When testing requires AWS infrastructure in a second AWS account, the below changes to the normal setup will allow the management or reference of resources and data sources across accounts:
 
-- In the `PreCheck` function, include `acctest.PreCheckOrganizationsAccount(t)` to ensure a standardized set of information is required for cross-account testing credentials
-- Switch usage of `ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories` to `ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t)`
+- In the `PreCheck` function, include `acctest.PreCheckOrganizationsAccount(ctx, t)` to ensure a standardized set of information is required for cross-account testing credentials
+- Switch usage of `ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories` to `ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t)`
 - Add `acctest.ConfigAlternateAccountProvider()` to the test configuration and use `provider = awsalternate` for cross-account resources. The resource that is the focus of the acceptance test should _not_ use the alternate provider identification to simplify the testing setup.
 - For any `TestStep` that includes `ImportState: true`, add the `Config` that matches the previous `TestStep` `Config`
 
@@ -831,21 +858,22 @@ An example acceptance test implementation can be seen below:
 
 ```go
 func TestAccExample_basic(t *testing.T) {
+  ctx := acctest.Context(t)
   resourceName := "aws_example.test"
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck: func() {
-      acctest.PreCheck(t)
-      acctest.PreCheckOrganizationsAccount(t)
+      acctest.PreCheck(ctx, t)
+      acctest.PreCheckOrganizationsAccount(ctx, t)
     },
     ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
-    ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-    CheckDestroy:             testAccCheckExampleDestroy,
+    ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+    CheckDestroy:             testAccCheckExampleDestroy(ctx),
     Steps: []resource.TestStep{
       {
         Config: testAccExampleConfig(),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleExists(resourceName),
+          testAccCheckExampleExists(ctx, resourceName),
           // ... additional checks ...
         ),
       },
@@ -884,8 +912,8 @@ Searching for usage of `acctest.PreCheckOrganizationsAccount` in the codebase wi
 
 When testing requires AWS infrastructure in a second or third AWS region, the below changes to the normal setup will allow the management or reference of resources and data sources across regions:
 
-- In the `PreCheck` function, include `acctest.PreCheckMultipleRegion(t, ###)` to ensure a standardized set of information is required for cross-region testing configuration. If the infrastructure in the second AWS region is also in a second AWS account also include `acctest.PreCheckOrganizationsAccount(t)`
-- Switch usage of `ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories` to `ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2)` (where the last parameter is number of regions, 2 or 3)
+- In the `PreCheck` function, include `acctest.PreCheckMultipleRegion(t, ###)` to ensure a standardized set of information is required for cross-region testing configuration. If the infrastructure in the second AWS region is also in a second AWS account also include `acctest.PreCheckOrganizationsAccount(ctx, t)`
+- Switch usage of `ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories` to `ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2)` (where the last parameter is number of regions, 2 or 3)
 - Add `acctest.ConfigMultipleRegionProvider(###)` to the test configuration and use `provider = awsalternate` (and potentially `provider = awsthird`) for cross-region resources. The resource that is the focus of the acceptance test should _not_ use the alternative providers to simplify the testing setup. If the infrastructure in the second AWS region is also in a second AWS account use `testAccAlternateAccountAlternateRegionProviderConfig()` (EC2) instead
 - For any `TestStep` that includes `ImportState: true`, add the `Config` that matches the previous `TestStep` `Config`
 
@@ -893,22 +921,23 @@ An example acceptance test implementation can be seen below:
 
 ```go
 func TestAccExample_basic(t *testing.T) {
+  ctx := acctest.Context(t)
   var providers []*schema.Provider
   resourceName := "aws_example.test"
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck: func() {
-      acctest.PreCheck(t)
+      acctest.PreCheck(ctx, t)
       acctest.PreCheckMultipleRegion(t, 2)
     },
     ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
-    ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
-    CheckDestroy:             testAccCheckExampleDestroy,
+    ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
+    CheckDestroy:             testAccCheckExampleDestroy(ctx),
     Steps: []resource.TestStep{
       {
         Config: testAccExampleConfig(),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleExists(resourceName),
+          testAccCheckExampleExists(ctx, resourceName),
           // ... additional checks ...
         ),
       },
@@ -943,118 +972,6 @@ resource "aws_example" "test" {
 
 Searching for usage of `acctest.PreCheckMultipleRegion` in the codebase will yield real world examples of this setup in action.
 
-#### Service-Specific Region Acceptance Testing
-
-Certain AWS service APIs are only available in specific AWS regions. For example as of this writing, the `pricing` service is available in `ap-south-1` and `us-east-1`, but no other regions or partitions. When encountering these types of services, the acceptance testing can be setup to automatically detect the correct region(s), while skipping the testing in unsupported partitions.
-
-To prepare the shared service functionality, create a file named `internal/service/{SERVICE}/acc_test.go`. A starting example with the Pricing service (`internal/service/pricing/acc_test.go`):
-
-```go
-package aws
-
-import (
-  "context"
-  "sync"
-  "testing"
-
-  "github.com/aws/aws-sdk-go/aws/endpoints"
-  "github.com/aws/aws-sdk-go/service/pricing"
-  "github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-  "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-  "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-  "github.com/hashicorp/terraform-provider-aws/internal/acctest"
-  "github.com/hashicorp/terraform-provider-aws/internal/provider"
-)
-
-// testAccPricingRegion is the chosen Pricing testing region
-//
-// Cached to prevent issues should multiple regions become available.
-var testAccPricingRegion string
-
-// testAccProviderPricing is the Pricing provider instance
-//
-// This Provider can be used in testing code for API calls without requiring
-// the use of saving and referencing specific ProviderFactories instances.
-//
-// testAccPreCheckPricing(t) must be called before using this provider instance.
-var testAccProviderPricing *schema.Provider
-
-// testAccProviderPricingConfigure ensures the provider is only configured once
-var testAccProviderPricingConfigure sync.Once
-
-// testAccPreCheckPricing verifies AWS credentials and that Pricing is supported
-func testAccPreCheckPricing(t *testing.T) {
-  acctest.PreCheckPartitionHasService(pricing.EndpointsID, t)
-
-  // Since we are outside the scope of the Terraform configuration we must
-  // call Configure() to properly initialize the provider configuration.
-  testAccProviderPricingConfigure.Do(func() {
-    testAccProviderPricing = provider.Provider()
-
-    config := map[string]interface{}{
-      "region": testAccGetPricingRegion(),
-    }
-
-    diags := testAccProviderPricing.Configure(context.Background(), terraform.NewResourceConfigRaw(config))
-
-    if diags != nil && diags.HasError() {
-      for _, d := range diags {
-        if d.Severity == diag.Error {
-          t.Fatalf("configuring Pricing provider: %s", d.Summary)
-        }
-      }
-    }
-  })
-}
-
-// testAccPricingRegionProviderConfig is the Terraform provider configuration for Pricing region testing
-//
-// Testing Pricing assumes no other provider configurations
-// are necessary and overwrites the "aws" provider configuration.
-func testAccPricingRegionProviderConfig() string {
-  return acctest.ConfigRegionalProvider(testAccGetPricingRegion())
-}
-
-// testAccGetPricingRegion returns the Pricing region for testing
-func testAccGetPricingRegion() string {
-  if testAccPricingRegion != "" {
-    return testAccPricingRegion
-  }
-
-  if rs, ok := endpoints.RegionsForService(endpoints.DefaultPartitions(), testAccGetPartition(), pricing.ServiceName); ok {
-    // return available region (random if multiple)
-    for regionID := range rs {
-      testAccPricingRegion = regionID
-      return testAccPricingRegion
-    }
-  }
-
-  testAccPricingRegion = testAccGetRegion()
-
-  return testAccPricingRegion
-}
-```
-
-For the resource or data source acceptance tests, the key items to adjust are:
-
-* Ensure `TestCase` uses `ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories` instead of `ProviderFactories: acctest.ProviderFactories` or `Providers: acctest.Providers`
-* Add the call for the new `PreCheck` function (keeping `acctest.PreCheck(t)`), e.g. `PreCheck: func() { acctest.PreCheck(t); testAccPreCheckPricing(t) },`
-* If the testing is for a managed resource with a `CheckDestroy` function, ensure it uses the new provider instance, e.g. `testAccProviderPricing`, instead of `acctest.Provider`.
-* If the testing is for a managed resource with a `Check...Exists` function, ensure it uses the new provider instance, e.g. `testAccProviderPricing`, instead of `acctest.Provider`.
-* In each `TestStep` configuration, ensure the new provider configuration function is called, e.g.
-
-```go
-func testAccDataSourcePricingProductConfigRedshift() string {
-  return acctest.ConfigCompose(
-    testAccPricingRegionProviderConfig(),
-    `
-# ... test configuration ...
-`)
-}
-```
-
-If the testing configurations require more than one region, reach out to the maintainers for further assistance.
-
 #### Acceptance Test Concurrency
 
 Certain AWS service APIs allow a limited number of a certain component, while the acceptance testing runs at a default concurrency of twenty tests at a time. For example as of this writing, the SageMaker service only allows one SageMaker Domain per AWS Region. Running the tests with the default concurrency will fail with API errors relating to the component quota being exceeded.
@@ -1063,32 +980,24 @@ When encountering these types of components, the acceptance testing can be setup
 
 To convert to serialized (one test at a time) acceptance testing:
 
-- Convert all existing capital `T` test functions with the limited component to begin with a lowercase `t`, e.g., `TestAccSageMakerDomain_basic` becomes `testAccSageMakerDomain_basic`. This will prevent the test framework from executing these tests directly as the prefix `Test` is required.
+- Convert all existing capital `T` test functions with the limited component to begin with a lowercase `t`, e.g., `TestAccSageMakerDomain_basic` becomes `testDomain_basic`. This will prevent the test framework from executing these tests directly as the prefix `Test` is required.
     - In each of these test functions, convert `resource.ParallelTest` to `resource.Test`
 - Create a capital `T` `TestAcc{Service}{Thing}_serial` test function that then references all the lowercase `t` test functions. If multiple test files are referenced, this new test be created in a new shared file such as `internal/service/{SERVICE}/{SERVICE}_test.go`. The contents of this test can be setup like the following:
 
 ```go
 func TestAccExampleThing_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"Thing": {
-			"basic":        testAccExampleThing_basic,
-			"disappears":   testAccExampleThing_disappears,
+			"basic":        testAccThing_basic,
+			"disappears":   testAccThing_disappears,
 			// ... potentially other resource tests ...
 		},
 		// ... potentially other top level resource test groups ...
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 ```
 
@@ -1112,20 +1021,21 @@ For example:
 
 ```go
 func TestAccExampleThingDataSource_Name(t *testing.T) {
+  ctx := acctest.Context(t)
   rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
   dataSourceName := "data.aws_example_thing.test"
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:                 func() { acctest.PreCheck(t) },
+    PreCheck:                 func() { acctest.PreCheck(ctx, t) },
     ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
     ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    CheckDestroy:             testAccCheckExampleThingDestroy,
+    CheckDestroy:             testAccCheckExampleThingDestroy(ctx),
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingDataSourceConfigName(rName),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleThingExists(resourceName),
+          testAccCheckExampleThingExists(ctx, resourceName),
           resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
           resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
           resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
@@ -1179,12 +1089,21 @@ To run sweepers with an assumed role, use the following additional environment v
 
 ### Sweeper Checklists
 
-- __Add Service To Sweeper List__: To allow sweeping for a given service, it needs to be registered in the list of services to be swept, at `internal/sweep/sweep_test.go`.
 - __Add Resource Sweeper Implementation__: See [Writing Test Sweepers](#writing-test-sweepers).
+- __Add Service To Sweeper List__: Once a `sweep.go` file is present in the service subdirectory, run `make gen` to regenerate the list of imports in `internal/sweep/sweep_test.go`.
 
 ### Writing Test Sweepers
 
-The first step is to initialize the resource into the test sweeper framework:
+Sweeper logic should be written to a file called `sweep.go` in the appropriate service subdirectory (`internal/service/{serviceName}`). This file should include the following build tags above the package declaration:
+
+```go
+//go:build sweep
+// +build sweep
+
+package example
+```
+
+Next, initialize the resource into the test sweeper framework:
 
 ```go
 func init() {
@@ -1203,13 +1122,14 @@ Then add the actual implementation. Preferably, if a paginated SDK call is avail
 
 ```go
 func sweepThings(region string) error {
+  ctx := sweep.Context(region)
   client, err := sweep.SharedRegionalSweepClient(region)
 
   if err != nil {
     return fmt.Errorf("getting client: %w", err)
   }
 
-  conn := client.(*conns.AWSClient).ExampleConn
+  conn := client.(*conns.AWSClient).ExampleConn()
   sweepResources := make([]sweep.Sweepable, 0)
   var errs *multierror.Error
 
@@ -1230,8 +1150,8 @@ func sweepThings(region string) error {
       // Perform resource specific pre-sweep setup.
       // For example, you may need to perform one or more of these types of pre-sweep tasks, specific to the resource:
       //
-      // err := r.Read(d, client)             // fill in data
-      // d.Set("skip_final_snapshot", true)   // set an argument in order to delete
+      // err := sweep.ReadResource(ctx, r, d, client) // fill in data
+      // d.Set("skip_final_snapshot", true)           // set an argument in order to delete
 
       // This "if" is only needed if the pre-sweep setup can produce errors.
       // Otherwise, do not include it.
@@ -1269,13 +1189,14 @@ Otherwise, if no paginated SDK call is available:
 
 ```go
 func sweepThings(region string) error {
+  ctx := sweep.Context(region)
   client, err := sweep.SharedRegionalSweepClient(region)
 
   if err != nil {
     return fmt.Errorf("getting client: %w", err)
   }
 
-  conn := client.(*conns.AWSClient).ExampleConn
+  conn := client.(*conns.AWSClient).ExampleConn()
   sweepResources := make([]sweep.Sweepable, 0)
   var errs *multierror.Error
 
@@ -1294,8 +1215,8 @@ func sweepThings(region string) error {
       // Perform resource specific pre-sweep setup.
       // For example, you may need to perform one or more of these types of pre-sweep tasks, specific to the resource:
       //
-      // err := r.Read(d, client)             // fill in data
-      // d.Set("skip_final_snapshot", true)   // set an argument in order to delete
+      // err := sweep.ReadResource(ctx, r, d, client) // fill in data
+      // d.Set("skip_final_snapshot", true)           // set an argument in order to delete
 
       // This "if" is only needed if the pre-sweep setup can produce errors.
       // Otherwise, do not include it.

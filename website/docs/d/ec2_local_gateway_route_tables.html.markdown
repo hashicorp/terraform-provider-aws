@@ -12,13 +12,13 @@ Provides information for multiple EC2 Local Gateway Route Tables, such as their 
 
 ## Example Usage
 
-The following shows outputing all Local Gateway Route Table Ids.
+The following shows outputting all Local Gateway Route Table Ids.
 
 ```terraform
-data "aws_ec2_local_gateway_route_table" "foo" {}
+data "aws_ec2_local_gateway_route_tables" "foo" {}
 
 output "foo" {
-  value = data.aws_ec2_local_gateway_route_table.foo.ids
+  value = data.aws_ec2_local_gateway_route_tables.foo.ids
 }
 ```
 

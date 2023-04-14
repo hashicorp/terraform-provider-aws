@@ -1,29 +1,34 @@
 package sagemaker
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_sagemaker_endpoint", name="Endpoint")
+// @Tags(identifierAttribute="arn")
 func ResourceEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceEndpointCreate,
-		Read:   resourceEndpointRead,
-		Update: resourceEndpointUpdate,
-		Delete: resourceEndpointDelete,
+		CreateWithoutTimeout: resourceEndpointCreate,
+		ReadWithoutTimeout:   resourceEndpointRead,
+		UpdateWithoutTimeout: resourceEndpointUpdate,
+		DeleteWithoutTimeout: resourceEndpointDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -153,43 +158,39 @@ func ResourceEndpoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validName,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	var name string
 	if v, ok := d.GetOk("name"); ok {
 		name = v.(string)
 	} else {
-		name = resource.UniqueId()
+		name = id.UniqueId()
 	}
 
 	createOpts := &sagemaker.CreateEndpointInput{
 		EndpointName:       aws.String(name),
 		EndpointConfigName: aws.String(d.Get("endpoint_config_name").(string)),
+		Tags:               GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("deployment_config"); ok && (len(v.([]interface{})) > 0) {
 		createOpts.DeploymentConfig = expandEndpointDeploymentConfig(v.([]interface{}))
 	}
 
-	if len(tags) > 0 {
-		createOpts.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	log.Printf("[DEBUG] SageMaker Endpoint create config: %#v", *createOpts)
-	_, err := conn.CreateEndpoint(createOpts)
+	_, err := conn.CreateEndpointWithContext(ctx, createOpts)
 	if err != nil {
-		return fmt.Errorf("creating SageMaker Endpoint: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker Endpoint: %s", err)
 	}
 
 	d.SetId(name)
@@ -198,28 +199,27 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 		EndpointName: aws.String(name),
 	}
 
-	if err := conn.WaitUntilEndpointInService(describeInput); err != nil {
-		return fmt.Errorf("waiting for SageMaker Endpoint (%s) to be in service: %w", name, err)
+	if err := conn.WaitUntilEndpointInServiceWithContext(ctx, describeInput); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Endpoint (%s) to be in service: %s", name, err)
 	}
 
-	return resourceEndpointRead(d, meta)
+	return append(diags, resourceEndpointRead(ctx, d, meta)...)
 }
 
-func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
-	endpoint, err := FindEndpointByName(conn, d.Id())
+	endpoint, err := FindEndpointByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SageMaker Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading SageMaker Endpoint (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker Endpoint (%s): %s", d.Id(), err)
 	}
 
 	d.Set("name", endpoint.EndpointName)
@@ -227,38 +227,15 @@ func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", endpoint.EndpointArn)
 
 	if err := d.Set("deployment_config", flattenEndpointDeploymentConfig(endpoint.LastDeploymentConfig)); err != nil {
-		return fmt.Errorf("setting deployment_config for SageMaker Endpoint (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting deployment_config for SageMaker Endpoint (%s): %s", d.Id(), err)
 	}
 
-	tags, err := ListTags(conn, aws.StringValue(endpoint.EndpointArn))
-	if err != nil {
-		return fmt.Errorf("listing tags for SageMaker Endpoint (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating SageMaker Endpoint (%s) tags: %w", d.Id(), err)
-		}
-	}
+func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	if d.HasChanges("endpoint_config_name", "deployment_config") {
 		modifyOpts := &sagemaker.UpdateEndpointInput{
@@ -271,50 +248,51 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[INFO] Modifying endpoint_config_name attribute for %s: %#v", d.Id(), modifyOpts)
-		if _, err := conn.UpdateEndpoint(modifyOpts); err != nil {
-			return fmt.Errorf("updating SageMaker Endpoint (%s): %w", d.Id(), err)
+		if _, err := conn.UpdateEndpointWithContext(ctx, modifyOpts); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker Endpoint (%s): %s", d.Id(), err)
 		}
 
 		describeInput := &sagemaker.DescribeEndpointInput{
 			EndpointName: aws.String(d.Id()),
 		}
 
-		err := conn.WaitUntilEndpointInService(describeInput)
+		err := conn.WaitUntilEndpointInServiceWithContext(ctx, describeInput)
 		if err != nil {
-			return fmt.Errorf("waiting for SageMaker Endpoint (%s) to be in service: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Endpoint (%s) to be in service: %s", d.Id(), err)
 		}
 	}
 
-	return resourceEndpointRead(d, meta)
+	return append(diags, resourceEndpointRead(ctx, d, meta)...)
 }
 
-func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	deleteEndpointOpts := &sagemaker.DeleteEndpointInput{
 		EndpointName: aws.String(d.Id()),
 	}
 	log.Printf("[INFO] Deleting SageMaker Endpoint: %s", d.Id())
 
-	_, err := conn.DeleteEndpoint(deleteEndpointOpts)
+	_, err := conn.DeleteEndpointWithContext(ctx, deleteEndpointOpts)
 
 	if tfawserr.ErrCodeEquals(err, "ValidationException") {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting SageMaker Endpoint (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Endpoint (%s): %s", d.Id(), err)
 	}
 
 	describeInput := &sagemaker.DescribeEndpointInput{
 		EndpointName: aws.String(d.Id()),
 	}
 
-	if err := conn.WaitUntilEndpointDeleted(describeInput); err != nil {
-		return fmt.Errorf("waiting for SageMaker Endpoint (%s) to be deleted: %w", d.Id(), err)
+	if err := conn.WaitUntilEndpointDeletedWithContext(ctx, describeInput); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Endpoint (%s) to be deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandEndpointDeploymentConfig(configured []interface{}) *sagemaker.DeploymentConfig {

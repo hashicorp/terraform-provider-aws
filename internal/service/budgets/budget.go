@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -28,6 +28,7 @@ const (
 	BudgetIdPartsCount = 2
 )
 
+// @SDKResource("aws_budgets_budget")
 func ResourceBudget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBudgetCreate,
@@ -36,7 +37,7 @@ func ResourceBudget() *schema.Resource {
 		DeleteWithoutTimeout: resourceBudgetDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -298,7 +299,7 @@ func ResourceBudget() *schema.Resource {
 }
 
 func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BudgetsConn
+	conn := meta.(*conns.AWSClient).BudgetsConn()
 
 	budget, err := expandBudgetUnmarshal(d)
 
@@ -338,7 +339,7 @@ func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BudgetsConn
+	conn := meta.(*conns.AWSClient).BudgetsConn()
 
 	accountID, budgetName, err := BudgetParseResourceID(d.Id())
 
@@ -464,7 +465,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceBudgetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BudgetsConn
+	conn := meta.(*conns.AWSClient).BudgetsConn()
 
 	accountID, _, err := BudgetParseResourceID(d.Id())
 
@@ -497,7 +498,7 @@ func resourceBudgetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceBudgetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BudgetsConn
+	conn := meta.(*conns.AWSClient).BudgetsConn()
 
 	accountID, budgetName, err := BudgetParseResourceID(d.Id())
 
@@ -548,7 +549,7 @@ func FindBudgetByTwoPartKey(ctx context.Context, conn *budgets.Budgets, accountI
 	output, err := conn.DescribeBudgetWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, budgets.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -589,7 +590,7 @@ func findNotifications(ctx context.Context, conn *budgets.Budgets, accountID, bu
 	})
 
 	if tfawserr.ErrCodeEquals(err, budgets.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -600,7 +601,7 @@ func findNotifications(ctx context.Context, conn *budgets.Budgets, accountID, bu
 	}
 
 	if len(output) == 0 {
-		return nil, &resource.NotFoundError{LastRequest: input}
+		return nil, &retry.NotFoundError{LastRequest: input}
 	}
 
 	return output, nil
@@ -631,7 +632,7 @@ func findSubscribers(ctx context.Context, conn *budgets.Budgets, accountID, budg
 	})
 
 	if tfawserr.ErrCodeEquals(err, budgets.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -642,7 +643,7 @@ func findSubscribers(ctx context.Context, conn *budgets.Budgets, accountID, budg
 	}
 
 	if len(output) == 0 {
-		return nil, &resource.NotFoundError{LastRequest: input}
+		return nil, &retry.NotFoundError{LastRequest: input}
 	}
 
 	return output, nil

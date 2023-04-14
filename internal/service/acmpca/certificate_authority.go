@@ -1,20 +1,25 @@
 package acmpca
 
 import (
-	"fmt"
+	"context"
+	"errors"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -23,16 +28,18 @@ const (
 	certificateAuthorityPermanentDeletionTimeInDaysDefault = certificateAuthorityPermanentDeletionTimeInDaysMax
 )
 
+// @SDKResource("aws_acmpca_certificate_authority", name="Certificate Authority")
+// @Tags(identifierAttribute="id")
 func ResourceCertificateAuthority() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceCertificateAuthorityCreate,
-		Read:   resourceCertificateAuthorityRead,
-		Update: resourceCertificateAuthorityUpdate,
-		Delete: resourceCertificateAuthorityDelete,
+		CreateWithoutTimeout: resourceCertificateAuthorityCreate,
+		ReadWithoutTimeout:   resourceCertificateAuthorityRead,
+		UpdateWithoutTimeout: resourceCertificateAuthorityUpdate,
+		DeleteWithoutTimeout: resourceCertificateAuthorityDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set(
 					"permanent_deletion_time_in_days",
 					certificateAuthorityPermanentDeletionTimeInDaysDefault,
@@ -229,28 +236,54 @@ func ResourceCertificateAuthority() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(0, 253),
+										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+											// Ignore attributes if CRL configuration is not enabled
+											if d.Get("revocation_configuration.0.crl_configuration.0.enabled").(bool) {
+												return old == new
+											}
+											return true
+										},
 									},
 									"enabled": {
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
-									// ValidationException: 1 validation error detected: Value null or empty at 'expirationInDays' failed to satisfy constraint: Member must not be null or empty.
-									// InvalidParameter: 1 validation error(s) found. minimum field value of 1, CreateCertificateAuthorityInput.RevocationConfiguration.CrlConfiguration.ExpirationInDays.
 									"expiration_in_days": {
 										Type:         schema.TypeInt,
-										Required:     true,
+										Optional:     true,
 										ValidateFunc: validation.IntBetween(1, 5000),
+										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+											// Ignore attributes if CRL configuration is not enabled
+											if d.Get("revocation_configuration.0.crl_configuration.0.enabled").(bool) {
+												return old == new
+											}
+											return true
+										},
 									},
 									"s3_bucket_name": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 255),
+										ValidateFunc: validation.StringLenBetween(3, 255),
+										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+											// Ignore attributes if CRL configuration is not enabled
+											if d.Get("revocation_configuration.0.crl_configuration.0.enabled").(bool) {
+												return old == new
+											}
+											return true
+										},
 									},
 									"s3_object_acl": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
 										ValidateFunc: validation.StringInSlice(acmpca.S3ObjectAcl_Values(), false),
+										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+											// Ignore attributes if CRL configuration is not enabled
+											if d.Get("revocation_configuration.0.crl_configuration.0.enabled").(bool) {
+												return old == new
+											}
+											return true
+										},
 									},
 								},
 							},
@@ -293,8 +326,8 @@ func ResourceCertificateAuthority() *schema.Resource {
 				Computed:   true,
 				Deprecated: "The reported value of the \"status\" attribute is often inaccurate. Use the resource's \"enabled\" attribute to explicitly set status.",
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -314,94 +347,65 @@ func ResourceCertificateAuthority() *schema.Resource {
 	}
 }
 
-func resourceCertificateAuthorityCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceCertificateAuthorityCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 
 	input := &acmpca.CreateCertificateAuthorityInput{
 		CertificateAuthorityConfiguration: expandCertificateAuthorityConfiguration(d.Get("certificate_authority_configuration").([]interface{})),
 		CertificateAuthorityType:          aws.String(d.Get("type").(string)),
-		IdempotencyToken:                  aws.String(resource.UniqueId()),
+		IdempotencyToken:                  aws.String(id.UniqueId()),
 		RevocationConfiguration:           expandRevocationConfiguration(d.Get("revocation_configuration").([]interface{})),
+		Tags:                              GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("usage_mode"); ok {
 		input.UsageMode = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating ACM PCA Certificate Authority: %s", input)
-	var output *acmpca.CreateCertificateAuthorityOutput
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		var err error
-		output, err = conn.CreateCertificateAuthority(input)
-		if err != nil {
-			// ValidationException: The ACM Private CA service account 'acm-pca-prod-pdx' requires getBucketAcl permissions for your S3 bucket 'tf-acc-test-5224996536060125340'. Check your S3 bucket permissions and try again.
-			if tfawserr.ErrMessageContains(err, "ValidationException", "Check your S3 bucket permissions and try again") {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateCertificateAuthority(input)
-	}
-	if err != nil {
-		return fmt.Errorf("creating ACM PCA Certificate Authority: %s", err)
-	}
-
-	d.SetId(aws.StringValue(output.CertificateAuthorityArn))
-
-	_, err = waitCertificateAuthorityCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	// ValidationException: The ACM Private CA service account 'acm-pca-prod-pdx' requires getBucketAcl permissions for your S3 bucket 'tf-acc-test-5224996536060125340'. Check your S3 bucket permissions and try again.
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 1*time.Minute, func() (interface{}, error) {
+		return conn.CreateCertificateAuthorityWithContext(ctx, input)
+	}, "ValidationException", "Check your S3 bucket permissions and try again")
 
 	if err != nil {
-		return fmt.Errorf("waiting for ACM PCA Certificate Authority %q to be active or pending certificate: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "creating ACM PCA Certificate Authority: %s", err)
 	}
 
-	return resourceCertificateAuthorityRead(d, meta)
+	d.SetId(aws.StringValue(outputRaw.(*acmpca.CreateCertificateAuthorityOutput).CertificateAuthorityArn))
+
+	if _, err := waitCertificateAuthorityCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for ACM PCA Certificate Authority (%s) create: %s", d.Id(), err)
+	}
+
+	return append(diags, resourceCertificateAuthorityRead(ctx, d, meta)...)
 }
 
-func resourceCertificateAuthorityRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 
-	certificateAuthority, err := FindCertificateAuthorityByARN(conn, d.Id())
+	certificateAuthority, err := FindCertificateAuthorityByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ACM PCA Certificate Authority (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading ACM PCA Certificate Authority (%s): %w", d.Id(), err)
-	}
-
-	if certificateAuthority == nil || aws.StringValue(certificateAuthority.Status) == acmpca.CertificateAuthorityStatusDeleted {
-		if d.IsNewResource() {
-			return fmt.Errorf("reading ACM PCA Certificate Authority (%s): not found or deleted", d.Id())
-		}
-
-		log.Printf("[WARN] ACM PCA Certificate Authority (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", certificateAuthority.Arn)
 	if err := d.Set("certificate_authority_configuration", flattenCertificateAuthorityConfiguration(certificateAuthority.CertificateAuthorityConfiguration)); err != nil {
-		return fmt.Errorf("setting certificate_authority_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting certificate_authority_configuration: %s", err)
 	}
 	d.Set("enabled", (aws.StringValue(certificateAuthority.Status) != acmpca.CertificateAuthorityStatusDisabled))
 	d.Set("not_after", aws.TimeValue(certificateAuthority.NotAfter).Format(time.RFC3339))
 	d.Set("not_before", aws.TimeValue(certificateAuthority.NotBefore).Format(time.RFC3339))
 	if err := d.Set("revocation_configuration", flattenRevocationConfiguration(certificateAuthority.RevocationConfiguration)); err != nil {
-		return fmt.Errorf("setting revocation_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting revocation_configuration: %s", err)
 	}
 	d.Set("serial", certificateAuthority.Serial)
 	d.Set("status", certificateAuthority.Status)
@@ -412,20 +416,18 @@ func resourceCertificateAuthorityRead(d *schema.ResourceData, meta interface{}) 
 		CertificateAuthorityArn: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Reading ACM PCA Certificate Authority Certificate: %s", getCertificateAuthorityCertificateInput)
-
-	getCertificateAuthorityCertificateOutput, err := conn.GetCertificateAuthorityCertificate(getCertificateAuthorityCertificateInput)
+	getCertificateAuthorityCertificateOutput, err := conn.GetCertificateAuthorityCertificateWithContext(ctx, getCertificateAuthorityCertificateInput)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] ACM PCA Certificate Authority (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	// Returned when in PENDING_CERTIFICATE status
 	// InvalidStateException: The certificate authority XXXXX is not in the correct state to have a certificate signing request.
 	if err != nil && !tfawserr.ErrCodeEquals(err, acmpca.ErrCodeInvalidStateException) {
-		return fmt.Errorf("reading ACM PCA Certificate Authority (%s) Certificate: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority (%s) Certificate: %s", d.Id(), err)
 	}
 
 	d.Set("certificate", "")
@@ -441,18 +443,18 @@ func resourceCertificateAuthorityRead(d *schema.ResourceData, meta interface{}) 
 
 	log.Printf("[DEBUG] Reading ACM PCA Certificate Authority Certificate Signing Request: %s", getCertificateAuthorityCsrInput)
 
-	getCertificateAuthorityCsrOutput, err := conn.GetCertificateAuthorityCsr(getCertificateAuthorityCsrInput)
+	getCertificateAuthorityCsrOutput, err := conn.GetCertificateAuthorityCsrWithContext(ctx, getCertificateAuthorityCsrInput)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] ACM PCA Certificate Authority (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	// Returned when in PENDING_CERTIFICATE status
 	// InvalidStateException: The certificate authority XXXXX is not in the correct state to have a certificate signing request.
 	if err != nil && !tfawserr.ErrCodeEquals(err, acmpca.ErrCodeInvalidStateException) {
-		return fmt.Errorf("reading ACM PCA Certificate Authority (%s) Certificate Signing Request: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority (%s) Certificate Signing Request: %s", d.Id(), err)
 	}
 
 	d.Set("certificate_signing_request", "")
@@ -460,80 +462,54 @@ func resourceCertificateAuthorityRead(d *schema.ResourceData, meta interface{}) 
 		d.Set("certificate_signing_request", getCertificateAuthorityCsrOutput.Csr)
 	}
 
-	tags, err := ListTags(conn, d.Id())
-
-	if err != nil {
-		return fmt.Errorf("listing tags for ACM PCA Certificate Authority (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceCertificateAuthorityUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
-	updateCertificateAuthority := false
+func resourceCertificateAuthorityUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 
-	input := &acmpca.UpdateCertificateAuthorityInput{
-		CertificateAuthorityArn: aws.String(d.Id()),
-	}
-
-	if d.HasChange("enabled") {
-		input.Status = aws.String(acmpca.CertificateAuthorityStatusActive)
-		if !d.Get("enabled").(bool) {
-			input.Status = aws.String(acmpca.CertificateAuthorityStatusDisabled)
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &acmpca.UpdateCertificateAuthorityInput{
+			CertificateAuthorityArn: aws.String(d.Id()),
 		}
-		updateCertificateAuthority = true
-	}
 
-	if d.HasChange("revocation_configuration") {
-		input.RevocationConfiguration = expandRevocationConfiguration(d.Get("revocation_configuration").([]interface{}))
-		updateCertificateAuthority = true
-	}
+		if d.HasChange("enabled") {
+			input.Status = aws.String(acmpca.CertificateAuthorityStatusActive)
+			if !d.Get("enabled").(bool) {
+				input.Status = aws.String(acmpca.CertificateAuthorityStatusDisabled)
+			}
+		}
 
-	if updateCertificateAuthority {
-		log.Printf("[DEBUG] Updating ACM PCA Certificate Authority: %s", input)
-		_, err := conn.UpdateCertificateAuthority(input)
+		if d.HasChange("revocation_configuration") {
+			input.RevocationConfiguration = expandRevocationConfiguration(d.Get("revocation_configuration").([]interface{}))
+		}
+
+		_, err := conn.UpdateCertificateAuthorityWithContext(ctx, input)
+
 		if err != nil {
-			return fmt.Errorf("updating ACM PCA Certificate Authority: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating ACM PCA Certificate Authority (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("updating ACM PCA Certificate Authority (%s) tags: %s", d.Id(), err)
-		}
-	}
-
-	return resourceCertificateAuthorityRead(d, meta)
+	return append(diags, resourceCertificateAuthorityRead(ctx, d, meta)...)
 }
 
-func resourceCertificateAuthorityDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
+func resourceCertificateAuthorityDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 
 	// The Certificate Authority must be in PENDING_CERTIFICATE or DISABLED state before deleting.
 	updateInput := &acmpca.UpdateCertificateAuthorityInput{
 		CertificateAuthorityArn: aws.String(d.Id()),
 		Status:                  aws.String(acmpca.CertificateAuthorityStatusDisabled),
 	}
-	_, err := conn.UpdateCertificateAuthority(updateInput)
+	_, err := conn.UpdateCertificateAuthorityWithContext(ctx, updateInput)
 	if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 	if err != nil && !tfawserr.ErrMessageContains(err, acmpca.ErrCodeInvalidStateException, "The certificate authority must be in the ACTIVE or DISABLED state to be updated") {
-		return fmt.Errorf("setting ACM PCA Certificate Authority (%s) to DISABLED status before deleting: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting ACM PCA Certificate Authority (%s) to DISABLED status before deleting: %s", d.Id(), err)
 	}
 
 	deleteInput := &acmpca.DeleteCertificateAuthorityInput{
@@ -545,16 +521,96 @@ func resourceCertificateAuthorityDelete(d *schema.ResourceData, meta interface{}
 	}
 
 	log.Printf("[INFO] Deleting ACM PCA Certificate Authority: %s", d.Id())
-	_, err = conn.DeleteCertificateAuthority(deleteInput)
+	_, err = conn.DeleteCertificateAuthorityWithContext(ctx, deleteInput)
 	if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("deleting ACM PCA Certificate Authority (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting ACM PCA Certificate Authority (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
+
+func FindCertificateAuthorityByARN(ctx context.Context, conn *acmpca.ACMPCA, arn string) (*acmpca.CertificateAuthority, error) {
+	input := &acmpca.DescribeCertificateAuthorityInput{
+		CertificateAuthorityArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeCertificateAuthorityWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.CertificateAuthority == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if status := aws.StringValue(output.CertificateAuthority.Status); status == acmpca.CertificateAuthorityStatusDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.CertificateAuthority.Arn) != arn {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output.CertificateAuthority, nil
+}
+
+func statusCertificateAuthority(ctx context.Context, conn *acmpca.ACMPCA, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindCertificateAuthorityByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitCertificateAuthorityCreated(ctx context.Context, conn *acmpca.ACMPCA, arn string, timeout time.Duration) (*acmpca.CertificateAuthority, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{acmpca.CertificateAuthorityStatusCreating},
+		Target:  []string{acmpca.CertificateAuthorityStatusActive, acmpca.CertificateAuthorityStatusPendingCertificate},
+		Refresh: statusCertificateAuthority(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*acmpca.CertificateAuthority); ok {
+		if status := aws.StringValue(output.Status); status == acmpca.CertificateAuthorityStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureReason)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
+	certificateAuthorityActiveTimeout = 1 * time.Minute
+)
 
 func expandASN1Subject(l []interface{}) *acmpca.ASN1Subject {
 	if len(l) == 0 {
@@ -630,21 +686,25 @@ func expandCrlConfiguration(l []interface{}) *acmpca.CrlConfiguration {
 
 	m := l[0].(map[string]interface{})
 
+	crlEnabled := m["enabled"].(bool)
+
 	config := &acmpca.CrlConfiguration{
-		Enabled: aws.Bool(m["enabled"].(bool)),
+		Enabled: aws.Bool(crlEnabled),
 	}
 
-	if v, ok := m["custom_cname"]; ok && v.(string) != "" {
-		config.CustomCname = aws.String(v.(string))
-	}
-	if v, ok := m["expiration_in_days"]; ok && v.(int) > 0 {
-		config.ExpirationInDays = aws.Int64(int64(v.(int)))
-	}
-	if v, ok := m["s3_bucket_name"]; ok && v.(string) != "" {
-		config.S3BucketName = aws.String(v.(string))
-	}
-	if v, ok := m["s3_object_acl"]; ok && v.(string) != "" {
-		config.S3ObjectAcl = aws.String(v.(string))
+	if crlEnabled {
+		if v, ok := m["custom_cname"]; ok && v.(string) != "" {
+			config.CustomCname = aws.String(v.(string))
+		}
+		if v, ok := m["expiration_in_days"]; ok && v.(int) > 0 {
+			config.ExpirationInDays = aws.Int64(int64(v.(int)))
+		}
+		if v, ok := m["s3_bucket_name"]; ok && v.(string) != "" {
+			config.S3BucketName = aws.String(v.(string))
+		}
+		if v, ok := m["s3_object_acl"]; ok && v.(string) != "" {
+			config.S3ObjectAcl = aws.String(v.(string))
+		}
 	}
 
 	return config

@@ -1,12 +1,13 @@
 package ram
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -20,9 +21,9 @@ const (
 )
 
 // StatusResourceShareInvitation fetches the ResourceShareInvitation and its Status
-func StatusResourceShareInvitation(conn *ram.RAM, arn string) resource.StateRefreshFunc {
+func StatusResourceShareInvitation(ctx context.Context, conn *ram.RAM, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		invitation, err := FindResourceShareInvitationByARN(conn, arn)
+		invitation, err := FindResourceShareInvitationByARN(ctx, conn, arn)
 
 		if err != nil {
 			return nil, ResourceShareInvitationStatusUnknown, err
@@ -37,9 +38,9 @@ func StatusResourceShareInvitation(conn *ram.RAM, arn string) resource.StateRefr
 }
 
 // StatusResourceShareOwnerSelf fetches the ResourceShare and its Status
-func StatusResourceShareOwnerSelf(conn *ram.RAM, arn string) resource.StateRefreshFunc {
+func StatusResourceShareOwnerSelf(ctx context.Context, conn *ram.RAM, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		share, err := FindResourceShareOwnerSelfByARN(conn, arn)
+		share, err := FindResourceShareOwnerSelfByARN(ctx, conn, arn)
 
 		if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
 			return nil, ResourceShareStatusNotFound, nil
@@ -57,9 +58,9 @@ func StatusResourceShareOwnerSelf(conn *ram.RAM, arn string) resource.StateRefre
 	}
 }
 
-func StatusResourceSharePrincipalAssociation(conn *ram.RAM, resourceShareArn, principal string) resource.StateRefreshFunc {
+func StatusResourceSharePrincipalAssociation(ctx context.Context, conn *ram.RAM, resourceShareArn, principal string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		association, err := FindResourceSharePrincipalAssociationByShareARNPrincipal(conn, resourceShareArn, principal)
+		association, err := FindResourceSharePrincipalAssociationByShareARNPrincipal(ctx, conn, resourceShareArn, principal)
 
 		if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
 			return nil, PrincipalAssociationStatusNotFound, err

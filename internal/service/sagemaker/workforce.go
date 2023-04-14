@@ -1,28 +1,31 @@
 package sagemaker
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_sagemaker_workforce")
 func ResourceWorkforce() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceWorkforceCreate,
-		Read:   resourceWorkforceRead,
-		Update: resourceWorkforceUpdate,
-		Delete: resourceWorkforceDelete,
+		CreateWithoutTimeout: resourceWorkforceCreate,
+		ReadWithoutTimeout:   resourceWorkforceRead,
+		UpdateWithoutTimeout: resourceWorkforceUpdate,
+		DeleteWithoutTimeout: resourceWorkforceDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -179,8 +182,9 @@ func ResourceWorkforce() *schema.Resource {
 	}
 }
 
-func resourceWorkforceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceWorkforceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	name := d.Get("workforce_name").(string)
 	input := &sagemaker.CreateWorkforceInput{
@@ -203,34 +207,35 @@ func resourceWorkforceCreate(d *schema.ResourceData, meta interface{}) error {
 		input.WorkforceVpcConfig = expandWorkforceVPCConfig(v.([]interface{}))
 	}
 
-	_, err := conn.CreateWorkforce(input)
+	_, err := conn.CreateWorkforceWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating SageMaker Workforce (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker Workforce (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
-	if _, err := WaitWorkforceActive(conn, name); err != nil {
-		return fmt.Errorf("waiting for SageMaker Workforce (%s) create: %w", d.Id(), err)
+	if _, err := WaitWorkforceActive(ctx, conn, name); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Workforce (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceWorkforceRead(d, meta)
+	return append(diags, resourceWorkforceRead(ctx, d, meta)...)
 }
 
-func resourceWorkforceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceWorkforceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
-	workforce, err := FindWorkforceByName(conn, d.Id())
+	workforce, err := FindWorkforceByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SageMaker Workforce (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading SageMaker Workforce (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker Workforce (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", workforce.WorkforceArn)
@@ -238,28 +243,29 @@ func resourceWorkforceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("workforce_name", workforce.WorkforceName)
 
 	if err := d.Set("cognito_config", flattenWorkforceCognitoConfig(workforce.CognitoConfig)); err != nil {
-		return fmt.Errorf("setting cognito_config : %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting cognito_config : %s", err)
 	}
 
 	if workforce.OidcConfig != nil {
 		if err := d.Set("oidc_config", flattenWorkforceOIDCConfig(workforce.OidcConfig, d.Get("oidc_config.0.client_secret").(string))); err != nil {
-			return fmt.Errorf("setting oidc_config: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting oidc_config: %s", err)
 		}
 	}
 
 	if err := d.Set("source_ip_config", flattenWorkforceSourceIPConfig(workforce.SourceIpConfig)); err != nil {
-		return fmt.Errorf("setting source_ip_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting source_ip_config: %s", err)
 	}
 
 	if err := d.Set("workforce_vpc_config", flattenWorkforceVPCConfig(workforce.WorkforceVpcConfig)); err != nil {
-		return fmt.Errorf("setting workforce_vpc_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting workforce_vpc_config: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceWorkforceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceWorkforceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	input := &sagemaker.UpdateWorkforceInput{
 		WorkforceName: aws.String(d.Id()),
@@ -277,40 +283,41 @@ func resourceWorkforceUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.WorkforceVpcConfig = expandWorkforceVPCConfig(d.Get("workforce_vpc_config").([]interface{}))
 	}
 
-	_, err := conn.UpdateWorkforce(input)
+	_, err := conn.UpdateWorkforceWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("updating SageMaker Workforce (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating SageMaker Workforce (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitWorkforceActive(conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for SageMaker Workforce (%s) update: %w", d.Id(), err)
+	if _, err := WaitWorkforceActive(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Workforce (%s) update: %s", d.Id(), err)
 	}
 
-	return resourceWorkforceRead(d, meta)
+	return append(diags, resourceWorkforceRead(ctx, d, meta)...)
 }
 
-func resourceWorkforceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceWorkforceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	log.Printf("[DEBUG] Deleting SageMaker Workforce: %s", d.Id())
-	_, err := conn.DeleteWorkforce(&sagemaker.DeleteWorkforceInput{
+	_, err := conn.DeleteWorkforceWithContext(ctx, &sagemaker.DeleteWorkforceInput{
 		WorkforceName: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrMessageContains(err, "ValidationException", "No workforce") {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting SageMaker Workforce (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Workforce (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitWorkforceDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for SageMaker Workforce (%s) delete: %w", d.Id(), err)
+	if _, err := WaitWorkforceDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Workforce (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandWorkforceSourceIPConfig(l []interface{}) *sagemaker.SourceIpConfig {

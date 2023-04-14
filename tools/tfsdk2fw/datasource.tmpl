@@ -3,24 +3,22 @@
 package {{ .PackageName }}
 
 import (
-    "context"
+	"context"
 
-    {{if .ImportFrameworkAttr }}"github.com/hashicorp/terraform-plugin-framework/attr"{{- end}}
-    "github.com/hashicorp/terraform-plugin-framework/datasource"
-    "github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
-    "github.com/hashicorp/terraform-plugin-framework/types"
+	{{if .ImportFrameworkAttr }}"github.com/hashicorp/terraform-plugin-framework/attr"{{- end}}
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	{{if .ImportProviderFrameworkTypes }}fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"{{- end}}
 )
 
-func init() {
-    registerFrameworkDataSourceFactory(newDataSource{{ .Name }})
-}
-
-// newDataSource{{ .Name }} instantiates a new DataSource for the {{ .TFTypeName }} data source.
+// @FrameworkDataSource
 func newDataSource{{ .Name }}(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSource{{ .Name }}{}, nil
+	d := &dataSource{{ .Name }}{}
+	d.SetMigratedFromPluginSDK(true)
+
+	return d, nil
 }
 
 type dataSource{{ .Name }} struct {
@@ -33,11 +31,9 @@ func (d *dataSource{{ .Name }}) Metadata(_ context.Context, request datasource.M
 	response.TypeName = "{{ .TFTypeName }}"
 }
 
-// GetSchema returns the schema for this data source.
-func (d *dataSource{{ .Name }}) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
-    schema := {{ .Schema }}
-
-    return schema, nil
+// Schema returns the schema for this data source.
+func (d *dataSource{{ .Name }}) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+    response.Schema = {{ .Schema }}
 }
 
 // Read is called when the provider must read data source values in order to update state.
@@ -51,7 +47,7 @@ func (d *dataSource{{ .Name }}) Read(ctx context.Context, request datasource.Rea
 		return
 	}
 
-	data.ID = types.String{Value: "TODO"}
+	data.ID = types.StringValue("TODO")
 
     response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

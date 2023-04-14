@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,8 +23,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_route53domains_registered_domain", name="Registered Domain")
+// @Tags(identifierAttribute="id")
 func ResourceRegisteredDomain() *schema.Resource {
 	contactSchema := &schema.Schema{
 		Type:     schema.TypeList,
@@ -214,9 +217,9 @@ func ResourceRegisteredDomain() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":         tftags.TagsSchema(),
-			"tags_all":     tftags.TagsSchemaComputed(),
-			"tech_contact": contactSchema,
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"tech_contact":    contactSchema,
 			"tech_privacy": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -242,7 +245,7 @@ func ResourceRegisteredDomain() *schema.Resource {
 }
 
 func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53DomainsClient
+	conn := meta.(*conns.AWSClient).Route53DomainsClient()
 
 	domainName := d.Get("domain_name").(string)
 	domainDetail, err := findDomainDetailByName(ctx, conn, domainName)
@@ -313,9 +316,8 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("error listing tags for Route 53 Domains Domain (%s): %s", d.Id(), err)
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	newTags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{}))).IgnoreConfig(ignoreTagsConfig)
+	newTags := KeyValueTags(ctx, GetTagsIn(ctx))
 	oldTags := tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if !oldTags.Equal(newTags) {
@@ -328,9 +330,7 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53DomainsClient
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).Route53DomainsClient()
 
 	domainDetail, err := findDomainDetailByName(ctx, conn, d.Id())
 
@@ -398,28 +398,11 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 	}
 	d.Set("whois_server", domainDetail.WhoIsServer)
 
-	tags, err := ListTags(ctx, conn, d.Id())
-
-	if err != nil {
-		return diag.Errorf("error listing tags for Route 53 Domains Domain (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("error setting tags_all: %s", err)
-	}
-
 	return nil
 }
 
 func resourceRegisteredDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53DomainsClient
+	conn := meta.(*conns.AWSClient).Route53DomainsClient()
 
 	if d.HasChanges("admin_contact", "registrant_contact", "tech_contact") {
 		var adminContact, registrantContact, techContact *types.ContactDetail
@@ -470,14 +453,6 @@ func resourceRegisteredDomainUpdate(ctx context.Context, d *schema.ResourceData,
 	if d.HasChange("transfer_lock") {
 		if err := modifyDomainTransferLock(ctx, conn, d.Id(), d.Get("transfer_lock").(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return diag.FromErr(err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("error updating Route 53 Domains Domain (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -645,7 +620,7 @@ func findDomainDetailByName(ctx context.Context, conn *route53domains.Client, na
 		var invalidInput *types.InvalidInput
 
 		if errors.As(err, &invalidInput) && strings.Contains(invalidInput.ErrorMessage(), "not found") {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -672,7 +647,7 @@ func findOperationDetailByID(ctx context.Context, conn *route53domains.Client, i
 		var invalidInput *types.InvalidInput
 
 		if errors.As(err, &invalidInput) && strings.Contains(invalidInput.ErrorMessage(), "not found") {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -692,7 +667,7 @@ func findOperationDetailByID(ctx context.Context, conn *route53domains.Client, i
 	return output, nil
 }
 
-func statusOperation(ctx context.Context, conn *route53domains.Client, id string) resource.StateRefreshFunc {
+func statusOperation(ctx context.Context, conn *route53domains.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findOperationDetailByID(ctx, conn, id)
 
@@ -709,7 +684,7 @@ func statusOperation(ctx context.Context, conn *route53domains.Client, id string
 }
 
 func waitOperationSucceeded(ctx context.Context, conn *route53domains.Client, id string, timeout time.Duration) (*route53domains.GetOperationDetailOutput, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.OperationStatusSubmitted, types.OperationStatusInProgress),
 		Target:  enum.Slice(types.OperationStatusSuccessful),
 		Timeout: timeout,

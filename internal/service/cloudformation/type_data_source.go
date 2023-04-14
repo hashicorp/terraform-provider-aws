@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_cloudformation_type")
 func DataSourceType() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTypeRead,
@@ -107,7 +108,7 @@ func DataSourceType() *schema.Resource {
 }
 
 func dataSourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudFormationConn
+	conn := meta.(*conns.AWSClient).CloudFormationConn()
 
 	input := &cloudformation.DescribeTypeInput{}
 

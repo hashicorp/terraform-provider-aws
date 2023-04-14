@@ -17,6 +17,7 @@ import (
 // AttachmentAccepter does not require AttachmentType. However, querying attachments for status updates requires knowing tyupe
 // To facilitate querying and waiters on specific attachment types, attachment_type set to required
 
+// @SDKResource("aws_networkmanager_attachment_accepter")
 func ResourceAttachmentAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAttachmentAccepterCreate,
@@ -82,7 +83,7 @@ func ResourceAttachmentAccepter() *schema.Resource {
 }
 
 func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	var state string
 	attachmentID := d.Get("attachment_id").(string)
@@ -159,7 +160,7 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	var a *networkmanager.Attachment
 

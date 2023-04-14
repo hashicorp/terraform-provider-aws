@@ -2,7 +2,6 @@ package lightsail
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -73,30 +72,29 @@ func ResourceDomainEntry() *schema.Resource {
 }
 
 func resourceDomainEntryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
-
+	conn := meta.(*conns.AWSClient).LightsailConn()
+	name := d.Get("name").(string)
 	req := &lightsail.CreateDomainEntryInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
 
 		DomainEntry: &lightsail.DomainEntry{
 			IsAlias: aws.Bool(d.Get("is_alias").(bool)),
-			Name:    aws.String(expandDomainEntryName(d.Get("name").(string), d.Get("domain_name").(string))),
+			Name:    aws.String(expandDomainEntryName(name, d.Get("domain_name").(string))),
 			Target:  aws.String(d.Get("target").(string)),
 			Type:    aws.String(d.Get("type").(string)),
 		},
 	}
 
-	resp, err := conn.CreateDomainEntry(req)
+	resp, err := conn.CreateDomainEntryWithContext(ctx, req)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateDomain, ResDomainEntry, d.Get("name").(string), err)
+		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateDomain, ResDomainEntry, name, err)
 	}
 
-	op := resp.Operation
+	diag := expandOperations(ctx, conn, []*lightsail.Operation{resp.Operation}, lightsail.OperationTypeCreateDomain, ResDomainEntry, name)
 
-	err = waitOperation(conn, op.Id)
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateDomain, ResDomainEntry, d.Get("name").(string), errors.New("Error waiting for Create DomainEntry request operation"))
+	if diag != nil {
+		return diag
 	}
 
 	// Generate an ID
@@ -113,7 +111,7 @@ func resourceDomainEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceDomainEntryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	entry, err := FindDomainEntryById(ctx, conn, d.Id())
 
@@ -145,17 +143,11 @@ func resourceDomainEntryRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceDomainEntryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
-	idParts, err := flex.ExpandResourceId(d.Id(), DomainEntryIdPartsCount)
-
-	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionExpandResourceId, ResDomainEntry, d.Id(), err)
-	}
-
-	resp, err := conn.DeleteDomainEntry(&lightsail.DeleteDomainEntryInput{
-		DomainName:  aws.String(expandDomainNameFromIdParts(idParts)),
-		DomainEntry: expandDomainEntry(idParts),
+	resp, err := conn.DeleteDomainEntryWithContext(ctx, &lightsail.DeleteDomainEntryInput{
+		DomainName:  aws.String(expandDomainNameFromId(d.Id())),
+		DomainEntry: expandDomainEntry(d.Id()),
 	})
 
 	if err != nil && tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
@@ -166,21 +158,32 @@ func resourceDomainEntryDelete(ctx context.Context, d *schema.ResourceData, meta
 		return create.DiagError(names.Lightsail, create.ErrActionDeleting, ResDomainEntry, d.Id(), err)
 	}
 
-	op := resp.Operation
+	diag := expandOperations(ctx, conn, []*lightsail.Operation{resp.Operation}, lightsail.OperationTypeDeleteDomain, ResDomainEntry, d.Id())
 
-	err = waitOperation(conn, op.Id)
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeDeleteDomain, ResDomainEntry, d.Get("name").(string), errors.New("Error waiting for Delete DomainEntry request operation"))
+	if diag != nil {
+		return diag
 	}
 
 	return nil
 }
 
-func expandDomainEntry(idParts []string) *lightsail.DomainEntry {
-	name := idParts[0]
-	domainName := idParts[1]
-	recordType := idParts[2]
-	recordTarget := idParts[3]
+func expandDomainEntry(id string) *lightsail.DomainEntry {
+	id_parts := strings.Split(id, "_")
+	idLength := len(id_parts)
+	var index int
+	var name string
+
+	if idLength == 5 {
+		index = 1
+		name = "_" + id_parts[index+0]
+	} else {
+		index = 0
+		name = id_parts[index+0]
+	}
+
+	domainName := id_parts[index+1]
+	recordType := id_parts[index+2]
+	recordTarget := id_parts[index+3]
 
 	entry := &lightsail.DomainEntry{
 		Name:   aws.String(expandDomainEntryName(name, domainName)),
@@ -191,8 +194,18 @@ func expandDomainEntry(idParts []string) *lightsail.DomainEntry {
 	return entry
 }
 
-func expandDomainNameFromIdParts(idParts []string) string {
-	domainName := idParts[1]
+func expandDomainNameFromId(id string) string {
+	id_parts := strings.Split(id, "_")
+	idLength := len(id_parts)
+	var index int
+
+	if idLength == 5 {
+		index = 1
+	} else {
+		index = 0
+	}
+
+	domainName := id_parts[index+1]
 
 	return domainName
 }

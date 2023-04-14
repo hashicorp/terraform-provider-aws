@@ -37,6 +37,8 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `APNS_VOIP_TOKEN_KEY` | Token key file content (.p8 format) for VOIP Apple Push Notification Service in Pinpoint testing. |
 | `APNS_VOIP_TOKEN_KEY_ID` | Identifier for VOIP Apple Push Notification Service Token Key in Pinpoint testing. |
 | `APPRUNNER_CUSTOM_DOMAIN` | A custom domain endpoint (root domain, subdomain, or wildcard) for AppRunner Custom Domain Association testing. |
+| `AUDITMANAGER_DEREGISTER_ACCOUNT_ON_DESTROY` | Flag to execute tests that will disable AuditManager in the account upon destruction. |
+| `AUDITMANAGER_ORGANIZATION_ADMIN_ACCOUNT_ID` | Organization admin account identifier for use in AuditManager testing. |
 | `AWS_ALTERNATE_ACCESS_KEY_ID` | AWS access key ID with access to a secondary AWS account for tests requiring multiple accounts. Requires `AWS_ALTERNATE_SECRET_ACCESS_KEY`. Conflicts with `AWS_ALTERNATE_PROFILE`. |
 | `AWS_ALTERNATE_SECRET_ACCESS_KEY` | AWS secret access key with access to a secondary AWS account for tests requiring multiple accounts. Requires `AWS_ALTERNATE_ACCESS_KEY_ID`. Conflicts with `AWS_ALTERNATE_PROFILE`. |
 | `AWS_ALTERNATE_PROFILE` | AWS profile with access to a secondary AWS account for tests requiring multiple accounts. Conflicts with `AWS_ALTERNATE_ACCESS_KEY_ID` and `AWS_ALTERNATE_SECRET_ACCESS_KEY`. |
@@ -49,7 +51,6 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `AWS_CODEBUILD_GITHUB_SOURCE_LOCATION` | GitHub source URL for CodeBuild testing. CodeBuild must have access to this repository via OAuth or Source Credentials. Defaults to `https://github.com/hashibot-test/aws-test.git`. |
 | `AWS_DEFAULT_REGION` | Primary AWS region for tests. Defaults to `us-west-2`. |
 | `AWS_DETECTIVE_MEMBER_EMAIL` | Email address for Detective Member testing. A valid email address associated with an AWS root account is required for tests to pass. |
-| `AWS_EC2_CLASSIC_REGION` | AWS region for EC2-Classic testing. Defaults to `us-east-1` in AWS Commercial and `AWS_DEFAULT_REGION` otherwise. |
 | `AWS_EC2_CLIENT_VPN_LIMIT` | Concurrency limit for Client VPN acceptance tests. [Default is 5](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/limits.html) if not specified. |
 | `AWS_EC2_EIP_PUBLIC_IPV4_POOL` | Identifier for EC2 Public IPv4 Pool for EC2 EIP testing. |
 | `AWS_GUARDDUTY_MEMBER_ACCOUNT_ID` | Identifier of AWS Account for GuardDuty Member testing. **DEPRECATED:** Should be replaced with standard alternate account handling for tests. |
@@ -81,4 +82,7 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `TEST_AWS_SES_VERIFIED_EMAIL_ARN` | Verified SES Email Identity for use in Cognito User Pool testing. |
 | `TF_ACC` | Enables Go tests containing `resource.Test()` and `resource.ParallelTest()`. |
 | `TF_ACC_ASSUME_ROLE_ARN` | Amazon Resource Name of existing IAM Role to use for limited permissions acceptance testing. |
+| `TF_AWS_LICENSE_MANAGER_GRANT_HOME_REGION` | Region where a License Manager license is imported. |
+| `TF_AWS_LICENSE_MANAGER_GRANT_LICENSE_ARN` | ARN for a License Manager license imported into the current account. |
+| `TF_AWS_LICENSE_MANAGER_GRANT_PRINCIPAL` | ARN of a principal to share the License Manager license with. Either a root user, Organization, or Organizational Unit. |
 | `TF_TEST_CLOUDFRONT_RETAIN` | Flag to disable but dangle CloudFront Distributions during testing to reduce feedback time (must be manually destroyed afterwards) |

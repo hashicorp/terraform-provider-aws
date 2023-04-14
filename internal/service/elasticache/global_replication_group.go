@@ -15,7 +15,7 @@ import (
 	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -36,6 +36,7 @@ const (
 	GlobalReplicationGroupMemberRoleSecondary = "SECONDARY"
 )
 
+// @SDKResource("aws_elasticache_global_replication_group")
 func ResourceGlobalReplicationGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalReplicationGroupCreate,
@@ -43,7 +44,7 @@ func ResourceGlobalReplicationGroup() *schema.Resource {
 		UpdateWithoutTimeout: resourceGlobalReplicationGroupUpdate,
 		DeleteWithoutTimeout: resourceGlobalReplicationGroupDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				re := regexp.MustCompile("^" + GlobalReplicationGroupRegionPrefixFormat)
 				d.Set("global_replication_group_id_suffix", re.ReplaceAllLiteralString(d.Id(), ""))
 
@@ -267,7 +268,7 @@ func paramGroupNameRequiresMajorVersionUpgrade(diff changeDiffer) error {
 }
 
 func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	id := d.Get("global_replication_group_id_suffix").(string)
 	input := &elasticache.CreateGlobalReplicationGroupInput{
@@ -380,7 +381,7 @@ func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceGlobalReplicationGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	globalReplicationGroup, err := FindGlobalReplicationGroupByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -392,7 +393,7 @@ func resourceGlobalReplicationGroupRead(ctx context.Context, d *schema.ResourceD
 		return diag.Errorf("reading ElastiCache Replication Group (%s): %s", d.Id(), err)
 	}
 
-	if aws.StringValue(globalReplicationGroup.Status) == "deleting" || aws.StringValue(globalReplicationGroup.Status) == "deleted" {
+	if !d.IsNewResource() && (aws.StringValue(globalReplicationGroup.Status) == "deleting" || aws.StringValue(globalReplicationGroup.Status) == "deleted") {
 		log.Printf("[WARN] ElastiCache Global Replication Group (%s) in deleted state (%s), removing from state", d.Id(), aws.StringValue(globalReplicationGroup.Status))
 		d.SetId("")
 		return nil
@@ -426,7 +427,7 @@ func resourceGlobalReplicationGroupRead(ctx context.Context, d *schema.ResourceD
 type globalReplicationGroupUpdater func(input *elasticache.ModifyGlobalReplicationGroupInput)
 
 func resourceGlobalReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	// Only one field can be changed per request
 	if d.HasChange("cache_node_type") {
@@ -550,7 +551,7 @@ func updateGlobalReplicationGroup(ctx context.Context, conn *elasticache.ElastiC
 }
 
 func resourceGlobalReplicationGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	// Using Update timeout because the Global Replication Group could be in the middle of an update operation
 	err := deleteGlobalReplicationGroup(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), d.Timeout(schema.TimeoutDelete))
@@ -567,19 +568,19 @@ func deleteGlobalReplicationGroup(ctx context.Context, conn *elasticache.ElastiC
 		RetainPrimaryReplicationGroup: aws.Bool(true),
 	}
 
-	err := resource.RetryContext(ctx, readyTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, readyTimeout, func() *retry.RetryError {
 		_, err := conn.DeleteGlobalReplicationGroupWithContext(ctx, input)
 		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeGlobalReplicationGroupNotFoundFault) {
-			return resource.NonRetryableError(&resource.NotFoundError{
+			return retry.NonRetryableError(&retry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			})
 		}
 		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeInvalidGlobalReplicationGroupStateFault) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil

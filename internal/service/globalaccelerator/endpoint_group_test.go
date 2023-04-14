@@ -20,20 +20,21 @@ import (
 )
 
 func TestAccGlobalAcceleratorEndpointGroup_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v globalaccelerator.EndpointGroup
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointGroupDestroy,
+		CheckDestroy:             testAccCheckEndpointGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointGroupExists(resourceName, &v),
+					testAccCheckEndpointGroupExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", acctest.Region()),
@@ -57,21 +58,22 @@ func TestAccGlobalAcceleratorEndpointGroup_basic(t *testing.T) {
 }
 
 func TestAccGlobalAcceleratorEndpointGroup_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v globalaccelerator.EndpointGroup
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointGroupDestroy,
+		CheckDestroy:             testAccCheckEndpointGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointGroupExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglobalaccelerator.ResourceEndpointGroup(), resourceName),
+					testAccCheckEndpointGroupExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglobalaccelerator.ResourceEndpointGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -80,6 +82,7 @@ func TestAccGlobalAcceleratorEndpointGroup_disappears(t *testing.T) {
 }
 
 func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v globalaccelerator.EndpointGroup
 	var vpc ec2.Vpc
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
@@ -88,15 +91,15 @@ func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointGroupDestroy,
+		CheckDestroy:             testAccCheckEndpointGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointGroupConfig_albClientIP(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointGroupExists(resourceName, &v),
+					testAccCheckEndpointGroupExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
@@ -123,7 +126,7 @@ func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 			{
 				Config: testAccEndpointGroupConfig_albClientIP(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointGroupExists(resourceName, &v),
+					testAccCheckEndpointGroupExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
@@ -145,8 +148,8 @@ func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: acctest.ConfigVPCWithSubnets(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(vpcResourceName, &vpc),
-					testAccCheckEndpointGroupDeleteSecurityGroup(&vpc),
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					testAccCheckEndpointGroupDeleteSecurityGroup(ctx, &vpc),
 				),
 			},
 		},
@@ -154,6 +157,7 @@ func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 }
 
 func TestAccGlobalAcceleratorEndpointGroup_instanceEndpoint(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v globalaccelerator.EndpointGroup
 	var vpc ec2.Vpc
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
@@ -162,15 +166,15 @@ func TestAccGlobalAcceleratorEndpointGroup_instanceEndpoint(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointGroupDestroy,
+		CheckDestroy:             testAccCheckEndpointGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointGroupConfig_instance(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointGroupExists(resourceName, &v),
+					testAccCheckEndpointGroupExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
@@ -197,8 +201,8 @@ func TestAccGlobalAcceleratorEndpointGroup_instanceEndpoint(t *testing.T) {
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: acctest.ConfigVPCWithSubnets(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(vpcResourceName, &vpc),
-					testAccCheckEndpointGroupDeleteSecurityGroup(&vpc),
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					testAccCheckEndpointGroupDeleteSecurityGroup(ctx, &vpc),
 				),
 			},
 		},
@@ -206,21 +210,22 @@ func TestAccGlobalAcceleratorEndpointGroup_instanceEndpoint(t *testing.T) {
 }
 
 func TestAccGlobalAcceleratorEndpointGroup_multiRegion(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v globalaccelerator.EndpointGroup
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
 	eipResourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccCheckEndpointGroupDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckEndpointGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointGroupConfig_multiRegion(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointGroupExists(resourceName, &v),
+					testAccCheckEndpointGroupExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
@@ -249,20 +254,21 @@ func TestAccGlobalAcceleratorEndpointGroup_multiRegion(t *testing.T) {
 }
 
 func TestAccGlobalAcceleratorEndpointGroup_portOverrides(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v globalaccelerator.EndpointGroup
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointGroupDestroy,
+		CheckDestroy:             testAccCheckEndpointGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointGroupConfig_portOverrides(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointGroupExists(resourceName, &v),
+					testAccCheckEndpointGroupExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", acctest.Region()),
@@ -283,7 +289,7 @@ func TestAccGlobalAcceleratorEndpointGroup_portOverrides(t *testing.T) {
 			{
 				Config: testAccEndpointGroupConfig_portOverridesUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointGroupExists(resourceName, &v),
+					testAccCheckEndpointGroupExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", acctest.Region()),
@@ -315,21 +321,22 @@ func TestAccGlobalAcceleratorEndpointGroup_portOverrides(t *testing.T) {
 }
 
 func TestAccGlobalAcceleratorEndpointGroup_tcpHealthCheckProtocol(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v globalaccelerator.EndpointGroup
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
 	eipResourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointGroupDestroy,
+		CheckDestroy:             testAccCheckEndpointGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointGroupConfig_tcpHealthCheckProtocol(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointGroupExists(resourceName, &v),
+					testAccCheckEndpointGroupExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
@@ -358,21 +365,22 @@ func TestAccGlobalAcceleratorEndpointGroup_tcpHealthCheckProtocol(t *testing.T) 
 }
 
 func TestAccGlobalAcceleratorEndpointGroup_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v globalaccelerator.EndpointGroup
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
 	eipResourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointGroupDestroy,
+		CheckDestroy:             testAccCheckEndpointGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointGroupExists(resourceName, &v),
+					testAccCheckEndpointGroupExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", acctest.Region()),
@@ -389,7 +397,7 @@ func TestAccGlobalAcceleratorEndpointGroup_update(t *testing.T) {
 			{
 				Config: testAccEndpointGroupConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointGroupExists(resourceName, &v),
+					testAccCheckEndpointGroupExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
@@ -417,9 +425,9 @@ func TestAccGlobalAcceleratorEndpointGroup_update(t *testing.T) {
 	})
 }
 
-func testAccCheckEndpointGroupExists(name string, v *globalaccelerator.EndpointGroup) resource.TestCheckFunc {
+func testAccCheckEndpointGroupExists(ctx context.Context, name string, v *globalaccelerator.EndpointGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn()
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -430,7 +438,7 @@ func testAccCheckEndpointGroupExists(name string, v *globalaccelerator.EndpointG
 			return fmt.Errorf("No Global Accelerator Endpoint Group ID is set")
 		}
 
-		endpointGroup, err := tfglobalaccelerator.FindEndpointGroupByARN(context.Background(), conn, rs.Primary.ID)
+		endpointGroup, err := tfglobalaccelerator.FindEndpointGroupByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -442,37 +450,39 @@ func testAccCheckEndpointGroupExists(name string, v *globalaccelerator.EndpointG
 	}
 }
 
-func testAccCheckEndpointGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn
+func testAccCheckEndpointGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_globalaccelerator_endpoint_group" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_globalaccelerator_endpoint_group" {
+				continue
+			}
+
+			_, err := tfglobalaccelerator.FindEndpointGroupByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Global Accelerator Endpoint Group %s still exists", rs.Primary.ID)
 		}
-
-		_, err := tfglobalaccelerator.FindEndpointGroupByARN(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Global Accelerator Endpoint Group %s still exists", rs.Primary.ID)
+		return nil
 	}
-	return nil
 }
 
 // testAccCheckEndpointGroupDeleteSecurityGroup deletes the security group
 // placed into the VPC when Global Accelerator client IP address preservation is enabled.
-func testAccCheckEndpointGroupDeleteSecurityGroup(vpc *ec2.Vpc) resource.TestCheckFunc {
+func testAccCheckEndpointGroupDeleteSecurityGroup(ctx context.Context, vpc *ec2.Vpc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		meta := acctest.Provider.Meta()
-		conn := meta.(*conns.AWSClient).EC2Conn
+		conn := meta.(*conns.AWSClient).EC2Conn()
 
-		v, err := tfec2.FindSecurityGroupByNameAndVPCID(context.Background(), conn, "GlobalAccelerator", aws.StringValue(vpc.VpcId))
+		v, err := tfec2.FindSecurityGroupByNameAndVPCIDAndOwnerID(ctx, conn, "GlobalAccelerator", aws.StringValue(vpc.VpcId), aws.StringValue(vpc.OwnerId))
 
 		if tfresource.NotFound(err) {
 			// Already gone.
@@ -488,7 +498,7 @@ func testAccCheckEndpointGroupDeleteSecurityGroup(vpc *ec2.Vpc) resource.TestChe
 		d.SetId(aws.StringValue(v.GroupId))
 		d.Set("revoke_rules_on_delete", true)
 
-		err = acctest.DeleteResource(r, d, meta)
+		err = acctest.DeleteResource(ctx, r, d, meta)
 
 		return err
 	}

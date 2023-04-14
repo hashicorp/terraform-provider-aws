@@ -1,6 +1,7 @@
 package redshift
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -8,22 +9,27 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_redshift_snapshot_schedule", name="Snapshot Schedule")
+// @Tags(identifierAttribute="arn")
 func ResourceSnapshotSchedule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSnapshotScheduleCreate,
-		Read:   resourceSnapshotScheduleRead,
-		Update: resourceSnapshotScheduleUpdate,
-		Delete: resourceSnapshotScheduleDelete,
+		CreateWithoutTimeout: resourceSnapshotScheduleCreate,
+		ReadWithoutTimeout:   resourceSnapshotScheduleRead,
+		UpdateWithoutTimeout: resourceSnapshotScheduleUpdate,
+		DeleteWithoutTimeout: resourceSnapshotScheduleDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -60,85 +66,74 @@ func ResourceSnapshotSchedule() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceSnapshotScheduleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceSnapshotScheduleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	var identifier string
 	if v, ok := d.GetOk("identifier"); ok {
 		identifier = v.(string)
 	} else {
 		if v, ok := d.GetOk("identifier_prefix"); ok {
-			identifier = resource.PrefixedUniqueId(v.(string))
+			identifier = id.PrefixedUniqueId(v.(string))
 		} else {
-			identifier = resource.UniqueId()
+			identifier = id.UniqueId()
 		}
 	}
 	createOpts := &redshift.CreateSnapshotScheduleInput{
 		ScheduleIdentifier:  aws.String(identifier),
 		ScheduleDefinitions: flex.ExpandStringSet(d.Get("definitions").(*schema.Set)),
-		Tags:                Tags(tags.IgnoreAWS()),
+		Tags:                GetTagsIn(ctx),
 	}
 	if attr, ok := d.GetOk("description"); ok {
 		createOpts.ScheduleDescription = aws.String(attr.(string))
 	}
 
-	resp, err := conn.CreateSnapshotSchedule(createOpts)
+	resp, err := conn.CreateSnapshotScheduleWithContext(ctx, createOpts)
 	if err != nil {
-		return fmt.Errorf("Error creating Redshift Snapshot Schedule: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Redshift Snapshot Schedule: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.ScheduleIdentifier))
 
-	return resourceSnapshotScheduleRead(d, meta)
+	return append(diags, resourceSnapshotScheduleRead(ctx, d, meta)...)
 }
 
-func resourceSnapshotScheduleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceSnapshotScheduleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	descOpts := &redshift.DescribeSnapshotSchedulesInput{
 		ScheduleIdentifier: aws.String(d.Id()),
 	}
 
-	resp, err := conn.DescribeSnapshotSchedules(descOpts)
+	resp, err := conn.DescribeSnapshotSchedulesWithContext(ctx, descOpts)
 	if err != nil {
-		return fmt.Errorf("describing Redshift Cluster Snapshot Schedule %s: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing Redshift Cluster Snapshot Schedule %s: %s", d.Id(), err)
 	}
 
 	if !d.IsNewResource() && (resp.SnapshotSchedules == nil || len(resp.SnapshotSchedules) != 1) {
 		log.Printf("[WARN] Redshift Cluster Snapshot Schedule (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 	snapshotSchedule := resp.SnapshotSchedules[0]
 
 	d.Set("identifier", snapshotSchedule.ScheduleIdentifier)
 	d.Set("description", snapshotSchedule.ScheduleDescription)
 	if err := d.Set("definitions", flex.FlattenStringList(snapshotSchedule.ScheduleDefinitions)); err != nil {
-		return fmt.Errorf("setting definitions: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting definitions: %s", err)
 	}
 
-	tags := KeyValueTags(snapshotSchedule.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
-	}
+	SetTagsOut(ctx, snapshotSchedule.Tags)
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -150,65 +145,59 @@ func resourceSnapshotScheduleRead(d *schema.ResourceData, meta interface{}) erro
 
 	d.Set("arn", arn)
 
-	return nil
+	return diags
 }
 
-func resourceSnapshotScheduleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating Redshift Snapshot Schedule (%s) tags: %w", d.Get("arn").(string), err)
-		}
-	}
+func resourceSnapshotScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	if d.HasChange("definitions") {
 		modifyOpts := &redshift.ModifySnapshotScheduleInput{
 			ScheduleIdentifier:  aws.String(d.Id()),
 			ScheduleDefinitions: flex.ExpandStringSet(d.Get("definitions").(*schema.Set)),
 		}
-		_, err := conn.ModifySnapshotSchedule(modifyOpts)
+		_, err := conn.ModifySnapshotScheduleWithContext(ctx, modifyOpts)
 		if err != nil {
-			return fmt.Errorf("modifying Redshift Snapshot Schedule %s: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying Redshift Snapshot Schedule %s: %s", d.Id(), err)
 		}
 	}
 
-	return resourceSnapshotScheduleRead(d, meta)
+	return append(diags, resourceSnapshotScheduleRead(ctx, d, meta)...)
 }
 
-func resourceSnapshotScheduleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourceSnapshotScheduleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	if d.Get("force_destroy").(bool) {
-		if err := resourceSnapshotScheduleDeleteAllAssociatedClusters(conn, d.Id()); err != nil {
-			return err
+		if err := resourceSnapshotScheduleDeleteAllAssociatedClusters(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "deleting Redshift Snapshot Schedule (%s): %s", d.Id(), err)
 		}
 	}
 
-	_, err := conn.DeleteSnapshotSchedule(&redshift.DeleteSnapshotScheduleInput{
+	_, err := conn.DeleteSnapshotScheduleWithContext(ctx, &redshift.DeleteSnapshotScheduleInput{
 		ScheduleIdentifier: aws.String(d.Id()),
 	})
 	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeSnapshotScheduleNotFoundFault) {
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("Error deleting Redshift Snapshot Schedule %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Redshift Snapshot Schedule (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceSnapshotScheduleDeleteAllAssociatedClusters(conn *redshift.Redshift, scheduleIdentifier string) error {
-	resp, err := conn.DescribeSnapshotSchedules(&redshift.DescribeSnapshotSchedulesInput{
+func resourceSnapshotScheduleDeleteAllAssociatedClusters(ctx context.Context, conn *redshift.Redshift, scheduleIdentifier string) error {
+	resp, err := conn.DescribeSnapshotSchedulesWithContext(ctx, &redshift.DescribeSnapshotSchedulesInput{
 		ScheduleIdentifier: aws.String(scheduleIdentifier),
 	})
 	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeSnapshotScheduleNotFoundFault) {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("Error describing Redshift Cluster Snapshot Schedule %s: %s", scheduleIdentifier, err)
+		return err
 	}
 	if resp.SnapshotSchedules == nil || len(resp.SnapshotSchedules) != 1 {
 		log.Printf("[WARN] Unable to find Redshift Cluster Snapshot Schedule (%s)", scheduleIdentifier)
@@ -218,7 +207,7 @@ func resourceSnapshotScheduleDeleteAllAssociatedClusters(conn *redshift.Redshift
 	snapshotSchedule := resp.SnapshotSchedules[0]
 
 	for _, associatedCluster := range snapshotSchedule.AssociatedClusters {
-		_, err = conn.ModifyClusterSnapshotSchedule(&redshift.ModifyClusterSnapshotScheduleInput{
+		_, err = conn.ModifyClusterSnapshotScheduleWithContext(ctx, &redshift.ModifyClusterSnapshotScheduleInput{
 			ClusterIdentifier:    associatedCluster.ClusterIdentifier,
 			ScheduleIdentifier:   aws.String(scheduleIdentifier),
 			DisassociateSchedule: aws.Bool(true),
@@ -235,13 +224,13 @@ func resourceSnapshotScheduleDeleteAllAssociatedClusters(conn *redshift.Redshift
 			continue
 		}
 		if err != nil {
-			return fmt.Errorf("Error disassociate Redshift Cluster (%s) and Snapshot Schedule (%s) Association: %s", clusterId, scheduleIdentifier, err)
+			return fmt.Errorf("disassociating Redshift Cluster (%s): %s", clusterId, err)
 		}
 	}
 
 	for _, associatedCluster := range snapshotSchedule.AssociatedClusters {
 		id := fmt.Sprintf("%s/%s", aws.StringValue(associatedCluster.ClusterIdentifier), scheduleIdentifier)
-		if _, err := waitScheduleAssociationDeleted(conn, id); err != nil {
+		if _, err := waitScheduleAssociationDeleted(ctx, conn, id); err != nil {
 			return err
 		}
 	}

@@ -2,7 +2,6 @@ package lightsail
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_lightsail_lb_certificate")
 func ResourceLoadBalancerCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerCertificateCreate,
@@ -27,7 +27,7 @@ func ResourceLoadBalancerCertificate() *schema.Resource {
 		DeleteWithoutTimeout: resourceLoadBalancerCertificateDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -138,11 +138,11 @@ func ResourceLoadBalancerCertificate() *schema.Resource {
 }
 
 func resourceLoadBalancerCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
-
+	conn := meta.(*conns.AWSClient).LightsailConn()
+	certName := d.Get("name").(string)
 	in := lightsail.CreateLoadBalancerTlsCertificateInput{
 		CertificateDomainName: aws.String(d.Get("domain_name").(string)),
-		CertificateName:       aws.String(d.Get("name").(string)),
+		CertificateName:       aws.String(certName),
 		LoadBalancerName:      aws.String(d.Get("lb_name").(string)),
 	}
 
@@ -153,24 +153,19 @@ func resourceLoadBalancerCertificateCreate(ctx context.Context, d *schema.Resour
 	out, err := conn.CreateLoadBalancerTlsCertificateWithContext(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateLoadBalancerTlsCertificate, ResLoadBalancerCertificate, d.Get("name").(string), err)
+		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateLoadBalancerTlsCertificate, ResLoadBalancerCertificate, certName, err)
 	}
 
-	if len(out.Operations) == 0 {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateLoadBalancerTlsCertificate, ResLoadBalancerCertificate, d.Get("name").(string), errors.New("No operations found for Create Load Balancer Certificate request"))
-	}
+	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeCreateLoadBalancerTlsCertificate, ResLoadBalancerCertificate, certName)
 
-	op := out.Operations[0]
-
-	err = waitOperation(conn, op.Id)
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateLoadBalancerTlsCertificate, ResLoadBalancerCertificate, d.Get("name").(string), errors.New("Error waiting for Create Load Balancer request operation"))
+	if diag != nil {
+		return diag
 	}
 
 	// Generate an ID
 	vars := []string{
 		d.Get("lb_name").(string),
-		d.Get("name").(string),
+		certName,
 	}
 
 	d.SetId(strings.Join(vars, ","))
@@ -179,7 +174,7 @@ func resourceLoadBalancerCertificateCreate(ctx context.Context, d *schema.Resour
 }
 
 func resourceLoadBalancerCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	out, err := FindLoadBalancerCertificateById(ctx, conn, d.Id())
 
@@ -206,30 +201,25 @@ func resourceLoadBalancerCertificateRead(ctx context.Context, d *schema.Resource
 }
 
 func resourceLoadBalancerCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	id_parts := strings.SplitN(d.Id(), ",", -1)
 	lbName := id_parts[0]
-	cName := id_parts[1]
+	certName := id_parts[1]
 
 	out, err := conn.DeleteLoadBalancerTlsCertificateWithContext(ctx, &lightsail.DeleteLoadBalancerTlsCertificateInput{
-		CertificateName:  aws.String(cName),
+		CertificateName:  aws.String(certName),
 		LoadBalancerName: aws.String(lbName),
 	})
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeDeleteLoadBalancerTlsCertificate, ResLoadBalancerCertificate, d.Get("name").(string), err)
+		return create.DiagError(names.Lightsail, lightsail.OperationTypeDeleteLoadBalancerTlsCertificate, ResLoadBalancerCertificate, certName, err)
 	}
 
-	if len(out.Operations) == 0 {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeDeleteLoadBalancerTlsCertificate, ResLoadBalancerCertificate, d.Get("name").(string), errors.New("No operations found for Delete Load Balancer Certificate request"))
-	}
+	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeDeleteLoadBalancerTlsCertificate, ResLoadBalancerCertificate, certName)
 
-	op := out.Operations[0]
-
-	err = waitOperation(conn, op.Id)
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateLoadBalancerTlsCertificate, ResLoadBalancerCertificate, d.Get("name").(string), errors.New("Error waiting for Delete Load Balancer Certificate request operation"))
+	if diag != nil {
+		return diag
 	}
 
 	return nil

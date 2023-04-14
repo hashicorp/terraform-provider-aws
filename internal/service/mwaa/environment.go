@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/mwaa"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,12 +18,15 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
 	propagationTimeout = 2 * time.Minute
 )
 
+// @SDKResource("aws_mwaa_environment", name="Environment")
+// @Tags(identifierAttribute="arn")
 func ResourceEnvironment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEnvironmentCreate,
@@ -32,7 +35,7 @@ func ResourceEnvironment() *schema.Resource {
 		DeleteWithoutTimeout: resourceEnvironmentDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -229,12 +232,21 @@ func ResourceEnvironment() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"startup_script_s3_object_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"startup_script_s3_path": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"webserver_access_mode": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -257,9 +269,7 @@ func ResourceEnvironment() *schema.Resource {
 }
 
 func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MWAAConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).MWAAConn()
 
 	name := d.Get("name").(string)
 	input := &mwaa.CreateEnvironmentInput{
@@ -268,6 +278,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 		Name:                 aws.String(name),
 		NetworkConfiguration: expandEnvironmentNetworkConfigurationCreate(d.Get("network_configuration").([]interface{})),
 		SourceBucketArn:      aws.String(d.Get("source_bucket_arn").(string)),
+		Tags:                 GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("airflow_configuration_options"); ok {
@@ -319,6 +330,14 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.Schedulers = aws.Int64(int64(v.(int)))
 	}
 
+	if v, ok := d.GetOk("startup_script_s3_object_version"); ok {
+		input.StartupScriptS3ObjectVersion = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("startup_script_s3_path"); ok {
+		input.StartupScriptS3Path = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("webserver_access_mode"); ok {
 		input.WebserverAccessMode = aws.String(v.(string))
 	}
@@ -327,16 +346,12 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.WeeklyMaintenanceWindowStart = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	log.Printf("[INFO] Creating MWAA Environment: %s", input)
 	/*
 		Execution roles created just before the MWAA Environment may result in ValidationExceptions
 		due to IAM permission propagation delays.
 	*/
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.CreateEnvironmentWithContext(ctx, input)
 	}, mwaa.ErrCodeValidationException, mwaa.ErrCodeInternalServerException)
 
@@ -354,9 +369,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MWAAConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).MWAAConn()
 
 	environment, err := FindEnvironmentByName(ctx, conn, d.Id())
 
@@ -397,27 +410,21 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("schedulers", environment.Schedulers)
 	d.Set("service_role_arn", environment.ServiceRoleArn)
 	d.Set("source_bucket_arn", environment.SourceBucketArn)
+	d.Set("startup_script_s3_object_version", environment.StartupScriptS3ObjectVersion)
+	d.Set("startup_script_s3_path", environment.StartupScriptS3Path)
 	d.Set("status", environment.Status)
 	d.Set("webserver_access_mode", environment.WebserverAccessMode)
 	d.Set("webserver_url", environment.WebserverUrl)
 	d.Set("weekly_maintenance_window_start", environment.WeeklyMaintenanceWindowStart)
 
-	tags := KeyValueTags(environment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, environment.Tags)
 
 	return nil
 }
 
 func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MWAAConn
+	conn := meta.(*conns.AWSClient).MWAAConn()
+
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &mwaa.UpdateEnvironmentInput{
 			Name: aws.String(d.Get("name").(string)),
@@ -488,6 +495,14 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.SourceBucketArn = aws.String(d.Get("source_bucket_arn").(string))
 		}
 
+		if d.HasChange("startup_script_s3_object_version") {
+			input.StartupScriptS3ObjectVersion = aws.String(d.Get("startup_script_s3_object_version").(string))
+		}
+
+		if d.HasChange("startup_script_s3_path") {
+			input.StartupScriptS3Path = aws.String(d.Get("startup_script_s3_path").(string))
+		}
+
 		if d.HasChange("webserver_access_mode") {
 			input.WebserverAccessMode = aws.String(d.Get("webserver_access_mode").(string))
 		}
@@ -508,19 +523,11 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating MWAA Environment (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
-
 	return resourceEnvironmentRead(ctx, d, meta)
 }
 
 func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MWAAConn
+	conn := meta.(*conns.AWSClient).MWAAConn()
 
 	log.Printf("[INFO] Deleting MWAA Environment: %s", d.Id())
 	_, err := conn.DeleteEnvironmentWithContext(ctx, &mwaa.DeleteEnvironmentInput{
@@ -572,7 +579,7 @@ func FindEnvironmentByName(ctx context.Context, conn *mwaa.MWAA, name string) (*
 	output, err := conn.GetEnvironmentWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, mwaa.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -589,7 +596,7 @@ func FindEnvironmentByName(ctx context.Context, conn *mwaa.MWAA, name string) (*
 	return output.Environment, nil
 }
 
-func statusEnvironment(ctx context.Context, conn *mwaa.MWAA, name string) resource.StateRefreshFunc {
+func statusEnvironment(ctx context.Context, conn *mwaa.MWAA, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		environment, err := FindEnvironmentByName(ctx, conn, name)
 
@@ -606,7 +613,7 @@ func statusEnvironment(ctx context.Context, conn *mwaa.MWAA, name string) resour
 }
 
 func waitEnvironmentCreated(ctx context.Context, conn *mwaa.MWAA, name string, timeout time.Duration) (*mwaa.Environment, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{mwaa.EnvironmentStatusCreating},
 		Target:  []string{mwaa.EnvironmentStatusAvailable},
 		Refresh: statusEnvironment(ctx, conn, name),
@@ -627,7 +634,7 @@ func waitEnvironmentCreated(ctx context.Context, conn *mwaa.MWAA, name string, t
 }
 
 func waitEnvironmentUpdated(ctx context.Context, conn *mwaa.MWAA, name string, timeout time.Duration) (*mwaa.Environment, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{mwaa.EnvironmentStatusUpdating},
 		Target:  []string{mwaa.EnvironmentStatusAvailable},
 		Refresh: statusEnvironment(ctx, conn, name),
@@ -648,7 +655,7 @@ func waitEnvironmentUpdated(ctx context.Context, conn *mwaa.MWAA, name string, t
 }
 
 func waitEnvironmentDeleted(ctx context.Context, conn *mwaa.MWAA, name string, timeout time.Duration) (*mwaa.Environment, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{mwaa.EnvironmentStatusDeleting},
 		Target:  []string{},
 		Refresh: statusEnvironment(ctx, conn, name),
@@ -753,19 +760,19 @@ func flattenLastUpdate(lastUpdate *mwaa.LastUpdate) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenLastUpdateError(error *mwaa.UpdateError) []interface{} {
-	if error == nil {
+func flattenLastUpdateError(apiObject *mwaa.UpdateError) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{}
 
-	if error.ErrorCode != nil {
-		m["error_code"] = error.ErrorCode
+	if apiObject.ErrorCode != nil {
+		m["error_code"] = apiObject.ErrorCode
 	}
 
-	if error.ErrorMessage != nil {
-		m["error_message"] = error.ErrorMessage
+	if apiObject.ErrorMessage != nil {
+		m["error_message"] = apiObject.ErrorMessage
 	}
 
 	return []interface{}{m}

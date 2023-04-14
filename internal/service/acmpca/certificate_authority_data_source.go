@@ -1,21 +1,24 @@
 package acmpca
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_acmpca_certificate_authority")
 func DataSourceCertificateAuthority() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCertificateAuthorityRead,
+		ReadWithoutTimeout: dataSourceCertificateAuthorityRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -45,14 +48,12 @@ func DataSourceCertificateAuthority() *schema.Resource {
 			// https://docs.aws.amazon.com/privateca/latest/APIReference/API_RevocationConfiguration.html
 			"revocation_configuration": {
 				Type:     schema.TypeList,
-				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						// https://docs.aws.amazon.com/privateca/latest/APIReference/API_CrlConfiguration.html
 						"crl_configuration": {
 							Type:     schema.TypeList,
-							Optional: true,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -82,7 +83,6 @@ func DataSourceCertificateAuthority() *schema.Resource {
 						// https://docs.aws.amazon.com/privateca/latest/APIReference/API_OcspConfiguration.html
 						"ocsp_configuration": {
 							Type:     schema.TypeList,
-							Optional: true,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -121,8 +121,9 @@ func DataSourceCertificateAuthority() *schema.Resource {
 	}
 }
 
-func dataSourceCertificateAuthorityRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
+func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	certificateAuthorityARN := d.Get("arn").(string)
 
@@ -132,13 +133,13 @@ func dataSourceCertificateAuthorityRead(d *schema.ResourceData, meta interface{}
 
 	log.Printf("[DEBUG] Reading ACM PCA Certificate Authority: %s", describeCertificateAuthorityInput)
 
-	describeCertificateAuthorityOutput, err := conn.DescribeCertificateAuthority(describeCertificateAuthorityInput)
+	describeCertificateAuthorityOutput, err := conn.DescribeCertificateAuthorityWithContext(ctx, describeCertificateAuthorityInput)
 	if err != nil {
-		return fmt.Errorf("reading ACM PCA Certificate Authority (%s): %w", certificateAuthorityARN, err)
+		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority (%s): %s", certificateAuthorityARN, err)
 	}
 
 	if describeCertificateAuthorityOutput.CertificateAuthority == nil {
-		return fmt.Errorf("reading ACM PCA Certificate Authority: not found")
+		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority: not found")
 	}
 	certificateAuthority := describeCertificateAuthorityOutput.CertificateAuthority
 
@@ -146,7 +147,7 @@ func dataSourceCertificateAuthorityRead(d *schema.ResourceData, meta interface{}
 	d.Set("not_after", aws.TimeValue(certificateAuthority.NotAfter).Format(time.RFC3339))
 	d.Set("not_before", aws.TimeValue(certificateAuthority.NotBefore).Format(time.RFC3339))
 	if err := d.Set("revocation_configuration", flattenRevocationConfiguration(certificateAuthority.RevocationConfiguration)); err != nil {
-		return fmt.Errorf("setting revocation_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting revocation_configuration: %s", err)
 	}
 	d.Set("serial", certificateAuthority.Serial)
 	d.Set("status", certificateAuthority.Status)
@@ -159,12 +160,12 @@ func dataSourceCertificateAuthorityRead(d *schema.ResourceData, meta interface{}
 
 	log.Printf("[DEBUG] Reading ACM PCA Certificate Authority Certificate: %s", getCertificateAuthorityCertificateInput)
 
-	getCertificateAuthorityCertificateOutput, err := conn.GetCertificateAuthorityCertificate(getCertificateAuthorityCertificateInput)
+	getCertificateAuthorityCertificateOutput, err := conn.GetCertificateAuthorityCertificateWithContext(ctx, getCertificateAuthorityCertificateInput)
 	if err != nil {
 		// Returned when in PENDING_CERTIFICATE status
 		// InvalidStateException: The certificate authority XXXXX is not in the correct state to have a certificate signing request.
 		if !tfawserr.ErrCodeEquals(err, acmpca.ErrCodeInvalidStateException) {
-			return fmt.Errorf("reading ACM PCA Certificate Authority Certificate: %w", err)
+			return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority Certificate: %s", err)
 		}
 	}
 
@@ -181,9 +182,9 @@ func dataSourceCertificateAuthorityRead(d *schema.ResourceData, meta interface{}
 
 	log.Printf("[DEBUG] Reading ACM PCA Certificate Authority Certificate Signing Request: %s", getCertificateAuthorityCsrInput)
 
-	getCertificateAuthorityCsrOutput, err := conn.GetCertificateAuthorityCsr(getCertificateAuthorityCsrInput)
+	getCertificateAuthorityCsrOutput, err := conn.GetCertificateAuthorityCsrWithContext(ctx, getCertificateAuthorityCsrInput)
 	if err != nil {
-		return fmt.Errorf("reading ACM PCA Certificate Authority Certificate Signing Request: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority Certificate Signing Request: %s", err)
 	}
 
 	d.Set("certificate_signing_request", "")
@@ -191,17 +192,17 @@ func dataSourceCertificateAuthorityRead(d *schema.ResourceData, meta interface{}
 		d.Set("certificate_signing_request", getCertificateAuthorityCsrOutput.Csr)
 	}
 
-	tags, err := ListTags(conn, certificateAuthorityARN)
+	tags, err := ListTags(ctx, conn, certificateAuthorityARN)
 
 	if err != nil {
-		return fmt.Errorf("listing tags for ACM PCA Certificate Authority (%s): %w", certificateAuthorityARN, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for ACM PCA Certificate Authority (%s): %s", certificateAuthorityARN, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	d.SetId(certificateAuthorityARN)
 
-	return nil
+	return diags
 }

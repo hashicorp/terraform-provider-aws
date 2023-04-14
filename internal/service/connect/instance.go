@@ -12,18 +12,19 @@ import (
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKResource("aws_connect_instance")
 func ResourceInstance() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceInstanceCreate,
-		ReadContext:   resourceInstanceRead,
-		UpdateContext: resourceInstanceUpdate,
-		DeleteContext: resourceInstanceDelete,
+		CreateWithoutTimeout: resourceInstanceCreate,
+		ReadWithoutTimeout:   resourceInstanceRead,
+		UpdateWithoutTimeout: resourceInstanceUpdate,
+		DeleteWithoutTimeout: resourceInstanceDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -116,10 +117,10 @@ func ResourceInstance() *schema.Resource {
 }
 
 func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	input := &connect.CreateInstanceInput{
-		ClientToken:            aws.String(resource.UniqueId()),
+		ClientToken:            aws.String(id.UniqueId()),
 		IdentityManagementType: aws.String(d.Get("identity_management_type").(string)),
 		InboundCallsEnabled:    aws.Bool(d.Get("inbound_calls_enabled").(bool)),
 		OutboundCallsEnabled:   aws.Bool(d.Get("outbound_calls_enabled").(bool)),
@@ -147,15 +148,12 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	for att := range InstanceAttributeMapping() {
 		rKey := InstanceAttributeMapping()[att]
-
-		if v, ok := d.GetOk(rKey); ok {
-			err := resourceInstanceUpdateAttribute(ctx, conn, d.Id(), att, strconv.FormatBool(v.(bool)))
-			//Pre-release attribute, user/account/instance now allow-listed
-			if err != nil && tfawserr.ErrCodeEquals(err, ErrCodeAccessDeniedException) || tfawserr.ErrMessageContains(err, ErrCodeAccessDeniedException, "not authorized to update") {
-				log.Printf("[WARN] error setting Connect instance (%s) attribute (%s): %s", d.Id(), att, err)
-			} else if err != nil {
-				return diag.FromErr(fmt.Errorf("error setting Connect instance (%s) attribute (%s): %w", d.Id(), att, err))
-			}
+		err := resourceInstanceUpdateAttribute(ctx, conn, d.Id(), att, strconv.FormatBool(d.Get(rKey).(bool)))
+		//Pre-release attribute, user/account/instance now allow-listed
+		if err != nil && tfawserr.ErrCodeEquals(err, ErrCodeAccessDeniedException) || tfawserr.ErrMessageContains(err, ErrCodeAccessDeniedException, "not authorized to update") {
+			log.Printf("[WARN] error setting Connect instance (%s) attribute (%s): %s", d.Id(), att, err)
+		} else if err != nil {
+			return diag.FromErr(fmt.Errorf("error setting Connect instance (%s) attribute (%s): %w", d.Id(), att, err))
 		}
 	}
 
@@ -163,7 +161,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	for att := range InstanceAttributeMapping() {
 		rKey := InstanceAttributeMapping()[att]
@@ -182,7 +180,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return nil
 }
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	input := connect.DescribeInstanceInput{
 		InstanceId: aws.String(d.Id()),
@@ -225,7 +223,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	input := &connect.DeleteInstanceInput{
 		InstanceId: aws.String(d.Id()),
@@ -233,7 +231,7 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 
 	log.Printf("[DEBUG] Deleting Connect Instance %s", d.Id())
 
-	_, err := conn.DeleteInstance(input)
+	_, err := conn.DeleteInstanceWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 		return nil

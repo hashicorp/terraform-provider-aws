@@ -5,19 +5,18 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 )
 
-func init() {
-	registerFrameworkDataSourceFactory(newDataSourceCallerIdentity)
-}
-
-// newDataSourceCallerIdentity instantiates a new DataSource for the aws_caller_identity data source.
+// @FrameworkDataSource
 func newDataSourceCallerIdentity(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceCallerIdentity{}, nil
+	d := &dataSourceCallerIdentity{}
+	d.SetMigratedFromPluginSDK(true)
+
+	return d, nil
 }
 
 type dataSourceCallerIdentity struct {
@@ -30,31 +29,25 @@ func (d *dataSourceCallerIdentity) Metadata(_ context.Context, request datasourc
 	response.TypeName = "aws_caller_identity"
 }
 
-// GetSchema returns the schema for this data source.
-func (d *dataSourceCallerIdentity) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	schema := tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"account_id": {
-				Type:     types.StringType,
+// Schema returns the schema for this data source.
+func (d *dataSourceCallerIdentity) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"account_id": schema.StringAttribute{
 				Computed: true,
 			},
-			"arn": {
-				Type:     types.StringType,
+			"arn": schema.StringAttribute{
 				Computed: true,
 			},
-			"id": {
-				Type:     types.StringType,
+			"id": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
-			"user_id": {
-				Type:     types.StringType,
+			"user_id": schema.StringAttribute{
 				Computed: true,
 			},
 		},
 	}
-
-	return schema, nil
 }
 
 // Read is called when the provider must read data source values in order to update state.
@@ -68,7 +61,7 @@ func (d *dataSourceCallerIdentity) Read(ctx context.Context, request datasource.
 		return
 	}
 
-	conn := d.Meta().STSConn
+	conn := d.Meta().STSConn()
 
 	output, err := FindCallerIdentity(ctx, conn)
 
@@ -79,10 +72,10 @@ func (d *dataSourceCallerIdentity) Read(ctx context.Context, request datasource.
 	}
 
 	accountID := aws.StringValue(output.Account)
-	data.AccountID = types.String{Value: accountID}
-	data.ARN = types.String{Value: aws.StringValue(output.Arn)}
-	data.ID = types.String{Value: accountID}
-	data.UserID = types.String{Value: aws.StringValue(output.UserId)}
+	data.AccountID = types.StringValue(accountID)
+	data.ARN = flex.StringToFrameworkLegacy(ctx, output.Arn)
+	data.ID = types.StringValue(accountID)
+	data.UserID = flex.StringToFrameworkLegacy(ctx, output.UserId)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

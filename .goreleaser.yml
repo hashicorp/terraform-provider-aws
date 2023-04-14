@@ -4,6 +4,7 @@ archives:
       - 'none*'
     format: zip
     name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+    rlcp: true
 before:
   hooks:
     - 'go mod download'
@@ -36,7 +37,7 @@ builds:
       - goarch: arm64
         goos: openbsd
     ldflags:
-      - -s -w -X version.ProviderVersion={{.Version}}
+      - -s -w -X 'github.com/hashicorp/terraform-provider-aws/version.ProviderVersion={{ .Version }}'
     mod_timestamp: '{{ .CommitTimestamp }}'
 checksum:
   algorithm: sha256

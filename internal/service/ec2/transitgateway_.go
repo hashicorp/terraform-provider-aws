@@ -2,7 +2,6 @@ package ec2
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"regexp"
 	"time"
@@ -10,25 +9,30 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ec2_transit_gateway", name="Transit Gateway")
+// @Tags(identifierAttribute="id")
 func ResourceTransitGateway() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTransitGatewayCreate,
-		Read:   resourceTransitGatewayRead,
-		Update: resourceTransitGatewayUpdate,
-		Delete: resourceTransitGatewayDelete,
+		CreateWithoutTimeout: resourceTransitGatewayCreate,
+		ReadWithoutTimeout:   resourceTransitGatewayRead,
+		UpdateWithoutTimeout: resourceTransitGatewayUpdate,
+		DeleteWithoutTimeout: resourceTransitGatewayDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -106,8 +110,8 @@ func ResourceTransitGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"transit_gateway_cidr_blocks": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -133,10 +137,9 @@ func ResourceTransitGateway() *schema.Resource {
 	}
 }
 
-func resourceTransitGatewayCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceTransitGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.CreateTransitGatewayInput{
 		Options: &ec2.TransitGatewayRequestOptions{
@@ -147,7 +150,7 @@ func resourceTransitGatewayCreate(d *schema.ResourceData, meta interface{}) erro
 			MulticastSupport:             aws.String(d.Get("multicast_support").(string)),
 			VpnEcmpSupport:               aws.String(d.Get("vpn_ecmp_support").(string)),
 		},
-		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGateway),
+		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeTransitGateway),
 	}
 
 	if v, ok := d.GetOk("amazon_side_asn"); ok {
@@ -163,36 +166,35 @@ func resourceTransitGatewayCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway: %s", input)
-	output, err := conn.CreateTransitGateway(input)
+	output, err := conn.CreateTransitGatewayWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating EC2 Transit Gateway: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating EC2 Transit Gateway: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.TransitGateway.TransitGatewayId))
 
-	if _, err := WaitTransitGatewayCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("waiting for EC2 Transit Gateway (%s) create: %w", d.Id(), err)
+	if _, err := WaitTransitGatewayCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceTransitGatewayRead(d, meta)
+	return append(diags, resourceTransitGatewayRead(ctx, d, meta)...)
 }
 
-func resourceTransitGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	transitGateway, err := FindTransitGatewayByID(conn, d.Id())
+	transitGateway, err := FindTransitGatewayByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Transit Gateway %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading EC2 Transit Gateway (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway (%s): %s", d.Id(), err)
 	}
 
 	d.Set("amazon_side_asn", transitGateway.Options.AmazonSideAsn)
@@ -209,22 +211,14 @@ func resourceTransitGatewayRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("transit_gateway_cidr_blocks", aws.StringValueSlice(transitGateway.Options.TransitGatewayCidrBlocks))
 	d.Set("vpn_ecmp_support", transitGateway.Options.VpnEcmpSupport)
 
-	tags := KeyValueTags(transitGateway.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	SetTagsOut(ctx, transitGateway.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceTransitGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceTransitGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ec2.ModifyTransitGatewayInput{
@@ -273,47 +267,40 @@ func resourceTransitGatewayUpdate(d *schema.ResourceData, meta interface{}) erro
 			input.Options.VpnEcmpSupport = aws.String(d.Get("vpn_ecmp_support").(string))
 		}
 
-		if _, err := conn.ModifyTransitGateway(input); err != nil {
-			return fmt.Errorf("updating EC2 Transit Gateway (%s): %w", d.Id(), err)
+		if _, err := conn.ModifyTransitGatewayWithContext(ctx, input); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EC2 Transit Gateway (%s): %s", d.Id(), err)
 		}
 
-		if _, err := WaitTransitGatewayUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("waiting for EC2 Transit Gateway (%s) update: %w", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("updating EC2 Transit Gateway (%s) tags: %w", d.Id(), err)
+		if _, err := WaitTransitGatewayUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
-func resourceTransitGatewayDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceTransitGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(TransitGatewayIncorrectStateTimeout, func() (interface{}, error) {
-		return conn.DeleteTransitGateway(&ec2.DeleteTransitGatewayInput{
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, TransitGatewayIncorrectStateTimeout, func() (interface{}, error) {
+		return conn.DeleteTransitGatewayWithContext(ctx, &ec2.DeleteTransitGatewayInput{
 			TransitGatewayId: aws.String(d.Id()),
 		})
 	}, errCodeIncorrectState)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayIDNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting EC2 Transit Gateway (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EC2 Transit Gateway (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitTransitGatewayDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("waiting for EC2 Transit Gateway (%s) delete: %w", d.Id(), err)
+	if _, err := WaitTransitGatewayDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

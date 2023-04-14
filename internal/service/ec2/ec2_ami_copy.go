@@ -2,28 +2,34 @@ package ec2
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ami_copy", name="AMI")
+// @Tags(identifierAttribute="id")
 func ResourceAMICopy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAMICopyCreate,
+		CreateWithoutTimeout: resourceAMICopyCreate,
 		// The remaining operations are shared with the generic aws_ami resource,
 		// since the aws_ami_copy resource only differs in how it's created.
-		Read:   resourceAMIRead,
-		Update: resourceAMIUpdate,
-		Delete: resourceAMIDelete,
+		ReadWithoutTimeout:   resourceAMIRead,
+		UpdateWithoutTimeout: resourceAMIUpdate,
+		DeleteWithoutTimeout: resourceAMIDelete,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(amiRetryTimeout),
@@ -240,8 +246,8 @@ func ResourceAMICopy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"tpm_support": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -260,15 +266,14 @@ func ResourceAMICopy() *schema.Resource {
 	}
 }
 
-func resourceAMICopyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceAMICopyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	name := d.Get("name").(string)
 	sourceImageID := d.Get("source_ami_id").(string)
 	input := &ec2.CopyImageInput{
-		ClientToken:   aws.String(resource.UniqueId()),
+		ClientToken:   aws.String(id.UniqueId()),
 		Description:   aws.String(d.Get("description").(string)),
 		Encrypted:     aws.Bool(d.Get("encrypted").(bool)),
 		Name:          aws.String(name),
@@ -284,30 +289,28 @@ func resourceAMICopyCreate(d *schema.ResourceData, meta interface{}) error {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	output, err := conn.CopyImage(input)
+	output, err := conn.CopyImageWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating EC2 AMI (%s) from source EC2 AMI (%s): %w", name, sourceImageID, err)
+		return sdkdiag.AppendErrorf(diags, "creating EC2 AMI (%s) from source EC2 AMI (%s): %s", name, sourceImageID, err)
 	}
 
 	d.SetId(aws.StringValue(output.ImageId))
 	d.Set("manage_ebs_snapshots", true)
 
-	if len(tags) > 0 {
-		if err := CreateTags(conn, d.Id(), tags); err != nil {
-			return fmt.Errorf("adding tags: %w", err)
-		}
+	if err := createTags(ctx, conn, d.Id(), GetTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting EC2 AMI (%s) tags: %s", d.Id(), err)
 	}
 
-	if _, err := WaitImageAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("waiting for EC2 AMI (%s) create: %w", d.Id(), err)
+	if _, err := WaitImageAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating EC2 AMI (%s) from source EC2 AMI (%s): waiting for completion: %s", name, sourceImageID, err)
 	}
 
 	if v, ok := d.GetOk("deprecation_time"); ok {
-		if err := enableImageDeprecation(conn, d.Id(), v.(string)); err != nil {
-			return err
+		if err := enableImageDeprecation(ctx, conn, d.Id(), v.(string)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating EC2 AMI (%s) from source EC2 AMI (%s): %s", name, sourceImageID, err)
 		}
 	}
 
-	return resourceAMIRead(d, meta)
+	return append(diags, resourceAMIRead(ctx, d, meta)...)
 }

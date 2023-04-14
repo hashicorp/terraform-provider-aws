@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+// @SDKResource("aws_sqs_queue_redrive_policy")
 func ResourceQueueRedrivePolicy() *schema.Resource {
 	h := &queueAttributeHandler{
 		AttributeName: sqs.QueueAttributeNameRedrivePolicy,
