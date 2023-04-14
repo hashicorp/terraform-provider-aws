@@ -1,3 +1,7 @@
 ```release-note:enhancement
-resource/aws_s3_bucket: When no object lock configuration is enabled on the s3 bucket, check the error code returned contains `ObjectLockConfigurationNotFound` instead of strict checking for the error code `ObjectLockConfigurationNotFoundError`
+resource/aws_s3_bucket: Correct S3 Object Lock error handling for third-party S3-compatible API implementations
+```
+
+```release-note:enhancement
+resource/aws_s3_bucket_object_lock_configuration: Correct error handling for third-party S3-compatible API implementations
 ```
