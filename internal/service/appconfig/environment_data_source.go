@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -78,7 +79,17 @@ func dataSourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta
 
 	appID := d.Get("application_id").(string)
 	envID := d.Get("environment_id").(string)
-	ID := fmt.Sprintf("%s:%s", envID, appID)
+
+	idParts := []string{
+		envID,
+		appID,
+	}
+
+	ID, err := flex.FlattenResourceId(idParts, EnvironmentIdPartsCount)
+
+	if err != nil {
+		return create.DiagError(names.AppConfig, create.ErrActionFlatteningResourceId, ResNameEnvironment, appID, err)
+	}
 
 	out, err := findEnvironmentByApplicationAndEnvironment(ctx, conn, appID, envID)
 	if err != nil {
