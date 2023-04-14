@@ -2,9 +2,7 @@ package appsync
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
@@ -13,8 +11,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	TypeIdPartsCount = 3
+	ResNameType      = "Type"
 )
 
 // @SDKResource("aws_appsync_type")
@@ -76,7 +82,19 @@ func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "creating Appsync Type: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s:%s", apiID, aws.StringValue(out.Type.Format), aws.StringValue(out.Type.Name)))
+	idParts := []string{
+		apiID,
+		aws.StringValue(out.Type.Format),
+		aws.StringValue(out.Type.Name),
+	}
+
+	id, err := flex.FlattenResourceId(idParts, TypeIdPartsCount)
+
+	if err != nil {
+		return create.DiagError(names.AppSync, create.ErrActionFlatteningResourceId, ResNameType, apiID, err)
+	}
+
+	d.SetId(id)
 
 	return append(diags, resourceTypeRead(ctx, d, meta)...)
 }
@@ -87,7 +105,7 @@ func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	apiID, format, name, err := DecodeTypeID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Appsync Type %q: %s", d.Id(), err)
+		return create.DiagError(names.AppSync, create.ErrActionExpandingResourceId, ResNameType, d.Id(), err)
 	}
 
 	resp, err := FindTypeByID(ctx, conn, apiID, format, name)
@@ -150,9 +168,10 @@ func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func DecodeTypeID(id string) (string, string, string, error) {
-	parts := strings.Split(id, ":")
-	if len(parts) != 3 {
-		return "", "", "", fmt.Errorf("Unexpected format of ID (%q), expected API-ID:FORMAT:TYPE-NAME", id)
+	idParts, err := flex.ExpandResourceId(id, TypeIdPartsCount)
+
+	if err != nil {
+		return "", "", "", err
 	}
-	return parts[0], parts[1], parts[2], nil
+	return idParts[0], idParts[1], idParts[2], nil
 }
