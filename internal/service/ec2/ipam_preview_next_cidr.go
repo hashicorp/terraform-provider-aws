@@ -2,8 +2,6 @@ package ec2
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -12,9 +10,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	IPAMPreviewNewCIDRIdPartsCount = 2
+	ResNameIPAMPreviewNewCIDR      = "IPAM Preview New CIDR"
 )
 
 // @SDKResource("aws_vpc_ipam_preview_next_cidr")
@@ -95,7 +100,20 @@ func resourceIPAMPreviewNextCIDRCreate(ctx context.Context, d *schema.ResourceDa
 	cidr := output.IpamPoolAllocation.Cidr
 
 	d.Set("cidr", cidr)
-	d.SetId(encodeIPAMPreviewNextCIDRID(aws.StringValue(cidr), poolId))
+
+	// Generate an ID
+	idParts := []string{
+		aws.StringValue(cidr),
+		poolId,
+	}
+
+	id, err := flex.FlattenResourceId(idParts, IPAMPreviewNewCIDRIdPartsCount)
+
+	if err != nil {
+		return create.DiagError(names.Lightsail, create.ErrActionFlatteningResourceId, ResNameIPAMPreviewNewCIDR, poolId, err)
+	}
+
+	d.SetId(id)
 
 	return append(diags, resourceIPAMPreviewNextCIDRRead(ctx, d, meta)...)
 }
@@ -114,14 +132,12 @@ func resourceIPAMPreviewNextCIDRRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func encodeIPAMPreviewNextCIDRID(cidr, poolId string) string {
-	return fmt.Sprintf("%s_%s", cidr, poolId)
-}
-
 func decodeIPAMPreviewNextCIDRID(id string) (string, string, error) {
-	idParts := strings.Split(id, "_")
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return "", "", fmt.Errorf("expected ID in the form of uniqueValue_poolId, given: %q", id)
+	idParts, err := flex.ExpandResourceId(id, IPAMPreviewNewCIDRIdPartsCount)
+
+	if err != nil {
+		return "", "", err
 	}
+
 	return idParts[0], idParts[1], nil
 }
