@@ -3,6 +3,7 @@ package ec2_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -18,7 +19,7 @@ import (
 func TestAccVPCEndpointServiceAllowedPrincipal_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_endpoint_service_allowed_principal.test"
-	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
+	rName := sdkacctest.RandomWithPrefix("tfacctest")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -28,8 +29,11 @@ func TestAccVPCEndpointServiceAllowedPrincipal_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointServiceAllowedPrincipalConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointServiceAllowedPrincipalExists(ctx, resourceName),
+					resource.TestMatchResourceAttr(resourceName, "id", regexp.MustCompile(`^vpce-svc-perm-\w{17}$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_endpoint_service_id", "aws_vpc_endpoint_service.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "principal_arn", "data.aws_iam_session_context.current", "issuer_arn"),
 				),
 			},
 		},
@@ -80,7 +84,8 @@ func testAccCheckVPCEndpointServiceAllowedPrincipalExists(ctx context.Context, n
 }
 
 func testAccVPCEndpointServiceAllowedPrincipalConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccVPCEndpointServiceConfig_networkLoadBalancerBase(rName, 1), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccVPCEndpointServiceConfig_networkLoadBalancerBase(rName, 1), `
 data "aws_caller_identity" "current" {}
 
 data "aws_iam_session_context" "current" {
@@ -90,10 +95,6 @@ data "aws_iam_session_context" "current" {
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required        = false
   network_load_balancer_arns = aws_lb.test[*].arn
-
-  tags = {
-    Name = %[1]q
-  }
 }
 
 resource "aws_vpc_endpoint_service_allowed_principal" "test" {
@@ -101,5 +102,5 @@ resource "aws_vpc_endpoint_service_allowed_principal" "test" {
 
   principal_arn = data.aws_iam_session_context.current.issuer_arn
 }
-`, rName))
+`)
 }
