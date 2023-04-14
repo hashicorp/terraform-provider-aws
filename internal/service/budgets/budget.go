@@ -335,7 +335,7 @@ func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	id, err := flex.FlattenResourceId(idParts, BudgetIdPartsCount)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionFlatteningResourceId, ResNameBudget, name, err)
+		return create.DiagError(names.Budgets, create.ErrActionFlatteningResourceId, ResNameBudget, name, err)
 	}
 
 	d.SetId(id)
