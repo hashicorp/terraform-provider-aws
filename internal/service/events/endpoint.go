@@ -336,7 +336,7 @@ func waitEndpointCreated(ctx context.Context, conn *eventbridge.EventBridge, nam
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*eventbridge.DescribeEndpointOutput); ok {
 		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateReason)))
@@ -355,7 +355,7 @@ func waitEndpointUpdated(ctx context.Context, conn *eventbridge.EventBridge, nam
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*eventbridge.DescribeEndpointOutput); ok {
 		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateReason)))
@@ -374,7 +374,7 @@ func waitEndpointDeleted(ctx context.Context, conn *eventbridge.EventBridge, nam
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*eventbridge.DescribeEndpointOutput); ok {
 		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateReason)))
