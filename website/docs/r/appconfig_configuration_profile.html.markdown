@@ -56,13 +56,13 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the AppConfig Configuration Profile.
 * `configuration_profile_id` - The configuration profile ID.
-* `id` - AppConfig configuration profile ID and application ID separated by a colon (`:`).
+* `id` - AppConfig configuration profile ID and application ID separated by a comma (`,`).
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-AppConfig Configuration Profiles can be imported by using the configuration profile ID and application ID separated by a colon (`:`), e.g.,
+AppConfig Configuration Profiles can be imported by using the configuration profile ID and application ID separated by a comma (`,`), e.g.,
 
 ```
-$ terraform import aws_appconfig_configuration_profile.example 71abcde:11xxxxx
+$ terraform import aws_appconfig_configuration_profile.example 71abcde,11xxxxx
 ```
