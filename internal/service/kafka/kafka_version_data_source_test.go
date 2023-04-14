@@ -1,6 +1,7 @@
 package kafka_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -11,17 +12,18 @@ import (
 )
 
 func TestAccKafkaKafkaVersionDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_msk_kafka_version.test"
 	version := "2.4.1.1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccVersionPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccVersionPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kafka.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVersionBasicDataSourceConfig(version),
+				Config: testAccVersionDataSourceConfig_basic(version),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "version", version),
 					resource.TestCheckResourceAttrSet(dataSourceName, "status"),
@@ -32,16 +34,17 @@ func TestAccKafkaKafkaVersionDataSource_basic(t *testing.T) {
 }
 
 func TestAccKafkaKafkaVersionDataSource_preferred(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_msk_kafka_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccVersionPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccVersionPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kafka.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVersionPreferredDataSourceConfig(),
+				Config: testAccVersionDataSourceConfig_preferred(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "version", "2.4.1.1"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "status"),
@@ -51,12 +54,12 @@ func TestAccKafkaKafkaVersionDataSource_preferred(t *testing.T) {
 	})
 }
 
-func testAccVersionPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
+func testAccVersionPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
 
 	input := &kafka.ListKafkaVersionsInput{}
 
-	_, err := conn.ListKafkaVersions(input)
+	_, err := conn.ListKafkaVersionsWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -67,7 +70,7 @@ func testAccVersionPreCheck(t *testing.T) {
 	}
 }
 
-func testAccVersionBasicDataSourceConfig(version string) string {
+func testAccVersionDataSourceConfig_basic(version string) string {
 	return fmt.Sprintf(`
 data "aws_msk_kafka_version" "test" {
   version = %[1]q
@@ -75,7 +78,7 @@ data "aws_msk_kafka_version" "test" {
 `, version)
 }
 
-func testAccVersionPreferredDataSourceConfig() string {
+func testAccVersionDataSourceConfig_preferred() string {
 	return `
 data "aws_msk_kafka_version" "test" {
   preferred_versions = ["2.4.1.1", "2.4.1", "2.2.1"]

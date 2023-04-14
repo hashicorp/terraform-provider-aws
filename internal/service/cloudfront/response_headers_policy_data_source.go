@@ -1,17 +1,20 @@
 package cloudfront
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_cloudfront_response_headers_policy")
 func DataSourceResponseHeadersPolicy() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceResponseHeadersPolicyRead,
+		ReadWithoutTimeout: dataSourceResponseHeadersPolicyRead,
 
 		Schema: map[string]*schema.Schema{
 			"comment": {
@@ -250,12 +253,28 @@ func DataSourceResponseHeadersPolicy() *schema.Resource {
 					},
 				},
 			},
+			"server_timing_headers_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"sampling_rate": {
+							Type:     schema.TypeFloat,
+							Computed: true,
+						},
+					}},
+			},
 		},
 	}
 }
 
-func dataSourceResponseHeadersPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func dataSourceResponseHeadersPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	var responseHeadersPolicyID string
 
@@ -265,7 +284,7 @@ func dataSourceResponseHeadersPolicyRead(d *schema.ResourceData, meta interface{
 		name := d.Get("name").(string)
 		input := &cloudfront.ListResponseHeadersPoliciesInput{}
 
-		err := ListResponseHeadersPoliciesPages(conn, input, func(page *cloudfront.ListResponseHeadersPoliciesOutput, lastPage bool) bool {
+		err := ListResponseHeadersPoliciesPages(ctx, conn, input, func(page *cloudfront.ListResponseHeadersPoliciesOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
 			}
@@ -282,18 +301,18 @@ func dataSourceResponseHeadersPolicyRead(d *schema.ResourceData, meta interface{
 		})
 
 		if err != nil {
-			return fmt.Errorf("error listing CloudFront Response Headers Policies: %w", err)
+			return sdkdiag.AppendErrorf(diags, "listing CloudFront Response Headers Policies: %s", err)
 		}
 
 		if responseHeadersPolicyID == "" {
-			return fmt.Errorf("no matching CloudFront Response Headers Policy (%s)", name)
+			return sdkdiag.AppendErrorf(diags, "no matching CloudFront Response Headers Policy (%s)", name)
 		}
 	}
 
-	output, err := FindResponseHeadersPolicyByID(conn, responseHeadersPolicyID)
+	output, err := FindResponseHeadersPolicyByID(ctx, conn, responseHeadersPolicyID)
 
 	if err != nil {
-		return fmt.Errorf("error reading CloudFront Response Headers Policy (%s): %w", responseHeadersPolicyID, err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudFront Response Headers Policy (%s): %s", responseHeadersPolicyID, err)
 	}
 
 	d.SetId(responseHeadersPolicyID)
@@ -302,14 +321,14 @@ func dataSourceResponseHeadersPolicyRead(d *schema.ResourceData, meta interface{
 	d.Set("comment", apiObject.Comment)
 	if apiObject.CorsConfig != nil {
 		if err := d.Set("cors_config", []interface{}{flattenResponseHeadersPolicyCorsConfig(apiObject.CorsConfig)}); err != nil {
-			return fmt.Errorf("error setting cors_config: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting cors_config: %s", err)
 		}
 	} else {
 		d.Set("cors_config", nil)
 	}
 	if apiObject.CustomHeadersConfig != nil {
 		if err := d.Set("custom_headers_config", []interface{}{flattenResponseHeadersPolicyCustomHeadersConfig(apiObject.CustomHeadersConfig)}); err != nil {
-			return fmt.Errorf("error setting custom_headers_config: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting custom_headers_config: %s", err)
 		}
 	} else {
 		d.Set("custom_headers_config", nil)
@@ -318,11 +337,19 @@ func dataSourceResponseHeadersPolicyRead(d *schema.ResourceData, meta interface{
 	d.Set("name", apiObject.Name)
 	if apiObject.SecurityHeadersConfig != nil {
 		if err := d.Set("security_headers_config", []interface{}{flattenResponseHeadersPolicySecurityHeadersConfig(apiObject.SecurityHeadersConfig)}); err != nil {
-			return fmt.Errorf("error setting security_headers_config: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting security_headers_config: %s", err)
 		}
 	} else {
 		d.Set("security_headers_config", nil)
 	}
 
-	return nil
+	if apiObject.ServerTimingHeadersConfig != nil {
+		if err := d.Set("server_timing_headers_config", []interface{}{flattenResponseHeadersPolicyServerTimingHeadersConfig(apiObject.ServerTimingHeadersConfig)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting server_timing_headers_config: %s", err)
+		}
+	} else {
+		d.Set("server_timing_headers_config", nil)
+	}
+
+	return diags
 }

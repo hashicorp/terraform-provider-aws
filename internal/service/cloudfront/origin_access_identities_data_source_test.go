@@ -11,18 +11,19 @@ import (
 )
 
 func TestAccCloudFrontOriginAccessIdentitiesDataSource_comments(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_cloudfront_origin_access_identities.test"
 	resourceName := "aws_cloudfront_origin_access_identity.test1"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontOriginAccessIdentityDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOriginAccessIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOriginAccessIdentitiesDataSourceCommentsConfig(rName),
+				Config: testAccOriginAccessIdentitiesDataSourceConfig_comments(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "iam_arns.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "1"),
@@ -37,17 +38,18 @@ func TestAccCloudFrontOriginAccessIdentitiesDataSource_comments(t *testing.T) {
 }
 
 func TestAccCloudFrontOriginAccessIdentitiesDataSource_all(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_cloudfront_origin_access_identities.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontOriginAccessIdentityDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOriginAccessIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOriginAccessIdentitiesDataSourceNoCommentsConfig(rName),
+				Config: testAccOriginAccessIdentitiesDataSourceConfig_noComments(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "iam_arns.#", "1"),
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", "1"),
@@ -58,7 +60,7 @@ func TestAccCloudFrontOriginAccessIdentitiesDataSource_all(t *testing.T) {
 	})
 }
 
-func testAccOriginAccessIdentitiesDataSourceCommentsConfig(rName string) string {
+func testAccOriginAccessIdentitiesDataSourceConfig_comments(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_origin_access_identity" "test1" {
   comment = "%[1]s-1-comment"
@@ -76,7 +78,7 @@ data "aws_cloudfront_origin_access_identities" "test" {
 `, rName)
 }
 
-func testAccOriginAccessIdentitiesDataSourceNoCommentsConfig(rName string) string {
+func testAccOriginAccessIdentitiesDataSourceConfig_noComments(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_origin_access_identity" "test1" {
   comment = "%[1]s-1-comment"

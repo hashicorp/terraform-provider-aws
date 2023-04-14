@@ -11,19 +11,20 @@ import (
 )
 
 func TestAccCloudFrontOriginRequestPolicyDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSource1Name := "data.aws_cloudfront_origin_request_policy.by_id"
 	dataSource2Name := "data.aws_cloudfront_origin_request_policy.by_name"
 	resourceName := "aws_cloudfront_origin_request_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPublicKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOriginRequestPolicyDataSourceConfig(rName),
+				Config: testAccOriginRequestPolicyDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSource1Name, "comment", resourceName, "comment"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "cookies_config.#", resourceName, "cookies_config.#"),
@@ -52,7 +53,7 @@ func TestAccCloudFrontOriginRequestPolicyDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccOriginRequestPolicyDataSourceConfig(rName string) string {
+func testAccOriginRequestPolicyDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_cloudfront_origin_request_policy" "by_name" {
   name = aws_cloudfront_origin_request_policy.test.name

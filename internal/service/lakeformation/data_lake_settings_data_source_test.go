@@ -9,13 +9,14 @@ import (
 )
 
 func testAccDataLakeSettingsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "data.aws_lakeformation_data_lake_settings.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDataLakeSettingsDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataLakeSettingsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataLakeSettingsDataSourceConfig_basic,

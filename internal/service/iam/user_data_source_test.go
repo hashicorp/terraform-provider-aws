@@ -11,18 +11,19 @@ import (
 )
 
 func TestAccIAMUserDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_iam_user.test"
 	dataSourceName := "data.aws_iam_user.test"
 
 	userName := fmt.Sprintf("test-datasource-user-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserDataSourceConfig(userName),
+				Config: testAccUserDataSourceConfig_basic(userName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "unique_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "path", resourceName, "path"),
@@ -37,15 +38,16 @@ func TestAccIAMUserDataSource_basic(t *testing.T) {
 }
 
 func TestAccIAMUserDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_iam_user.test"
 	dataSourceName := "data.aws_iam_user.test"
 
 	userName := fmt.Sprintf("test-datasource-user-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDataSourceConfig_tags(userName),
@@ -57,7 +59,7 @@ func TestAccIAMUserDataSource_tags(t *testing.T) {
 	})
 }
 
-func testAccUserDataSourceConfig(name string) string {
+func testAccUserDataSourceConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   name = "%s"

@@ -11,13 +11,14 @@ import (
 )
 
 func TestAccS3CanonicalUserIDDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCanonicalUserIdDataSourceConfig,
+				Config: testAccCanonicalUserIDDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCanonicalUserIdCheckExistsDataSource("data.aws_canonical_user_id.current"),
 				),
@@ -44,6 +45,6 @@ func testAccCanonicalUserIdCheckExistsDataSource(name string) resource.TestCheck
 	}
 }
 
-const testAccCanonicalUserIdDataSourceConfig = `
+const testAccCanonicalUserIDDataSourceConfig_basic = `
 data "aws_canonical_user_id" "current" {}
 `

@@ -11,12 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_networkmanager_link_association")
 func ResourceLinkAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLinkAssociationCreate,
@@ -24,7 +25,7 @@ func ResourceLinkAssociation() *schema.Resource {
 		DeleteWithoutTimeout: resourceLinkAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -53,7 +54,7 @@ func ResourceLinkAssociation() *schema.Resource {
 }
 
 func resourceLinkAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	linkID := d.Get("link_id").(string)
@@ -82,7 +83,7 @@ func resourceLinkAssociationCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceLinkAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	globalNetworkID, linkID, deviceID, err := LinkAssociationParseResourceID(d.Id())
 
@@ -110,7 +111,7 @@ func resourceLinkAssociationRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceLinkAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	globalNetworkID, linkID, deviceID, err := LinkAssociationParseResourceID(d.Id())
 
@@ -178,7 +179,7 @@ func FindLinkAssociations(ctx context.Context, conn *networkmanager.NetworkManag
 	})
 
 	if globalNetworkIDNotFoundError(err) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -205,7 +206,7 @@ func FindLinkAssociationByThreePartKey(ctx context.Context, conn *networkmanager
 	}
 
 	if state := aws.StringValue(output.LinkAssociationState); state == networkmanager.LinkAssociationStateDeleted {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     state,
 			LastRequest: input,
 		}
@@ -213,7 +214,7 @@ func FindLinkAssociationByThreePartKey(ctx context.Context, conn *networkmanager
 
 	// Eventual consistency check.
 	if aws.StringValue(output.GlobalNetworkId) != globalNetworkID || aws.StringValue(output.LinkId) != linkID || aws.StringValue(output.DeviceId) != deviceID {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -221,7 +222,7 @@ func FindLinkAssociationByThreePartKey(ctx context.Context, conn *networkmanager
 	return output, nil
 }
 
-func statusLinkAssociationState(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, linkID, deviceID string) resource.StateRefreshFunc {
+func statusLinkAssociationState(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, linkID, deviceID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindLinkAssociationByThreePartKey(ctx, conn, globalNetworkID, linkID, deviceID)
 
@@ -238,7 +239,7 @@ func statusLinkAssociationState(ctx context.Context, conn *networkmanager.Networ
 }
 
 func waitLinkAssociationCreated(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, linkID, deviceID string, timeout time.Duration) (*networkmanager.LinkAssociation, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkmanager.LinkAssociationStatePending},
 		Target:  []string{networkmanager.LinkAssociationStateAvailable},
 		Timeout: timeout,
@@ -255,7 +256,7 @@ func waitLinkAssociationCreated(ctx context.Context, conn *networkmanager.Networ
 }
 
 func waitLinkAssociationDeleted(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, linkID, deviceID string, timeout time.Duration) (*networkmanager.LinkAssociation, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkmanager.LinkAssociationStateDeleting},
 		Target:  []string{},
 		Timeout: timeout,

@@ -1,6 +1,7 @@
 package xray_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -17,20 +18,21 @@ import (
 )
 
 func TestAccXRayGroup_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var Group xray.Group
 	resourceName := "aws_xray_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, xray.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, xray.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupBasicConfig(rName, "responsetime > 5"),
+				Config: testAccGroupConfig_basic(rName, "responsetime > 5"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckXrayGroupExists(resourceName, &Group),
+					testAccCheckGroupExists(ctx, resourceName, &Group),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "xray", regexp.MustCompile(`group/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "group_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "filter_expression", "responsetime > 5"),
@@ -43,9 +45,9 @@ func TestAccXRayGroup_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGroupBasicConfig(rName, "responsetime > 10"),
+				Config: testAccGroupConfig_basic(rName, "responsetime > 10"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckXrayGroupExists(resourceName, &Group),
+					testAccCheckGroupExists(ctx, resourceName, &Group),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "xray", regexp.MustCompile(`group/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "group_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "filter_expression", "responsetime > 10"),
@@ -57,20 +59,21 @@ func TestAccXRayGroup_basic(t *testing.T) {
 }
 
 func TestAccXRayGroup_insights(t *testing.T) {
+	ctx := acctest.Context(t)
 	var Group xray.Group
 	resourceName := "aws_xray_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, xray.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, xray.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupBasicInsightsConfig(rName, "responsetime > 5", true, true),
+				Config: testAccGroupConfig_basicInsights(rName, "responsetime > 5", true, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckXrayGroupExists(resourceName, &Group),
+					testAccCheckGroupExists(ctx, resourceName, &Group),
 					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "insights_configuration.*", map[string]string{
 						"insights_enabled":      "true",
@@ -84,9 +87,9 @@ func TestAccXRayGroup_insights(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGroupBasicInsightsConfig(rName, "responsetime > 10", false, false),
+				Config: testAccGroupConfig_basicInsights(rName, "responsetime > 10", false, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckXrayGroupExists(resourceName, &Group),
+					testAccCheckGroupExists(ctx, resourceName, &Group),
 					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "insights_configuration.*", map[string]string{
 						"insights_enabled":      "false",
@@ -99,20 +102,21 @@ func TestAccXRayGroup_insights(t *testing.T) {
 }
 
 func TestAccXRayGroup_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var Group xray.Group
 	resourceName := "aws_xray_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, xray.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, xray.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupBasicTags1Config(rName, "key1", "value1"),
+				Config: testAccGroupConfig_basicTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckXrayGroupExists(resourceName, &Group),
+					testAccCheckGroupExists(ctx, resourceName, &Group),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -123,18 +127,18 @@ func TestAccXRayGroup_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGroupBasicTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccGroupConfig_basicTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckXrayGroupExists(resourceName, &Group),
+					testAccCheckGroupExists(ctx, resourceName, &Group),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccGroupBasicTags1Config(rName, "key2", "value2"),
+				Config: testAccGroupConfig_basicTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckXrayGroupExists(resourceName, &Group),
+					testAccCheckGroupExists(ctx, resourceName, &Group),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2")),
 			},
@@ -143,21 +147,22 @@ func TestAccXRayGroup_tags(t *testing.T) {
 }
 
 func TestAccXRayGroup_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var Group xray.Group
 	resourceName := "aws_xray_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, xray.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, xray.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupBasicConfig(rName, "responsetime > 5"),
+				Config: testAccGroupConfig_basic(rName, "responsetime > 5"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckXrayGroupExists(resourceName, &Group),
-					acctest.CheckResourceDisappears(acctest.Provider, tfxray.ResourceGroup(), resourceName),
+					testAccCheckGroupExists(ctx, resourceName, &Group),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfxray.ResourceGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -165,7 +170,7 @@ func TestAccXRayGroup_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckXrayGroupExists(n string, Group *xray.Group) resource.TestCheckFunc {
+func testAccCheckGroupExists(ctx context.Context, n string, Group *xray.Group) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -175,13 +180,13 @@ func testAccCheckXrayGroupExists(n string, Group *xray.Group) resource.TestCheck
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No XRay Group ID is set")
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayConn()
 
 		input := &xray.GetGroupInput{
 			GroupARN: aws.String(rs.Primary.ID),
 		}
 
-		group, err := conn.GetGroup(input)
+		group, err := conn.GetGroupWithContext(ctx, input)
 
 		if err != nil {
 			return err
@@ -193,37 +198,39 @@ func testAccCheckXrayGroupExists(n string, Group *xray.Group) resource.TestCheck
 	}
 }
 
-func testAccCheckGroupDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_xray_group" {
-			continue
+func testAccCheckGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_xray_group" {
+				continue
+			}
+
+			conn := acctest.Provider.Meta().(*conns.AWSClient).XRayConn()
+
+			input := &xray.GetGroupInput{
+				GroupARN: aws.String(rs.Primary.ID),
+			}
+
+			group, err := conn.GetGroupWithContext(ctx, input)
+
+			if tfawserr.ErrMessageContains(err, xray.ErrCodeInvalidRequestException, "Group not found") {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if group != nil {
+				return fmt.Errorf("Expected XRay Group to be destroyed, %s found", rs.Primary.ID)
+			}
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayConn
-
-		input := &xray.GetGroupInput{
-			GroupARN: aws.String(rs.Primary.ID),
-		}
-
-		group, err := conn.GetGroup(input)
-
-		if tfawserr.ErrMessageContains(err, xray.ErrCodeInvalidRequestException, "Group not found") {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if group != nil {
-			return fmt.Errorf("Expected XRay Group to be destroyed, %s found", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccGroupBasicConfig(rName, expression string) string {
+func testAccGroupConfig_basic(rName, expression string) string {
 	return fmt.Sprintf(`
 resource "aws_xray_group" "test" {
   group_name        = %[1]q
@@ -232,7 +239,7 @@ resource "aws_xray_group" "test" {
 `, rName, expression)
 }
 
-func testAccGroupBasicTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccGroupConfig_basicTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_xray_group" "test" {
   group_name        = %[1]q
@@ -245,7 +252,7 @@ resource "aws_xray_group" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccGroupBasicTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccGroupConfig_basicTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_xray_group" "test" {
   group_name        = %[1]q
@@ -259,7 +266,7 @@ resource "aws_xray_group" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccGroupBasicInsightsConfig(rName, expression string, insightsEnabled bool, notificationsEnabled bool) string {
+func testAccGroupConfig_basicInsights(rName, expression string, insightsEnabled bool, notificationsEnabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_xray_group" "test" {
   group_name        = %[1]q

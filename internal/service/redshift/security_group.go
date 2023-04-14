@@ -2,30 +2,33 @@ package redshift
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"regexp"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_redshift_security_group")
 func ResourceSecurityGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSecurityGroupCreate,
-		Read:   resourceSecurityGroupRead,
-		Update: resourceSecurityGroupUpdate,
-		Delete: resourceSecurityGroupDelete,
+		CreateWithoutTimeout: resourceSecurityGroupCreate,
+		ReadWithoutTimeout:   resourceSecurityGroupRead,
+		UpdateWithoutTimeout: resourceSecurityGroupUpdate,
+		DeleteWithoutTimeout: resourceSecurityGroupDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -73,67 +76,21 @@ func ResourceSecurityGroup() *schema.Resource {
 				Set: resourceSecurityGroupIngressHash,
 			},
 		},
+
+		DeprecationMessage: `With the retirement of EC2-Classic the aws_redshift_security_group resource has been deprecated and will be removed in a future version.`,
 	}
 }
 
-func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
-
-	var err error
-	var errs []error
-
-	name := d.Get("name").(string)
-	desc := d.Get("description").(string)
-	sgInput := &redshift.CreateClusterSecurityGroupInput{
-		ClusterSecurityGroupName: aws.String(name),
-		Description:              aws.String(desc),
-	}
-	log.Printf("[DEBUG] Redshift security group create: name: %s, description: %s", name, desc)
-	_, err = conn.CreateClusterSecurityGroup(sgInput)
-	if err != nil {
-		return fmt.Errorf("Error creating RedshiftSecurityGroup: %s", err)
-	}
-
-	d.SetId(d.Get("name").(string))
-
-	log.Printf("[INFO] Redshift Security Group ID: %s", d.Id())
-	sg, err := resourceSecurityGroupRetrieve(d, meta)
-	if err != nil {
-		return err
-	}
-
-	ingresses := d.Get("ingress").(*schema.Set)
-	for _, ing := range ingresses.List() {
-		err := resourceSecurityGroupAuthorizeRule(ing, *sg.ClusterSecurityGroupName, conn)
-		if err != nil {
-			errs = append(errs, err)
-		}
-	}
-
-	if len(errs) > 0 {
-		return &multierror.Error{Errors: errs}
-	}
-
-	log.Println("[INFO] Waiting for Redshift Security Group Ingress Authorizations to be authorized")
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"authorizing"},
-		Target:  []string{"authorized"},
-		Refresh: resourceSecurityGroupStateRefreshFunc(d, meta),
-		Timeout: 10 * time.Minute,
-	}
-
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return err
-	}
-
-	return resourceSecurityGroupRead(d, meta)
+func resourceSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic no new Redshift Security Groups can be created`)
 }
 
-func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
-	sg, err := resourceSecurityGroupRetrieve(d, meta)
+func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	sg, err := resourceSecurityGroupRetrieve(ctx, d, meta)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Redshift Security Group (%s): %s", d.Id(), err)
 	}
 
 	rules := &schema.Set{
@@ -157,11 +114,12 @@ func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", sg.ClusterSecurityGroupName)
 	d.Set("description", sg.Description)
 
-	return nil
+	return diags
 }
 
-func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourceSecurityGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	if d.HasChange("ingress") {
 		o, n := d.GetChange("ingress")
@@ -175,77 +133,86 @@ func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		removeIngressRules := expandRedshiftSGRevokeIngress(os.Difference(ns).List())
+		removeIngressRules := expandSGRevokeIngress(os.Difference(ns).List())
 		if len(removeIngressRules) > 0 {
 			for _, r := range removeIngressRules {
 				r.ClusterSecurityGroupName = aws.String(d.Id())
 
-				_, err := conn.RevokeClusterSecurityGroupIngress(&r)
+				_, err := conn.RevokeClusterSecurityGroupIngressWithContext(ctx, &r)
 				if err != nil {
-					return err
+					return sdkdiag.AppendErrorf(diags, "updating Redshift Security Group (%s): revoking ingress: %s", d.Id(), err)
 				}
 			}
 		}
 
-		addIngressRules := expandRedshiftSGAuthorizeIngress(ns.Difference(os).List())
+		addIngressRules := expandSGAuthorizeIngress(ns.Difference(os).List())
 		if len(addIngressRules) > 0 {
 			for _, r := range addIngressRules {
 				r.ClusterSecurityGroupName = aws.String(d.Id())
 
-				_, err := conn.AuthorizeClusterSecurityGroupIngress(&r)
+				_, err := conn.AuthorizeClusterSecurityGroupIngressWithContext(ctx, &r)
 				if err != nil {
-					return err
+					return sdkdiag.AppendErrorf(diags, "updating Redshift Security Group (%s): authorizing ingress: %s", d.Id(), err)
 				}
 			}
 		}
-
 	}
-	return resourceSecurityGroupRead(d, meta)
+	return append(diags, resourceSecurityGroupRead(ctx, d, meta)...)
 }
 
-func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	log.Printf("[DEBUG] Redshift Security Group destroy: %v", d.Id())
 	opts := redshift.DeleteClusterSecurityGroupInput{
 		ClusterSecurityGroupName: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Redshift Security Group destroy configuration: %v", opts)
-	_, err := conn.DeleteClusterSecurityGroup(&opts)
+	_, err := conn.DeleteClusterSecurityGroupWithContext(ctx, &opts)
 
-	if err != nil {
-		newerr, ok := err.(awserr.Error)
-		if ok && newerr.Code() == "InvalidRedshiftSecurityGroup.NotFound" {
-			return nil
-		}
-		return err
+	if tfawserr.ErrCodeEquals(err, "InvalidRedshiftSecurityGroup.NotFound") {
+		return diags
 	}
 
-	return nil
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Redshift Security Group (%s): %s", d.Id(), err)
+	}
+
+	return diags
 }
 
-func resourceSecurityGroupRetrieve(d *schema.ResourceData, meta interface{}) (*redshift.ClusterSecurityGroup, error) {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourceSecurityGroupRetrieve(ctx context.Context, d *schema.ResourceData, meta interface{}) (*redshift.ClusterSecurityGroup, error) {
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	opts := redshift.DescribeClusterSecurityGroupsInput{
 		ClusterSecurityGroupName: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Redshift Security Group describe configuration: %#v", opts)
-
-	resp, err := conn.DescribeClusterSecurityGroups(&opts)
-
+	resp, err := conn.DescribeClusterSecurityGroupsWithContext(ctx, &opts)
 	if err != nil {
-		return nil, fmt.Errorf("Error retrieving Redshift Security Groups: %s", err)
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: opts,
+		}
 	}
 
-	if len(resp.ClusterSecurityGroups) != 1 ||
-		*resp.ClusterSecurityGroups[0].ClusterSecurityGroupName != d.Id() {
-		return nil, fmt.Errorf("Unable to find Redshift Security Group: %#v", resp.ClusterSecurityGroups)
+	if len(resp.ClusterSecurityGroups) == 0 || resp.ClusterSecurityGroups[0] == nil {
+		return nil, tfresource.NewEmptyResultError(opts)
 	}
 
-	return resp.ClusterSecurityGroups[0], nil
+	if l := len(resp.ClusterSecurityGroups); l > 1 {
+		return nil, tfresource.NewTooManyResultsError(l, opts)
+	}
+
+	result := resp.ClusterSecurityGroups[0]
+	if aws.StringValue(result.ClusterSecurityGroupName) != d.Id() {
+		return nil, &retry.NotFoundError{
+			LastRequest: opts,
+		}
+	}
+
+	return result, nil
 }
 
 func resourceSecurityGroupIngressHash(v interface{}) int {
@@ -267,65 +234,7 @@ func resourceSecurityGroupIngressHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func resourceSecurityGroupAuthorizeRule(ingress interface{}, redshiftSecurityGroupName string, conn *redshift.Redshift) error {
-	ing := ingress.(map[string]interface{})
-
-	opts := redshift.AuthorizeClusterSecurityGroupIngressInput{
-		ClusterSecurityGroupName: aws.String(redshiftSecurityGroupName),
-	}
-
-	if attr, ok := ing["cidr"]; ok && attr != "" {
-		opts.CIDRIP = aws.String(attr.(string))
-	}
-
-	if attr, ok := ing["security_group_name"]; ok && attr != "" {
-		opts.EC2SecurityGroupName = aws.String(attr.(string))
-	}
-
-	if attr, ok := ing["security_group_owner_id"]; ok && attr != "" {
-		opts.EC2SecurityGroupOwnerId = aws.String(attr.(string))
-	}
-
-	log.Printf("[DEBUG] Authorize ingress rule configuration: %#v", opts)
-	_, err := conn.AuthorizeClusterSecurityGroupIngress(&opts)
-
-	if err != nil {
-		return fmt.Errorf("Error authorizing security group ingress: %s", err)
-	}
-
-	return nil
-}
-
-func resourceSecurityGroupStateRefreshFunc(
-	d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		v, err := resourceSecurityGroupRetrieve(d, meta)
-
-		if err != nil {
-			log.Printf("Error on retrieving Redshift Security Group when waiting: %s", err)
-			return nil, "", err
-		}
-
-		statuses := make([]string, 0, len(v.EC2SecurityGroups)+len(v.IPRanges))
-		for _, ec2g := range v.EC2SecurityGroups {
-			statuses = append(statuses, *ec2g.Status)
-		}
-		for _, ips := range v.IPRanges {
-			statuses = append(statuses, *ips.Status)
-		}
-
-		for _, stat := range statuses {
-			// Not done
-			if stat != "authorized" {
-				return nil, "authorizing", nil
-			}
-		}
-
-		return v, "authorized", nil
-	}
-}
-
-func expandRedshiftSGAuthorizeIngress(configured []interface{}) []redshift.AuthorizeClusterSecurityGroupIngressInput {
+func expandSGAuthorizeIngress(configured []interface{}) []redshift.AuthorizeClusterSecurityGroupIngressInput {
 	var ingress []redshift.AuthorizeClusterSecurityGroupIngressInput
 
 	// Loop over our configured parameters and create
@@ -353,7 +262,7 @@ func expandRedshiftSGAuthorizeIngress(configured []interface{}) []redshift.Autho
 	return ingress
 }
 
-func expandRedshiftSGRevokeIngress(configured []interface{}) []redshift.RevokeClusterSecurityGroupIngressInput {
+func expandSGRevokeIngress(configured []interface{}) []redshift.RevokeClusterSecurityGroupIngressInput {
 	var ingress []redshift.RevokeClusterSecurityGroupIngressInput
 
 	// Loop over our configured parameters and create

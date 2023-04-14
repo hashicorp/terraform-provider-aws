@@ -1,41 +1,107 @@
 package ec2_test
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"regexp"
+	"strings"
 	"testing"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccEC2AMI_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var ami ec2.Image
 	resourceName := "aws_ami.test"
 	snapshotResourceName := "aws_ebs_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAmiDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAMIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAmiConfigBasic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAmiExists(resourceName, &ami),
+				Config: testAccAMIConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAMIExists(ctx, resourceName, &ami),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"delete_on_termination": "true",
+						"device_name":           "/dev/sda1",
+						"encrypted":             "false",
+						"iops":                  "0",
+						"throughput":            "0",
+						"volume_size":           "8",
+						"outpost_arn":           "",
+						"volume_type":           "standard",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*.snapshot_id", snapshotResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "ena_support", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "hypervisor", "xen"),
+					resource.TestCheckResourceAttr(resourceName, "image_type", "machine"),
+					resource.TestCheckResourceAttr(resourceName, "imds_support", ""),
+					resource.TestCheckResourceAttr(resourceName, "kernel_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "platform_details", "Linux/UNIX"),
+					resource.TestCheckResourceAttr(resourceName, "ramdisk_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "root_device_name", "/dev/sda1"),
+					resource.TestCheckResourceAttrPair(resourceName, "root_snapshot_id", snapshotResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "sriov_net_support", "simple"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tpm_support", ""),
+					resource.TestCheckResourceAttr(resourceName, "usage_operation", "RunInstances"),
+					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"manage_ebs_snapshots",
+				},
+			},
+		},
+	})
+}
+
+func TestAccEC2AMI_deprecateAt(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ami ec2.Image
+	resourceName := "aws_ami.test"
+	snapshotResourceName := "aws_ebs_snapshot.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	deprecateAt := "2027-10-15T13:17:00.000Z"
+	deprecateAtUpdated := "2028-10-15T13:17:00.000Z"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAMIDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAMIConfig_deprecateAt(rName, deprecateAt),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAMIExists(ctx, resourceName, &ami),
+					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "deprecation_time", deprecateAt),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
@@ -58,13 +124,8 @@ func TestAccEC2AMI_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_device_name", "/dev/sda1"),
 					resource.TestCheckResourceAttrPair(resourceName, "root_snapshot_id", snapshotResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "sriov_net_support", "simple"),
-					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "usage_operation", "RunInstances"),
-					resource.TestCheckResourceAttr(resourceName, "platform_details", "Linux/UNIX"),
-					resource.TestCheckResourceAttr(resourceName, "image_type", "machine"),
-					resource.TestCheckResourceAttr(resourceName, "hypervisor", "xen"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 				),
 			},
 			{
@@ -75,11 +136,45 @@ func TestAccEC2AMI_basic(t *testing.T) {
 					"manage_ebs_snapshots",
 				},
 			},
+			{
+				Config: testAccAMIConfig_deprecateAt(rName, deprecateAtUpdated),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAMIExists(ctx, resourceName, &ami),
+					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "deprecation_time", deprecateAtUpdated),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"delete_on_termination": "true",
+						"device_name":           "/dev/sda1",
+						"encrypted":             "false",
+						"iops":                  "0",
+						"throughput":            "0",
+						"volume_size":           "8",
+						"outpost_arn":           "",
+						"volume_type":           "standard",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*.snapshot_id", snapshotResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "ena_support", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kernel_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "ramdisk_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "root_device_name", "/dev/sda1"),
+					resource.TestCheckResourceAttrPair(resourceName, "root_snapshot_id", snapshotResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "sriov_net_support", "simple"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
+				),
+			},
 		},
 	})
 }
 
 func TestAccEC2AMI_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	var ami ec2.Image
 	resourceName := "aws_ami.test"
 	snapshotResourceName := "aws_ebs_snapshot.test"
@@ -88,15 +183,15 @@ func TestAccEC2AMI_description(t *testing.T) {
 	descUpdated := sdkacctest.RandomWithPrefix("desc-updated")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAmiDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAMIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAmiConfigDesc(rName, desc),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAmiExists(resourceName, &ami),
+				Config: testAccAMIConfig_desc(rName, desc),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAMIExists(ctx, resourceName, &ami),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", desc),
@@ -108,6 +203,7 @@ func TestAccEC2AMI_description(t *testing.T) {
 						"iops":                  "0",
 						"throughput":            "0",
 						"volume_size":           "8",
+						"outpost_arn":           "",
 						"volume_type":           "standard",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*.snapshot_id", snapshotResourceName, "id"),
@@ -120,8 +216,8 @@ func TestAccEC2AMI_description(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_device_name", "/dev/sda1"),
 					resource.TestCheckResourceAttrPair(resourceName, "root_snapshot_id", snapshotResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "sriov_net_support", "simple"),
-					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 				),
 			},
 			{
@@ -133,9 +229,9 @@ func TestAccEC2AMI_description(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAmiConfigDesc(rName, descUpdated),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAmiExists(resourceName, &ami),
+				Config: testAccAMIConfig_desc(rName, descUpdated),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAMIExists(ctx, resourceName, &ami),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", descUpdated),
@@ -147,6 +243,7 @@ func TestAccEC2AMI_description(t *testing.T) {
 						"iops":                  "0",
 						"throughput":            "0",
 						"volume_size":           "8",
+						"outpost_arn":           "",
 						"volume_type":           "standard",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*.snapshot_id", snapshotResourceName, "id"),
@@ -159,8 +256,8 @@ func TestAccEC2AMI_description(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_device_name", "/dev/sda1"),
 					resource.TestCheckResourceAttrPair(resourceName, "root_snapshot_id", snapshotResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "sriov_net_support", "simple"),
-					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 				),
 			},
 		},
@@ -168,21 +265,22 @@ func TestAccEC2AMI_description(t *testing.T) {
 }
 
 func TestAccEC2AMI_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var ami ec2.Image
 	resourceName := "aws_ami.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAmiDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAMIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAmiConfigBasic(rName),
+				Config: testAccAMIConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAmiExists(resourceName, &ami),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceAMI(), resourceName),
+					testAccCheckAMIExists(ctx, resourceName, &ami),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceAMI(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -191,21 +289,22 @@ func TestAccEC2AMI_disappears(t *testing.T) {
 }
 
 func TestAccEC2AMI_ephemeralBlockDevices(t *testing.T) {
+	ctx := acctest.Context(t)
 	var ami ec2.Image
 	resourceName := "aws_ami.test"
 	snapshotResourceName := "aws_ebs_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAmiDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAMIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAmiConfigEphemeralBlockDevices(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAmiExists(resourceName, &ami),
+				Config: testAccAMIConfig_ephemeralBlockDevices(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAMIExists(ctx, resourceName, &ami),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -217,6 +316,7 @@ func TestAccEC2AMI_ephemeralBlockDevices(t *testing.T) {
 						"iops":                  "0",
 						"throughput":            "0",
 						"volume_size":           "8",
+						"outpost_arn":           "",
 						"volume_type":           "standard",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*.snapshot_id", snapshotResourceName, "id"),
@@ -236,8 +336,8 @@ func TestAccEC2AMI_ephemeralBlockDevices(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_device_name", "/dev/sda1"),
 					resource.TestCheckResourceAttrPair(resourceName, "root_snapshot_id", snapshotResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "sriov_net_support", "simple"),
-					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 				),
 			},
 			{
@@ -253,21 +353,22 @@ func TestAccEC2AMI_ephemeralBlockDevices(t *testing.T) {
 }
 
 func TestAccEC2AMI_gp3BlockDevice(t *testing.T) {
+	ctx := acctest.Context(t)
 	var ami ec2.Image
 	resourceName := "aws_ami.test"
 	snapshotResourceName := "aws_ebs_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAmiDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAMIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAmiConfigGp3BlockDevice(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAmiExists(resourceName, &ami),
+				Config: testAccAMIConfig_gp3BlockDevice(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAMIExists(ctx, resourceName, &ami),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -279,6 +380,7 @@ func TestAccEC2AMI_gp3BlockDevice(t *testing.T) {
 						"iops":                  "0",
 						"throughput":            "0",
 						"volume_size":           "8",
+						"outpost_arn":           "",
 						"volume_type":           "standard",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*.snapshot_id", snapshotResourceName, "id"),
@@ -289,6 +391,7 @@ func TestAccEC2AMI_gp3BlockDevice(t *testing.T) {
 						"iops":                  "100",
 						"throughput":            "500",
 						"volume_size":           "10",
+						"outpost_arn":           "",
 						"volume_type":           "gp3",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "ena_support", "false"),
@@ -300,8 +403,8 @@ func TestAccEC2AMI_gp3BlockDevice(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_device_name", "/dev/sda1"),
 					resource.TestCheckResourceAttrPair(resourceName, "root_snapshot_id", snapshotResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "sriov_net_support", "simple"),
-					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 				),
 			},
 			{
@@ -317,20 +420,21 @@ func TestAccEC2AMI_gp3BlockDevice(t *testing.T) {
 }
 
 func TestAccEC2AMI_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var ami ec2.Image
 	resourceName := "aws_ami.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAmiDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAMIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAmiConfigTags1(rName, "key1", "value1"),
+				Config: testAccAMIConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAmiExists(resourceName, &ami),
+					testAccCheckAMIExists(ctx, resourceName, &ami),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -344,18 +448,18 @@ func TestAccEC2AMI_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAmiConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAMIConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAmiExists(resourceName, &ami),
+					testAccCheckAMIExists(ctx, resourceName, &ami),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAmiConfigTags1(rName, "key2", "value2"),
+				Config: testAccAMIConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAmiExists(resourceName, &ami),
+					testAccCheckAMIExists(ctx, resourceName, &ami),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -365,20 +469,21 @@ func TestAccEC2AMI_tags(t *testing.T) {
 }
 
 func TestAccEC2AMI_outpost(t *testing.T) {
+	ctx := acctest.Context(t)
 	var ami ec2.Image
 	resourceName := "aws_ami.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAmiDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAMIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAmiConfigOutpost(rName),
+				Config: testAccAMIConfig_outpost(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAmiExists(resourceName, &ami),
+					testAccCheckAMIExists(ctx, resourceName, &ami),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*.outpost_arn", " data.aws_outposts_outpost.test", "arn"),
 				),
 			},
@@ -395,20 +500,21 @@ func TestAccEC2AMI_outpost(t *testing.T) {
 }
 
 func TestAccEC2AMI_boot(t *testing.T) {
+	ctx := acctest.Context(t)
 	var ami ec2.Image
 	resourceName := "aws_ami.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAmiDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAMIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAmiConfigBoot(rName),
+				Config: testAccAMIConfig_boot(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAmiExists(resourceName, &ami),
+					testAccCheckAMIExists(ctx, resourceName, &ami),
 					resource.TestCheckResourceAttr(resourceName, "boot_mode", "uefi"),
 				),
 			},
@@ -424,81 +530,127 @@ func TestAccEC2AMI_boot(t *testing.T) {
 	})
 }
 
-func testAccCheckAmiDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+func TestAccEC2AMI_tpmSupport(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ami ec2.Image
+	resourceName := "aws_ami.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ami" {
-			continue
-		}
-
-		// Try to find the AMI
-		log.Printf("AMI-ID: %s", rs.Primary.ID)
-		DescribeAmiOpts := &ec2.DescribeImagesInput{
-			ImageIds: []*string{aws.String(rs.Primary.ID)},
-		}
-		resp, err := conn.DescribeImages(DescribeAmiOpts)
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidAMIID", "NotFound") {
-				log.Printf("[DEBUG] AMI not found, passing")
-				return nil
-			}
-			return err
-		}
-
-		if len(resp.Images) > 0 {
-			state := resp.Images[0].State
-			return fmt.Errorf("AMI %s still exists in the state: %s.", aws.StringValue(resp.Images[0].ImageId),
-				aws.StringValue(state))
-		}
-	}
-	return nil
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAMIDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAMIConfig_tpmSupport(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAMIExists(ctx, resourceName, &ami),
+					resource.TestCheckResourceAttr(resourceName, "tpm_support", "v2.0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"manage_ebs_snapshots",
+				},
+			},
+		},
+	})
 }
 
-func testAccCheckAmiExists(n string, ami *ec2.Image) resource.TestCheckFunc {
+func TestAccEC2AMI_imdsSupport(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ami ec2.Image
+	resourceName := "aws_ami.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAMIDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAMIConfig_imdsSupport(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAMIExists(ctx, resourceName, &ami),
+					resource.TestCheckResourceAttr(resourceName, "imds_support", "v2.0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"manage_ebs_snapshots",
+				},
+			},
+		},
+	})
+}
+
+func testAccCheckAMIDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+
+		for n, rs := range s.RootModule().Resources {
+			// The configuration may contain aws_ami data sources.
+			// Ignore them.
+			if strings.HasPrefix(n, "data.") {
+				continue
+			}
+
+			if rs.Type != "aws_ami" {
+				continue
+			}
+
+			_, err := tfec2.FindImageByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("EC2 AMI %s still exists", rs.Primary.ID)
+		}
+
+		// Check for managed EBS snapshots.
+		return testAccCheckEBSSnapshotDestroy(ctx)(s)
+	}
+}
+
+func testAccCheckAMIExists(ctx context.Context, n string, v *ec2.Image) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("AMI Not found: %s", n)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No AMI ID is set")
+			return fmt.Errorf("No EC2 AMI ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-		var resp *ec2.DescribeImagesOutput
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			opts := &ec2.DescribeImagesInput{
-				ImageIds: []*string{aws.String(rs.Primary.ID)},
-			}
-			var err error
-			resp, err = conn.DescribeImages(opts)
-			if err != nil {
-				// This can be just eventual consistency
-				if tfawserr.ErrCodeEquals(err, "InvalidAMIID.NotFound") {
-					return resource.RetryableError(err)
-				}
+		output, err := tfec2.FindImageByID(ctx, conn, rs.Primary.ID)
 
-				return resource.NonRetryableError(err)
-			}
-
-			return nil
-		})
 		if err != nil {
-			return fmt.Errorf("Unable to find AMI after retries: %s", err)
+			return err
 		}
 
-		if len(resp.Images) == 0 {
-			return fmt.Errorf("AMI not found")
-		}
-		*ami = *resp.Images[0]
+		*v = *output
+
 		return nil
 	}
 }
 
-func testAccAmiConfigBase(rName string) string {
+func testAccAMIConfig_base(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -521,9 +673,9 @@ resource "aws_ebs_snapshot" "test" {
 `, rName))
 }
 
-func testAccAmiConfigBasic(rName string) string {
+func testAccAMIConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAmiConfigBase(rName),
+		testAccAMIConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_ami" "test" {
   ena_support         = true
@@ -539,9 +691,28 @@ resource "aws_ami" "test" {
 `, rName))
 }
 
-func testAccAmiConfigDesc(rName, desc string) string {
+func testAccAMIConfig_deprecateAt(rName, deprecateAt string) string {
 	return acctest.ConfigCompose(
-		testAccAmiConfigBase(rName),
+		testAccAMIConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_ami" "test" {
+  ena_support         = true
+  name                = %[1]q
+  root_device_name    = "/dev/sda1"
+  virtualization_type = "hvm"
+  deprecation_time    = %[2]q
+
+  ebs_block_device {
+    device_name = "/dev/sda1"
+    snapshot_id = aws_ebs_snapshot.test.id
+  }
+}
+`, rName, deprecateAt))
+}
+
+func testAccAMIConfig_desc(rName, desc string) string {
+	return acctest.ConfigCompose(
+		testAccAMIConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_ami" "test" {
   ena_support         = true
@@ -558,9 +729,9 @@ resource "aws_ami" "test" {
 `, rName, desc))
 }
 
-func testAccAmiConfigEphemeralBlockDevices(rName string) string {
+func testAccAMIConfig_ephemeralBlockDevices(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAmiConfigBase(rName),
+		testAccAMIConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_ami" "test" {
   ena_support         = true
@@ -586,9 +757,9 @@ resource "aws_ami" "test" {
 `, rName))
 }
 
-func testAccAmiConfigGp3BlockDevice(rName string) string {
+func testAccAMIConfig_gp3BlockDevice(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAmiConfigBase(rName),
+		testAccAMIConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_ami" "test" {
   ena_support         = false
@@ -614,9 +785,9 @@ resource "aws_ami" "test" {
 `, rName))
 }
 
-func testAccAmiConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccAMIConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		testAccAmiConfigBase(rName),
+		testAccAMIConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_ami" "test" {
   ena_support         = true
@@ -636,9 +807,9 @@ resource "aws_ami" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccAmiConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccAMIConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		testAccAmiConfigBase(rName),
+		testAccAMIConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_ami" "test" {
   ena_support         = true
@@ -659,9 +830,9 @@ resource "aws_ami" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccAmiConfigOutpost(rName string) string {
+func testAccAMIConfig_outpost(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAmiConfigBase(rName),
+		testAccAMIConfig_base(rName),
 		fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
@@ -684,9 +855,9 @@ resource "aws_ami" "test" {
 `, rName))
 }
 
-func testAccAmiConfigBoot(rName string) string {
+func testAccAMIConfig_boot(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAmiConfigBase(rName),
+		testAccAMIConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_ami" "test" {
   ena_support         = true
@@ -697,6 +868,45 @@ resource "aws_ami" "test" {
 
   ebs_block_device {
     device_name = "/dev/sda1"
+    snapshot_id = aws_ebs_snapshot.test.id
+  }
+}
+`, rName))
+}
+
+func testAccAMIConfig_tpmSupport(rName string) string {
+	return acctest.ConfigCompose(
+		testAccAMIConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_ami" "test" {
+  ena_support         = true
+  name                = %[1]q
+  root_device_name    = "/dev/xvda"
+  virtualization_type = "hvm"
+  boot_mode           = "uefi"
+  tpm_support         = "v2.0"
+
+  ebs_block_device {
+    device_name = "/dev/xvda"
+    snapshot_id = aws_ebs_snapshot.test.id
+  }
+}
+`, rName))
+}
+
+func testAccAMIConfig_imdsSupport(rName string) string {
+	return acctest.ConfigCompose(
+		testAccAMIConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_ami" "test" {
+  name                = %[1]q
+  root_device_name    = "/dev/xvda"
+  virtualization_type = "hvm"
+  boot_mode           = "uefi"
+  imds_support        = "v2.0"
+
+  ebs_block_device {
+    device_name = "/dev/xvda"
     snapshot_id = aws_ebs_snapshot.test.id
   }
 }

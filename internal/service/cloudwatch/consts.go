@@ -1,6 +1,11 @@
 package cloudwatch
 
 const (
+	ResNameDashboard   = "Dashboard"
+	ResNameMetricAlarm = "Metric Alarm"
+)
+
+const (
 	lowSampleCountPercentilesEvaluate          = "evaluate"
 	lowSampleCountPercentilesmissingDataIgnore = "ignore"
 )

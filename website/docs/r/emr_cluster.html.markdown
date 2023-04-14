@@ -447,115 +447,111 @@ resource "aws_main_route_table_association" "a" {
 ###
 
 # IAM role for EMR Service
-resource "aws_iam_role" "iam_emr_service_role" {
-  name = "iam_emr_service_role"
+data "aws_iam_policy_document" "emr_assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2008-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "elasticmapreduce.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
+    principals {
+      type        = "Service"
+      identifiers = ["elasticmapreduce.amazonaws.com"]
     }
-  ]
+
+    actions = "sts:AssumeRole"
+  }
 }
-EOF
+
+resource "aws_iam_role" "iam_emr_service_role" {
+  name               = "iam_emr_service_role"
+  assume_role_policy = data.aws_iam_policy_document.emr_assume_role.json
+}
+
+data "aws_iam_policy_document" "iam_emr_service_policy" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "ec2:AuthorizeSecurityGroupEgress",
+      "ec2:AuthorizeSecurityGroupIngress",
+      "ec2:CancelSpotInstanceRequests",
+      "ec2:CreateNetworkInterface",
+      "ec2:CreateSecurityGroup",
+      "ec2:CreateTags",
+      "ec2:DeleteNetworkInterface",
+      "ec2:DeleteSecurityGroup",
+      "ec2:DeleteTags",
+      "ec2:DescribeAvailabilityZones",
+      "ec2:DescribeAccountAttributes",
+      "ec2:DescribeDhcpOptions",
+      "ec2:DescribeInstanceStatus",
+      "ec2:DescribeInstances",
+      "ec2:DescribeKeyPairs",
+      "ec2:DescribeNetworkAcls",
+      "ec2:DescribeNetworkInterfaces",
+      "ec2:DescribePrefixLists",
+      "ec2:DescribeRouteTables",
+      "ec2:DescribeSecurityGroups",
+      "ec2:DescribeSpotInstanceRequests",
+      "ec2:DescribeSpotPriceHistory",
+      "ec2:DescribeSubnets",
+      "ec2:DescribeVpcAttribute",
+      "ec2:DescribeVpcEndpoints",
+      "ec2:DescribeVpcEndpointServices",
+      "ec2:DescribeVpcs",
+      "ec2:DetachNetworkInterface",
+      "ec2:ModifyImageAttribute",
+      "ec2:ModifyInstanceAttribute",
+      "ec2:RequestSpotInstances",
+      "ec2:RevokeSecurityGroupEgress",
+      "ec2:RunInstances",
+      "ec2:TerminateInstances",
+      "ec2:DeleteVolume",
+      "ec2:DescribeVolumeStatus",
+      "ec2:DescribeVolumes",
+      "ec2:DetachVolume",
+      "iam:GetRole",
+      "iam:GetRolePolicy",
+      "iam:ListInstanceProfiles",
+      "iam:ListRolePolicies",
+      "iam:PassRole",
+      "s3:CreateBucket",
+      "s3:Get*",
+      "s3:List*",
+      "sdb:BatchPutAttributes",
+      "sdb:Select",
+      "sqs:CreateQueue",
+      "sqs:Delete*",
+      "sqs:GetQueue*",
+      "sqs:PurgeQueue",
+      "sqs:ReceiveMessage",
+    ]
+
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_role_policy" "iam_emr_service_policy" {
-  name = "iam_emr_service_policy"
-  role = aws_iam_role.iam_emr_service_role.id
-
-  policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [{
-        "Effect": "Allow",
-        "Resource": "*",
-        "Action": [
-            "ec2:AuthorizeSecurityGroupEgress",
-            "ec2:AuthorizeSecurityGroupIngress",
-            "ec2:CancelSpotInstanceRequests",
-            "ec2:CreateNetworkInterface",
-            "ec2:CreateSecurityGroup",
-            "ec2:CreateTags",
-            "ec2:DeleteNetworkInterface",
-            "ec2:DeleteSecurityGroup",
-            "ec2:DeleteTags",
-            "ec2:DescribeAvailabilityZones",
-            "ec2:DescribeAccountAttributes",
-            "ec2:DescribeDhcpOptions",
-            "ec2:DescribeInstanceStatus",
-            "ec2:DescribeInstances",
-            "ec2:DescribeKeyPairs",
-            "ec2:DescribeNetworkAcls",
-            "ec2:DescribeNetworkInterfaces",
-            "ec2:DescribePrefixLists",
-            "ec2:DescribeRouteTables",
-            "ec2:DescribeSecurityGroups",
-            "ec2:DescribeSpotInstanceRequests",
-            "ec2:DescribeSpotPriceHistory",
-            "ec2:DescribeSubnets",
-            "ec2:DescribeVpcAttribute",
-            "ec2:DescribeVpcEndpoints",
-            "ec2:DescribeVpcEndpointServices",
-            "ec2:DescribeVpcs",
-            "ec2:DetachNetworkInterface",
-            "ec2:ModifyImageAttribute",
-            "ec2:ModifyInstanceAttribute",
-            "ec2:RequestSpotInstances",
-            "ec2:RevokeSecurityGroupEgress",
-            "ec2:RunInstances",
-            "ec2:TerminateInstances",
-            "ec2:DeleteVolume",
-            "ec2:DescribeVolumeStatus",
-            "ec2:DescribeVolumes",
-            "ec2:DetachVolume",
-            "iam:GetRole",
-            "iam:GetRolePolicy",
-            "iam:ListInstanceProfiles",
-            "iam:ListRolePolicies",
-            "iam:PassRole",
-            "s3:CreateBucket",
-            "s3:Get*",
-            "s3:List*",
-            "sdb:BatchPutAttributes",
-            "sdb:Select",
-            "sqs:CreateQueue",
-            "sqs:Delete*",
-            "sqs:GetQueue*",
-            "sqs:PurgeQueue",
-            "sqs:ReceiveMessage"
-        ]
-    }]
-}
-EOF
+  name   = "iam_emr_service_policy"
+  role   = aws_iam_role.iam_emr_service_role.id
+  policy = data.aws_iam_policy_document.iam_emr_service_policy.json
 }
 
 # IAM Role for EC2 Instance Profile
-resource "aws_iam_role" "iam_emr_profile_role" {
-  name = "iam_emr_profile_role"
+data "aws_iam_policy_document" "ec2_assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2008-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "ec2.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
     }
-  ]
+
+    actions = "sts:AssumeRole"
+  }
 }
-EOF
+
+resource "aws_iam_role" "iam_emr_profile_role" {
+  name               = "iam_emr_profile_role"
+  assume_role_policy = data.aws_iam_policy_document.ec2_assume_role.json
 }
 
 resource "aws_iam_instance_profile" "emr_profile" {
@@ -563,43 +559,43 @@ resource "aws_iam_instance_profile" "emr_profile" {
   role = aws_iam_role.iam_emr_profile_role.name
 }
 
-resource "aws_iam_role_policy" "iam_emr_profile_policy" {
-  name = "iam_emr_profile_policy"
-  role = aws_iam_role.iam_emr_profile_role.id
+data "aws_iam_policy_document" "iam_emr_profile_policy" {
+  statement {
+    effect = "Allow"
 
-  policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [{
-        "Effect": "Allow",
-        "Resource": "*",
-        "Action": [
-            "cloudwatch:*",
-            "dynamodb:*",
-            "ec2:Describe*",
-            "elasticmapreduce:Describe*",
-            "elasticmapreduce:ListBootstrapActions",
-            "elasticmapreduce:ListClusters",
-            "elasticmapreduce:ListInstanceGroups",
-            "elasticmapreduce:ListInstances",
-            "elasticmapreduce:ListSteps",
-            "kinesis:CreateStream",
-            "kinesis:DeleteStream",
-            "kinesis:DescribeStream",
-            "kinesis:GetRecords",
-            "kinesis:GetShardIterator",
-            "kinesis:MergeShards",
-            "kinesis:PutRecord",
-            "kinesis:SplitShard",
-            "rds:Describe*",
-            "s3:*",
-            "sdb:*",
-            "sns:*",
-            "sqs:*"
-        ]
-    }]
+    actions = [
+      "cloudwatch:*",
+      "dynamodb:*",
+      "ec2:Describe*",
+      "elasticmapreduce:Describe*",
+      "elasticmapreduce:ListBootstrapActions",
+      "elasticmapreduce:ListClusters",
+      "elasticmapreduce:ListInstanceGroups",
+      "elasticmapreduce:ListInstances",
+      "elasticmapreduce:ListSteps",
+      "kinesis:CreateStream",
+      "kinesis:DeleteStream",
+      "kinesis:DescribeStream",
+      "kinesis:GetRecords",
+      "kinesis:GetShardIterator",
+      "kinesis:MergeShards",
+      "kinesis:PutRecord",
+      "kinesis:SplitShard",
+      "rds:Describe*",
+      "s3:*",
+      "sdb:*",
+      "sns:*",
+      "sqs:*",
+    ]
+
+    resources = ["*"]
+  }
 }
-EOF
+
+resource "aws_iam_role_policy" "iam_emr_profile_policy" {
+  name   = "iam_emr_profile_policy"
+  role   = aws_iam_role.iam_emr_profile_role.id
+  policy = data.aws_iam_policy_document.iam_emr_profile_policy.json
 }
 ```
 
@@ -662,7 +658,7 @@ EOF
 * `security_configuration` - (Optional) Security configuration name to attach to the EMR cluster. Only valid for EMR clusters with `release_label` 4.8.0 or greater.
 * `step` - (Optional) List of steps to run when creating the cluster. See below. It is highly recommended to utilize the [lifecycle configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) with `ignore_changes` if other steps are being managed outside of Terraform. This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
 * `step_concurrency_level` - (Optional) Number of steps that can be executed concurrently. You can specify a maximum of 256 steps. Only valid for EMR clusters with `release_label` 5.28.0 or greater (default is 1).
-* `tags` - (Optional) list of tags to apply to the EMR Cluster. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) list of tags to apply to the EMR Cluster. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `termination_protection` - (Optional) Switch on/off termination protection (default is `false`, except when using multiple master nodes). Before attempting to destroy the resource when termination protection is enabled, this configuration must be applied with its value set to `false`.
 * `visible_to_all_users` - (Optional) Whether the job flow is visible to all IAM users of the AWS account associated with the job flow. Default value is `true`.
 
@@ -734,7 +730,8 @@ The launch specification for Spot instances in the fleet, which determines the d
 
 * `iops` - (Optional) Number of I/O operations per second (IOPS) that the volume supports.
 * `size` - (Required) Volume size, in gibibytes (GiB).
-* `type` - (Required) Volume type. Valid options are `gp2`, `io1`, `standard` and `st1`. See [EBS Volume Types](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html).
+* `type` - (Required) Volume type. Valid options are `gp3`, `gp2`, `io1`, `standard`, `st1` and `sc1`. See [EBS Volume Types](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html).
+* `throughput` - (Optional) The throughput, in mebibyte per second (MiB/s).
 * `volumes_per_instance` - (Optional) Number of EBS volumes with this configuration to attach to each EC2 instance in the instance group (default is 1).
 
 ### ec2_attributes
@@ -825,7 +822,7 @@ In addition to all arguments above, the following attributes are exported:
 * `name` - Name of the cluster.
 * `release_label` - Release label for the Amazon EMR release.
 * `service_role` - IAM role that will be assumed by the Amazon EMR service to access AWS resources on your behalf.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `visible_to_all_users` - Indicates whether the job flow is visible to all IAM users of the AWS account associated with the job flow.
 
 ## Import

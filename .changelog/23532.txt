@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_ec2_network_insights_analysis
+```
+
+```release-note:new-data-source
+aws_ec2_network_insights_path
+```
+
+```release-note:new-data-source
+aws_ec2_network_insights_analysis
+```

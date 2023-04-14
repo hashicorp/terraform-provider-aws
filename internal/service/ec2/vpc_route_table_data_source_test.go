@@ -12,7 +12,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccEC2RouteTableDataSource_basic(t *testing.T) {
+func TestAccVPCRouteTableDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rtResourceName := "aws_route_table.test"
 	snResourceName := "aws_subnet.test"
 	vpcResourceName := "aws_vpc.test"
@@ -25,12 +26,12 @@ func TestAccEC2RouteTableDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteTableBasicDataSourceConfig(rName),
+				Config: testAccVPCRouteTableDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					// By tags.
 					acctest.MatchResourceAttrRegionalARN(datasource1Name, "arn", "ec2", regexp.MustCompile(`route-table/.+$`)),
@@ -98,17 +99,18 @@ func TestAccEC2RouteTableDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2RouteTableDataSource_main(t *testing.T) {
+func TestAccVPCRouteTableDataSource_main(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_route_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteTableMainDataSourceConfig(rName),
+				Config: testAccVPCRouteTableDataSourceConfig_main(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceName, "id"),
 					resource.TestCheckResourceAttrSet(datasourceName, "vpc_id"),
@@ -165,7 +167,7 @@ func testAccCheckListHasSomeElementAttrPair(nameFirst string, resourceAttr strin
 	}
 }
 
-func testAccRouteTableBasicDataSourceConfig(rName string) string {
+func testAccVPCRouteTableDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"
@@ -247,7 +249,7 @@ data "aws_route_table" "by_id" {
 `, rName)
 }
 
-func testAccRouteTableMainDataSourceConfig(rName string) string {
+func testAccVPCRouteTableDataSourceConfig_main(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"

@@ -12,13 +12,13 @@ func MetricAlarmMigrateState(
 	switch v {
 	case 0:
 		log.Println("[INFO] Found AWS CloudWatch Metric Alarm State v0; migrating to v1")
-		return migrateCloudWatchMetricAlarmStateV0toV1(is)
+		return migrateMetricAlarmStateV0toV1(is)
 	default:
 		return is, fmt.Errorf("Unexpected schema version: %d", v)
 	}
 }
 
-func migrateCloudWatchMetricAlarmStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error) {
+func migrateMetricAlarmStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error) {
 	if is.Empty() {
 		log.Println("[DEBUG] Empty InstanceState; nothing to migrate.")
 		return is, nil

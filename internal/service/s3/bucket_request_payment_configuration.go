@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -12,15 +13,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_s3_bucket_request_payment_configuration")
 func ResourceBucketRequestPaymentConfiguration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceBucketRequestPaymentConfigurationCreate,
-		ReadContext:   resourceBucketRequestPaymentConfigurationRead,
-		UpdateContext: resourceBucketRequestPaymentConfigurationUpdate,
-		DeleteContext: resourceBucketRequestPaymentConfigurationDelete,
+		CreateWithoutTimeout: resourceBucketRequestPaymentConfigurationCreate,
+		ReadWithoutTimeout:   resourceBucketRequestPaymentConfigurationRead,
+		UpdateWithoutTimeout: resourceBucketRequestPaymentConfigurationUpdate,
+		DeleteWithoutTimeout: resourceBucketRequestPaymentConfigurationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -48,7 +51,7 @@ func ResourceBucketRequestPaymentConfiguration() *schema.Resource {
 }
 
 func resourceBucketRequestPaymentConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
@@ -64,9 +67,9 @@ func resourceBucketRequestPaymentConfigurationCreate(ctx context.Context, d *sch
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketRequestPaymentWithContext(ctx, input)
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error creating S3 bucket (%s) request payment configuration: %w", bucket, err))
@@ -78,7 +81,7 @@ func resourceBucketRequestPaymentConfigurationCreate(ctx context.Context, d *sch
 }
 
 func resourceBucketRequestPaymentConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -113,7 +116,7 @@ func resourceBucketRequestPaymentConfigurationRead(ctx context.Context, d *schem
 }
 
 func resourceBucketRequestPaymentConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -141,7 +144,7 @@ func resourceBucketRequestPaymentConfigurationUpdate(ctx context.Context, d *sch
 }
 
 func resourceBucketRequestPaymentConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {

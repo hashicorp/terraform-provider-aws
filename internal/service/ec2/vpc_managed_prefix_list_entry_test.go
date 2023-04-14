@@ -1,6 +1,7 @@
 package ec2_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -15,22 +16,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccEC2ManagedPrefixListEntry_ipv4(t *testing.T) {
+func TestAccVPCManagedPrefixListEntry_ipv4(t *testing.T) {
+	ctx := acctest.Context(t)
 	var entry ec2.PrefixListEntry
 	resourceName := "aws_ec2_managed_prefix_list_entry.test"
 	plResourceName := "aws_ec2_managed_prefix_list.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckManagedPrefixListEntryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckManagedPrefixList(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckManagedPrefixListEntryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccManagedPrefixListEntryIPv4Config(rName),
+				Config: testAccVPCManagedPrefixListEntryConfig_ipv4(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckManagedPrefixListEntryExists(resourceName, &entry),
+					testAccCheckManagedPrefixListEntryExists(ctx, resourceName, &entry),
 					resource.TestCheckResourceAttrPair(resourceName, "prefix_list_id", plResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "cidr", "10.0.0.0/8"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -46,22 +48,52 @@ func TestAccEC2ManagedPrefixListEntry_ipv4(t *testing.T) {
 	})
 }
 
-func TestAccEC2ManagedPrefixListEntry_ipv6(t *testing.T) {
+func TestAccVPCManagedPrefixListEntry_ipv4Multiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	var entry ec2.PrefixListEntry
+	resourceName1 := "aws_ec2_managed_prefix_list_entry.test1"
+	resourceName2 := "aws_ec2_managed_prefix_list_entry.test2"
+	resourceName3 := "aws_ec2_managed_prefix_list_entry.test3"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckManagedPrefixList(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckManagedPrefixListEntryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCManagedPrefixListEntryConfig_ipv4Multiple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckManagedPrefixListEntryExists(ctx, resourceName1, &entry),
+					testAccCheckManagedPrefixListEntryExists(ctx, resourceName2, &entry),
+					testAccCheckManagedPrefixListEntryExists(ctx, resourceName3, &entry),
+					resource.TestCheckResourceAttr(resourceName1, "cidr", "10.0.0.0/24"),
+					resource.TestCheckResourceAttr(resourceName2, "cidr", "10.0.1.0/24"),
+					resource.TestCheckResourceAttr(resourceName3, "cidr", "10.0.2.0/24"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVPCManagedPrefixListEntry_ipv6(t *testing.T) {
+	ctx := acctest.Context(t)
 	var entry ec2.PrefixListEntry
 	resourceName := "aws_ec2_managed_prefix_list_entry.test"
 	plResourceName := "aws_ec2_managed_prefix_list.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckManagedPrefixListEntryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckManagedPrefixList(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckManagedPrefixListEntryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccManagedPrefixListEntryIPv6Config(rName),
+				Config: testAccVPCManagedPrefixListEntryConfig_ipv6(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckManagedPrefixListEntryExists(resourceName, &entry),
+					testAccCheckManagedPrefixListEntryExists(ctx, resourceName, &entry),
 					resource.TestCheckResourceAttrPair(resourceName, "prefix_list_id", plResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "cidr", "::/0"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -77,60 +109,63 @@ func TestAccEC2ManagedPrefixListEntry_ipv6(t *testing.T) {
 	})
 }
 
-func TestAccEC2ManagedPrefixListEntry_expectInvalidTypeError(t *testing.T) {
+func TestAccVPCManagedPrefixListEntry_expectInvalidTypeError(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckManagedPrefixListEntryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckManagedPrefixList(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckManagedPrefixListEntryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccManagedPrefixListEntryExpectInvalidType(rName),
+				Config:      testAccVPCManagedPrefixListEntryConfig_expectInvalidType(rName),
 				ExpectError: regexp.MustCompile(`invalid CIDR address: ::/244`),
 			},
 		},
 	})
 }
 
-func TestAccEC2ManagedPrefixListEntry_expectInvalidCIDR(t *testing.T) {
+func TestAccVPCManagedPrefixListEntry_expectInvalidCIDR(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckManagedPrefixListEntryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckManagedPrefixList(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckManagedPrefixListEntryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccManagedPrefixListEntryInvalidIPv4CIDR(rName),
+				Config:      testAccVPCManagedPrefixListEntryConfig_invalidIPv4CIDR(rName),
 				ExpectError: regexp.MustCompile("invalid CIDR address: 1.2.3.4/33"),
 			},
 			{
-				Config:      testAccManagedPrefixListEntryInvalidIPv6CIDR(rName),
+				Config:      testAccVPCManagedPrefixListEntryConfig_invalidIPv6CIDR(rName),
 				ExpectError: regexp.MustCompile("invalid CIDR address: ::/244"),
 			},
 		},
 	})
 }
 
-func TestAccEC2ManagedPrefixListEntry_description(t *testing.T) {
+func TestAccVPCManagedPrefixListEntry_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	var entry ec2.PrefixListEntry
 	resourceName := "aws_ec2_managed_prefix_list_entry.test"
 	plResourceName := "aws_ec2_managed_prefix_list.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckManagedPrefixListEntryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckManagedPrefixList(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckManagedPrefixListEntryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccManagedPrefixListEntryDescriptionConfig(rName),
+				Config: testAccVPCManagedPrefixListEntryConfig_description(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckManagedPrefixListEntryExists(resourceName, &entry),
+					testAccCheckManagedPrefixListEntryExists(ctx, resourceName, &entry),
 					resource.TestCheckResourceAttrPair(resourceName, "prefix_list_id", plResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "cidr", "10.0.0.0/8"),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
@@ -146,22 +181,23 @@ func TestAccEC2ManagedPrefixListEntry_description(t *testing.T) {
 	})
 }
 
-func TestAccEC2ManagedPrefixListEntry_disappears(t *testing.T) {
+func TestAccVPCManagedPrefixListEntry_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var entry ec2.PrefixListEntry
 	resourceName := "aws_ec2_managed_prefix_list_entry.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckManagedPrefixListEntryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckManagedPrefixList(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckManagedPrefixListEntryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccManagedPrefixListEntryIPv4Config(rName),
+				Config: testAccVPCManagedPrefixListEntryConfig_ipv4(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckManagedPrefixListEntryExists(resourceName, &entry),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceManagedPrefixListEntry(), resourceName),
+					testAccCheckManagedPrefixListEntryExists(ctx, resourceName, &entry),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceManagedPrefixListEntry(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -169,37 +205,39 @@ func TestAccEC2ManagedPrefixListEntry_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckManagedPrefixListEntryDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+func testAccCheckManagedPrefixListEntryDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ec2_managed_prefix_list_entry" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ec2_managed_prefix_list_entry" {
+				continue
+			}
+
+			plID, cidr, err := tfec2.ManagedPrefixListEntryParseResourceID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			_, err = tfec2.FindManagedPrefixListEntryByIDAndCIDR(ctx, conn, plID, cidr)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("EC2 Managed Prefix List Entry %s still exists", rs.Primary.ID)
 		}
 
-		plID, cidr, err := tfec2.ManagedPrefixListEntryParseID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		_, err = tfec2.FindManagedPrefixListEntryByIDAndCIDR(conn, plID, cidr)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("EC2 Managed Prefix List Entry %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckManagedPrefixListEntryExists(n string, v *ec2.PrefixListEntry) resource.TestCheckFunc {
+func testAccCheckManagedPrefixListEntryExists(ctx context.Context, n string, v *ec2.PrefixListEntry) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -210,15 +248,15 @@ func testAccCheckManagedPrefixListEntryExists(n string, v *ec2.PrefixListEntry) 
 			return fmt.Errorf("No EC2 Managed Prefix List Entry ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-		plID, cidr, err := tfec2.ManagedPrefixListEntryParseID(rs.Primary.ID)
+		plID, cidr, err := tfec2.ManagedPrefixListEntryParseResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		output, err := tfec2.FindManagedPrefixListEntryByIDAndCIDR(conn, plID, cidr)
+		output, err := tfec2.FindManagedPrefixListEntryByIDAndCIDR(ctx, conn, plID, cidr)
 
 		if err != nil {
 			return err
@@ -240,11 +278,11 @@ func testAccManagedPrefixListEntryImportStateIdFunc(resourceName string) resourc
 		plID := rs.Primary.Attributes["prefix_list_id"]
 		cidr := rs.Primary.Attributes["cidr"]
 
-		return tfec2.ManagedPrefixListEntryCreateID(plID, cidr), nil
+		return tfec2.ManagedPrefixListEntryCreateResourceID(plID, cidr), nil
 	}
 }
 
-func testAccManagedPrefixListEntryIPv4Config(rName string) string {
+func testAccVPCManagedPrefixListEntryConfig_ipv4(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_managed_prefix_list" "test" {
   name           = %[1]q
@@ -259,7 +297,35 @@ resource "aws_ec2_managed_prefix_list_entry" "test" {
 `, rName)
 }
 
-func testAccManagedPrefixListEntryIPv6Config(rName string) string {
+func testAccVPCManagedPrefixListEntryConfig_ipv4Multiple(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_managed_prefix_list" "test" {
+  name           = %[1]q
+  address_family = "IPv4"
+  max_entries    = 5
+}
+
+resource "aws_ec2_managed_prefix_list_entry" "test1" {
+  cidr           = "10.0.0.0/24"
+  description    = "description 1"
+  prefix_list_id = aws_ec2_managed_prefix_list.test.id
+}
+
+resource "aws_ec2_managed_prefix_list_entry" "test2" {
+  cidr           = "10.0.1.0/24"
+  description    = "description 2"
+  prefix_list_id = aws_ec2_managed_prefix_list.test.id
+}
+
+resource "aws_ec2_managed_prefix_list_entry" "test3" {
+  cidr           = "10.0.2.0/24"
+  description    = "description 3"
+  prefix_list_id = aws_ec2_managed_prefix_list.test.id
+}
+`, rName)
+}
+
+func testAccVPCManagedPrefixListEntryConfig_ipv6(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_managed_prefix_list" "test" {
   name           = %[1]q
@@ -274,7 +340,7 @@ resource "aws_ec2_managed_prefix_list_entry" "test" {
 `, rName)
 }
 
-func testAccManagedPrefixListEntryDescriptionConfig(rName string) string {
+func testAccVPCManagedPrefixListEntryConfig_description(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_managed_prefix_list" "test" {
   name           = %[1]q
@@ -290,7 +356,7 @@ resource "aws_ec2_managed_prefix_list_entry" "test" {
 `, rName)
 }
 
-func testAccManagedPrefixListEntryExpectInvalidType(rName string) string {
+func testAccVPCManagedPrefixListEntryConfig_expectInvalidType(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_managed_prefix_list" "test" {
   name           = %[1]q
@@ -305,7 +371,7 @@ resource "aws_ec2_managed_prefix_list_entry" "test" {
 `, rName)
 }
 
-func testAccManagedPrefixListEntryInvalidIPv4CIDR(rName string) string {
+func testAccVPCManagedPrefixListEntryConfig_invalidIPv4CIDR(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_managed_prefix_list" "test" {
   name           = %[1]q
@@ -320,7 +386,7 @@ resource "aws_ec2_managed_prefix_list_entry" "test" {
 `, rName)
 }
 
-func testAccManagedPrefixListEntryInvalidIPv6CIDR(rName string) string {
+func testAccVPCManagedPrefixListEntryConfig_invalidIPv6CIDR(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_managed_prefix_list" "test" {
   name           = %[1]q

@@ -65,7 +65,7 @@ The following arguments are supported:
 * `security_group_ids` - (Optional) A list of IDs for the security groups that apply to the specified network interfaces created for file system access. These security groups will apply to all network interfaces.
 * `self_managed_active_directory` - (Optional) Configuration block that Amazon FSx uses to join the Windows File Server instance to your self-managed (including on-premises) Microsoft Active Directory (AD) directory. Cannot be specified with `active_directory_id`. Detailed below.
 * `skip_final_backup` - (Optional) When enabled, will skip the default final backup taken when the file system is deleted. This configuration must be applied separately before attempting to delete the resource to have the desired behavior. Defaults to `false`.
-* `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `weekly_maintenance_start_time` - (Optional) The preferred start time (in `d:HH:MM` format) to perform weekly maintenance, in the UTC time zone.
 * `deployment_type` - (Optional) Specifies the file system deployment type, valid values are `MULTI_AZ_1`, `SINGLE_AZ_1` and `SINGLE_AZ_2`. Default value is `SINGLE_AZ_1`.
 * `preferred_subnet_id` - (Optional) Specifies the subnet in which you want the preferred file server to be located. Required for when deployment type is `MULTI_AZ_1`.
@@ -98,19 +98,18 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Identifier of the file system, e.g., `fs-12345678`
 * `network_interface_ids` - Set of Elastic Network Interface identifiers from which the file system is accessible.
 * `owner_id` - AWS account identifier that created the file system.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpc_id` - Identifier of the Virtual Private Cloud for the file system.
 * `preferred_file_server_ip` - The IP address of the primary, or preferred, file server.
 * `remote_administration_endpoint` - For `MULTI_AZ_1` deployment types, use this endpoint when performing administrative tasks on the file system using Amazon FSx Remote PowerShell. For `SINGLE_AZ_1` deployment types, this is the DNS name of the file system.
 
 ## Timeouts
 
-`aws_fsx_windows_file_system` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
-configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `45m`) How long to wait for the file system to be created.
-* `delete` - (Default `30m`) How long to wait for the file system to be deleted.
-* `update` - (Default `45m`) How long to wait for the file system to be updated.
+* `create` - (Default `45m`)
+* `delete` - (Default `30m`)
+* `update` - (Default `45m`)
 
 ## Import
 

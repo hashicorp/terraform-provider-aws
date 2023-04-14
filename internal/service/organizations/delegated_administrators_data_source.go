@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_organizations_delegated_administrators")
 func DataSourceDelegatedAdministrators() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDelegatedAdministratorsRead,
@@ -67,7 +68,7 @@ func DataSourceDelegatedAdministrators() *schema.Resource {
 }
 
 func dataSourceDelegatedAdministratorsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	input := &organizations.ListDelegatedAdministratorsInput{}
 
@@ -90,7 +91,7 @@ func dataSourceDelegatedAdministratorsRead(ctx context.Context, d *schema.Resour
 		return diag.FromErr(fmt.Errorf("error describing organizations delegated Administrators: %w", err))
 	}
 
-	if err = d.Set("delegated_administrators", flattenOrganizationsDelegatedAdministrators(delegators)); err != nil {
+	if err = d.Set("delegated_administrators", flattenDelegatedAdministrators(delegators)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting delegated_administrators: %w", err))
 	}
 
@@ -99,7 +100,7 @@ func dataSourceDelegatedAdministratorsRead(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-func flattenOrganizationsDelegatedAdministrators(delegatedAdministrators []*organizations.DelegatedAdministrator) []map[string]interface{} {
+func flattenDelegatedAdministrators(delegatedAdministrators []*organizations.DelegatedAdministrator) []map[string]interface{} {
 	if len(delegatedAdministrators) == 0 {
 		return nil
 	}

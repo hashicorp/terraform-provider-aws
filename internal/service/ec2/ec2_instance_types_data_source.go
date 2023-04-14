@@ -1,17 +1,25 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_ec2_instance_types")
 func DataSourceInstanceTypes() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceInstanceTypesRead,
+		ReadWithoutTimeout: dataSourceInstanceTypesRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"filter": DataSourceFiltersSchema(),
@@ -24,8 +32,9 @@ func DataSourceInstanceTypes() *schema.Resource {
 	}
 }
 
-func dataSourceInstanceTypesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceInstanceTypesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeInstanceTypesInput{}
 
@@ -33,30 +42,20 @@ func dataSourceInstanceTypesRead(d *schema.ResourceData, meta interface{}) error
 		input.Filters = BuildFiltersDataSource(v.(*schema.Set))
 	}
 
-	var instanceTypes []string
-
-	err := conn.DescribeInstanceTypesPages(input, func(page *ec2.DescribeInstanceTypesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, instanceType := range page.InstanceTypes {
-			if instanceType == nil {
-				continue
-			}
-
-			instanceTypes = append(instanceTypes, aws.StringValue(instanceType.InstanceType))
-		}
-
-		return !lastPage
-	})
+	output, err := FindInstanceTypes(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error listing EC2 Instance Types: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance Types: %s", err)
+	}
+
+	var instanceTypes []string
+
+	for _, instanceType := range output {
+		instanceTypes = append(instanceTypes, aws.StringValue(instanceType.InstanceType))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("instance_types", instanceTypes)
 
-	return nil
+	return diags
 }

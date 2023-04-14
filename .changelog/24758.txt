@@ -1,0 +1,10 @@
+```release-note:bug
+resource/aws_servicecatalog_provisioned_product: Prevent error when retrieving a provisioned product in a non-available state
+```
+
+```release-note:enhancement
+resource/aws_servicecatalog_provisioned_product: Wait for provisioning to finish
+```
+
+```release-note:enhancement
+resource/aws_servicecatalog_provisioned_product: Wait for update to finish
