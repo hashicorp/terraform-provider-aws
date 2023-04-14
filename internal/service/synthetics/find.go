@@ -2,7 +2,6 @@ package synthetics
 
 import (
 	"context"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/synthetics"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -57,4 +56,39 @@ func FindGroupByName(ctx context.Context, conn *synthetics.Synthetics, name stri
 	}
 
 	return output.Group, nil
+}
+
+func FindAssociatedGroup(ctx context.Context, conn *synthetics.Synthetics, canaryArn string, groupName string) (*synthetics.GroupSummary, error) {
+	input := &synthetics.ListAssociatedGroupsInput{
+		ResourceArn: aws.String(canaryArn),
+	}
+	out, err := conn.ListAssociatedGroupsWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, synthetics.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.Groups == nil || len(out.Groups) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	var group *synthetics.GroupSummary
+	for _, groupSummary := range out.Groups {
+		if *groupSummary.Name == groupName {
+			group = groupSummary
+		}
+	}
+
+	if group == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return group, nil
 }
