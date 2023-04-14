@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/types/timestamp"
 )
 
-var accountIDRegexp = regexp.MustCompile(`^(aws|aws-managed|third-party|\d{12}|cw{10})$`)
+var accountIDRegexp = regexp.MustCompile(`^(aws|aws-managed|third-party|\d{12}|cw.{10})$`)
 var partitionRegexp = regexp.MustCompile(`^aws(-[a-z]+)*$`)
 var regionRegexp = regexp.MustCompile(`^[a-z]{2}(-[a-z]+)+-\d$`)
 
