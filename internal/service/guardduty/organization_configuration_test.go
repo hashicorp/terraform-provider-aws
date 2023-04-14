@@ -197,7 +197,7 @@ resource "aws_organizations_organization" "test" {
 resource "aws_guardduty_detector" "test" {}
 
 resource "aws_guardduty_organization_admin_account" "test" {
-  depends_on = [aws_organizations_organization.test]
+  depends_on = [aws_organizations_organization.test, aws_guardduty_detector.test]
 
   admin_account_id = data.aws_caller_identity.current.account_id
 }
@@ -225,7 +225,7 @@ resource "aws_organizations_organization" "test" {
 resource "aws_guardduty_detector" "test" {}
 
 resource "aws_guardduty_organization_admin_account" "test" {
-  depends_on = [aws_organizations_organization.test]
+  depends_on = [aws_organizations_organization.test, aws_guardduty_detector.test]
 
   admin_account_id = data.aws_caller_identity.current.account_id
 }
@@ -259,7 +259,7 @@ resource "aws_organizations_organization" "test" {
 resource "aws_guardduty_detector" "test" {}
 
 resource "aws_guardduty_organization_admin_account" "test" {
-  depends_on = [aws_organizations_organization.test]
+  depends_on = [aws_organizations_organization.test, aws_guardduty_detector.test]
 
   admin_account_id = data.aws_caller_identity.current.account_id
 }
@@ -295,7 +295,7 @@ resource "aws_organizations_organization" "test" {
 resource "aws_guardduty_detector" "test" {}
 
 resource "aws_guardduty_organization_admin_account" "test" {
-  depends_on = [aws_organizations_organization.test]
+  depends_on = [aws_organizations_organization.test, aws_guardduty_detector.test]
 
   admin_account_id = data.aws_caller_identity.current.account_id
 }
