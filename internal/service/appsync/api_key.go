@@ -2,9 +2,7 @@ package appsync
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -14,7 +12,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	APIKeyIdPartsCount = 2
+	ResNameAPIKey      = "APIKey"
 )
 
 // @SDKResource("aws_appsync_api_key")
@@ -78,7 +84,19 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "creating Appsync API Key: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", apiID, aws.StringValue(resp.ApiKey.Id)))
+	idParts := []string{
+		apiID,
+		aws.StringValue(resp.ApiKey.Id),
+	}
+
+	id, err := flex.FlattenResourceId(idParts, APIKeyIdPartsCount)
+
+	if err != nil {
+		return create.DiagError(names.AppSync, create.ErrActionFlatteningResourceId, ResNameAPIKey, apiID, err)
+	}
+
+	d.SetId(id)
+
 	return append(diags, resourceAPIKeyRead(ctx, d, meta)...)
 }
 
@@ -88,7 +106,7 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	apiID, keyID, err := DecodeAPIKeyID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Appsync API Key (%s): %s", d.Id(), err)
+		return create.DiagError(names.AppSync, create.ErrActionExpandingResourceId, ResNameAPIKey, d.Id(), err)
 	}
 
 	key, err := GetAPIKey(ctx, apiID, keyID, conn)
@@ -114,7 +132,7 @@ func resourceAPIKeyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	apiID, keyID, err := DecodeAPIKeyID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Appsync API Key (%s): %s", d.Id(), err)
+		return create.DiagError(names.AppSync, create.ErrActionExpandingResourceId, ResNameAPIKey, d.Id(), err)
 	}
 
 	params := &appsync.UpdateApiKeyInput{
@@ -143,7 +161,7 @@ func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 
 	apiID, keyID, err := DecodeAPIKeyID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Appsync API Key (%s): %s", d.Id(), err)
+		return create.DiagError(names.AppSync, create.ErrActionExpandingResourceId, ResNameAPIKey, d.Id(), err)
 	}
 
 	input := &appsync.DeleteApiKeyInput{
@@ -162,11 +180,13 @@ func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func DecodeAPIKeyID(id string) (string, string, error) {
-	parts := strings.Split(id, ":")
-	if len(parts) != 2 {
-		return "", "", fmt.Errorf("Unexpected format of ID (%q), expected API-ID:API-KEY-ID", id)
+	idParts, err := flex.ExpandResourceId(id, APIKeyIdPartsCount)
+
+	if err != nil {
+		return "", "", err
 	}
-	return parts[0], parts[1], nil
+
+	return idParts[0], idParts[1], nil
 }
 
 func GetAPIKey(ctx context.Context, apiID, keyID string, conn *appsync.AppSync) (*appsync.ApiKey, error) {
