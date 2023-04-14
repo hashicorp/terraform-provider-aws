@@ -51,6 +51,7 @@ func ResourceRoute() *schema.Resource {
 		ReadWithoutTimeout:   resourceRouteRead,
 		UpdateWithoutTimeout: resourceRouteUpdate,
 		DeleteWithoutTimeout: resourceRouteDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceRouteImport,
 		},
@@ -262,10 +263,8 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(RouteCreateID(routeTableID, destination))
 
-	_, err = WaitRouteReady(ctx, conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutCreate))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Route in Route Table (%s) with destination (%s) to become available: %s", routeTableID, destination, err)
+	if _, err := WaitRouteReady(ctx, conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Route in Route Table (%s) with destination (%s) create: %s", routeTableID, destination, err)
 	}
 
 	return append(diags, resourceRouteRead(ctx, d, meta)...)
@@ -411,10 +410,8 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "updating Route in Route Table (%s) with destination (%s): %s", routeTableID, destination, err)
 	}
 
-	_, err = WaitRouteReady(ctx, conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutUpdate))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Route in Route Table (%s) with destination (%s) to become available: %s", routeTableID, destination, err)
+	if _, err := WaitRouteReady(ctx, conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Route in Route Table (%s) with destination (%s) update: %s", routeTableID, destination, err)
 	}
 
 	return append(diags, resourceRouteRead(ctx, d, meta)...)
@@ -472,10 +469,8 @@ func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "deleting Route in Route Table (%s) with destination (%s): %s", routeTableID, destination, err)
 	}
 
-	_, err = WaitRouteDeleted(ctx, conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutDelete))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Route in Route Table (%s) with destination (%s) to delete: %s", routeTableID, destination, err)
+	if _, err := WaitRouteDeleted(ctx, conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Route in Route Table (%s) with destination (%s) delete: %s", routeTableID, destination, err)
 	}
 
 	return diags
