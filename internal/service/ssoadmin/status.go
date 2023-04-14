@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -15,7 +15,7 @@ const (
 	permissionSetProvisioningStatusNotFound = "NotFound"
 )
 
-func statusAccountAssignmentCreation(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceArn, requestID string) resource.StateRefreshFunc {
+func statusAccountAssignmentCreation(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceArn, requestID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &ssoadmin.DescribeAccountAssignmentCreationStatusInput{
 			AccountAssignmentCreationRequestId: aws.String(requestID),
@@ -36,7 +36,7 @@ func statusAccountAssignmentCreation(ctx context.Context, conn *ssoadmin.SSOAdmi
 	}
 }
 
-func statusAccountAssignmentDeletion(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceArn, requestID string) resource.StateRefreshFunc {
+func statusAccountAssignmentDeletion(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceArn, requestID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &ssoadmin.DescribeAccountAssignmentDeletionStatusInput{
 			AccountAssignmentDeletionRequestId: aws.String(requestID),
@@ -57,7 +57,7 @@ func statusAccountAssignmentDeletion(ctx context.Context, conn *ssoadmin.SSOAdmi
 	}
 }
 
-func statusPermissionSetProvisioning(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceArn, requestID string) resource.StateRefreshFunc {
+func statusPermissionSetProvisioning(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceArn, requestID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &ssoadmin.DescribePermissionSetProvisioningStatusInput{
 			InstanceArn:                     aws.String(instanceArn),

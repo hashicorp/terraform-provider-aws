@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKDataSource("aws_kms_public_key")
 func DataSourcePublicKey() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePublicKeyRead,
@@ -39,7 +40,7 @@ func DataSourcePublicKey() *schema.Resource {
 			"key_id": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validKey,
+				ValidateFunc: ValidateKeyOrAlias,
 			},
 			"key_usage": {
 				Type:     schema.TypeString,

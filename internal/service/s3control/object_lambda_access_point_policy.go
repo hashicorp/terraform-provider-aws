@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3control"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -17,10 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func init() {
-	_sp.registerSDKResourceFactory("aws_s3control_object_lambda_access_point_policy", resourceObjectLambdaAccessPointPolicy)
-}
-
+// @SDKResource("aws_s3control_object_lambda_access_point_policy")
 func resourceObjectLambdaAccessPointPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectLambdaAccessPointPolicyCreate,
@@ -29,7 +26,7 @@ func resourceObjectLambdaAccessPointPolicy() *schema.Resource {
 		DeleteWithoutTimeout: resourceObjectLambdaAccessPointPolicyDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -198,7 +195,7 @@ func FindObjectLambdaAccessPointPolicyAndStatusByTwoPartKey(ctx context.Context,
 	output1, err := conn.GetAccessPointPolicyForObjectLambdaWithContext(ctx, input1)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint, errCodeNoSuchAccessPointPolicy) {
-		return "", nil, &resource.NotFoundError{
+		return "", nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input1,
 		}
@@ -226,7 +223,7 @@ func FindObjectLambdaAccessPointPolicyAndStatusByTwoPartKey(ctx context.Context,
 	output2, err := conn.GetAccessPointPolicyStatusForObjectLambdaWithContext(ctx, input2)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint, errCodeNoSuchAccessPointPolicy) {
-		return "", nil, &resource.NotFoundError{
+		return "", nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input2,
 		}

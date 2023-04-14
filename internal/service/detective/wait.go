@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/detective"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -17,7 +17,7 @@ const (
 
 // MemberStatusUpdated waits for an AdminAccount and graph arn to return Invited
 func MemberStatusUpdated(ctx context.Context, conn *detective.Detective, graphARN, adminAccountID, expectedValue string) (*detective.MemberDetail, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{detective.MemberStatusVerificationInProgress},
 		Target:  []string{detective.MemberStatusInvited},
 		Refresh: MemberStatus(ctx, conn, graphARN, adminAccountID),

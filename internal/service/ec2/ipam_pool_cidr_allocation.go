@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_vpc_ipam_pool_cidr_allocation")
 func ResourceIPAMPoolCIDRAllocation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPAMPoolCIDRAllocationCreate,
@@ -39,7 +40,7 @@ func ResourceIPAMPoolCIDRAllocation() *schema.Resource {
 				ConflictsWith: []string{"netmask_length"},
 				ValidateFunc: validation.Any(
 					verify.ValidIPv4CIDRNetworkAddress,
-					validation.IsCIDRNetwork(0, 32),
+					verify.ValidIPv6CIDRNetworkAddress,
 				),
 			},
 			"description": {
@@ -56,7 +57,7 @@ func ResourceIPAMPoolCIDRAllocation() *schema.Resource {
 					ValidateFunc: validation.Any(
 						verify.ValidIPv4CIDRNetworkAddress,
 						// Follow the numbers used for netmask_length
-						validation.IsCIDRNetwork(0, 32),
+						validation.IsCIDRNetwork(0, 128),
 					),
 				},
 			},
@@ -73,7 +74,7 @@ func ResourceIPAMPoolCIDRAllocation() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				ForceNew:      true,
-				ValidateFunc:  validation.IntBetween(0, 32),
+				ValidateFunc:  validation.IntBetween(0, 128),
 				ConflictsWith: []string{"cidr"},
 			},
 			"resource_id": {
@@ -98,7 +99,7 @@ func resourceIPAMPoolCIDRAllocationCreate(ctx context.Context, d *schema.Resourc
 
 	ipamPoolID := d.Get("ipam_pool_id").(string)
 	input := &ec2.AllocateIpamPoolCidrInput{
-		ClientToken: aws.String(resource.UniqueId()),
+		ClientToken: aws.String(id.UniqueId()),
 		IpamPoolId:  aws.String(ipamPoolID),
 	}
 

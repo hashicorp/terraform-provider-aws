@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,8 +19,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_eks_node_group", name="Node Group")
+// @Tags(identifierAttribute="arn")
 func ResourceNodeGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNodeGroupCreate,
@@ -221,8 +224,8 @@ func ResourceNodeGroup() *schema.Resource {
 				MinItems: 1,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"taint": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -286,19 +289,17 @@ func ResourceNodeGroup() *schema.Resource {
 
 func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	clusterName := d.Get("cluster_name").(string)
 	nodeGroupName := create.Name(d.Get("node_group_name").(string), d.Get("node_group_name_prefix").(string))
-	id := NodeGroupCreateResourceID(clusterName, nodeGroupName)
-
+	groupID := NodeGroupCreateResourceID(clusterName, nodeGroupName)
 	input := &eks.CreateNodegroupInput{
-		ClientRequestToken: aws.String(resource.UniqueId()),
+		ClientRequestToken: aws.String(id.UniqueId()),
 		ClusterName:        aws.String(clusterName),
 		NodegroupName:      aws.String(nodeGroupName),
 		NodeRole:           aws.String(d.Get("node_role_arn").(string)),
 		Subnets:            flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
+		Tags:               GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("ami_type"); ok {
@@ -349,22 +350,18 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Version = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	_, err := conn.CreateNodegroupWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating EKS Node Group (%s): %s", id, err)
+		return diag.Errorf("creating EKS Node Group (%s): %s", groupID, err)
 	}
 
-	d.SetId(id)
+	d.SetId(groupID)
 
 	_, err = waitNodegroupCreated(ctx, conn, clusterName, nodeGroupName, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
-		return diag.Errorf("error waiting for EKS Node Group (%s) to create: %s", d.Id(), err)
+		return diag.Errorf("waiting for EKS Node Group (%s) to create: %s", d.Id(), err)
 	}
 
 	return resourceNodeGroupRead(ctx, d, meta)
@@ -372,8 +369,6 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterName, nodeGroupName, err := NodeGroupParseResourceID(d.Id())
 
@@ -452,16 +447,7 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.Set("version", nodeGroup.Version)
 
-	tags := KeyValueTags(nodeGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("error setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, nodeGroup.Tags)
 
 	return nil
 }
@@ -478,7 +464,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	// Do any version update first.
 	if d.HasChanges("launch_template", "release_version", "version") {
 		input := &eks.UpdateNodegroupVersionInput{
-			ClientRequestToken: aws.String(resource.UniqueId()),
+			ClientRequestToken: aws.String(id.UniqueId()),
 			ClusterName:        aws.String(clusterName),
 			Force:              aws.Bool(d.Get("force_update_version").(bool)),
 			NodegroupName:      aws.String(nodeGroupName),
@@ -532,9 +518,9 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		oldTaintsRaw, newTaintsRaw := d.GetChange("taint")
 
 		input := &eks.UpdateNodegroupConfigInput{
-			ClientRequestToken: aws.String(resource.UniqueId()),
+			ClientRequestToken: aws.String(id.UniqueId()),
 			ClusterName:        aws.String(clusterName),
-			Labels:             expandUpdateLabelsPayload(oldLabelsRaw, newLabelsRaw),
+			Labels:             expandUpdateLabelsPayload(ctx, oldLabelsRaw, newLabelsRaw),
 			NodegroupName:      aws.String(nodeGroupName),
 			Taints:             expandUpdateTaintsPayload(oldTaintsRaw.(*schema.Set).List(), newTaintsRaw.(*schema.Set).List()),
 		}
@@ -563,13 +549,6 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 		if err != nil {
 			return diag.Errorf("error waiting for EKS Node Group (%s) config update (%s): %s", d.Id(), updateID, err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("error updating tags: %s", err)
 		}
 	}
 
@@ -794,10 +773,10 @@ func expandNodegroupUpdateConfig(tfMap map[string]interface{}) *eks.NodegroupUpd
 	return apiObject
 }
 
-func expandUpdateLabelsPayload(oldLabelsMap, newLabelsMap interface{}) *eks.UpdateLabelsPayload {
+func expandUpdateLabelsPayload(ctx context.Context, oldLabelsMap, newLabelsMap interface{}) *eks.UpdateLabelsPayload {
 	// EKS Labels operate similarly to keyvaluetags
-	oldLabels := tftags.New(oldLabelsMap)
-	newLabels := tftags.New(newLabelsMap)
+	oldLabels := tftags.New(ctx, oldLabelsMap)
+	newLabels := tftags.New(ctx, newLabelsMap)
 
 	removedLabels := oldLabels.Removed(newLabels)
 	updatedLabels := oldLabels.Updated(newLabels)

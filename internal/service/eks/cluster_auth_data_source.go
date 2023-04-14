@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_eks_cluster_auth")
 func DataSourceClusterAuth() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterAuthRead,

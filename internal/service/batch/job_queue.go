@@ -10,15 +10,18 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_batch_job_queue", name="Job Queue")
+// @Tags(identifierAttribute="arn")
 func ResourceJobQueue() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceJobQueueCreate,
@@ -59,8 +62,8 @@ func ResourceJobQueue() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{batch.JQStateDisabled, batch.JQStateEnabled}, true),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -74,21 +77,17 @@ func ResourceJobQueue() *schema.Resource {
 func resourceJobQueueCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
 	input := batch.CreateJobQueueInput{
 		ComputeEnvironmentOrder: createComputeEnvironmentOrder(d.Get("compute_environments").([]interface{})),
 		JobQueueName:            aws.String(d.Get("name").(string)),
 		Priority:                aws.Int64(int64(d.Get("priority").(int))),
 		State:                   aws.String(d.Get("state").(string)),
+		Tags:                    GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("scheduling_policy_arn"); ok {
 		input.SchedulingPolicyArn = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	name := d.Get("name").(string)
@@ -97,7 +96,7 @@ func resourceJobQueueCreate(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "%s %q", err, name)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{batch.JQStatusCreating, batch.JQStatusUpdating},
 		Target:     []string{batch.JQStatusValid},
 		Refresh:    jobQueueRefreshStatusFunc(ctx, conn, name),
@@ -121,8 +120,6 @@ func resourceJobQueueCreate(ctx context.Context, d *schema.ResourceData, meta in
 func resourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	jq, err := GetJobQueue(ctx, conn, d.Id())
 	if err != nil {
@@ -155,16 +152,7 @@ func resourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("scheduling_policy_arn", jq.SchedulingPolicyArn)
 	d.Set("state", jq.State)
 
-	tags := KeyValueTags(jq.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, jq.Tags)
 
 	return diags
 }
@@ -201,7 +189,7 @@ func resourceJobQueueUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Batch Job Queue (%s): %s", d.Get("name").(string), err)
 		}
-		stateConf := &resource.StateChangeConf{
+		stateConf := &retry.StateChangeConf{
 			Pending:    []string{batch.JQStatusUpdating},
 			Target:     []string{batch.JQStatusValid},
 			Refresh:    jobQueueRefreshStatusFunc(ctx, conn, name),
@@ -213,14 +201,6 @@ func resourceJobQueueUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		_, err = stateConf.WaitForStateContext(ctx)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Batch Job Queue (%s): waiting for completion: %s", d.Get("name").(string), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
@@ -265,7 +245,7 @@ func DeleteJobQueue(ctx context.Context, jobQueue string, conn *batch.Batch) err
 		return err
 	}
 
-	stateChangeConf := &resource.StateChangeConf{
+	stateChangeConf := &retry.StateChangeConf{
 		Pending:    []string{batch.JQStateDisabled, batch.JQStatusDeleting},
 		Target:     []string{batch.JQStatusDeleted},
 		Refresh:    jobQueueRefreshStatusFunc(ctx, conn, jobQueue),
@@ -287,7 +267,7 @@ func DisableJobQueue(ctx context.Context, jobQueue string, conn *batch.Batch) er
 		return err
 	}
 
-	stateChangeConf := &resource.StateChangeConf{
+	stateChangeConf := &retry.StateChangeConf{
 		Pending:    []string{batch.JQStatusUpdating},
 		Target:     []string{batch.JQStatusValid},
 		Refresh:    jobQueueRefreshStatusFunc(ctx, conn, jobQueue),
@@ -320,7 +300,7 @@ func GetJobQueue(ctx context.Context, conn *batch.Batch, sn string) (*batch.JobQ
 	return nil, nil
 }
 
-func jobQueueRefreshStatusFunc(ctx context.Context, conn *batch.Batch, sn string) resource.StateRefreshFunc {
+func jobQueueRefreshStatusFunc(ctx context.Context, conn *batch.Batch, sn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		ce, err := GetJobQueue(ctx, conn, sn)
 		if err != nil {

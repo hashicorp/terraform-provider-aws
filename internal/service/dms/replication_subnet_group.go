@@ -11,7 +11,7 @@ import (
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -22,6 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_dms_replication_subnet_group", name="Replication Subnet Group")
+// @Tags(identifierAttribute="replication_subnet_group_arn")
 func ResourceReplicationSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationSubnetGroupCreate,
@@ -61,8 +63,8 @@ func ResourceReplicationSubnetGroup() *schema.Resource {
 				MinItems: 2,
 				Required: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -80,27 +82,25 @@ const (
 func resourceReplicationSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	request := &dms.CreateReplicationSubnetGroupInput{
 		ReplicationSubnetGroupIdentifier:  aws.String(d.Get("replication_subnet_group_id").(string)),
 		ReplicationSubnetGroupDescription: aws.String(d.Get("replication_subnet_group_description").(string)),
 		SubnetIds:                         flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-		Tags:                              Tags(tags.IgnoreAWS()),
+		Tags:                              GetTagsIn(ctx),
 	}
 
 	log.Println("[DEBUG] DMS create replication subnet group:", request)
 
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err := conn.CreateReplicationSubnetGroupWithContext(ctx, request)
 
 		if tfawserr.ErrCodeEquals(err, dms.ErrCodeAccessDeniedFault) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -125,8 +125,6 @@ func resourceReplicationSubnetGroupCreate(ctx context.Context, d *schema.Resourc
 func resourceReplicationSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	response, err := conn.DescribeReplicationSubnetGroupsWithContext(ctx, &dms.DescribeReplicationSubnetGroupsInput{
 		Filters: []*dms.Filter{
@@ -177,23 +175,6 @@ func resourceReplicationSubnetGroupRead(ctx context.Context, d *schema.ResourceD
 	d.Set("subnet_ids", subnet_ids)
 	d.Set("vpc_id", group.VpcId)
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return create.DiagError(names.DMS, create.ErrActionReading, ResNameReplicationSubnetGroup, d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagSettingError(names.DMS, ResNameReplicationSubnetGroup, d.Id(), "tags", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagSettingError(names.DMS, ResNameReplicationSubnetGroup, d.Id(), "tags_all", err)
-	}
-
 	return diags
 }
 
@@ -210,15 +191,6 @@ func resourceReplicationSubnetGroupUpdate(ctx context.Context, d *schema.Resourc
 
 	if d.HasChange("replication_subnet_group_description") {
 		request.ReplicationSubnetGroupDescription = aws.String(d.Get("replication_subnet_group_description").(string))
-	}
-
-	if d.HasChange("tags_all") {
-		arn := d.Get("replication_subnet_group_arn").(string)
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return create.DiagError(names.DMS, create.ErrActionUpdating, ResNameReplicationSubnetGroup, d.Id(), err)
-		}
 	}
 
 	log.Println("[DEBUG] DMS update replication subnet group:", request)

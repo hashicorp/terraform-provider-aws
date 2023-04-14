@@ -52,7 +52,7 @@ func ExpandFrameworkStringSet(ctx context.Context, set types.Set) []*string {
 	return vs
 }
 
-func ExpandFrameworkStringValueSet(ctx context.Context, set types.Set) []string {
+func ExpandFrameworkStringValueSet(ctx context.Context, set types.Set) Set[string] {
 	if set.IsNull() || set.IsUnknown() {
 		return nil
 	}
@@ -138,6 +138,37 @@ func FlattenFrameworkStringValueListLegacy(_ context.Context, vs []string) types
 	}
 
 	return types.ListValueMust(types.StringType, elems)
+}
+
+// FlattenFrameworkStringSet converts a slice of string pointers to a framework Set value.
+//
+// A nil slice is converted to a null Set.
+// An empty slice is converted to a null Set.
+func FlattenFrameworkStringSet(_ context.Context, vs []*string) types.Set {
+	if len(vs) == 0 {
+		return types.SetNull(types.StringType)
+	}
+
+	elems := make([]attr.Value, len(vs))
+
+	for i, v := range vs {
+		elems[i] = types.StringValue(aws.ToString(v))
+	}
+
+	return types.SetValueMust(types.StringType, elems)
+}
+
+// FlattenFrameworkStringSetLegacy converts a slice of string pointers to a framework Set value.
+//
+// A nil slice is converted to an empty (non-null) Set.
+func FlattenFrameworkStringSetLegacy(_ context.Context, vs []*string) types.Set {
+	elems := make([]attr.Value, len(vs))
+
+	for i, v := range vs {
+		elems[i] = types.StringValue(aws.ToString(v))
+	}
+
+	return types.SetValueMust(types.StringType, elems)
 }
 
 // FlattenFrameworkStringValueSet converts a slice of string values to a framework Set value.
@@ -294,4 +325,38 @@ func StringToFrameworkWithTransform(_ context.Context, v *string, f func(string)
 	}
 
 	return types.StringValue(f(aws.ToString(v)))
+}
+
+// Float64ToFramework converts a float64 pointer to a Framework Float64 value.
+// A nil float64 pointer is converted to a null Float64.
+func Float64ToFramework(_ context.Context, v *float64) types.Float64 {
+	if v == nil {
+		return types.Float64Null()
+	}
+
+	return types.Float64Value(aws.ToFloat64(v))
+}
+
+// Float64ToFrameworkLegacy converts a float64 pointer to a Framework Float64 value.
+// A nil float64 pointer is converted to a zero float64.
+func Float64ToFrameworkLegacy(_ context.Context, v *float64) types.Float64 {
+	return types.Float64Value(aws.ToFloat64(v))
+}
+
+type Set[T comparable] []T
+
+// Difference find the elements in two sets that are not similar.
+func (s Set[T]) Difference(ns Set[T]) Set[T] {
+	m := make(map[T]struct{})
+	for _, v := range ns {
+		m[v] = struct{}{}
+	}
+
+	var result []T
+	for _, v := range s {
+		if _, ok := m[v]; !ok {
+			result = append(result, v)
+		}
+	}
+	return result
 }

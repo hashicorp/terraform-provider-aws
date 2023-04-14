@@ -8,7 +8,7 @@ import (
 	r53rcc "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKResource("aws_route53recoverycontrolconfig_safety_rule")
 func ResourceSafetyRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSafetyRuleCreate,
@@ -250,7 +251,7 @@ func createAssertionRule(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	input := &r53rcc.CreateSafetyRuleInput{
-		ClientToken:   aws.String(resource.UniqueId()),
+		ClientToken:   aws.String(id.UniqueId()),
 		AssertionRule: assertionRule,
 	}
 
@@ -288,7 +289,7 @@ func createGatingRule(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	input := &r53rcc.CreateSafetyRuleInput{
-		ClientToken: aws.String(resource.UniqueId()),
+		ClientToken: aws.String(id.UniqueId()),
 		GatingRule:  gatingRule,
 	}
 

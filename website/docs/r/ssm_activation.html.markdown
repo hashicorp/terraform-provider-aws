@@ -13,19 +13,22 @@ Registers an on-premises server or virtual machine with Amazon EC2 so that it ca
 ## Example Usage
 
 ```terraform
-resource "aws_iam_role" "test_role" {
-  name = "test_role"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-  {
-    "Version": "2012-10-17",
-    "Statement": {
-      "Effect": "Allow",
-      "Principal": {"Service": "ssm.amazonaws.com"},
-      "Action": "sts:AssumeRole"
+    principals {
+      type        = "Service"
+      identifiers = ["ssm.amazonaws.com"]
     }
+
+    actions = ["sts:AssumeRole"]
   }
-EOF
+}
+
+resource "aws_iam_role" "test_role" {
+  name               = "test_role"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 resource "aws_iam_role_policy_attachment" "test_attach" {

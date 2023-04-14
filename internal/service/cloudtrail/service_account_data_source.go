@@ -26,6 +26,7 @@ var ServiceAccountPerRegionMap = map[string]string{
 	endpoints.ApSoutheast1RegionID: "903692715234",
 	endpoints.ApSoutheast2RegionID: "284668455005",
 	endpoints.ApSoutheast3RegionID: "069019280451",
+	endpoints.ApSoutheast4RegionID: "187074758985",
 	endpoints.CaCentral1RegionID:   "819402241893",
 	endpoints.CnNorth1RegionID:     "193415116832",
 	endpoints.CnNorthwest1RegionID: "681348832753",
@@ -48,6 +49,7 @@ var ServiceAccountPerRegionMap = map[string]string{
 	endpoints.UsWest2RegionID:      "113285607260",
 }
 
+// @SDKDataSource("aws_cloudtrail_service_account")
 func DataSourceServiceAccount() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceAccountRead,

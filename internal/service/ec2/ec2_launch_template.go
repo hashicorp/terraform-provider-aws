@@ -13,18 +13,22 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_launch_template", name="Launch Template")
+// @Tags(identifierAttribute="id")
 func ResourceLaunchTemplate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLaunchTemplateCreate,
@@ -57,24 +61,16 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"delete_on_termination": {
-										// Use TypeString to allow an "unspecified" value,
-										// since TypeBool only has true/false with false default.
-										// The conversion from bare true/false values in
-										// configurations to TypeString value is currently safe.
-										Type:             schema.TypeString,
+										Type:             nullable.TypeNullableBool,
 										Optional:         true,
-										DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
-										ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+										DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+										ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 									},
 									"encrypted": {
-										// Use TypeString to allow an "unspecified" value,
-										// since TypeBool only has true/false with false default.
-										// The conversion from bare true/false values in
-										// configurations to TypeString value is currently safe.
-										Type:             schema.TypeString,
+										Type:             nullable.TypeNullableBool,
 										Optional:         true,
-										DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
-										ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+										DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+										ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 									},
 									"iops": {
 										Type:     schema.TypeInt,
@@ -207,14 +203,10 @@ func ResourceLaunchTemplate() *schema.Resource {
 				Optional: true,
 			},
 			"ebs_optimized": {
-				// Use TypeString to allow an "unspecified" value,
-				// since TypeBool only has true/false with false default.
-				// The conversion from bare true/false values in
-				// configurations to TypeString value is currently safe.
-				Type:             schema.TypeString,
+				Type:             nullable.TypeNullableBool,
 				Optional:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
-				ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+				DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+				ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 			},
 			"elastic_gpu_specifications": {
 				Type:     schema.TypeList,
@@ -411,6 +403,13 @@ func ResourceLaunchTemplate() *schema.Resource {
 								ValidateFunc: validation.StringInSlice(ec2.AcceleratorType_Values(), false),
 							},
 						},
+						"allowed_instance_types": {
+							Type:          schema.TypeSet,
+							Optional:      true,
+							MaxItems:      400,
+							Elem:          &schema.Schema{Type: schema.TypeString},
+							ConflictsWith: []string{"instance_requirements.0.excluded_instance_types"},
+						},
 						"bare_metal": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -449,10 +448,11 @@ func ResourceLaunchTemplate() *schema.Resource {
 							},
 						},
 						"excluded_instance_types": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 400,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Type:          schema.TypeSet,
+							Optional:      true,
+							MaxItems:      400,
+							Elem:          &schema.Schema{Type: schema.TypeString},
+							ConflictsWith: []string{"instance_requirements.0.allowed_instance_types"},
 						},
 						"instance_generations": {
 							Type:     schema.TypeSet,
@@ -509,6 +509,25 @@ func ResourceLaunchTemplate() *schema.Resource {
 										Type:         schema.TypeInt,
 										Required:     true,
 										ValidateFunc: validation.IntAtLeast(1),
+									},
+								},
+							},
+						},
+						"network_bandwidth_gbps": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max": {
+										Type:         schema.TypeFloat,
+										Optional:     true,
+										ValidateFunc: verify.FloatGreaterThan(0.0),
+									},
+									"min": {
+										Type:         schema.TypeFloat,
+										Optional:     true,
+										ValidateFunc: verify.FloatGreaterThan(0.0),
 									},
 								},
 							},
@@ -707,26 +726,22 @@ func ResourceLaunchTemplate() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"associate_carrier_ip_address": {
-							Type:             schema.TypeString,
+							Type:             nullable.TypeNullableBool,
 							Optional:         true,
-							DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
-							ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+							DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+							ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 						},
 						"associate_public_ip_address": {
-							Type:             schema.TypeString,
+							Type:             nullable.TypeNullableBool,
 							Optional:         true,
-							DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
-							ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+							DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+							ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 						},
 						"delete_on_termination": {
-							// Use TypeString to allow an "unspecified" value,
-							// since TypeBool only has true/false with false default.
-							// The conversion from bare true/false values in
-							// configurations to TypeString value is currently safe.
-							Type:             schema.TypeString,
+							Type:             nullable.TypeNullableBool,
 							Optional:         true,
-							DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
-							ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+							DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+							ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 						},
 						"description": {
 							Type:     schema.TypeString,
@@ -904,8 +919,8 @@ func ResourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"update_default_version": {
 				Type:          schema.TypeBool,
 				Optional:      true,
@@ -956,14 +971,12 @@ func ResourceLaunchTemplate() *schema.Resource {
 func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &ec2.CreateLaunchTemplateInput{
-		ClientToken:        aws.String(resource.UniqueId()),
+		ClientToken:        aws.String(id.UniqueId()),
 		LaunchTemplateName: aws.String(name),
-		TagSpecifications:  tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeLaunchTemplate),
+		TagSpecifications:  getTagSpecificationsIn(ctx, ec2.ResourceTypeLaunchTemplate),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -991,8 +1004,6 @@ func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, m
 func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	lt, err := FindLaunchTemplateByID(ctx, conn, d.Id())
 
@@ -1031,16 +1042,7 @@ func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Launch Template (%s): %s", d.Id(), err)
 	}
 
-	tags := KeyValueTags(lt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, lt.Tags)
 
 	return diags
 }
@@ -1086,7 +1088,7 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	if d.HasChanges(updateKeys...) {
 		input := &ec2.CreateLaunchTemplateVersionInput{
-			ClientToken:      aws.String(resource.UniqueId()),
+			ClientToken:      aws.String(id.UniqueId()),
 			LaunchTemplateId: aws.String(d.Id()),
 		}
 
@@ -1124,14 +1126,6 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Launch Template (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 Launch Template (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -1206,9 +1200,7 @@ func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sche
 		apiObject.DisableApiTermination = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("ebs_optimized"); ok {
-		v, _ := strconv.ParseBool(v.(string))
-
+	if v, null, _ := nullable.Bool(d.Get("ebs_optimized").(string)).Value(); !null {
 		apiObject.EbsOptimized = aws.Bool(v)
 	}
 
@@ -1305,7 +1297,7 @@ func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sche
 	}
 
 	if v, ok := d.GetOk("tag_specifications"); ok && len(v.([]interface{})) > 0 {
-		apiObject.TagSpecifications = expandLaunchTemplateTagSpecificationRequests(v.([]interface{}))
+		apiObject.TagSpecifications = expandLaunchTemplateTagSpecificationRequests(ctx, v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
@@ -1322,7 +1314,7 @@ func expandLaunchTemplateBlockDeviceMappingRequest(tfMap map[string]interface{})
 
 	apiObject := &ec2.LaunchTemplateBlockDeviceMappingRequest{}
 
-	if v, ok := tfMap["ebs"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["ebs"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Ebs = expandLaunchTemplateEBSBlockDeviceRequest(v[0].(map[string]interface{}))
 	}
 
@@ -1374,15 +1366,11 @@ func expandLaunchTemplateEBSBlockDeviceRequest(tfMap map[string]interface{}) *ec
 
 	apiObject := &ec2.LaunchTemplateEbsBlockDeviceRequest{}
 
-	if v, ok := tfMap["delete_on_termination"].(string); ok && v != "" {
-		v, _ := strconv.ParseBool(v)
-
+	if v, null, _ := nullable.Bool(tfMap["delete_on_termination"].(string)).Value(); !null {
 		apiObject.DeleteOnTermination = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["encrypted"].(string); ok && v != "" {
-		v, _ := strconv.ParseBool(v)
-
+	if v, null, _ := nullable.Bool(tfMap["encrypted"].(string)).Value(); !null {
 		apiObject.Encrypted = aws.Bool(v)
 	}
 
@@ -1424,7 +1412,7 @@ func expandLaunchTemplateCapacityReservationSpecificationRequest(tfMap map[strin
 		apiObject.CapacityReservationPreference = aws.String(v)
 	}
 
-	if v, ok := tfMap["capacity_reservation_target"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["capacity_reservation_target"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.CapacityReservationTarget = expandCapacityReservationTarget(v[0].(map[string]interface{}))
 	}
 
@@ -1558,7 +1546,7 @@ func expandLaunchTemplateInstanceMarketOptionsRequest(tfMap map[string]interface
 		apiObject.MarketType = aws.String(v)
 	}
 
-	if v, ok := tfMap["spot_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["spot_options"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.SpotOptions = expandLaunchTemplateSpotMarketOptionsRequest(v[0].(map[string]interface{}))
 	}
 
@@ -1572,7 +1560,7 @@ func expandInstanceRequirementsRequest(tfMap map[string]interface{}) *ec2.Instan
 
 	apiObject := &ec2.InstanceRequirementsRequest{}
 
-	if v, ok := tfMap["accelerator_count"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["accelerator_count"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.AcceleratorCount = expandAcceleratorCountRequest(v[0].(map[string]interface{}))
 	}
 
@@ -1584,7 +1572,7 @@ func expandInstanceRequirementsRequest(tfMap map[string]interface{}) *ec2.Instan
 		apiObject.AcceleratorNames = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap["accelerator_total_memory_mib"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["accelerator_total_memory_mib"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.AcceleratorTotalMemoryMiB = expandAcceleratorTotalMemoryMiBRequest(v[0].(map[string]interface{}))
 	}
 
@@ -1592,11 +1580,15 @@ func expandInstanceRequirementsRequest(tfMap map[string]interface{}) *ec2.Instan
 		apiObject.AcceleratorTypes = flex.ExpandStringSet(v)
 	}
 
+	if v, ok := tfMap["allowed_instance_types"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.AllowedInstanceTypes = flex.ExpandStringSet(v)
+	}
+
 	if v, ok := tfMap["bare_metal"].(string); ok && v != "" {
 		apiObject.BareMetal = aws.String(v)
 	}
 
-	if v, ok := tfMap["baseline_ebs_bandwidth_mbps"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["baseline_ebs_bandwidth_mbps"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.BaselineEbsBandwidthMbps = expandBaselineEBSBandwidthMbpsRequest(v[0].(map[string]interface{}))
 	}
 
@@ -1624,15 +1616,19 @@ func expandInstanceRequirementsRequest(tfMap map[string]interface{}) *ec2.Instan
 		apiObject.LocalStorageTypes = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap["memory_gib_per_vcpu"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["memory_gib_per_vcpu"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.MemoryGiBPerVCpu = expandMemoryGiBPerVCPURequest(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["memory_mib"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["memory_mib"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.MemoryMiB = expandMemoryMiBRequest(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["network_interface_count"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["network_bandwidth_gbps"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.NetworkBandwidthGbps = expandNetworkBandwidthGbpsRequest(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["network_interface_count"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.NetworkInterfaceCount = expandNetworkInterfaceCountRequest(v[0].(map[string]interface{}))
 	}
 
@@ -1648,11 +1644,11 @@ func expandInstanceRequirementsRequest(tfMap map[string]interface{}) *ec2.Instan
 		apiObject.SpotMaxPricePercentageOverLowestPrice = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["total_local_storage_gb"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["total_local_storage_gb"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.TotalLocalStorageGB = expandTotalLocalStorageGBRequest(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["vcpu_count"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["vcpu_count"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.VCpuCount = expandVCPUCountRangeRequest(v[0].(map[string]interface{}))
 	}
 
@@ -1754,6 +1750,26 @@ func expandMemoryMiBRequest(tfMap map[string]interface{}) *ec2.MemoryMiBRequest 
 
 	if v, ok := tfMap["max"].(int); ok && v >= min {
 		apiObject.Max = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func expandNetworkBandwidthGbpsRequest(tfMap map[string]interface{}) *ec2.NetworkBandwidthGbpsRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.NetworkBandwidthGbpsRequest{}
+
+	var min float64
+	if v, ok := tfMap["min"].(float64); ok {
+		min = v
+		apiObject.Min = aws.Float64(v)
+	}
+
+	if v, ok := tfMap["max"].(float64); ok && v >= min {
+		apiObject.Max = aws.Float64(v)
 	}
 
 	return apiObject
@@ -1900,21 +1916,18 @@ func expandLaunchTemplateInstanceMetadataOptionsRequest(tfMap map[string]interfa
 
 	if v, ok := tfMap["http_endpoint"].(string); ok && v != "" {
 		apiObject.HttpEndpoint = aws.String(v)
+	}
 
-		if v == ec2.LaunchTemplateInstanceMetadataEndpointStateEnabled {
-			// These parameters are not allowed unless HttpEndpoint is enabled.
-			if v, ok := tfMap["http_tokens"].(string); ok && v != "" {
-				apiObject.HttpTokens = aws.String(v)
-			}
+	if v, ok := tfMap["http_tokens"].(string); ok && v != "" {
+		apiObject.HttpTokens = aws.String(v)
+	}
 
-			if v, ok := tfMap["http_put_response_hop_limit"].(int); ok && v != 0 {
-				apiObject.HttpPutResponseHopLimit = aws.Int64(int64(v))
-			}
+	if v, ok := tfMap["http_put_response_hop_limit"].(int); ok && v != 0 {
+		apiObject.HttpPutResponseHopLimit = aws.Int64(int64(v))
+	}
 
-			if v, ok := tfMap["instance_metadata_tags"].(string); ok && v != "" {
-				apiObject.InstanceMetadataTags = aws.String(v)
-			}
-		}
+	if v, ok := tfMap["instance_metadata_tags"].(string); ok && v != "" {
+		apiObject.InstanceMetadataTags = aws.String(v)
 	}
 
 	if v, ok := tfMap["http_protocol_ipv6"].(string); ok && v != "" {
@@ -1945,21 +1958,15 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 
 	apiObject := &ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest{}
 
-	if v, ok := tfMap["associate_carrier_ip_address"].(string); ok && v != "" {
-		v, _ := strconv.ParseBool(v)
-
+	if v, null, _ := nullable.Bool(tfMap["associate_carrier_ip_address"].(string)).Value(); !null {
 		apiObject.AssociateCarrierIpAddress = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["associate_public_ip_address"].(string); ok && v != "" {
-		v, _ := strconv.ParseBool(v)
-
+	if v, null, _ := nullable.Bool(tfMap["associate_public_ip_address"].(string)).Value(); !null {
 		apiObject.AssociatePublicIpAddress = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["delete_on_termination"].(string); ok && v != "" {
-		v, _ := strconv.ParseBool(v)
-
+	if v, null, _ := nullable.Bool(tfMap["delete_on_termination"].(string)).Value(); !null {
 		apiObject.DeleteOnTermination = aws.Bool(v)
 	}
 
@@ -2129,7 +2136,7 @@ func expandLaunchTemplatePrivateDNSNameOptionsRequest(tfMap map[string]interface
 	return apiObject
 }
 
-func expandLaunchTemplateTagSpecificationRequest(tfMap map[string]interface{}) *ec2.LaunchTemplateTagSpecificationRequest {
+func expandLaunchTemplateTagSpecificationRequest(ctx context.Context, tfMap map[string]interface{}) *ec2.LaunchTemplateTagSpecificationRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -2141,7 +2148,7 @@ func expandLaunchTemplateTagSpecificationRequest(tfMap map[string]interface{}) *
 	}
 
 	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
-		if v := tftags.New(v).IgnoreAWS(); len(v) > 0 {
+		if v := tftags.New(ctx, v).IgnoreAWS(); len(v) > 0 {
 			apiObject.Tags = Tags(v)
 		}
 	}
@@ -2149,7 +2156,7 @@ func expandLaunchTemplateTagSpecificationRequest(tfMap map[string]interface{}) *
 	return apiObject
 }
 
-func expandLaunchTemplateTagSpecificationRequests(tfList []interface{}) []*ec2.LaunchTemplateTagSpecificationRequest {
+func expandLaunchTemplateTagSpecificationRequests(ctx context.Context, tfList []interface{}) []*ec2.LaunchTemplateTagSpecificationRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -2163,7 +2170,7 @@ func expandLaunchTemplateTagSpecificationRequests(tfList []interface{}) []*ec2.L
 			continue
 		}
 
-		apiObject := expandLaunchTemplateTagSpecificationRequest(tfMap)
+		apiObject := expandLaunchTemplateTagSpecificationRequest(ctx, tfMap)
 
 		if apiObject == nil {
 			continue
@@ -2316,7 +2323,7 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sc
 	}
 	d.Set("ram_disk_id", apiObject.RamDiskId)
 	d.Set("security_group_names", aws.StringValueSlice(apiObject.SecurityGroups))
-	if err := d.Set("tag_specifications", flattenLaunchTemplateTagSpecifications(apiObject.TagSpecifications)); err != nil {
+	if err := d.Set("tag_specifications", flattenLaunchTemplateTagSpecifications(ctx, apiObject.TagSpecifications)); err != nil {
 		return fmt.Errorf("error setting tag_specifications: %w", err)
 	}
 	d.Set("user_data", apiObject.UserData)
@@ -2588,6 +2595,10 @@ func flattenInstanceRequirements(apiObject *ec2.InstanceRequirements) map[string
 		tfMap["accelerator_types"] = aws.StringValueSlice(v)
 	}
 
+	if v := apiObject.AllowedInstanceTypes; v != nil {
+		tfMap["allowed_instance_types"] = aws.StringValueSlice(v)
+	}
+
 	if v := apiObject.BareMetal; v != nil {
 		tfMap["bare_metal"] = aws.StringValue(v)
 	}
@@ -2626,6 +2637,10 @@ func flattenInstanceRequirements(apiObject *ec2.InstanceRequirements) map[string
 
 	if v := apiObject.MemoryMiB; v != nil {
 		tfMap["memory_mib"] = []interface{}{flattenMemoryMiB(v)}
+	}
+
+	if v := apiObject.NetworkBandwidthGbps; v != nil {
+		tfMap["network_bandwidth_gbps"] = []interface{}{flattenNetworkBandwidthGbps(v)}
 	}
 
 	if v := apiObject.NetworkInterfaceCount; v != nil {
@@ -2740,6 +2755,24 @@ func flattenMemoryMiB(apiObject *ec2.MemoryMiB) map[string]interface{} {
 
 	if v := apiObject.Min; v != nil {
 		tfMap["min"] = aws.Int64Value(v)
+	}
+
+	return tfMap
+}
+
+func flattenNetworkBandwidthGbps(apiObject *ec2.NetworkBandwidthGbps) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Max; v != nil {
+		tfMap["max"] = aws.Float64Value(v)
+	}
+
+	if v := apiObject.Min; v != nil {
+		tfMap["min"] = aws.Float64Value(v)
 	}
 
 	return tfMap
@@ -3092,7 +3125,7 @@ func flattenLaunchTemplatePrivateDNSNameOptions(apiObject *ec2.LaunchTemplatePri
 	return tfMap
 }
 
-func flattenLaunchTemplateTagSpecification(apiObject *ec2.LaunchTemplateTagSpecification) map[string]interface{} {
+func flattenLaunchTemplateTagSpecification(ctx context.Context, apiObject *ec2.LaunchTemplateTagSpecification) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -3104,13 +3137,13 @@ func flattenLaunchTemplateTagSpecification(apiObject *ec2.LaunchTemplateTagSpeci
 	}
 
 	if v := apiObject.Tags; len(v) > 0 {
-		tfMap["tags"] = KeyValueTags(v).IgnoreAWS().Map()
+		tfMap["tags"] = KeyValueTags(ctx, v).IgnoreAWS().Map()
 	}
 
 	return tfMap
 }
 
-func flattenLaunchTemplateTagSpecifications(apiObjects []*ec2.LaunchTemplateTagSpecification) []interface{} {
+func flattenLaunchTemplateTagSpecifications(ctx context.Context, apiObjects []*ec2.LaunchTemplateTagSpecification) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -3122,7 +3155,7 @@ func flattenLaunchTemplateTagSpecifications(apiObjects []*ec2.LaunchTemplateTagS
 			continue
 		}
 
-		tfList = append(tfList, flattenLaunchTemplateTagSpecification(apiObject))
+		tfList = append(tfList, flattenLaunchTemplateTagSpecification(ctx, apiObject))
 	}
 
 	return tfList

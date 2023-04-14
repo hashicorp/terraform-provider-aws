@@ -41,6 +41,59 @@ resource "aws_autoscaling_group" "bar" {
 }
 ```
 
+### Create target tarcking scaling policy using metric math
+
+```terraform
+resource "aws_autoscaling_policy" "example" {
+  autoscaling_group_name = "my-test-asg"
+  name                   = "foo"
+  policy_type            = "TargetTrackingScaling"
+  target_tracking_configuration {
+    target_value = 100
+    customized_metric_specification {
+      metrics {
+        label = "Get the queue size (the number of messages waiting to be processed)"
+        id    = "m1"
+        metric_stat {
+          metric {
+            namespace   = "AWS/SQS"
+            metric_name = "ApproximateNumberOfMessagesVisible"
+            dimensions {
+              name  = "QueueName"
+              value = "my-queue"
+            }
+          }
+          stat = "Sum"
+        }
+        return_data = false
+      }
+      metrics {
+        label = "Get the group size (the number of InService instances)"
+        id    = "m2"
+        metric_stat {
+          metric {
+            namespace   = "AWS/AutoScaling"
+            metric_name = "GroupInServiceInstances"
+            dimensions {
+              name  = "AutoScalingGroupName"
+              value = "my-asg"
+            }
+          }
+          stat = "Average"
+        }
+        return_data = false
+      }
+      metrics {
+        label       = "Calculate the backlog per instance"
+        id          = "e1"
+        expression  = "m1 / m2"
+        return_data = true
+      }
+    }
+  }
+}
+```
+
 ### Create predictive scaling policy using customized metrics
 
 ```terraform
@@ -214,12 +267,46 @@ The following arguments are supported:
 The following arguments are supported:
 
 * `metric_dimension` - (Optional) Dimensions of the metric.
-* `metric_name` - (Required) Name of the metric.
-* `namespace` - (Required) Namespace of the metric.
-* `statistic` - (Required) Statistic of the metric.
+* `metric_name` - (Optional) Name of the metric.
+* `namespace` - (Optional) Namespace of the metric.
+* `statistic` - (Optional) Statistic of the metric.
 * `unit` - (Optional) Unit of the metric.
+* `metrics` - (Optional) Metrics to include, as a metric data query.
 
 #### metric_dimension
+
+The following arguments are supported:
+
+* `name` - (Required) Name of the dimension.
+* `value` - (Required) Value of the dimension.
+
+#### metrics
+
+The following arguments are supported:
+
+* `expression` - (Optional) Math expression used on the returned metric. You must specify either `expression` or `metric_stat`, but not both.
+* `id` - (Required) Short name for the metric used in target tracking scaling policy.
+* `label` - (Optional) Human-readable label for this metric or expression.
+* `metric_stat` - (Optional) Structure that defines CloudWatch metric to be used in target tracking scaling policy. You must specify either `expression` or `metric_stat`, but not both.
+* `return_data` - (Optional) Boolean that indicates whether to return the timestamps and raw data values of this metric, the default is true
+
+##### metric_stat
+
+The following arguments are supported:
+
+* `metric` - (Required) Structure that defines the CloudWatch metric to return, including the metric name, namespace, and dimensions.
+* `stat` - (Required) Statistic of the metrics to return.
+* `unit` - (Optional) Unit of the metrics to return.
+
+##### metric
+
+The following arguments are supported:
+
+* `dimensions` - (Optional) Dimensions of the metric.
+* `metric_name` - (Required) Name of the metric.
+* `namespace` - (Required) Namespace of the metric.
+
+###### dimensions
 
 The following arguments are supported:
 
@@ -269,30 +356,35 @@ The following arguments are supported:
 * `resource_label` - (Required) Label that uniquely identifies a specific Application Load Balancer target group from which to determine the request count served by your Auto Scaling group.
 
 ##### customized_scaling_metric_specification
+
 The following arguments are supported:
 
 * `metric_data_queries` - (Required) List of up to 10 structures that defines custom scaling metric in predictive scaling policy
 
 ##### customized_load_metric_specification
+
 The following arguments are supported:
 
 * `metric_data_queries` - (Required) List of up to 10 structures that defines custom load metric in predictive scaling policy
 
 ##### customized_capacity_metric_specification
+
 The following arguments are supported:
 
 * `metric_data_queries` - (Required) List of up to 10 structures that defines custom capacity metric in predictive scaling policy
 
 ##### metric_data_queries
+
 The following arguments are supported:
 
 * `expression` - (Optional) Math expression used on the returned metric. You must specify either `expression` or `metric_stat`, but not both.
 * `id` - (Required) Short name for the metric used in predictive scaling policy.
-* `metric_stat` - (Optional) Structure that defines CloudWatch metric to be used in predictive scaling policy. You must specify either `expression` or `metric_stat`, but not both.
 * `label` - (Optional) Human-readable label for this metric or expression.
-* `return_data` - (Optional) Boolean that indicates whether to return the timestamps and raw data values of this metric, the default it true
+* `metric_stat` - (Optional) Structure that defines CloudWatch metric to be used in predictive scaling policy. You must specify either `expression` or `metric_stat`, but not both.
+* `return_data` - (Optional) Boolean that indicates whether to return the timestamps and raw data values of this metric, the default is true
 
 ##### metric_stat
+
 The following arguments are supported:
 
 * `metric` - (Required) Structure that defines the CloudWatch metric to return, including the metric name, namespace, and dimensions.
@@ -300,6 +392,7 @@ The following arguments are supported:
 * `unit` - (Optional) Unit of the metrics to return.
 
 ##### metric
+
 The following arguments are supported:
 
 * `dimensions` - (Optional) Dimensions of the metric.
@@ -307,6 +400,7 @@ The following arguments are supported:
 * `namespace` - (Required) Namespace of the metric.
 
 ##### dimensions
+
 The following arguments are supported:
 
 * `name` - (Required) Name of the dimension.

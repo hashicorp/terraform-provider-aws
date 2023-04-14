@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_db_event_categories")
 func DataSourceEventCategories() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEventCategoriesRead,
@@ -42,7 +43,6 @@ func dataSourceEventCategoriesRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	output, err := findEventCategoriesMaps(ctx, conn, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS Event Categories: %s", err)
 	}
@@ -63,7 +63,6 @@ func findEventCategoriesMaps(ctx context.Context, conn *rds.RDS, input *rds.Desc
 	var output []*rds.EventCategoriesMap
 
 	page, err := conn.DescribeEventCategoriesWithContext(ctx, input)
-
 	if err != nil {
 		return nil, err
 	}

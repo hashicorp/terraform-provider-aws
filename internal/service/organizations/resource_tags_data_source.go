@@ -12,6 +12,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_organizations_resource_tags")
 func DataSourceResourceTags() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResourceTagsRead,
@@ -52,7 +53,7 @@ func dataSourceResourceTagsRead(ctx context.Context, d *schema.ResourceData, met
 	d.SetId(resource_id)
 
 	if tags != nil {
-		if err := d.Set("tags", KeyValueTags(tags).Map()); err != nil {
+		if err := d.Set("tags", KeyValueTags(ctx, tags).Map()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 		}
 	} else {

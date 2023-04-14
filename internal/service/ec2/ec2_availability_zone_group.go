@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_ec2_availability_zone_group")
 func ResourceAvailabilityZoneGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAvailabilityZoneGroupCreate,
