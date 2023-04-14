@@ -68,7 +68,7 @@ func resourceVPCEndpointServiceAllowedPrincipalRead(ctx context.Context, d *sche
 	serviceID := d.Get("vpc_endpoint_service_id").(string)
 	principalARN := d.Get("principal_arn").(string)
 
-	err := FindVPCEndpointServicePermissionExists(ctx, conn, serviceID, principalARN)
+	output, err := FindVPCEndpointServicePermission(ctx, conn, serviceID, principalARN)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 VPC Endpoint Service Allowed Principal %s not found, removing from state", d.Id())
@@ -79,6 +79,8 @@ func resourceVPCEndpointServiceAllowedPrincipalRead(ctx context.Context, d *sche
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC Endpoint Service (%s) Allowed Principal (%s): %s", serviceID, principalARN, err)
 	}
+
+	d.SetId(aws.StringValue(output.ServicePermissionId))
 
 	return diags
 }
