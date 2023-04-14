@@ -81,7 +81,7 @@ func FindAssociatedGroup(ctx context.Context, conn *synthetics.Synthetics, canar
 
 	var group *synthetics.GroupSummary
 	for _, groupSummary := range out.Groups {
-		if *groupSummary.Name == groupName {
+		if aws.StringValue(groupSummary.Name) == groupName {
 			group = groupSummary
 		}
 	}
