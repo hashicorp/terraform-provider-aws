@@ -21,7 +21,7 @@ func TestAccElasticsearchDomainDataSource_basic(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearchservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -65,7 +65,7 @@ func TestAccElasticsearchDomainDataSource_advanced(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearchservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -152,7 +152,6 @@ POLICY
   }
 
   cluster_config {
-    instance_type            = "t3.small.elasticsearch"
     instance_count           = 2
     dedicated_master_enabled = false
 
@@ -276,7 +275,6 @@ POLICY
   }
 
   cluster_config {
-    instance_type            = "t2.small.elasticsearch"
     instance_count           = 2
     dedicated_master_enabled = false
 

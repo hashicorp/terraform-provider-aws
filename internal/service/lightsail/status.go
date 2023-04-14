@@ -8,11 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lightsail"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusContainerService(ctx context.Context, conn *lightsail.Lightsail, serviceName string) resource.StateRefreshFunc {
+func statusContainerService(ctx context.Context, conn *lightsail.Lightsail, serviceName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		containerService, err := FindContainerServiceByName(ctx, conn, serviceName)
 
@@ -28,7 +28,7 @@ func statusContainerService(ctx context.Context, conn *lightsail.Lightsail, serv
 	}
 }
 
-func statusContainerServiceDeploymentVersion(ctx context.Context, conn *lightsail.Lightsail, serviceName string, version int) resource.StateRefreshFunc {
+func statusContainerServiceDeploymentVersion(ctx context.Context, conn *lightsail.Lightsail, serviceName string, version int) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		deployment, err := FindContainerServiceDeploymentByVersion(ctx, conn, serviceName, version)
 
@@ -45,7 +45,7 @@ func statusContainerServiceDeploymentVersion(ctx context.Context, conn *lightsai
 }
 
 // statusOperation is a method to check the status of a Lightsail Operation
-func statusOperation(ctx context.Context, conn *lightsail.Lightsail, oid *string) resource.StateRefreshFunc {
+func statusOperation(ctx context.Context, conn *lightsail.Lightsail, oid *string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &lightsail.GetOperationInput{
 			OperationId: oid,
@@ -70,7 +70,7 @@ func statusOperation(ctx context.Context, conn *lightsail.Lightsail, oid *string
 }
 
 // statusDatabase is a method to check the status of a Lightsail Relational Database
-func statusDatabase(ctx context.Context, conn *lightsail.Lightsail, db *string) resource.StateRefreshFunc {
+func statusDatabase(ctx context.Context, conn *lightsail.Lightsail, db *string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &lightsail.GetRelationalDatabaseInput{
 			RelationalDatabaseName: db,
@@ -95,7 +95,7 @@ func statusDatabase(ctx context.Context, conn *lightsail.Lightsail, db *string) 
 }
 
 // statusDatabase is a method to check the status of a Lightsail Relational Database Backup Retention
-func statusDatabaseBackupRetention(ctx context.Context, conn *lightsail.Lightsail, db *string) resource.StateRefreshFunc {
+func statusDatabaseBackupRetention(ctx context.Context, conn *lightsail.Lightsail, db *string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &lightsail.GetRelationalDatabaseInput{
 			RelationalDatabaseName: db,
@@ -118,7 +118,7 @@ func statusDatabaseBackupRetention(ctx context.Context, conn *lightsail.Lightsai
 	}
 }
 
-func statusDatabasePubliclyAccessible(ctx context.Context, conn *lightsail.Lightsail, db *string) resource.StateRefreshFunc {
+func statusDatabasePubliclyAccessible(ctx context.Context, conn *lightsail.Lightsail, db *string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &lightsail.GetRelationalDatabaseInput{
 			RelationalDatabaseName: db,
@@ -141,7 +141,7 @@ func statusDatabasePubliclyAccessible(ctx context.Context, conn *lightsail.Light
 	}
 }
 
-func statusInstance(ctx context.Context, conn *lightsail.Lightsail, iName *string) resource.StateRefreshFunc {
+func statusInstance(ctx context.Context, conn *lightsail.Lightsail, iName *string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		in := &lightsail.GetInstanceStateInput{
 			InstanceName: iName,

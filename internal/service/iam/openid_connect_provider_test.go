@@ -23,7 +23,7 @@ func TestAccIAMOpenIDConnectProvider_basic(t *testing.T) {
 	resourceName := "aws_iam_openid_connect_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx),
@@ -37,7 +37,7 @@ func TestAccIAMOpenIDConnectProvider_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_id_list.0",
 						"266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com"),
-					resource.TestCheckResourceAttr(resourceName, "thumbprint_list.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "thumbprint_list.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -70,7 +70,7 @@ func TestAccIAMOpenIDConnectProvider_tags(t *testing.T) {
 	resourceName := "aws_iam_openid_connect_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceProfileDestroy(ctx),
@@ -116,7 +116,7 @@ func TestAccIAMOpenIDConnectProvider_disappears(t *testing.T) {
 	resourceName := "aws_iam_openid_connect_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx),
@@ -192,7 +192,7 @@ resource "aws_iam_openid_connect_provider" "test" {
     "266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com",
   ]
 
-  thumbprint_list = []
+  thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94"]
 }
 `, rString)
 }
@@ -220,7 +220,7 @@ resource "aws_iam_openid_connect_provider" "test" {
     "266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com",
   ]
 
-  thumbprint_list = []
+  thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94"]
 
   tags = {
     %[2]q = %[3]q
@@ -238,7 +238,7 @@ resource "aws_iam_openid_connect_provider" "test" {
     "266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com",
   ]
 
-  thumbprint_list = []
+  thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94"]
 
   tags = {
     %[2]q = %[3]q

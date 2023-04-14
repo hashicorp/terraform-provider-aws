@@ -28,6 +28,10 @@ func DataSourceProxy() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"client_password_auth_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"description": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -99,7 +103,6 @@ func dataSourceProxyRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	name := d.Get("name").(string)
 	dbProxy, err := FindDBProxyByName(ctx, conn, name)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Proxy (%s): %s", name, err)
 	}

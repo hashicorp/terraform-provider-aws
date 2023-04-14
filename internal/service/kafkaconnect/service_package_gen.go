@@ -5,35 +5,51 @@ package kafkaconnect
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_mskconnect_connector":            DataSourceConnector,
-		"aws_mskconnect_custom_plugin":        DataSourceCustomPlugin,
-		"aws_mskconnect_worker_configuration": DataSourceWorkerConfiguration,
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceConnector,
+			TypeName: "aws_mskconnect_connector",
+		},
+		{
+			Factory:  DataSourceCustomPlugin,
+			TypeName: "aws_mskconnect_custom_plugin",
+		},
+		{
+			Factory:  DataSourceWorkerConfiguration,
+			TypeName: "aws_mskconnect_worker_configuration",
+		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_mskconnect_connector":            ResourceConnector,
-		"aws_mskconnect_custom_plugin":        ResourceCustomPlugin,
-		"aws_mskconnect_worker_configuration": ResourceWorkerConfiguration,
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceConnector,
+			TypeName: "aws_mskconnect_connector",
+		},
+		{
+			Factory:  ResourceCustomPlugin,
+			TypeName: "aws_mskconnect_custom_plugin",
+		},
+		{
+			Factory:  ResourceWorkerConfiguration,
+			TypeName: "aws_mskconnect_worker_configuration",
+		},
 	}
 }
 

@@ -5,36 +5,71 @@ package batch
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_batch_compute_environment": DataSourceComputeEnvironment,
-		"aws_batch_job_queue":           DataSourceJobQueue,
-		"aws_batch_scheduling_policy":   DataSourceSchedulingPolicy,
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceComputeEnvironment,
+			TypeName: "aws_batch_compute_environment",
+		},
+		{
+			Factory:  DataSourceJobQueue,
+			TypeName: "aws_batch_job_queue",
+		},
+		{
+			Factory:  DataSourceSchedulingPolicy,
+			TypeName: "aws_batch_scheduling_policy",
+		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_batch_compute_environment": ResourceComputeEnvironment,
-		"aws_batch_job_definition":      ResourceJobDefinition,
-		"aws_batch_job_queue":           ResourceJobQueue,
-		"aws_batch_scheduling_policy":   ResourceSchedulingPolicy,
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceComputeEnvironment,
+			TypeName: "aws_batch_compute_environment",
+			Name:     "Compute Environment",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceJobDefinition,
+			TypeName: "aws_batch_job_definition",
+			Name:     "Job Definition",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceJobQueue,
+			TypeName: "aws_batch_job_queue",
+			Name:     "Job Queue",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceSchedulingPolicy,
+			TypeName: "aws_batch_scheduling_policy",
+			Name:     "Job Definition",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
 	}
 }
 

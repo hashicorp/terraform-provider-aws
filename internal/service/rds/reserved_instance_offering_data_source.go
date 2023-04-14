@@ -76,7 +76,6 @@ func dataSourceReservedOfferingRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	resp, err := conn.DescribeReservedDBInstancesOfferingsWithContext(ctx, input)
-
 	if err != nil {
 		return create.DiagError(names.RDS, create.ErrActionReading, ResNameReservedInstanceOffering, "unknown", err)
 	}
