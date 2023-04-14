@@ -93,22 +93,22 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Individual routes can be imported using `ROUTETABLEID_DESTINATION`.
+Individual routes can be imported using `ROUTETABLEID,DESTINATION`.
 
 For example, import a route in route table `rtb-656C65616E6F72` with an IPv4 destination CIDR of `10.42.0.0/16` like this:
 
 ```console
-$ terraform import aws_route.my_route rtb-656C65616E6F72_10.42.0.0/16
+$ terraform import aws_route.my_route rtb-656C65616E6F72,10.42.0.0/16
 ```
 
 Import a route in route table `rtb-656C65616E6F72` with an IPv6 destination CIDR of `2620:0:2d0:200::8/125` similarly:
 
 ```console
-$ terraform import aws_route.my_route rtb-656C65616E6F72_2620:0:2d0:200::8/125
+$ terraform import aws_route.my_route rtb-656C65616E6F72,2620:0:2d0:200::8/125
 ```
 
 Import a route in route table `rtb-656C65616E6F72` with a managed prefix list destination of `pl-0570a1d2d725c16be` similarly:
 
 ```console
-$ terraform import aws_route.my_route rtb-656C65616E6F72_pl-0570a1d2d725c16be
+$ terraform import aws_route.my_route rtb-656C65616E6F72,pl-0570a1d2d725c16be
 ```
