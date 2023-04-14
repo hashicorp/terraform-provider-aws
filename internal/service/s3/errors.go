@@ -19,7 +19,7 @@ const (
 	errCodeNoSuchTagSetError                         = "NoSuchTagSetError"
 	ErrCodeNoSuchWebsiteConfiguration                = "NoSuchWebsiteConfiguration"
 	errCodeNotImplemented                            = "NotImplemented"
-	ErrCodeObjectLockConfigurationNotFound           = "ObjectLockConfigurationNotFoundError"
+	errCodeObjectLockConfigurationNotFound           = "ObjectLockConfigurationNotFoundError"
 	errCodeOperationAborted                          = "OperationAborted"
 	ErrCodeReplicationConfigurationNotFound          = "ReplicationConfigurationNotFoundError"
 	ErrCodeServerSideEncryptionConfigurationNotFound = "ServerSideEncryptionConfigurationNotFoundError"
