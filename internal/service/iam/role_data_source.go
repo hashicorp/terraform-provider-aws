@@ -98,10 +98,8 @@ func dataSourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "setting create_date: %s", err)
 	}
 
-	if output.Role.RoleLastUsed != nil && output.Role.RoleLastUsed.LastUsedDate != nil {
-		if err := d.Set("role_last_used", flattenRoleLastUsed(output.Role.RoleLastUsed)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting role_last_used: %s", err)
-		}
+	if err := d.Set("role_last_used", flattenRoleLastUsed(output.Role.RoleLastUsed)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting role_last_used: %s", err)
 	}
 
 	d.Set("description", output.Role.Description)

@@ -327,10 +327,8 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "reading inline policies for IAM role %s, error: %s", d.Id(), err)
 	}
 
-	if role.RoleLastUsed != nil && role.RoleLastUsed.LastUsedDate != nil {
-		if err := d.Set("role_last_used", flattenRoleLastUsed(role.RoleLastUsed)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting role_last_used: %s", err)
-		}
+	if err := d.Set("role_last_used", flattenRoleLastUsed(role.RoleLastUsed)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting role_last_used: %s", err)
 	}
 
 	var configPoliciesList []*iam.PutRolePolicyInput
