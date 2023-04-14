@@ -2017,7 +2017,7 @@ func flattenCalculatedColumns(apiObject []*quicksight.CalculatedColumn) interfac
 			tfMap["column_name"] = aws.StringValue(column.ColumnName)
 		}
 		if column.Expression != nil {
-			tfMap["column_id"] = aws.StringValue(column.Expression)
+			tfMap["expression"] = aws.StringValue(column.Expression)
 		}
 
 		tfList = append(tfList, tfMap)
