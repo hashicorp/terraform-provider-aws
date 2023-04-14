@@ -139,6 +139,9 @@ func ResourceEndpoint() *schema.Resource {
 }
 
 func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	const (
+		timeout = 2 * time.Minute
+	)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsConn()
 
@@ -171,7 +174,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(name)
 
-	if _, err := waitEndpointCreated(ctx, conn, d.Id(), 2*time.Minute); err != nil {
+	if _, err := waitEndpointCreated(ctx, conn, d.Id(), timeout); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EventBridge Global Endpoint (%s) create: %s", d.Id(), err)
 	}
 
@@ -221,6 +224,9 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	const (
+		timeout = 2 * time.Minute
+	)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsConn()
 
@@ -256,7 +262,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "updating EventBridge Global Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitEndpointUpdated(ctx, conn, d.Id(), 2*time.Minute); err != nil {
+	if _, err := waitEndpointUpdated(ctx, conn, d.Id(), timeout); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EventBridge Global Endpoint (%s) update: %s", d.Id(), err)
 	}
 
@@ -264,6 +270,9 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	const (
+		timeout = 2 * time.Minute
+	)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsConn()
 
@@ -280,7 +289,7 @@ func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "deleting EventBridge Global Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitEndpointDeleted(ctx, conn, d.Id(), 2*time.Minute); err != nil {
+	if _, err := waitEndpointDeleted(ctx, conn, d.Id(), timeout); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EventBridge Global Endpoint (%s) delete: %s", d.Id(), err)
 	}
 
