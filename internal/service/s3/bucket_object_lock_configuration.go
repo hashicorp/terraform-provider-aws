@@ -2,7 +2,6 @@ package s3
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -135,47 +134,28 @@ func resourceBucketObjectLockConfigurationRead(ctx context.Context, d *schema.Re
 	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
+
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	input := &s3.GetObjectLockConfigurationInput{
-		Bucket: aws.String(bucket),
-	}
+	objLockConfig, err := FindObjectLockConfiguration(ctx, conn, bucket, expectedBucketOwner)
 
-	if expectedBucketOwner != "" {
-		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
-	}
-
-	output, err := conn.GetObjectLockConfigurationWithContext(ctx, input)
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket, errCodeObjectLockConfigurationNotFound) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Object Lock Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading S3 bucket Object Lock configuration (%s): %w", d.Id(), err))
+		return diag.Errorf("reading S3 Bucket Object Lock Configuration (%s): %s", d.Id(), err)
 	}
-
-	if output == nil || output.ObjectLockConfiguration == nil {
-		if d.IsNewResource() {
-			return diag.FromErr(fmt.Errorf("error reading S3 bucket Object Lock configuration (%s): empty output", d.Id()))
-		}
-		log.Printf("[WARN] S3 Bucket Object Lock Configuration (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	objLockConfig := output.ObjectLockConfiguration
 
 	d.Set("bucket", bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
 	d.Set("object_lock_enabled", objLockConfig.ObjectLockEnabled)
-
 	if err := d.Set("rule", flattenBucketObjectLockConfigurationRule(objLockConfig.Rule)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting rule: %w", err))
+		return diag.Errorf("setting rule: %s", err)
 	}
 
 	return nil
