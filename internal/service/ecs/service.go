@@ -708,7 +708,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if strings.HasPrefix(d.Get("cluster").(string), "arn:"+meta.(*conns.AWSClient).Partition+":ecs:") {
 		d.Set("cluster", service.ClusterArn)
 	} else {
-		clusterARN := getNameFromARN(aws.StringValue(service.ClusterArn))
+		clusterARN := GetNameFromARN(aws.StringValue(service.ClusterArn))
 		d.Set("cluster", clusterARN)
 	}
 
@@ -717,7 +717,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		if strings.HasPrefix(d.Get("iam_role").(string), "arn:"+meta.(*conns.AWSClient).Partition+":iam:") {
 			d.Set("iam_role", service.RoleArn)
 		} else {
-			roleARN := getNameFromARN(aws.StringValue(service.RoleArn))
+			roleARN := GetNameFromARN(aws.StringValue(service.RoleArn))
 			d.Set("iam_role", roleARN)
 		}
 	}
@@ -1574,11 +1574,16 @@ func buildFamilyAndRevisionFromARN(arn string) string {
 	return strings.Split(arn, "/")[1]
 }
 
-// Expects the following ARNs:
-// arn:aws:iam::0123456789:role/EcsService
-// arn:aws:iam::0123456789:role/role_group/EcsService
-// arn:aws:ecs:us-west-2:0123456789:cluster/radek-cluster
-func getNameFromARN(arn string) string {
-	const maxParts = 2 // Ensures the path is carried with the role's name by splitting only on first /
-	return strings.SplitAfterN(arn, "/", maxParts)[1]
+// GetNameFromARN parses the resource name from a fully qualified ARN
+//
+// Expects either an IAM role or ECS cluster ARN:
+//
+//	arn:aws:iam::0123456789:role/EcsService
+//	arn:aws:iam::0123456789:role/role_group/EcsService
+//	arn:aws:ecs:us-west-2:0123456789:cluster/radek-cluster
+func GetNameFromARN(arn string) string {
+	if parts := strings.Split(arn, "/"); len(parts) > 1 {
+		return parts[len(parts)-1]
+	}
+	return ""
 }
