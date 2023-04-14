@@ -521,7 +521,7 @@ func TestAccEventsRule_eventBusARN(t *testing.T) {
 	})
 }
 
-func testAccCheckRuleExists(ctx context.Context, n string, rule *eventbridge.DescribeRuleOutput) resource.TestCheckFunc {
+func testAccCheckRuleExists(ctx context.Context, n string, v *eventbridge.DescribeRuleOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -532,37 +532,49 @@ func testAccCheckRuleExists(ctx context.Context, n string, rule *eventbridge.Des
 			return fmt.Errorf("No EventBridge Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
-
-		resp, err := tfevents.FindRuleByResourceID(ctx, conn, rs.Primary.ID)
+		eventBusName, ruleName, err := tfevents.RuleParseResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*rule = *resp
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
+
+		output, err := tfevents.FindRuleByTwoPartKey(ctx, conn, eventBusName, ruleName)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCheckRuleEnabled(ctx context.Context, n string, desired string) resource.TestCheckFunc {
+func testAccCheckRuleEnabled(ctx context.Context, n string, want string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
-
-		resp, err := tfevents.FindRuleByResourceID(ctx, conn, rs.Primary.ID)
+		eventBusName, ruleName, err := tfevents.RuleParseResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if aws.StringValue(resp.State) != desired {
-			return fmt.Errorf("Expected state %q, given %q", desired, aws.StringValue(resp.State))
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
+
+		output, err := tfevents.FindRuleByTwoPartKey(ctx, conn, eventBusName, ruleName)
+
+		if err != nil {
+			return err
+		}
+
+		if got := aws.StringValue(output.State); got != want {
+			return fmt.Errorf("EventBridge Rule State = %v, want %v", got, want)
 		}
 
 		return nil
@@ -578,7 +590,13 @@ func testAccCheckRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfevents.FindRuleByResourceID(ctx, conn, rs.Primary.ID)
+			eventBusName, ruleName, err := tfevents.RuleParseResourceID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			_, err = tfevents.FindRuleByTwoPartKey(ctx, conn, eventBusName, ruleName)
 
 			if tfresource.NotFound(err) {
 				continue

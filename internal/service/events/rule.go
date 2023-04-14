@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -156,7 +157,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	output, err := FindRuleByEventBusAndRuleNames(ctx, conn, eventBusName, ruleName)
+	output, err := FindRuleByTwoPartKey(ctx, conn, eventBusName, ruleName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EventBridge Rule (%s) not found, removing from state", d.Id())
@@ -171,6 +172,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	arn := aws.StringValue(output.Arn)
 	d.Set("arn", arn)
 	d.Set("description", output.Description)
+	d.Set("event_bus_name", eventBusName) // Use event bus name from resource ID as API response may collapse any ARN.
 	if output.EventPattern != nil {
 		pattern, err := structure.NormalizeJsonString(aws.StringValue(output.EventPattern))
 		if err != nil {
@@ -178,19 +180,11 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		}
 		d.Set("event_pattern", pattern)
 	}
+	d.Set("is_enabled", aws.StringValue(output.State) == eventbridge.RuleStateEnabled)
 	d.Set("name", output.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(output.Name)))
 	d.Set("role_arn", output.RoleArn)
 	d.Set("schedule_expression", output.ScheduleExpression)
-	d.Set("event_bus_name", eventBusName) // Use event bus name from resource ID as API response may collapse any ARN.
-
-	enabled, err := RuleEnabledFromState(aws.StringValue(output.State))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EventBridge Rule (%s): %s", d.Id(), err)
-	}
-
-	d.Set("is_enabled", enabled)
 
 	return diags
 }
@@ -258,6 +252,34 @@ func retryPutRule(ctx context.Context, conn *eventbridge.EventBridge, input *eve
 	}
 
 	return aws.StringValue(outputRaw.(*eventbridge.PutRuleOutput).RuleArn), nil
+}
+
+func FindRuleByTwoPartKey(ctx context.Context, conn *eventbridge.EventBridge, eventBusName, ruleName string) (*eventbridge.DescribeRuleOutput, error) {
+	input := eventbridge.DescribeRuleInput{
+		Name: aws.String(ruleName),
+	}
+	if eventBusName != "" {
+		input.EventBusName = aws.String(eventBusName)
+	}
+
+	output, err := conn.DescribeRuleWithContext(ctx, &input)
+
+	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func expandPutRuleInput(d *schema.ResourceData, name string) *eventbridge.PutRuleInput {
