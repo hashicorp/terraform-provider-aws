@@ -230,3 +230,10 @@ func FlattenResourceId(idParts []string, partCount int) (string, error) {
 func StringToBoolValue(v *string) bool {
 	return aws.StringValue(v) == strconv.FormatBool(true)
 }
+
+// Takes a string of resource attributes separated by the ResourceIdSeparator constant
+// returns the number of parts
+func ResourceIdPartCount(id string) int {
+	idParts := strings.Split(id, ResourceIdSeparator)
+	return len(idParts)
+}
