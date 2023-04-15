@@ -2,8 +2,6 @@ package cognitoidp
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -17,6 +15,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	RiskConfigurationIdPartsCount = 2
 )
 
 // @SDKResource("aws_cognito_risk_configuration")
@@ -297,7 +299,16 @@ func resourceRiskConfigurationPut(ctx context.Context, d *schema.ResourceData, m
 
 	if v, ok := d.GetOk("client_id"); ok {
 		input.ClientId = aws.String(v.(string))
-		id = fmt.Sprintf("%s:%s", userPoolId, v.(string))
+		idParts := []string{
+			userPoolId,
+			v.(string),
+		}
+		var err error
+		id, err = flex.FlattenResourceId(idParts, RiskConfigurationIdPartsCount)
+
+		if err != nil {
+			return create.DiagError(names.CognitoIDP, create.ErrActionFlatteningResourceId, ResNameRiskConfiguration, userPoolId, err)
+		}
 	}
 
 	if v, ok := d.GetOk("risk_exception_configuration"); ok && len(v.([]interface{})) > 0 {
@@ -329,7 +340,7 @@ func resourceRiskConfigurationRead(ctx context.Context, d *schema.ResourceData, 
 
 	userPoolId, clientId, err := RiskConfigurationParseID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Cognito Risk Configuration (%s): %s", d.Id(), err)
+		return create.DiagError(names.CognitoIDP, create.ErrActionExpandingResourceId, ResNameRiskConfiguration, d.Id(), err)
 	}
 
 	riskConfig, err := FindRiskConfigurationById(ctx, conn, d.Id())
@@ -372,7 +383,7 @@ func resourceRiskConfigurationDelete(ctx context.Context, d *schema.ResourceData
 
 	userPoolId, clientId, err := RiskConfigurationParseID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Cognito Risk Configuration (%s): %s", d.Id(), err)
+		return create.DiagError(names.CognitoIDP, create.ErrActionExpandingResourceId, ResNameRiskConfiguration, d.Id(), err)
 	}
 
 	input := &cognitoidentityprovider.SetRiskConfigurationInput{
@@ -737,15 +748,17 @@ func flattenNotifyEmail(apiObject *cognitoidentityprovider.NotifyEmailType) []in
 }
 
 func RiskConfigurationParseID(id string) (string, string, error) {
-	parts := strings.Split(id, ":")
+	partCount := flex.ResourceIdPartCount(id)
 
-	if len(parts) > 2 || len(parts) < 1 {
-		return "", "", fmt.Errorf("wrong format of import ID (%s), use: 'userpool-id/client-id' or 'userpool-id'", id)
-	}
-
-	if len(parts) == 2 {
-		return parts[0], parts[1], nil
+	if partCount == 1 {
+		return id, "", nil
 	} else {
-		return parts[0], "", nil
+		idParts, err := flex.ExpandResourceId(id, RiskConfigurationIdPartsCount)
+
+		if err != nil {
+			return "", "", err
+		}
+
+		return idParts[0], idParts[1], nil
 	}
 }
