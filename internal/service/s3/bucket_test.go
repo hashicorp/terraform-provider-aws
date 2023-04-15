@@ -82,6 +82,32 @@ func TestAccS3Bucket_Basic_basic(t *testing.T) {
 	})
 }
 
+func TestAccS3Bucket_Basic_nameAlreadyExists(t *testing.T) {
+	ctx := acctest.Context(t)
+	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	resourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx),
+		Steps: []resource.TestStep{
+			// create test bucket
+			{
+				Config: testAccBucketConfig_basic(bucketName),
+				Check:  testAccCheckBucketExists(ctx, resourceName),
+			},
+			// try create new bucket with same name but different resourceName. expect error
+			{
+				Config:      testAccBucketConfig_basic_nameAlreadyExists(bucketName),
+				Check:       testAccCheckBucketExists(ctx, resourceName),
+				ExpectError: regexp.MustCompile(`bucket .+ already exists, try another name`),
+			},
+		},
+	})
+}
+
 // Support for common Terraform 0.11 pattern
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7868
 func TestAccS3Bucket_Basic_emptyString(t *testing.T) {
@@ -2761,6 +2787,15 @@ func testAccBucketConfig_basic(bucketName string) string {
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
+`, bucketName)
+}
+
+func testAccBucketConfig_basic_nameAlreadyExists(bucketName string) string {
+	return fmt.Sprintf(`
+
+resource "aws_s3_bucket" "duplicate" {
+	bucket = %[1]q
+  }
 `, bucketName)
 }
 

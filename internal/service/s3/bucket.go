@@ -20,6 +20,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -688,7 +689,10 @@ func ResourceBucket() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.Sequence(
+			resourceBucketCustomizeDiff,
+			verify.SetTagsDiff,
+		),
 	}
 }
 
@@ -1411,6 +1415,25 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if err != nil {
 		return create.DiagError(names.S3, create.ErrActionWaitingForDeletion, resNameBucket, d.Id(), err)
+	}
+
+	return nil
+}
+
+func resourceBucketCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	bucketName := d.Get("bucket").(string)
+	if d.HasChange("bucket") && bucketName != "" {
+		conn := meta.(*conns.AWSClient).S3Conn()
+		input := &s3.HeadBucketInput{
+			Bucket: aws.String(bucketName),
+		}
+
+		_, err := conn.HeadBucketWithContext(ctx, input)
+
+		if !tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
+			log.Printf("[INFO] head-bucket %s returned error, full error: %+v", bucketName, err)
+			return fmt.Errorf("bucket '%s' already exists, try another name", bucketName)
+		}
 	}
 
 	return nil
