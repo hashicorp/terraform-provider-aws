@@ -11,9 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_vpc_ipam_preview_next_cidr")
@@ -94,7 +96,19 @@ func dataSourceIPAMPreviewNextCIDRRead(ctx context.Context, d *schema.ResourceDa
 	cidr := output.IpamPoolAllocation.Cidr
 
 	d.Set("cidr", cidr)
-	d.SetId(encodeIPAMPreviewNextCIDRID(aws.StringValue(cidr), poolId))
+	// Generate an ID
+	idParts := []string{
+		aws.StringValue(cidr),
+		poolId,
+	}
+
+	id, err := flex.FlattenResourceId(idParts, IPAMPreviewNewCIDRIdPartsCount)
+
+	if err != nil {
+		return create.DiagError(names.EC2, create.ErrActionFlatteningResourceId, ResNameIPAMPreviewNewCIDR, poolId, err)
+	}
+
+	d.SetId(id)
 
 	return diags
 }

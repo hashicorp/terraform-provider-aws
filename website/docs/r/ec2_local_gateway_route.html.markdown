@@ -32,12 +32,12 @@ The following arguments are required:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - EC2 Local Gateway Route Table identifier and destination CIDR block separated by underscores (`_`)
+* `id` - EC2 Local Gateway Route Table identifier and destination CIDR block separated by comma (`,`)
 
 ## Import
 
-`aws_ec2_local_gateway_route` can be imported by using the EC2 Local Gateway Route Table identifier and destination CIDR block separated by underscores (`_`), e.g.,
+`aws_ec2_local_gateway_route` can be imported by using the EC2 Local Gateway Route Table identifier and destination CIDR block separated by comma (`,`), e.g.,
 
 ```
-$ terraform import aws_ec2_local_gateway_route.example lgw-rtb-12345678_172.16.0.0/16
+$ terraform import aws_ec2_local_gateway_route.example lgw-rtb-12345678,172.16.0.0/16
 ```

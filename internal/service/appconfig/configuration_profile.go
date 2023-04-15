@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -15,10 +14,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	ConfigurationProfileIdPartsCount = 2
+	ResNameConfigurationProfile      = "Configuration Profile"
 )
 
 // @SDKResource("aws_appconfig_configuration_profile", name="Connection Profile")
@@ -146,7 +152,18 @@ func resourceConfigurationProfileCreate(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "creating AppConfig Configuration Profile (%s) for Application (%s): empty response", name, appId)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(profile.Id), aws.StringValue(profile.ApplicationId)))
+	idParts := []string{
+		aws.StringValue(profile.Id),
+		aws.StringValue(profile.ApplicationId),
+	}
+
+	id, err := flex.FlattenResourceId(idParts, ConfigurationProfileIdPartsCount)
+
+	if err != nil {
+		return create.DiagError(names.AppConfig, create.ErrActionFlatteningResourceId, ResNameConfigurationProfile, appId, err)
+	}
+
+	d.SetId(id)
 
 	return append(diags, resourceConfigurationProfileRead(ctx, d, meta)...)
 }
@@ -158,7 +175,7 @@ func resourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceDat
 	confProfID, appID, err := ConfigurationProfileParseID(d.Id())
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading AppConfig Configuration Profile (%s): %s", d.Id(), err)
+		return create.DiagError(names.AppConfig, create.ErrActionExpandingResourceId, ResNameConfigurationProfile, d.Id(), err)
 	}
 
 	input := &appconfig.GetConfigurationProfileInput{
@@ -255,7 +272,7 @@ func resourceConfigurationProfileDelete(ctx context.Context, d *schema.ResourceD
 	confProfID, appID, err := ConfigurationProfileParseID(d.Id())
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting AppConfig Configuration Profile (%s): %s", d.Id(), err)
+		return create.DiagError(names.AppConfig, create.ErrActionExpandingResourceId, ResNameConfigurationProfile, d.Id(), err)
 	}
 
 	input := &appconfig.DeleteConfigurationProfileInput{
@@ -277,13 +294,13 @@ func resourceConfigurationProfileDelete(ctx context.Context, d *schema.ResourceD
 }
 
 func ConfigurationProfileParseID(id string) (string, string, error) {
-	parts := strings.Split(id, ":")
+	idParts, err := flex.ExpandResourceId(id, ConfigurationProfileIdPartsCount)
 
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%q), expected ConfigurationProfileID:ApplicationID", id)
+	if err != nil {
+		return "", "", err
 	}
 
-	return parts[0], parts[1], nil
+	return idParts[0], idParts[1], nil
 }
 
 func expandValidator(tfMap map[string]interface{}) *appconfig.Validator {

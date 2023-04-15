@@ -54,5 +54,5 @@ In addition to all arguments above, the following attributes are exported:
 Appsync Types can be imported using the `id` e.g.,
 
 ```
-$ terraform import aws_appsync_type.example api-id:format:name
+$ terraform import aws_appsync_type.example api-id,format,name
 ```

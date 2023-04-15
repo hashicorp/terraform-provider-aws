@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -12,8 +11,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	NetworkInterfaceSGAttachmentIdPartsCount = 2
+	ResNameNetworkInterfaceSGAttachment      = "Network Interface Security Group Attachment"
 )
 
 // @SDKResource("aws_network_interface_sg_attachment")
@@ -85,7 +92,18 @@ func resourceNetworkInterfaceSGAttachmentCreate(ctx context.Context, d *schema.R
 		return sdkdiag.AppendErrorf(diags, "modifying EC2 Network Interface (%s): %s", networkInterfaceID, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s_%s", sgID, networkInterfaceID))
+	idParts := []string{
+		sgID,
+		networkInterfaceID,
+	}
+
+	id, err := flex.FlattenResourceId(idParts, NetworkInterfaceSGAttachmentIdPartsCount)
+
+	if err != nil {
+		return create.DiagError(names.EC2, create.ErrActionFlatteningResourceId, ResNameNetworkInterfaceSGAttachment, networkInterfaceID, err)
+	}
+
+	d.SetId(id)
 
 	return append(diags, resourceNetworkInterfaceSGAttachmentRead(ctx, d, meta)...)
 }
@@ -174,13 +192,14 @@ func resourceNetworkInterfaceSGAttachmentDelete(ctx context.Context, d *schema.R
 }
 
 func resourceNetworkInterfaceSGAttachmentImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	parts := strings.Split(d.Id(), "_")
-	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("Unexpected format for import: %s. Please use '<NetworkInterfaceId>_<SecurityGroupID>", d.Id())
+	idParts, err := flex.ExpandResourceId(d.Id(), NetworkInterfaceSGAttachmentIdPartsCount)
+
+	if err != nil {
+		return []*schema.ResourceData{}, err
 	}
 
-	networkInterfaceID := parts[0]
-	securityGroupID := parts[1]
+	networkInterfaceID := idParts[0]
+	securityGroupID := idParts[1]
 
 	log.Printf("[DEBUG] Importing network interface security group association, Interface: %s, Security Group: %s", networkInterfaceID, securityGroupID)
 

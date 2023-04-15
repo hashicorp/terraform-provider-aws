@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -17,9 +16,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	BudgetActionIdPartsCount = 3
+	ResNameBudgetAction      = "Budget Action"
 )
 
 // @SDKResource("aws_budgets_budget_action")
@@ -248,7 +254,20 @@ func resourceBudgetActionCreate(ctx context.Context, d *schema.ResourceData, met
 	actionID := aws.StringValue(output.ActionId)
 	budgetName := aws.StringValue(output.BudgetName)
 
-	d.SetId(BudgetActionCreateResourceID(accountID, actionID, budgetName))
+	// Generate an ID
+	idParts := []string{
+		accountID,
+		actionID,
+		budgetName,
+	}
+
+	id, err := flex.FlattenResourceId(idParts, BudgetActionIdPartsCount)
+
+	if err != nil {
+		return create.DiagError(names.Budgets, create.ErrActionFlatteningResourceId, ResNameBudgetAction, budgetName, err)
+	}
+
+	d.SetId(id)
 
 	if _, err := waitActionAvailable(ctx, conn, accountID, actionID, budgetName, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("waiting for Budget Action (%s) create: %s", d.Id(), err)
@@ -385,23 +404,14 @@ func resourceBudgetActionDelete(ctx context.Context, d *schema.ResourceData, met
 	return nil
 }
 
-const budgetActionResourceIDSeparator = ":"
-
-func BudgetActionCreateResourceID(accountID, actionID, budgetName string) string {
-	parts := []string{accountID, actionID, budgetName}
-	id := strings.Join(parts, budgetActionResourceIDSeparator)
-
-	return id
-}
-
 func BudgetActionParseResourceID(id string) (string, string, string, error) {
-	parts := strings.Split(id, budgetActionResourceIDSeparator)
+	parts, err := flex.ExpandResourceId(id, BudgetActionIdPartsCount)
 
-	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
-		return parts[0], parts[1], parts[2], nil
+	if err != nil {
+		return "", "", "", err
 	}
 
-	return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected AccountID%[2]sActionID%[2]sBudgetName", id, budgetActionResourceIDSeparator)
+	return parts[0], parts[1], parts[2], nil
 }
 
 const (

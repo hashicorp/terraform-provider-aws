@@ -21,7 +21,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/shopspring/decimal"
+)
+
+const (
+	BudgetIdPartsCount = 2
+	ResNameBudget      = "Budget"
 )
 
 // @SDKResource("aws_budgets_budget")
@@ -320,7 +326,19 @@ func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("creating Budget (%s): %s", name, err)
 	}
 
-	d.SetId(BudgetCreateResourceID(accountID, aws.StringValue(budget.BudgetName)))
+	// Generate an ID
+	idParts := []string{
+		accountID,
+		aws.StringValue(budget.BudgetName),
+	}
+
+	id, err := flex.FlattenResourceId(idParts, BudgetIdPartsCount)
+
+	if err != nil {
+		return create.DiagError(names.Budgets, create.ErrActionFlatteningResourceId, ResNameBudget, name, err)
+	}
+
+	d.SetId(id)
 
 	notificationsRaw := d.Get("notification").(*schema.Set).List()
 	notifications, subscribers := expandBudgetNotificationsUnmarshal(notificationsRaw)
@@ -519,23 +537,14 @@ func resourceBudgetDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return nil
 }
 
-const budgetResourceIDSeparator = ":"
-
-func BudgetCreateResourceID(accountID, budgetName string) string {
-	parts := []string{accountID, budgetName}
-	id := strings.Join(parts, budgetResourceIDSeparator)
-
-	return id
-}
-
 func BudgetParseResourceID(id string) (string, string, error) {
-	parts := strings.Split(id, budgetResourceIDSeparator)
+	parts, err := flex.ExpandResourceId(id, BudgetIdPartsCount)
 
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], nil
+	if err != nil {
+		return "", "", err
 	}
 
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected AccountID%[2]sBudgetName", id, budgetActionResourceIDSeparator)
+	return parts[0], parts[1], nil
 }
 
 func FindBudgetByTwoPartKey(ctx context.Context, conn *budgets.Budgets, accountID, budgetName string) (*budgets.Budget, error) {

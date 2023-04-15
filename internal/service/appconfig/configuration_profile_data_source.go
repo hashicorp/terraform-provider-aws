@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -86,7 +87,17 @@ func dataSourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceD
 
 	appId := d.Get("application_id").(string)
 	profileId := d.Get("configuration_profile_id").(string)
-	ID := fmt.Sprintf("%s:%s", profileId, appId)
+
+	idParts := []string{
+		appId,
+		profileId,
+	}
+
+	ID, err := flex.FlattenResourceId(idParts, ConfigurationProfileIdPartsCount)
+
+	if err != nil {
+		return create.DiagError(names.AppConfig, create.ErrActionFlatteningResourceId, ResNameConfigurationProfile, appId, err)
+	}
 
 	out, err := findConfigurationProfileByApplicationAndProfile(ctx, conn, appId, profileId)
 	if err != nil {

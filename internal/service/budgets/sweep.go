@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -51,7 +52,16 @@ func sweepBudgetActions(region string) error {
 		for _, v := range page.Actions {
 			r := ResourceBudgetAction()
 			d := r.Data(nil)
-			d.SetId(BudgetActionCreateResourceID(accountID, aws.StringValue(v.ActionId), aws.StringValue(v.BudgetName)))
+
+			idParts := []string{
+				accountID,
+				aws.StringValue(v.ActionId),
+				aws.StringValue(v.BudgetName),
+			}
+
+			id, _ := flex.FlattenResourceId(idParts, BudgetActionIdPartsCount)
+
+			d.SetId(id)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -104,7 +114,14 @@ func sweepBudgets(region string) error { // nosemgrep:ci.budgets-in-func-name
 
 			r := ResourceBudget()
 			d := r.Data(nil)
-			d.SetId(BudgetCreateResourceID(accountID, budgetName))
+
+			idParts := []string{
+				accountID,
+				budgetName,
+			}
+
+			id, _ := flex.FlattenResourceId(idParts, BudgetIdPartsCount)
+			d.SetId(id)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
