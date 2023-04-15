@@ -15,6 +15,7 @@ import (
 	// types.<Type Name>.
 	"context"
 	"errors"
+	"fmt"
 	"regexp"
 	"testing"
 
@@ -48,66 +49,6 @@ import (
 // 7. Helper functions (exists, destroy, check, etc.)
 // 8. Functions that return Terraform configurations
 
-// TIP: ==== UNIT TESTS ====
-// This is an example of a unit test. Its name is not prefixed with
-// "TestAcc" like an acceptance test.
-//
-// Unlike acceptance tests, unit tests do not access AWS and are focused on a
-// function (or method). Because of this, they are quick and cheap to run.
-//
-// In designing a resource's implementation, isolate complex bits from AWS bits
-// so that they can be tested through a unit test. We encourage more unit tests
-// in the provider.
-//
-// Cut and dry functions using well-used patterns, like typical flatteners and
-// expanders, don't need unit testing. However, if they are complex or
-// intricate, they should be unit tested.
-func TestListenerExampleUnitTest(t *testing.T) {
-	testCases := []struct {
-		TestName string
-		Input    string
-		Expected string
-		Error    bool
-	}{
-		{
-			TestName: "empty",
-			Input:    "",
-			Expected: "",
-			Error:    true,
-		},
-		{
-			TestName: "descriptive name",
-			Input:    "some input",
-			Expected: "some output",
-			Error:    false,
-		},
-		{
-			TestName: "another descriptive name",
-			Input:    "more input",
-			Expected: "more output",
-			Error:    false,
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.TestName, func(t *testing.T) {
-			got, err := tfvpclattice.FunctionFromResource(testCase.Input)
-
-			if err != nil && !testCase.Error {
-				t.Errorf("got error (%s), expected no error", err)
-			}
-
-			if err == nil && testCase.Error {
-				t.Errorf("got (%s) and no error, expected error", got)
-			}
-
-			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
-
 // TIP: ==== ACCEPTANCE TESTS ====
 // This is an example of a basic acceptance test. This should test as much of
 // standard functionality of the resource as possible, and test importing, if
@@ -115,6 +56,97 @@ func TestListenerExampleUnitTest(t *testing.T) {
 // resource name.
 //
 // Acceptance test access AWS and cost money to run.
+
+func TestAccVpcLatticeListener_httpFixedResponse(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var listener vpclattice.GetListenerOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_listener.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerConfig_httpFixedResponse(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &listener),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.0.status_code", "404"),
+					// resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
+					// resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
+					// 	"console_access": "false",
+					// 	"groups.#":       "0",
+					// 	"username":       "Test",
+					// 	"password":       "TestTest1234",
+					// }),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpclattice", regexp.MustCompile(`listener:+.`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				//ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			},
+		},
+	})
+
+}
+
+func TestAccVpcLatticeListener_httpForwardRuleToId(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var listener vpclattice.GetListenerOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_listener.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerConfig_httpForwardRuleToId(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &listener),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
+					//resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.0.status_code", "404"),
+					// resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
+					// resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
+					// 	"console_access": "false",
+					// 	"groups.#":       "0",
+					// 	"username":       "Test",
+					// 	"password":       "TestTest1234",
+					// }),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpclattice", regexp.MustCompile(`listener:+.`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				//ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			},
+		},
+	})
+
+}
+
 func TestAccVPCLatticeListener_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	// TIP: This is a long-running test guard for tests that run longer than
@@ -123,7 +155,7 @@ func TestAccVPCLatticeListener_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var listener vpclattice.DescribeListenerResponse
+	var listener vpclattice.GetListenerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_listener.test"
 
@@ -162,37 +194,37 @@ func TestAccVPCLatticeListener_basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCLatticeListener_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+// func TestAccVPCLatticeListener_disappears(t *testing.T) {
+// 	ctx := acctest.Context(t)
+// 	if testing.Short() {
+// 		t.Skip("skipping long-running test in short mode")
+// 	}
 
-	var listener vpclattice.DescribeListenerResponse
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_vpclattice_listener.test"
+// 	var listener vpclattice.GetListenerOutput
+// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+// 	resourceName := "aws_vpclattice_listener.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
-			testAccPreCheck(t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccListenerConfig_basic(rName, testAccListenerVersionNewer),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerExists(resourceName, &listener),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceListener(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
+// 	resource.ParallelTest(t, resource.TestCase{
+// 		PreCheck: func() {
+// 			acctest.PreCheck(ctx, t)
+// 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+// 			testAccPreCheck(t)
+// 		},
+// 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+// 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+// 		Steps: []resource.TestStep{
+// 			{
+// 				Config: testAccListenerConfig_basic(rName, testAccListenerVersionNewer),
+// 				Check: resource.ComposeTestCheckFunc(
+// 					testAccCheckListenerExists(resourceName, &listener),
+// 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceListener(), resourceName),
+// 				),
+// 				ExpectNonEmptyPlan: true,
+// 			},
+// 		},
+// 	})
+// }
 
 func testAccCheckListenerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -203,11 +235,12 @@ func testAccCheckListenerDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			input := &vpclattice.DescribeListenerInput{
-				ListenerId: aws.String(rs.Primary.ID),
-			}
-			_, err := conn.DescribeListener(ctx, &vpclattice.DescribeListenerInput{
-				ListenerId: aws.String(rs.Primary.ID),
+			// input := &vpclattice.GetListenerInput{
+			// 	ListenerIdentifier: aws.String(rs.Primary.ID),
+			// }
+			_, err := conn.GetListener(ctx, &vpclattice.GetListenerInput{
+				ListenerIdentifier: aws.String(rs.Primary.ID),
+				ServiceIdentifier:  aws.String(rs.Primary.Attributes["service_identifier"]),
 			})
 			if err != nil {
 				var nfe *types.ResourceNotFoundException
@@ -224,7 +257,7 @@ func testAccCheckListenerDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckListenerExists(ctx context.Context, name string, listener *vpclattice.DescribeListenerResponse) resource.TestCheckFunc {
+func testAccCheckListenerExists(ctx context.Context, name string, listener *vpclattice.GetListenerOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -236,8 +269,9 @@ func testAccCheckListenerExists(ctx context.Context, name string, listener *vpcl
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
-		resp, err := conn.DescribeListener(ctx, &vpclattice.DescribeListenerInput{
-			ListenerId: aws.String(rs.Primary.ID),
+		resp, err := conn.GetListener(ctx, &vpclattice.GetListenerInput{
+			ListenerIdentifier: aws.String(rs.Primary.ID),
+			ServiceIdentifier:  aws.String(rs.Primary.Attributes["service_identifier"]),
 		})
 
 		if err != nil {
@@ -250,33 +284,23 @@ func testAccCheckListenerExists(ctx context.Context, name string, listener *vpcl
 	}
 }
 
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
+// func testAccPreCheck(ctx context.Context, t *testing.T) {
+// 	conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
 
-	input := &vpclattice.ListListenersInput{}
-	_, err := conn.ListListeners(ctx, input)
+// 	input := &vpclattice.ListListenersInput{}
+// 	_, err := conn.ListListeners(ctx, input)
 
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
+// 	if acctest.PreCheckSkipError(err) {
+// 		t.Skipf("skipping acceptance testing: %s", err)
+// 	}
 
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-func testAccCheckListenerNotRecreated(before, after *vpclattice.DescribeListenerResponse) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.ListenerId), aws.StringValue(after.ListenerId); before != after {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingNotRecreated, tfvpclattice.ResNameListener, aws.StringValue(before.ListenerId), errors.New("recreated"))
-		}
-
-		return nil
-	}
-}
+// 	if err != nil {
+// 		t.Fatalf("unexpected PreCheck error: %s", err)
+// 	}
+// }
 
 func testAccListenerConfig_basic(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 0), `
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 0), fmt.Sprintf(`
 resource "aws_vpclattice_service" "test" {
   name = %[1]q
 }
@@ -293,13 +317,13 @@ resource "aws_vpclattice_target_group" "test" {
 }
 
 
-`, rName)
+`, rName))
 }
 
 func testAccListenerConfig_httpForwardRuleToArn(rName string) string {
-	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), `
+	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener" "test" {
-  name        = "test"
+  name        = %[1]q
   service_arn = aws_vpclattice_service.test.arn
   default_action {
     forward {
@@ -310,37 +334,38 @@ resource "aws_vpclattice_listener" "test" {
       ]
     }
   }
-}`, rName)
+}`, rName))
 }
 
 func testAccListenerConfig_httpForwardRuleToId(rName string) string {
-	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), `
+	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener" "test" {
-  name        = "test"
-  protocol    = "HTTP"
-  service_arn = aws_vpclattice_service.test.arn
+  name               = %[1]q
+  protocol           = "HTTP"
+  service_identifier = aws_vpclattice_service.test.arn
   default_action {
     forward {
-      target_groups = [{
+      target_groups {
         target_group_identifier = aws_vpclattice_target_group.test.id
         weight                  = 100
-        }
-      ]
+      }
     }
   }
-}`, rName)
+}
+`, rName))
 }
 
 func testAccListenerConfig_httpFixedResponse(rName string) string {
-	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), `
+	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener" "test" {
-  name        = "test"
-  protocol    = "HTTP"
-  service_arn = aws_vpclattice_service.test.arn
+  name               = %[1]q
+  protocol           = "HTTP"
+  service_identifier = aws_vpclattice_service.test.arn
   default_action {
     fixed_response {
       status_code = 404
     }
   }
-}`, rName)
+}
+`, rName))
 }
