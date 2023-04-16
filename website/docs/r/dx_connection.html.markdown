@@ -73,6 +73,7 @@ In addition to all arguments above, the following attributes are exported:
 * `jumbo_frame_capable` - Boolean value representing if jumbo frames have been enabled for this connection.
 * `macsec_capable` - Boolean value indicating whether the connection supports MAC Security (MACsec).
 * `owner_account_id` - The ID of the AWS account that owns the connection.
+* `partner_name` - The name of the AWS Direct Connect service provider associated with the connection.
 * `port_encryption_status` - The MAC Security (MACsec) port link status of the connection.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vlan_id` - The VLAN ID.

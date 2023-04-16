@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emrserverless"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -22,7 +22,7 @@ const (
 )
 
 func waitApplicationCreated(ctx context.Context, conn *emrserverless.EMRServerless, id string) (*emrserverless.Application, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{emrserverless.ApplicationStateCreating},
 		Target:     []string{emrserverless.ApplicationStateCreated},
 		Refresh:    statusApplication(ctx, conn, id),
@@ -45,7 +45,7 @@ func waitApplicationCreated(ctx context.Context, conn *emrserverless.EMRServerle
 }
 
 func waitApplicationTerminated(ctx context.Context, conn *emrserverless.EMRServerless, id string) (*emrserverless.Application, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    emrserverless.ApplicationState_Values(),
 		Target:     []string{},
 		Refresh:    statusApplication(ctx, conn, id),

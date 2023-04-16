@@ -8,7 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/aws/aws-sdk-go/service/ecr/ecriface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists ecr service tags.
@@ -26,6 +29,22 @@ func ListTags(ctx context.Context, conn ecriface.ECRAPI, identifier string) (tft
 	}
 
 	return KeyValueTags(ctx, output.Tags), nil
+}
+
+// ListTags lists ecr service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).ECRConn(), identifier)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(tags)
+	}
+
+	return nil
 }
 
 // []*SERVICE.Tag handling
@@ -57,17 +76,37 @@ func KeyValueTags(ctx context.Context, tags []*ecr.Tag) tftags.KeyValueTags {
 	return tftags.New(ctx, m)
 }
 
+// GetTagsIn returns ecr service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*ecr.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets ecr service tags in Context.
+func SetTagsOut(ctx context.Context, tags []*ecr.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
+}
+
 // UpdateTags updates ecr service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn ecriface.ECRAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+
+func UpdateTags(ctx context.Context, conn ecriface.ECRAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &ecr.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreSystem(names.ECR).Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -80,7 +119,7 @@ func UpdateTags(ctx context.Context, conn ecriface.ECRAPI, identifier string, ol
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &ecr.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreAWS()),
+			Tags:        Tags(updatedTags.IgnoreSystem(names.ECR)),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)
@@ -91,4 +130,10 @@ func UpdateTags(ctx context.Context, conn ecriface.ECRAPI, identifier string, ol
 	}
 
 	return nil
+}
+
+// UpdateTags updates ecr service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).ECRConn(), identifier, oldTags, newTags)
 }

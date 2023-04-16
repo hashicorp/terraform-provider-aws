@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -430,7 +430,7 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	if v, ok := d.GetOk("target_id"); ok {
 		targetID = v.(string)
 	} else {
-		targetID = resource.UniqueId()
+		targetID = id.UniqueId()
 		d.Set("target_id", targetID)
 	}
 	var busName string

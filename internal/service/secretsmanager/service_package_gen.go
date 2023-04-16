@@ -5,38 +5,67 @@ package secretsmanager
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_secretsmanager_random_password": DataSourceRandomPassword,
-		"aws_secretsmanager_secret":          DataSourceSecret,
-		"aws_secretsmanager_secret_rotation": DataSourceSecretRotation,
-		"aws_secretsmanager_secret_version":  DataSourceSecretVersion,
-		"aws_secretsmanager_secrets":         DataSourceSecrets,
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceRandomPassword,
+			TypeName: "aws_secretsmanager_random_password",
+		},
+		{
+			Factory:  DataSourceSecret,
+			TypeName: "aws_secretsmanager_secret",
+		},
+		{
+			Factory:  DataSourceSecretRotation,
+			TypeName: "aws_secretsmanager_secret_rotation",
+		},
+		{
+			Factory:  DataSourceSecretVersion,
+			TypeName: "aws_secretsmanager_secret_version",
+		},
+		{
+			Factory:  DataSourceSecrets,
+			TypeName: "aws_secretsmanager_secrets",
+		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_secretsmanager_secret":          ResourceSecret,
-		"aws_secretsmanager_secret_policy":   ResourceSecretPolicy,
-		"aws_secretsmanager_secret_rotation": ResourceSecretRotation,
-		"aws_secretsmanager_secret_version":  ResourceSecretVersion,
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceSecret,
+			TypeName: "aws_secretsmanager_secret",
+			Name:     "Secret",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
+			Factory:  ResourceSecretPolicy,
+			TypeName: "aws_secretsmanager_secret_policy",
+		},
+		{
+			Factory:  ResourceSecretRotation,
+			TypeName: "aws_secretsmanager_secret_rotation",
+		},
+		{
+			Factory:  ResourceSecretVersion,
+			TypeName: "aws_secretsmanager_secret_version",
+		},
 	}
 }
 

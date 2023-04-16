@@ -5,36 +5,59 @@ package cloudformation
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_cloudformation_export": DataSourceExport,
-		"aws_cloudformation_stack":  DataSourceStack,
-		"aws_cloudformation_type":   DataSourceType,
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceExport,
+			TypeName: "aws_cloudformation_export",
+		},
+		{
+			Factory:  DataSourceStack,
+			TypeName: "aws_cloudformation_stack",
+		},
+		{
+			Factory:  DataSourceType,
+			TypeName: "aws_cloudformation_type",
+		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_cloudformation_stack":              ResourceStack,
-		"aws_cloudformation_stack_set":          ResourceStackSet,
-		"aws_cloudformation_stack_set_instance": ResourceStackSetInstance,
-		"aws_cloudformation_type":               ResourceType,
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceStack,
+			TypeName: "aws_cloudformation_stack",
+			Name:     "Stack",
+			Tags:     &types.ServicePackageResourceTags{},
+		},
+		{
+			Factory:  ResourceStackSet,
+			TypeName: "aws_cloudformation_stack_set",
+			Name:     "Stack Set",
+			Tags:     &types.ServicePackageResourceTags{},
+		},
+		{
+			Factory:  ResourceStackSetInstance,
+			TypeName: "aws_cloudformation_stack_set_instance",
+		},
+		{
+			Factory:  ResourceType,
+			TypeName: "aws_cloudformation_type",
+		},
 	}
 }
 

@@ -50,6 +50,7 @@ In addition to all arguments above, the following attributes are exported:
 * `kms_key_id` - If StorageEncrypted is true, the KMS key identifier for the encrypted DB instance.
 * `license_model` - License model information for this DB instance.
 * `master_username` - Contains the master username for the DB instance.
+* `master_user_secret` - Provides the master user secret. Only available when `manage_master_user_password` is set to true. [Documented below](#master_user_secret).
 * `monitoring_interval` - Interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB instance.
 * `monitoring_role_arn` - ARN for the IAM role that permits RDS to send Enhanced Monitoring metrics to CloudWatch Logs.
 * `multi_az` - If the DB instance is a Multi-AZ deployment.
@@ -67,3 +68,11 @@ In addition to all arguments above, the following attributes are exported:
 * `vpc_security_groups` - Provides a list of VPC security group elements that the DB instance belongs to.
 * `replicate_source_db` - Identifier of the source DB that this is a replica of.
 * `ca_cert_identifier` - Identifier of the CA certificate for the DB instance.
+
+### master_user_secret
+
+The `master_user_secret` configuration block supports the following attributes:
+
+* `kms_key_id` - The Amazon Web Services KMS key identifier that is used to encrypt the secret.
+* `secret_arn` - The Amazon Resource Name (ARN) of the secret.
+* `secret_status` - The status of the secret. Valid Values: `creating` | `active` | `rotating` | `impaired`.

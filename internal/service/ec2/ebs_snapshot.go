@@ -18,9 +18,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ebs_snapshot")
+// @SDKResource("aws_ebs_snapshot", name="EBS Snapshot")
+// @Tags(identifierAttribute="id")
 func ResourceEBSSnapshot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEBSSnapshotCreate,
@@ -85,8 +87,8 @@ func ResourceEBSSnapshot() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(append(ec2.TargetStorageTier_Values(), TargetStorageTierStandard), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"temporary_restore_days": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -107,12 +109,10 @@ func ResourceEBSSnapshot() *schema.Resource {
 func resourceEBSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	volumeID := d.Get("volume_id").(string)
 	input := &ec2.CreateSnapshotInput{
-		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSnapshot),
+		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeSnapshot),
 		VolumeId:          aws.String(volumeID),
 	}
 
@@ -170,8 +170,6 @@ func resourceEBSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta
 func resourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	snapshot, err := FindSnapshotByID(ctx, conn, d.Id())
 
@@ -203,16 +201,7 @@ func resourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("volume_id", snapshot.VolumeId)
 	d.Set("volume_size", snapshot.VolumeSize)
 
-	tags := KeyValueTags(ctx, snapshot.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, snapshot.Tags)
 
 	return diags
 }
@@ -254,14 +243,6 @@ func resourceEBSSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "restoring EBS Snapshot (%s): %s", d.Id(), err)
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EBS Snapshot (%s) tags: %s", d.Id(), err)
 		}
 	}
 

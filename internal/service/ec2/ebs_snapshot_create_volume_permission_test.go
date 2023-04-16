@@ -23,7 +23,7 @@ func TestAccEC2EBSSnapshotCreateVolumePermission_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -49,7 +49,7 @@ func TestAccEC2EBSSnapshotCreateVolumePermission_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -73,7 +73,7 @@ func TestAccEC2EBSSnapshotCreateVolumePermission_snapshotOwnerExpectError(t *tes
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSnapshotCreateVolumePermissionDestroy(ctx),

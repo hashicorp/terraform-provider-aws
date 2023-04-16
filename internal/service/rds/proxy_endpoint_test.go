@@ -27,7 +27,7 @@ func TestAccRDSProxyEndpoint_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyEndpointPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProxyEndpointDestroy(ctx),
@@ -70,7 +70,7 @@ func TestAccRDSProxyEndpoint_targetRole(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyEndpointPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProxyEndpointDestroy(ctx),
@@ -102,7 +102,7 @@ func TestAccRDSProxyEndpoint_vpcSecurityGroupIDs(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyEndpointPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProxyEndpointDestroy(ctx),
@@ -144,7 +144,7 @@ func TestAccRDSProxyEndpoint_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyEndpointPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProxyEndpointDestroy(ctx),
@@ -193,7 +193,7 @@ func TestAccRDSProxyEndpoint_disappears(t *testing.T) {
 	resourceName := "aws_db_proxy_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyEndpointPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProxyEndpointDestroy(ctx),
@@ -220,7 +220,7 @@ func TestAccRDSProxyEndpoint_Disappears_proxy(t *testing.T) {
 	resourceName := "aws_db_proxy_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccDBProxyEndpointPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyEndpointPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProxyEndpointDestroy(ctx),
@@ -294,7 +294,6 @@ func testAccCheckProxyEndpointExists(ctx context.Context, n string, v *rds.DBPro
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 		dbProxyEndpoint, err := tfrds.FindDBProxyEndpoint(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

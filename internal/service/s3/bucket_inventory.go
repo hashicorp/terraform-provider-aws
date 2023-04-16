@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -229,15 +229,15 @@ func resourceBucketInventoryPut(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	log.Printf("[DEBUG] Putting S3 bucket inventory configuration: %s", input)
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err := conn.PutBucketInventoryConfigurationWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -277,7 +277,7 @@ func resourceBucketInventoryDelete(ctx context.Context, d *schema.ResourceData, 
 		return diags
 	}
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchConfiguration) {
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchConfiguration) {
 		return diags
 	}
 
@@ -307,20 +307,20 @@ func resourceBucketInventoryRead(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[DEBUG] Reading S3 bucket inventory configuration: %s", input)
 	var output *s3.GetBucketInventoryConfigurationOutput
-	err = resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
 		output, err = conn.GetBucketInventoryConfigurationWithContext(ctx, input)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeNoSuchConfiguration) {
-			return resource.RetryableError(err)
+		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchConfiguration) {
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -336,7 +336,7 @@ func resourceBucketInventoryRead(ctx context.Context, d *schema.ResourceData, me
 		return diags
 	}
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeNoSuchConfiguration) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchConfiguration) {
 		log.Printf("[WARN] S3 Bucket Inventory Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

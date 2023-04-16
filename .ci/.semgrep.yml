@@ -299,85 +299,9 @@ rules:
           ...
     severity: WARNING
 
-  - id: helper-schema-ResourceData-SetId-empty-without-IsNewResource-check
+  - id: helper-schema-retry-RetryContext-without-TimeoutError-check
     languages: [go]
-    message: Calling `d.SetId("")` should ensure `!d.IsNewResource()` is also checked. See https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/error-handling.md#disnewresource-checks
-    paths:
-      include:
-        - internal/service
-      exclude:
-        - internal/service/**/*_data_source.go
-        - internal/service/backup
-        - internal/service/batch
-        - internal/service/d[a-d]*
-        - internal/service/devicefarm
-        - internal/service/directconnect
-        - internal/service/dlm
-        - internal/service/dms
-        - internal/service/ds
-        - internal/service/dynamodb
-        - internal/service/ec2
-        - internal/service/ecs
-        - internal/service/efs
-        - internal/service/elasticache
-        - internal/service/elasticbeanstalk
-        - internal/service/elastictranscoder
-        - internal/service/elbv2
-        - internal/service/emr
-        - internal/service/g*
-        - internal/service/inspector
-        - internal/service/iot
-        - internal/service/kafka
-        - internal/service/kms
-        - internal/service/lambda
-        - internal/service/lexmodels
-        - internal/service/licensemanager
-        - internal/service/lightsail
-        - internal/service/logs
-        - internal/service/macie
-        - internal/service/macie2
-        - internal/service/mediastore
-        - internal/service/mq
-        - internal/service/neptune
-        - internal/service/opsworks
-        - internal/service/organizations
-        - internal/service/pinpoint
-        - internal/service/rds
-        - internal/service/resourcegroups
-        - internal/service/route53
-        - internal/service/route53resolver
-        - internal/service/s[a-df-rt]*
-        - internal/service/se[d-z]*
-        - internal/service/sec[a-t]*
-        - internal/service/securityhub
-        - internal/service/ssoadmin
-        - internal/service/swf
-        - internal/service/[t-v]*
-        - internal/service/waf
-        - internal/service/wafv2
-        - internal/service/workspaces
-        - internal/service/xray
-    patterns:
-      - pattern-either:
-          - pattern: |
-              d.SetId("")
-              ...
-              return nil
-      - pattern-not-inside: |
-          if ... {
-            if <... d.IsNewResource() ...> { ... }
-            ...
-            d.SetId("")
-            ...
-            return nil
-          }
-      - pattern-not-inside: |
-          if <... !d.IsNewResource() ...> { ... }
-    severity: WARNING
-
-  - id: helper-schema-resource-Retry-without-TimeoutError-check
-    languages: [go]
-    message: Check resource.Retry() errors with tfresource.TimedOut()
+    message: Check retry.RetryContext() errors with tfresource.TimedOut()
     paths:
       exclude:
         - "*_test.go"
@@ -386,79 +310,43 @@ rules:
         - internal/
     patterns:
       - pattern-either:
-          - patterns:
-              - pattern-either:
-                  - pattern: |
-                      $ERR := resource.Retry(...)
-                      ...
-                      return ...
-                  - pattern: |
-                      $ERR = resource.Retry(...)
-                      ...
-                      return ...
-              - pattern-not: |
-                  $ERR := resource.Retry(...)
-                  ...
-                  if isResourceTimeoutError($ERR) { ... }
-                  ...
-                  return ...
-              - pattern-not: |
-                  $ERR = resource.Retry(...)
-                  ...
-                  if isResourceTimeoutError($ERR) { ... }
-                  ...
-                  return ...
-              - pattern-not: |
-                  $ERR := resource.Retry(...)
-                  ...
-                  if tfresource.TimedOut($ERR) { ... }
-                  ...
-                  return ...
-              - pattern-not: |
-                  $ERR = resource.Retry(...)
-                  ...
-                  if tfresource.TimedOut($ERR) { ... }
-                  ...
-                  return ...
-          - patterns:
-              - pattern-either:
-                  - pattern: |
-                      $ERR := resource.RetryContext(...)
-                      ...
-                      return ...
-                  - pattern: |
-                      $ERR = resource.RetryContext(...)
-                      ...
-                      return ...
-              - pattern-not: |
-                  $ERR := resource.RetryContext(...)
-                  ...
-                  if isResourceTimeoutError($ERR) { ... }
-                  ...
-                  return ...
-              - pattern-not: |
-                  $ERR = resource.RetryContext(...)
-                  ...
-                  if isResourceTimeoutError($ERR) { ... }
-                  ...
-                  return ...
-              - pattern-not: |
-                  $ERR := resource.RetryContext(...)
-                  ...
-                  if tfresource.TimedOut($ERR) { ... }
-                  ...
-                  return ...
-              - pattern-not: |
-                  $ERR = resource.RetryContext(...)
-                  ...
-                  if tfresource.TimedOut($ERR) { ... }
-                  ...
-                  return ...
+          - pattern: |
+              $ERR := retry.RetryContext(...)
+              ...
+              return ...
+          - pattern: |
+              $ERR = retry.RetryContext(...)
+              ...
+              return ...
+      - pattern-not: |
+          $ERR := retry.RetryContext(...)
+          ...
+          if isResourceTimeoutError($ERR) { ... }
+          ...
+          return ...
+      - pattern-not: |
+          $ERR = retry.RetryContext(...)
+          ...
+          if isResourceTimeoutError($ERR) { ... }
+          ...
+          return ...
+      - pattern-not: |
+          $ERR := retry.RetryContext(...)
+          ...
+          if tfresource.TimedOut($ERR) { ... }
+          ...
+          return ...
+      - pattern-not: |
+          $ERR = retry.RetryContext(...)
+          ...
+          if tfresource.TimedOut($ERR) { ... }
+          ...
+          return ...
     severity: WARNING
 
   - id: helper-schema-TimeoutError-check-doesnt-return-output
     languages: [go]
-    message: If the resource.Retry(), resource.RetryContext(), or tfresource.Retry() function returns a value, ensure the isResourceTimeoutError() check does as well
+    message: If the retry.RetryContext() or tfresource.Retry() function returns a value, ensure the isResourceTimeoutError() check does as well
     paths:
       exclude:
         - "*_test.go"
@@ -472,7 +360,7 @@ rules:
                     _, $ERR = $CONN.$FUNC(...)
                   }
               - pattern-not-inside: |
-                  $ERR = resource.Retry(..., func() *resource.RetryError {
+                  $ERR = retry.RetryContext(..., func() *retry.RetryError {
                     ...
                     _, $ERR2 = $CONN.$FUNC(...)
                     ...
@@ -480,15 +368,7 @@ rules:
                   ...
                   if isResourceTimeoutError($ERR) { ... }
               - pattern-not-inside: |
-                  $ERR = resource.RetryContext(..., func() *resource.RetryError {
-                    ...
-                    _, $ERR2 = $CONN.$FUNC(...)
-                    ...
-                  })
-                  ...
-                  if isResourceTimeoutError($ERR) { ... }
-              - pattern-not-inside: |
-                  $ERR = tfresource.Retry(..., func() *resource.RetryError {
+                  $ERR = tfresource.Retry(..., func() *retry.RetryError {
                     ...
                     _, $ERR2 = $CONN.$FUNC(...)
                     ...
@@ -501,7 +381,7 @@ rules:
                     _, $ERR = $CONN.$FUNC(...)
                   }
               - pattern-not-inside: |
-                  $ERR = resource.Retry(..., func() *resource.RetryError {
+                  $ERR = retry.RetryContext(..., func() *retry.RetryError {
                     ...
                     _, $ERR2 = $CONN.$FUNC(...)
                     ...
@@ -509,15 +389,7 @@ rules:
                   ...
                   if tfresource.TimedOut($ERR) { ... }
               - pattern-not-inside: |
-                  $ERR = resource.RetryContext(..., func() *resource.RetryError {
-                    ...
-                    _, $ERR2 = $CONN.$FUNC(...)
-                    ...
-                  })
-                  ...
-                  if tfresource.TimedOut($ERR) { ... }
-              - pattern-not-inside: |
-                  $ERR = tfresource.Retry(..., func() *resource.RetryError {
+                  $ERR = tfresource.Retry(..., func() *retry.RetryError {
                     ...
                     _, $ERR2 = $CONN.$FUNC(...)
                     ...
@@ -528,7 +400,7 @@ rules:
 
   - id: is-not-found-error
     languages: [go]
-    message: Check for resource.NotFoundError errors with tfresource.NotFound()
+    message: Check for retry.NotFoundError errors with tfresource.NotFound()
     paths:
       include:
         - internal/
@@ -536,18 +408,18 @@ rules:
       - pattern-either:
           - patterns:
               - pattern: |
-                  var $CAST *resource.NotFoundError
+                  var $CAST *retry.NotFoundError
                   ...
                   errors.As($ERR, &$CAST)
               - pattern-not-inside: |
-                  var $CAST *resource.NotFoundError
+                  var $CAST *retry.NotFoundError
                   ...
                   errors.As($ERR, &$CAST)
                   ...
                   $CAST.$FIELD
           - patterns:
               - pattern: |
-                  $X, $Y := $ERR.(*resource.NotFoundError)
+                  $X, $Y := $ERR.(*retry.NotFoundError)
     severity: WARNING
 
   - id: time-equality

@@ -3,12 +3,12 @@ subcategory: "Verified Access"
 layout: "aws"
 page_title: "AWS: aws_verifiedaccess_group"
 description: |-
-  Terraform resource for managing an AWS EC2 (Elastic Compute Cloud) Verified Access Group.
+  Terraform resource for managing a Verified Access Group.
 ---
 
 # Resource: aws_verifiedaccess_group
 
-Terraform resource for managing an AWS EC2 (Elastic Compute Cloud) Verified Access Group.
+Terraform resource for managing a Verified Access Group.
 
 ## Example Usage
 
@@ -16,13 +16,6 @@ Terraform resource for managing an AWS EC2 (Elastic Compute Cloud) Verified Acce
 resource "aws_verifiedaccess_group" "example" {
   description                 = "example"
   verified_access_instance_id = aws_verifiedaccess_instance.example.id
-
-  policy_document = <<EOF
-permit(principal, action, resource) 
-when {
-    context.http_request.method == "GET"
-};
-EOF
 
   depends_on = [
     aws_verifiedaccess_trust_provider_attachment.example
@@ -54,7 +47,6 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) A description for the AWS Verified Access group.
-* `policy_document` - (Optional) The AWS Verified Access policy document. AWS Verfied Access uses [Cedar Policy Language](https://www.cedarpolicy.com/)
 
 ## Attributes Reference
 
@@ -75,7 +67,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EC2 (Elastic Compute Cloud) Verified Access Group can be imported using the `id`, e.g.,
+Verified Access Groups can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_verifiedaccess_group.example vagr-8012925589

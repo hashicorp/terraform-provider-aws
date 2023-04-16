@@ -43,15 +43,6 @@ rules:
           metavariable: $V2
           regex: ^New\w+Paginator$
     severity: ERROR
-  - id: retry-context
-    languages: [go]
-    message: Waiter and retry functions should use the Context version
-    paths: *paths
-    patterns:
-      - pattern-either:
-          - pattern: $X.WaitForState()
-          - pattern: resource.Retry()
-    severity: WARNING
   - id: context-todo
     languages: [go]
     message: Should not use `context.TODO()`
