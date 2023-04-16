@@ -601,6 +601,7 @@ func findListenerRuleByID(ctx context.Context, conn *vpclattice.Client, id strin
 
 	return out.ListenerRule, nil
 }
+
 func flattenRuleAction(apiObject types.RuleAction) map[string]interface{} {
 	if apiObject == nil {
 		return nil
@@ -632,14 +633,14 @@ func flattenRuleActionMemberFixedResponse(apiObject *types.RuleActionMemberFixed
 	return tfMap
 }
 
-func flattenForwardAction(apiObject *types.ForwardAction) map[string]interface{} {
+func flattenForwardAction(apiObject *types.RuleActionMemberForward) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.TargetGroups; v != nil {
+	if v := apiObject.Value.TargetGroups; v != nil {
 		tfMap["forward"] = flattenWeightedTargetGroups(v)
 	}
 
