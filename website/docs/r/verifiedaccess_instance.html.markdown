@@ -3,12 +3,12 @@ subcategory: "Verified Access"
 layout: "aws"
 page_title: "AWS: aws_verifiedaccess_instance"
 description: |-
-  Terraform resource for managing an AWS EC2 (Elastic Compute Cloud) Verified Access Instance.
+  Terraform resource for managing a Verified Access Instance.
 ---
 
 # Resource: aws_verifiedaccess_instance
 
-Terraform resource for managing an AWS EC2 (Elastic Compute Cloud) Verified Access Instance.
+Terraform resource for managing a Verified Access Instance.
 
 ## Example Usage
 
@@ -40,7 +40,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EC2 (Elastic Compute Cloud) Verified Access Instance can be imported using the `id`, e.g.,
+Verified Access Instances can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_verifiedaccess_instance.example vai-8012925589
