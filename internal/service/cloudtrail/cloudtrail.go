@@ -314,7 +314,7 @@ func resourceCloudTrailCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	log.Printf("[DEBUG] CloudTrail created: %s", t)
 
-	d.SetId(aws.StringValue(t.Name))
+	d.SetId(aws.StringValue(t.TrailARN))
 
 	// AWS CloudTrail sets newly-created trails to false.
 	if v, ok := d.GetOk("enable_logging"); ok && v.(bool) {
@@ -355,16 +355,31 @@ func resourceCloudTrailRead(ctx context.Context, d *schema.ResourceData, meta in
 			aws.String(d.Id()),
 		},
 	}
-	resp, err := conn.DescribeTrailsWithContext(ctx, &input)
-	if err != nil {
-		return create.DiagError(names.CloudTrail, create.ErrActionReading, ResNameTrail, d.Id(), errors.New("not found after creation"))
-	}
 
 	// CloudTrail does not return a NotFound error in the event that the Trail
 	// you're looking for is not found. Instead, it's simply not in the list.
+	var resp *cloudtrail.DescribeTrailsOutput
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+		var err error
+		resp, err = conn.DescribeTrailsWithContext(ctx, &input)
+		if err != nil {
+			return retry.NonRetryableError(err)
+		} else if d.IsNewResource() && len(resp.TrailList) == 0 {
+			err := errors.New("not found after creation")
+			return retry.RetryableError(err)
+		}
+		return nil
+	})
+	if tfresource.TimedOut(err) {
+		resp, err = conn.DescribeTrailsWithContext(ctx, &input)
+	}
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "getting CloudTrail (%s): %s", d.Id(), err)
+	}
+
 	var trail *cloudtrail.Trail
 	for _, c := range resp.TrailList {
-		if d.Id() == aws.StringValue(c.Name) {
+		if d.Id() == aws.StringValue(c.TrailARN) || d.Id() == aws.StringValue(c.Name) {
 			trail = c
 		}
 	}
@@ -401,7 +416,7 @@ func resourceCloudTrailRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("arn", arn)
 	d.Set("home_region", trail.HomeRegion)
 
-	logstatus, err := getLoggingStatus(ctx, conn, trail.Name)
+	logstatus, err := getLoggingStatus(ctx, conn, trail.TrailARN)
 	if err != nil {
 		return create.DiagError(names.CloudTrail, create.ErrActionReading, ResNameTrail, d.Id(), err)
 	}
