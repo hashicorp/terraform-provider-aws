@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudtrail: Use Trail ARN instead of name to get organization trails from a delegated account.
+```
