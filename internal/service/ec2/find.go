@@ -7024,7 +7024,7 @@ func FindVerifiedAccessTrustProviderByID(ctx context.Context, conn *ec2.EC2, id 
 	out, err := conn.DescribeVerifiedAccessTrustProvidersWithContext(ctx, in)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessTrustProviderIdNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -7044,7 +7044,7 @@ func FindVerifiedAccessInstanceByID(ctx context.Context, conn *ec2.EC2, id strin
 	out, err := conn.DescribeVerifiedAccessInstancesWithContext(ctx, in)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessInstanceIdNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -7071,7 +7071,7 @@ func FindVerifiedAccessTrustProviderAttachment(ctx context.Context, conn *ec2.EC
 			}
 		}
 	}
-	return nil, &resource.NotFoundError{
+	return nil, &retry.NotFoundError{
 		LastError:   err,
 		LastRequest: verifiedAccessTrustProviderId,
 	}
