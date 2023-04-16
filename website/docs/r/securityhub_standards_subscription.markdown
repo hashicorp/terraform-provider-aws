@@ -41,6 +41,7 @@ Currently available standards (remember to replace `${var.region}` as appropriat
 | AWS Foundational Security Best Practices | `arn:aws:securityhub:${var.region}::standards/aws-foundational-security-best-practices/v/1.0.0` |
 | CIS AWS Foundations Benchmark v1.2.0     | `arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0`                           |
 | CIS AWS Foundations Benchmark v1.4.0     | `arn:aws:securityhub:${var.region}::standards/cis-aws-foundations-benchmark/v/1.4.0`            |
+| NIST SP 800-53 Rev. 5                    | `arn:aws:securityhub:${var.region}::standards/nist-800-53/v/5.0.0`                              |
 | PCI DSS                                  | `arn:aws:securityhub:${var.region}::standards/pci-dss/v/3.2.1`                                  |
 
 ## Attributes Reference
@@ -56,4 +57,5 @@ Security Hub standards subscriptions can be imported using the standards subscri
 ```
 $ terraform import aws_securityhub_standards_subscription.cis arn:aws:securityhub:eu-west-1:123456789012:subscription/cis-aws-foundations-benchmark/v/1.2.0
 $ terraform import aws_securityhub_standards_subscription.pci_321 arn:aws:securityhub:eu-west-1:123456789012:subscription/pci-dss/v/3.2.1
+$ terraform import aws_securityhub_standards_subscription.nist_800_53_rev_5 arn:aws:securityhub:eu-west-1:123456789012:subscription/nist-800-53/v/5.0.0
 ```

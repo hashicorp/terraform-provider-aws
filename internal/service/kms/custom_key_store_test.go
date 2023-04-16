@@ -43,7 +43,7 @@ func testAccCustomKeyStore_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, kms.EndpointsID)
 			testAccCustomKeyStoresPreCheck(ctx, t)
 		},
@@ -91,7 +91,7 @@ func testAccCustomKeyStore_update(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, kms.EndpointsID)
 			testAccCustomKeyStoresPreCheck(ctx, t)
 		},
@@ -134,7 +134,7 @@ func testAccCustomKeyStore_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, kms.EndpointsID)
 			testAccCustomKeyStoresPreCheck(ctx, t)
 		},

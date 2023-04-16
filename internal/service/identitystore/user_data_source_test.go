@@ -20,7 +20,7 @@ func TestAccIdentityStoreUserDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
@@ -62,7 +62,7 @@ func TestAccIdentityStoreUserDataSource_filterUserName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
@@ -89,7 +89,7 @@ func TestAccIdentityStoreUserDataSource_uniqueAttributeUserName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
@@ -116,7 +116,7 @@ func TestAccIdentityStoreUserDataSource_email(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
@@ -143,7 +143,7 @@ func TestAccIdentityStoreUserDataSource_userID(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
@@ -164,7 +164,7 @@ func TestAccIdentityStoreUserDataSource_userID(t *testing.T) {
 func TestAccIdentityStoreUserDataSource_nonExistent(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSSOAdminInstances(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
@@ -185,7 +185,7 @@ func TestAccIdentityStoreUserDataSource_userIdFilterMismatch(t *testing.T) {
 	email2 := acctest.RandomEmailAddress(acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSSOAdminInstances(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
@@ -201,7 +201,7 @@ func TestAccIdentityStoreUserDataSource_userIdFilterMismatch(t *testing.T) {
 func TestAccIdentityStoreUserDataSource_externalIdConflictsWithUniqueAttribute(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSSOAdminInstances(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
@@ -220,7 +220,7 @@ func TestAccIdentityStoreUserDataSource_filterConflictsWithExternalId(t *testing
 	email := acctest.RandomEmailAddress(acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSSOAdminInstances(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
@@ -239,7 +239,7 @@ func TestAccIdentityStoreUserDataSource_userIdConflictsWithExternalId(t *testing
 	email := acctest.RandomEmailAddress(acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSSOAdminInstances(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),

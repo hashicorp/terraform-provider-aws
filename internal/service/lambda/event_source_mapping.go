@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -450,23 +450,23 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 	// retry
 	var eventSourceMappingConfiguration *lambda.EventSourceMappingConfiguration
 	var err error
-	err = resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		eventSourceMappingConfiguration, err = conn.CreateEventSourceMappingWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "cannot be assumed by Lambda") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "execution role does not have permissions") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "ensure the role can perform") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -672,15 +672,15 @@ func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceDat
 		input.TumblingWindowInSeconds = aws.Int64(int64(d.Get("tumbling_window_in_seconds").(int)))
 	}
 
-	err := resource.RetryContext(ctx, eventSourceMappingPropagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, eventSourceMappingPropagationTimeout, func() *retry.RetryError {
 		_, err := conn.UpdateEventSourceMappingWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceInUseException) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -711,15 +711,15 @@ func resourceEventSourceMappingDelete(ctx context.Context, d *schema.ResourceDat
 		UUID: aws.String(d.Id()),
 	}
 
-	err := resource.RetryContext(ctx, eventSourceMappingPropagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, eventSourceMappingPropagationTimeout, func() *retry.RetryError {
 		_, err := conn.DeleteEventSourceMappingWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceInUseException) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -1109,7 +1109,7 @@ func findEventSourceMappingConfiguration(ctx context.Context, conn *lambda.Lambd
 	output, err := conn.GetEventSourceMappingWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1134,7 +1134,7 @@ func FindEventSourceMappingConfigurationByID(ctx context.Context, conn *lambda.L
 	return findEventSourceMappingConfiguration(ctx, conn, input)
 }
 
-func statusEventSourceMappingState(ctx context.Context, conn *lambda.Lambda, id string) resource.StateRefreshFunc {
+func statusEventSourceMappingState(ctx context.Context, conn *lambda.Lambda, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		eventSourceMappingConfiguration, err := FindEventSourceMappingConfigurationByID(ctx, conn, id)
 
@@ -1158,7 +1158,7 @@ const (
 )
 
 func waitEventSourceMappingCreate(ctx context.Context, conn *lambda.Lambda, id string) (*lambda.EventSourceMappingConfiguration, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{eventSourceMappingStateCreating, eventSourceMappingStateDisabling, eventSourceMappingStateEnabling},
 		Target:  []string{eventSourceMappingStateDisabled, eventSourceMappingStateEnabled},
 		Refresh: statusEventSourceMappingState(ctx, conn, id),
@@ -1177,7 +1177,7 @@ func waitEventSourceMappingCreate(ctx context.Context, conn *lambda.Lambda, id s
 }
 
 func waitEventSourceMappingDelete(ctx context.Context, conn *lambda.Lambda, id string) (*lambda.EventSourceMappingConfiguration, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{eventSourceMappingStateDeleting},
 		Target:  []string{},
 		Refresh: statusEventSourceMappingState(ctx, conn, id),
@@ -1196,7 +1196,7 @@ func waitEventSourceMappingDelete(ctx context.Context, conn *lambda.Lambda, id s
 }
 
 func waitEventSourceMappingUpdate(ctx context.Context, conn *lambda.Lambda, id string) (*lambda.EventSourceMappingConfiguration, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{eventSourceMappingStateDisabling, eventSourceMappingStateEnabling, eventSourceMappingStateUpdating},
 		Target:  []string{eventSourceMappingStateDisabled, eventSourceMappingStateEnabled},
 		Refresh: statusEventSourceMappingState(ctx, conn, id),

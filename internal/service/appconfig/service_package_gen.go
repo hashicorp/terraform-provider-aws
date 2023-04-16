@@ -5,41 +5,99 @@ package appconfig
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_appconfig_configuration_profile":  DataSourceConfigurationProfile,
-		"aws_appconfig_configuration_profiles": DataSourceConfigurationProfiles,
-		"aws_appconfig_environment":            DataSourceEnvironment,
-		"aws_appconfig_environments":           DataSourceEnvironments,
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceConfigurationProfile,
+			TypeName: "aws_appconfig_configuration_profile",
+		},
+		{
+			Factory:  DataSourceConfigurationProfiles,
+			TypeName: "aws_appconfig_configuration_profiles",
+		},
+		{
+			Factory:  DataSourceEnvironment,
+			TypeName: "aws_appconfig_environment",
+		},
+		{
+			Factory:  DataSourceEnvironments,
+			TypeName: "aws_appconfig_environments",
+		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_appconfig_application":                  ResourceApplication,
-		"aws_appconfig_configuration_profile":        ResourceConfigurationProfile,
-		"aws_appconfig_deployment":                   ResourceDeployment,
-		"aws_appconfig_deployment_strategy":          ResourceDeploymentStrategy,
-		"aws_appconfig_environment":                  ResourceEnvironment,
-		"aws_appconfig_extension":                    ResourceExtension,
-		"aws_appconfig_extension_association":        ResourceExtensionAssociation,
-		"aws_appconfig_hosted_configuration_version": ResourceHostedConfigurationVersion,
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceApplication,
+			TypeName: "aws_appconfig_application",
+			Name:     "Application",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceConfigurationProfile,
+			TypeName: "aws_appconfig_configuration_profile",
+			Name:     "Connection Profile",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceDeployment,
+			TypeName: "aws_appconfig_deployment",
+			Name:     "Deployment",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceDeploymentStrategy,
+			TypeName: "aws_appconfig_deployment_strategy",
+			Name:     "Deployment Strategy",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceEnvironment,
+			TypeName: "aws_appconfig_environment",
+			Name:     "Environment",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceExtension,
+			TypeName: "aws_appconfig_extension",
+			Name:     "Extension",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceExtensionAssociation,
+			TypeName: "aws_appconfig_extension_association",
+		},
+		{
+			Factory:  ResourceHostedConfigurationVersion,
+			TypeName: "aws_appconfig_hosted_configuration_version",
+		},
 	}
 }
 

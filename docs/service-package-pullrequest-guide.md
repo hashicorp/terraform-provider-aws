@@ -166,7 +166,7 @@ with the pull request author.
    | `isResourceNotFoundError(α)` | `tfresource.NotFound(α)` |
    | `isResourceTimeoutError(α)` | `tfresource.TimedOut(α)` |
    | `testSweepSkipResourceError(α)` | `tfawserr.ErrCodeContains(α, "AccessDenied")` |
-   | `testAccPreCheck(t)` | `acctest.PreCheck(t)` |
+   | `testAccPreCheck(t)` | `acctest.PreCheck(ctx, t)` |
    | `testAccProviders` | `acctest.Providers` |
    | `acctest.RandomWithPrefix("tf-acc-test")` | `sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)` |
    | `composeConfig(α)` | `acctest.ConfigCompose(α)` |

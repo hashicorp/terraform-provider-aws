@@ -16,14 +16,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_verifiedaccess_trust_provider")
+// @SDKResource("aws_verifiedaccess_trust_provider", name="Verified Access Trust Provider")
+// @Tags(identifierAttribute="id")
 func ResourceVerifiedAccessTrustProvider() *schema.Resource {
 	return &schema.Resource{
 
@@ -120,8 +120,8 @@ func ResourceVerifiedAccessTrustProvider() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-zA-Z_][a-zA-Z0-9_]*`), ""),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"trust_provider_type": {
 				Type:         schema.TypeString,
 				ForceNew:     true,
@@ -152,6 +152,7 @@ func resourceVerifiedAccessTrustProviderCreate(ctx context.Context, d *schema.Re
 
 	in := &ec2.CreateVerifiedAccessTrustProviderInput{
 		PolicyReferenceName: aws.String(d.Get("policy_reference_name").(string)),
+		TagSpecifications:   getTagSpecificationsIn(ctx, ec2.ResourceTypeVerifiedAccessTrustProvider),
 		TrustProviderType:   aws.String(d.Get("trust_provider_type").(string)),
 	}
 
@@ -175,13 +176,6 @@ func resourceVerifiedAccessTrustProviderCreate(ctx context.Context, d *schema.Re
 		in.UserTrustProviderType = aws.String(v.(string))
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVerifiedAccessTrustProvider)
-	}
-
 	out, err := conn.CreateVerifiedAccessTrustProviderWithContext(ctx, in)
 	if err != nil {
 		return create.DiagError(names.EC2, create.ErrActionCreating, ResNameVerifiedAccessTrustProvider, "", err)
@@ -197,7 +191,6 @@ func resourceVerifiedAccessTrustProviderCreate(ctx context.Context, d *schema.Re
 }
 
 func resourceVerifiedAccessTrustProviderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	out, err := FindVerifiedAccessTrustProviderByID(ctx, conn, d.Id())
@@ -232,25 +225,13 @@ func resourceVerifiedAccessTrustProviderRead(ctx context.Context, d *schema.Reso
 	d.Set("trust_provider_type", out.TrustProviderType)
 	d.Set("user_trust_provider_type", out.UserTrustProviderType)
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, out.Tags)
 
 	return nil
 }
 
 func resourceVerifiedAccessTrustProviderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -283,14 +264,6 @@ func resourceVerifiedAccessTrustProviderUpdate(ctx context.Context, d *schema.Re
 
 		if err != nil {
 			return create.DiagError(names.EC2, create.ErrActionUpdating, ResNameVerifiedAccessTrustProvider, d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating verified access trust provider (%s) tags: %s", d.Id(), err)
 		}
 	}
 

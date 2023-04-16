@@ -23,7 +23,7 @@ func TestAccLightsailContainerService_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -73,7 +73,7 @@ func TestAccLightsailContainerService_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -101,7 +101,7 @@ func TestAccLightsailContainerService_Name(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -134,7 +134,7 @@ func TestAccLightsailContainerService_IsDisabled(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -167,7 +167,7 @@ func TestAccLightsailContainerService_Power(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -199,7 +199,7 @@ func TestAccLightsailContainerService_PublicDomainNames(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -222,7 +222,7 @@ func TestAccLightsailContainerService_PrivateRegistryAccess(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -251,7 +251,7 @@ func TestAccLightsailContainerService_Scale(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -284,7 +284,7 @@ func TestAccLightsailContainerService_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},

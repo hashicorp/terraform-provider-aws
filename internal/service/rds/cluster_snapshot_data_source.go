@@ -22,7 +22,7 @@ func DataSourceClusterSnapshot() *schema.Resource {
 		ReadWithoutTimeout: dataSourceClusterSnapshotRead,
 
 		Schema: map[string]*schema.Schema{
-			//selection criteria
+			// selection criteria
 			"db_cluster_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -55,7 +55,7 @@ func DataSourceClusterSnapshot() *schema.Resource {
 				Default:  false,
 			},
 
-			//Computed values returned
+			// Computed values returned
 			"allocated_storage": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -186,7 +186,6 @@ func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("vpc_id", snapshot.VpcId)
 
 	tags, err := ListTags(ctx, conn, d.Get("db_cluster_snapshot_arn").(string))
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for RDS DB Cluster Snapshot (%s): %s", d.Get("db_cluster_snapshot_arn").(string), err)
 	}

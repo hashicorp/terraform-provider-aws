@@ -11,7 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/medialive/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,7 +25,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_medialive_input")
+// @SDKResource("aws_medialive_input", name="Input")
+// @Tags(identifierAttribute="arn")
 func ResourceInput() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInputCreate,
@@ -166,8 +168,8 @@ func ResourceInput() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -184,8 +186,9 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).MediaLiveClient()
 
 	in := &medialive.CreateInputInput{
-		RequestId: aws.String(resource.UniqueId()),
+		RequestId: aws.String(id.UniqueId()),
 		Name:      aws.String(d.Get("name").(string)),
+		Tags:      GetTagsIn(ctx),
 		Type:      types.InputType(d.Get("type").(string)),
 	}
 
@@ -215,13 +218,6 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if v, ok := d.GetOk("vpc"); ok && len(v.([]interface{})) > 0 {
 		in.Vpc = expandVPC(v.([]interface{}))
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	// IAM propagation
@@ -283,23 +279,6 @@ func resourceInputRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("sources", flattenSources(out.Sources))
 	d.Set("type", out.Type)
 
-	tags, err := ListTags(ctx, conn, aws.ToString(out.Arn))
-	if err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionReading, ResNameInput, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameInput, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameInput, d.Id(), err)
-	}
-
 	return nil
 }
 
@@ -359,14 +338,6 @@ func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameInput, d.Id(), err)
-		}
-	}
-
 	return resourceInputRead(ctx, d, meta)
 }
 
@@ -396,7 +367,7 @@ func resourceInputDelete(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func waitInputCreated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.InputStateCreating),
 		Target:                    enum.Slice(types.InputStateDetached, types.InputStateAttached),
 		Refresh:                   statusInput(ctx, conn, id),
@@ -415,7 +386,7 @@ func waitInputCreated(ctx context.Context, conn *medialive.Client, id string, ti
 }
 
 func waitInputUpdated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(types.InputStateDetached, types.InputStateAttached),
 		Refresh:                   statusInput(ctx, conn, id),
@@ -434,7 +405,7 @@ func waitInputUpdated(ctx context.Context, conn *medialive.Client, id string, ti
 }
 
 func waitInputDeleted(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.InputStateDeleting),
 		Target:  enum.Slice(types.InputStateDeleted),
 		Refresh: statusInput(ctx, conn, id),
@@ -449,7 +420,7 @@ func waitInputDeleted(ctx context.Context, conn *medialive.Client, id string, ti
 	return nil, err
 }
 
-func statusInput(ctx context.Context, conn *medialive.Client, id string) resource.StateRefreshFunc {
+func statusInput(ctx context.Context, conn *medialive.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := FindInputByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -472,7 +443,7 @@ func FindInputByID(ctx context.Context, conn *medialive.Client, id string) (*med
 	if err != nil {
 		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}

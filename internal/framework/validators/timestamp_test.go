@@ -57,3 +57,99 @@ func TestUTCTimestampValidator(t *testing.T) {
 		})
 	}
 }
+
+func TestOnceADayWindowFormatValidator(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		val         types.String
+		expectError bool
+	}
+
+	tests := map[string]testCase{
+		"unknown String": {
+			val: types.StringUnknown(),
+		},
+		"null String": {
+			val: types.StringNull(),
+		},
+		"valid format": {
+			val: types.StringValue("04:00-05:00"),
+		},
+		"invalid format": {
+			val:         types.StringValue("24:00-25:00"),
+			expectError: true,
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			request := validator.StringRequest{
+				Path:           path.Root("test"),
+				PathExpression: path.MatchRoot("test"),
+				ConfigValue:    test.val,
+			}
+			response := validator.StringResponse{}
+			fwvalidators.OnceADayWindowFormat().ValidateString(context.Background(), request, &response)
+
+			if !response.Diagnostics.HasError() && test.expectError {
+				t.Fatal("expected error, got no error")
+			}
+
+			if response.Diagnostics.HasError() && !test.expectError {
+				t.Fatalf("got unexpected error: %s", response.Diagnostics)
+			}
+		})
+	}
+}
+
+func TestOnceAWeekWindowFormatValidator(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		val         types.String
+		expectError bool
+	}
+
+	tests := map[string]testCase{
+		"unknown String": {
+			val: types.StringUnknown(),
+		},
+		"null String": {
+			val: types.StringNull(),
+		},
+		"valid format": {
+			val: types.StringValue("sun:04:00-sun:05:00"),
+		},
+		"invalid format": {
+			val:         types.StringValue("sun:04:00-sun:04:60"),
+			expectError: true,
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			request := validator.StringRequest{
+				Path:           path.Root("test"),
+				PathExpression: path.MatchRoot("test"),
+				ConfigValue:    test.val,
+			}
+			response := validator.StringResponse{}
+			fwvalidators.OnceAWeekWindowFormat().ValidateString(context.Background(), request, &response)
+
+			if !response.Diagnostics.HasError() && test.expectError {
+				t.Fatal("expected error, got no error")
+			}
+
+			if response.Diagnostics.HasError() && !test.expectError {
+				t.Fatalf("got unexpected error: %s", response.Diagnostics)
+			}
+		})
+	}
+}

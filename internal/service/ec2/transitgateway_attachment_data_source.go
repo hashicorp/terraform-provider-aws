@@ -25,6 +25,14 @@ func DataSourceTransitGatewayAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"association_state": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"association_transit_gateway_route_table_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"filter": CustomFiltersSchema(),
 			"resource_id": {
 				Type:     schema.TypeString,
@@ -98,6 +106,13 @@ func dataSourceTransitGatewayAttachmentRead(ctx context.Context, d *schema.Resou
 		Resource:  fmt.Sprintf("transit-gateway-attachment/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
+	if v := transitGatewayAttachment.Association; v != nil {
+		d.Set("association_state", v.State)
+		d.Set("association_transit_gateway_route_table_id", v.TransitGatewayRouteTableId)
+	} else {
+		d.Set("association_state", nil)
+		d.Set("association_transit_gateway_route_table_id", nil)
+	}
 	d.Set("resource_id", transitGatewayAttachment.ResourceId)
 	d.Set("resource_owner_id", resourceOwnerID)
 	d.Set("resource_type", transitGatewayAttachment.ResourceType)

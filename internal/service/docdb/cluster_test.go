@@ -36,7 +36,7 @@ func TestAccDocDBCluster_basic(t *testing.T) {
 	resourceName := "aws_docdb_cluster.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
@@ -81,7 +81,7 @@ func TestAccDocDBCluster_namePrefix(t *testing.T) {
 	var v docdb.DBCluster
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
@@ -115,7 +115,7 @@ func TestAccDocDBCluster_generatedName(t *testing.T) {
 	var v docdb.DBCluster
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
@@ -153,7 +153,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier(t *testing.T) {
 	resourceName := "aws_docdb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
@@ -193,7 +193,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Add(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
@@ -234,7 +234,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Remove(t *testing.T) {
 	resourceName := "aws_docdb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
@@ -279,7 +279,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Update(t *testing.T) {
 	resourceName := "aws_docdb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
@@ -325,7 +325,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_PrimarySecondaryClusters(t *tes
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 			testAccPreCheckGlobalCluster(ctx, t)
 		},
@@ -350,7 +350,7 @@ func TestAccDocDBCluster_takeFinalSnapshot(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterSnapshot(ctx, rInt),
@@ -382,7 +382,7 @@ func TestAccDocDBCluster_takeFinalSnapshot(t *testing.T) {
 func TestAccDocDBCluster_missingUserNameCausesError(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
@@ -401,7 +401,7 @@ func TestAccDocDBCluster_updateTags(t *testing.T) {
 	ri := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
@@ -444,7 +444,7 @@ func TestAccDocDBCluster_updateCloudWatchLogsExports(t *testing.T) {
 	ri := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
@@ -484,7 +484,7 @@ func TestAccDocDBCluster_kmsKey(t *testing.T) {
 	var v docdb.DBCluster
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
@@ -517,7 +517,7 @@ func TestAccDocDBCluster_encrypted(t *testing.T) {
 	var v docdb.DBCluster
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
@@ -554,7 +554,7 @@ func TestAccDocDBCluster_backupsUpdate(t *testing.T) {
 
 	ri := sdkacctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
@@ -606,7 +606,7 @@ func TestAccDocDBCluster_port(t *testing.T) {
 	resourceName := "aws_docdb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
@@ -648,7 +648,7 @@ func TestAccDocDBCluster_deleteProtection(t *testing.T) {
 	resourceName := "aws_docdb_cluster.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),

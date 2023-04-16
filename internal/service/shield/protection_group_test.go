@@ -24,7 +24,7 @@ func TestAccShieldProtectionGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -60,7 +60,7 @@ func TestAccShieldProtectionGroup_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -87,7 +87,7 @@ func TestAccShieldProtectionGroup_aggregation(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -130,7 +130,7 @@ func TestAccShieldProtectionGroup_members(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -164,7 +164,7 @@ func TestAccShieldProtectionGroup_protectionGroupID(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -207,7 +207,7 @@ func TestAccShieldProtectionGroup_resourceType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -252,7 +252,7 @@ func TestAccShieldProtectionGroup_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},

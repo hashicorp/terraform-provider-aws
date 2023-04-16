@@ -29,7 +29,7 @@ func TestAccVerifiedAccessTrustProvider_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheck(t)
 			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/sso.amazonaws.com")
 		},
@@ -68,7 +68,7 @@ func TestAccVerifiedAccessTrustProvider_deviceOptions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -113,7 +113,7 @@ func TestAccVerifiedAccessTrustProvider_oidcOptions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -158,7 +158,7 @@ func TestAccVerifiedAccessTrustProvider_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheck(t)
 			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/sso.amazonaws.com")
 		},
@@ -212,7 +212,7 @@ func TestAccVerifiedAccessTrustProvider_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheck(t)
 			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/sso.amazonaws.com")
 		},

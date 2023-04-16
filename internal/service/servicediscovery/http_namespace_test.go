@@ -23,7 +23,7 @@ func TestAccServiceDiscoveryHTTPNamespace_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -59,7 +59,7 @@ func TestAccServiceDiscoveryHTTPNamespace_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -86,7 +86,7 @@ func TestAccServiceDiscoveryHTTPNamespace_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -117,7 +117,7 @@ func TestAccServiceDiscoveryHTTPNamespace_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},

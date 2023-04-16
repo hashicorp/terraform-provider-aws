@@ -10,6 +10,7 @@ import (
 )
 
 func testAccBotAliasDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	dataSourceName := "data.aws_lex_bot_alias.test"
 	resourceName := "aws_lex_bot_alias.test"
@@ -17,7 +18,7 @@ func testAccBotAliasDataSource_basic(t *testing.T) {
 	// If this test runs in parallel with other Lex Bot tests, it loses its description
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),

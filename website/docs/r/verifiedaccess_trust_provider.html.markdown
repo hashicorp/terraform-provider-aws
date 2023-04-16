@@ -3,12 +3,12 @@ subcategory: "Verified Access"
 layout: "aws"
 page_title: "AWS: aws_verifiedaccess_trust_provider"
 description: |-
-  Terraform resource for managing an AWS EC2 (Elastic Compute Cloud) Verified Access Trust Provider.
+  Terraform resource for managing a Verified Access Trust Provider.
 ---
 
 # Resource: aws_verifiedaccess_trust_provider
 
-Terraform resource for managing an AWS EC2 (Elastic Compute Cloud) Verified Access Trust Provider.
+Terraform resource for managing a Verified Access Trust Provider.
 
 ## Example Usage
 
@@ -52,7 +52,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EC2 (Elastic Compute Cloud) Verified Access Trust Provider can be imported using the `id`, e.g.,
+Verified Access Trust Providers can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_verifiedaccess_trust_provider.example vatp-8012925589

@@ -27,7 +27,7 @@ func TestAccKendraThesaurus_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.KendraEndpointID)
 			testAccPreCheck(ctx, t)
 		},
@@ -70,7 +70,7 @@ func TestAccKendraThesaurus_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.KendraEndpointID)
 			testAccPreCheck(ctx, t)
 		},
@@ -101,7 +101,7 @@ func TestAccKendraThesaurus_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.KendraEndpointID)
 			testAccPreCheck(ctx, t)
 		},
@@ -154,7 +154,7 @@ func TestAccKendraThesaurus_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.KendraEndpointID)
 			testAccPreCheck(ctx, t)
 		},
@@ -204,7 +204,7 @@ func TestAccKendraThesaurus_name(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.KendraEndpointID)
 			testAccPreCheck(ctx, t)
 		},
@@ -246,7 +246,7 @@ func TestAccKendraThesaurus_roleARN(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.KendraEndpointID)
 			testAccPreCheck(ctx, t)
 		},
@@ -288,7 +288,7 @@ func TestAccKendraThesaurus_sourceS3Path(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.KendraEndpointID)
 			testAccPreCheck(ctx, t)
 		},
