@@ -137,7 +137,7 @@ func ResourceListener() *schema.Resource {
 			},
 			"port": {
 				Type:         schema.TypeInt,
-				Optional:     true,
+				Required:     true,
 				ValidateFunc: validation.IsPortNumber,
 			},
 			"protocol": {
@@ -188,10 +188,20 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 		ServiceIdentifier: aws.String(d.Get("service_identifier").(string)),
 	}
 
-	if v, ok := d.GetOk("port"); ok {
-		// For HTTP, the default is 80. For HTTPS, the default is 443.
+	if v, ok := d.GetOk("port"); ok && v != nil {
 		in.Port = aws.Int32(int32(v.(int)))
 	}
+	// } else {
+	// 	// If port is not specified during create, set default values in state.
+	// 	// For HTTP, the default port is 80. For HTTPS, the default is 443.
+	// 	switch v := d.Get("protocol").(string); v {
+	// 	case "HTTP":
+	// 		fmt.Println("Using default HTTP port 80")
+	// 		in.Port = aws.Int32(int32(80))
+	// 	case "HTTPS":
+	// 		in.Port = aws.Int32(int32(443))
+	// 	}
+	// }
 
 	// TIP: Not all resources support tags and tags don't always make sense. If
 	// your resource doesn't need tags, you can remove the tags lines here and
@@ -220,6 +230,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	// work.
 	d.SetId(aws.ToString(out.Id))
 	d.Set("service_identifier", out.ServiceId)
+	// d.Set("port", out.Port)
 
 	// TIP: -- 5. Use a waiter to wait for create to complete
 	// if _, err := waitListenerCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -255,7 +266,7 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("last_updated_at", aws.ToTime(out.LastUpdatedAt).String())
 	d.Set("name", out.Name)
 	d.Set("port", out.Port)
-	//d.Set("service_arn", out.ServiceArn)
+	// d.Set("service_arn", out.ServiceArn)
 	d.Set("service_identifier", out.ServiceId)
 
 	// TIP: Setting a complex type.
@@ -317,7 +328,7 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if d.HasChanges("default_action") {
 		// Expander function here
-		// in.DefaultAction = aws.String(d.Get("default_action").(string))
+		in.DefaultAction = expandDefaultAction(d.Get("default_action").([]interface{}))
 		update = true
 	}
 
@@ -544,9 +555,9 @@ func flattenListenerRuleActions(config types.RuleAction) []interface{} {
 
 	switch v := config.(type) {
 	case *types.RuleActionMemberFixedResponse:
-		m["default_action"] = flattenRuleActionMemberFixedResponse(v)
+		m["fixed_response"] = flattenRuleActionMemberFixedResponse(&v.Value)
 	case *types.RuleActionMemberForward:
-		m["default_action"] = flattenComplexDefaultActionForward(v)
+		m["forward"] = flattenComplexDefaultActionForward(&v.Value)
 	default:
 		fmt.Println("config is nil or unknown type")
 	}
@@ -554,44 +565,30 @@ func flattenListenerRuleActions(config types.RuleAction) []interface{} {
 	return []interface{}{m}
 }
 
-//
-// Flatten functions for fixed response
-//
-
-func flattenRuleActionMemberFixedResponse(response *types.RuleActionMemberFixedResponse) map[string]interface{} {
+// Flatten function for fixed response
+func flattenRuleActionMemberFixedResponse(response *types.FixedResponseAction) []interface{} {
 	tfMap := map[string]interface{}{}
 
-	if v := response.Value.StatusCode; v != nil {
-		tfMap["fixed_response"] = flattenFixedResponseAction(v)
-	}
-
-	return tfMap
-}
-
-func flattenFixedResponseAction(statusCode *int32) map[string]interface{} {
-	tfMap := map[string]interface{}{}
-
-	if v := statusCode; v != nil {
+	if v := response.StatusCode; v != nil {
 		tfMap["status_code"] = aws.ToInt32(v)
 	}
 
-	return tfMap
-
+	return []interface{}{tfMap}
 }
 
 //
 // Flatten functions for forward action
 //
 
-func flattenComplexDefaultActionForward(forwardAction *types.RuleActionMemberForward) map[string]interface{} {
+func flattenComplexDefaultActionForward(forwardAction *types.ForwardAction) map[string]interface{} {
 	// Create an empty map with key type `string` and value of `interface{}`
 	m := map[string]interface{}{}
 
 	// Create slice with `interface{}` type based on length of target group list
-	targetGroups := make([]interface{}, len(forwardAction.Value.TargetGroups))
+	targetGroups := make([]interface{}, len(forwardAction.TargetGroups))
 
 	// Flatten each target group
-	for i, tg := range forwardAction.Value.TargetGroups {
+	for i, tg := range forwardAction.TargetGroups {
 		targetGroup := map[string]interface{}{
 			"target_group_identifier": aws.ToString(tg.TargetGroupIdentifier),
 			"weight":                  aws.ToInt32(tg.Weight),
@@ -600,9 +597,14 @@ func flattenComplexDefaultActionForward(forwardAction *types.RuleActionMemberFor
 
 	}
 
-	forward := map[string]interface{}{}
-	forward["target_groups"] = targetGroups
-	m["forward"] = forward
+	// forward := map[string]interface{}{}
+	m["target_groups"] = targetGroups
+
+	j, err := json.Marshal(m)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(string(j))
 
 	return m
 
@@ -667,17 +669,17 @@ func expandDefaultAction(l []interface{}) types.RuleAction {
 func expandDefaultActionForwardAction(l []interface{}) *types.ForwardAction {
 	lRaw := l[0].(map[string]interface{})
 
-	j, err := json.Marshal(lRaw)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(string(j))
-
 	forwardAction := &types.ForwardAction{}
 
 	if v, ok := lRaw["target_groups"].([]interface{}); ok && len(v) > 0 {
 		forwardAction.TargetGroups = expandForwardTargetGroupList(v)
 	}
+
+	j, err := json.Marshal(forwardAction)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(string(j))
 
 	return forwardAction
 }

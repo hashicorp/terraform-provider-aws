@@ -81,14 +81,7 @@ func TestAccVpcLatticeListener_httpFixedResponse(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.0.status_code", "404"),
-					// resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					// resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-					// 	"console_access": "false",
-					// 	"groups.#":       "0",
-					// 	"username":       "Test",
-					// 	"password":       "TestTest1234",
-					// }),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpclattice", regexp.MustCompile(`listener:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile(`service/svc-.*/listener/listener-.+`)),
 				),
 			},
 			{
@@ -125,7 +118,7 @@ func TestAccVpcLatticeListener_httpForwardRuleToId(t *testing.T) {
 					testAccCheckListenerExists(ctx, resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
-					//resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.0.status_code", "404"),
+					// resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.status_code", "404"),
 					// resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
 					// resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
 					// 	"console_access": "false",
@@ -133,7 +126,7 @@ func TestAccVpcLatticeListener_httpForwardRuleToId(t *testing.T) {
 					// 	"username":       "Test",
 					// 	"password":       "TestTest1234",
 					// }),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpclattice", regexp.MustCompile(`listener:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile(`service\/svc-.*\/listener\/listener-.+`)),
 				),
 			},
 			{
@@ -147,52 +140,52 @@ func TestAccVpcLatticeListener_httpForwardRuleToId(t *testing.T) {
 
 }
 
-func TestAccVPCLatticeListener_basic(t *testing.T) {
-	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+// func TestAccVPCLatticeListener_basic(t *testing.T) {
+// 	ctx := acctest.Context(t)
+// 	// TIP: This is a long-running test guard for tests that run longer than
+// 	// 300s (5 min) generally.
+// 	if testing.Short() {
+// 		t.Skip("skipping long-running test in short mode")
+// 	}
 
-	var listener vpclattice.GetListenerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_vpclattice_listener.test"
+// 	var listener vpclattice.GetListenerOutput
+// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+// 	resourceName := "aws_vpclattice_listener.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccListenerConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerExists(ctx, resourceName, &listener),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpclattice", regexp.MustCompile(`listener:+.`)),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
-			},
-		},
-	})
-}
+// 	resource.ParallelTest(t, resource.TestCase{
+// 		PreCheck: func() {
+// 			acctest.PreCheck(ctx, t)
+// 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+// 			testAccPreCheck(ctx, t)
+// 		},
+// 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+// 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+// 		Steps: []resource.TestStep{
+// 			{
+// 				Config: testAccListenerConfig_basic(rName),
+// 				Check: resource.ComposeTestCheckFunc(
+// 					testAccCheckListenerExists(ctx, resourceName, &listener),
+// 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
+// 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
+// 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
+// 						"console_access": "false",
+// 						"groups.#":       "0",
+// 						"username":       "Test",
+// 						"password":       "TestTest1234",
+// 					}),
+// 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpclattice", regexp.MustCompile(`listener:+.`)),
+// 				),
+// 			},
+// 			{
+// 				ResourceName:            resourceName,
+// 				ImportState:             true,
+// 				ImportStateVerify:       true,
+// 				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+// 			},
+// 		},
+// 	})
+// }
 
 // func TestAccVPCLatticeListener_disappears(t *testing.T) {
 // 	ctx := acctest.Context(t)
@@ -328,7 +321,7 @@ resource "aws_vpclattice_listener" "test" {
   default_action {
     forward {
       target_groups = [{
-        target_group_identifier = aws_vpclattice_target_group.test.arn
+        target_group_identifier = aws_vpclattice_target_group.test.id
         weight                  = 100
         }
       ]
@@ -342,7 +335,7 @@ func testAccListenerConfig_httpForwardRuleToId(rName string) string {
 resource "aws_vpclattice_listener" "test" {
   name               = %[1]q
   protocol           = "HTTP"
-  service_identifier = aws_vpclattice_service.test.arn
+  service_identifier = aws_vpclattice_service.test.id
   default_action {
     forward {
       target_groups {
@@ -355,12 +348,46 @@ resource "aws_vpclattice_listener" "test" {
 `, rName))
 }
 
+func testAccListenerConfig_httpForwardRuleMultiTarget(rName string) string {
+	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
+resource "aws_vpclattice_target_group" "canary" {
+  name = %[1]q
+  type = "INSTANCE"
+
+  config {
+    port           = 8080
+    protocol       = "HTTP"
+    vpc_identifier = aws_vpc.test.id
+  }
+}
+
+resource "aws_vpclattice_listener" "test" {
+  name               = %[1]q
+  protocol           = "HTTP"
+  service_identifier = aws_vpclattice_service.test.id
+  default_action {
+    forward {
+      target_groups {
+        target_group_identifier = aws_vpclattice_target_group.test.id
+        weight                  = 80
+      }
+      target_groups {
+        target_group_identifier = aws_vpclattice_target_group.canary.id
+        weight                  = 20
+      }
+    }
+  }
+}
+`, rName))
+}
+
 func testAccListenerConfig_httpFixedResponse(rName string) string {
 	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener" "test" {
   name               = %[1]q
+  port               = 80
   protocol           = "HTTP"
-  service_identifier = aws_vpclattice_service.test.arn
+  service_identifier = aws_vpclattice_service.test.id
   default_action {
     fixed_response {
       status_code = 404
