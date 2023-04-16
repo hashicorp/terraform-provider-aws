@@ -11,9 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -209,6 +210,18 @@ func ResourceListenerRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"listener_identifier": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"service_identifier": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -226,136 +239,65 @@ const (
 func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
+	name := d.Get("name").(string)
 	in := &vpclattice.CreateRuleInput{
-		Name: aws.String(d.Get("name").(string)),
-
-		// ServiceIdentifier: vpclattice.CreateRuleInput.ServiceIdentifier()
+		ClientToken:        aws.String(id.UniqueId()),
+		Name:               aws.String(name),
+		ListenerIdentifier: aws.String(d.Get("listener_identifier").(string)),
+		ServiceIdentifier:  aws.String(d.Get("service_identifier").(string)),
+		Tags:               GetTagsIn(ctx),
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
+	if v, ok := d.GetOk("action"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		in.Action = expandRuleAction(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	// TIP: -- 3. Call the AWS create function
-	out, err := conn.CreateListenerRule(ctx, in)
+	if v, ok := d.GetOk("match"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		in.Match = expandRuleMatch(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	out, err := conn.CreateRule(ctx, in)
+
 	if err != nil {
-		// TIP: Since d.SetId() has not been called yet, you cannot use d.Id()
-		// in error messages at this point.
-		return create.DiagError(names.VpcLattice, create.ErrActionCreating, ResNameListenerRule, d.Get("name").(string), err)
+		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameService, name, err)
 	}
 
-	if out == nil || out.ListenerRule == nil {
-		return create.DiagError(names.VpcLattice, create.ErrActionCreating, ResNameListenerRule, d.Get("name").(string), errors.New("empty output"))
+	d.SetId(aws.ToString(out.Id))
+
+	if _, err := waitTargetGroupCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return create.DiagError(names.VPCLattice, create.ErrActionWaitingForCreation, ResNameTargetGroup, d.Id(), err)
 	}
 
-	// TIP: -- 4. Set the minimum arguments and/or attributes for the Read function to
-	// work.
-	d.SetId(aws.ToString(out.ListenerRule.ListenerRuleID))
-
-	// TIP: -- 5. Use a waiter to wait for create to complete
-	if _, err := waitListenerRuleCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.VpcLattice, create.ErrActionWaitingForCreation, ResNameListenerRule, d.Id(), err)
-	}
-
-	// TIP: -- 6. Call the Read function in the Create return
-	return resourceListenerRuleRead(ctx, d, meta)
+	return resourceTargetGroupRead(ctx, d, meta)
 }
 
 func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// TIP: ==== RESOURCE READ ====
-	// Generally, the Read function should do the following things. Make
-	// sure there is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Get the resource from AWS
-	// 3. Set ID to empty where resource is not new and not found
-	// 4. Set the arguments and attributes
-	// 5. Set the tags
-	// 6. Return nil
+	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
-	// TIP: -- 1. Get a client connection to the relevant service
-	conn := meta.(*conns.AWSClient).VpcLatticeClient()
+	out, err := FindListenerRuleByID(ctx, conn, d.Id())
 
-	// TIP: -- 2. Get the resource from AWS using an API Get, List, or Describe-
-	// type function, or, better yet, using a finder.
-	out, err := findListenerRuleByID(ctx, conn, d.Id())
-
-	// TIP: -- 3. Set ID to empty where resource is not new and not found
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] VpcLattice ListenerRule (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] VpcLattice Listener Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return create.DiagError(names.VpcLattice, create.ErrActionReading, ResNameListenerRule, d.Id(), err)
+		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameListenerRule, d.Id(), err)
 	}
 
-	// TIP: -- 4. Set the arguments and attributes
-	//
-	// For simple data types (i.e., schema.TypeString, schema.TypeBool,
-	// schema.TypeInt, and schema.TypeFloat), a simple Set call (e.g.,
-	// d.Set("arn", out.Arn) is sufficient. No error or nil checking is
-	// necessary.
-	//
-	// However, there are some situations where more handling is needed.
-	// a. Complex data types (e.g., schema.TypeList, schema.TypeSet)
-	// b. Where errorneous diffs occur. For example, a schema.TypeString may be
-	//    a JSON. AWS may return the JSON in a slightly different order but it
-	//    is equivalent to what is already set. In that case, you may check if
-	//    it is equivalent before setting the different JSON.
 	d.Set("arn", out.Arn)
+
+	if err := d.Set("action", []interface{}{flattenRuleAction(out.Action)}); err != nil {
+		return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameListenerRule, d.Id(), err)
+	}
+
+	if err := d.Set("match", []interface{}{flattenRuleMatch(out.Match)}); err != nil {
+		return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameListenerRule, d.Id(), err)
+	}
+
 	d.Set("name", out.Name)
 
-	// TIP: Setting a complex type.
-	// For more information, see:
-	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#data-handling-and-conversion
-	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#flatten-functions-for-blocks
-	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#root-typeset-of-resource-and-aws-list-of-structure
-	if err := d.Set("complex_argument", flattenComplexArguments(out.ComplexArguments)); err != nil {
-		return create.DiagError(names.VpcLattice, create.ErrActionSetting, ResNameListenerRule, d.Id(), err)
-	}
-
-	// TIP: Setting a JSON string to avoid errorneous diffs.
-	p, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.ToString(out.Policy))
-	if err != nil {
-		return create.DiagError(names.VpcLattice, create.ErrActionSetting, ResNameListenerRule, d.Id(), err)
-	}
-
-	p, err = structure.NormalizeJsonString(p)
-	if err != nil {
-		return create.DiagError(names.VpcLattice, create.ErrActionSetting, ResNameListenerRule, d.Id(), err)
-	}
-
-	d.Set("policy", p)
-
-	// TIP: -- 5. Set the tags
-	//
-	// TIP: Not all resources support tags and tags don't always make sense. If
-	// your resource doesn't need tags, you can remove the tags lines here and
-	// below. Many resources do include tags so this a reminder to include them
-	// where possible.
-	tags, err := ListTags(ctx, conn, d.Id())
-	if err != nil {
-		return create.DiagError(names.VpcLattice, create.ErrActionReading, ResNameListenerRule, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.VpcLattice, create.ErrActionSetting, ResNameListenerRule, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.VpcLattice, create.ErrActionSetting, ResNameListenerRule, d.Id(), err)
-	}
-
-	// TIP: -- 6. Return nil
 	return nil
 }
 
@@ -470,10 +412,6 @@ func resourceListenerRuleDelete(ctx context.Context, d *schema.ResourceData, met
 	return nil
 }
 
-// TIP: ==== STATUS CONSTANTS ====
-// Create constants for states and statuses if the service does not
-// already have suitable constants. We prefer that you use the constants
-// provided in the service if available (e.g., amp.WorkspaceStatusCodeActive).
 const (
 	statusChangePending = "Pending"
 	statusDeleting      = "Deleting"
@@ -518,7 +456,7 @@ func waitListenerRuleCreated(ctx context.Context, conn *vpclattice.Client, id st
 // the update has been fully realized. Other times, you can check to see if a
 // key resource argument is updated to a new value or not.
 
-func waitListenerRuleUpdated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.ListenerRule, error) {
+func waitListenerRuleUpdated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetRuleOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:                   []string{statusChangePending},
 		Target:                    []string{statusUpdated},
@@ -565,7 +503,7 @@ func waitListenerRuleDeleted(ctx context.Context, conn *vpclattice.Client, id st
 
 func statusListenerRule(ctx context.Context, conn *vpclattice.Client, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findListenerRuleByID(ctx, conn, id)
+		out, err := FindListenerRuleByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -578,15 +516,15 @@ func statusListenerRule(ctx context.Context, conn *vpclattice.Client, id string)
 	}
 }
 
-func findListenerRuleByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.ListenerRule, error) {
-	in := &vpclattice.GetListenerRuleInput{
-		Id: aws.String(id),
+func FindListenerRuleByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetRuleOutput, error) {
+	in := &vpclattice.GetRuleInput{
+		RuleIdentifier: aws.String(id),
 	}
-	out, err := conn.GetListenerRule(ctx, in)
+	out, err := conn.GetRule(ctx, in)
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -595,11 +533,11 @@ func findListenerRuleByID(ctx context.Context, conn *vpclattice.Client, id strin
 		return nil, err
 	}
 
-	if out == nil || out.ListenerRule == nil {
+	if out == nil || out.Id == nil {
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
-	return out.ListenerRule, nil
+	return out, nil
 }
 
 func flattenRuleAction(apiObject types.RuleAction) map[string]interface{} {
@@ -679,7 +617,19 @@ func flattenWeightedTargetGroup(apiObject *types.WeightedTargetGroup) map[string
 
 	return tfMap
 }
+func flattenRuleMatch(apiObject types.RuleMatch) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
 
+	tfMap := make(map[string]interface{})
+
+	if v, ok := apiObject.(*types.HttpMatch); ok {
+		tfMap["http_match"] = flattenHttpMatch(v)
+	}
+
+	return tfMap
+}
 func flattenHttpMatch(apiObject *types.HttpMatch) map[string]interface{} {
 	if apiObject == nil {
 		return nil
