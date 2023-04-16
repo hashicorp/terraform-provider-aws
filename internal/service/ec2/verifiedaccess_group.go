@@ -129,34 +129,32 @@ func resourceVerifiedAccessGroupRead(ctx context.Context, d *schema.ResourceData
 func resourceVerifiedAccessGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	if d.HasChangesExcept("policy_document", "tags", "tags_all") {
-		update := false
+	update := false
 
-		in := &ec2.ModifyVerifiedAccessGroupInput{
-			VerifiedAccessGroupId: aws.String(d.Id()),
-		}
+	in := &ec2.ModifyVerifiedAccessGroupInput{
+		VerifiedAccessGroupId: aws.String(d.Id()),
+	}
 
-		if d.HasChanges("description") {
-			in.Description = aws.String(d.Get("an_argument").(string))
-			update = true
-		}
+	if d.HasChanges("description") {
+		in.Description = aws.String(d.Get("an_argument").(string))
+		update = true
+	}
 
-		if d.HasChanges("verified_access_instance_id") {
-			in.VerifiedAccessInstanceId = aws.String(d.Get("verified_access_instance_id").(string))
-			update = true
-		}
+	if d.HasChanges("verified_access_instance_id") {
+		in.VerifiedAccessInstanceId = aws.String(d.Get("verified_access_instance_id").(string))
+		update = true
+	}
 
-		if !update {
-			return nil
-		}
+	if !update {
+		return nil
+	}
 
-		log.Printf("[DEBUG] Updating EC2 VerifiedAccessGroup (%s): %#v", d.Id(), in)
+	log.Printf("[DEBUG] Updating EC2 VerifiedAccessGroup (%s): %#v", d.Id(), in)
 
-		_, err := conn.ModifyVerifiedAccessGroupWithContext(ctx, in)
+	_, err := conn.ModifyVerifiedAccessGroupWithContext(ctx, in)
 
-		if err != nil {
-			return create.DiagError(names.EC2, create.ErrActionUpdating, ResNameVerifiedAccessGroup, d.Id(), err)
-		}
+	if err != nil {
+		return create.DiagError(names.EC2, create.ErrActionUpdating, ResNameVerifiedAccessGroup, d.Id(), err)
 	}
 
 	return resourceVerifiedAccessGroupRead(ctx, d, meta)

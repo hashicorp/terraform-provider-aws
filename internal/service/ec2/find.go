@@ -7023,7 +7023,7 @@ func FindVerifiedAccessGroupByID(ctx context.Context, conn *ec2.EC2, id string) 
 	}
 	out, err := conn.DescribeVerifiedAccessGroupsWithContext(ctx, in)
 	if tfawserr.ErrCodeEquals(err, errInvalidVerifiedAccessGroupIdNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
