@@ -32,7 +32,7 @@ func testAccRoleAssociation_usersAdmin(t *testing.T) {
 	resource.Test(t,
 		resource.TestCase{
 			PreCheck: func() {
-				acctest.PreCheck(t)
+				acctest.PreCheck(ctx, t)
 				acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID)
 				acctest.PreCheckSSOAdminInstances(ctx, t)
 			},
@@ -70,7 +70,7 @@ func testAccRoleAssociation_usersEditor(t *testing.T) {
 	resource.Test(t,
 		resource.TestCase{
 			PreCheck: func() {
-				acctest.PreCheck(t)
+				acctest.PreCheck(ctx, t)
 				acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID)
 				acctest.PreCheckSSOAdminInstances(ctx, t)
 			},
@@ -108,7 +108,7 @@ func testAccRoleAssociation_groupsAdmin(t *testing.T) {
 	resource.Test(t,
 		resource.TestCase{
 			PreCheck: func() {
-				acctest.PreCheck(t)
+				acctest.PreCheck(ctx, t)
 				acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID)
 				acctest.PreCheckSSOAdminInstances(ctx, t)
 			},
@@ -146,7 +146,7 @@ func testAccRoleAssociation_groupsEditor(t *testing.T) {
 	resource.Test(t,
 		resource.TestCase{
 			PreCheck: func() {
-				acctest.PreCheck(t)
+				acctest.PreCheck(ctx, t)
 				acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID)
 				acctest.PreCheckSSOAdminInstances(ctx, t)
 			},
@@ -189,7 +189,7 @@ func testAccRoleAssociation_usersAndGroupsAdmin(t *testing.T) {
 	resource.Test(t,
 		resource.TestCase{
 			PreCheck: func() {
-				acctest.PreCheck(t)
+				acctest.PreCheck(ctx, t)
 				acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID)
 				acctest.PreCheckSSOAdminInstances(ctx, t)
 			},
@@ -234,7 +234,7 @@ func testAccRoleAssociation_usersAndGroupsEditor(t *testing.T) {
 	resource.Test(t,
 		resource.TestCase{
 			PreCheck: func() {
-				acctest.PreCheck(t)
+				acctest.PreCheck(ctx, t)
 				acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID)
 				acctest.PreCheckSSOAdminInstances(ctx, t)
 			},

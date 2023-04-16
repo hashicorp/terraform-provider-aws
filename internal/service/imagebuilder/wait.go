@@ -5,12 +5,12 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 // waitImageStatusAvailable waits for an Image to return Available
 func waitImageStatusAvailable(ctx context.Context, conn *imagebuilder.Imagebuilder, imageBuildVersionArn string, timeout time.Duration) (*imagebuilder.Image, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			imagebuilder.ImageStatusBuilding,
 			imagebuilder.ImageStatusCreating,

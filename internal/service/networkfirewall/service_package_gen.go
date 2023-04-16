@@ -5,36 +5,67 @@ package networkfirewall
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_networkfirewall_firewall":        DataSourceFirewall,
-		"aws_networkfirewall_firewall_policy": DataSourceFirewallPolicy,
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceFirewall,
+			TypeName: "aws_networkfirewall_firewall",
+		},
+		{
+			Factory:  DataSourceFirewallPolicy,
+			TypeName: "aws_networkfirewall_firewall_policy",
+		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_networkfirewall_firewall":              ResourceFirewall,
-		"aws_networkfirewall_firewall_policy":       ResourceFirewallPolicy,
-		"aws_networkfirewall_logging_configuration": ResourceLoggingConfiguration,
-		"aws_networkfirewall_resource_policy":       ResourceResourcePolicy,
-		"aws_networkfirewall_rule_group":            ResourceRuleGroup,
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceFirewall,
+			TypeName: "aws_networkfirewall_firewall",
+			Name:     "Firewall",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
+			Factory:  ResourceFirewallPolicy,
+			TypeName: "aws_networkfirewall_firewall_policy",
+			Name:     "Firewall Policy",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
+			Factory:  ResourceLoggingConfiguration,
+			TypeName: "aws_networkfirewall_logging_configuration",
+		},
+		{
+			Factory:  ResourceResourcePolicy,
+			TypeName: "aws_networkfirewall_resource_policy",
+		},
+		{
+			Factory:  ResourceRuleGroup,
+			TypeName: "aws_networkfirewall_rule_group",
+			Name:     "Rule Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
 	}
 }
 
