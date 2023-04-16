@@ -7024,7 +7024,7 @@ func FindVerifiedAccessTrustProviderByID(ctx context.Context, conn *ec2.EC2, id 
 	out, err := conn.DescribeVerifiedAccessTrustProvidersWithContext(ctx, in)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessTrustProviderIdNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}

@@ -234,37 +234,35 @@ func resourceVerifiedAccessTrustProviderUpdate(ctx context.Context, d *schema.Re
 
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	if d.HasChangesExcept("tags", "tags_all") {
-		update := false
+	update := false
 
-		in := &ec2.ModifyVerifiedAccessTrustProviderInput{
-			VerifiedAccessTrustProviderId: aws.String(d.Id()),
+	in := &ec2.ModifyVerifiedAccessTrustProviderInput{
+		VerifiedAccessTrustProviderId: aws.String(d.Id()),
+	}
+
+	if d.HasChanges("description") {
+		if v, ok := d.GetOk("description"); ok {
+			in.Description = aws.String(v.(string))
+			update = true
 		}
+	}
 
-		if d.HasChanges("description") {
-			if v, ok := d.GetOk("description"); ok {
-				in.Description = aws.String(v.(string))
-				update = true
-			}
+	if d.HasChanges("oidc_options") {
+		if v, ok := d.GetOk("oidc_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			in.OidcOptions = expandModifyVerifiedAccessTrustProviderOIDCOptions(v.([]interface{})[0].(map[string]interface{}))
+			update = true
 		}
+	}
 
-		if d.HasChanges("oidc_options") {
-			if v, ok := d.GetOk("oidc_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				in.OidcOptions = expandModifyVerifiedAccessTrustProviderOIDCOptions(v.([]interface{})[0].(map[string]interface{}))
-				update = true
-			}
-		}
+	if !update {
+		return nil
+	}
 
-		if !update {
-			return nil
-		}
+	log.Printf("[DEBUG] Updating EC2 VerifiedAccessTrustProvider (%s): %#v", d.Id(), in)
+	_, err := conn.ModifyVerifiedAccessTrustProviderWithContext(ctx, in)
 
-		log.Printf("[DEBUG] Updating EC2 VerifiedAccessTrustProvider (%s): %#v", d.Id(), in)
-		_, err := conn.ModifyVerifiedAccessTrustProviderWithContext(ctx, in)
-
-		if err != nil {
-			return create.DiagError(names.EC2, create.ErrActionUpdating, ResNameVerifiedAccessTrustProvider, d.Id(), err)
-		}
+	if err != nil {
+		return create.DiagError(names.EC2, create.ErrActionUpdating, ResNameVerifiedAccessTrustProvider, d.Id(), err)
 	}
 
 	return resourceVerifiedAccessTrustProviderRead(ctx, d, meta)
