@@ -49,3 +49,11 @@ the `main_route_table_association` delete to work properly.
 [aws-route-tables]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html#Route_Replacing_Main_Table
 [tf-route-tables]: /docs/providers/aws/r/route_table.html
 [tf-default-route-table]: /docs/providers/aws/r/default_route_table.html
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `5m`)
+- `update` - (Default `2m`)
+- `delete` - (Default `5m`)
