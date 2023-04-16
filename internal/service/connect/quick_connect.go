@@ -15,9 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_connect_quick_connect")
+// @SDKResource("aws_connect_quick_connect", name="Quick Connect")
+// @Tags(identifierAttribute="arn")
 func ResourceQuickConnect() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQuickConnectCreate,
@@ -127,34 +129,27 @@ func ResourceQuickConnect() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceQuickConnectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
-
 	quickConnectConfig := expandQuickConnectConfig(d.Get("quick_connect_config").([]interface{}))
-
 	input := &connect.CreateQuickConnectInput{
 		QuickConnectConfig: quickConnectConfig,
 		InstanceId:         aws.String(instanceID),
 		Name:               aws.String(name),
+		Tags:               GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating Connect Quick Connect %s", input)
@@ -175,8 +170,6 @@ func resourceQuickConnectCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceID, quickConnectID, err := QuickConnectParseID(d.Id())
 
@@ -213,16 +206,7 @@ func resourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("arn", resp.QuickConnect.QuickConnectARN)
 	d.Set("quick_connect_id", resp.QuickConnect.QuickConnectId)
 
-	tags := KeyValueTags(ctx, resp.QuickConnect.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
-	}
+	SetTagsOut(ctx, resp.QuickConnect.Tags)
 
 	return nil
 }
@@ -270,14 +254,6 @@ func resourceQuickConnectUpdate(ctx context.Context, d *schema.ResourceData, met
 		_, err = conn.UpdateQuickConnectConfigWithContext(ctx, inputConfig)
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("updating QuickConnect (%s): %w", d.Id(), err))
-		}
-	}
-
-	// updates to tags
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
 		}
 	}
 

@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,9 +23,11 @@ func ResourceDelegatedAdministrator() *schema.Resource {
 		CreateWithoutTimeout: resourceDelegatedAdministratorCreate,
 		ReadWithoutTimeout:   resourceDelegatedAdministratorRead,
 		DeleteWithoutTimeout: resourceDelegatedAdministratorDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"account_id": {
 				Type:         schema.TypeString,
@@ -115,9 +118,13 @@ func resourceDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	if delegatedAccount == nil {
-		log.Printf("[WARN] AWS Organization DelegatedAdministrators not found (%s), removing from state", d.Id())
-		d.SetId("")
-		return nil
+		if !d.IsNewResource() {
+			log.Printf("[WARN] AWS Organization DelegatedAdministrators not found (%s), removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+
+		return diag.FromErr(&retry.NotFoundError{})
 	}
 
 	d.Set("arn", delegatedAccount.Arn)

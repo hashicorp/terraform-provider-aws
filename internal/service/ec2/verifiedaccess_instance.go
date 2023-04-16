@@ -12,14 +12,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_verifiedaccess_instance")
+// @SDKResource("aws_verifiedaccess_instance", name="Verified Access Instance")
+// @Tags(identifierAttribute="id")
 func ResourceVerifiedAccessInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVerifiedAccessInstanceCreate,
@@ -42,8 +42,8 @@ func ResourceVerifiedAccessInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -57,17 +57,12 @@ const (
 func resourceVerifiedAccessInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	in := &ec2.CreateVerifiedAccessInstanceInput{}
+	in := &ec2.CreateVerifiedAccessInstanceInput{
+		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeVerifiedAccessInstance),
+	}
 
 	if v, ok := d.GetOk("description"); ok {
 		in.Description = aws.String(v.(string))
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVerifiedAccessInstance)
 	}
 
 	out, err := conn.CreateVerifiedAccessInstanceWithContext(ctx, in)
@@ -85,7 +80,6 @@ func resourceVerifiedAccessInstanceCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceVerifiedAccessInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
@@ -103,25 +97,12 @@ func resourceVerifiedAccessInstanceRead(ctx context.Context, d *schema.ResourceD
 
 	d.Set("description", out.Description)
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, out.Tags)
 
 	return nil
 }
 
 func resourceVerifiedAccessInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -144,14 +125,6 @@ func resourceVerifiedAccessInstanceUpdate(ctx context.Context, d *schema.Resourc
 		_, err := conn.ModifyVerifiedAccessInstanceWithContext(ctx, in)
 		if err != nil {
 			return create.DiagError(names.EC2, create.ErrActionUpdating, ResNameVerifiedAccessInstance, d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating verified access instance (%s) tags: %s", d.Id(), err)
 		}
 	}
 

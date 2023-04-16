@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -152,7 +152,7 @@ func FindFirewallConfigByID(ctx context.Context, conn *route53resolver.Route53Re
 	}
 
 	if output == nil {
-		return nil, &resource.NotFoundError{LastRequest: input}
+		return nil, &retry.NotFoundError{LastRequest: input}
 	}
 
 	return output, nil

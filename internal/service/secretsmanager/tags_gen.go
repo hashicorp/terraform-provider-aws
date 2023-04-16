@@ -8,7 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/secretsmanager/secretsmanageriface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // []*SERVICE.Tag handling
@@ -40,17 +43,37 @@ func KeyValueTags(ctx context.Context, tags []*secretsmanager.Tag) tftags.KeyVal
 	return tftags.New(ctx, m)
 }
 
+// GetTagsIn returns secretsmanager service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*secretsmanager.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets secretsmanager service tags in Context.
+func SetTagsOut(ctx context.Context, tags []*secretsmanager.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
+}
+
 // UpdateTags updates secretsmanager service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn secretsmanageriface.SecretsManagerAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+
+func UpdateTags(ctx context.Context, conn secretsmanageriface.SecretsManagerAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &secretsmanager.UntagResourceInput{
 			SecretId: aws.String(identifier),
-			TagKeys:  aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:  aws.StringSlice(removedTags.IgnoreSystem(names.SecretsManager).Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -63,7 +86,7 @@ func UpdateTags(ctx context.Context, conn secretsmanageriface.SecretsManagerAPI,
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &secretsmanager.TagResourceInput{
 			SecretId: aws.String(identifier),
-			Tags:     Tags(updatedTags.IgnoreAWS()),
+			Tags:     Tags(updatedTags.IgnoreSystem(names.SecretsManager)),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)
@@ -74,4 +97,10 @@ func UpdateTags(ctx context.Context, conn secretsmanageriface.SecretsManagerAPI,
 	}
 
 	return nil
+}
+
+// UpdateTags updates secretsmanager service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).SecretsManagerConn(), identifier, oldTags, newTags)
 }

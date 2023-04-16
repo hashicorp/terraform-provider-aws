@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -19,7 +19,7 @@ func FindAccessByServerIDAndExternalID(ctx context.Context, conn *transfer.Trans
 	output, err := conn.DescribeAccessWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -44,7 +44,7 @@ func FindServerByID(ctx context.Context, conn *transfer.Transfer, id string) (*t
 	output, err := conn.DescribeServerWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -61,32 +61,6 @@ func FindServerByID(ctx context.Context, conn *transfer.Transfer, id string) (*t
 	return output.Server, nil
 }
 
-func FindUserByServerIDAndUserName(ctx context.Context, conn *transfer.Transfer, serverID, userName string) (*transfer.DescribedUser, error) {
-	input := &transfer.DescribeUserInput{
-		ServerId: aws.String(serverID),
-		UserName: aws.String(userName),
-	}
-
-	output, err := conn.DescribeUserWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.User == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.User, nil
-}
-
 func FindWorkflowByID(ctx context.Context, conn *transfer.Transfer, id string) (*transfer.DescribedWorkflow, error) {
 	input := &transfer.DescribeWorkflowInput{
 		WorkflowId: aws.String(id),
@@ -95,7 +69,7 @@ func FindWorkflowByID(ctx context.Context, conn *transfer.Transfer, id string) (
 	output, err := conn.DescribeWorkflowWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

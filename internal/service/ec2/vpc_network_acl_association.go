@@ -59,7 +59,9 @@ func resourceNetworkACLAssociationRead(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	association, err := FindNetworkACLAssociationByID(ctx, conn, d.Id())
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindNetworkACLAssociationByID(ctx, conn, d.Id())
+	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Network ACL Association (%s) not found, removing from state", d.Id())
@@ -70,6 +72,8 @@ func resourceNetworkACLAssociationRead(ctx context.Context, d *schema.ResourceDa
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACL Association (%s): %s", d.Id(), err)
 	}
+
+	association := outputRaw.(*ec2.NetworkAclAssociation)
 
 	d.Set("network_acl_id", association.NetworkAclId)
 	d.Set("subnet_id", association.SubnetId)
