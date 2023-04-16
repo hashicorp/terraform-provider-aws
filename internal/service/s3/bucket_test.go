@@ -2792,10 +2792,9 @@ resource "aws_s3_bucket" "test" {
 
 func testAccBucketConfig_basic_nameAlreadyExists(bucketName string) string {
 	return fmt.Sprintf(`
-
 resource "aws_s3_bucket" "duplicate" {
-	bucket = %[1]q
-  }
+  bucket = %[1]q
+}
 `, bucketName)
 }
 
