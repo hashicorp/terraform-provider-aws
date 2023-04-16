@@ -25,7 +25,6 @@ func init() {
 
 func sweepPipes(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
-
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
@@ -38,7 +37,6 @@ func sweepPipes(region string) error {
 
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(context.Background())
-
 		if err != nil {
 			errs = multierror.Append(errs, fmt.Errorf("listing Pipes for %s: %w", region, err))
 			break
