@@ -2684,6 +2684,26 @@ func FindSubnetIPv6CIDRBlockAssociationByID(ctx context.Context, conn *ec2.EC2, 
 	return nil, &retry.NotFoundError{}
 }
 
+func FindVerifiedAccessEndpointByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.VerifiedAccessEndpoint, error) {
+	in := &ec2.DescribeVerifiedAccessEndpointsInput{
+		VerifiedAccessEndpointIds: aws.StringSlice([]string{id}),
+	}
+	out, err := conn.DescribeVerifiedAccessEndpointsWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessEndpointIdNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return out.VerifiedAccessEndpoints[0], nil
+}
+
 func FindVolumeModifications(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeVolumesModificationsInput) ([]*ec2.VolumeModification, error) {
 	var output []*ec2.VolumeModification
 

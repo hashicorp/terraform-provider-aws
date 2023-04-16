@@ -1414,3 +1414,19 @@ func StatusIPAMScopeState(ctx context.Context, conn *ec2.EC2, id string) retry.S
 		return output, aws.StringValue(output.State), nil
 	}
 }
+
+func StatusVerifiedAccessEndpoint(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		out, err := FindVerifiedAccessEndpointByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "xx", nil
+		}
+
+		if err != nil {
+			return nil, "XX", err
+		}
+
+		return out, aws.StringValue(out.Status.Code), nil
+	}
+}

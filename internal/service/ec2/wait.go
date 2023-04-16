@@ -1643,6 +1643,59 @@ func WaitTransitGatewayVPCAttachmentUpdated(ctx context.Context, conn *ec2.EC2, 
 	return nil, err
 }
 
+func WaitVerifiedAccessEndpointCreated(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.VerifiedAccessEndpoint, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{},
+		Target:                    []string{ec2.VerifiedAccessEndpointStatusCodeActive},
+		Refresh:                   StatusVerifiedAccessEndpoint(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*ec2.VerifiedAccessEndpoint); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func WaitVerifiedAccessEndpointUpdated(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.VerifiedAccessEndpoint, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{ec2.VerifiedAccessEndpointStatusCodeUpdating},
+		Target:                    []string{ec2.VerifiedAccessEndpointStatusCodeActive},
+		Refresh:                   StatusVerifiedAccessEndpoint(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*ec2.VerifiedAccessEndpoint); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func WaitVerifiedAccessEndpointDeleted(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.VerifiedAccessEndpoint, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{ec2.VerifiedAccessEndpointStatusCodeDeleting},
+		Target:  []string{},
+		Refresh: StatusVerifiedAccessEndpoint(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if out, ok := outputRaw.(*ec2.VerifiedAccessEndpoint); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
 func WaitVolumeCreated(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Volume, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{ec2.VolumeStateCreating},
