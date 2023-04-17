@@ -9,8 +9,8 @@ import (
 	"log"
 	//"reflect"
 	//"regexp"
-	//"strings"
 	"encoding/json"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -51,8 +51,19 @@ func ResourceListener() *schema.Resource {
 		// https://hashicorp.github.io/terraform-provider-aws/add-import-support/
 		// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#implicit-state-passthrough
 		// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#virtual-attributes
+
+		// Id returned by GetListener does not contain required service name, use a custom import function
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				idParts := strings.Split(d.Id(), "/")
+				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+					return nil, fmt.Errorf("Unexpected format of ID (%q), expected SERVICE-ID/LISTENER-ID", d.Id())
+				}
+				d.Set("service_identifier", idParts[0])
+				d.Set("listener_id", idParts[1])
+
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
@@ -127,6 +138,10 @@ func ResourceListener() *schema.Resource {
 				},
 			},
 			"last_updated_at": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"listener_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -226,18 +241,22 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameListener, d.Get("name").(string), errors.New("empty output"))
 	}
 
-	// TIP: -- 4. Set the minimum arguments and/or attributes for the Read function to
-	// work.
-	d.SetId(aws.ToString(out.Id))
-	d.Set("service_identifier", out.ServiceId)
-	// d.Set("port", out.Port)
+	// Id returned by GetListener does not contain required service name
+	// Create a composite ID using service ID and listener ID
+	d.Set("listener_id", out.Id)
+
+	parts := []string{
+		d.Get("service_identifier").(string),
+		d.Get("listener_id").(string),
+	}
+
+	d.SetId(strings.Join(parts, "/"))
 
 	// TIP: -- 5. Use a waiter to wait for create to complete
 	// if _, err := waitListenerCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 	// 	return create.DiagError(names.VPCLattice, create.ErrActionWaitingForCreation, ResNameListener, d.Id(), err)
 	// }
 
-	// TIP: -- 6. Call the Read function in the Create return
 	return resourceListenerRead(ctx, d, meta)
 }
 
@@ -246,10 +265,10 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	// GetListener requires the ID or Amazon Resource Name (ARN) of the service
 	serviceId := d.Get("service_identifier").(string)
+	listenerId := d.Get("listener_id").(string)
 
-	out, err := findListenerByIdAndServiceId(ctx, conn, d.Id(), serviceId)
+	out, err := findListenerByIdAndServiceId(ctx, conn, listenerId, serviceId)
 
-	// TIP: -- 3. Set ID to empty where resource is not new and not found
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPCLattice Listener (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -260,11 +279,12 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameListener, d.Id(), err)
 	}
 
-	// TIP: -- 4. Set the arguments and attributes
 	d.Set("arn", out.Arn)
 	d.Set("created_at", aws.ToTime(out.CreatedAt).String())
 	d.Set("last_updated_at", aws.ToTime(out.LastUpdatedAt).String())
+	d.Set("listener_id", out.Id)
 	d.Set("name", out.Name)
+	d.Set("protocol", out.Protocol)
 	d.Set("port", out.Port)
 	// d.Set("service_arn", out.ServiceArn)
 	d.Set("service_identifier", out.ServiceId)
@@ -279,12 +299,6 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameListener, d.Id(), err)
 	}
 
-	// TIP: -- 5. Set the tags
-	//
-	// TIP: Not all resources support tags and tags don't always make sense. If
-	// your resource doesn't need tags, you can remove the tags lines here and
-	// below. Many resources do include tags so this a reminder to include them
-	// where possible.
 	// ListTags requires ARN, not ID
 	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 	if err != nil {
@@ -317,8 +331,13 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	// whether to call the AWS update function.
 	update := false
 
+	serviceId := d.Get("service_identifier").(string)
+	listenerId := d.Get("listener_id").(string)
+
+	// TIP: -- 3. Call the AWS delete function
 	in := &vpclattice.UpdateListenerInput{
-		ListenerIdentifier: aws.String(d.Id()),
+		ListenerIdentifier: aws.String(listenerId),
+		ServiceIdentifier:  aws.String(serviceId),
 	}
 
 	if d.HasChanges("service_id") {
@@ -378,10 +397,11 @@ func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta in
 	log.Printf("[INFO] Deleting VPC Lattice Listener %s", d.Id())
 
 	serviceId := d.Get("service_identifier").(string)
+	listenerId := d.Get("listener_id").(string)
 
 	// TIP: -- 3. Call the AWS delete function
 	_, err := conn.DeleteListener(ctx, &vpclattice.DeleteListenerInput{
-		ListenerIdentifier: aws.String(d.Id()),
+		ListenerIdentifier: aws.String(listenerId),
 		ServiceIdentifier:  aws.String(serviceId),
 	})
 
@@ -653,9 +673,16 @@ func expandDefaultAction(l []interface{}) types.RuleAction {
 	lRaw := l[0].(map[string]interface{})
 
 	if v, ok := lRaw["forward"].([]interface{}); ok && len(v) > 0 {
-		return &types.RuleActionMemberForward{
+		foo := &types.RuleActionMemberForward{
 			Value: *expandDefaultActionForwardAction(v),
 		}
+		j, err := json.Marshal(foo)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println("Returning from defaultAction:", string(j))
+
+		return foo
 	} else if v, ok := lRaw["fixed_response"].([]interface{}); ok && len(v) > 0 {
 		return &types.RuleActionMemberFixedResponse{
 			Value: *expandDefaultActionFixedResponseStatus(v),
@@ -679,7 +706,7 @@ func expandDefaultActionForwardAction(l []interface{}) *types.ForwardAction {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(string(j))
+	fmt.Println("Returning from forwardAction:", string(j))
 
 	return forwardAction
 }

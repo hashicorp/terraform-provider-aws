@@ -232,7 +232,7 @@ func testAccCheckListenerDestroy(ctx context.Context) resource.TestCheckFunc {
 			// 	ListenerIdentifier: aws.String(rs.Primary.ID),
 			// }
 			_, err := conn.GetListener(ctx, &vpclattice.GetListenerInput{
-				ListenerIdentifier: aws.String(rs.Primary.ID),
+				ListenerIdentifier: aws.String(rs.Primary.Attributes["listener_id"]),
 				ServiceIdentifier:  aws.String(rs.Primary.Attributes["service_identifier"]),
 			})
 			if err != nil {
@@ -263,7 +263,7 @@ func testAccCheckListenerExists(ctx context.Context, name string, listener *vpcl
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
 		resp, err := conn.GetListener(ctx, &vpclattice.GetListenerInput{
-			ListenerIdentifier: aws.String(rs.Primary.ID),
+			ListenerIdentifier: aws.String(rs.Primary.Attributes["listener_id"]),
 			ServiceIdentifier:  aws.String(rs.Primary.Attributes["service_identifier"]),
 		})
 
@@ -334,6 +334,7 @@ func testAccListenerConfig_httpForwardRuleToId(rName string) string {
 	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener" "test" {
   name               = %[1]q
+  port               = 80
   protocol           = "HTTP"
   service_identifier = aws_vpclattice_service.test.id
   default_action {
