@@ -106,8 +106,11 @@ provider "aws" {
   <li><code>ce</code> (or <code>costexplorer</code>)</li>
   <li><code>chime</code></li>
   <li><code>chimesdkidentity</code></li>
+  <li><code>chimesdkmediapipelines</code></li>
   <li><code>chimesdkmeetings</code></li>
   <li><code>chimesdkmessaging</code></li>
+  <li><code>chimesdkvoice</code></li>
+  <li><code>cleanrooms</code></li>
   <li><code>cloud9</code></li>
   <li><code>cloudcontrol</code> (or <code>cloudcontrolapi</code>)</li>
   <li><code>clouddirectory</code></li>
@@ -154,6 +157,7 @@ provider "aws" {
   <li><code>dlm</code></li>
   <li><code>dms</code> (or <code>databasemigration</code> or <code>databasemigrationservice</code>)</li>
   <li><code>docdb</code></li>
+  <li><code>docdbelastic</code></li>
   <li><code>drs</code></li>
   <li><code>ds</code> (or <code>directoryservice</code>)</li>
   <li><code>dynamodb</code></li>
@@ -220,6 +224,7 @@ provider "aws" {
   <li><code>iottwinmaker</code></li>
   <li><code>iotwireless</code></li>
   <li><code>ivs</code></li>
+  <li><code>ivschat</code></li>
   <li><code>kafka</code> (or <code>msk</code>)</li>
   <li><code>kafkaconnect</code></li>
   <li><code>kendra</code></li>
@@ -275,7 +280,9 @@ provider "aws" {
   <li><code>networkfirewall</code></li>
   <li><code>networkmanager</code></li>
   <li><code>nimble</code> (or <code>nimblestudio</code>)</li>
+  <li><code>oam</code> (or <code>cloudwatchobservabilityaccessmanager</code>)</li>
   <li><code>opensearch</code> (or <code>opensearchservice</code>)</li>
+  <li><code>opensearchserverless</code></li>
   <li><code>opsworks</code></li>
   <li><code>opsworkscm</code></li>
   <li><code>organizations</code></li>
@@ -288,6 +295,7 @@ provider "aws" {
   <li><code>pinpoint</code></li>
   <li><code>pinpointemail</code></li>
   <li><code>pinpointsmsvoice</code></li>
+  <li><code>pipes</code></li>
   <li><code>polly</code></li>
   <li><code>pricing</code></li>
   <li><code>proton</code></li>
@@ -303,6 +311,7 @@ provider "aws" {
   <li><code>redshiftserverless</code></li>
   <li><code>rekognition</code></li>
   <li><code>resiliencehub</code></li>
+  <li><code>resourceexplorer2</code></li>
   <li><code>resourcegroups</code></li>
   <li><code>resourcegroupstaggingapi</code> (or <code>resourcegroupstagging</code>)</li>
   <li><code>robomaker</code></li>
@@ -323,9 +332,11 @@ provider "aws" {
   <li><code>sagemakerfeaturestoreruntime</code></li>
   <li><code>sagemakerruntime</code></li>
   <li><code>savingsplans</code></li>
+  <li><code>scheduler</code></li>
   <li><code>schemas</code></li>
   <li><code>secretsmanager</code></li>
   <li><code>securityhub</code></li>
+  <li><code>securitylake</code></li>
   <li><code>serverlessrepo</code> (or <code>serverlessapprepo</code> or <code>serverlessapplicationrepository</code>)</li>
   <li><code>servicecatalog</code></li>
   <li><code>servicecatalogappregistry</code> (or <code>appregistry</code>)</li>
@@ -361,6 +372,7 @@ provider "aws" {
   <li><code>transfer</code></li>
   <li><code>translate</code></li>
   <li><code>voiceid</code></li>
+  <li><code>vpclattice</code></li>
   <li><code>waf</code></li>
   <li><code>wafregional</code></li>
   <li><code>wafv2</code></li>

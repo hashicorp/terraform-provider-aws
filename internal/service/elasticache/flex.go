@@ -32,7 +32,6 @@ func flattenLogDeliveryConfigurations(logDeliveryConfiguration []*elasticache.Lo
 
 	var logDeliveryConfigurations []map[string]interface{}
 	for _, v := range logDeliveryConfiguration {
-
 		logDeliveryConfig := make(map[string]interface{})
 
 		switch aws.StringValue(v.DestinationType) {
@@ -60,7 +59,6 @@ func expandEmptyLogDeliveryConfigurations(v map[string]interface{}) elasticache.
 }
 
 func expandLogDeliveryConfigurations(v map[string]interface{}) elasticache.LogDeliveryConfigurationRequest {
-
 	logDeliveryConfigurationRequest := elasticache.LogDeliveryConfigurationRequest{}
 
 	logDeliveryConfigurationRequest.LogType = aws.String(v["log_type"].(string))

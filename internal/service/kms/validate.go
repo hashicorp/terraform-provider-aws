@@ -3,6 +3,21 @@ package kms
 import (
 	"fmt"
 	"regexp"
+
+	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+)
+
+const (
+	aliasNameRegexPattern   = `alias/[a-zA-Z0-9/_-]+`
+	multiRegionKeyIdPattern = `mrk-[a-f0-9]{32}`
+)
+
+var (
+	aliasNameRegex     = regexp.MustCompile(`^` + aliasNameRegexPattern + `$`)
+	keyIdRegex         = regexp.MustCompile(`^` + verify.UUIDRegexPattern + `|` + multiRegionKeyIdPattern + `$`)
+	keyIdResourceRegex = regexp.MustCompile(`^key/(` + verify.UUIDRegexPattern + `|` + multiRegionKeyIdPattern + `)$`)
 )
 
 func validGrantName(v interface{}, k string) (ws []string, es []error) {
@@ -22,7 +37,7 @@ func validGrantName(v interface{}, k string) (ws []string, es []error) {
 func validNameForDataSource(v interface{}, k string) (ws []string, es []error) {
 	value := v.(string)
 
-	if !regexp.MustCompile(`^(alias/)[a-zA-Z0-9/_-]+$`).MatchString(value) {
+	if !aliasNameRegex.MatchString(value) {
 		es = append(es, fmt.Errorf(
 			"%q must begin with 'alias/' and be comprised of only [a-zA-Z0-9/_-]", k))
 	}
@@ -36,25 +51,73 @@ func validNameForResource(v interface{}, k string) (ws []string, es []error) {
 		es = append(es, fmt.Errorf("%q cannot begin with reserved AWS CMK prefix 'alias/aws/'", k))
 	}
 
-	if !regexp.MustCompile(`^(alias/)[a-zA-Z0-9/_-]+$`).MatchString(value) {
+	if !aliasNameRegex.MatchString(value) {
 		es = append(es, fmt.Errorf(
 			"%q must begin with 'alias/' and be comprised of only [a-zA-Z0-9/_-]", k))
 	}
 	return
 }
 
-func validKey(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	arnPrefixPattern := `arn:[^:]+:kms:[^:]+:[^:]+:`
-	keyIdPattern := "[A-Za-z0-9-]+"
-	keyArnPattern := arnPrefixPattern + "key/" + keyIdPattern
-	aliasNamePattern := "alias/[a-zA-Z0-9:/_-]+"
-	aliasArnPattern := arnPrefixPattern + aliasNamePattern
-	if !regexp.MustCompile(fmt.Sprintf("^%s$", keyIdPattern)).MatchString(value) &&
-		!regexp.MustCompile(fmt.Sprintf("^%s$", keyArnPattern)).MatchString(value) &&
-		!regexp.MustCompile(fmt.Sprintf("^%s$", aliasNamePattern)).MatchString(value) &&
-		!regexp.MustCompile(fmt.Sprintf("^%s$", aliasArnPattern)).MatchString(value) {
-		errors = append(errors, fmt.Errorf("%q must be one of the following patterns: %s, %s, %s or %s", k, keyIdPattern, keyArnPattern, aliasNamePattern, aliasArnPattern))
+var ValidateKey = validation.Any(
+	validateKeyId,
+	validateKeyARN,
+)
+
+var ValidateKeyOrAlias = validation.Any(
+	validateKeyId,
+	validateKeyARN,
+	validateKeyAliasName,
+	validateKeyAliasARN,
+)
+
+var validateKeyId = validation.StringMatch(keyIdRegex, "must be a KMS Key ID")
+
+func validateKeyARN(v any, k string) (ws []string, errors []error) {
+	value, ok := v.(string)
+	if !ok {
+		errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
+		return
 	}
+
+	if value == "" {
+		return
+	}
+
+	if _, err := arn.Parse(value); err != nil {
+		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: %s", k, value, err))
+		return
+	}
+
+	if !isKeyARN(value) {
+		errors = append(errors, fmt.Errorf("%q (%s) is not a valid KMS Key ARN", k, value))
+		return
+	}
+
+	return
+}
+
+var validateKeyAliasName = validation.StringMatch(aliasNameRegex, "must be a KMS Key Alias")
+
+func validateKeyAliasARN(v any, k string) (ws []string, errors []error) {
+	value, ok := v.(string)
+	if !ok {
+		errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
+		return
+	}
+
+	if value == "" {
+		return
+	}
+
+	if _, err := arn.Parse(value); err != nil {
+		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: %s", k, value, err))
+		return
+	}
+
+	if !isAliasARN(value) {
+		errors = append(errors, fmt.Errorf("%q (%s) is not a valid KMS Key Alias ARN", k, value))
+		return
+	}
+
 	return
 }

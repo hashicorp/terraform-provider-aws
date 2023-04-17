@@ -38,7 +38,6 @@ The arguments of this data source act as filters for querying the available
 security group in the current region. The given filters must match exactly one
 security group whose data will be exported as attributes.
 
-
 * `filter` - (Optional) Custom filter block as described below.
 
 * `id` - (Optional) Id of the specific security group to retrieve.
@@ -75,6 +74,6 @@ The following fields are also exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)

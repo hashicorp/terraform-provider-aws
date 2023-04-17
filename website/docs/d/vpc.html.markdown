@@ -77,6 +77,7 @@ The following attribute is additionally exported:
 
 * `arn` - ARN of VPC
 * `enable_dns_support` - Whether or not the VPC has DNS support
+* `enable_network_address_usage_metrics` - Whether Network Address Usage metrics are enabled for your VPC
 * `enable_dns_hostnames` - Whether or not the VPC has DNS hostname support
 * `instance_tenancy` - Allowed tenancy of instances launched into the
   selected VPC. May be any of `"default"`, `"dedicated"`, or `"host"`.
@@ -87,12 +88,12 @@ The following attribute is additionally exported:
 
 `cidr_block_associations` is also exported with the following attributes:
 
-* `association_id` - Association ID for the the IPv4 CIDR block.
+* `association_id` - Association ID for the IPv4 CIDR block.
 * `cidr_block` - CIDR block for the association.
 * `state` - State of the association.
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)

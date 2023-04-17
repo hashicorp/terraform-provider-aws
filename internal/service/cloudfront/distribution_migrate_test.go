@@ -8,6 +8,8 @@ import (
 )
 
 func TestDistributionMigrateState(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]struct {
 		StateVersion int
 		Attributes   map[string]string

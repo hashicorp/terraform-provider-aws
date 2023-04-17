@@ -72,7 +72,6 @@ resource "aws_rds_cluster_instance" "secondary" {
 
 ### New PostgreSQL Global Cluster
 
-
 ```terraform
 provider "aws" {
   alias  = "primary"
@@ -137,7 +136,6 @@ resource "aws_rds_cluster_instance" "secondary" {
   db_subnet_group_name = "default"
 }
 ```
-
 
 ### New Global Cluster From Existing DB Cluster
 
@@ -226,7 +224,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `30m`)
 - `update` - (Default `90m`)

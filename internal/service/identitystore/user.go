@@ -12,15 +12,17 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/identitystore/document"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_identitystore_user")
 func ResourceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserCreate,
@@ -117,7 +119,7 @@ func ResourceUser() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
-							Type:     schema.TypeBool,
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"issuer": {
@@ -249,7 +251,7 @@ const (
 )
 
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IdentityStoreConn
+	conn := meta.(*conns.AWSClient).IdentityStoreClient()
 
 	in := &identitystore.CreateUserInput{
 		DisplayName:     aws.String(d.Get("display_name").(string)),
@@ -316,7 +318,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IdentityStoreConn
+	conn := meta.(*conns.AWSClient).IdentityStoreClient()
 
 	identityStoreId, userId, err := resourceUserParseID(d.Id())
 
@@ -324,7 +326,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return create.DiagError(names.IdentityStore, create.ErrActionReading, ResNameUser, d.Id(), err)
 	}
 
-	out, err := findUserByID(ctx, conn, identityStoreId, userId)
+	out, err := FindUserByTwoPartKey(ctx, conn, identityStoreId, userId)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IdentityStore User (%s) not found, removing from state", d.Id())
@@ -372,7 +374,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IdentityStoreConn
+	conn := meta.(*conns.AWSClient).IdentityStoreClient()
 
 	in := &identitystore.UpdateUserInput{
 		IdentityStoreId: aws.String(d.Get("identity_store_id").(string)),
@@ -605,7 +607,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IdentityStoreConn
+	conn := meta.(*conns.AWSClient).IdentityStoreClient()
 
 	log.Printf("[INFO] Deleting IdentityStore User %s", d.Id())
 
@@ -626,24 +628,23 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	return nil
 }
 
-func findUserByID(ctx context.Context, conn *identitystore.Client, identityStoreId, userId string) (*identitystore.DescribeUserOutput, error) {
+func FindUserByTwoPartKey(ctx context.Context, conn *identitystore.Client, identityStoreID, userID string) (*identitystore.DescribeUserOutput, error) {
 	in := &identitystore.DescribeUserInput{
-		IdentityStoreId: aws.String(identityStoreId),
-		UserId:          aws.String(userId),
+		IdentityStoreId: aws.String(identityStoreID),
+		UserId:          aws.String(userID),
 	}
 
 	out, err := conn.DescribeUser(ctx, in)
 
-	if err != nil {
-		var e *types.ResourceNotFoundException
-		if errors.As(err, &e) {
-			return nil, &resource.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		} else {
-			return nil, err
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
 		}
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	if out == nil || out.UserId == nil {
@@ -651,378 +652,6 @@ func findUserByID(ctx context.Context, conn *identitystore.Client, identityStore
 	}
 
 	return out, nil
-}
-
-func flattenAddress(apiObject *types.Address) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	m := map[string]interface{}{}
-
-	if v := apiObject.Country; v != nil {
-		m["country"] = aws.ToString(v)
-	}
-
-	if v := apiObject.Formatted; v != nil {
-		m["formatted"] = aws.ToString(v)
-	}
-
-	if v := apiObject.Locality; v != nil {
-		m["locality"] = aws.ToString(v)
-	}
-
-	if v := apiObject.PostalCode; v != nil {
-		m["postal_code"] = aws.ToString(v)
-	}
-
-	m["primary"] = apiObject.Primary
-
-	if v := apiObject.Region; v != nil {
-		m["region"] = aws.ToString(v)
-	}
-
-	if v := apiObject.StreetAddress; v != nil {
-		m["street_address"] = aws.ToString(v)
-	}
-
-	if v := apiObject.Type; v != nil {
-		m["type"] = aws.ToString(v)
-	}
-
-	return m
-}
-
-func expandAddress(tfMap map[string]interface{}) *types.Address {
-	if tfMap == nil {
-		return nil
-	}
-
-	a := &types.Address{}
-
-	if v, ok := tfMap["country"].(string); ok && v != "" {
-		a.Country = aws.String(v)
-	}
-
-	if v, ok := tfMap["formatted"].(string); ok && v != "" {
-		a.Formatted = aws.String(v)
-	}
-
-	if v, ok := tfMap["locality"].(string); ok && v != "" {
-		a.Locality = aws.String(v)
-	}
-
-	if v, ok := tfMap["postal_code"].(string); ok && v != "" {
-		a.PostalCode = aws.String(v)
-	}
-
-	a.Primary = tfMap["primary"].(bool)
-
-	if v, ok := tfMap["region"].(string); ok && v != "" {
-		a.Region = aws.String(v)
-	}
-
-	if v, ok := tfMap["street_address"].(string); ok && v != "" {
-		a.StreetAddress = aws.String(v)
-	}
-
-	if v, ok := tfMap["type"].(string); ok && v != "" {
-		a.Type = aws.String(v)
-	}
-
-	return a
-}
-
-func flattenAddresses(apiObjects []types.Address) []interface{} {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var l []interface{}
-
-	for _, apiObject := range apiObjects {
-		apiObject := apiObject
-		l = append(l, flattenAddress(&apiObject))
-	}
-
-	return l
-}
-
-func expandAddresses(tfList []interface{}) []types.Address {
-	s := make([]types.Address, 0, len(tfList))
-
-	for _, r := range tfList {
-		m, ok := r.(map[string]interface{})
-
-		if !ok {
-			continue
-		}
-
-		a := expandAddress(m)
-
-		if a == nil {
-			continue
-		}
-
-		s = append(s, *a)
-	}
-
-	return s
-}
-
-func flattenName(apiObject *types.Name) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	m := map[string]interface{}{}
-
-	if v := apiObject.FamilyName; v != nil {
-		m["family_name"] = aws.ToString(v)
-	}
-
-	if v := apiObject.Formatted; v != nil {
-		m["formatted"] = aws.ToString(v)
-	}
-
-	if v := apiObject.GivenName; v != nil {
-		m["given_name"] = aws.ToString(v)
-	}
-
-	if v := apiObject.HonorificPrefix; v != nil {
-		m["honorific_prefix"] = aws.ToString(v)
-	}
-
-	if v := apiObject.HonorificSuffix; v != nil {
-		m["honorific_suffix"] = aws.ToString(v)
-	}
-
-	if v := apiObject.MiddleName; v != nil {
-		m["middle_name"] = aws.ToString(v)
-	}
-
-	return m
-}
-
-func expandName(tfMap map[string]interface{}) *types.Name {
-	if tfMap == nil {
-		return nil
-	}
-
-	a := &types.Name{}
-
-	if v, ok := tfMap["family_name"].(string); ok && v != "" {
-		a.FamilyName = aws.String(v)
-	}
-
-	if v, ok := tfMap["formatted"].(string); ok && v != "" {
-		a.Formatted = aws.String(v)
-	}
-
-	if v, ok := tfMap["given_name"].(string); ok && v != "" {
-		a.GivenName = aws.String(v)
-	}
-
-	if v, ok := tfMap["honorific_prefix"].(string); ok && v != "" {
-		a.HonorificPrefix = aws.String(v)
-	}
-
-	if v, ok := tfMap["honorific_suffix"].(string); ok && v != "" {
-		a.HonorificSuffix = aws.String(v)
-	}
-
-	if v, ok := tfMap["middle_name"].(string); ok && v != "" {
-		a.MiddleName = aws.String(v)
-	}
-
-	return a
-}
-
-func flattenEmail(apiObject *types.Email) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	m := map[string]interface{}{}
-
-	m["primary"] = apiObject.Primary
-
-	if v := apiObject.Type; v != nil {
-		m["type"] = aws.ToString(v)
-	}
-
-	if v := apiObject.Value; v != nil {
-		m["value"] = aws.ToString(v)
-	}
-
-	return m
-}
-
-func expandEmail(tfMap map[string]interface{}) *types.Email {
-	if tfMap == nil {
-		return nil
-	}
-
-	a := &types.Email{}
-
-	a.Primary = tfMap["primary"].(bool)
-
-	if v, ok := tfMap["type"].(string); ok && v != "" {
-		a.Type = aws.String(v)
-	}
-
-	if v, ok := tfMap["value"].(string); ok && v != "" {
-		a.Value = aws.String(v)
-	}
-
-	return a
-}
-
-func flattenEmails(apiObjects []types.Email) []interface{} {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var l []interface{}
-
-	for _, apiObject := range apiObjects {
-		apiObject := apiObject
-		l = append(l, flattenEmail(&apiObject))
-	}
-
-	return l
-}
-
-func expandEmails(tfList []interface{}) []types.Email {
-	s := make([]types.Email, 0, len(tfList))
-
-	for _, r := range tfList {
-		m, ok := r.(map[string]interface{})
-
-		if !ok {
-			continue
-		}
-
-		a := expandEmail(m)
-
-		if a == nil {
-			continue
-		}
-
-		s = append(s, *a)
-	}
-
-	return s
-}
-
-func flattenExternalId(apiObject *types.ExternalId) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	m := map[string]interface{}{}
-
-	if v := apiObject.Id; v != nil {
-		m["id"] = aws.ToString(v)
-	}
-
-	if v := apiObject.Issuer; v != nil {
-		m["issuer"] = aws.ToString(v)
-	}
-
-	return m
-}
-
-func flattenExternalIds(apiObjects []types.ExternalId) []interface{} {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var l []interface{}
-
-	for _, apiObject := range apiObjects {
-		apiObject := apiObject
-		l = append(l, flattenExternalId(&apiObject))
-	}
-
-	return l
-}
-
-func flattenPhoneNumber(apiObject *types.PhoneNumber) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	m := map[string]interface{}{}
-
-	m["primary"] = apiObject.Primary
-
-	if v := apiObject.Type; v != nil {
-		m["type"] = aws.ToString(v)
-	}
-
-	if v := apiObject.Value; v != nil {
-		m["value"] = aws.ToString(v)
-	}
-
-	return m
-}
-
-func expandPhoneNumber(tfMap map[string]interface{}) *types.PhoneNumber {
-	if tfMap == nil {
-		return nil
-	}
-
-	a := &types.PhoneNumber{}
-
-	a.Primary = tfMap["primary"].(bool)
-
-	if v, ok := tfMap["type"].(string); ok && v != "" {
-		a.Type = aws.String(v)
-	}
-
-	if v, ok := tfMap["value"].(string); ok && v != "" {
-		a.Value = aws.String(v)
-	}
-
-	return a
-}
-
-func flattenPhoneNumbers(apiObjects []types.PhoneNumber) []interface{} {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var l []interface{}
-
-	for _, apiObject := range apiObjects {
-		apiObject := apiObject
-		l = append(l, flattenPhoneNumber(&apiObject))
-	}
-
-	return l
-}
-
-func expandPhoneNumbers(tfList []interface{}) []types.PhoneNumber {
-	s := make([]types.PhoneNumber, 0, len(tfList))
-
-	for _, r := range tfList {
-		m, ok := r.(map[string]interface{})
-
-		if !ok {
-			continue
-		}
-
-		a := expandPhoneNumber(m)
-
-		if a == nil {
-			continue
-		}
-
-		s = append(s, *a)
-	}
-
-	return s
 }
 
 func resourceUserParseID(id string) (identityStoreId, userId string, err error) {

@@ -10,7 +10,7 @@ description: |-
 
 ## Example Usage
 
-The following shows outputing all network interface ids in a region.
+The following shows outputting all network interface ids in a region.
 
 ```terraform
 data "aws_network_interfaces" "example" {}
@@ -70,9 +70,8 @@ which take the following arguments:
 * `id` - AWS Region.
 * `ids` - List of all the network interface ids found.
 
-
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)

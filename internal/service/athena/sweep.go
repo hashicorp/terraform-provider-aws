@@ -23,11 +23,12 @@ func init() {
 }
 
 func sweepDatabases(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AthenaConn
+	conn := client.(*conns.AWSClient).AthenaConn()
 	input := &athena.ListDatabasesInput{
 		CatalogName: aws.String("AwsDataCatalog"),
 	}
@@ -35,7 +36,7 @@ func sweepDatabases(region string) error {
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	for {
-		output, err := conn.ListDatabases(input)
+		output, err := conn.ListDatabasesWithContext(ctx, input)
 
 		for _, v := range output.DatabaseList {
 			name := aws.StringValue(v.Name)
@@ -68,7 +69,7 @@ func sweepDatabases(region string) error {
 		return nil
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Athena Databases (%s): %w", region, err))

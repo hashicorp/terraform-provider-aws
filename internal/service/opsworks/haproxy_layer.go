@@ -5,6 +5,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// @SDKResource("aws_opsworks_haproxy_layer", name="HAProxy Layer")
+// @Tags(identifierAttribute="arn")
 func ResourceHAProxyLayer() *schema.Resource {
 	layerType := &opsworksLayerType{
 		TypeName:         opsworks.LayerTypeLb,
@@ -45,5 +47,5 @@ func ResourceHAProxyLayer() *schema.Resource {
 		},
 	}
 
-	return layerType.SchemaResource()
+	return layerType.resourceSchema()
 }
