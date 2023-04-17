@@ -16,6 +16,7 @@ const (
 	DSNameFunctions = "Functions Data Source"
 )
 
+// @SDKDataSource("aws_lambda_functions")
 func DataSourceFunctions() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFunctionsRead,

@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,12 +23,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-var (
-	flagDiffUserSettings = false
-)
-
+// @SDKResource("aws_appstream_stack", name="Stack")
+// @Tags(identifierAttribute="arn")
 func ResourceStack() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStackCreate,
@@ -91,15 +90,11 @@ func ResourceStack() *schema.Resource {
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
 			"display_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 100),
 			},
 			"embed_host_domains": {
@@ -184,8 +179,8 @@ func ResourceStack() *schema.Resource {
 				},
 				Set: userSettingsHash,
 			},
-			"tags":     tftags.TagsSchemaForceNew(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: customdiff.All(
@@ -239,12 +234,11 @@ func ResourceStack() *schema.Resource {
 
 func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppStreamConn()
+
 	input := &appstream.CreateStackInput{
 		Name: aws.String(d.Get("name").(string)),
+		Tags: GetTagsIn(ctx),
 	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	if v, ok := d.GetOk("access_endpoints"); ok {
 		input.AccessEndpoints = expandAccessEndpoints(v.(*schema.Set).List())
@@ -282,20 +276,16 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.UserSettings = expandUserSettings(v.(*schema.Set).List())
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	var err error
 	var output *appstream.CreateStackOutput
-	err = resource.RetryContext(ctx, stackOperationTimeout, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, stackOperationTimeout, func() *retry.RetryError {
 		output, err = conn.CreateStackWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -316,9 +306,6 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppStreamConn()
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeStacksWithContext(ctx, &appstream.DescribeStacksInput{Names: []*string{aws.String(d.Id())}})
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
@@ -353,24 +340,8 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		if err = d.Set("user_settings", flattenUserSettings(v.UserSettings)); err != nil {
 			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "user_settings", d.Id(), err))
 		}
-
-		tg, err := conn.ListTagsForResource(&appstream.ListTagsForResourceInput{
-			ResourceArn: v.Arn,
-		})
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error listing stack tags for AppStream Stack (%s): %w", d.Id(), err))
-		}
-
-		tags := KeyValueTags(tg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-		if err = d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "tags", d.Id(), err))
-		}
-
-		if err = d.Set("tags_all", tags.Map()); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "tags_all", d.Id(), err))
-		}
 	}
+
 	return nil
 }
 
@@ -406,22 +377,13 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("user_settings") {
-		input.UserSettings = expandUserSettings(d.Get("user_settings").([]interface{}))
+		input.UserSettings = expandUserSettings(d.Get("user_settings").(*schema.Set).List())
 	}
 
-	resp, err := conn.UpdateStack(input)
+	_, err := conn.UpdateStackWithContext(ctx, input)
 
 	if err != nil {
 		diag.FromErr(fmt.Errorf("error updating Appstream Stack (%s): %w", d.Id(), err))
-	}
-
-	if d.HasChange("tags") {
-		arn := aws.StringValue(resp.Stack.Arn)
-
-		o, n := d.GetChange("tags")
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating Appstream Stack tags (%s): %w", d.Id(), err))
-		}
 	}
 
 	return resourceStackRead(ctx, d, meta)
@@ -711,6 +673,7 @@ func flattenUserSettings(apiObjects []*appstream.UserSetting) []map[string]inter
 }
 
 func suppressAppsStreamStackUserSettings(k, old, new string, d *schema.ResourceData) bool {
+	flagDiffUserSettings := false
 	count := len(d.Get("user_settings").(*schema.Set).List())
 	defaultCount := len(appstream.Action_Values())
 

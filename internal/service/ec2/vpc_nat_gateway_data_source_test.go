@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccVPCNATGatewayDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceNameById := "data.aws_nat_gateway.test_by_id"
 	dataSourceNameBySubnetId := "data.aws_nat_gateway.test_by_subnet_id"
@@ -18,7 +19,7 @@ func TestAccVPCNATGatewayDataSource_basic(t *testing.T) {
 	resourceName := "aws_nat_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -36,6 +37,7 @@ func TestAccVPCNATGatewayDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceNameById, "private_ip"),
 					resource.TestCheckNoResourceAttr(dataSourceNameById, "attached_vpc_id"),
 					resource.TestCheckResourceAttrSet(dataSourceNameById, "tags.OtherTag"),
+					resource.TestCheckResourceAttrPair(dataSourceNameById, "association_id", resourceName, "association_id"),
 				),
 			},
 		},

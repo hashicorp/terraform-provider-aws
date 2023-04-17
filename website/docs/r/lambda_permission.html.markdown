@@ -122,9 +122,9 @@ resource "aws_lambda_permission" "lambda_permission" {
   function_name = "MyDemoFunction"
   principal     = "apigateway.amazonaws.com"
 
-  # The /*/*/* part allows invocation from any stage, method and resource path
-  # within API Gateway REST API.
-  source_arn = "${aws_api_gateway_rest_api.MyDemoAPI.execution_arn}/*/*/*"
+  # The /* part allows invocation from any stage, method and resource path
+  # within API Gateway.
+  source_arn = "${aws_api_gateway_rest_api.MyDemoAPI.execution_arn}/*"
 }
 ```
 
@@ -158,24 +158,22 @@ resource "aws_lambda_function" "logging" {
   runtime       = "python3.7"
 }
 
-resource "aws_iam_role" "default" {
-  name = "iam_for_lambda_called_from_cloudwatch_logs"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-EOF
+
+resource "aws_iam_role" "default" {
+  name               = "iam_for_lambda_called_from_cloudwatch_logs"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 ```
 

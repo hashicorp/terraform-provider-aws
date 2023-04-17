@@ -13,13 +13,12 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func init() {
-	_sp.registerFrameworkDataSourceFactory(newDataSourceRegions)
-}
-
-// newDataSourceRegions instantiates a new DataSource for the aws_regions data source.
+// @FrameworkDataSource
 func newDataSourceRegions(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceRegions{}, nil
+	d := &dataSourceRegions{}
+	d.SetMigratedFromPluginSDK(true)
+
+	return d, nil
 }
 
 type dataSourceRegions struct {
@@ -86,7 +85,7 @@ func (d *dataSourceRegions) Read(ctx context.Context, request datasource.ReadReq
 	}
 
 	data.ID = types.StringValue(d.Meta().Partition)
-	data.Names = flex.FlattenFrameworkStringValueSet(ctx, names)
+	data.Names = flex.FlattenFrameworkStringValueSetLegacy(ctx, names)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

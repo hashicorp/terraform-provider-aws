@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func testAccCheckLayerExists(n string, v *opsworks.Layer) resource.TestCheckFunc {
+func testAccCheckLayerExists(ctx context.Context, n string, v *opsworks.Layer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -26,7 +26,7 @@ func testAccCheckLayerExists(n string, v *opsworks.Layer) resource.TestCheckFunc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
 
-		output, err := tfopsworks.FindLayerByID(context.Background(), conn, rs.Primary.ID)
+		output, err := tfopsworks.FindLayerByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -38,7 +38,7 @@ func testAccCheckLayerExists(n string, v *opsworks.Layer) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckLayerDestroy(resourceType string, s *terraform.State) error {
+func testAccCheckLayerDestroy(ctx context.Context, resourceType string, s *terraform.State) error { // nosemgrep:ci.semgrep.acctest.naming.destroy-check-signature
 	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
 
 	for _, rs := range s.RootModule().Resources {
@@ -46,7 +46,7 @@ func testAccCheckLayerDestroy(resourceType string, s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfopsworks.FindLayerByID(context.Background(), conn, rs.Primary.ID)
+		_, err := tfopsworks.FindLayerByID(ctx, conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/prometheusservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -17,7 +17,7 @@ const (
 )
 
 func waitAlertManagerDefinitionCreated(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.AlertManagerDefinitionDescription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{prometheusservice.AlertManagerDefinitionStatusCodeCreating},
 		Target:  []string{prometheusservice.AlertManagerDefinitionStatusCodeActive},
 		Refresh: statusAlertManagerDefinition(ctx, conn, id),
@@ -38,7 +38,7 @@ func waitAlertManagerDefinitionCreated(ctx context.Context, conn *prometheusserv
 }
 
 func waitAlertManagerDefinitionUpdated(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.AlertManagerDefinitionDescription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{prometheusservice.AlertManagerDefinitionStatusCodeUpdating},
 		Target:  []string{prometheusservice.AlertManagerDefinitionStatusCodeActive},
 		Refresh: statusAlertManagerDefinition(ctx, conn, id),
@@ -59,7 +59,7 @@ func waitAlertManagerDefinitionUpdated(ctx context.Context, conn *prometheusserv
 }
 
 func waitAlertManagerDefinitionDeleted(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.AlertManagerDefinitionDescription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{prometheusservice.AlertManagerDefinitionStatusCodeDeleting},
 		Target:  []string{},
 		Refresh: statusAlertManagerDefinition(ctx, conn, id),
@@ -76,7 +76,7 @@ func waitAlertManagerDefinitionDeleted(ctx context.Context, conn *prometheusserv
 }
 
 func waitRuleGroupNamespaceDeleted(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.RuleGroupsNamespaceDescription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{prometheusservice.RuleGroupsNamespaceStatusCodeDeleting},
 		Target:  []string{},
 		Refresh: statusRuleGroupNamespace(ctx, conn, id),
@@ -93,7 +93,7 @@ func waitRuleGroupNamespaceDeleted(ctx context.Context, conn *prometheusservice.
 }
 
 func waitRuleGroupNamespaceCreated(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.RuleGroupsNamespaceDescription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{prometheusservice.RuleGroupsNamespaceStatusCodeCreating},
 		Target:  []string{prometheusservice.RuleGroupsNamespaceStatusCodeActive},
 		Refresh: statusRuleGroupNamespace(ctx, conn, id),
@@ -110,7 +110,7 @@ func waitRuleGroupNamespaceCreated(ctx context.Context, conn *prometheusservice.
 }
 
 func waitRuleGroupNamespaceUpdated(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.RuleGroupsNamespaceDescription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{prometheusservice.RuleGroupsNamespaceStatusCodeUpdating},
 		Target:  []string{prometheusservice.RuleGroupsNamespaceStatusCodeActive},
 		Refresh: statusRuleGroupNamespace(ctx, conn, id),
@@ -127,7 +127,7 @@ func waitRuleGroupNamespaceUpdated(ctx context.Context, conn *prometheusservice.
 }
 
 func waitWorkspaceCreated(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.WorkspaceDescription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{prometheusservice.WorkspaceStatusCodeCreating},
 		Target:  []string{prometheusservice.WorkspaceStatusCodeActive},
 		Refresh: statusWorkspace(ctx, conn, id),
@@ -144,7 +144,7 @@ func waitWorkspaceCreated(ctx context.Context, conn *prometheusservice.Prometheu
 }
 
 func waitWorkspaceDeleted(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.WorkspaceDescription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{prometheusservice.WorkspaceStatusCodeDeleting},
 		Target:  []string{},
 		Refresh: statusWorkspace(ctx, conn, id),
@@ -161,7 +161,7 @@ func waitWorkspaceDeleted(ctx context.Context, conn *prometheusservice.Prometheu
 }
 
 func waitWorkspaceUpdated(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.WorkspaceDescription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{prometheusservice.WorkspaceStatusCodeUpdating},
 		Target:  []string{prometheusservice.WorkspaceStatusCodeActive},
 		Refresh: statusWorkspace(ctx, conn, id),
@@ -177,8 +177,8 @@ func waitWorkspaceUpdated(ctx context.Context, conn *prometheusservice.Prometheu
 	return nil, err
 }
 
-func waitLoggingConfigurationCreated(ctx context.Context, conn *prometheusservice.PrometheusService, workspaceID string) (*prometheusservice.LoggingConfigurationMetadata, error) {
-	stateConf := &resource.StateChangeConf{
+func waitLoggingConfigurationCreated(ctx context.Context, conn *prometheusservice.PrometheusService, workspaceID string) (*prometheusservice.LoggingConfigurationMetadata, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{prometheusservice.LoggingConfigurationStatusCodeCreating},
 		Target:  []string{prometheusservice.LoggingConfigurationStatusCodeActive},
 		Refresh: statusLoggingConfiguration(ctx, conn, workspaceID),
@@ -199,7 +199,7 @@ func waitLoggingConfigurationCreated(ctx context.Context, conn *prometheusservic
 }
 
 func waitLoggingConfigurationDeleted(ctx context.Context, conn *prometheusservice.PrometheusService, workspaceID string) (*prometheusservice.LoggingConfigurationMetadata, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{prometheusservice.LoggingConfigurationStatusCodeDeleting},
 		Target:  []string{},
 		Refresh: statusLoggingConfiguration(ctx, conn, workspaceID),
@@ -216,7 +216,7 @@ func waitLoggingConfigurationDeleted(ctx context.Context, conn *prometheusservic
 }
 
 func waitLoggingConfigurationUpdated(ctx context.Context, conn *prometheusservice.PrometheusService, workspaceID string) (*prometheusservice.LoggingConfigurationMetadata, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{prometheusservice.LoggingConfigurationStatusCodeUpdating},
 		Target:  []string{prometheusservice.LoggingConfigurationStatusCodeActive},
 		Refresh: statusLoggingConfiguration(ctx, conn, workspaceID),

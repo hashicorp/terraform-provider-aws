@@ -25,7 +25,28 @@ const (
 	PEMBlockTypePublicKey          = `PUBLIC KEY`
 )
 
-var tlsX509CertificateSerialNumberLimit = new(big.Int).Lsh(big.NewInt(1), 128) //nolint:gomnd
+var (
+	tlsX509CertificateSerialNumberLimit = new(big.Int).Lsh(big.NewInt(1), 128) //nolint:gomnd
+)
+
+// TLSPEMRemovePublicKeyEncapsulationBoundaries removes public key
+// pre and post encapsulation boundaries from a PEM string.
+func TLSPEMRemovePublicKeyEncapsulationBoundaries(pem string) string {
+	return removePEMEncapsulationBoundaries(pem, PEMBlockTypePublicKey)
+}
+
+func removePEMEncapsulationBoundaries(pem, label string) string {
+	return strings.ReplaceAll(strings.ReplaceAll(pem, pemPreEncapsulationBoundary(label), ""), pemPostEncapsulationBoundary(label), "")
+}
+
+// See https://www.rfc-editor.org/rfc/rfc7468#section-2.
+func pemPreEncapsulationBoundary(label string) string {
+	return `-----BEGIN ` + label + `-----`
+}
+
+func pemPostEncapsulationBoundary(label string) string {
+	return `-----END ` + label + `-----`
+}
 
 // TLSECDSAPublicKeyPEM generates an ECDSA private key PEM string using the specified elliptic curve.
 // Wrap with TLSPEMEscapeNewlines() to allow simple fmt.Sprintf()
@@ -390,6 +411,10 @@ func TLSRSAX509CertificateRequestPEM(t *testing.T, keyBits int, commonName strin
 
 func TLSPEMEscapeNewlines(pem string) string {
 	return strings.ReplaceAll(pem, "\n", "\\n")
+}
+
+func TLSPEMRemoveNewlines(pem string) string {
+	return strings.ReplaceAll(pem, "\n", "")
 }
 
 func ellipticCurveForName(name string) elliptic.Curve {

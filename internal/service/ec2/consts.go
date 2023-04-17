@@ -276,3 +276,13 @@ func securityGroupRuleType_Values() []string {
 		securityGroupRuleTypeIngress,
 	}
 }
+
+const (
+	ResInstance      = "Instance"
+	ResInstanceState = "Instance State"
+)
+
+const (
+	gatewayIDLocal      = "local"
+	gatewayIDVPCLattice = "VpcLattice"
+)

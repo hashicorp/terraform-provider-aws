@@ -1,6 +1,7 @@
 package appsync
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -9,20 +10,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_appsync_datasource")
 func ResourceDataSource() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDataSourceCreate,
-		Read:   resourceDataSourceRead,
-		Update: resourceDataSourceUpdate,
-		Delete: resourceDataSourceDelete,
+		CreateWithoutTimeout: resourceDataSourceCreate,
+		ReadWithoutTimeout:   resourceDataSourceRead,
+		UpdateWithoutTimeout: resourceDataSourceUpdate,
+		DeleteWithoutTimeout: resourceDataSourceDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -222,6 +226,21 @@ func ResourceDataSource() *schema.Resource {
 				},
 				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "http_config", "lambda_config"},
 			},
+			"event_bridge_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"event_bus_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
+				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "http_config", "lambda_config", "relational_database_config"},
+			},
 			"service_role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -235,7 +254,8 @@ func ResourceDataSource() *schema.Resource {
 	}
 }
 
-func resourceDataSourceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncConn()
 	region := meta.(*conns.AWSClient).Region
 
@@ -257,6 +277,10 @@ func resourceDataSourceCreate(d *schema.ResourceData, meta interface{}) error {
 		input.ElasticsearchConfig = expandElasticsearchDataSourceConfig(v.([]interface{}), region)
 	}
 
+	if v, ok := d.GetOk("event_bridge_config"); ok {
+		input.EventBridgeConfig = expandEventBridgeDataSourceConfig(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("http_config"); ok {
 		input.HttpConfig = expandHTTPDataSourceConfig(v.([]interface{}))
 	}
@@ -273,23 +297,24 @@ func resourceDataSourceCreate(d *schema.ResourceData, meta interface{}) error {
 		input.RelationalDatabaseConfig = expandRelationalDatabaseDataSourceConfig(v.([]interface{}), region)
 	}
 
-	_, err := conn.CreateDataSource(input)
+	_, err := conn.CreateDataSourceWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating Appsync Datasource: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Appsync Datasource: %s", err)
 	}
 
 	d.SetId(d.Get("api_id").(string) + "-" + d.Get("name").(string))
 
-	return resourceDataSourceRead(d, meta)
+	return append(diags, resourceDataSourceRead(ctx, d, meta)...)
 }
 
-func resourceDataSourceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID, name, err := DecodeID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Appsync Data Source (%s): %s", d.Id(), err)
 	}
 
 	input := &appsync.GetDataSourceInput{
@@ -297,14 +322,14 @@ func resourceDataSourceRead(d *schema.ResourceData, meta interface{}) error {
 		Name:  aws.String(name),
 	}
 
-	resp, err := conn.GetDataSource(input)
+	resp, err := conn.GetDataSourceWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) && !d.IsNewResource() {
 			log.Printf("[WARN] AppSync Datasource %q not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Appsync Data Source (%s): %s", d.Id(), err)
 	}
 
 	dataSource := resp.DataSource
@@ -314,40 +339,45 @@ func resourceDataSourceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", dataSource.Description)
 
 	if err := d.Set("dynamodb_config", flattenDynamoDBDataSourceConfig(dataSource.DynamodbConfig)); err != nil {
-		return fmt.Errorf("error setting dynamodb_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting dynamodb_config: %s", err)
 	}
 
 	if err := d.Set("elasticsearch_config", flattenElasticsearchDataSourceConfig(dataSource.ElasticsearchConfig)); err != nil {
-		return fmt.Errorf("error setting elasticsearch_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting elasticsearch_config: %s", err)
 	}
 
 	if err := d.Set("http_config", flattenHTTPDataSourceConfig(dataSource.HttpConfig)); err != nil {
-		return fmt.Errorf("error setting http_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting http_config: %s", err)
 	}
 
 	if err := d.Set("lambda_config", flattenLambdaDataSourceConfig(dataSource.LambdaConfig)); err != nil {
-		return fmt.Errorf("error setting lambda_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting lambda_config: %s", err)
 	}
 
 	if err := d.Set("relational_database_config", flattenRelationalDatabaseDataSourceConfig(dataSource.RelationalDatabaseConfig)); err != nil {
-		return fmt.Errorf("error setting relational_database_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting relational_database_config: %s", err)
+	}
+
+	if err := d.Set("event_bridge_config", flattenEventBridgeDataSourceConfig(dataSource.EventBridgeConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting event_bridge_config: %s", err)
 	}
 
 	d.Set("name", dataSource.Name)
 	d.Set("service_role_arn", dataSource.ServiceRoleArn)
 	d.Set("type", dataSource.Type)
 
-	return nil
+	return diags
 }
 
-func resourceDataSourceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncConn()
 	region := meta.(*conns.AWSClient).Region
 
 	apiID, name, err := DecodeID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating Appsync Data Source (%s): %s", d.Id(), err)
 	}
 
 	input := &appsync.UpdateDataSourceInput{
@@ -384,20 +414,22 @@ func resourceDataSourceUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.RelationalDatabaseConfig = expandRelationalDatabaseDataSourceConfig(v.([]interface{}), region)
 	}
 
-	_, err = conn.UpdateDataSource(input)
+	_, err = conn.UpdateDataSourceWithContext(ctx, input)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating Appsync Data Source (%s): %s", d.Id(), err)
 	}
-	return resourceDataSourceRead(d, meta)
+
+	return append(diags, resourceDataSourceRead(ctx, d, meta)...)
 }
 
-func resourceDataSourceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID, name, err := DecodeID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting Appsync Data Source (%s): %s", d.Id(), err)
 	}
 
 	input := &appsync.DeleteDataSourceInput{
@@ -405,15 +437,15 @@ func resourceDataSourceDelete(d *schema.ResourceData, meta interface{}) error {
 		Name:  aws.String(name),
 	}
 
-	_, err = conn.DeleteDataSource(input)
+	_, err = conn.DeleteDataSourceWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
-			return nil
+			return diags
 		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting Appsync Data Source (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func DecodeID(id string) (string, string, error) {
@@ -708,6 +740,32 @@ func flattenRelationalDatabaseDataSourceConfig(config *appsync.RelationalDatabas
 	result := map[string]interface{}{
 		"source_type":          aws.StringValue(config.RelationalDatabaseSourceType),
 		"http_endpoint_config": flattenRDSHTTPEndpointConfig(config.RdsHttpEndpointConfig),
+	}
+
+	return []map[string]interface{}{result}
+}
+
+func expandEventBridgeDataSourceConfig(l []interface{}) *appsync.EventBridgeDataSourceConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	configured := l[0].(map[string]interface{})
+
+	result := &appsync.EventBridgeDataSourceConfig{
+		EventBusArn: aws.String(configured["event_bus_arn"].(string)),
+	}
+
+	return result
+}
+
+func flattenEventBridgeDataSourceConfig(config *appsync.EventBridgeDataSourceConfig) []map[string]interface{} {
+	if config == nil {
+		return nil
+	}
+
+	result := map[string]interface{}{
+		"event_bus_arn": aws.StringValue(config.EventBusArn),
 	}
 
 	return []map[string]interface{}{result}

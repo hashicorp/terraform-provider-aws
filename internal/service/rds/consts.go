@@ -1,6 +1,8 @@
 package rds
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	ClusterRoleStatusActive  = "ACTIVE"
@@ -97,6 +99,11 @@ const (
 	EventSubscriptionStatusCreating  = "creating"
 	EventSubscriptionStatusDeleting  = "deleting"
 	EventSubscriptionStatusModifying = "modifying"
+)
+
+const (
+	DBSnapshotAvailable = "available"
+	DBSnapshotCreating  = "creating"
 )
 
 const (
