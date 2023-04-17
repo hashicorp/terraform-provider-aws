@@ -128,27 +128,29 @@ func FindLoggingConfigurationByWorkspaceID(ctx context.Context, conn *prometheus
 
 func FindWorkspaces(ctx context.Context, conn *prometheusservice.PrometheusService, alias string) ([]*prometheusservice.WorkspaceSummary, error) {
 	input := &prometheusservice.ListWorkspacesInput{}
-
-	// ListWorkspaces returns all workspaces that begin with the given alias.
 	if alias != "" {
 		input.Alias = aws.String(alias)
 	}
+	var output []*prometheusservice.WorkspaceSummary
 
-	var results []*prometheusservice.WorkspaceSummary
-	err := conn.ListWorkspacesPages(input, func(page *prometheusservice.ListWorkspacesOutput, lastPage bool) bool {
+	err := conn.ListWorkspacesPagesWithContext(ctx, input, func(page *prometheusservice.ListWorkspacesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, w := range page.Workspaces {
-			if w == nil {
+		for _, v := range page.Workspaces {
+			if v == nil {
 				continue
 			}
-			results = append(results, w)
+			output = append(output, v)
 		}
 
 		return !lastPage
 	})
 
-	return results, err
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
