@@ -3,12 +3,8 @@ package vpclattice
 import (
 	"context"
 	"errors"
-	//"fmt"
-
 	"fmt"
 	"log"
-	//"reflect"
-	//"regexp"
 	"strings"
 	"time"
 
@@ -18,18 +14,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
-	//"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-
-	//"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	//"github.com/hashicorp/terraform/helper/schema"
 )
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
@@ -40,23 +31,12 @@ func ResourceListener() *schema.Resource {
 		ReadWithoutTimeout:   resourceListenerRead,
 		UpdateWithoutTimeout: resourceListenerUpdate,
 		DeleteWithoutTimeout: resourceListenerDelete,
-
-		// TIP: ==== TERRAFORM IMPORTING ====
-		// If Read can get all the information it needs from the Identifier
-		// (i.e., d.Id()), you can use the Passthrough importer. Otherwise,
-		// you'll need a custom import function.
-		//
-		// See more:
-		// https://hashicorp.github.io/terraform-provider-aws/add-import-support/
-		// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#implicit-state-passthrough
-		// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#virtual-attributes
-
 		// Id returned by GetListener does not contain required service name, use a custom import function
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-					return nil, fmt.Errorf("Unexpected format of ID (%q), expected SERVICE-ID/LISTENER-ID", d.Id())
+					return nil, fmt.Errorf("unexpected format of ID (%q), expected SERVICE-ID/LISTENER-ID", d.Id())
 				}
 				d.Set("service_identifier", idParts[0])
 				d.Set("listener_id", idParts[1])
@@ -151,7 +131,8 @@ func ResourceListener() *schema.Resource {
 			},
 			"port": {
 				Type:         schema.TypeInt,
-				Required:     true,
+				Computed:     true,
+				Optional:     true,
 				ValidateFunc: validation.IsPortNumber,
 			},
 			"protocol": {
@@ -159,11 +140,19 @@ func ResourceListener() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"HTTP", "HTTPS"}, true),
 			},
-			"service_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
+			"service_arn": {
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				AtLeastOneOf: []string{"service_arn", "service_identifier"},
 			},
-			"tags":     tftags.TagsSchema(), // TIP: Many, but not all, resources have `tags` and `tags_all` attributes.
+			"service_identifier": {
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				AtLeastOneOf: []string{"service_arn", "service_identifier"},
+			},
+			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
@@ -176,46 +165,29 @@ const (
 )
 
 func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// TIP: ==== RESOURCE CREATE ====
-	// Generally, the Create function should do the following things. Make
-	// sure there is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Populate a create input structure
-	// 3. Call the AWS create/put function
-	// 4. Using the output from the create function, set the minimum arguments
-	//    and attributes for the Read function to work. At a minimum, set the
-	//    resource ID. E.g., d.SetId(<Identifier, such as AWS ID or ARN>)
-	// 5. Use a waiter to wait for create to complete
-	// 6. Call the Read function in the Create return
-
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
-	// TIP: -- 2. Populate a create input structure
 	in := &vpclattice.CreateListenerInput{
-		// TIP: Mandatory or fields that will always be present can be set when
-		// you create the Input structure. (Replace these with real fields.)
-		Name:              aws.String(d.Get("name").(string)),
-		DefaultAction:     expandDefaultAction(d.Get("default_action").([]interface{})),
-		Protocol:          types.ListenerProtocol(d.Get("protocol").(string)),
-		ServiceIdentifier: aws.String(d.Get("service_identifier").(string)),
+		Name:          aws.String(d.Get("name").(string)),
+		DefaultAction: expandDefaultAction(d.Get("default_action").([]interface{})),
+		Protocol: types.ListenerProtocol(d.Get("protocol").(string)),
 	}
 
 	if v, ok := d.GetOk("port"); ok && v != nil {
 		in.Port = aws.Int32(int32(v.(int)))
 	}
-	// } else {
-	// 	// If port is not specified during create, set default values in state.
-	// 	// For HTTP, the default port is 80. For HTTPS, the default is 443.
-	// 	switch v := d.Get("protocol").(string); v {
-	// 	case "HTTP":
-	// 		fmt.Println("Using default HTTP port 80")
-	// 		in.Port = aws.Int32(int32(80))
-	// 	case "HTTPS":
-	// 		in.Port = aws.Int32(int32(443))
-	// 	}
-	// }
+
+	if v, ok := d.GetOk("service_identifier"); ok {
+		in.ServiceIdentifier = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("service_arn"); ok {
+		in.ServiceIdentifier = aws.String(v.(string))
+	}
+
+	if in.ServiceIdentifier == nil {
+		return diag.FromErr(fmt.Errorf("must specify either service_arn or service_identifier"))
+	}
 
 	// TIP: Not all resources support tags and tags don't always make sense. If
 	// your resource doesn't need tags, you can remove the tags lines here and
@@ -228,11 +200,8 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	// TIP: -- 3. Call the AWS create function
 	out, err := conn.CreateListener(ctx, in)
 	if err != nil {
-		// TIP: Since d.SetId() has not been called yet, you cannot use d.Id()
-		// in error messages at this point.
 		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameListener, d.Get("name").(string), err)
 	}
 
@@ -243,6 +212,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	// Id returned by GetListener does not contain required service name
 	// Create a composite ID using service ID and listener ID
 	d.Set("listener_id", out.Id)
+	d.Set("service_identifier", out.ServiceId)
 
 	parts := []string{
 		d.Get("service_identifier").(string),
@@ -260,8 +230,6 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	fmt.Println("Beginning read function...")
-
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
 	// GetListener requires the ID or Amazon Resource Name (ARN) of the service
@@ -287,16 +255,8 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("name", out.Name)
 	d.Set("protocol", out.Protocol)
 	d.Set("port", out.Port)
-	// d.Set("service_arn", out.ServiceArn)
+	d.Set("service_arn", out.ServiceArn)
 	d.Set("service_identifier", out.ServiceId)
-
-	// TIP: Setting a complex type.
-	// For more information, see:
-	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#data-handling-and-conversion
-	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#flatten-functions-for-blocks
-	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#root-typeset-of-resource-and-aws-list-of-structure
-
-	fmt.Println("Attempting to set default action...")
 
 	if err := d.Set("default_action", flattenListenerRuleActions(out.DefaultAction)); err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameListener, d.Id(), err)
@@ -326,47 +286,27 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
-	// TIP: -- 2. Populate a modify input structure and check for changes
-	//
-	// When creating the input structure, only include mandatory fields. Other
-	// fields are set as needed. You can use a flag, such as update below, to
-	// determine if a certain portion of arguments have been changed and
-	// whether to call the AWS update function.
-	update := false
+	if d.HasChangesExcept("tags", "tags_all") {
+		serviceId := d.Get("service_identifier").(string)
+		listenerId := d.Get("listener_id").(string)
 
-	serviceId := d.Get("service_identifier").(string)
-	listenerId := d.Get("listener_id").(string)
+		in := &vpclattice.UpdateListenerInput{
+			ListenerIdentifier: aws.String(listenerId),
+			ServiceIdentifier:  aws.String(serviceId),
+		}
 
-	// TIP: -- 3. Call the AWS delete function
-	in := &vpclattice.UpdateListenerInput{
-		ListenerIdentifier: aws.String(listenerId),
-		ServiceIdentifier:  aws.String(serviceId),
+		// Cannot edit listener name, protocol, or port after creation
+		if d.HasChanges("default_action") {
+			in.DefaultAction = expandDefaultAction(d.Get("default_action").([]interface{}))
+		}
+
+		// TIP: -- 3. Call the AWS modify/update function
+		log.Printf("[DEBUG] Updating VPC Lattice Listener (%s): %#v", d.Id(), in)
+		_, err := conn.UpdateListener(ctx, in)
+		if err != nil {
+			return create.DiagError(names.VPCLattice, create.ErrActionUpdating, ResNameListener, d.Id(), err)
+		}
 	}
-
-	if d.HasChanges("service_id") {
-		in.ServiceIdentifier = aws.String(d.Get("service_id").(string))
-		update = true
-	}
-
-	if d.HasChanges("default_action") {
-		// Expander function here
-		in.DefaultAction = expandDefaultAction(d.Get("default_action").([]interface{}))
-		update = true
-	}
-
-	if !update {
-		// TIP: If update doesn't do anything at all, which is rare, you can
-		// return nil. Otherwise, return a read call, as below.
-		return nil
-	}
-
-	// TIP: -- 3. Call the AWS modify/update function
-	log.Printf("[DEBUG] Updating VPC Lattice Listener (%s): %#v", d.Id(), in)
-	_, err := conn.UpdateListener(ctx, in)
-	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionUpdating, ResNameListener, d.Id(), err)
-	}
-
 	// TIP: -- 4. Use a waiter to wait for update to complete
 	// if _, err := waitListenerUpdated(ctx, conn, aws.ToString(out.Id), d.Timeout(schema.TimeoutUpdate)); err != nil {
 	// 	return create.DiagError(names.VPCLattice, create.ErrActionWaitingForUpdate, ResNameListener, d.Id(), err)
@@ -377,39 +317,18 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// TIP: ==== RESOURCE DELETE ====
-	// Most resources have Delete functions. There are rare situations
-	// where you might not need a delete:
-	// a. The AWS API does not provide a way to delete the resource
-	// b. The point of your resource is to perform an action (e.g., reboot a
-	//    server) and deleting serves no purpose.
-	//
-	// The Delete function should do the following things. Make sure there
-	// is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Populate a delete input structure
-	// 3. Call the AWS delete function
-	// 4. Use a waiter to wait for delete to complete
-	// 5. Return nil
-
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
-	// TIP: -- 2. Populate a delete input structure
 	log.Printf("[INFO] Deleting VPC Lattice Listener %s", d.Id())
 
 	serviceId := d.Get("service_identifier").(string)
 	listenerId := d.Get("listener_id").(string)
 
-	// TIP: -- 3. Call the AWS delete function
 	_, err := conn.DeleteListener(ctx, &vpclattice.DeleteListenerInput{
 		ListenerIdentifier: aws.String(listenerId),
 		ServiceIdentifier:  aws.String(serviceId),
 	})
 
-	// TIP: On rare occassions, the API returns a not found error after deleting a
-	// resource. If that happens, we don't want it to show up as an error.
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
@@ -424,7 +343,6 @@ func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta in
 	// 	return create.DiagError(names.VPCLattice, create.ErrActionWaitingForDeletion, ResNameListener, d.Id(), err)
 	// }
 
-	// TIP: -- 5. Return nil
 	return nil
 }
 
@@ -581,8 +499,6 @@ func flattenListenerRuleActions(config types.RuleAction) []interface{} {
 		m["fixed_response"] = flattenRuleActionMemberFixedResponse(&v.Value)
 	case *types.RuleActionMemberForward:
 		m["forward"] = flattenComplexDefaultActionForward(&v.Value)
-	default:
-		fmt.Println("config is nil or unknown type")
 	}
 
 	return []interface{}{m}
