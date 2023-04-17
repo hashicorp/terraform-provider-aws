@@ -27,6 +27,7 @@ func ResourceDataLakeSettings() *schema.Resource {
 		UpdateWithoutTimeout: resourceDataLakeSettingsCreate,
 		ReadWithoutTimeout:   resourceDataLakeSettingsRead,
 		DeleteWithoutTimeout: resourceDataLakeSettingsDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -40,6 +41,16 @@ func ResourceDataLakeSettings() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: verify.ValidARN,
 				},
+			},
+			"allow_external_data_filtering": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"authorized_session_tag_value_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"catalog_id": {
 				Type:     schema.TypeString,
@@ -96,19 +107,6 @@ func ResourceDataLakeSettings() *schema.Resource {
 					},
 				},
 			},
-			"trusted_resource_owners": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidAccountID,
-				},
-			},
-			"allow_external_data_filtering": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
 			"external_data_filtering_allow_list": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -118,11 +116,14 @@ func ResourceDataLakeSettings() *schema.Resource {
 					ValidateFunc: validPrincipal,
 				},
 			},
-			"authorized_session_tag_value_list": {
+			"trusted_resource_owners": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: verify.ValidAccountID,
+				},
 			},
 		},
 	}
@@ -140,6 +141,18 @@ func resourceDataLakeSettingsCreate(ctx context.Context, d *schema.ResourceData,
 
 	settings := &lakeformation.DataLakeSettings{}
 
+	if v, ok := d.GetOk("admins"); ok {
+		settings.DataLakeAdmins = expandDataLakeSettingsAdmins(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("allow_external_data_filtering"); ok {
+		settings.AllowExternalDataFiltering = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("authorized_session_tag_value_list"); ok {
+		settings.AuthorizedSessionTagValueList = flex.ExpandStringList(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("create_database_default_permissions"); ok {
 		settings.CreateDatabaseDefaultPermissions = expandDataLakeSettingsCreateDefaultPermissions(v.([]interface{}))
 	}
@@ -148,24 +161,12 @@ func resourceDataLakeSettingsCreate(ctx context.Context, d *schema.ResourceData,
 		settings.CreateTableDefaultPermissions = expandDataLakeSettingsCreateDefaultPermissions(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("admins"); ok {
-		settings.DataLakeAdmins = expandDataLakeSettingsAdmins(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("trusted_resource_owners"); ok {
-		settings.TrustedResourceOwners = flex.ExpandStringList(v.([]interface{}))
-	}
-
-	if v, ok := d.GetOk("allow_external_data_filtering"); ok {
-		settings.AllowExternalDataFiltering = aws.Bool(v.(bool))
-	}
-
 	if v, ok := d.GetOk("external_data_filtering_allow_list"); ok {
 		settings.ExternalDataFilteringAllowList = expandDataLakeSettingsDataFilteringAllowList(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("authorized_session_tag_value_list"); ok {
-		settings.AuthorizedSessionTagValueList = flex.ExpandStringList(v.([]interface{}))
+	if v, ok := d.GetOk("trusted_resource_owners"); ok {
+		settings.TrustedResourceOwners = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	input.DataLakeSettings = settings
@@ -232,13 +233,13 @@ func resourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData, m
 
 	settings := output.DataLakeSettings
 
+	d.Set("admins", flattenDataLakeSettingsAdmins(settings.DataLakeAdmins))
+	d.Set("allow_external_data_filtering", settings.AllowExternalDataFiltering)
+	d.Set("authorized_session_tag_value_list", flex.FlattenStringList(settings.AuthorizedSessionTagValueList))
 	d.Set("create_database_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateDatabaseDefaultPermissions))
 	d.Set("create_table_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateTableDefaultPermissions))
-	d.Set("admins", flattenDataLakeSettingsAdmins(settings.DataLakeAdmins))
-	d.Set("trusted_resource_owners", flex.FlattenStringList(settings.TrustedResourceOwners))
-	d.Set("allow_external_data_filtering", settings.AllowExternalDataFiltering)
 	d.Set("external_data_filtering_allow_list", flattenDataLakeSettingsDataFilteringAllowList(settings.ExternalDataFilteringAllowList))
-	d.Set("authorized_session_tag_value_list", flex.FlattenStringList(settings.AuthorizedSessionTagValueList))
+	d.Set("trusted_resource_owners", flex.FlattenStringList(settings.TrustedResourceOwners))
 
 	return diags
 }
