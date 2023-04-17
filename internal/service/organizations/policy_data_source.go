@@ -50,7 +50,7 @@ func DataSourcePolicy() *schema.Resource {
 				Computed: true,
 			},
 		},
-	},
+	}
 }
 
 const (
@@ -79,4 +79,3 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	return diags
 }
-
