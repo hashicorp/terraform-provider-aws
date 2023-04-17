@@ -45,7 +45,7 @@ func dataSourceWorkspacesRead(ctx context.Context, d *schema.ResourceData, meta 
 	workspaces, err := FindWorkspaces(ctx, conn, alias_prefix)
 
 	if err != nil {
-		return diag.Errorf("Error reading AMP Workspaces: %s", err)
+		return diag.Errorf("reading AMP Workspaces: %s", err)
 	}
 
 	var arns, aliases, workspace_ids []string
@@ -56,8 +56,8 @@ func dataSourceWorkspacesRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("arns", arns)
 	d.Set("aliases", aliases)
+	d.Set("arns", arns)
 	d.Set("workspace_ids", workspace_ids)
 
 	return nil
