@@ -5,3 +5,7 @@
 ```release-note:bug
  resource/aws_lakeformation_permissions: Remove limit on number of `lf_tag_policy.expression` blocks
 ```
+
+```release-note:bug
+ data-source/aws_lakeformation_permissions: Remove limit on number of `lf_tag_policy.expression` blocks
+```
