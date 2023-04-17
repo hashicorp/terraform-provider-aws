@@ -130,7 +130,7 @@ func ResourceEventSourceMapping() *schema.Resource {
 						},
 						"database_name": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 						},
 						"full_document": {
 							Type:         schema.TypeString,
@@ -618,6 +618,12 @@ func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceDat
 	if d.HasChange("destination_config") {
 		if v, ok := d.GetOk("destination_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.DestinationConfig = expandDestinationConfig(v.([]interface{})[0].(map[string]interface{}))
+		}
+	}
+
+	if d.HasChange("document_db_event_source_config") {
+		if v, ok := d.GetOk("document_db_event_source_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.DocumentDBEventSourceConfig = expandDocumentDBEventSourceConfig(v.([]interface{})[0].(map[string]interface{}))
 		}
 	}
 

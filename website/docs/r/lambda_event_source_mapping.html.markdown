@@ -186,7 +186,7 @@ resource "aws_lambda_event_source_mapping" "example" {
 ### document_db_event_source_config Configuration Block
 
 * `collection_name` - (Optional) The name of the collection to consume within the database. If you do not specify a collection, Lambda consumes all collections.
-* `database_name` - (Optional) The name of the database to consume within the DocumentDB cluster.
+* `database_name` - (Required) The name of the database to consume within the DocumentDB cluster.
 * `full_document` - (Optional) Determines what DocumentDB sends to your event stream during document update operations. If set to `UpdateLookup`, DocumentDB sends a delta describing the changes, along with a copy of the entire document. Otherwise, DocumentDB sends only a partial document that contains the changes. Valid values: `UpdateLookup`, `Default`.
 
 ### filter_criteria Configuration Block
