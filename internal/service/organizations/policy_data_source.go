@@ -59,15 +59,16 @@ const (
 
 func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	policyID := d.Get("policy_id").(string)
 
 	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	input := &organizations.DescribeOrganizationInput{
-		PolicyId: aws.String(d.Get("policy_id").(string)),
+		PolicyId: aws.String(policyID),
 	}
 	output, err := conn.DescribeOrganizationWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing Policy (%s): %s", policyID, err)
+		return sdkdiag.AppendErrorf(diags, "describing Policy (%s): %s", input, err)
 	}
 
 	d.SetId(aws.StringValue(output.Policy.PolicySummary.Id))
