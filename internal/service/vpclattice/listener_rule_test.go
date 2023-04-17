@@ -22,7 +22,7 @@ import (
 
 func TestAccVPCLatticeListenerRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var targetGroup vpclattice.GetTargetGroupOutput
+	var listenerRule vpclattice.GetRuleOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_listener_rule.test"
 
@@ -34,13 +34,13 @@ func TestAccVPCLatticeListenerRule_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListeningRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupConfig_basic(rName),
+				Config: testAccListeningRule_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile("targetgroup/.+$")),
+					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile(`service/.+/listener/.+/rule/.+`)),
 				),
 			},
 			{
@@ -53,21 +53,36 @@ func TestAccVPCLatticeListenerRule_basic(t *testing.T) {
 }
 
 func testAccListeningRule_basic(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 0), fmt.Sprintf(`
-resource "aws_vpclattice_listener_rule" "test" {
-	listener_identifier = "arn:aws:vpc-lattice:eu-west-1:926562225508:service/svc-05cad7dcf6ee78d45/listener/listener-061ead87f8dcf282c"
-	service_identifier  = "arn:aws:vpc-lattice:eu-west-1:926562225508:service/svc-05cad7dcf6ee78d45"
-	action {
-		target_group_arn = "arn:aws:vpc-lattice:eu-west-1:926562225508:targetgroup/tg-00153386728e69d10"
-	  }
-	match {
-		path_match = "/"
+	return fmt.Sprintf(`
+	resource "aws_vpclattice_listener_rule" "test" {
+		name = %q
+		listener_identifier = "listener-0238d4e9479096392"
+		service_identifier = "svc-05cad7dcf6ee78d45"
+		priority     = 93	  
+		action  {
+			forward {
+				target_groups{
+					target_group_identifier = "tg-00153386728e69d10"
+					weight = 1
+				}
+			}
+			
+		}
+		match {
+			http_match {
+				path_match {
+					case_sensitive = false
+					match {
+						exact = "/example-path"
+					  }
+				}
+			}
+		}
 	}
-}
-`, rName))
+`, rName)
 }
 
-func testAccCheckListeningRuleExists(ctx context.Context, name string, targetGroup *vpclattice.GetRuleOutput) resource.TestCheckFunc {
+func testAccCheckListenerRuleExists(ctx context.Context, name string, listenerRule *vpclattice.GetRuleOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -78,22 +93,32 @@ func testAccCheckListeningRuleExists(ctx context.Context, name string, targetGro
 			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameListenerRule, name, errors.New("not set"))
 		}
 
+		listenerRuleResource, ok := s.RootModule().Resources["aws_vpclattice_listener_rule.test"]
+		if !ok {
+			return fmt.Errorf("Not found: %s", "aws_vpclattice_listener_rule.test")
+		}
+
+		listenerIdentifier := listenerRuleResource.Primary.Attributes["listener_identifier"]
+		serviceIdentifier := listenerRuleResource.Primary.Attributes["service_identifier"]
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
 		resp, err := conn.GetRule(ctx, &vpclattice.GetRuleInput{
-			ListenerIdentifier: aws.String(rs.Primary.ID),
+			RuleIdentifier:     aws.String(rs.Primary.ID),
+			ListenerIdentifier: aws.String(listenerIdentifier),
+			ServiceIdentifier:  aws.String(serviceIdentifier),
 		})
 
 		if err != nil {
 			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameListenerRule, rs.Primary.ID, err)
 		}
 
-		*targetGroup = *resp
+		*listenerRule = *resp
 
 		return nil
 	}
 }
 
-func testAccCheckListenerRuleDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckListeningRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
 
@@ -102,8 +127,18 @@ func testAccCheckListenerRuleDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
+			listenerRuleResource, ok := s.RootModule().Resources["aws_vpclattice_listener_rule.test"]
+			if !ok {
+				return fmt.Errorf("Not found: %s", "aws_vpclattice_listener_rule.test")
+			}
+
+			listenerIdentifier := listenerRuleResource.Primary.Attributes["listener_identifier"]
+			serviceIdentifier := listenerRuleResource.Primary.Attributes["service_identifier"]
+
 			_, err := conn.GetRule(ctx, &vpclattice.GetRuleInput{
-				ListenerIdentifier: aws.String(rs.Primary.ID),
+				RuleIdentifier:     aws.String(rs.Primary.ID),
+				ListenerIdentifier: aws.String(listenerIdentifier),
+				ServiceIdentifier:  aws.String(serviceIdentifier),
 			})
 			if err != nil {
 				var nfe *types.ResourceNotFoundException

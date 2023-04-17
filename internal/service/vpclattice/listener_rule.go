@@ -166,11 +166,13 @@ func ResourceListenerRule() *schema.Resource {
 												"case_sensitive": {
 													Type:     schema.TypeBool,
 													Optional: true,
+													Computed: true,
 												},
 												"match": {
 													Type:     schema.TypeList,
 													Optional: true,
 													MaxItems: 1,
+													Computed: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"exact": {
@@ -242,6 +244,11 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 		ServiceIdentifier:  aws.String(d.Get("service_identifier").(string)),
 		Tags:               GetTagsIn(ctx),
 	}
+
+	if v, ok := d.GetOk("priority"); ok {
+		in.Priority = aws.Int32(int32(v.(int)))
+	}
+
 	if v, ok := d.GetOk("action"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		in.Action = expandRuleAction(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -258,11 +265,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(aws.ToString(out.Id)) //Concatinate my ids to one
 
-	if _, err := waitTargetGroupCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionWaitingForCreation, ResNameTargetGroup, d.Id(), err)
-	}
-
-	return resourceTargetGroupRead(ctx, d, meta)
+	return resourceListenerRuleRead(ctx, d, meta)
 }
 
 func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -282,6 +285,7 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.Set("arn", out.Arn)
+	d.Set("priority", out.Priority)
 
 	if err := d.Set("action", []interface{}{flattenRuleAction(out.Action)}); err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameListenerRule, d.Id(), err)
@@ -323,7 +327,7 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 func resourceListenerRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
-	log.Printf("[INFO] Deleting VpcLattice ListeningRule: %s", d.Id())
+	log.Printf("[INFO] Deleting VpcLattice Listening Rule: %s", d.Id())
 	_, err := conn.DeleteRule(ctx, &vpclattice.DeleteRuleInput{
 		RuleIdentifier:     aws.String(d.Id()),
 		ListenerIdentifier: aws.String(d.Get("listener_identifier").(string)),
@@ -336,89 +340,11 @@ func resourceListenerRuleDelete(ctx context.Context, d *schema.ResourceData, met
 			return nil
 		}
 
-		return create.DiagError(names.VPCLattice, create.ErrActionDeleting, ResNameTargetGroup, d.Id(), err)
-	}
-
-	if _, err := waitTargetGroupDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionWaitingForDeletion, ResNameTargetGroup, d.Id(), err)
+		return create.DiagError(names.VPCLattice, create.ErrActionDeleting, ResNameListenerRule, d.Id(), err)
 	}
 
 	return nil
 }
-
-// const (
-// 	statusChangePending = "Pending"
-// 	statusDeleting      = "Deleting"
-// 	statusNormal        = "Normal"
-// 	statusUpdated       = "Updated"
-// )
-
-// func waitListenerRuleCreated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.ListenerRule, error) {
-// 	stateConf := &resource.StateChangeConf{
-// 		Pending:                   []string{},
-// 		Target:                    []string{statusNormal},
-// 		Refresh:                   statusListenerRule(ctx, conn, id),
-// 		Timeout:                   timeout,
-// 		NotFoundChecks:            20,
-// 		ContinuousTargetOccurence: 2,
-// 	}
-
-// 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-// 	if out, ok := outputRaw.(*vpclattice.ListenerRule); ok {
-// 		return out, err
-// 	}
-
-// 	return nil, err
-// }
-
-// func waitListenerRuleUpdated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetRuleOutput, error) {
-// 	stateConf := &resource.StateChangeConf{
-// 		Pending:                   []string{statusChangePending},
-// 		Target:                    []string{statusUpdated},
-// 		Refresh:                   statusListenerRule(ctx, conn, id),
-// 		Timeout:                   timeout,
-// 		NotFoundChecks:            20,
-// 		ContinuousTargetOccurence: 2,
-// 	}
-
-// 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-// 	if out, ok := outputRaw.(*vpclattice.ListenerRule); ok {
-// 		return out, err
-// 	}
-
-// 	return nil, err
-// }
-
-// func waitListenerRuleDeleted(ctx context.Context, conn *vpclattice.Client, id, listenerIdentifier, serviceIdentifier string, timeout time.Duration) (*vpclattice.GetRuleOutput, error) {
-// 	stateConf := &resource.StateChangeConf{
-// 		Pending: []string{statusDeleting, statusNormal},
-// 		Target:  []string{},
-// 		Refresh: statusListenerRule(ctx, conn, id, listenerIdentifier, serviceIdentifier),
-// 		Timeout: timeout,
-// 	}
-
-// 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-// 	if out, ok := outputRaw.(*vpclattice.ListenerRule); ok {
-// 		return out, err
-// 	}
-
-// 	return nil, err
-// }
-
-// func statusListenerRule(ctx context.Context, conn *vpclattice.Client, id, listenerIdentifier, serviceIdentifier string) resource.StateRefreshFunc {
-// 	return func() (interface{}, string, error) {
-// 		out, err := FindListenerRuleByID(ctx, conn, id, listenerIdentifier, serviceIdentifier)
-// 		if tfresource.NotFound(err) {
-// 			return nil, "", nil
-// 		}
-
-// 		if err != nil {
-// 			return nil, "", err
-// 		}
-
-// 		return out, aws.ToString(out.), nil
-// 	}
-// }
 
 func FindListenerRuleByID(ctx context.Context, conn *vpclattice.Client, id, listenerIdentifier, serviceIdentifier string) (*vpclattice.GetRuleOutput, error) {
 	in := &vpclattice.GetRuleInput{
@@ -456,7 +382,7 @@ func flattenRuleAction(apiObject types.RuleAction) map[string]interface{} {
 		tfMap["fixed_response"] = flattenRuleActionMemberFixedResponse(v)
 	}
 	if v, ok := apiObject.(*types.RuleActionMemberForward); ok {
-		tfMap["forward"] = flattenForwardAction(v)
+		tfMap["forward"] = []interface{}{flattenForwardAction(v)}
 	}
 
 	return tfMap
@@ -484,7 +410,7 @@ func flattenForwardAction(apiObject *types.RuleActionMemberForward) map[string]i
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Value.TargetGroups; v != nil {
-		tfMap["forward"] = flattenWeightedTargetGroups(v)
+		tfMap["target_groups"] = flattenWeightedTargetGroups(v)
 	}
 
 	return tfMap
@@ -531,7 +457,7 @@ func flattenRuleMatch(apiObject types.RuleMatch) map[string]interface{} {
 	tfMap := make(map[string]interface{})
 
 	if v, ok := apiObject.(*types.RuleMatchMemberHttpMatch); ok {
-		tfMap["http_match"] = flattenHttpMatch(&v.Value)
+		tfMap["http_match"] = []interface{}{flattenHttpMatch(&v.Value)}
 	}
 
 	return tfMap
@@ -549,11 +475,11 @@ func flattenHttpMatch(apiObject *types.HttpMatch) map[string]interface{} {
 	}
 
 	if v := apiObject.HeaderMatches; v != nil {
-		tfMap["headers_matches"] = []interface{}{flattenHeaderMatches(v)}
+		tfMap["headers_matches"] = flattenHeaderMatches(v)
 	}
 
 	if v := apiObject.PathMatch; v != nil {
-		tfMap["path_match"] = []interface{}{flattenPathMatch(v)}
+		tfMap["path_match"] = flattenPathMatch(v)
 	}
 
 	return tfMap
@@ -591,39 +517,15 @@ func flattenHeaderMatch(apiObject *types.HeaderMatch) map[string]interface{} {
 	if v := apiObject.Match; v != nil {
 		if exact, ok := v.(*types.HeaderMatchTypeMemberExact); ok {
 			tfMap["exact"] = flattenHeaderMatchTypeMemberExact(exact)
-		}
-		if prefix, ok := v.(*types.HeaderMatchTypeMemberPrefix); ok {
+		} else if prefix, ok := v.(*types.HeaderMatchTypeMemberPrefix); ok {
 			tfMap["prefix"] = flattenHeaderMatchTypeMemberPrefix(prefix)
-		}
-		if contains, ok := v.(*types.HeaderMatchTypeMemberContains); ok {
+		} else if contains, ok := v.(*types.HeaderMatchTypeMemberContains); ok {
 			tfMap["contains"] = flattenHeaderMatchTypeMemberContains(contains)
 		}
 	}
 
 	return tfMap
 }
-
-// func flattenHeaderMatchType(apiObject types.HeaderMatchType) map[string]interface{} {
-// 	if apiObject == nil {
-// 		return nil
-// 	}
-
-// 	tfMap := make(map[string]interface{})
-
-// 	if v, ok := apiObject.(*types.HeaderMatchTypeMemberExact); ok {
-// 		tfMap["exact"] = []interface{}{flattenHeaderMatchTypeMemberExact(v)}
-// 	}
-
-// 	if v, ok := apiObject.(*types.HeaderMatchTypeMemberPrefix); ok {
-// 		tfMap["prefix"] = []interface{}{flattenHeaderMatchTypeMemberPrefix(v)}
-// 	}
-
-// 	if v, ok := apiObject.(*types.HeaderMatchTypeMemberContains); ok {
-// 		tfMap["contains"] = []interface{}{flattenHeaderMatchTypeMemberContains(v)}
-// 	}
-
-// 	return tfMap
-// }
 
 func flattenHeaderMatchTypeMemberContains(apiObject *types.HeaderMatchTypeMemberContains) map[string]interface{} {
 	if apiObject == nil {
@@ -675,8 +577,7 @@ func flattenPathMatch(apiObject *types.PathMatch) map[string]interface{} {
 	if v := apiObject.Match; v != nil {
 		if exact, ok := v.(*types.PathMatchTypeMemberExact); ok {
 			tfMap["exact"] = flattenPathMatchTypeMemberExact(exact)
-		}
-		if prefix, ok := v.(*types.PathMatchTypeMemberPrefix); ok {
+		} else if prefix, ok := v.(*types.PathMatchTypeMemberPrefix); ok {
 			tfMap["prefix"] = flattenPathMatchTypeMemberPrefix(prefix)
 		}
 	}
@@ -711,10 +612,9 @@ func flattenPathMatchTypeMemberPrefix(apiObject *types.PathMatchTypeMemberPrefix
 func expandRuleAction(tfMap map[string]interface{}) types.RuleAction {
 	var apiObject types.RuleAction
 
-	if v, ok := tfMap["fixed_response_action"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["fixed_response"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject = expandFixedResponseAction(v[0].(map[string]interface{}))
-	}
-	if v, ok := tfMap["forward_action"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	} else if v, ok := tfMap["forward"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject = expandForwardAction(v[0].(map[string]interface{}))
 	}
 
@@ -780,7 +680,7 @@ func expandWeightedTargetGroup(tfMap map[string]interface{}) types.WeightedTarge
 func expandRuleMatch(tfMap map[string]interface{}) types.RuleMatch {
 	apiObject := &types.RuleMatchMemberHttpMatch{}
 
-	if v, ok := tfMap["match"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["http_match"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Value = expandHttpMatch(v[0].(map[string]interface{}))
 	}
 
