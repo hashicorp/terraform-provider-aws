@@ -69,10 +69,6 @@ func ResourceListener() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
-							// ExactlyOneOf: []string{
-							// 	"default_action.0.fixed_response",
-							// 	"default_action.0.forward",
-							// },
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"status_code": {
@@ -86,10 +82,6 @@ func ResourceListener() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							MinItems: 1,
-							// ExactlyOneOf: []string{
-							// 	"default_action.0.fixed_response",
-							// 	"default_action.0.forward",
-							// },
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"target_groups": {
@@ -190,10 +182,6 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.FromErr(fmt.Errorf("must specify either service_arn or service_identifier"))
 	}
 
-	// TIP: Not all resources support tags and tags don't always make sense. If
-	// your resource doesn't need tags, you can remove the tags lines here and
-	// below. Many resources do include tags so this a reminder to include them
-	// where possible.
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
@@ -221,11 +209,6 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.SetId(strings.Join(parts, "/"))
-
-	// TIP: -- 5. Use a waiter to wait for create to complete
-	// if _, err := waitListenerCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-	// 	return create.DiagError(names.VPCLattice, create.ErrActionWaitingForCreation, ResNameListener, d.Id(), err)
-	// }
 
 	return resourceListenerRead(ctx, d, meta)
 }
@@ -302,7 +285,6 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			in.DefaultAction = expandDefaultAction(d.Get("default_action").([]interface{}))
 		}
 
-		// TIP: -- 3. Call the AWS modify/update function
 		log.Printf("[DEBUG] Updating VPC Lattice Listener (%s): %#v", d.Id(), in)
 		_, err := conn.UpdateListener(ctx, in)
 		if err != nil {
@@ -318,12 +300,6 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	// TIP: -- 4. Use a waiter to wait for update to complete
-	// if _, err := waitListenerUpdated(ctx, conn, aws.ToString(out.Id), d.Timeout(schema.TimeoutUpdate)); err != nil {
-	// 	return create.DiagError(names.VPCLattice, create.ErrActionWaitingForUpdate, ResNameListener, d.Id(), err)
-	// }
-
-	// TIP: -- 5. Call the Read function in the Update return
 	return resourceListenerRead(ctx, d, meta)
 }
 
@@ -349,127 +325,8 @@ func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta in
 		return create.DiagError(names.VPCLattice, create.ErrActionDeleting, ResNameListener, d.Id(), err)
 	}
 
-	// TIP: -- 4. Use a waiter to wait for delete to complete
-	// if _, err := waitListenerDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-	// 	return create.DiagError(names.VPCLattice, create.ErrActionWaitingForDeletion, ResNameListener, d.Id(), err)
-	// }
-
 	return nil
 }
-
-// TIP: ==== STATUS CONSTANTS ====
-// Create constants for states and statuses if the service does not
-// already have suitable constants. We prefer that you use the constants
-// provided in the service if available (e.g., amp.WorkspaceStatusCodeActive).
-// const (
-// 	statusChangePending = "Pending"
-// 	statusDeleting      = "Deleting"
-// 	statusNormal        = "Normal"
-// 	statusUpdated       = "Updated"
-// )
-
-// TIP: ==== WAITERS ====
-// Some resources of some services have waiters provided by the AWS API.
-// Unless they do not work properly, use them rather than defining new ones
-// here.
-//
-// Sometimes we define the wait, status, and find functions in separate
-// files, wait.go, status.go, and find.go. Follow the pattern set out in the
-// service and define these where it makes the most sense.
-//
-// If these functions are used in the _test.go file, they will need to be
-// exported (i.e., capitalized).
-//
-// You will need to adjust the parameters and names to fit the service.
-
-// func waitListenerCreated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.Listener, error) {
-// 	stateConf := &retry.StateChangeConf{
-// 		Pending:                   []string{},
-// 		Target:                    []string{statusNormal},
-// 		Refresh:                   statusListener(ctx, conn, id),
-// 		Timeout:                   timeout,
-// 		NotFoundChecks:            20,
-// 		ContinuousTargetOccurence: 2,
-// 	}
-
-// 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-// 	if out, ok := outputRaw.(*vpclattice.Listener); ok {
-// 		return out, err
-// 	}
-
-// 	return nil, err
-// }
-
-// // TIP: It is easier to determine whether a resource is updated for some
-// // resources than others. The best case is a status flag that tells you when
-// // the update has been fully realized. Other times, you can check to see if a
-// // key resource argument is updated to a new value or not.
-
-// func waitListenerUpdated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.Listener, error) {
-// 	stateConf := &retry.StateChangeConf{
-// 		Pending:                   []string{statusChangePending},
-// 		Target:                    []string{statusUpdated},
-// 		Refresh:                   statusListener(ctx, conn, id),
-// 		Timeout:                   timeout,
-// 		NotFoundChecks:            20,
-// 		ContinuousTargetOccurence: 2,
-// 	}
-
-// 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-// 	if out, ok := outputRaw.(*vpclattice.Listener); ok {
-// 		return out, err
-// 	}
-
-// 	return nil, err
-// }
-
-// // TIP: A deleted waiter is almost like a backwards created waiter. There may
-// // be additional pending states, however.
-
-// func waitListenerDeleted(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.Listener, error) {
-// 	stateConf := &retry.StateChangeConf{
-// 		Pending:                   []string{statusDeleting, statusNormal},
-// 		Target:                    []string{},
-// 		Refresh:                   statusListener(ctx, conn, id),
-// 		Timeout:                   timeout,
-// 	}
-
-// 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-// 	if out, ok := outputRaw.(*vpclattice.Listener); ok {
-// 		return out, err
-// 	}
-
-// 	return nil, err
-// }
-
-// TIP: ==== STATUS ====
-// The status function can return an actual status when that field is
-// available from the API (e.g., out.Status). Otherwise, you can use custom
-// statuses to communicate the states of the resource.
-//
-// Waiters consume the values returned by status functions. Design status so
-// that it can be reused by a create, update, and delete waiter, if possible.
-
-// func statusListener(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
-// 	return func() (interface{}, string, error) {
-// 		out, err := findListenerByID(ctx, conn, id)
-// 		if tfresource.NotFound(err) {
-// 			return nil, "", nil
-// 		}
-
-// 		if err != nil {
-// 			return nil, "", err
-// 		}
-
-// 		return out, aws.ToString(out.), nil
-// 	}
-// }
-
-// TIP: ==== FINDERS ====
-// The find function is not strictly necessary. You could do the API
-// request from the status function. However, we have found that find often
-// comes in handy in other places besides the status function. As a result, it
-// is good practice to define it separately.
 
 func findListenerByIdAndServiceId(ctx context.Context, conn *vpclattice.Client, id string, serviceId string) (*vpclattice.GetListenerOutput, error) {
 	in := &vpclattice.GetListenerInput{
@@ -496,9 +353,8 @@ func findListenerByIdAndServiceId(ctx context.Context, conn *vpclattice.Client, 
 	return out, nil
 }
 
-// flattenListenerRuleActions
+// Flatten function for listener rule actions
 func flattenListenerRuleActions(config types.RuleAction) []interface{} {
-	// Create an empty map with key type `string` and value of `interface{}`
 	m := map[string]interface{}{}
 
 	if config == nil {
