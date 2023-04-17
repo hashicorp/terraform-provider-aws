@@ -155,7 +155,6 @@ func ResourcePermissions() *schema.Resource {
 								Type:         schema.TypeString,
 								ValidateFunc: validateLFTagValues(),
 							},
-							Set: schema.HashString,
 						},
 					},
 				},
@@ -184,7 +183,7 @@ func ResourcePermissions() *schema.Resource {
 							ValidateFunc: verify.ValidAccountID,
 						},
 						"expression": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
 							Elem: &schema.Resource{
@@ -205,7 +204,6 @@ func ResourcePermissions() *schema.Resource {
 											Type:         schema.TypeString,
 											ValidateFunc: validateLFTagValues(),
 										},
-										Set: schema.HashString,
 									},
 								},
 							},
@@ -325,7 +323,6 @@ func ResourcePermissions() *schema.Resource {
 							Type:     schema.TypeSet,
 							ForceNew: true,
 							Optional: true,
-							Set:      schema.HashString,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.NoZeroValues,
@@ -344,7 +341,6 @@ func ResourcePermissions() *schema.Resource {
 							Type:     schema.TypeSet,
 							ForceNew: true,
 							Optional: true,
-							Set:      schema.HashString,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.NoZeroValues,
@@ -893,8 +889,8 @@ func ExpandLFTagPolicyResource(tfMap map[string]interface{}) *lakeformation.LFTa
 		apiObject.CatalogId = aws.String(v)
 	}
 
-	if v, ok := tfMap["expression"]; ok && v != nil {
-		apiObject.Expression = ExpandLFTagExpression(v.([]interface{}))
+	if v, ok := tfMap["expression"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Expression = ExpandLFTagExpression(v.List())
 	}
 
 	if v, ok := tfMap["resource_type"].(string); ok && v != "" {

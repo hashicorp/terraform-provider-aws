@@ -100,7 +100,6 @@ func DataSourcePermissions() *schema.Resource {
 								Type:         schema.TypeString,
 								ValidateFunc: validateLFTagValues(),
 							},
-							Set: schema.HashString,
 						},
 					},
 				},
@@ -119,7 +118,7 @@ func DataSourcePermissions() *schema.Resource {
 							ValidateFunc: verify.ValidAccountID,
 						},
 						"expression": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
 							Elem: &schema.Resource{
@@ -138,7 +137,6 @@ func DataSourcePermissions() *schema.Resource {
 											Type:         schema.TypeString,
 											ValidateFunc: validateLFTagValues(),
 										},
-										Set: schema.HashString,
 									},
 								},
 							},
@@ -216,7 +214,6 @@ func DataSourcePermissions() *schema.Resource {
 						"column_names": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Set:      schema.HashString,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.NoZeroValues,
@@ -229,7 +226,6 @@ func DataSourcePermissions() *schema.Resource {
 						"excluded_column_names": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Set:      schema.HashString,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.NoZeroValues,
