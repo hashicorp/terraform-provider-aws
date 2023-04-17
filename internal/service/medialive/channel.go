@@ -1425,8 +1425,8 @@ func expandChannelDestinations(tfList []interface{}) []types.OutputDestination {
 		if v, ok := m["media_package_settings"].(*schema.Set); ok && v.Len() > 0 {
 			d.MediaPackageSettings = expandChannelDestinationsMediaPackageSettings(v.List())
 		}
-		if v, ok := m["multiplex_settings"].(*schema.Set); ok && v.Len() > 0 {
-			d.MultiplexSettings = expandChannelDestinationsMultiplexSettings(v.List())
+		if v, ok := m["multiplex_settings"].([]interface{}); ok && len(v) > 0 {
+			d.MultiplexSettings = expandChannelDestinationsMultiplexSettings(v)
 		}
 		if v, ok := m["settings"].(*schema.Set); ok && v.Len() > 0 {
 			d.Settings = expandChannelDestinationsSettings(v.List())
