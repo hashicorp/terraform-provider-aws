@@ -118,6 +118,29 @@ func ResourceEventSourceMapping() *schema.Resource {
 				},
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
+			"document_db_event_source_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"collection_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"database_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"full_document": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      lambda.FullDocumentDefault,
+							ValidateFunc: validation.StringInSlice(lambda.FullDocument_Values(), false),
+						},
+					},
+				},
+			},
 			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -368,6 +391,10 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 		input.DestinationConfig = expandDestinationConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("document_db_event_source_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.DocumentDBEventSourceConfig = expandDocumentDBEventSourceConfig(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("event_source_arn"); ok {
 		v := v.(string)
 
@@ -493,6 +520,13 @@ func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData,
 		}
 	} else {
 		d.Set("destination_config", nil)
+	}
+	if eventSourceMappingConfiguration.DocumentDBEventSourceConfig != nil {
+		if err := d.Set("document_db_event_source_config", []interface{}{flattenDocumentDBEventSourceConfig(eventSourceMappingConfiguration.DocumentDBEventSourceConfig)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting document_db_event_source_config: %s", err)
+		}
+	} else {
+		d.Set("document_db_event_source_config", nil)
 	}
 	d.Set("event_source_arn", eventSourceMappingConfiguration.EventSourceArn)
 	if v := eventSourceMappingConfiguration.FilterCriteria; v != nil {
@@ -698,6 +732,28 @@ func expandDestinationConfig(tfMap map[string]interface{}) *lambda.DestinationCo
 	return apiObject
 }
 
+func expandDocumentDBEventSourceConfig(tfMap map[string]interface{}) *lambda.DocumentDBEventSourceConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &lambda.DocumentDBEventSourceConfig{}
+
+	if v, ok := tfMap["collection_name"].(string); ok && v != "" {
+		apiObject.CollectionName = aws.String(v)
+	}
+
+	if v, ok := tfMap["database_name"].(string); ok && v != "" {
+		apiObject.DatabaseName = aws.String(v)
+	}
+
+	if v, ok := tfMap["full_document"].(string); ok && v != "" {
+		apiObject.FullDocument = aws.String(v)
+	}
+
+	return apiObject
+}
+
 func expandOnFailure(tfMap map[string]interface{}) *lambda.OnFailure {
 	if tfMap == nil {
 		return nil
@@ -721,6 +777,28 @@ func flattenDestinationConfig(apiObject *lambda.DestinationConfig) map[string]in
 
 	if v := apiObject.OnFailure; v != nil {
 		tfMap["on_failure"] = []interface{}{flattenOnFailure(v)}
+	}
+
+	return tfMap
+}
+
+func flattenDocumentDBEventSourceConfig(apiObject *lambda.DocumentDBEventSourceConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.CollectionName; v != nil {
+		tfMap["collection_name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.DatabaseName; v != nil {
+		tfMap["database_name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.FullDocument; v != nil {
+		tfMap["full_document"] = aws.StringValue(v)
 	}
 
 	return tfMap
