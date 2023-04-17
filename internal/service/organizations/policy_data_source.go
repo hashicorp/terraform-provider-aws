@@ -21,52 +21,36 @@ func DataSourcePolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"policy": {
-				Type:     schema.TypeList,
+			"content": {
+				Type:     schema.TypeString,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"content": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"policy_summary": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"arn": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"aws_managed": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"description": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"type": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-					},
-				},
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"aws_managed": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"type": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
-	}
+	},
 }
 
 const (
@@ -77,52 +61,22 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).OrganizationsConn()
-	policyID := d.Get("policy_id").(string)
 
-	policy, err := findPolicyByPolicyID(ctx, conn, policyID)
+	input := &organizations.DescribeOrganizationInput{
+		PolicyId: aws.String(d.Get("policy_id").(string)),
+	}
+	output, err := conn.DescribeOrganizationWithContext(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "describing Policy (%s): %s", policyID, err)
 	}
 
-	d.SetId(policyID)
-	if err := d.Set("policy", FlattenOrganizationPolicy(policy)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting policy: %s", err)
-	}
+	d.SetId(aws.StringValue(output.Policy.PolicySummary.Id))
+	d.Set("name", aws.StringValue(output.Policy.PolicySummary.Name))
+	d.Set("description", aws.StringValue(output.Policy.PolicySummary.Description))
+	d.Set("type", aws.StringValue(output.Policy.PolicySummary.Type))
+	d.Set("context", aws.StringValue(output.Policy.Context))
+	d.Set("aws_managed", aws.StringValue(output.Policy.PolicySummary.AwsManaged))
 
 	return diags
 }
-func findPolicyByPolicyID(ctx context.Context, conn *organizations.Organizations, id string) ([]*organizations.Policy, error) {
-	input := &organizations.DescribePolicyInput{
-		PolicyId: aws.String(id),
-	}
-	var output []*organizations.Policy
 
-	output, err := conn.DescribePolicyWithContext(ctx, input) (page *organizations.DescribePolicyOutput, err error) {
-		output = append(output, page.Policy...)
-
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
-
-func FlattenOrganizationPolicy(policies []*organizations.Policy) []map[string]interface{} {
-	if len(policies) == 0 {
-		return nil
-	}
-	var result []map[string]interface{}
-	for _, policy := range policies {
-		result = append(result, map[string]interface{}{
-			"context":     aws.StringValue(policy.Context),
-			"arn":         aws.StringValue(policy.PolicySummary.Arn),
-			"aws_managed": aws.BoolValue(policy.PolicySummary.AwsManaged),
-			"description": aws.StringValue(policy.PolicySummary.Description),
-			"id":          aws.StringValue(policy.PolicySummary.Id),
-			"name":        aws.StringValue(policy.PolicySummary.Name),
-			"type":        aws.StringValue(policy.PolicySummary.Type),
-		})
-	}
-	return result
-}
