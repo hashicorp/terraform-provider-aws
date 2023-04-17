@@ -221,11 +221,16 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.Ipv6NetmaskLength = aws.Int64(int64(v.(int)))
 	}
 
-	output, err := conn.CreateVpcWithContext(ctx, input)
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.CreateVpcWithContext(ctx, input)
+		// "UnsupportedOperation: The operation AllocateIpamPoolCidr is not supported. Account 123456789012 is not monitored by IPAM ipam-07b079e3392782a55."
+	}, errCodeUnsupportedOperation, "is not monitored by IPAM")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPC: %s", err)
 	}
+
+	output := outputRaw.(*ec2.CreateVpcOutput)
 
 	d.SetId(aws.StringValue(output.Vpc.VpcId))
 
@@ -368,13 +373,17 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 	} else {
 		cidrBlock := aws.StringValue(ipv6CIDRBlockAssociation.Ipv6CidrBlock)
 		ipv6PoolID := aws.StringValue(ipv6CIDRBlockAssociation.Ipv6Pool)
-		isAmazonIPv6Pool := ipv6PoolID == AmazonIPv6PoolID
+		isAmazonIPv6Pool := ipv6PoolID == amazonIPv6PoolID
 		d.Set("assign_generated_ipv6_cidr_block", isAmazonIPv6Pool)
 		d.Set("ipv6_association_id", ipv6CIDRBlockAssociation.AssociationId)
 		d.Set("ipv6_cidr_block", cidrBlock)
 		d.Set("ipv6_cidr_block_network_border_group", ipv6CIDRBlockAssociation.NetworkBorderGroup)
 		if !isAmazonIPv6Pool {
-			d.Set("ipv6_ipam_pool_id", ipv6PoolID)
+			if ipv6PoolID == ipamManagedIPv6PoolID {
+				d.Set("ipv6_ipam_pool_id", d.Get("ipv6_ipam_pool_id"))
+			} else {
+				d.Set("ipv6_ipam_pool_id", ipv6PoolID)
+			}
 		}
 		if ipv6PoolID != "" && !isAmazonIPv6Pool {
 			parts := strings.Split(cidrBlock, "/")
