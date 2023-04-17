@@ -17,13 +17,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"golang.org/x/exp/maps"
 )
-
-const clusterParameterGroupMaxParamsBulkEdit = 20
 
 // @SDKResource("aws_rds_cluster_parameter_group", name="Cluster Parameter Group")
 // @Tags(identifierAttribute="arn")
@@ -113,7 +113,6 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 	}
 
 	output, err := conn.CreateDBClusterParameterGroupWithContext(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating DB Cluster Parameter Group (%s): %s", groupName, err)
 	}
@@ -215,6 +214,9 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	const (
+		maxParamModifyChunk = 20
+	)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
 
@@ -230,29 +232,16 @@ func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.Resource
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		// Expand the "parameter" set to aws-sdk-go compat []rds.Parameter
-		parameters := expandParameters(ns.Difference(os).List())
-		if len(parameters) > 0 {
-			// We can only modify 20 parameters at a time, so walk them until
-			// we've got them all.
-			for parameters != nil {
-				var paramsToModify []*rds.Parameter
-				if len(parameters) <= clusterParameterGroupMaxParamsBulkEdit {
-					paramsToModify, parameters = parameters[:], nil
-				} else {
-					paramsToModify, parameters = parameters[:clusterParameterGroupMaxParamsBulkEdit], parameters[clusterParameterGroupMaxParamsBulkEdit:]
-				}
+		// Expand the "parameter" set to aws-sdk-go compat []rds.Parameter.
+		for _, chunk := range slices.Chunks(expandParameters(ns.Difference(os).List()), maxParamModifyChunk) {
+			input := &rds.ModifyDBClusterParameterGroupInput{
+				DBClusterParameterGroupName: aws.String(d.Id()),
+				Parameters:                  chunk,
+			}
 
-				input := &rds.ModifyDBClusterParameterGroupInput{
-					DBClusterParameterGroupName: aws.String(d.Id()),
-					Parameters:                  paramsToModify,
-				}
-
-				_, err := conn.ModifyDBClusterParameterGroupWithContext(ctx, input)
-
-				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "modifying DB Cluster Parameter Group (%s): %s", d.Id(), err)
-				}
+			_, err := conn.ModifyDBClusterParameterGroupWithContext(ctx, input)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "modifying DB Cluster Parameter Group (%s): %s", d.Id(), err)
 			}
 		}
 
@@ -270,53 +259,21 @@ func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.Resource
 			}
 		}
 
-		// Reset parameters that have been removed
-		var resetParameters []*rds.Parameter
-		for _, v := range toRemove {
-			resetParameters = append(resetParameters, v)
-		}
-		if len(resetParameters) > 0 {
-			for resetParameters != nil {
-				var paramsToReset []*rds.Parameter
-				if len(resetParameters) <= clusterParameterGroupMaxParamsBulkEdit {
-					paramsToReset, resetParameters = resetParameters[:], nil
-				} else {
-					paramsToReset, resetParameters = resetParameters[:clusterParameterGroupMaxParamsBulkEdit], resetParameters[clusterParameterGroupMaxParamsBulkEdit:]
-				}
-
-				input := &rds.ResetDBClusterParameterGroupInput{
-					DBClusterParameterGroupName: aws.String(d.Id()),
-					Parameters:                  paramsToReset,
-					ResetAllParameters:          aws.Bool(false),
-				}
-
-				err := retry.RetryContext(ctx, 3*time.Minute, func() *retry.RetryError {
-					_, err := conn.ResetDBClusterParameterGroupWithContext(ctx, input)
-					if err != nil {
-						if tfawserr.ErrMessageContains(err, "InvalidDBParameterGroupState", "has pending changes") {
-							return retry.RetryableError(err)
-						}
-						return retry.NonRetryableError(err)
-					}
-					return nil
-				})
-
-				if tfresource.TimedOut(err) {
-					_, err = conn.ResetDBClusterParameterGroupWithContext(ctx, input)
-				}
-
-				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "resetting DB Cluster Parameter Group (%s): %s", d.Id(), err)
-				}
+		// Reset parameters that have been removed.
+		for _, chunk := range slices.Chunks(maps.Values(toRemove), maxParamModifyChunk) {
+			input := &rds.ResetDBClusterParameterGroupInput{
+				DBClusterParameterGroupName: aws.String(d.Id()),
+				Parameters:                  chunk,
+				ResetAllParameters:          aws.Bool(false),
 			}
-		}
-	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+			_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 3*time.Minute, func() (interface{}, error) {
+				return conn.ResetDBClusterParameterGroupWithContext(ctx, input)
+			}, rds.ErrCodeInvalidDBParameterGroupStateFault, "has pending changes")
 
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster Parameter Group (%s) tags: %s", d.Id(), err)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "resetting DB Cluster Parameter Group (%s): %s", d.Id(), err)
+			}
 		}
 	}
 
