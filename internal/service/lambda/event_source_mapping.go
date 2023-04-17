@@ -439,42 +439,15 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 		input.TumblingWindowInSeconds = aws.Int64(int64(v.(int)))
 	}
 
-	log.Printf("[DEBUG] Creating Lambda Event Source Mapping: %s", input)
-
 	// IAM profiles and roles can take some time to propagate in AWS:
 	//  http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
 	// Error creating Lambda function: InvalidParameterValueException: The
 	// function defined for the task cannot be assumed by Lambda.
 	//
-	// The role may exist, but the permissions may not have propagated, so we
-	// retry
-	var eventSourceMappingConfiguration *lambda.EventSourceMappingConfiguration
-	var err error
-	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		eventSourceMappingConfiguration, err = conn.CreateEventSourceMappingWithContext(ctx, input)
-
-		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "cannot be assumed by Lambda") {
-			return retry.RetryableError(err)
-		}
-
-		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "execution role does not have permissions") {
-			return retry.RetryableError(err)
-		}
-
-		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "ensure the role can perform") {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
+	// The role may exist, but the permissions may not have propagated, so we retry.
+	eventSourceMappingConfiguration, err := retryEventSourceMapping(ctx, func() (*lambda.EventSourceMappingConfiguration, error) {
+		return conn.CreateEventSourceMappingWithContext(ctx, input)
 	})
-
-	if tfresource.TimedOut(err) {
-		eventSourceMappingConfiguration, err = conn.CreateEventSourceMappingWithContext(ctx, input)
-	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Lambda Event Source Mapping (%s): %s", target, err)
@@ -483,7 +456,7 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 	d.SetId(aws.StringValue(eventSourceMappingConfiguration.UUID))
 
 	if _, err := waitEventSourceMappingCreate(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Lambda Event Source Mapping (%s) to create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Lambda Event Source Mapping (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceEventSourceMappingRead(ctx, d, meta)...)
@@ -596,8 +569,6 @@ func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaConn()
 
-	log.Printf("[DEBUG] Updating Lambda Event Source Mapping: %s", d.Id())
-
 	input := &lambda.UpdateEventSourceMappingInput{
 		UUID: aws.String(d.Id()),
 	}
@@ -672,42 +643,16 @@ func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceDat
 		input.TumblingWindowInSeconds = aws.Int64(int64(d.Get("tumbling_window_in_seconds").(int)))
 	}
 
-	err := retry.RetryContext(ctx, eventSourceMappingPropagationTimeout, func() *retry.RetryError {
-		_, err := conn.UpdateEventSourceMappingWithContext(ctx, input)
-
-		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceInUseException) {
-			return retry.RetryableError(err)
-		}
-
-		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "cannot be assumed by Lambda") {
-			return retry.RetryableError(err)
-		}
-
-		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "execution role does not have permissions") {
-			return retry.RetryableError(err)
-		}
-
-		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "ensure the role can perform") {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
+	_, err := retryEventSourceMapping(ctx, func() (*lambda.EventSourceMappingConfiguration, error) {
+		return conn.UpdateEventSourceMappingWithContext(ctx, input)
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.UpdateEventSourceMappingWithContext(ctx, input)
-	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Lambda Event Source Mapping (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitEventSourceMappingUpdate(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Lambda Event Source Mapping (%s) to update: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Lambda Event Source Mapping (%s) update: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceEventSourceMappingRead(ctx, d, meta)...)
@@ -718,28 +663,11 @@ func resourceEventSourceMappingDelete(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	log.Printf("[INFO] Deleting Lambda Event Source Mapping: %s", d.Id())
-
-	input := &lambda.DeleteEventSourceMappingInput{
-		UUID: aws.String(d.Id()),
-	}
-
-	err := retry.RetryContext(ctx, eventSourceMappingPropagationTimeout, func() *retry.RetryError {
-		_, err := conn.DeleteEventSourceMappingWithContext(ctx, input)
-
-		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceInUseException) {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteEventSourceMappingWithContext(ctx, input)
-	}
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, eventSourceMappingPropagationTimeout, func() (interface{}, error) {
+		return conn.DeleteEventSourceMappingWithContext(ctx, &lambda.DeleteEventSourceMappingInput{
+			UUID: aws.String(d.Id()),
+		})
+	}, lambda.ErrCodeResourceInUseException)
 
 	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
 		return diags
@@ -750,7 +678,7 @@ func resourceEventSourceMappingDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if _, err := waitEventSourceMappingDelete(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Lambda Event Source Mapping (%s) to delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Lambda Event Source Mapping (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -1224,4 +1152,33 @@ func waitEventSourceMappingUpdate(ctx context.Context, conn *lambda.Lambda, id s
 	}
 
 	return nil, err
+}
+
+func retryEventSourceMapping(ctx context.Context, f func() (*lambda.EventSourceMappingConfiguration, error)) (*lambda.EventSourceMappingConfiguration, error) {
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func() (interface{}, error) {
+			return f()
+		},
+		func(err error) (bool, error) {
+			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "cannot be assumed by Lambda") {
+				return true, err
+			}
+
+			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "execution role does not have permissions") {
+				return true, err
+			}
+
+			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "ensure the role can perform") {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return outputRaw.(*lambda.EventSourceMappingConfiguration), err
 }
