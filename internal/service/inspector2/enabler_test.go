@@ -103,6 +103,45 @@ func testAccEnabler_disappears(t *testing.T) {
 	})
 }
 
+func testAccEnabler_updateResourceTypes(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_inspector2_enabler.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnablerConfig_basic([]string{"EC2"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnablerExists(ctx, []string{"EC2"}),
+					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_types.0", "EC2"),
+				),
+			},
+			{
+				Config: testAccEnablerConfig_basic([]string{"ECR"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnablerExists(ctx, []string{"ECR"}),
+					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_types.0", "ECR"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckEnablerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		id := ""
