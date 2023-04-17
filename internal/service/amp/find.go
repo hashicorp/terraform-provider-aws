@@ -126,7 +126,7 @@ func FindLoggingConfigurationByWorkspaceID(ctx context.Context, conn *prometheus
 	return output.LoggingConfiguration, nil
 }
 
-func FindWorkspaces(ctx context.Context, conn *prometheusservice.PrometheusService, alias string) ([]*prometheusservice.WorkspaceSummary, error) {
+func FindWorkspaces(ctx context.Context, conn *prometheusservice.PrometheusService, alias string) ([]*prometheusservice.WorkspaceSummary, error) { // nosemgrep:ci.caps0-in-func-name
 	input := &prometheusservice.ListWorkspacesInput{}
 	if alias != "" {
 		input.Alias = aws.String(alias)

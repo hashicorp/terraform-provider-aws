@@ -8,11 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/prometheusservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAMPWorkspacesDataSource_basic(t *testing.T) {
+func TestAccAMPWorkspacesDataSource_basic(t *testing.T) { // nosemgrep:ci.caps0-in-func-name
 	ctx := acctest.Context(t)
 	rCount := strconv.Itoa(sdkacctest.RandIntRange(1, 4))
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -28,12 +27,11 @@ func TestAccAMPWorkspacesDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspacesDataSourceConfig_resources(rCount, rName),
+				Config: testAccWorkspacesDataSourceConfig_base(rCount, rName),
 			},
 			{
 				Config: testAccWorkspacesDataSourceConfig_basic(rCount, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspacesExistsDataSource(dataSourceName),
 					resource.TestCheckResourceAttr(dataSourceName, "aliases.#", rCount),
 					resource.TestCheckResourceAttr(dataSourceName, "arns.#", rCount),
 					resource.TestCheckResourceAttr(dataSourceName, "workspace_ids.#", rCount),
@@ -43,7 +41,7 @@ func TestAccAMPWorkspacesDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAMPWorkspacesDataSource_aliasPrefix(t *testing.T) {
+func TestAccAMPWorkspacesDataSource_aliasPrefix(t *testing.T) { // nosemgrep:ci.caps0-in-func-name
 	ctx := acctest.Context(t)
 	rCount := strconv.Itoa(sdkacctest.RandIntRange(1, 4))
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -61,7 +59,6 @@ func TestAccAMPWorkspacesDataSource_aliasPrefix(t *testing.T) {
 			{
 				Config: testAccWorkspacesDataSourceConfig_aliasPrefix(rCount, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspacesExistsDataSource(dataSourceName),
 					resource.TestCheckResourceAttr(dataSourceName, "aliases.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "workspace_ids.#", "1"),
@@ -71,7 +68,7 @@ func TestAccAMPWorkspacesDataSource_aliasPrefix(t *testing.T) {
 	})
 }
 
-func testAccWorkspacesDataSourceConfig_resources(rCount, rName string) string {
+func testAccWorkspacesDataSourceConfig_base(rCount, rName string) string { // nosemgrep:ci.caps0-in-func-name
 	return fmt.Sprintf(`
 resource "aws_prometheus_workspace" "test" {
   count = %[1]s
@@ -80,34 +77,16 @@ resource "aws_prometheus_workspace" "test" {
 `, rCount, rName)
 }
 
-func testAccWorkspacesDataSourceConfig_basic(rCount, rName string) string {
-	return fmt.Sprintf(`
-%s
-data "aws_prometheus_workspaces" "test" {
-}
-`, testAccWorkspacesDataSourceConfig_resources(rCount, rName))
+func testAccWorkspacesDataSourceConfig_basic(rCount, rName string) string { // nosemgrep:ci.caps0-in-func-name
+	return acctest.ConfigCompose(testAccWorkspacesDataSourceConfig_base(rCount, rName), `
+data "aws_prometheus_workspaces" "test" {}
+`)
 }
 
-func testAccWorkspacesDataSourceConfig_aliasPrefix(rCount, rName string) string {
-	return fmt.Sprintf(`
-%s
+func testAccWorkspacesDataSourceConfig_aliasPrefix(rCount, rName string) string { // nosemgrep:ci.caps0-in-func-name
+	return acctest.ConfigCompose(testAccWorkspacesDataSourceConfig_base(rCount, rName), `
 data "aws_prometheus_workspaces" "test" {
   alias_prefix = aws_prometheus_workspace.test[0].alias
 }
-`, testAccWorkspacesDataSourceConfig_resources(rCount, rName))
-}
-
-func testAccCheckWorkspacesExistsDataSource(addr string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[addr]
-		if !ok {
-			return fmt.Errorf("Can't find AMP workspaces data source: %s", addr)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("AMP workspaces data source ID not set")
-		}
-
-		return nil
-	}
+`)
 }

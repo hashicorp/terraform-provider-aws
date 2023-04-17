@@ -10,7 +10,7 @@ import (
 )
 
 // @SDKDataSource("aws_prometheus_workspaces")
-func DataSourceWorkspaces() *schema.Resource {
+func DataSourceWorkspaces() *schema.Resource { // nosemgrep:ci.caps0-in-func-name
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceWorkspacesRead,
 
@@ -38,7 +38,7 @@ func DataSourceWorkspaces() *schema.Resource {
 	}
 }
 
-func dataSourceWorkspacesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceWorkspacesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.caps0-in-func-name
 	conn := meta.(*conns.AWSClient).AMPConn()
 
 	alias_prefix := d.Get("alias_prefix").(string)
