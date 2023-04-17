@@ -2,7 +2,6 @@ package lightsail
 
 import (
 	"context"
-	"errors"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -29,7 +28,7 @@ func ResourceBucketResourceAccess() *schema.Resource {
 		ReadWithoutTimeout:   resourceBucketResourceAccessRead,
 		DeleteWithoutTimeout: resourceBucketResourceAccessDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -64,15 +63,10 @@ func resourceBucketResourceAccessCreate(ctx context.Context, d *schema.ResourceD
 		return create.DiagError(names.Lightsail, lightsail.OperationTypeSetResourceAccessForBucket, ResBucketResourceAccess, d.Get("bucket_name").(string), err)
 	}
 
-	if len(out.Operations) == 0 {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeSetResourceAccessForBucket, ResBucketResourceAccess, d.Get("bucket_name").(string), errors.New("No operations found for request"))
-	}
+	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeSetResourceAccessForBucket, ResBucketResourceAccess, d.Get("bucket_name").(string))
 
-	op := out.Operations[0]
-
-	err = waitOperation(ctx, conn, op.Id)
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeSetResourceAccessForBucket, ResBucketResourceAccess, d.Get("bucket_name").(string), errors.New("Error waiting for request operation"))
+	if diag != nil {
+		return diag
 	}
 
 	idParts := []string{d.Get("bucket_name").(string), d.Get("resource_name").(string)}
@@ -136,12 +130,10 @@ func resourceBucketResourceAccessDelete(ctx context.Context, d *schema.ResourceD
 		return create.DiagError(names.Lightsail, lightsail.OperationTypeSetResourceAccessForBucket, ResBucketResourceAccess, d.Id(), err)
 	}
 
-	op := out.Operations[0]
+	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeSetResourceAccessForBucket, ResBucketResourceAccess, d.Id())
 
-	err = waitOperation(ctx, conn, op.Id)
-
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeSetResourceAccessForBucket, ResBucketResourceAccess, d.Id(), err)
+	if diag != nil {
+		return diag
 	}
 
 	return nil

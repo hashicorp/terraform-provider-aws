@@ -12,7 +12,7 @@ Provides information for multiple EC2 Customer-Owned IP Pools, such as their ide
 
 ## Example Usage
 
-The following shows outputing all COIP Pool Ids.
+The following shows outputting all COIP Pool Ids.
 
 ```terraform
 data "aws_ec2_coip_pools" "foo" {}

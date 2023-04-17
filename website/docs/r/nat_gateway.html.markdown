@@ -52,6 +52,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `association_id` - The association ID of the Elastic IP address that's associated with the NAT gateway. Only available when `connectivity_type` is `public`.
 * `id` - The ID of the NAT Gateway.
 * `network_interface_id` - The ID of the network interface associated with the NAT gateway.
 * `public_ip` - The Elastic IP address associated with the NAT gateway.

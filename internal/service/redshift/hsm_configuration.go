@@ -16,9 +16,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_redshift_hsm_configuration")
+// @SDKResource("aws_redshift_hsm_configuration", name="HSM Configuration")
+// @Tags(identifierAttribute="arn")
 func ResourceHSMConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHSMConfigurationCreate,
@@ -66,8 +68,8 @@ func ResourceHSMConfiguration() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -77,8 +79,6 @@ func ResourceHSMConfiguration() *schema.Resource {
 func resourceHSMConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	hsmConfigurationID := d.Get("hsm_configuration_identifier").(string)
 	input := &redshift.CreateHsmConfigurationInput{
@@ -88,9 +88,8 @@ func resourceHSMConfigurationCreate(ctx context.Context, d *schema.ResourceData,
 		HsmPartitionName:           aws.String(d.Get("hsm_partition_name").(string)),
 		HsmPartitionPassword:       aws.String(d.Get("hsm_partition_password").(string)),
 		HsmServerPublicCertificate: aws.String(d.Get("hsm_server_public_certificate").(string)),
+		Tags:                       GetTagsIn(ctx),
 	}
-
-	input.Tags = Tags(tags.IgnoreAWS())
 
 	output, err := conn.CreateHsmConfigurationWithContext(ctx, input)
 
@@ -106,8 +105,6 @@ func resourceHSMConfigurationCreate(ctx context.Context, d *schema.ResourceData,
 func resourceHSMConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	hsmConfiguration, err := FindHSMConfigurationByID(ctx, conn, d.Id())
 
@@ -136,31 +133,15 @@ func resourceHSMConfigurationRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("hsm_partition_password", d.Get("hsm_partition_password").(string))
 	d.Set("hsm_server_public_certificate", d.Get("hsm_server_public_certificate").(string))
 
-	tags := KeyValueTags(ctx, hsmConfiguration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, hsmConfiguration.Tags)
 
 	return diags
 }
 
 func resourceHSMConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Redshift HSM Configuration (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
+	// Tags only.
 
 	return append(diags, resourceHSMConfigurationRead(ctx, d, meta)...)
 }

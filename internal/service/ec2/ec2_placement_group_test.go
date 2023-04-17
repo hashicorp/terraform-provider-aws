@@ -145,6 +145,36 @@ func TestAccEC2PlacementGroup_partitionCount(t *testing.T) {
 	})
 }
 
+func TestAccEC2PlacementGroup_defaultSpreadLevel(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pg ec2.PlacementGroup
+	resourceName := "aws_placement_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlacementGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlacementGroupConfig_defaultSpreadLevel(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlacementGroupExists(ctx, resourceName, &pg),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "spread_level", "rack"),
+					resource.TestCheckResourceAttr(resourceName, "strategy", "spread"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccEC2PlacementGroup_spreadLevel(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pg ec2.PlacementGroup
@@ -278,6 +308,15 @@ resource "aws_placement_group" "test" {
   name         = %[1]q
   spread_level = "host"
   strategy     = "spread"
+}
+`, rName)
+}
+
+func testAccPlacementGroupConfig_defaultSpreadLevel(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_placement_group" "test" {
+  name     = %[1]q
+  strategy = "spread"
 }
 `, rName)
 }

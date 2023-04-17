@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appflow"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 func FindFlowByARN(ctx context.Context, conn *appflow.Appflow, arn string) (*appflow.FlowDefinition, error) {
@@ -33,7 +33,7 @@ func FindFlowByARN(ctx context.Context, conn *appflow.Appflow, arn string) (*app
 	})
 
 	if tfawserr.ErrCodeEquals(err, appflow.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -44,7 +44,7 @@ func FindFlowByARN(ctx context.Context, conn *appflow.Appflow, arn string) (*app
 	}
 
 	if result == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     fmt.Sprintf("No flow with arn %q", arn),
 			LastRequest: in,
 		}
@@ -76,7 +76,7 @@ func FindConnectorProfileByARN(ctx context.Context, conn *appflow.Appflow, arn s
 	})
 
 	if tfawserr.ErrCodeEquals(err, appflow.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: params,
 		}
@@ -87,7 +87,7 @@ func FindConnectorProfileByARN(ctx context.Context, conn *appflow.Appflow, arn s
 	}
 
 	if result == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     fmt.Sprintf("No connector profile with arn %q", arn),
 			LastRequest: params,
 		}

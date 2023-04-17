@@ -15,9 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_dx_hosted_private_virtual_interface_accepter")
+// @SDKResource("aws_dx_hosted_private_virtual_interface_accepter", name="Hosted Private Virtual Interface")
+// @Tags(identifierAttribute="arn")
 func ResourceHostedPrivateVirtualInterfaceAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHostedPrivateVirtualInterfaceAccepterCreate,
@@ -39,8 +41,8 @@ func ResourceHostedPrivateVirtualInterfaceAccepter() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"vpn_gateway_id"},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"virtual_interface_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -104,14 +106,18 @@ func resourceHostedPrivateVirtualInterfaceAccepterCreate(ctx context.Context, d 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
+		if err := UpdateTags(ctx, conn, arn, nil, tags); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Direct Connect hosted private virtual interface (%s) tags: %s", arn, err)
+		}
+	}
+
 	return append(diags, resourceHostedPrivateVirtualInterfaceAccepterUpdate(ctx, d, meta)...)
 }
 
 func resourceHostedPrivateVirtualInterfaceAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
 	if err != nil {
@@ -133,24 +139,6 @@ func resourceHostedPrivateVirtualInterfaceAccepterRead(ctx context.Context, d *s
 	d.Set("dx_gateway_id", vif.DirectConnectGatewayId)
 	d.Set("virtual_interface_id", vif.VirtualInterfaceId)
 	d.Set("vpn_gateway_id", vif.VirtualGatewayId)
-
-	arn := d.Get("arn").(string)
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Direct Connect hosted private virtual interface (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
 
 	return diags
 }

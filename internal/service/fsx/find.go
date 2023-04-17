@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -39,7 +39,7 @@ func FindBackupByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Backup,
 	output, err := conn.DescribeBackupsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileSystemNotFound) || tfawserr.ErrCodeEquals(err, fsx.ErrCodeBackupNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -72,7 +72,7 @@ func findFileCacheByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.File
 	})
 
 	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileCacheNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -104,7 +104,7 @@ func findDataRepositoryAssociationsByIDs(ctx context.Context, conn *fsx.FSx, ids
 	})
 
 	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeDataRepositoryAssociationNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -137,7 +137,7 @@ func FindFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Fil
 	})
 
 	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileSystemNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -176,7 +176,7 @@ func FindDataRepositoryAssociationByID(ctx context.Context, conn *fsx.FSx, id st
 	})
 
 	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeDataRepositoryAssociationNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -215,7 +215,7 @@ func FindStorageVirtualMachineByID(ctx context.Context, conn *fsx.FSx, id string
 	})
 
 	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeStorageVirtualMachineNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -254,7 +254,7 @@ func FindVolumeByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Volume,
 	})
 
 	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeVolumeNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -283,7 +283,7 @@ func FindSnapshotByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Snaps
 	output, err := conn.DescribeSnapshotsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeVolumeNotFound) || tfawserr.ErrCodeEquals(err, fsx.ErrCodeSnapshotNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -318,7 +318,7 @@ func FindSnapshots(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeSnapsh
 	})
 
 	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeSnapshotNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

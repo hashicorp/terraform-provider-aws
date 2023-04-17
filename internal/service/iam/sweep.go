@@ -70,6 +70,7 @@ func init() {
 			"aws_iot_topic_rule_destination",
 			"aws_lambda_function",
 			"aws_launch_configuration",
+			"aws_opensearch_domain",
 			"aws_redshift_cluster",
 			"aws_redshift_scheduled_action",
 			"aws_spot_fleet_request",

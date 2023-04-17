@@ -10,6 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/datapipeline/datapipelineiface"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // []*SERVICE.Tag handling
@@ -41,6 +43,25 @@ func KeyValueTags(ctx context.Context, tags []*datapipeline.Tag) tftags.KeyValue
 	return tftags.New(ctx, m)
 }
 
+// GetTagsIn returns datapipeline service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*datapipeline.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets datapipeline service tags in Context.
+func SetTagsOut(ctx context.Context, tags []*datapipeline.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
+}
+
 // UpdateTags updates datapipeline service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -52,7 +73,7 @@ func UpdateTags(ctx context.Context, conn datapipelineiface.DataPipelineAPI, ide
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &datapipeline.RemoveTagsInput{
 			PipelineId: aws.String(identifier),
-			TagKeys:    aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:    aws.StringSlice(removedTags.IgnoreSystem(names.DataPipeline).Keys()),
 		}
 
 		_, err := conn.RemoveTagsWithContext(ctx, input)
@@ -65,7 +86,7 @@ func UpdateTags(ctx context.Context, conn datapipelineiface.DataPipelineAPI, ide
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &datapipeline.AddTagsInput{
 			PipelineId: aws.String(identifier),
-			Tags:       Tags(updatedTags.IgnoreAWS()),
+			Tags:       Tags(updatedTags.IgnoreSystem(names.DataPipeline)),
 		}
 
 		_, err := conn.AddTagsWithContext(ctx, input)
@@ -78,6 +99,8 @@ func UpdateTags(ctx context.Context, conn datapipelineiface.DataPipelineAPI, ide
 	return nil
 }
 
+// UpdateTags updates datapipeline service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).DataPipelineConn(), identifier, oldTags, newTags)
 }

@@ -10,6 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/fms/fmsiface"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists fms service tags.
@@ -29,8 +31,20 @@ func ListTags(ctx context.Context, conn fmsiface.FMSAPI, identifier string) (tft
 	return KeyValueTags(ctx, output.TagList), nil
 }
 
-func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
-	return ListTags(ctx, meta.(*conns.AWSClient).FMSConn(), identifier)
+// ListTags lists fms service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).FMSConn(), identifier)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(tags)
+	}
+
+	return nil
 }
 
 // []*SERVICE.Tag handling
@@ -62,6 +76,25 @@ func KeyValueTags(ctx context.Context, tags []*fms.Tag) tftags.KeyValueTags {
 	return tftags.New(ctx, m)
 }
 
+// GetTagsIn returns fms service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*fms.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets fms service tags in Context.
+func SetTagsOut(ctx context.Context, tags []*fms.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
+}
+
 // UpdateTags updates fms service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -73,7 +106,7 @@ func UpdateTags(ctx context.Context, conn fmsiface.FMSAPI, identifier string, ol
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &fms.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreSystem(names.FMS).Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -86,7 +119,7 @@ func UpdateTags(ctx context.Context, conn fmsiface.FMSAPI, identifier string, ol
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &fms.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagList:     Tags(updatedTags.IgnoreAWS()),
+			TagList:     Tags(updatedTags.IgnoreSystem(names.FMS)),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)
@@ -99,6 +132,8 @@ func UpdateTags(ctx context.Context, conn fmsiface.FMSAPI, identifier string, ol
 	return nil
 }
 
+// UpdateTags updates fms service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).FMSConn(), identifier, oldTags, newTags)
 }

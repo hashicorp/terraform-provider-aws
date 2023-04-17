@@ -14,12 +14,75 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
+
+func Test_GetRoleNameFromARN(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		arn  string
+		want string
+	}{
+		{"empty", "", ""},
+		{
+			"role",
+			"arn:aws:iam::0123456789:role/EcsService", //lintignore:AWSAT005
+			"EcsService",
+		},
+		{
+			"role with path",
+			"arn:aws:iam::0123456789:role/group/EcsService", //lintignore:AWSAT005
+			"/group/EcsService",
+		},
+		{
+			"role with complex path",
+			"arn:aws:iam::0123456789:role/group/subgroup/my-role", //lintignore:AWSAT005
+			"/group/subgroup/my-role",
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			if got := tfecs.GetRoleNameFromARN(tt.arn); got != tt.want {
+				t.Errorf("GetRoleNameFromARN() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_GetClustereNameFromARN(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		arn  string
+		want string
+	}{
+		{"empty", "", ""},
+		{
+			"cluster",
+			"arn:aws:ecs:us-west-2:0123456789:cluster/my-cluster", //lintignore:AWSAT003,AWSAT005
+			"my-cluster",
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			if got := tfecs.GetClusterNameFromARN(tt.arn); got != tt.want {
+				t.Errorf("GetClusterNameFromARN() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
 
 func TestAccECSService_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -1526,17 +1589,17 @@ func testAccCheckServiceExists(ctx context.Context, name string, service *ecs.Se
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn()
 
-		err := resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+		err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
 			var err error
 			service, err = tfecs.FindServiceNoTagsByID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["cluster"])
 			if tfresource.NotFound(err) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 
 			return nil

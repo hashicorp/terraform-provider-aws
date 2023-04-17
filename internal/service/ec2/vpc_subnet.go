@@ -17,9 +17,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_subnet")
+// @SDKResource("aws_subnet", name="Subnet")
+// @Tags(identifierAttribute="id")
 func ResourceSubnet() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -134,8 +136,8 @@ func ResourceSubnet() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(ec2.HostnameType_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -148,11 +150,9 @@ func ResourceSubnet() *schema.Resource {
 func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateSubnetInput{
-		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSubnet),
+		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeSubnet),
 		VpcId:             aws.String(d.Get("vpc_id").(string)),
 	}
 
@@ -219,8 +219,6 @@ func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, SubnetPropagationTimeout, func() (interface{}, error) {
 		return FindSubnetByID(ctx, conn, d.Id())
@@ -274,16 +272,7 @@ func resourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("private_dns_hostname_type_on_launch", nil)
 	}
 
-	tags := KeyValueTags(ctx, subnet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, subnet.Tags)
 
 	return diags
 }
@@ -291,14 +280,6 @@ func resourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceSubnetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 Subnet (%s) tags: %s", d.Id(), err)
-		}
-	}
 
 	// You cannot modify multiple subnet attributes in the same request,
 	// except CustomerOwnedIpv4Pool and MapCustomerOwnedIpOnLaunch.

@@ -33,10 +33,22 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceConfigurationSet,
 			TypeName: "aws_sesv2_configuration_set",
+			Name:     "Configuration Set",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceConfigurationSetEventDestination,
 			TypeName: "aws_sesv2_configuration_set_event_destination",
+		},
+		{
+			Factory:  ResourceContactList,
+			TypeName: "aws_sesv2_contact_list",
+			Name:     "Contact List",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceDedicatedIPAssignment,
@@ -45,10 +57,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDedicatedIPPool,
 			TypeName: "aws_sesv2_dedicated_ip_pool",
+			Name:     "Dedicated IP Pool",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceEmailIdentity,
 			TypeName: "aws_sesv2_email_identity",
+			Name:     "Email Identity",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceEmailIdentityFeedbackAttributes,

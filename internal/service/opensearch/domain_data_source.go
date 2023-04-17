@@ -105,15 +105,15 @@ func DataSourceDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"dashboard_endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"domain_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"kibana_endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -160,6 +160,10 @@ func DataSourceDomain() *schema.Resource {
 						},
 					},
 				},
+			},
+			"kibana_endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"node_to_node_encryption": {
 				Type:     schema.TypeList,
@@ -390,6 +394,7 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("arn", ds.ARN)
 	d.Set("domain_id", ds.DomainId)
 	d.Set("endpoint", ds.Endpoint)
+	d.Set("dashboard_endpoint", getDashboardEndpoint(d))
 	d.Set("kibana_endpoint", getKibanaEndpoint(d))
 
 	if err := d.Set("advanced_security_options", flattenAdvancedSecurityOptions(ds.AdvancedSecurityOptions)); err != nil {
@@ -431,6 +436,7 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 		if err := d.Set("endpoint", endpoints["vpc"]); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 		}
+		d.Set("dashboard_endpoint", getDashboardEndpoint(d))
 		d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		if ds.Endpoint != nil {
 			return sdkdiag.AppendErrorf(diags, "%q: OpenSearch domain in VPC expected to have null Endpoint value", d.Id())
@@ -438,6 +444,7 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 	} else {
 		if ds.Endpoint != nil {
 			d.Set("endpoint", ds.Endpoint)
+			d.Set("dashboard_endpoint", getDashboardEndpoint(d))
 			d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		}
 		if ds.Endpoints != nil {

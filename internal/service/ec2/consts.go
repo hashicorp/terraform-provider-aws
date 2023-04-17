@@ -281,3 +281,8 @@ const (
 	ResInstance      = "Instance"
 	ResInstanceState = "Instance State"
 )
+
+const (
+	gatewayIDLocal      = "local"
+	gatewayIDVPCLattice = "VpcLattice"
+)

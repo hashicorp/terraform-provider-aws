@@ -10,6 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/signer/signeriface"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists signer service tags.
@@ -29,8 +31,20 @@ func ListTags(ctx context.Context, conn signeriface.SignerAPI, identifier string
 	return KeyValueTags(ctx, output.Tags), nil
 }
 
-func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
-	return ListTags(ctx, meta.(*conns.AWSClient).SignerConn(), identifier)
+// ListTags lists signer service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).SignerConn(), identifier)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(tags)
+	}
+
+	return nil
 }
 
 // map[string]*string handling
@@ -45,6 +59,25 @@ func KeyValueTags(ctx context.Context, tags map[string]*string) tftags.KeyValueT
 	return tftags.New(ctx, tags)
 }
 
+// GetTagsIn returns signer service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) map[string]*string {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets signer service tags in Context.
+func SetTagsOut(ctx context.Context, tags map[string]*string) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
+}
+
 // UpdateTags updates signer service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -56,7 +89,7 @@ func UpdateTags(ctx context.Context, conn signeriface.SignerAPI, identifier stri
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &signer.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreSystem(names.Signer).Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -69,7 +102,7 @@ func UpdateTags(ctx context.Context, conn signeriface.SignerAPI, identifier stri
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &signer.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreAWS()),
+			Tags:        Tags(updatedTags.IgnoreSystem(names.Signer)),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)
@@ -82,6 +115,8 @@ func UpdateTags(ctx context.Context, conn signeriface.SignerAPI, identifier stri
 	return nil
 }
 
+// UpdateTags updates signer service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).SignerConn(), identifier, oldTags, newTags)
 }
