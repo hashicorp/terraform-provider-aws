@@ -65,7 +65,7 @@ const (
 	DSNameOrganizationalPolicies = "Organizational Policies Data Source"
 )
 
-func dataSourceOrganizationPoliciesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceOrganizationalPoliciesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).OrganizationsConn()
