@@ -14,8 +14,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_prometheus_workspace", name="Workspace")
+// @Tags(identifierAttribute="arn")
 func ResourceWorkspace() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWorkspaceCreate,
@@ -24,7 +27,7 @@ func ResourceWorkspace() *schema.Resource {
 		DeleteWithoutTimeout: resourceWorkspaceDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -62,25 +65,21 @@ func ResourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AMPConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).AMPConn()
 
-	input := &prometheusservice.CreateWorkspaceInput{}
+	input := &prometheusservice.CreateWorkspaceInput{
+		Tags: GetTagsIn(ctx),
+	}
 
 	if v, ok := d.GetOk("alias"); ok {
 		input.Alias = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	result, err := conn.CreateWorkspaceWithContext(ctx, input)
@@ -117,9 +116,7 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AMPConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).AMPConn()
 
 	ws, err := FindWorkspaceByID(ctx, conn, d.Id())
 
@@ -150,27 +147,11 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	tags, err := ListTagsWithContext(ctx, conn, arn)
-
-	if err != nil {
-		return diag.Errorf("listing tags for Prometheus Workspace (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
 	return nil
 }
 
 func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AMPConn
+	conn := meta.(*conns.AWSClient).AMPConn()
 
 	if d.HasChange("alias") {
 		input := &prometheusservice.UpdateWorkspaceAliasInput{
@@ -192,19 +173,33 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	if d.HasChange("logging_configuration") {
 		if v, ok := d.GetOk("logging_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			tfMap := v.([]interface{})[0].(map[string]interface{})
-			input := &prometheusservice.UpdateLoggingConfigurationInput{
-				LogGroupArn: aws.String(tfMap["log_group_arn"].(string)),
-				WorkspaceId: aws.String(d.Id()),
-			}
 
-			_, err := conn.UpdateLoggingConfigurationWithContext(ctx, input)
+			if o, _ := d.GetChange("logging_configuration"); o == nil || len(o.([]interface{})) == 0 || o.([]interface{})[0] == nil {
+				input := &prometheusservice.CreateLoggingConfigurationInput{
+					LogGroupArn: aws.String(tfMap["log_group_arn"].(string)),
+					WorkspaceId: aws.String(d.Id()),
+				}
 
-			if err != nil {
-				return diag.Errorf("updating Prometheus Workspace (%s) logging configuration: %s", d.Id(), err)
-			}
+				if _, err := conn.CreateLoggingConfigurationWithContext(ctx, input); err != nil {
+					return diag.Errorf("creating Prometheus Workspace (%s) logging configuration: %s", d.Id(), err)
+				}
 
-			if _, err := waitLoggingConfigurationUpdated(ctx, conn, d.Id()); err != nil {
-				return diag.Errorf("waiting for Prometheus Workspace (%s) logging configuration update: %s", d.Id(), err)
+				if _, err := waitLoggingConfigurationCreated(ctx, conn, d.Id()); err != nil {
+					return diag.Errorf("waiting for Prometheus Workspace (%s) logging configuration create: %s", d.Id(), err)
+				}
+			} else {
+				input := &prometheusservice.UpdateLoggingConfigurationInput{
+					LogGroupArn: aws.String(tfMap["log_group_arn"].(string)),
+					WorkspaceId: aws.String(d.Id()),
+				}
+
+				if _, err := conn.UpdateLoggingConfigurationWithContext(ctx, input); err != nil {
+					return diag.Errorf("updating Prometheus Workspace (%s) logging configuration: %s", d.Id(), err)
+				}
+
+				if _, err := waitLoggingConfigurationUpdated(ctx, conn, d.Id()); err != nil {
+					return diag.Errorf("waiting for Prometheus Workspace (%s) logging configuration update: %s", d.Id(), err)
+				}
 			}
 		} else {
 			_, err := conn.DeleteLoggingConfigurationWithContext(ctx, &prometheusservice.DeleteLoggingConfigurationInput{
@@ -221,20 +216,11 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		arn := d.Get("arn").(string)
-
-		if err := UpdateTagsWithContext(ctx, conn, arn, o, n); err != nil {
-			return diag.Errorf("updating Prometheus Workspace (%s) tags: %s", arn, err)
-		}
-	}
-
 	return resourceWorkspaceRead(ctx, d, meta)
 }
 
 func resourceWorkspaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AMPConn
+	conn := meta.(*conns.AWSClient).AMPConn()
 
 	log.Printf("[INFO] Deleting Prometheus Workspace: %s", d.Id())
 	_, err := conn.DeleteWorkspaceWithContext(ctx, &prometheusservice.DeleteWorkspaceInput{

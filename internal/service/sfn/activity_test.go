@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sfn"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,19 +18,20 @@ import (
 )
 
 func TestAccSFNActivity_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sfn_activity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckActivityDestroy,
+		CheckDestroy:             testAccCheckActivityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActivityConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckActivityExists(resourceName),
+					testAccCheckActivityExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -45,20 +47,21 @@ func TestAccSFNActivity_basic(t *testing.T) {
 }
 
 func TestAccSFNActivity_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sfn_activity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckActivityDestroy,
+		CheckDestroy:             testAccCheckActivityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActivityConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckActivityExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsfn.ResourceActivity(), resourceName),
+					testAccCheckActivityExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsfn.ResourceActivity(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -67,19 +70,20 @@ func TestAccSFNActivity_disappears(t *testing.T) {
 }
 
 func TestAccSFNActivity_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sfn_activity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckActivityDestroy,
+		CheckDestroy:             testAccCheckActivityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActivityConfig_basicTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckActivityExists(resourceName),
+					testAccCheckActivityExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -92,7 +96,7 @@ func TestAccSFNActivity_tags(t *testing.T) {
 			{
 				Config: testAccActivityConfig_basicTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckActivityExists(resourceName),
+					testAccCheckActivityExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -101,7 +105,7 @@ func TestAccSFNActivity_tags(t *testing.T) {
 			{
 				Config: testAccActivityConfig_basicTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckActivityExists(resourceName),
+					testAccCheckActivityExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -110,7 +114,7 @@ func TestAccSFNActivity_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckActivityExists(n string) resource.TestCheckFunc {
+func testAccCheckActivityExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -121,41 +125,43 @@ func testAccCheckActivityExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No Step Functions Activity ID set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn()
 
-		_, err := tfsfn.FindActivityByARN(context.Background(), conn, rs.Primary.ID)
+		_, err := tfsfn.FindActivityByARN(ctx, conn, rs.Primary.ID)
 
 		return err
 	}
 }
 
-func testAccCheckActivityDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn
+func testAccCheckActivityDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_sfn_activity" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_sfn_activity" {
+				continue
+			}
+
+			// Retrying as Read after Delete is not always consistent.
+			err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
+				_, err := tfsfn.FindActivityByARN(ctx, conn, rs.Primary.ID)
+
+				if tfresource.NotFound(err) {
+					return nil
+				}
+
+				if err != nil {
+					return retry.NonRetryableError(err)
+				}
+
+				return retry.RetryableError(fmt.Errorf("Step Functions Activity still exists: %s", rs.Primary.ID))
+			})
+
+			return err
 		}
 
-		// Retrying as Read after Delete is not always consistent.
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			_, err := tfsfn.FindActivityByARN(context.Background(), conn, rs.Primary.ID)
-
-			if tfresource.NotFound(err) {
-				return nil
-			}
-
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
-			return resource.RetryableError(fmt.Errorf("Step Functions Activity still exists: %s", rs.Primary.ID))
-		})
-
-		return err
+		return nil
 	}
-
-	return nil
 }
 
 func testAccActivityConfig_basic(rName string) string {

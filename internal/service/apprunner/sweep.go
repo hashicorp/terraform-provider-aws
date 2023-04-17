@@ -4,7 +4,6 @@
 package apprunner
 
 import (
-	"context"
 	"fmt"
 	"log"
 
@@ -36,15 +35,16 @@ func init() {
 }
 
 func sweepAutoScalingConfigurationVersions(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).AppRunnerConn
+	conn := client.(*conns.AWSClient).AppRunnerConn()
 	sweepResources := make([]sweep.Sweepable, 0)
-	ctx := context.Background()
+
 	var errs *multierror.Error
 
 	input := &apprunner.ListAutoScalingConfigurationsInput{}
@@ -88,7 +88,7 @@ func sweepAutoScalingConfigurationVersions(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing App Runner AutoScaling Configuration Versions: %w", err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping App Runner AutoScaling Configuration Version for %s: %w", region, err))
 	}
 
@@ -101,15 +101,15 @@ func sweepAutoScalingConfigurationVersions(region string) error {
 }
 
 func sweepConnections(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).AppRunnerConn
+	conn := client.(*conns.AWSClient).AppRunnerConn()
 	sweepResources := make([]sweep.Sweepable, 0)
-	ctx := context.Background()
 
 	var errs *multierror.Error
 
@@ -149,7 +149,7 @@ func sweepConnections(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing App Runner Connections: %w", err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping App Runner Connections for %s: %w", region, err))
 	}
 
@@ -162,15 +162,16 @@ func sweepConnections(region string) error {
 }
 
 func sweepServices(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).AppRunnerConn
+	conn := client.(*conns.AWSClient).AppRunnerConn()
 	sweepResources := make([]sweep.Sweepable, 0)
-	ctx := context.Background()
+
 	var errs *multierror.Error
 
 	input := &apprunner.ListServicesInput{}
@@ -208,7 +209,7 @@ func sweepServices(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing App Runner Services: %w", err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping App Runner Services for %s: %w", region, err))
 	}
 

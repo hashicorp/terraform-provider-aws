@@ -19,23 +19,28 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
 	documentClassifierTagKey = "tf-aws_comprehend_document_classifier"
 )
 
+// @SDKResource("aws_comprehend_document_classifier", name="Document Classifier")
+// @Tags(identifierAttribute="id")
 func ResourceDocumentClassifier() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDocumentClassifierCreate,
@@ -143,8 +148,8 @@ func ResourceDocumentClassifier() *schema.Resource {
 			"model_kms_key_id": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				DiffSuppressFunc: diffSuppressKMSKeyId,
-				ValidateFunc:     validateKMSKey,
+				DiffSuppressFunc: tfkms.DiffSuppressKey,
+				ValidateFunc:     tfkms.ValidateKey,
 			},
 			"name": {
 				Type:         schema.TypeString,
@@ -162,8 +167,8 @@ func ResourceDocumentClassifier() *schema.Resource {
 						"kms_key_id": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							DiffSuppressFunc: diffSuppressKMSKeyOrAlias,
-							ValidateFunc:     validateKMSKeyOrAlias,
+							DiffSuppressFunc: tfkms.DiffSuppressKeyOrAlias,
+							ValidateFunc:     tfkms.ValidateKeyOrAlias,
 						},
 						"s3_uri": {
 							Type:     schema.TypeString,
@@ -181,8 +186,8 @@ func ResourceDocumentClassifier() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"version_name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -200,8 +205,8 @@ func ResourceDocumentClassifier() *schema.Resource {
 			"volume_kms_key_id": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				DiffSuppressFunc: diffSuppressKMSKeyId,
-				ValidateFunc:     validateKMSKey,
+				DiffSuppressFunc: tfkms.DiffSuppressKey,
+				ValidateFunc:     tfkms.ValidateKey,
 			},
 			"vpc_config": {
 				Type:     schema.TypeList,
@@ -264,7 +269,7 @@ func ResourceDocumentClassifier() *schema.Resource {
 
 func resourceDocumentClassifierCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	awsClient := meta.(*conns.AWSClient)
-	conn := awsClient.ComprehendClient
+	conn := awsClient.ComprehendClient()
 
 	var versionName *string
 	raw := d.GetRawConfig().GetAttr("version_name")
@@ -283,7 +288,7 @@ func resourceDocumentClassifierCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceDocumentClassifierRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ComprehendClient
+	conn := meta.(*conns.AWSClient).ComprehendClient()
 
 	out, err := FindDocumentClassifierByID(ctx, conn, d.Id())
 
@@ -325,29 +330,12 @@ func resourceDocumentClassifierRead(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("setting vpc_config: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id())
-	if err != nil {
-		return diag.Errorf("listing tags for Comprehend Document Classifier (%s): %s", d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
-
 	return nil
 }
 
 func resourceDocumentClassifierUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	awsClient := meta.(*conns.AWSClient)
-	conn := awsClient.ComprehendClient
+	conn := awsClient.ComprehendClient()
 
 	var diags diag.Diagnostics
 
@@ -363,21 +351,13 @@ func resourceDocumentClassifierUpdate(ctx context.Context, d *schema.ResourceDat
 		if diags.HasError() {
 			return diags
 		}
-	} else if d.HasChange("tags_all") {
-		// For a tags-only change. If tag changes are combined with version publishing, the tags are set
-		// by the CreateDocumentClassifier call
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return errs.AppendErrorf(diags, "updating tags for Comprehend Document Classifier (%s): %s", d.Id(), err)
-		}
 	}
 
 	return append(diags, resourceDocumentClassifierRead(ctx, d, meta)...)
 }
 
 func resourceDocumentClassifierDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ComprehendClient
+	conn := meta.(*conns.AWSClient).ComprehendClient()
 
 	log.Printf("[INFO] Stopping Comprehend Document Classifier (%s)", d.Id())
 
@@ -432,8 +412,8 @@ func resourceDocumentClassifierDelete(ctx context.Context, d *schema.ResourceDat
 				return fmt.Errorf("waiting for version (%s) to be deleted: %s", aws.ToString(v.VersionName), err)
 			}
 
-			ec2Conn := meta.(*conns.AWSClient).EC2Conn
-			networkInterfaces, err := tfec2.FindNetworkInterfacesWithContext(ctx, ec2Conn, &ec2.DescribeNetworkInterfacesInput{
+			ec2Conn := meta.(*conns.AWSClient).EC2Conn()
+			networkInterfaces, err := tfec2.FindNetworkInterfaces(ctx, ec2Conn, &ec2.DescribeNetworkInterfacesInput{
 				Filters: []*ec2.Filter{
 					tfec2.NewFilter(fmt.Sprintf("tag:%s", documentClassifierTagKey), []string{aws.ToString(v.DocumentClassifierArn)}),
 				},
@@ -448,14 +428,14 @@ func resourceDocumentClassifierDelete(ctx context.Context, d *schema.ResourceDat
 					networkInterfaceID := aws.ToString(v.NetworkInterfaceId)
 
 					if v.Attachment != nil {
-						err = tfec2.DetachNetworkInterfaceWithContext(ctx, ec2Conn, networkInterfaceID, aws.ToString(v.Attachment.AttachmentId), d.Timeout(schema.TimeoutDelete))
+						err = tfec2.DetachNetworkInterface(ctx, ec2Conn, networkInterfaceID, aws.ToString(v.Attachment.AttachmentId), d.Timeout(schema.TimeoutDelete))
 
 						if err != nil {
 							return fmt.Errorf("detaching ENI (%s): %w", networkInterfaceID, err)
 						}
 					}
 
-					err = tfec2.DeleteNetworkInterfaceWithContext(ctx, ec2Conn, networkInterfaceID)
+					err = tfec2.DeleteNetworkInterface(ctx, ec2Conn, networkInterfaceID)
 					if err != nil {
 						return fmt.Errorf("deleting ENI (%s): %w", networkInterfaceID, err)
 					}
@@ -485,7 +465,8 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 		OutputDataConfig:       expandDocumentClassifierOutputDataConfig(d.Get("output_data_config").([]interface{})),
 		VersionName:            versionName,
 		VpcConfig:              expandVPCConfig(d.Get("vpc_config").([]interface{})),
-		ClientRequestToken:     aws.String(resource.UniqueId()),
+		ClientRequestToken:     aws.String(id.UniqueId()),
+		Tags:                   GetTagsIn(ctx),
 	}
 
 	if v, ok := d.Get("model_kms_key_id").(string); ok && v != "" {
@@ -494,13 +475,6 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 
 	if v, ok := d.Get("volume_kms_key_id").(string); ok && v != "" {
 		in.VolumeKmsKeyId = aws.String(v)
-	}
-
-	defaultTagsConfig := awsClient.DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	// Because the IAM credentials aren't evaluated until training time, we need to ensure we wait for the IAM propagation delay
@@ -512,7 +486,7 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 	}
 
 	var out *comprehend.CreateDocumentClassifierOutput
-	err := tfresource.RetryContext(ctx, timeout, func() *resource.RetryError {
+	err := tfresource.Retry(ctx, timeout, func() *retry.RetryError {
 		var err error
 		out, err = conn.CreateDocumentClassifier(ctx, in)
 
@@ -520,12 +494,12 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 			var tmre *types.TooManyRequestsException
 			var qee ratelimit.QuotaExceededError // This is not a typo: the ratelimit.QuotaExceededError is returned as a struct, not a pointer
 			if errors.As(err, &tmre) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			} else if errors.As(err, &qee) {
 				// Unable to get a rate limit token
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			} else {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 		}
 
@@ -565,10 +539,10 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 
 	if in.VpcConfig != nil {
 		g.Go(func() error {
-			ec2Conn := awsClient.EC2Conn
+			ec2Conn := awsClient.EC2Conn()
 			enis, err := findNetworkInterfaces(waitCtx, ec2Conn, in.VpcConfig.SecurityGroupIds, in.VpcConfig.Subnets)
 			if err != nil {
-				diags = errs.AppendWarningf(diags, "waiting for Amazon Comprehend Document Classifier (%s) %s: %s", d.Id(), tobe, err)
+				diags = sdkdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Document Classifier (%s) %s: %s", d.Id(), tobe, err)
 				return nil
 			}
 			initialENIIds := make(map[string]bool, len(enis))
@@ -578,11 +552,11 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 
 			newENI, err := waitNetworkInterfaceCreated(waitCtx, ec2Conn, initialENIIds, in.VpcConfig.SecurityGroupIds, in.VpcConfig.Subnets, d.Timeout(schema.TimeoutCreate))
 			if errors.Is(err, context.Canceled) {
-				diags = errs.AppendWarningf(diags, "waiting for Amazon Comprehend Document Classifier (%s) %s: %s", d.Id(), tobe, "ENI not found")
+				diags = sdkdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Document Classifier (%s) %s: %s", d.Id(), tobe, "ENI not found")
 				return nil
 			}
 			if err != nil {
-				diags = errs.AppendWarningf(diags, "waiting for Amazon Comprehend Document Classifier (%s) %s: %s", d.Id(), tobe, err)
+				diags = sdkdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Document Classifier (%s) %s: %s", d.Id(), tobe, err)
 				return nil
 			}
 
@@ -598,7 +572,7 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 				},
 			})
 			if err != nil {
-				diags = errs.AppendWarningf(diags, "waiting for Amazon Comprehend Document Classifier (%s) %s: %s", d.Id(), tobe, err)
+				diags = sdkdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Document Classifier (%s) %s: %s", d.Id(), tobe, err)
 				return nil
 			}
 
@@ -608,7 +582,7 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 
 	err = g.Wait().ErrorOrNil()
 	if err != nil {
-		diags = errs.AppendErrorf(diags, "waiting for Amazon Comprehend Document Classifier (%s) %s: %s", d.Id(), tobe, err)
+		diags = sdkdiag.AppendErrorf(diags, "waiting for Amazon Comprehend Document Classifier (%s) %s: %s", d.Id(), tobe, err)
 	}
 
 	return diags
@@ -623,7 +597,7 @@ func FindDocumentClassifierByID(ctx context.Context, conn *comprehend.Client, id
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -660,7 +634,7 @@ func ListDocumentClassifierVersionsByName(ctx context.Context, conn *comprehend.
 }
 
 func waitDocumentClassifierCreated(ctx context.Context, conn *comprehend.Client, id string, timeout time.Duration) (*types.DocumentClassifierProperties, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining),
 		Target:       enum.Slice(types.ModelStatusTrained),
 		Refresh:      statusDocumentClassifier(ctx, conn, id),
@@ -670,21 +644,18 @@ func waitDocumentClassifierCreated(ctx context.Context, conn *comprehend.Client,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*types.DocumentClassifierProperties); ok {
-		var ues *resource.UnexpectedStateError
-		if errors.As(err, &ues) {
-			if ues.State == string(types.ModelStatusInError) {
-				err = errors.New(aws.ToString(out.Message))
-			}
+	if output, ok := outputRaw.(*types.DocumentClassifierProperties); ok {
+		if output.Status == types.ModelStatusInError {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.Message)))
 		}
-		return out, err
+		return output, err
 	}
 
 	return nil, err
 }
 
 func waitDocumentClassifierStopped(ctx context.Context, conn *comprehend.Client, id string, timeout time.Duration) (*types.DocumentClassifierProperties, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining, types.ModelStatusStopRequested),
 		Target:       enum.Slice(types.ModelStatusTrained, types.ModelStatusStopped, types.ModelStatusInError, types.ModelStatusDeleting),
 		Refresh:      statusDocumentClassifier(ctx, conn, id),
@@ -702,7 +673,7 @@ func waitDocumentClassifierStopped(ctx context.Context, conn *comprehend.Client,
 }
 
 func waitDocumentClassifierDeleted(ctx context.Context, conn *comprehend.Client, id string, timeout time.Duration) (*types.DocumentClassifierProperties, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        enum.Slice(types.ModelStatusSubmitted, types.ModelStatusTraining, types.ModelStatusDeleting, types.ModelStatusInError, types.ModelStatusStopRequested),
 		Target:         []string{},
 		Refresh:        statusDocumentClassifier(ctx, conn, id),
@@ -720,7 +691,7 @@ func waitDocumentClassifierDeleted(ctx context.Context, conn *comprehend.Client,
 	return nil, err
 }
 
-func statusDocumentClassifier(ctx context.Context, conn *comprehend.Client, id string) resource.StateRefreshFunc {
+func statusDocumentClassifier(ctx context.Context, conn *comprehend.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := FindDocumentClassifierByID(ctx, conn, id)
 		if tfresource.NotFound(err) {

@@ -15,7 +15,6 @@ import (
 )
 
 var (
-	createTagsFunc = flag.String("CreateTagsFunc", "CreateTags", "createTagsFunc")
 	getTagFunc     = flag.String("GetTagFunc", "GetTag", "getTagFunc")
 	idAttribName   = flag.String("IDAttribName", "resource_arn", "idAttribName")
 	updateTagsFunc = flag.String("UpdateTagsFunc", "UpdateTags", "updateTagsFunc")
@@ -29,14 +28,17 @@ func usage() {
 }
 
 type TemplateData struct {
-	AWSService      string
-	AWSServiceUpper string
-	ServicePackage  string
+	AWSService           string
+	AWSServiceUpper      string
+	ProviderResourceName string
+	ServicePackage       string
 
 	CreateTagsFunc string
 	GetTagFunc     string
 	IDAttribName   string
+
 	UpdateTagsFunc string
+	WithContext    bool
 }
 
 func main() {
@@ -59,29 +61,42 @@ func main() {
 		g.Fatalf("encountered: %s", err)
 	}
 
-	templateData := TemplateData{
-		AWSService:      awsService,
-		AWSServiceUpper: u,
-		ServicePackage:  servicePackage,
+	providerResName := fmt.Sprintf("aws_%s_tag", servicePackage)
 
-		CreateTagsFunc: *createTagsFunc,
+	templateData := TemplateData{
+		AWSService:           awsService,
+		AWSServiceUpper:      u,
+		ProviderResourceName: providerResName,
+		ServicePackage:       servicePackage,
+
 		GetTagFunc:     *getTagFunc,
 		IDAttribName:   *idAttribName,
 		UpdateTagsFunc: *updateTagsFunc,
 	}
 
-	resourceFilename := "tag_gen.go"
+	const (
+		resourceFilename     = "tag_gen.go"
+		resourceTestFilename = "tag_gen_test.go"
+	)
+
 	d := g.NewGoFileDestination(resourceFilename)
 
 	if err := d.WriteTemplate("taggen", resourceTemplateBody, templateData); err != nil {
-		g.Fatalf("error: %s", err.Error())
+		g.Fatalf("generating file (%s): %s", resourceFilename, err)
 	}
 
-	resourceTestFilename := "tag_gen_test.go"
+	if err := d.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", resourceFilename, err)
+	}
+
 	d = g.NewGoFileDestination(resourceTestFilename)
 
 	if err := d.WriteTemplate("taggen", resourceTestTemplateBody, templateData); err != nil {
-		g.Fatalf("error: %s", err.Error())
+		g.Fatalf("generating file (%s): %s", resourceTestFilename, err)
+	}
+
+	if err := d.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", resourceTestFilename, err)
 	}
 }
 

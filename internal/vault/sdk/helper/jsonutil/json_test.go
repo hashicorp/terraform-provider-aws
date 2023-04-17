@@ -7,6 +7,8 @@ import (
 )
 
 func TestJSONUtil_DecodeJSONFromReader(t *testing.T) {
+	t.Parallel()
+
 	input := `{"test":"data","validation":"process"}`
 
 	var actual map[string]interface{}

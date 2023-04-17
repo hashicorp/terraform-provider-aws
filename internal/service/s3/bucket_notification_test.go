@@ -1,6 +1,7 @@
 package s3_test
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"sort"
@@ -12,25 +13,27 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccS3BucketNotification_eventbridge(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3_bucket_notification.notification"
+	resourceName := "aws_s3_bucket_notification.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketNotificationDestroy,
+		CheckDestroy:             testAccCheckBucketNotificationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketNotificationConfig_eventBridge(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketEventBridgeNotification("aws_s3_bucket.bucket")),
+					testAccCheckBucketEventBridgeNotification(ctx, "aws_s3_bucket.test")),
 			},
 			{
 				ResourceName:      resourceName,
@@ -42,22 +45,22 @@ func TestAccS3BucketNotification_eventbridge(t *testing.T) {
 }
 
 func TestAccS3BucketNotification_lambdaFunction(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3_bucket_notification.notification"
+	resourceName := "aws_s3_bucket_notification.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketNotificationDestroy,
+		CheckDestroy:             testAccCheckBucketNotificationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketNotificationConfig_lambdaFunction(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLambdaFunctionConfiguration(
-						"aws_s3_bucket.bucket",
+					testAccCheckBucketLambdaFunctionConfiguration(ctx, "aws_s3_bucket.test",
 						"notification-lambda",
-						"aws_lambda_function.func",
+						"aws_lambda_function.test",
 						[]string{"s3:ObjectCreated:*", "s3:ObjectRemoved:Delete"},
 						&s3.KeyFilter{
 							FilterRules: []*s3.FilterRule{
@@ -84,20 +87,20 @@ func TestAccS3BucketNotification_lambdaFunction(t *testing.T) {
 }
 
 func TestAccS3BucketNotification_LambdaFunctionLambdaFunctionARN_alias(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_notification.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketNotificationDestroy,
+		CheckDestroy:             testAccCheckBucketNotificationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketNotificationConfig_lambdaFunctionLambdaFunctionARNAlias(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLambdaFunctionConfiguration(
-						"aws_s3_bucket.test",
+					testAccCheckBucketLambdaFunctionConfiguration(ctx, "aws_s3_bucket.test",
 						"test",
 						"aws_lambda_alias.test",
 						[]string{"s3:ObjectCreated:*"},
@@ -115,22 +118,22 @@ func TestAccS3BucketNotification_LambdaFunctionLambdaFunctionARN_alias(t *testin
 }
 
 func TestAccS3BucketNotification_queue(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3_bucket_notification.notification"
+	resourceName := "aws_s3_bucket_notification.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketNotificationDestroy,
+		CheckDestroy:             testAccCheckBucketNotificationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketNotificationConfig_queue(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketQueueNotification(
-						"aws_s3_bucket.bucket",
+					testAccCheckBucketQueueNotification(ctx, "aws_s3_bucket.test",
 						"notification-sqs",
-						"aws_sqs_queue.queue",
+						"aws_sqs_queue.test",
 						[]string{"s3:ObjectCreated:*", "s3:ObjectRemoved:Delete"},
 						&s3.KeyFilter{
 							FilterRules: []*s3.FilterRule{
@@ -157,22 +160,22 @@ func TestAccS3BucketNotification_queue(t *testing.T) {
 }
 
 func TestAccS3BucketNotification_topic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3_bucket_notification.notification"
+	resourceName := "aws_s3_bucket_notification.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketNotificationDestroy,
+		CheckDestroy:             testAccCheckBucketNotificationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketNotificationConfig_topic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketTopicNotification(
-						"aws_s3_bucket.bucket",
+					testAccCheckBucketTopicNotification(ctx, "aws_s3_bucket.test",
 						"notification-sns1",
-						"aws_sns_topic.topic",
+						"aws_sns_topic.test",
 						[]string{"s3:ObjectCreated:*", "s3:ObjectRemoved:Delete"},
 						nil,
 					),
@@ -188,22 +191,22 @@ func TestAccS3BucketNotification_topic(t *testing.T) {
 }
 
 func TestAccS3BucketNotification_Topic_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3_bucket_notification.notification"
+	resourceName := "aws_s3_bucket_notification.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketNotificationDestroy,
+		CheckDestroy:             testAccCheckBucketNotificationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketNotificationConfig_topicMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketTopicNotification(
-						"aws_s3_bucket.bucket",
+					testAccCheckBucketTopicNotification(ctx, "aws_s3_bucket.test",
 						"notification-sns1",
-						"aws_sns_topic.topic",
+						"aws_sns_topic.test",
 						[]string{"s3:ObjectCreated:*", "s3:ObjectRemoved:Delete"},
 						&s3.KeyFilter{
 							FilterRules: []*s3.FilterRule{
@@ -218,10 +221,9 @@ func TestAccS3BucketNotification_Topic_multiple(t *testing.T) {
 							},
 						},
 					),
-					testAccCheckBucketTopicNotification(
-						"aws_s3_bucket.bucket",
+					testAccCheckBucketTopicNotification(ctx, "aws_s3_bucket.test",
 						"notification-sns2",
-						"aws_sns_topic.topic",
+						"aws_sns_topic.test",
 						[]string{"s3:ObjectCreated:*", "s3:ObjectRemoved:Delete"},
 						&s3.KeyFilter{
 							FilterRules: []*s3.FilterRule{
@@ -244,21 +246,21 @@ func TestAccS3BucketNotification_Topic_multiple(t *testing.T) {
 }
 
 func TestAccS3BucketNotification_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketNotificationDestroy,
+		CheckDestroy:             testAccCheckBucketNotificationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketNotificationConfig_topic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketTopicNotification(
-						"aws_s3_bucket.bucket",
+					testAccCheckBucketTopicNotification(ctx, "aws_s3_bucket.test",
 						"notification-sns1",
-						"aws_sns_topic.topic",
+						"aws_sns_topic.test",
 						[]string{"s3:ObjectCreated:*", "s3:ObjectRemoved:Delete"},
 						nil,
 					),
@@ -267,10 +269,9 @@ func TestAccS3BucketNotification_update(t *testing.T) {
 			{
 				Config: testAccBucketNotificationConfig_queue(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketQueueNotification(
-						"aws_s3_bucket.bucket",
+					testAccCheckBucketQueueNotification(ctx, "aws_s3_bucket.test",
 						"notification-sqs",
-						"aws_sqs_queue.queue",
+						"aws_sqs_queue.test",
 						[]string{"s3:ObjectCreated:*", "s3:ObjectRemoved:Delete"},
 						&s3.KeyFilter{
 							FilterRules: []*s3.FilterRule{
@@ -291,59 +292,61 @@ func TestAccS3BucketNotification_update(t *testing.T) {
 	})
 }
 
-func testAccCheckBucketNotificationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+func testAccCheckBucketNotificationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_s3_bucket_notification" {
-			continue
-		}
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			out, err := conn.GetBucketNotificationConfiguration(&s3.GetBucketNotificationConfigurationRequest{
-				Bucket: aws.String(rs.Primary.ID),
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_s3_bucket_notification" {
+				continue
+			}
+			err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
+				out, err := conn.GetBucketNotificationConfigurationWithContext(ctx, &s3.GetBucketNotificationConfigurationRequest{
+					Bucket: aws.String(rs.Primary.ID),
+				})
+
+				if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
+					return nil
+				}
+
+				if err != nil {
+					return retry.NonRetryableError(err)
+				}
+
+				if len(out.TopicConfigurations) > 0 {
+					return retry.RetryableError(fmt.Errorf("TopicConfigurations is exists: %v", out))
+				}
+				if len(out.LambdaFunctionConfigurations) > 0 {
+					return retry.RetryableError(fmt.Errorf("LambdaFunctionConfigurations is exists: %v", out))
+				}
+				if len(out.QueueConfigurations) > 0 {
+					return retry.RetryableError(fmt.Errorf("QueueConfigurations is exists: %v", out))
+				}
+
+				return nil
 			})
 
-			if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
-				return nil
-			}
-
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return err
 			}
-
-			if len(out.TopicConfigurations) > 0 {
-				return resource.RetryableError(fmt.Errorf("TopicConfigurations is exists: %v", out))
-			}
-			if len(out.LambdaFunctionConfigurations) > 0 {
-				return resource.RetryableError(fmt.Errorf("LambdaFunctionConfigurations is exists: %v", out))
-			}
-			if len(out.QueueConfigurations) > 0 {
-				return resource.RetryableError(fmt.Errorf("QueueConfigurations is exists: %v", out))
-			}
-
-			return nil
-		})
-
-		if err != nil {
-			return err
 		}
+		return nil
 	}
-	return nil
 }
 
-func testAccCheckBucketTopicNotification(n, i, t string, events []string, filters *s3.KeyFilter) resource.TestCheckFunc {
+func testAccCheckBucketTopicNotification(ctx context.Context, n, i, t string, events []string, filters *s3.KeyFilter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
 		topicArn := s.RootModule().Resources[t].Primary.ID
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			out, err := conn.GetBucketNotificationConfiguration(&s3.GetBucketNotificationConfigurationRequest{
+		err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
+			out, err := conn.GetBucketNotificationConfigurationWithContext(ctx, &s3.GetBucketNotificationConfigurationRequest{
 				Bucket: aws.String(rs.Primary.ID),
 			})
 
 			if err != nil {
-				return resource.NonRetryableError(fmt.Errorf("GetBucketNotification error: %v", err))
+				return retry.NonRetryableError(fmt.Errorf("GetBucketNotification error: %v", err))
 			}
 
 			eventSlice := sort.StringSlice(events)
@@ -356,29 +359,29 @@ func testAccCheckBucketTopicNotification(n, i, t string, events []string, filter
 					matched = true
 
 					if *outputTopic.TopicArn != topicArn {
-						return resource.RetryableError(fmt.Errorf("bad topic arn, expected: %s, got %#v", topicArn, *outputTopic.TopicArn))
+						return retry.RetryableError(fmt.Errorf("bad topic arn, expected: %s, got %#v", topicArn, *outputTopic.TopicArn))
 					}
 
 					if filters != nil {
 						if !reflect.DeepEqual(filters, outputTopic.Filter.Key) {
-							return resource.RetryableError(fmt.Errorf("bad notification filters, expected: %#v, got %#v", filters, outputTopic.Filter.Key))
+							return retry.RetryableError(fmt.Errorf("bad notification filters, expected: %#v, got %#v", filters, outputTopic.Filter.Key))
 						}
 					} else {
 						if outputTopic.Filter != nil {
-							return resource.RetryableError(fmt.Errorf("bad notification filters, expected: nil, got %#v", outputTopic.Filter))
+							return retry.RetryableError(fmt.Errorf("bad notification filters, expected: nil, got %#v", outputTopic.Filter))
 						}
 					}
 
 					outputEventSlice := sort.StringSlice(aws.StringValueSlice(outputTopic.Events))
 					outputEventSlice.Sort()
 					if !reflect.DeepEqual(eventSlice, outputEventSlice) {
-						return resource.RetryableError(fmt.Errorf("bad notification events, expected: %#v, got %#v", events, outputEventSlice))
+						return retry.RetryableError(fmt.Errorf("bad notification events, expected: %#v, got %#v", events, outputEventSlice))
 					}
 				}
 			}
 
 			if !matched {
-				return resource.RetryableError(fmt.Errorf("No match topic configurations: %#v", out))
+				return retry.RetryableError(fmt.Errorf("No match topic configurations: %#v", out))
 			}
 
 			return nil
@@ -388,22 +391,22 @@ func testAccCheckBucketTopicNotification(n, i, t string, events []string, filter
 	}
 }
 
-func testAccCheckBucketEventBridgeNotification(n string) resource.TestCheckFunc {
+func testAccCheckBucketEventBridgeNotification(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			out, err := conn.GetBucketNotificationConfiguration(&s3.GetBucketNotificationConfigurationRequest{
+		err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
+			out, err := conn.GetBucketNotificationConfigurationWithContext(ctx, &s3.GetBucketNotificationConfigurationRequest{
 				Bucket: aws.String(rs.Primary.ID),
 			})
 
 			if err != nil {
-				return resource.NonRetryableError(fmt.Errorf("GetBucketNotification error: %v", err))
+				return retry.NonRetryableError(fmt.Errorf("GetBucketNotification error: %v", err))
 			}
 
 			if out.EventBridgeConfiguration == nil {
-				return resource.RetryableError(fmt.Errorf("No EventBridge configuration: %#v", out))
+				return retry.RetryableError(fmt.Errorf("No EventBridge configuration: %#v", out))
 			} else {
 				return nil
 			}
@@ -413,19 +416,19 @@ func testAccCheckBucketEventBridgeNotification(n string) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckBucketQueueNotification(n, i, t string, events []string, filters *s3.KeyFilter) resource.TestCheckFunc {
+func testAccCheckBucketQueueNotification(ctx context.Context, n, i, t string, events []string, filters *s3.KeyFilter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
 		queueArn := s.RootModule().Resources[t].Primary.Attributes["arn"]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			out, err := conn.GetBucketNotificationConfiguration(&s3.GetBucketNotificationConfigurationRequest{
+		err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
+			out, err := conn.GetBucketNotificationConfigurationWithContext(ctx, &s3.GetBucketNotificationConfigurationRequest{
 				Bucket: aws.String(rs.Primary.ID),
 			})
 
 			if err != nil {
-				return resource.NonRetryableError(fmt.Errorf("GetBucketNotification error: %v", err))
+				return retry.NonRetryableError(fmt.Errorf("GetBucketNotification error: %v", err))
 			}
 
 			eventSlice := sort.StringSlice(events)
@@ -438,29 +441,29 @@ func testAccCheckBucketQueueNotification(n, i, t string, events []string, filter
 					matched = true
 
 					if *outputQueue.QueueArn != queueArn {
-						return resource.RetryableError(fmt.Errorf("bad queue arn, expected: %s, got %#v", queueArn, *outputQueue.QueueArn))
+						return retry.RetryableError(fmt.Errorf("bad queue arn, expected: %s, got %#v", queueArn, *outputQueue.QueueArn))
 					}
 
 					if filters != nil {
 						if !reflect.DeepEqual(filters, outputQueue.Filter.Key) {
-							return resource.RetryableError(fmt.Errorf("bad notification filters, expected: %#v, got %#v", filters, outputQueue.Filter.Key))
+							return retry.RetryableError(fmt.Errorf("bad notification filters, expected: %#v, got %#v", filters, outputQueue.Filter.Key))
 						}
 					} else {
 						if outputQueue.Filter != nil {
-							return resource.RetryableError(fmt.Errorf("bad notification filters, expected: nil, got %#v", outputQueue.Filter))
+							return retry.RetryableError(fmt.Errorf("bad notification filters, expected: nil, got %#v", outputQueue.Filter))
 						}
 					}
 
 					outputEventSlice := sort.StringSlice(aws.StringValueSlice(outputQueue.Events))
 					outputEventSlice.Sort()
 					if !reflect.DeepEqual(eventSlice, outputEventSlice) {
-						return resource.RetryableError(fmt.Errorf("bad notification events, expected: %#v, got %#v", events, outputEventSlice))
+						return retry.RetryableError(fmt.Errorf("bad notification events, expected: %#v, got %#v", events, outputEventSlice))
 					}
 				}
 			}
 
 			if !matched {
-				return resource.RetryableError(fmt.Errorf("No match queue configurations: %#v", out))
+				return retry.RetryableError(fmt.Errorf("No match queue configurations: %#v", out))
 			}
 
 			return nil
@@ -470,19 +473,19 @@ func testAccCheckBucketQueueNotification(n, i, t string, events []string, filter
 	}
 }
 
-func testAccCheckBucketLambdaFunctionConfiguration(n, i, t string, events []string, filters *s3.KeyFilter) resource.TestCheckFunc {
+func testAccCheckBucketLambdaFunctionConfiguration(ctx context.Context, n, i, t string, events []string, filters *s3.KeyFilter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
 		funcArn := s.RootModule().Resources[t].Primary.Attributes["arn"]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			out, err := conn.GetBucketNotificationConfiguration(&s3.GetBucketNotificationConfigurationRequest{
+		err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
+			out, err := conn.GetBucketNotificationConfigurationWithContext(ctx, &s3.GetBucketNotificationConfigurationRequest{
 				Bucket: aws.String(rs.Primary.ID),
 			})
 
 			if err != nil {
-				return resource.NonRetryableError(fmt.Errorf("GetBucketNotification error: %v", err))
+				return retry.NonRetryableError(fmt.Errorf("GetBucketNotification error: %v", err))
 			}
 
 			eventSlice := sort.StringSlice(events)
@@ -495,29 +498,29 @@ func testAccCheckBucketLambdaFunctionConfiguration(n, i, t string, events []stri
 					matched = true
 
 					if *outputFunc.LambdaFunctionArn != funcArn {
-						return resource.RetryableError(fmt.Errorf("bad lambda function arn, expected: %s, got %#v", funcArn, *outputFunc.LambdaFunctionArn))
+						return retry.RetryableError(fmt.Errorf("bad lambda function arn, expected: %s, got %#v", funcArn, *outputFunc.LambdaFunctionArn))
 					}
 
 					if filters != nil {
 						if !reflect.DeepEqual(filters, outputFunc.Filter.Key) {
-							return resource.RetryableError(fmt.Errorf("bad notification filters, expected: %#v, got %#v", filters, outputFunc.Filter.Key))
+							return retry.RetryableError(fmt.Errorf("bad notification filters, expected: %#v, got %#v", filters, outputFunc.Filter.Key))
 						}
 					} else {
 						if outputFunc.Filter != nil {
-							return resource.RetryableError(fmt.Errorf("bad notification filters, expected: nil, got %#v", outputFunc.Filter))
+							return retry.RetryableError(fmt.Errorf("bad notification filters, expected: nil, got %#v", outputFunc.Filter))
 						}
 					}
 
 					outputEventSlice := sort.StringSlice(aws.StringValueSlice(outputFunc.Events))
 					outputEventSlice.Sort()
 					if !reflect.DeepEqual(eventSlice, outputEventSlice) {
-						return resource.RetryableError(fmt.Errorf("bad notification events, expected: %#v, got %#v", events, outputEventSlice))
+						return retry.RetryableError(fmt.Errorf("bad notification events, expected: %#v, got %#v", events, outputEventSlice))
 					}
 				}
 			}
 
 			if !matched {
-				return resource.RetryableError(fmt.Errorf("No match lambda function configurations: %#v", out))
+				return retry.RetryableError(fmt.Errorf("No match lambda function configurations: %#v", out))
 			}
 
 			return nil
@@ -531,17 +534,38 @@ func testAccBucketNotificationConfig_eventBridge(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
+resource "aws_s3_bucket_public_access_block" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_ownership_controls" "test" {
+  bucket = aws_s3_bucket.test.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
+  depends_on = [
+    aws_s3_bucket_public_access_block.test,
+    aws_s3_bucket_ownership_controls.test,
+  ]
+
+  bucket = aws_s3_bucket.test.id
   acl    = "public-read"
 }
 
-resource "aws_s3_bucket_notification" "notification" {
-  bucket = aws_s3_bucket.bucket.id
+resource "aws_s3_bucket_notification" "test" {
+  bucket = aws_s3_bucket.test.id
 
   eventbridge = true
 }
@@ -552,7 +576,7 @@ func testAccBucketNotificationConfig_topicMultiple(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_sns_topic" "topic" {
+resource "aws_sns_topic" "test" {
   name = %[1]q
 
   policy = <<POLICY
@@ -567,7 +591,7 @@ resource "aws_sns_topic" "topic" {
       "Resource": "arn:${data.aws_partition.current.partition}:sns:*:*:%[1]s",
       "Condition": {
         "ArnLike": {
-          "aws:SourceArn": "${aws_s3_bucket.bucket.arn}"
+          "aws:SourceArn": "${aws_s3_bucket.test.arn}"
         }
       }
     }
@@ -576,21 +600,42 @@ resource "aws_sns_topic" "topic" {
 POLICY
 }
 
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
+resource "aws_s3_bucket_public_access_block" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_ownership_controls" "test" {
+  bucket = aws_s3_bucket.test.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
+  depends_on = [
+    aws_s3_bucket_public_access_block.test,
+    aws_s3_bucket_ownership_controls.test,
+  ]
+
+  bucket = aws_s3_bucket.test.id
   acl    = "public-read"
 }
 
-resource "aws_s3_bucket_notification" "notification" {
-  bucket = aws_s3_bucket.bucket.id
+resource "aws_s3_bucket_notification" "test" {
+  bucket = aws_s3_bucket.test.id
 
   topic {
     id        = "notification-sns1"
-    topic_arn = aws_sns_topic.topic.arn
+    topic_arn = aws_sns_topic.test.arn
 
     events = [
       "s3:ObjectCreated:*",
@@ -603,7 +648,7 @@ resource "aws_s3_bucket_notification" "notification" {
 
   topic {
     id        = "notification-sns2"
-    topic_arn = aws_sns_topic.topic.arn
+    topic_arn = aws_sns_topic.test.arn
 
     events = [
       "s3:ObjectCreated:*",
@@ -620,7 +665,7 @@ func testAccBucketNotificationConfig_queue(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_sqs_queue" "queue" {
+resource "aws_sqs_queue" "test" {
   name = %[1]q
 
   policy = <<POLICY
@@ -634,7 +679,7 @@ resource "aws_sqs_queue" "queue" {
       "Resource": "arn:${data.aws_partition.current.partition}:sqs:*:*:%[1]s",
       "Condition": {
         "ArnEquals": {
-          "aws:SourceArn": "${aws_s3_bucket.bucket.arn}"
+          "aws:SourceArn": "${aws_s3_bucket.test.arn}"
         }
       }
     }
@@ -643,21 +688,42 @@ resource "aws_sqs_queue" "queue" {
 POLICY
 }
 
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
+resource "aws_s3_bucket_public_access_block" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_ownership_controls" "test" {
+  bucket = aws_s3_bucket.test.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
+  depends_on = [
+    aws_s3_bucket_public_access_block.test,
+    aws_s3_bucket_ownership_controls.test,
+  ]
+
+  bucket = aws_s3_bucket.test.id
   acl    = "public-read"
 }
 
-resource "aws_s3_bucket_notification" "notification" {
-  bucket = aws_s3_bucket.bucket.id
+resource "aws_s3_bucket_notification" "test" {
+  bucket = aws_s3_bucket.test.id
 
   queue {
     id        = "notification-sqs"
-    queue_arn = aws_sqs_queue.queue.arn
+    queue_arn = aws_sqs_queue.test.arn
 
     events = [
       "s3:ObjectCreated:*",
@@ -675,7 +741,7 @@ func testAccBucketNotificationConfig_lambdaFunction(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_iam_role" "iam_for_lambda" {
+resource "aws_iam_role" "test" {
   name = %[1]q
 
   assume_role_policy = <<EOF
@@ -695,37 +761,58 @@ resource "aws_iam_role" "iam_for_lambda" {
 EOF
 }
 
-resource "aws_lambda_permission" "allow_bucket" {
+resource "aws_lambda_permission" "test" {
   statement_id  = "AllowExecutionFromS3Bucket"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.func.arn
+  function_name = aws_lambda_function.test.arn
   principal     = "s3.${data.aws_partition.current.dns_suffix}"
-  source_arn    = aws_s3_bucket.bucket.arn
+  source_arn    = aws_s3_bucket.test.arn
 }
 
-resource "aws_lambda_function" "func" {
+resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
-  role          = aws_iam_role.iam_for_lambda.arn
+  role          = aws_iam_role.test.arn
   handler       = "exports.example"
   runtime       = "nodejs16.x"
 }
 
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
+resource "aws_s3_bucket_public_access_block" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_ownership_controls" "test" {
+  bucket = aws_s3_bucket.test.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
+  depends_on = [
+    aws_s3_bucket_public_access_block.test,
+    aws_s3_bucket_ownership_controls.test,
+  ]
+
+  bucket = aws_s3_bucket.test.id
   acl    = "public-read"
 }
 
-resource "aws_s3_bucket_notification" "notification" {
-  bucket = aws_s3_bucket.bucket.id
+resource "aws_s3_bucket_notification" "test" {
+  bucket = aws_s3_bucket.test.id
 
   lambda_function {
     id                  = "notification-lambda"
-    lambda_function_arn = aws_lambda_function.func.arn
+    lambda_function_arn = aws_lambda_function.test.arn
 
     events = [
       "s3:ObjectCreated:*",
@@ -789,11 +876,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_notification" "test" {
   bucket = aws_s3_bucket.test.id
 
@@ -810,7 +892,7 @@ func testAccBucketNotificationConfig_topic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_sns_topic" "topic" {
+resource "aws_sns_topic" "test" {
   name = %[1]q
 
   policy = <<POLICY
@@ -827,7 +909,7 @@ resource "aws_sns_topic" "topic" {
       "Resource": "arn:${data.aws_partition.current.partition}:sns:*:*:%[1]s",
       "Condition": {
         "ArnLike": {
-          "aws:SourceArn": "${aws_s3_bucket.bucket.arn}"
+          "aws:SourceArn": "${aws_s3_bucket.test.arn}"
         }
       }
     }
@@ -836,21 +918,42 @@ resource "aws_sns_topic" "topic" {
 POLICY
 }
 
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
+resource "aws_s3_bucket_public_access_block" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_ownership_controls" "test" {
+  bucket = aws_s3_bucket.test.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
+  depends_on = [
+    aws_s3_bucket_public_access_block.test,
+    aws_s3_bucket_ownership_controls.test,
+  ]
+
+  bucket = aws_s3_bucket.test.id
   acl    = "public-read"
 }
 
-resource "aws_s3_bucket_notification" "notification" {
-  bucket = aws_s3_bucket.bucket.id
+resource "aws_s3_bucket_notification" "test" {
+  bucket = aws_s3_bucket.test.id
 
   topic {
     id        = "notification-sns1"
-    topic_arn = aws_sns_topic.topic.arn
+    topic_arn = aws_sns_topic.test.arn
 
     events = [
       "s3:ObjectCreated:*",

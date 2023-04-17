@@ -1,28 +1,33 @@
 package datasync
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_datasync_location_smb", name="Location SMB")
+// @Tags(identifierAttribute="id")
 func ResourceLocationSMB() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceLocationSMBCreate,
-		Read:   resourceLocationSMBRead,
-		Update: resourceLocationSMBUpdate,
-		Delete: resourceLocationSMBDelete,
+		CreateWithoutTimeout: resourceLocationSMBCreate,
+		ReadWithoutTimeout:   resourceLocationSMBRead,
+		UpdateWithoutTimeout: resourceLocationSMBUpdate,
+		DeleteWithoutTimeout: resourceLocationSMBDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -88,8 +93,8 @@ func ResourceLocationSMB() *schema.Resource {
 				},
 				*/
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"uri": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -105,10 +110,9 @@ func ResourceLocationSMB() *schema.Resource {
 	}
 }
 
-func resourceLocationSMBCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceLocationSMBCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	input := &datasync.CreateLocationSmbInput{
 		AgentArns:      flex.ExpandStringSet(d.Get("agent_arns").(*schema.Set)),
@@ -116,7 +120,7 @@ func resourceLocationSMBCreate(d *schema.ResourceData, meta interface{}) error {
 		Password:       aws.String(d.Get("password").(string)),
 		ServerHostname: aws.String(d.Get("server_hostname").(string)),
 		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
-		Tags:           Tags(tags.IgnoreAWS()),
+		Tags:           GetTagsIn(ctx),
 		User:           aws.String(d.Get("user").(string)),
 	}
 
@@ -124,53 +128,41 @@ func resourceLocationSMBCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Domain = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateLocationSmb(input)
+	output, err := conn.CreateLocationSmbWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating DataSync Location SMB: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating DataSync Location SMB: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.LocationArn))
 
-	return resourceLocationSMBRead(d, meta)
+	return append(diags, resourceLocationSMBRead(ctx, d, meta)...)
 }
 
-func resourceLocationSMBRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceLocationSMBRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	input := &datasync.DescribeLocationSmbInput{
 		LocationArn: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Reading DataSync Location SMB: %s", input)
-	output, err := conn.DescribeLocationSmb(input)
+	output, err := conn.DescribeLocationSmbWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
 		log.Printf("[WARN] DataSync Location SMB %q not found - removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DataSync Location SMB (%s): %w", d.Id(), err)
-	}
-
-	tagsInput := &datasync.ListTagsForResourceInput{
-		ResourceArn: output.LocationArn,
-	}
-
-	log.Printf("[DEBUG] Reading DataSync Location SMB tags: %s", tagsInput)
-	tagsOutput, err := conn.ListTagsForResource(tagsInput)
-
-	if err != nil {
-		return fmt.Errorf("error reading DataSync Location SMB (%s) tags: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DataSync Location SMB (%s): %s", d.Id(), err)
 	}
 
 	subdirectory, err := SubdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading DataSync Location SMB (%s) tags: %s", d.Id(), err)
 	}
 
 	d.Set("agent_arns", flex.FlattenStringSet(output.AgentArns))
@@ -180,31 +172,19 @@ func resourceLocationSMBRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("domain", output.Domain)
 
 	if err := d.Set("mount_options", flattenSMBMountOptions(output.MountOptions)); err != nil {
-		return fmt.Errorf("error setting mount_options: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting mount_options: %s", err)
 	}
 
 	d.Set("subdirectory", subdirectory)
-
-	tags := KeyValueTags(tagsOutput.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
 	d.Set("user", output.User)
-
 	d.Set("uri", output.LocationUri)
 
-	return nil
+	return diags
 }
 
-func resourceLocationSMBUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+func resourceLocationSMBUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &datasync.UpdateLocationSmbInput{
@@ -220,41 +200,35 @@ func resourceLocationSMBUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.Domain = aws.String(v.(string))
 		}
 
-		_, err := conn.UpdateLocationSmb(input)
+		_, err := conn.UpdateLocationSmbWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("error updating DataSync Location SMB (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating DataSync Location SMB (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating DataSync SMB location (%s) tags: %w", d.Id(), err)
-		}
-	}
-	return resourceLocationSMBRead(d, meta)
+	return append(diags, resourceLocationSMBRead(ctx, d, meta)...)
 }
 
-func resourceLocationSMBDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+func resourceLocationSMBDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	input := &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Deleting DataSync Location SMB: %s", input)
-	_, err := conn.DeleteLocation(input)
+	_, err := conn.DeleteLocationWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting DataSync Location SMB (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting DataSync Location SMB (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenSMBMountOptions(mountOptions *datasync.SmbMountOptions) []interface{} {

@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	datasourceschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -107,19 +108,19 @@ func CustomFiltersSchema() *schema.Schema {
 }
 
 // CustomFiltersBlock is the Plugin Framework variant of CustomFiltersSchema.
-func CustomFiltersBlock() tfsdk.Block {
-	return tfsdk.Block{
-		Attributes: map[string]tfsdk.Attribute{
-			"name": {
-				Type:     types.StringType,
-				Required: true,
-			},
-			"values": {
-				Type:     types.SetType{ElemType: types.StringType},
-				Required: true,
+func CustomFiltersBlock() datasourceschema.Block {
+	return datasourceschema.SetNestedBlock{
+		NestedObject: datasourceschema.NestedBlockObject{
+			Attributes: map[string]datasourceschema.Attribute{
+				"name": datasourceschema.StringAttribute{
+					Required: true,
+				},
+				"values": datasourceschema.SetAttribute{
+					ElementType: types.StringType,
+					Required:    true,
+				},
 			},
 		},
-		NestingMode: tfsdk.BlockNestingModeSet,
 	}
 }
 

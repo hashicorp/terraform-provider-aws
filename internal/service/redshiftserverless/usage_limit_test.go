@@ -1,6 +1,7 @@
 package redshiftserverless_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,19 +16,20 @@ import (
 )
 
 func TestAccRedshiftServerlessUsageLimit_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_usage_limit.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshiftserverless.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUsageLimitDestroy,
+		CheckDestroy:             testAccCheckUsageLimitDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUsageLimitConfig_basic(rName, 60),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsageLimitExists(resourceName),
+					testAccCheckUsageLimitExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_redshiftserverless_workgroup.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "amount", "60"),
 					resource.TestCheckResourceAttr(resourceName, "usage_type", "serverless-compute"),
@@ -43,7 +45,7 @@ func TestAccRedshiftServerlessUsageLimit_basic(t *testing.T) {
 			{
 				Config: testAccUsageLimitConfig_basic(rName, 120),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsageLimitExists(resourceName),
+					testAccCheckUsageLimitExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_redshiftserverless_workgroup.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "amount", "120"),
 				),
@@ -53,20 +55,21 @@ func TestAccRedshiftServerlessUsageLimit_basic(t *testing.T) {
 }
 
 func TestAccRedshiftServerlessUsageLimit_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_usage_limit.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshiftserverless.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUsageLimitDestroy,
+		CheckDestroy:             testAccCheckUsageLimitDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUsageLimitConfig_basic(rName, 60),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsageLimitExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfredshiftserverless.ResourceUsageLimit(), resourceName),
+					testAccCheckUsageLimitExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshiftserverless.ResourceUsageLimit(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -74,30 +77,32 @@ func TestAccRedshiftServerlessUsageLimit_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckUsageLimitDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn
+func testAccCheckUsageLimitDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_redshiftserverless_usage_limit" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_redshiftserverless_usage_limit" {
+				continue
+			}
+			_, err := tfredshiftserverless.FindUsageLimitByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Redshift Serverless Usage Limit %s still exists", rs.Primary.ID)
 		}
-		_, err := tfredshiftserverless.FindUsageLimitByName(conn, rs.Primary.ID)
 
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Redshift Serverless Usage Limit %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckUsageLimitExists(name string) resource.TestCheckFunc {
+func testAccCheckUsageLimitExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -108,9 +113,9 @@ func testAccCheckUsageLimitExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Redshift Serverless Usage Limit is not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn()
 
-		_, err := tfredshiftserverless.FindUsageLimitByName(conn, rs.Primary.ID)
+		_, err := tfredshiftserverless.FindUsageLimitByName(ctx, conn, rs.Primary.ID)
 
 		return err
 	}

@@ -17,8 +17,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_evidently_segment", name="Segment")
+// @Tags(identifierAttribute="arn")
 func ResourceSegment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSegmentCreate,
@@ -80,8 +83,8 @@ func ResourceSegment() *schema.Resource {
 					return json
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -89,25 +92,19 @@ func ResourceSegment() *schema.Resource {
 }
 
 func resourceSegmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).EvidentlyConn()
 
 	name := d.Get("name").(string)
 	input := &cloudwatchevidently.CreateSegmentInput{
 		Name:    aws.String(name),
 		Pattern: aws.String(d.Get("pattern").(string)),
+		Tags:    GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating CloudWatch Evidently Segment: %s", input)
 	output, err := conn.CreateSegmentWithContext(ctx, input)
 
 	if err != nil {
@@ -120,9 +117,7 @@ func resourceSegmentCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EvidentlyConn()
 
 	segment, err := FindSegmentByNameOrARN(ctx, conn, d.Id())
 
@@ -145,35 +140,18 @@ func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("name", segment.Name)
 	d.Set("pattern", segment.Pattern)
 
-	tags := KeyValueTags(segment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, segment.Tags)
 
 	return nil
 }
 
 func resourceSegmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("updating tags: %s", err)
-		}
-	}
-
+	// Tags only.
 	return resourceSegmentRead(ctx, d, meta)
 }
 
 func resourceSegmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn
+	conn := meta.(*conns.AWSClient).EvidentlyConn()
 
 	log.Printf("[DEBUG] Deleting CloudWatch Evidently Segment: %s", d.Id())
 	_, err := conn.DeleteSegmentWithContext(ctx, &cloudwatchevidently.DeleteSegmentInput{

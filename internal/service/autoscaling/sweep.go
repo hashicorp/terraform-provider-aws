@@ -28,15 +28,16 @@ func init() {
 }
 
 func sweepGroups(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AutoScalingConn
+	conn := client.(*conns.AWSClient).AutoScalingConn()
 	input := &autoscaling.DescribeAutoScalingGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeAutoScalingGroupsPages(input, func(page *autoscaling.DescribeAutoScalingGroupsOutput, lastPage bool) bool {
+	err = conn.DescribeAutoScalingGroupsPagesWithContext(ctx, input, func(page *autoscaling.DescribeAutoScalingGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -62,7 +63,7 @@ func sweepGroups(region string) error {
 		return fmt.Errorf("error listing Auto Scaling Groups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Auto Scaling Groups (%s): %w", region, err)
@@ -72,15 +73,16 @@ func sweepGroups(region string) error {
 }
 
 func sweepLaunchConfigurations(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AutoScalingConn
+	conn := client.(*conns.AWSClient).AutoScalingConn()
 	input := &autoscaling.DescribeLaunchConfigurationsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeLaunchConfigurationsPages(input, func(page *autoscaling.DescribeLaunchConfigurationsOutput, lastPage bool) bool {
+	err = conn.DescribeLaunchConfigurationsPagesWithContext(ctx, input, func(page *autoscaling.DescribeLaunchConfigurationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -105,7 +107,7 @@ func sweepLaunchConfigurations(region string) error {
 		return fmt.Errorf("error listing Auto Scaling Launch Configurations (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Auto Scaling Launch Configurations (%s): %w", region, err)

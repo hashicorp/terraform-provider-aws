@@ -17,7 +17,8 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -27,9 +28,12 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/mitchellh/copystructure"
 )
 
+// @SDKResource("aws_mq_broker", name="Broker")
+// @Tags(identifierAttribute="arn")
 func ResourceBroker() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBrokerCreate,
@@ -38,7 +42,7 @@ func ResourceBroker() *schema.Resource {
 		DeleteWithoutTimeout: resourceBrokerDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -284,8 +288,8 @@ func ResourceBroker() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"user": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -350,20 +354,19 @@ func ResourceBroker() *schema.Resource {
 }
 
 func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MQConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).MQConn()
 
 	name := d.Get("broker_name").(string)
 	engineType := d.Get("engine_type").(string)
 	input := &mq.CreateBrokerRequest{
 		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 		BrokerName:              aws.String(name),
-		CreatorRequestId:        aws.String(resource.PrefixedUniqueId(fmt.Sprintf("tf-%s", name))),
+		CreatorRequestId:        aws.String(id.PrefixedUniqueId(fmt.Sprintf("tf-%s", name))),
 		EngineType:              aws.String(engineType),
 		EngineVersion:           aws.String(d.Get("engine_version").(string)),
 		HostInstanceType:        aws.String(d.Get("host_instance_type").(string)),
 		PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
+		Tags:                    GetTagsIn(ctx),
 		Users:                   expandUsers(d.Get("user").(*schema.Set).List()),
 	}
 
@@ -397,9 +400,6 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	if v, ok := d.GetOk("subnet_ids"); ok {
 		input.SubnetIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
 
 	out, err := conn.CreateBrokerWithContext(ctx, input)
 
@@ -418,9 +418,7 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MQConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).MQConn()
 
 	output, err := FindBrokerByID(ctx, conn, d.Id())
 
@@ -483,22 +481,13 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("setting user: %s", err)
 	}
 
-	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, output.Tags)
 
 	return nil
 }
 
 func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MQConn
+	conn := meta.(*conns.AWSClient).MQConn()
 
 	requiresReboot := false
 
@@ -598,19 +587,11 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating MQ Broker (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
-
 	return nil
 }
 
 func resourceBrokerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MQConn
+	conn := meta.(*conns.AWSClient).MQConn()
 
 	log.Printf("[INFO] Deleting MQ Broker: %s", d.Id())
 	_, err := conn.DeleteBrokerWithContext(ctx, &mq.DeleteBrokerInput{
@@ -640,7 +621,7 @@ func FindBrokerByID(ctx context.Context, conn *mq.MQ, id string) (*mq.DescribeBr
 	output, err := conn.DescribeBrokerWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, mq.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -657,7 +638,7 @@ func FindBrokerByID(ctx context.Context, conn *mq.MQ, id string) (*mq.DescribeBr
 	return output, nil
 }
 
-func statusBrokerState(ctx context.Context, conn *mq.MQ, id string) resource.StateRefreshFunc {
+func statusBrokerState(ctx context.Context, conn *mq.MQ, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindBrokerByID(ctx, conn, id)
 
@@ -674,7 +655,7 @@ func statusBrokerState(ctx context.Context, conn *mq.MQ, id string) resource.Sta
 }
 
 func waitBrokerCreated(ctx context.Context, conn *mq.MQ, id string, timeout time.Duration) (*mq.DescribeBrokerResponse, error) {
-	stateConf := resource.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: []string{mq.BrokerStateCreationInProgress, mq.BrokerStateRebootInProgress},
 		Target:  []string{mq.BrokerStateRunning},
 		Timeout: timeout,
@@ -690,7 +671,7 @@ func waitBrokerCreated(ctx context.Context, conn *mq.MQ, id string, timeout time
 }
 
 func waitBrokerDeleted(ctx context.Context, conn *mq.MQ, id string, timeout time.Duration) (*mq.DescribeBrokerResponse, error) {
-	stateConf := resource.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: []string{
 			mq.BrokerStateCreationFailed,
 			mq.BrokerStateDeletionInProgress,
@@ -711,7 +692,7 @@ func waitBrokerDeleted(ctx context.Context, conn *mq.MQ, id string, timeout time
 }
 
 func waitBrokerRebooted(ctx context.Context, conn *mq.MQ, id string, timeout time.Duration) (*mq.DescribeBrokerResponse, error) {
-	stateConf := resource.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: []string{mq.BrokerStateRebootInProgress},
 		Target:  []string{mq.BrokerStateRunning},
 		Timeout: timeout,

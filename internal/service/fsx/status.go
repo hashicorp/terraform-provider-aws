@@ -1,15 +1,17 @@
 package fsx
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusAdministrativeAction(conn *fsx.FSx, fsID, actionType string) resource.StateRefreshFunc {
+func statusAdministrativeAction(ctx context.Context, conn *fsx.FSx, fsID, actionType string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindAdministrativeActionByFileSystemIDAndActionType(conn, fsID, actionType)
+		output, err := FindAdministrativeActionByFileSystemIDAndActionType(ctx, conn, fsID, actionType)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -23,9 +25,9 @@ func statusAdministrativeAction(conn *fsx.FSx, fsID, actionType string) resource
 	}
 }
 
-func statusBackup(conn *fsx.FSx, id string) resource.StateRefreshFunc {
+func statusBackup(ctx context.Context, conn *fsx.FSx, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindBackupByID(conn, id)
+		output, err := FindBackupByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -39,9 +41,9 @@ func statusBackup(conn *fsx.FSx, id string) resource.StateRefreshFunc {
 	}
 }
 
-func statusFileCache(conn *fsx.FSx, id string) resource.StateRefreshFunc {
+func statusFileCache(ctx context.Context, conn *fsx.FSx, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findFileCacheByID(conn, id)
+		out, err := findFileCacheByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -54,9 +56,9 @@ func statusFileCache(conn *fsx.FSx, id string) resource.StateRefreshFunc {
 	}
 }
 
-func statusFileSystem(conn *fsx.FSx, id string) resource.StateRefreshFunc {
+func statusFileSystem(ctx context.Context, conn *fsx.FSx, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindFileSystemByID(conn, id)
+		output, err := FindFileSystemByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -70,9 +72,9 @@ func statusFileSystem(conn *fsx.FSx, id string) resource.StateRefreshFunc {
 	}
 }
 
-func statusDataRepositoryAssociation(conn *fsx.FSx, id string) resource.StateRefreshFunc {
+func statusDataRepositoryAssociation(ctx context.Context, conn *fsx.FSx, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDataRepositoryAssociationByID(conn, id)
+		output, err := FindDataRepositoryAssociationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -86,9 +88,9 @@ func statusDataRepositoryAssociation(conn *fsx.FSx, id string) resource.StateRef
 	}
 }
 
-func statusStorageVirtualMachine(conn *fsx.FSx, id string) resource.StateRefreshFunc {
+func statusStorageVirtualMachine(ctx context.Context, conn *fsx.FSx, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindStorageVirtualMachineByID(conn, id)
+		output, err := FindStorageVirtualMachineByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -102,9 +104,9 @@ func statusStorageVirtualMachine(conn *fsx.FSx, id string) resource.StateRefresh
 	}
 }
 
-func statusVolume(conn *fsx.FSx, id string) resource.StateRefreshFunc {
+func statusVolume(ctx context.Context, conn *fsx.FSx, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindVolumeByID(conn, id)
+		output, err := FindVolumeByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -118,9 +120,9 @@ func statusVolume(conn *fsx.FSx, id string) resource.StateRefreshFunc {
 	}
 }
 
-func statusSnapshot(conn *fsx.FSx, id string) resource.StateRefreshFunc {
+func statusSnapshot(ctx context.Context, conn *fsx.FSx, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindSnapshotByID(conn, id)
+		output, err := FindSnapshotByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

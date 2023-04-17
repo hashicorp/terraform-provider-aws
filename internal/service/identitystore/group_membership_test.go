@@ -20,6 +20,7 @@ import (
 )
 
 func TestAccIdentityStoreGroupMembership_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var groupMembership identitystore.DescribeGroupMembershipOutput
 
 	userResourceName := "aws_identitystore_user.test"
@@ -31,18 +32,18 @@ func TestAccIdentityStoreGroupMembership_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupMembershipDestroy,
+		CheckDestroy:             testAccCheckGroupMembershipDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupMembershipConfig_basic(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupMembershipExists(resourceName, &groupMembership),
+					testAccCheckGroupMembershipExists(ctx, resourceName, &groupMembership),
 					resource.TestCheckResourceAttrPair(resourceName, "member_id", userResourceName, "user_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "group_id", groupResourceName, "group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_store_id"),
@@ -59,6 +60,7 @@ func TestAccIdentityStoreGroupMembership_basic(t *testing.T) {
 }
 
 func TestAccIdentityStoreGroupMembership_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var groupMembership identitystore.DescribeGroupMembershipOutput
 
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix) // Group Name
@@ -68,20 +70,20 @@ func TestAccIdentityStoreGroupMembership_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
-			testAccPreCheckSSOAdminInstances(t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
+			testAccPreCheckSSOAdminInstances(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupMembershipDestroy,
+		CheckDestroy:             testAccCheckGroupMembershipDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupMembershipConfig_basic(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupMembershipExists(resourceName, &groupMembership),
-					acctest.CheckResourceDisappears(acctest.Provider, tfidentitystore.ResourceGroupMembership(), resourceName),
+					testAccCheckGroupMembershipExists(ctx, resourceName, &groupMembership),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfidentitystore.ResourceGroupMembership(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -90,6 +92,7 @@ func TestAccIdentityStoreGroupMembership_disappears(t *testing.T) {
 }
 
 func TestAccIdentityStoreGroupMembership_GroupId(t *testing.T) {
+	ctx := acctest.Context(t)
 	var groupMembership identitystore.DescribeGroupMembershipOutput
 
 	groupResourceName := "aws_identitystore_group.test"
@@ -101,18 +104,18 @@ func TestAccIdentityStoreGroupMembership_GroupId(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupMembershipDestroy,
+		CheckDestroy:             testAccCheckGroupMembershipDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupMembershipConfig_basic(rName1, rName3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupMembershipExists(resourceName, &groupMembership),
+					testAccCheckGroupMembershipExists(ctx, resourceName, &groupMembership),
 					resource.TestCheckResourceAttrPair(resourceName, "group_id", groupResourceName, "group_id"),
 				),
 			},
@@ -124,7 +127,7 @@ func TestAccIdentityStoreGroupMembership_GroupId(t *testing.T) {
 			{
 				Config: testAccGroupMembershipConfig_basic(rName2, rName3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupMembershipExists(resourceName, &groupMembership),
+					testAccCheckGroupMembershipExists(ctx, resourceName, &groupMembership),
 					resource.TestCheckResourceAttrPair(resourceName, "group_id", groupResourceName, "group_id"),
 				),
 			},
@@ -133,6 +136,7 @@ func TestAccIdentityStoreGroupMembership_GroupId(t *testing.T) {
 }
 
 func TestAccIdentityStoreGroupMembership_MemberId(t *testing.T) {
+	ctx := acctest.Context(t)
 	var groupMembership identitystore.DescribeGroupMembershipOutput
 
 	groupResourceName := "aws_identitystore_user.test"
@@ -144,18 +148,18 @@ func TestAccIdentityStoreGroupMembership_MemberId(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupMembershipDestroy,
+		CheckDestroy:             testAccCheckGroupMembershipDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupMembershipConfig_basic(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupMembershipExists(resourceName, &groupMembership),
+					testAccCheckGroupMembershipExists(ctx, resourceName, &groupMembership),
 					resource.TestCheckResourceAttrPair(resourceName, "member_id", groupResourceName, "user_id"),
 				),
 			},
@@ -167,7 +171,7 @@ func TestAccIdentityStoreGroupMembership_MemberId(t *testing.T) {
 			{
 				Config: testAccGroupMembershipConfig_basic(rName1, rName3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupMembershipExists(resourceName, &groupMembership),
+					testAccCheckGroupMembershipExists(ctx, resourceName, &groupMembership),
 					resource.TestCheckResourceAttrPair(resourceName, "member_id", groupResourceName, "user_id"),
 				),
 			},
@@ -175,34 +179,35 @@ func TestAccIdentityStoreGroupMembership_MemberId(t *testing.T) {
 	})
 }
 
-func testAccCheckGroupMembershipDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient
-	ctx := context.Background()
+func testAccCheckGroupMembershipDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_identitystore_group_membership" {
-			continue
-		}
-
-		_, err := conn.DescribeGroupMembership(ctx, &identitystore.DescribeGroupMembershipInput{
-			IdentityStoreId: aws.String(rs.Primary.Attributes["identity_store_id"]),
-			MembershipId:    aws.String(rs.Primary.Attributes["membership_id"]),
-		})
-		if err != nil {
-			var nfe *types.ResourceNotFoundException
-			if errors.As(err, &nfe) {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_identitystore_group_membership" {
+				continue
 			}
-			return err
+
+			_, err := conn.DescribeGroupMembership(ctx, &identitystore.DescribeGroupMembershipInput{
+				IdentityStoreId: aws.String(rs.Primary.Attributes["identity_store_id"]),
+				MembershipId:    aws.String(rs.Primary.Attributes["membership_id"]),
+			})
+			if err != nil {
+				var nfe *types.ResourceNotFoundException
+				if errors.As(err, &nfe) {
+					return nil
+				}
+				return err
+			}
+
+			return create.Error(names.IdentityStore, create.ErrActionCheckingDestroyed, tfidentitystore.ResNameGroupMembership, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
-		return create.Error(names.IdentityStore, create.ErrActionCheckingDestroyed, tfidentitystore.ResNameGroupMembership, rs.Primary.ID, errors.New("not destroyed"))
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckGroupMembershipExists(name string, groupMembership *identitystore.DescribeGroupMembershipOutput) resource.TestCheckFunc {
+func testAccCheckGroupMembershipExists(ctx context.Context, name string, groupMembership *identitystore.DescribeGroupMembershipOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -213,8 +218,8 @@ func testAccCheckGroupMembershipExists(name string, groupMembership *identitysto
 			return create.Error(names.IdentityStore, create.ErrActionCheckingExistence, tfidentitystore.ResNameGroupMembership, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient
-		ctx := context.Background()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient()
+
 		resp, err := conn.DescribeGroupMembership(ctx, &identitystore.DescribeGroupMembershipInput{
 			IdentityStoreId: aws.String(rs.Primary.Attributes["identity_store_id"]),
 			MembershipId:    aws.String(rs.Primary.Attributes["membership_id"]),

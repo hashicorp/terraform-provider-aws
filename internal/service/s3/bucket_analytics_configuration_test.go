@@ -1,6 +1,7 @@
 package s3_test
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -19,20 +20,21 @@ import (
 )
 
 func TestAccS3BucketAnalyticsConfiguration_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var ac s3.AnalyticsConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
@@ -49,26 +51,27 @@ func TestAccS3BucketAnalyticsConfiguration_basic(t *testing.T) {
 }
 
 func TestAccS3BucketAnalyticsConfiguration_removed(t *testing.T) {
+	ctx := acctest.Context(t)
 	var ac s3.AnalyticsConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 				),
 			},
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_removed(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketAnalyticsConfigurationRemoved(rName, rName),
+					testAccCheckBucketAnalyticsConfigurationRemoved(ctx, rName, rName),
 				),
 			},
 		},
@@ -76,6 +79,7 @@ func TestAccS3BucketAnalyticsConfiguration_removed(t *testing.T) {
 }
 
 func TestAccS3BucketAnalyticsConfiguration_updateBasic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var ac s3.AnalyticsConfiguration
 	originalACName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	originalBucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -84,15 +88,15 @@ func TestAccS3BucketAnalyticsConfiguration_updateBasic(t *testing.T) {
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_basic(originalACName, originalBucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "name", originalACName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
@@ -102,8 +106,8 @@ func TestAccS3BucketAnalyticsConfiguration_updateBasic(t *testing.T) {
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_basic(updatedACName, originalBucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
-					testAccCheckBucketAnalyticsConfigurationRemoved(originalACName, originalBucketName),
+					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationRemoved(ctx, originalACName, originalBucketName),
 					resource.TestCheckResourceAttr(resourceName, "name", updatedACName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
@@ -113,8 +117,8 @@ func TestAccS3BucketAnalyticsConfiguration_updateBasic(t *testing.T) {
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_update(updatedACName, originalBucketName, updatedBucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
-					testAccCheckBucketAnalyticsConfigurationRemoved(updatedACName, originalBucketName),
+					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationRemoved(ctx, updatedACName, originalBucketName),
 					resource.TestCheckResourceAttr(resourceName, "name", updatedACName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test_2", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
@@ -131,13 +135,14 @@ func TestAccS3BucketAnalyticsConfiguration_updateBasic(t *testing.T) {
 }
 
 func TestAccS3BucketAnalyticsConfiguration_WithFilter_empty(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBucketAnalyticsConfigurationConfig_emptyFilter(rName, rName),
@@ -148,6 +153,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_empty(t *testing.T) {
 }
 
 func TestAccS3BucketAnalyticsConfiguration_WithFilter_prefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	var ac s3.AnalyticsConfiguration
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
@@ -157,15 +163,15 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_prefix(t *testing.T) {
 	prefixUpdate := fmt.Sprintf("prefix-update-%d/", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_filterPrefix(rName, rName, prefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefix),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "0"),
@@ -174,7 +180,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_prefix(t *testing.T) {
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_filterPrefix(rName, rName, prefixUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefixUpdate),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "0"),
@@ -190,6 +196,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_prefix(t *testing.T) {
 }
 
 func TestAccS3BucketAnalyticsConfiguration_WithFilter_singleTag(t *testing.T) {
+	ctx := acctest.Context(t)
 	var ac s3.AnalyticsConfiguration
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
@@ -199,15 +206,15 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_singleTag(t *testing.T) {
 	tag1Update := fmt.Sprintf("tag-update-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_filterSingleTag(rName, rName, tag1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
@@ -217,7 +224,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_singleTag(t *testing.T) {
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_filterSingleTag(rName, rName, tag1Update),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
@@ -234,6 +241,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_singleTag(t *testing.T) {
 }
 
 func TestAccS3BucketAnalyticsConfiguration_WithFilter_multipleTags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var ac s3.AnalyticsConfiguration
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
@@ -245,15 +253,15 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_multipleTags(t *testing.T)
 	tag2Update := fmt.Sprintf("tag2-update-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_filterMultipleTags(rName, rName, tag1, tag2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
@@ -264,7 +272,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_multipleTags(t *testing.T)
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_filterMultipleTags(rName, rName, tag1Update, tag2Update),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
@@ -282,6 +290,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_multipleTags(t *testing.T)
 }
 
 func TestAccS3BucketAnalyticsConfiguration_WithFilter_prefixAndTags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var ac s3.AnalyticsConfiguration
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
@@ -295,15 +304,15 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_prefixAndTags(t *testing.T
 	tag2Update := fmt.Sprintf("tag2-update-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_filterPrefixAndTags(rName, rName, prefix, tag1, tag2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefix),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
@@ -314,7 +323,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_prefixAndTags(t *testing.T
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_filterPrefixAndTags(rName, rName, prefixUpdate, tag1Update, tag2Update),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefixUpdate),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
@@ -332,6 +341,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_prefixAndTags(t *testing.T
 }
 
 func TestAccS3BucketAnalyticsConfiguration_WithFilter_remove(t *testing.T) {
+	ctx := acctest.Context(t)
 	var ac s3.AnalyticsConfiguration
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
@@ -340,21 +350,21 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_remove(t *testing.T) {
 	prefix := fmt.Sprintf("prefix-%d/", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_filterPrefix(rName, rName, prefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 				),
 			},
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
 				),
 			},
@@ -368,13 +378,14 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_remove(t *testing.T) {
 }
 
 func TestAccS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_empty(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBucketAnalyticsConfigurationConfig_emptyStorageClassAnalysis(rName, rName),
@@ -385,21 +396,22 @@ func TestAccS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_empty(t *tes
 }
 
 func TestAccS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_default(t *testing.T) {
+	ctx := acctest.Context(t)
 	var ac s3.AnalyticsConfiguration
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_defaultStorageClassAnalysis(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "storage_class_analysis.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_class_analysis.0.data_export.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_class_analysis.0.data_export.0.output_schema_version", "V_1"),
@@ -419,6 +431,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_default(t *t
 }
 
 func TestAccS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_full(t *testing.T) {
+	ctx := acctest.Context(t)
 	var ac s3.AnalyticsConfiguration
 	resourceName := "aws_s3_bucket_analytics_configuration.test"
 
@@ -427,15 +440,15 @@ func TestAccS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_full(t *test
 	prefix := fmt.Sprintf("prefix-%d/", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_fullStorageClassAnalysis(rName, rName, prefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "storage_class_analysis.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_class_analysis.0.data_export.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_class_analysis.0.data_export.0.output_schema_version", "V_1"),
@@ -455,33 +468,35 @@ func TestAccS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_full(t *test
 	})
 }
 
-func testAccCheckBucketAnalyticsConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+func testAccCheckBucketAnalyticsConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_s3_bucket_analytics_configuration" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_s3_bucket_analytics_configuration" {
+				continue
+			}
+
+			bucket, name, err := tfs3.BucketAnalyticsConfigurationParseID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
+			return tfs3.WaitForDeleteBucketAnalyticsConfiguration(ctx, conn, bucket, name, 1*time.Minute)
 		}
-
-		bucket, name, err := tfs3.BucketAnalyticsConfigurationParseID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		return tfs3.WaitForDeleteBucketAnalyticsConfiguration(conn, bucket, name, 1*time.Minute)
+		return nil
 	}
-	return nil
 }
 
-func testAccCheckBucketAnalyticsConfigurationExists(n string, ac *s3.AnalyticsConfiguration) resource.TestCheckFunc {
+func testAccCheckBucketAnalyticsConfigurationExists(ctx context.Context, n string, ac *s3.AnalyticsConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
-		output, err := conn.GetBucketAnalyticsConfiguration(&s3.GetBucketAnalyticsConfigurationInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		output, err := conn.GetBucketAnalyticsConfigurationWithContext(ctx, &s3.GetBucketAnalyticsConfigurationInput{
 			Bucket: aws.String(rs.Primary.Attributes["bucket"]),
 			Id:     aws.String(rs.Primary.Attributes["name"]),
 		})
@@ -500,10 +515,10 @@ func testAccCheckBucketAnalyticsConfigurationExists(n string, ac *s3.AnalyticsCo
 	}
 }
 
-func testAccCheckBucketAnalyticsConfigurationRemoved(name, bucket string) resource.TestCheckFunc {
+func testAccCheckBucketAnalyticsConfigurationRemoved(ctx context.Context, name, bucket string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
-		return tfs3.WaitForDeleteBucketAnalyticsConfiguration(conn, bucket, name, 1*time.Minute)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		return tfs3.WaitForDeleteBucketAnalyticsConfiguration(ctx, conn, bucket, name, 1*time.Minute)
 	}
 }
 
@@ -714,6 +729,9 @@ resource "aws_s3_bucket" "destination" {
 }
 
 func TestExpandAnalyticsFilter(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
 	testCases := map[string]struct {
 		Input    []interface{}
 		Expected *s3.AnalyticsFilter
@@ -824,14 +842,14 @@ func TestExpandAnalyticsFilter(t *testing.T) {
 	}
 
 	for k, tc := range testCases {
-		value := tfs3.ExpandAnalyticsFilter(tc.Input)
+		value := tfs3.ExpandAnalyticsFilter(ctx, tc.Input)
 
 		if value == nil {
 			if tc.Expected == nil {
 				continue
-			} else {
-				t.Errorf("Case %q: Got nil\nExpected:\n%v", k, tc.Expected)
 			}
+
+			t.Errorf("Case %q: Got nil\nExpected:\n%v", k, tc.Expected)
 		}
 
 		if tc.Expected == nil {
@@ -856,6 +874,8 @@ func TestExpandAnalyticsFilter(t *testing.T) {
 }
 
 func TestExpandStorageClassAnalysis(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]struct {
 		Input    []interface{}
 		Expected *s3.StorageClassAnalysis
@@ -1002,6 +1022,9 @@ func TestExpandStorageClassAnalysis(t *testing.T) {
 }
 
 func TestFlattenAnalyticsFilter(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
 	testCases := map[string]struct {
 		Input    *s3.AnalyticsFilter
 		Expected []map[string]interface{}
@@ -1113,7 +1136,7 @@ func TestFlattenAnalyticsFilter(t *testing.T) {
 	}
 
 	for k, tc := range testCases {
-		value := tfs3.FlattenAnalyticsFilter(tc.Input)
+		value := tfs3.FlattenAnalyticsFilter(ctx, tc.Input)
 
 		if !reflect.DeepEqual(value, tc.Expected) {
 			t.Errorf("Case %q: Got:\n%v\n\nExpected:\n%v", k, value, tc.Expected)
@@ -1122,6 +1145,8 @@ func TestFlattenAnalyticsFilter(t *testing.T) {
 }
 
 func TestFlattenStorageClassAnalysis(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]struct {
 		Input    *s3.StorageClassAnalysis
 		Expected []map[string]interface{}

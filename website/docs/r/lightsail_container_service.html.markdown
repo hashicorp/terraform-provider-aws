@@ -68,27 +68,25 @@ resource "aws_lightsail_container_service" "default" {
   }
 }
 
+data "aws_iam_policy_document" "default" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = [aws_lightsail_container_service.default.private_registry_access[0].ecr_image_puller_role[0].principal_arn]
+    }
+
+    actions = [
+      "ecr:BatchGetImage",
+      "ecr:GetDownloadUrlForLayer",
+    ]
+  }
+}
+
 resource "aws_ecr_repository_policy" "default" {
   repository = aws_ecr_repository.default.name
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "AllowLightsailPull",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "${aws_lightsail_container_service.default.private_registry_access[0].ecr_image_puller_role[0].principal_arn}"
-      },
-      "Action": [
-        "ecr:BatchGetImage",
-        "ecr:GetDownloadUrlForLayer"
-      ]
-    }
-  ]
-}
-EOF
+  policy     = data.aws_iam_policy_document.default.json
 }
 ```
 

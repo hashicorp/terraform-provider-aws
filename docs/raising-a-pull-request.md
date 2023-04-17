@@ -103,7 +103,7 @@ This Contribution Guide also includes separate sections on topics such as [Error
 - __Passes Testing__: All code and documentation changes must pass unit testing, code linting, and website link testing. Resource code changes must pass all acceptance testing for the resource.
 - __Avoids API Calls Across Account, Region, and Service Boundaries__: Resources should not implement cross-account, cross-region, or cross-service API calls.
 - __Does Not Set Optional or Required for Non-Configurable Attributes__: Resource schema definitions for read-only attributes must not include `Optional: true` or `Required: true`.
-- __Avoids resource.Retry() without resource.RetryableError()__: Resource logic should only implement [`resource.Retry()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#Retry) if there is a retryable condition (e.g., `return resource.RetryableError(err)`).
+- __Avoids retry.RetryContext() without retry.RetryableError()__: Resource logic should only implement [`retry.Retry()`](https://godoc.org/github.com/hashicorp/terraform/helper/retry#Retry) if there is a retryable condition (e.g., `return retry.RetryableError(err)`).
 - __Avoids Reusing Resource Read Function in Data Source Read Function__: Data sources should fully implement their own resource `Read` functionality including duplicating `d.Set()` calls.
 - __Avoids Reading Schema Structure in Resource Code__: The resource `Schema` should not be read in resource `Create`/`Read`/`Update`/`Delete` functions to perform looping or otherwise complex attribute logic. Use [`d.Get()`](https://godoc.org/github.com/hashicorp/terraform/helper/schema#ResourceData.Get) and [`d.Set()`](https://godoc.org/github.com/hashicorp/terraform/helper/schema#ResourceData.Set) directly with individual attributes instead.
 - __Avoids ResourceData.GetOkExists()__: Resource logic should avoid using [`ResourceData.GetOkExists()`](https://godoc.org/github.com/hashicorp/terraform/helper/schema#ResourceData.GetOkExists) as its expected functionality is not guaranteed in all scenarios.
@@ -118,11 +118,11 @@ This Contribution Guide also includes separate sections on topics such as [Error
 - __Uses AWS Go SDK Pointer Conversion Functions__: Many APIs return pointer types and these functions return the zero value for the type if the pointer is `nil`. This prevents potential panics from unchecked `*` pointer dereferences and can eliminate boilerplate `nil` checking in many cases. See also the [`aws` package in the AWS Go SDK documentation](https://docs.aws.amazon.com/sdk-for-go/api/aws/).
 - __Uses AWS Go SDK Types__: Use available SDK structs instead of implementing custom types with indirection.
 - __Uses Existing Validation Functions__: Schema definitions including `ValidateFunc` for attribute validation should use available [Terraform `helper/validation` package](https://godoc.org/github.com/hashicorp/terraform/helper/validation) functions. `All()`/`Any()` can be used for combining multiple validation function behaviors.
-- __Uses tfresource.TimedOut() with resource.Retry()__: Resource logic implementing [`resource.Retry()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#Retry) should error check with [`tfresource.TimedOut(err error)`](https://godoc.org/github.com/hashicorp/terraform-provider-aws/internal/tfresource#TimedOut) and potentially unset the error before returning the error. For example:
+- __Uses tfresource.TimedOut() with retry.Retry()__: Resource logic implementing [`retry.Retry()`](https://godoc.org/github.com/hashicorp/terraform/helper/retry#Retry) should error check with [`tfresource.TimedOut(err error)`](https://godoc.org/github.com/hashicorp/terraform-provider-aws/internal/tfresource#TimedOut) and potentially unset the error before returning the error. For example:
 
   ```go
   var output *kms.CreateKeyOutput
-  err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+  err := retry.Retry(1*time.Minute, func() *retry.RetryError {
     var err error
 
     output, err = conn.CreateKey(input)
@@ -137,11 +137,11 @@ This Contribution Guide also includes separate sections on topics such as [Error
   }
 
   if err != nil {
-    return fmt.Errorf("error creating KMS External Key: %s", err)
+    return fmt.Errorf("creating KMS External Key: %s", err)
   }
   ```
 
-- __Uses resource.UniqueId()__: API fields for concurrency protection such as `CallerReference` and `IdempotencyToken` should use [`resource.UniqueId()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#UniqueId). The implementation includes a monotonic counter which is safer for concurrent operations than solutions such as `time.Now()`.
+- __Uses id.UniqueId()__: API fields for concurrency protection such as `CallerReference` and `IdempotencyToken` should use [`id.UniqueId()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#UniqueId). The implementation includes a monotonic counter which is safer for concurrent operations than solutions such as `time.Now()`.
 - __Skips id Attribute__: The `id` attribute is implicit for all Terraform resources and does not need to be defined in the schema.
 
 The below are style-based items that _may_ be noted during review and are recommended for simplicity, consistency, and quality assurance:

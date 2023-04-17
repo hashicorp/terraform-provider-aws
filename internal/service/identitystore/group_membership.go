@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,6 +24,7 @@ const (
 	ResNameGroupMembership = "GroupMembership"
 )
 
+// @SDKResource("aws_identitystore_group_membership")
 func ResourceGroupMembership() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupMembershipCreate,
@@ -65,7 +66,7 @@ func ResourceGroupMembership() *schema.Resource {
 }
 
 func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IdentityStoreClient
+	conn := meta.(*conns.AWSClient).IdentityStoreClient()
 
 	identityStoreId := d.Get("identity_store_id").(string)
 
@@ -95,7 +96,7 @@ func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IdentityStoreClient
+	conn := meta.(*conns.AWSClient).IdentityStoreClient()
 
 	identityStoreId, groupMembershipId, err := resourceGroupMembershipParseID(d.Id())
 
@@ -131,7 +132,7 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IdentityStoreClient
+	conn := meta.(*conns.AWSClient).IdentityStoreClient()
 
 	log.Printf("[INFO] Deleting IdentityStore GroupMembership %s", d.Id())
 
@@ -188,7 +189,7 @@ func findGroupMembershipByID(ctx context.Context, conn *identitystore.Client, id
 	if err != nil {
 		var e *types.ResourceNotFoundException
 		if errors.As(err, &e) {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}

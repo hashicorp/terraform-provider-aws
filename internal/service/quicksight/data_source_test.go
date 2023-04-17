@@ -1,8 +1,8 @@
 package quicksight_test
 
 import (
+	"context"
 	"fmt"
-	"reflect"
 	"regexp"
 	"testing"
 
@@ -11,235 +11,29 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 )
 
-func TestDataSourcePermissionsDiff(t *testing.T) {
-	testCases := []struct {
-		name            string
-		oldPermissions  []interface{}
-		newPermissions  []interface{}
-		expectedGrants  []*quicksight.ResourcePermission
-		expectedRevokes []*quicksight.ResourcePermission
-	}{
-		{
-			name:            "no changes;empty",
-			oldPermissions:  []interface{}{},
-			newPermissions:  []interface{}{},
-			expectedGrants:  nil,
-			expectedRevokes: nil,
-		},
-		{
-			name: "no changes;same",
-			oldPermissions: []interface{}{
-				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action1",
-						"action2",
-					}),
-				},
-			},
-			newPermissions: []interface{}{
-				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action1",
-						"action2",
-					}),
-				}},
-
-			expectedGrants:  nil,
-			expectedRevokes: nil,
-		},
-		{
-			name:           "grant only",
-			oldPermissions: []interface{}{},
-			newPermissions: []interface{}{
-				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action1",
-						"action2",
-					}),
-				},
-			},
-			expectedGrants: []*quicksight.ResourcePermission{
-				{
-					Actions:   aws.StringSlice([]string{"action1", "action2"}),
-					Principal: aws.String("principal1"),
-				},
-			},
-			expectedRevokes: nil,
-		},
-		{
-			name: "revoke only",
-			oldPermissions: []interface{}{
-				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action1",
-						"action2",
-					}),
-				},
-			},
-			newPermissions: []interface{}{},
-			expectedGrants: nil,
-			expectedRevokes: []*quicksight.ResourcePermission{
-				{
-					Actions:   aws.StringSlice([]string{"action1", "action2"}),
-					Principal: aws.String("principal1"),
-				},
-			},
-		},
-		{
-			name: "grant new action",
-			oldPermissions: []interface{}{
-				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action1",
-					}),
-				},
-			},
-			newPermissions: []interface{}{
-				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action1",
-						"action2",
-					}),
-				},
-			},
-			expectedGrants: []*quicksight.ResourcePermission{
-				{
-					Actions:   aws.StringSlice([]string{"action2"}),
-					Principal: aws.String("principal1"),
-				},
-			},
-			expectedRevokes: nil,
-		},
-		{
-			name: "revoke old action",
-			oldPermissions: []interface{}{
-				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"oldAction",
-						"onlyOldAction",
-					}),
-				},
-			},
-			newPermissions: []interface{}{
-				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"oldAction",
-					}),
-				},
-			},
-			expectedGrants: nil,
-			expectedRevokes: []*quicksight.ResourcePermission{
-				{
-					Actions:   aws.StringSlice([]string{"onlyOldAction"}),
-					Principal: aws.String("principal1"),
-				},
-			},
-		},
-		{
-			name: "multiple permissions",
-			oldPermissions: []interface{}{
-				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action1",
-						"action2",
-					}),
-				},
-				map[string]interface{}{
-					"principal": "principal2",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action1",
-						"action3",
-						"action4",
-					}),
-				},
-				map[string]interface{}{
-					"principal": "principal3",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action5",
-					}),
-				},
-			},
-			newPermissions: []interface{}{
-				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action1",
-						"action2",
-					}),
-				},
-				map[string]interface{}{
-					"principal": "principal2",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action3",
-						"action5",
-					}),
-				},
-			},
-			expectedGrants: []*quicksight.ResourcePermission{
-				{
-					Actions:   aws.StringSlice([]string{"action5"}),
-					Principal: aws.String("principal2"),
-				},
-			},
-			expectedRevokes: []*quicksight.ResourcePermission{
-				{
-					Actions:   aws.StringSlice([]string{"action1", "action4"}),
-					Principal: aws.String("principal2"),
-				},
-				{
-					Actions:   aws.StringSlice([]string{"action5"}),
-					Principal: aws.String("principal3"),
-				},
-			},
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			toGrant, toRevoke := tfquicksight.DiffPermissions(testCase.oldPermissions, testCase.newPermissions)
-			if !reflect.DeepEqual(toGrant, testCase.expectedGrants) {
-				t.Fatalf("Expected: %v, got: %v", testCase.expectedGrants, toGrant)
-			}
-
-			if !reflect.DeepEqual(toRevoke, testCase.expectedRevokes) {
-				t.Fatalf("Expected: %v, got: %v", testCase.expectedRevokes, toRevoke)
-			}
-		})
-	}
-}
-
 func TestAccQuickSightDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dataSource quicksight.DataSource
 	resourceName := "aws_quicksight_data_source.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_basic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName, &dataSource),
+					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "data_source_id", rId),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("datasource/%s", rId)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -262,22 +56,23 @@ func TestAccQuickSightDataSource_basic(t *testing.T) {
 }
 
 func TestAccQuickSightDataSource_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dataSource quicksight.DataSource
 	resourceName := "aws_quicksight_data_source.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_basic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName, &dataSource),
-					acctest.CheckResourceDisappears(acctest.Provider, tfquicksight.ResourceDataSource(), resourceName),
+					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceDataSource(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -286,21 +81,22 @@ func TestAccQuickSightDataSource_disappears(t *testing.T) {
 }
 
 func TestAccQuickSightDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dataSource quicksight.DataSource
 	resourceName := "aws_quicksight_data_source.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_tags1(rId, rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName, &dataSource),
+					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -313,7 +109,7 @@ func TestAccQuickSightDataSource_tags(t *testing.T) {
 			{
 				Config: testAccDataSourceConfig_tags2(rId, rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName, &dataSource),
+					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -322,7 +118,7 @@ func TestAccQuickSightDataSource_tags(t *testing.T) {
 			{
 				Config: testAccDataSourceConfig_tags1(rId, rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName, &dataSource),
+					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -332,21 +128,22 @@ func TestAccQuickSightDataSource_tags(t *testing.T) {
 }
 
 func TestAccQuickSightDataSource_permissions(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dataSource quicksight.DataSource
 	resourceName := "aws_quicksight_data_source.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
-		CheckDestroy:             testAccCheckDataSourceDestroy,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_permissions(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName, &dataSource),
+					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "permission.#", "1"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "permission.*", map[string]*regexp.Regexp{
 						"principal": regexp.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
@@ -364,7 +161,7 @@ func TestAccQuickSightDataSource_permissions(t *testing.T) {
 			{
 				Config: testAccDataSourceConfig_updatePermissions(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName, &dataSource),
+					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "permission.#", "1"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "permission.*", map[string]*regexp.Regexp{
 						"principal": regexp.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
@@ -385,7 +182,7 @@ func TestAccQuickSightDataSource_permissions(t *testing.T) {
 			{
 				Config: testAccDataSourceConfig_basic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(resourceName, &dataSource),
+					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "permission.#", "0"),
 				),
 			},
@@ -393,7 +190,7 @@ func TestAccQuickSightDataSource_permissions(t *testing.T) {
 	})
 }
 
-func testAccCheckDataSourceExists(resourceName string, dataSource *quicksight.DataSource) resource.TestCheckFunc {
+func testAccCheckDataSourceExists(ctx context.Context, resourceName string, dataSource *quicksight.DataSource) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -405,14 +202,14 @@ func testAccCheckDataSourceExists(resourceName string, dataSource *quicksight.Da
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
 
 		input := &quicksight.DescribeDataSourceInput{
 			AwsAccountId: aws.String(awsAccountID),
 			DataSourceId: aws.String(dataSourceId),
 		}
 
-		output, err := conn.DescribeDataSource(input)
+		output, err := conn.DescribeDataSourceWithContext(ctx, input)
 
 		if err != nil {
 			return err
@@ -428,37 +225,39 @@ func testAccCheckDataSourceExists(resourceName string, dataSource *quicksight.Da
 	}
 }
 
-func testAccCheckDataSourceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_quicksight_data_source" {
-			continue
+func testAccCheckDataSourceDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_quicksight_data_source" {
+				continue
+			}
+
+			awsAccountID, dataSourceId, err := tfquicksight.ParseDataSourceID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
+			output, err := conn.DescribeDataSourceWithContext(ctx, &quicksight.DescribeDataSourceInput{
+				AwsAccountId: aws.String(awsAccountID),
+				DataSourceId: aws.String(dataSourceId),
+			})
+
+			if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if output != nil && output.DataSource != nil {
+				return fmt.Errorf("QuickSight Data Source (%s) still exists", rs.Primary.ID)
+			}
 		}
 
-		awsAccountID, dataSourceId, err := tfquicksight.ParseDataSourceID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		output, err := conn.DescribeDataSource(&quicksight.DescribeDataSourceInput{
-			AwsAccountId: aws.String(awsAccountID),
-			DataSourceId: aws.String(dataSourceId),
-		})
-
-		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if output != nil && output.DataSource != nil {
-			return fmt.Errorf("QuickSight Data Source (%s) still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
 func testAccBaseDataSourceConfig(rName string) string {
@@ -470,12 +269,36 @@ resource "aws_s3_bucket" "test" {
   force_destroy = true
 }
 
+resource "aws_s3_bucket_public_access_block" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_ownership_controls" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_acl" "test" {
+  depends_on = [
+    aws_s3_bucket_public_access_block.test,
+    aws_s3_bucket_ownership_controls.test,
+  ]
+
   bucket = aws_s3_bucket.test.id
   acl    = "public-read"
 }
 
 resource "aws_s3_object" "test" {
+  depends_on = [aws_s3_bucket_acl.test]
+
   bucket  = aws_s3_bucket.test.bucket
   key     = %[1]q
   content = <<EOF

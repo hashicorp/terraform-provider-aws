@@ -1,6 +1,7 @@
 package fsx_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -19,6 +20,7 @@ import (
 )
 
 func TestAccFSxDataRepositoryAssociation_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
 		t.Skip("PERSISTENT_2 deployment_type is not supported in GovCloud partition")
 	}
@@ -30,15 +32,15 @@ func TestAccFSxDataRepositoryAssociation_basic(t *testing.T) {
 	fileSystemPath := "/test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataRepositoryAssociationDestroy,
+		CheckDestroy:             testAccCheckDataRepositoryAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataRepositoryAssociationConfig_fileSystemPath(bucketName, fileSystemPath),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataRepositoryAssociationExists(resourceName, &association),
+					testAccCheckDataRepositoryAssociationExists(ctx, resourceName, &association),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`association/fs-.+/dra-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "batch_import_meta_data_on_create", "false"),
 					resource.TestCheckResourceAttr(resourceName, "data_repository_path", bucketPath),
@@ -58,6 +60,7 @@ func TestAccFSxDataRepositoryAssociation_basic(t *testing.T) {
 }
 
 func TestAccFSxDataRepositoryAssociation_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
 		t.Skip("PERSISTENT_2 deployment_type is not supported in GovCloud partition")
 	}
@@ -68,16 +71,16 @@ func TestAccFSxDataRepositoryAssociation_disappears(t *testing.T) {
 	fileSystemPath := "/test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataRepositoryAssociationDestroy,
+		CheckDestroy:             testAccCheckDataRepositoryAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataRepositoryAssociationConfig_fileSystemPath(bucketName, fileSystemPath),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataRepositoryAssociationExists(resourceName, &association),
-					acctest.CheckResourceDisappears(acctest.Provider, tffsx.ResourceDataRepositoryAssociation(), resourceName),
+					testAccCheckDataRepositoryAssociationExists(ctx, resourceName, &association),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceDataRepositoryAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -86,6 +89,7 @@ func TestAccFSxDataRepositoryAssociation_disappears(t *testing.T) {
 }
 
 func TestAccFSxDataRepositoryAssociation_disappears_ParentFileSystem(t *testing.T) {
+	ctx := acctest.Context(t)
 	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
 		t.Skip("PERSISTENT_2 deployment_type is not supported in GovCloud partition")
 	}
@@ -97,16 +101,16 @@ func TestAccFSxDataRepositoryAssociation_disappears_ParentFileSystem(t *testing.
 	fileSystemPath := "/test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataRepositoryAssociationDestroy,
+		CheckDestroy:             testAccCheckDataRepositoryAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataRepositoryAssociationConfig_fileSystemPath(bucketName, fileSystemPath),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataRepositoryAssociationExists(resourceName, &association),
-					acctest.CheckResourceDisappears(acctest.Provider, tffsx.ResourceLustreFileSystem(), parentResourceName),
+					testAccCheckDataRepositoryAssociationExists(ctx, resourceName, &association),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceLustreFileSystem(), parentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -115,6 +119,7 @@ func TestAccFSxDataRepositoryAssociation_disappears_ParentFileSystem(t *testing.
 }
 
 func TestAccFSxDataRepositoryAssociation_fileSystemPathUpdated(t *testing.T) {
+	ctx := acctest.Context(t)
 	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
 		t.Skip("PERSISTENT_2 deployment_type is not supported in GovCloud partition")
 	}
@@ -126,15 +131,15 @@ func TestAccFSxDataRepositoryAssociation_fileSystemPathUpdated(t *testing.T) {
 	fileSystemPath2 := "/test2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataRepositoryAssociationDestroy,
+		CheckDestroy:             testAccCheckDataRepositoryAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataRepositoryAssociationConfig_fileSystemPath(bucketName, fileSystemPath1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataRepositoryAssociationExists(resourceName, &association1),
+					testAccCheckDataRepositoryAssociationExists(ctx, resourceName, &association1),
 					resource.TestCheckResourceAttr(resourceName, "file_system_path", fileSystemPath1),
 				),
 			},
@@ -147,7 +152,7 @@ func TestAccFSxDataRepositoryAssociation_fileSystemPathUpdated(t *testing.T) {
 			{
 				Config: testAccDataRepositoryAssociationConfig_fileSystemPath(bucketName, fileSystemPath2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataRepositoryAssociationExists(resourceName, &association2),
+					testAccCheckDataRepositoryAssociationExists(ctx, resourceName, &association2),
 					testAccCheckDataRepositoryAssociationRecreated(&association1, &association2),
 					resource.TestCheckResourceAttr(resourceName, "file_system_path", fileSystemPath2),
 				),
@@ -157,6 +162,7 @@ func TestAccFSxDataRepositoryAssociation_fileSystemPathUpdated(t *testing.T) {
 }
 
 func TestAccFSxDataRepositoryAssociation_dataRepositoryPathUpdated(t *testing.T) {
+	ctx := acctest.Context(t)
 	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
 		t.Skip("PERSISTENT_2 deployment_type is not supported in GovCloud partition")
 	}
@@ -170,15 +176,15 @@ func TestAccFSxDataRepositoryAssociation_dataRepositoryPathUpdated(t *testing.T)
 	fileSystemPath := "/test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataRepositoryAssociationDestroy,
+		CheckDestroy:             testAccCheckDataRepositoryAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataRepositoryAssociationConfig_fileSystemPath(bucketName1, fileSystemPath),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataRepositoryAssociationExists(resourceName, &association1),
+					testAccCheckDataRepositoryAssociationExists(ctx, resourceName, &association1),
 					resource.TestCheckResourceAttr(resourceName, "data_repository_path", bucketPath1),
 				),
 			},
@@ -191,7 +197,7 @@ func TestAccFSxDataRepositoryAssociation_dataRepositoryPathUpdated(t *testing.T)
 			{
 				Config: testAccDataRepositoryAssociationConfig_fileSystemPath(bucketName2, fileSystemPath),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataRepositoryAssociationExists(resourceName, &association2),
+					testAccCheckDataRepositoryAssociationExists(ctx, resourceName, &association2),
 					testAccCheckDataRepositoryAssociationRecreated(&association1, &association2),
 					resource.TestCheckResourceAttr(resourceName, "data_repository_path", bucketPath2),
 				),
@@ -202,6 +208,7 @@ func TestAccFSxDataRepositoryAssociation_dataRepositoryPathUpdated(t *testing.T)
 
 // lintignore:AT002
 func TestAccFSxDataRepositoryAssociation_importedFileChunkSize(t *testing.T) {
+	ctx := acctest.Context(t)
 	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
 		t.Skip("PERSISTENT_2 deployment_type is not supported in GovCloud partition")
 	}
@@ -212,15 +219,15 @@ func TestAccFSxDataRepositoryAssociation_importedFileChunkSize(t *testing.T) {
 	fileSystemPath := "/test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataRepositoryAssociationDestroy,
+		CheckDestroy:             testAccCheckDataRepositoryAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataRepositoryAssociationConfig_importedFileChunkSize(bucketName, fileSystemPath, 256),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataRepositoryAssociationExists(resourceName, &association),
+					testAccCheckDataRepositoryAssociationExists(ctx, resourceName, &association),
 					resource.TestCheckResourceAttr(resourceName, "imported_file_chunk_size", "256"),
 				),
 			},
@@ -236,6 +243,7 @@ func TestAccFSxDataRepositoryAssociation_importedFileChunkSize(t *testing.T) {
 
 // lintignore:AT002
 func TestAccFSxDataRepositoryAssociation_importedFileChunkSizeUpdated(t *testing.T) {
+	ctx := acctest.Context(t)
 	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
 		t.Skip("PERSISTENT_2 deployment_type is not supported in GovCloud partition")
 	}
@@ -246,15 +254,15 @@ func TestAccFSxDataRepositoryAssociation_importedFileChunkSizeUpdated(t *testing
 	fileSystemPath := "/test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataRepositoryAssociationDestroy,
+		CheckDestroy:             testAccCheckDataRepositoryAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataRepositoryAssociationConfig_importedFileChunkSize(bucketName, fileSystemPath, 256),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataRepositoryAssociationExists(resourceName, &association1),
+					testAccCheckDataRepositoryAssociationExists(ctx, resourceName, &association1),
 					resource.TestCheckResourceAttr(resourceName, "imported_file_chunk_size", "256"),
 				),
 			},
@@ -267,7 +275,7 @@ func TestAccFSxDataRepositoryAssociation_importedFileChunkSizeUpdated(t *testing
 			{
 				Config: testAccDataRepositoryAssociationConfig_importedFileChunkSize(bucketName, fileSystemPath, 512),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataRepositoryAssociationExists(resourceName, &association2),
+					testAccCheckDataRepositoryAssociationExists(ctx, resourceName, &association2),
 					testAccCheckDataRepositoryAssociationNotRecreated(&association1, &association2),
 					resource.TestCheckResourceAttr(resourceName, "imported_file_chunk_size", "512"),
 				),
@@ -277,6 +285,7 @@ func TestAccFSxDataRepositoryAssociation_importedFileChunkSizeUpdated(t *testing
 }
 
 func TestAccFSxDataRepositoryAssociation_deleteDataInFilesystem(t *testing.T) {
+	ctx := acctest.Context(t)
 	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
 		t.Skip("PERSISTENT_2 deployment_type is not supported in GovCloud partition")
 	}
@@ -287,15 +296,15 @@ func TestAccFSxDataRepositoryAssociation_deleteDataInFilesystem(t *testing.T) {
 	fileSystemPath := "/test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataRepositoryAssociationDestroy,
+		CheckDestroy:             testAccCheckDataRepositoryAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataRepositoryAssociationConfig_deleteInFilesystem(bucketName, fileSystemPath, "true"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataRepositoryAssociationExists(resourceName, &association),
+					testAccCheckDataRepositoryAssociationExists(ctx, resourceName, &association),
 					resource.TestCheckResourceAttr(resourceName, "delete_data_in_filesystem", "true"),
 				),
 			},
@@ -310,6 +319,7 @@ func TestAccFSxDataRepositoryAssociation_deleteDataInFilesystem(t *testing.T) {
 }
 
 func TestAccFSxDataRepositoryAssociation_s3AutoExportPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
 	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
 		t.Skip("PERSISTENT_2 deployment_type is not supported in GovCloud partition")
 	}
@@ -321,15 +331,15 @@ func TestAccFSxDataRepositoryAssociation_s3AutoExportPolicy(t *testing.T) {
 	events := []string{"NEW", "CHANGED", "DELETED"}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataRepositoryAssociationDestroy,
+		CheckDestroy:             testAccCheckDataRepositoryAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataRepositoryAssociationConfig_s3AutoExportPolicy(bucketName, fileSystemPath, events),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataRepositoryAssociationExists(resourceName, &association),
+					testAccCheckDataRepositoryAssociationExists(ctx, resourceName, &association),
 					resource.TestCheckResourceAttr(resourceName, "s3.0.auto_export_policy.0.events.0", "NEW"),
 					resource.TestCheckResourceAttr(resourceName, "s3.0.auto_export_policy.0.events.1", "CHANGED"),
 					resource.TestCheckResourceAttr(resourceName, "s3.0.auto_export_policy.0.events.2", "DELETED"),
@@ -346,6 +356,7 @@ func TestAccFSxDataRepositoryAssociation_s3AutoExportPolicy(t *testing.T) {
 }
 
 func TestAccFSxDataRepositoryAssociation_s3AutoExportPolicyUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
 	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
 		t.Skip("PERSISTENT_2 deployment_type is not supported in GovCloud partition")
 	}
@@ -358,15 +369,15 @@ func TestAccFSxDataRepositoryAssociation_s3AutoExportPolicyUpdate(t *testing.T) 
 	events2 := []string{"NEW"}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataRepositoryAssociationDestroy,
+		CheckDestroy:             testAccCheckDataRepositoryAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataRepositoryAssociationConfig_s3AutoExportPolicy(bucketName, fileSystemPath, events1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataRepositoryAssociationExists(resourceName, &association1),
+					testAccCheckDataRepositoryAssociationExists(ctx, resourceName, &association1),
 					resource.TestCheckResourceAttr(resourceName, "s3.0.auto_export_policy.0.events.0", "NEW"),
 					resource.TestCheckResourceAttr(resourceName, "s3.0.auto_export_policy.0.events.1", "CHANGED"),
 					resource.TestCheckResourceAttr(resourceName, "s3.0.auto_export_policy.0.events.2", "DELETED"),
@@ -381,7 +392,7 @@ func TestAccFSxDataRepositoryAssociation_s3AutoExportPolicyUpdate(t *testing.T) 
 			{
 				Config: testAccDataRepositoryAssociationConfig_s3AutoExportPolicy(bucketName, fileSystemPath, events2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataRepositoryAssociationExists(resourceName, &association2),
+					testAccCheckDataRepositoryAssociationExists(ctx, resourceName, &association2),
 					testAccCheckDataRepositoryAssociationNotRecreated(&association1, &association2),
 					resource.TestCheckResourceAttr(resourceName, "s3.0.auto_export_policy.0.events.0", "NEW"),
 				),
@@ -391,6 +402,7 @@ func TestAccFSxDataRepositoryAssociation_s3AutoExportPolicyUpdate(t *testing.T) 
 }
 
 func TestAccFSxDataRepositoryAssociation_s3AutoImportPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
 	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
 		t.Skip("PERSISTENT_2 deployment_type is not supported in GovCloud partition")
 	}
@@ -402,15 +414,15 @@ func TestAccFSxDataRepositoryAssociation_s3AutoImportPolicy(t *testing.T) {
 	events := []string{"NEW", "CHANGED", "DELETED"}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataRepositoryAssociationDestroy,
+		CheckDestroy:             testAccCheckDataRepositoryAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataRepositoryAssociationConfig_s3AutoImportPolicy(bucketName, fileSystemPath, events),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataRepositoryAssociationExists(resourceName, &association),
+					testAccCheckDataRepositoryAssociationExists(ctx, resourceName, &association),
 					resource.TestCheckResourceAttr(resourceName, "s3.0.auto_import_policy.0.events.0", "NEW"),
 					resource.TestCheckResourceAttr(resourceName, "s3.0.auto_import_policy.0.events.1", "CHANGED"),
 					resource.TestCheckResourceAttr(resourceName, "s3.0.auto_import_policy.0.events.2", "DELETED"),
@@ -427,6 +439,7 @@ func TestAccFSxDataRepositoryAssociation_s3AutoImportPolicy(t *testing.T) {
 }
 
 func TestAccFSxDataRepositoryAssociation_s3AutoImportPolicyUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
 	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
 		t.Skip("PERSISTENT_2 deployment_type is not supported in GovCloud partition")
 	}
@@ -439,15 +452,15 @@ func TestAccFSxDataRepositoryAssociation_s3AutoImportPolicyUpdate(t *testing.T) 
 	events2 := []string{"NEW"}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataRepositoryAssociationDestroy,
+		CheckDestroy:             testAccCheckDataRepositoryAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataRepositoryAssociationConfig_s3AutoImportPolicy(bucketName, fileSystemPath, events1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataRepositoryAssociationExists(resourceName, &association1),
+					testAccCheckDataRepositoryAssociationExists(ctx, resourceName, &association1),
 					resource.TestCheckResourceAttr(resourceName, "s3.0.auto_import_policy.0.events.0", "NEW"),
 					resource.TestCheckResourceAttr(resourceName, "s3.0.auto_import_policy.0.events.1", "CHANGED"),
 					resource.TestCheckResourceAttr(resourceName, "s3.0.auto_import_policy.0.events.2", "DELETED"),
@@ -462,7 +475,7 @@ func TestAccFSxDataRepositoryAssociation_s3AutoImportPolicyUpdate(t *testing.T) 
 			{
 				Config: testAccDataRepositoryAssociationConfig_s3AutoImportPolicy(bucketName, fileSystemPath, events2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataRepositoryAssociationExists(resourceName, &association2),
+					testAccCheckDataRepositoryAssociationExists(ctx, resourceName, &association2),
 					testAccCheckDataRepositoryAssociationNotRecreated(&association1, &association2),
 					resource.TestCheckResourceAttr(resourceName, "s3.0.auto_import_policy.0.events.0", "NEW"),
 				),
@@ -472,6 +485,7 @@ func TestAccFSxDataRepositoryAssociation_s3AutoImportPolicyUpdate(t *testing.T) 
 }
 
 func TestAccFSxDataRepositoryAssociation_s3FullPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
 	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
 		t.Skip("PERSISTENT_2 deployment_type is not supported in GovCloud partition")
 	}
@@ -482,15 +496,15 @@ func TestAccFSxDataRepositoryAssociation_s3FullPolicy(t *testing.T) {
 	fileSystemPath := "/test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataRepositoryAssociationDestroy,
+		CheckDestroy:             testAccCheckDataRepositoryAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataRepositoryAssociationConfig_s3FullPolicy(bucketName, fileSystemPath),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataRepositoryAssociationExists(resourceName, &association),
+					testAccCheckDataRepositoryAssociationExists(ctx, resourceName, &association),
 					resource.TestCheckResourceAttr(resourceName, "s3.0.auto_export_policy.0.events.0", "NEW"),
 					resource.TestCheckResourceAttr(resourceName, "s3.0.auto_export_policy.0.events.1", "CHANGED"),
 					resource.TestCheckResourceAttr(resourceName, "s3.0.auto_export_policy.0.events.2", "DELETED"),
@@ -509,16 +523,16 @@ func TestAccFSxDataRepositoryAssociation_s3FullPolicy(t *testing.T) {
 	})
 }
 
-func testAccCheckDataRepositoryAssociationExists(resourceName string, assoc *fsx.DataRepositoryAssociation) resource.TestCheckFunc {
+func testAccCheckDataRepositoryAssociationExists(ctx context.Context, resourceName string, assoc *fsx.DataRepositoryAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
 
-		association, err := tffsx.FindDataRepositoryAssociationByID(conn, rs.Primary.ID)
+		association, err := tffsx.FindDataRepositoryAssociationByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -533,24 +547,26 @@ func testAccCheckDataRepositoryAssociationExists(resourceName string, assoc *fsx
 	}
 }
 
-func testAccCheckDataRepositoryAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
+func testAccCheckDataRepositoryAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_fsx_lustre_file_system" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_fsx_lustre_file_system" {
+				continue
+			}
 
-		filesystem, err := tffsx.FindFileSystemByID(conn, rs.Primary.ID)
-		if tfresource.NotFound(err) {
-			continue
-		}
+			filesystem, err := tffsx.FindFileSystemByID(ctx, conn, rs.Primary.ID)
+			if tfresource.NotFound(err) {
+				continue
+			}
 
-		if filesystem != nil {
-			return fmt.Errorf("FSx Lustre File System (%s) still exists", rs.Primary.ID)
+			if filesystem != nil {
+				return fmt.Errorf("FSx Lustre File System (%s) still exists", rs.Primary.ID)
+			}
 		}
+		return nil
 	}
-	return nil
 }
 
 func testAccCheckDataRepositoryAssociationNotRecreated(i, j *fsx.DataRepositoryAssociation) resource.TestCheckFunc {
@@ -573,7 +589,7 @@ func testAccCheckDataRepositoryAssociationRecreated(i, j *fsx.DataRepositoryAsso
 	}
 }
 
-func testAccDataRepositoryAssociationBucketConfig(bucketName string) string {
+func testAccDataRepositoryAssociationConfig_s3Bucket(bucketName string) string {
 	return acctest.ConfigCompose(testAccLustreFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity            = 1200
@@ -585,16 +601,11 @@ resource "aws_fsx_lustre_file_system" "test" {
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
 `, bucketName))
 }
 
 func testAccDataRepositoryAssociationConfig_fileSystemPath(bucketName, fileSystemPath string) string {
-	return acctest.ConfigCompose(testAccDataRepositoryAssociationBucketConfig(bucketName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataRepositoryAssociationConfig_s3Bucket(bucketName), fmt.Sprintf(`
 resource "aws_fsx_data_repository_association" "test" {
   file_system_id       = aws_fsx_lustre_file_system.test.id
   data_repository_path = "s3://%[1]s"
@@ -605,7 +616,7 @@ resource "aws_fsx_data_repository_association" "test" {
 
 func testAccDataRepositoryAssociationConfig_importedFileChunkSize(bucketName, fileSystemPath string, fileChunkSize int64) string {
 	bucketPath := fmt.Sprintf("s3://%s", bucketName)
-	return acctest.ConfigCompose(testAccDataRepositoryAssociationBucketConfig(bucketName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataRepositoryAssociationConfig_s3Bucket(bucketName), fmt.Sprintf(`
 resource "aws_fsx_data_repository_association" "test" {
   file_system_id           = aws_fsx_lustre_file_system.test.id
   data_repository_path     = %[1]q
@@ -617,7 +628,7 @@ resource "aws_fsx_data_repository_association" "test" {
 
 func testAccDataRepositoryAssociationConfig_deleteInFilesystem(bucketName, fileSystemPath, deleteDataInFilesystem string) string {
 	bucketPath := fmt.Sprintf("s3://%s", bucketName)
-	return acctest.ConfigCompose(testAccDataRepositoryAssociationBucketConfig(bucketName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataRepositoryAssociationConfig_s3Bucket(bucketName), fmt.Sprintf(`
 resource "aws_fsx_data_repository_association" "test" {
   file_system_id            = aws_fsx_lustre_file_system.test.id
   data_repository_path      = %[1]q
@@ -630,7 +641,7 @@ resource "aws_fsx_data_repository_association" "test" {
 func testAccDataRepositoryAssociationConfig_s3AutoExportPolicy(bucketName, fileSystemPath string, events []string) string {
 	bucketPath := fmt.Sprintf("s3://%s", bucketName)
 	eventsString := strings.Replace(fmt.Sprintf("%q", events), " ", ", ", -1)
-	return acctest.ConfigCompose(testAccDataRepositoryAssociationBucketConfig(bucketName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataRepositoryAssociationConfig_s3Bucket(bucketName), fmt.Sprintf(`
 resource "aws_fsx_data_repository_association" "test" {
   file_system_id       = aws_fsx_lustre_file_system.test.id
   data_repository_path = %[1]q
@@ -648,7 +659,7 @@ resource "aws_fsx_data_repository_association" "test" {
 func testAccDataRepositoryAssociationConfig_s3AutoImportPolicy(bucketName, fileSystemPath string, events []string) string {
 	bucketPath := fmt.Sprintf("s3://%s", bucketName)
 	eventsString := strings.Replace(fmt.Sprintf("%q", events), " ", ", ", -1)
-	return acctest.ConfigCompose(testAccDataRepositoryAssociationBucketConfig(bucketName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataRepositoryAssociationConfig_s3Bucket(bucketName), fmt.Sprintf(`
 resource "aws_fsx_data_repository_association" "test" {
   file_system_id       = aws_fsx_lustre_file_system.test.id
   data_repository_path = %[1]q
@@ -665,7 +676,7 @@ resource "aws_fsx_data_repository_association" "test" {
 
 func testAccDataRepositoryAssociationConfig_s3FullPolicy(bucketName, fileSystemPath string) string {
 	bucketPath := fmt.Sprintf("s3://%s", bucketName)
-	return acctest.ConfigCompose(testAccDataRepositoryAssociationBucketConfig(bucketName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataRepositoryAssociationConfig_s3Bucket(bucketName), fmt.Sprintf(`
 resource "aws_fsx_data_repository_association" "test" {
   file_system_id       = aws_fsx_lustre_file_system.test.id
   data_repository_path = %[1]q

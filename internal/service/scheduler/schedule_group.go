@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_scheduler_schedule_group", name="Schedule Group")
+// @Tags(identifierAttribute="arn")
 func ResourceScheduleGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceScheduleGroupCreate,
@@ -71,7 +73,7 @@ func ResourceScheduleGroup() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 				ValidateDiagFunc: validation.ToDiagFunc(validation.All(
-					validation.StringLenBetween(1, 64-resource.UniqueIDSuffixLength),
+					validation.StringLenBetween(1, 64-id.UniqueIDSuffixLength),
 					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z-_.]+$`), `The name must consist of alphanumerics, hyphens, and underscores.`),
 				)),
 			},
@@ -79,8 +81,8 @@ func ResourceScheduleGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -90,19 +92,13 @@ const (
 )
 
 func resourceScheduleGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SchedulerClient
+	conn := meta.(*conns.AWSClient).SchedulerClient()
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 
 	in := &scheduler.CreateScheduleGroupInput{
 		Name: aws.String(name),
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
+		Tags: GetTagsIn(ctx),
 	}
 
 	out, err := conn.CreateScheduleGroup(ctx, in)
@@ -124,7 +120,7 @@ func resourceScheduleGroupCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceScheduleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SchedulerClient
+	conn := meta.(*conns.AWSClient).SchedulerClient()
 
 	out, err := findScheduleGroupByName(ctx, conn, d.Id())
 
@@ -145,42 +141,16 @@ func resourceScheduleGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(out.Name)))
 	d.Set("state", out.State)
 
-	tags, err := ListTags(ctx, conn, aws.ToString(out.Arn))
-	if err != nil {
-		return create.DiagError(names.Scheduler, create.ErrActionReading, ResNameScheduleGroup, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.Scheduler, create.ErrActionSetting, ResNameScheduleGroup, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.Scheduler, create.ErrActionSetting, ResNameScheduleGroup, d.Id(), err)
-	}
-
 	return nil
 }
 
 func resourceScheduleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SchedulerClient
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("error updating EventBridge Scheduler Schedule Group (%s) tags: %s", d.Id(), err)
-		}
-	}
-
+	// Tags only.
 	return resourceScheduleGroupRead(ctx, d, meta)
 }
 
 func resourceScheduleGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SchedulerClient
+	conn := meta.(*conns.AWSClient).SchedulerClient()
 
 	log.Printf("[INFO] Deleting EventBridge Scheduler ScheduleGroup %s", d.Id())
 

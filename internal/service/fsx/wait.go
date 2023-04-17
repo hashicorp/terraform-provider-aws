@@ -1,12 +1,13 @@
 package fsx
 
 import (
+	"context"
 	"errors"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -15,16 +16,16 @@ const (
 	backupDeletedTimeout   = 10 * time.Minute
 )
 
-func waitAdministrativeActionCompleted(conn *fsx.FSx, fsID, actionType string, timeout time.Duration) (*fsx.AdministrativeAction, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+func waitAdministrativeActionCompleted(ctx context.Context, conn *fsx.FSx, fsID, actionType string, timeout time.Duration) (*fsx.AdministrativeAction, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{fsx.StatusInProgress, fsx.StatusPending},
 		Target:  []string{fsx.StatusCompleted, fsx.StatusUpdatedOptimizing},
-		Refresh: statusAdministrativeAction(conn, fsID, actionType),
+		Refresh: statusAdministrativeAction(ctx, conn, fsID, actionType),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*fsx.AdministrativeAction); ok {
 		if status, details := aws.StringValue(output.Status), output.FailureDetails; status == fsx.StatusFailed && details != nil {
@@ -37,15 +38,15 @@ func waitAdministrativeActionCompleted(conn *fsx.FSx, fsID, actionType string, t
 	return nil, err
 }
 
-func waitBackupAvailable(conn *fsx.FSx, id string) (*fsx.Backup, error) {
-	stateConf := &resource.StateChangeConf{
+func waitBackupAvailable(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Backup, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{fsx.BackupLifecycleCreating, fsx.BackupLifecyclePending, fsx.BackupLifecycleTransferring},
 		Target:  []string{fsx.BackupLifecycleAvailable},
-		Refresh: statusBackup(conn, id),
+		Refresh: statusBackup(ctx, conn, id),
 		Timeout: backupAvailableTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*fsx.Backup); ok {
 		return output, err
@@ -54,15 +55,15 @@ func waitBackupAvailable(conn *fsx.FSx, id string) (*fsx.Backup, error) {
 	return nil, err
 }
 
-func waitBackupDeleted(conn *fsx.FSx, id string) (*fsx.Backup, error) {
-	stateConf := &resource.StateChangeConf{
+func waitBackupDeleted(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Backup, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{fsx.FileSystemLifecycleDeleting},
 		Target:  []string{},
-		Refresh: statusBackup(conn, id),
+		Refresh: statusBackup(ctx, conn, id),
 		Timeout: backupDeletedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*fsx.Backup); ok {
 		return output, err
@@ -71,16 +72,16 @@ func waitBackupDeleted(conn *fsx.FSx, id string) (*fsx.Backup, error) {
 	return nil, err
 }
 
-func waitFileCacheCreated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileCache, error) {
-	stateConf := &resource.StateChangeConf{
+func waitFileCacheCreated(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileCache, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{fsx.FileCacheLifecycleCreating},
 		Target:  []string{fsx.FileCacheLifecycleAvailable},
-		Refresh: statusFileCache(conn, id),
+		Refresh: statusFileCache(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*fsx.FileCache); ok {
 		if status, details := aws.StringValue(output.Lifecycle), output.FailureDetails; status == fsx.FileCacheLifecycleFailed && details != nil {
@@ -91,16 +92,16 @@ func waitFileCacheCreated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx
 	return nil, err
 }
 
-func waitFileCacheUpdated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileCache, error) {
-	stateConf := &resource.StateChangeConf{
+func waitFileCacheUpdated(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileCache, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{fsx.FileCacheLifecycleUpdating},
 		Target:  []string{fsx.FileCacheLifecycleAvailable},
-		Refresh: statusFileCache(conn, id),
+		Refresh: statusFileCache(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*fsx.FileCache); ok {
 		if status, details := aws.StringValue(output.Lifecycle), output.FailureDetails; status == fsx.FileCacheLifecycleFailed && details != nil {
@@ -112,16 +113,16 @@ func waitFileCacheUpdated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx
 	return nil, err
 }
 
-func waitFileCacheDeleted(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileCache, error) {
-	stateConf := &resource.StateChangeConf{
+func waitFileCacheDeleted(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileCache, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{fsx.FileCacheLifecycleAvailable, fsx.FileCacheLifecycleDeleting},
 		Target:  []string{},
-		Refresh: statusFileCache(conn, id),
+		Refresh: statusFileCache(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*fsx.FileCache); ok {
 		if status, details := aws.StringValue(output.Lifecycle), output.FailureDetails; status == fsx.FileCacheLifecycleFailed && details != nil {
@@ -133,16 +134,16 @@ func waitFileCacheDeleted(conn *fsx.FSx, id string, timeout time.Duration) (*fsx
 	return nil, err
 }
 
-func waitFileSystemCreated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileSystem, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+func waitFileSystemCreated(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileSystem, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{fsx.FileSystemLifecycleCreating},
 		Target:  []string{fsx.FileSystemLifecycleAvailable},
-		Refresh: statusFileSystem(conn, id),
+		Refresh: statusFileSystem(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*fsx.FileSystem); ok {
 		if status, details := aws.StringValue(output.Lifecycle), output.FailureDetails; status == fsx.FileSystemLifecycleFailed && details != nil {
@@ -155,16 +156,16 @@ func waitFileSystemCreated(conn *fsx.FSx, id string, timeout time.Duration) (*fs
 	return nil, err
 }
 
-func waitFileSystemUpdated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileSystem, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+func waitFileSystemUpdated(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileSystem, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{fsx.FileSystemLifecycleUpdating},
 		Target:  []string{fsx.FileSystemLifecycleAvailable},
-		Refresh: statusFileSystem(conn, id),
+		Refresh: statusFileSystem(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*fsx.FileSystem); ok {
 		if status, details := aws.StringValue(output.Lifecycle), output.FailureDetails; status == fsx.FileSystemLifecycleFailed && details != nil {
@@ -177,16 +178,16 @@ func waitFileSystemUpdated(conn *fsx.FSx, id string, timeout time.Duration) (*fs
 	return nil, err
 }
 
-func waitFileSystemDeleted(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileSystem, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+func waitFileSystemDeleted(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileSystem, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{fsx.FileSystemLifecycleAvailable, fsx.FileSystemLifecycleDeleting},
 		Target:  []string{},
-		Refresh: statusFileSystem(conn, id),
+		Refresh: statusFileSystem(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*fsx.FileSystem); ok {
 		if status, details := aws.StringValue(output.Lifecycle), output.FailureDetails; status == fsx.FileSystemLifecycleFailed && details != nil {
@@ -199,16 +200,16 @@ func waitFileSystemDeleted(conn *fsx.FSx, id string, timeout time.Duration) (*fs
 	return nil, err
 }
 
-func waitDataRepositoryAssociationCreated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.DataRepositoryAssociation, error) {
-	stateConf := &resource.StateChangeConf{
+func waitDataRepositoryAssociationCreated(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.DataRepositoryAssociation, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{fsx.DataRepositoryLifecycleCreating},
 		Target:  []string{fsx.DataRepositoryLifecycleAvailable},
-		Refresh: statusDataRepositoryAssociation(conn, id),
+		Refresh: statusDataRepositoryAssociation(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*fsx.DataRepositoryAssociation); ok {
 		if status, details := aws.StringValue(output.Lifecycle), output.FailureDetails; status == fsx.DataRepositoryLifecycleFailed && details != nil {
@@ -221,16 +222,16 @@ func waitDataRepositoryAssociationCreated(conn *fsx.FSx, id string, timeout time
 	return nil, err
 }
 
-func waitDataRepositoryAssociationUpdated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.DataRepositoryAssociation, error) {
-	stateConf := &resource.StateChangeConf{
+func waitDataRepositoryAssociationUpdated(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.DataRepositoryAssociation, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{fsx.DataRepositoryLifecycleUpdating},
 		Target:  []string{fsx.DataRepositoryLifecycleAvailable},
-		Refresh: statusDataRepositoryAssociation(conn, id),
+		Refresh: statusDataRepositoryAssociation(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*fsx.DataRepositoryAssociation); ok {
 		if status, details := aws.StringValue(output.Lifecycle), output.FailureDetails; status == fsx.DataRepositoryLifecycleFailed && details != nil {
@@ -243,16 +244,16 @@ func waitDataRepositoryAssociationUpdated(conn *fsx.FSx, id string, timeout time
 	return nil, err
 }
 
-func waitDataRepositoryAssociationDeleted(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.DataRepositoryAssociation, error) {
-	stateConf := &resource.StateChangeConf{
+func waitDataRepositoryAssociationDeleted(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.DataRepositoryAssociation, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{fsx.DataRepositoryLifecycleAvailable, fsx.DataRepositoryLifecycleDeleting},
 		Target:  []string{},
-		Refresh: statusDataRepositoryAssociation(conn, id),
+		Refresh: statusDataRepositoryAssociation(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*fsx.DataRepositoryAssociation); ok {
 		if status, details := aws.StringValue(output.Lifecycle), output.FailureDetails; status == fsx.DataRepositoryLifecycleFailed && details != nil {
@@ -265,16 +266,16 @@ func waitDataRepositoryAssociationDeleted(conn *fsx.FSx, id string, timeout time
 	return nil, err
 }
 
-func waitStorageVirtualMachineCreated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.StorageVirtualMachine, error) {
-	stateConf := &resource.StateChangeConf{
+func waitStorageVirtualMachineCreated(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.StorageVirtualMachine, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{fsx.StorageVirtualMachineLifecycleCreating, fsx.StorageVirtualMachineLifecyclePending},
 		Target:  []string{fsx.StorageVirtualMachineLifecycleCreated, fsx.StorageVirtualMachineLifecycleMisconfigured},
-		Refresh: statusStorageVirtualMachine(conn, id),
+		Refresh: statusStorageVirtualMachine(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*fsx.StorageVirtualMachine); ok {
 		if status, details := aws.StringValue(output.Lifecycle), output.LifecycleTransitionReason; status == fsx.FileSystemLifecycleFailed && details != nil {
@@ -287,16 +288,16 @@ func waitStorageVirtualMachineCreated(conn *fsx.FSx, id string, timeout time.Dur
 	return nil, err
 }
 
-func waitStorageVirtualMachineUpdated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.StorageVirtualMachine, error) {
-	stateConf := &resource.StateChangeConf{
+func waitStorageVirtualMachineUpdated(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.StorageVirtualMachine, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{fsx.StorageVirtualMachineLifecyclePending},
 		Target:  []string{fsx.StorageVirtualMachineLifecycleCreated, fsx.StorageVirtualMachineLifecycleMisconfigured},
-		Refresh: statusStorageVirtualMachine(conn, id),
+		Refresh: statusStorageVirtualMachine(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*fsx.StorageVirtualMachine); ok {
 		if status, details := aws.StringValue(output.Lifecycle), output.LifecycleTransitionReason; status == fsx.FileSystemLifecycleFailed && details != nil {
@@ -309,16 +310,16 @@ func waitStorageVirtualMachineUpdated(conn *fsx.FSx, id string, timeout time.Dur
 	return nil, err
 }
 
-func waitStorageVirtualMachineDeleted(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.StorageVirtualMachine, error) {
-	stateConf := &resource.StateChangeConf{
+func waitStorageVirtualMachineDeleted(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.StorageVirtualMachine, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{fsx.StorageVirtualMachineLifecycleCreated, fsx.StorageVirtualMachineLifecycleDeleting},
 		Target:  []string{},
-		Refresh: statusStorageVirtualMachine(conn, id),
+		Refresh: statusStorageVirtualMachine(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*fsx.StorageVirtualMachine); ok {
 		if status, details := aws.StringValue(output.Lifecycle), output.LifecycleTransitionReason; status == fsx.StorageVirtualMachineLifecycleFailed && details != nil {
@@ -331,16 +332,16 @@ func waitStorageVirtualMachineDeleted(conn *fsx.FSx, id string, timeout time.Dur
 	return nil, err
 }
 
-func waitVolumeCreated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Volume, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+func waitVolumeCreated(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Volume, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{fsx.VolumeLifecycleCreating, fsx.VolumeLifecyclePending},
 		Target:  []string{fsx.VolumeLifecycleCreated, fsx.VolumeLifecycleMisconfigured, fsx.VolumeLifecycleAvailable},
-		Refresh: statusVolume(conn, id),
+		Refresh: statusVolume(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*fsx.Volume); ok {
 		if status, details := aws.StringValue(output.Lifecycle), output.LifecycleTransitionReason; status == fsx.VolumeLifecycleFailed && details != nil {
@@ -353,16 +354,16 @@ func waitVolumeCreated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Vo
 	return nil, err
 }
 
-func waitVolumeUpdated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Volume, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+func waitVolumeUpdated(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Volume, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{fsx.VolumeLifecyclePending},
 		Target:  []string{fsx.VolumeLifecycleCreated, fsx.VolumeLifecycleMisconfigured, fsx.VolumeLifecycleAvailable},
-		Refresh: statusVolume(conn, id),
+		Refresh: statusVolume(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   150 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*fsx.Volume); ok {
 		if status, details := aws.StringValue(output.Lifecycle), output.LifecycleTransitionReason; status == fsx.VolumeLifecycleFailed && details != nil {
@@ -375,16 +376,16 @@ func waitVolumeUpdated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Vo
 	return nil, err
 }
 
-func waitVolumeDeleted(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Volume, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+func waitVolumeDeleted(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Volume, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{fsx.VolumeLifecycleCreated, fsx.VolumeLifecycleMisconfigured, fsx.VolumeLifecycleAvailable, fsx.VolumeLifecycleDeleting},
 		Target:  []string{},
-		Refresh: statusVolume(conn, id),
+		Refresh: statusVolume(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*fsx.Volume); ok {
 		if status, details := aws.StringValue(output.Lifecycle), output.LifecycleTransitionReason; status == fsx.VolumeLifecycleFailed && details != nil {
@@ -397,16 +398,16 @@ func waitVolumeDeleted(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Vo
 	return nil, err
 }
 
-func waitSnapshotCreated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Snapshot, error) {
-	stateConf := &resource.StateChangeConf{
+func waitSnapshotCreated(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Snapshot, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{fsx.SnapshotLifecycleCreating, fsx.SnapshotLifecyclePending},
 		Target:  []string{fsx.SnapshotLifecycleAvailable},
-		Refresh: statusSnapshot(conn, id),
+		Refresh: statusSnapshot(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*fsx.Snapshot); ok {
 		return output, err
@@ -415,16 +416,16 @@ func waitSnapshotCreated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.
 	return nil, err
 }
 
-func waitSnapshotUpdated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Snapshot, error) {
-	stateConf := &resource.StateChangeConf{
+func waitSnapshotUpdated(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Snapshot, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{fsx.SnapshotLifecyclePending},
 		Target:  []string{fsx.SnapshotLifecycleAvailable},
-		Refresh: statusSnapshot(conn, id),
+		Refresh: statusSnapshot(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   150 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*fsx.Snapshot); ok {
 		return output, err
@@ -433,16 +434,16 @@ func waitSnapshotUpdated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.
 	return nil, err
 }
 
-func waitSnapshotDeleted(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Snapshot, error) {
-	stateConf := &resource.StateChangeConf{
+func waitSnapshotDeleted(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Snapshot, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{fsx.SnapshotLifecyclePending, fsx.SnapshotLifecycleDeleting},
 		Target:  []string{},
-		Refresh: statusSnapshot(conn, id),
+		Refresh: statusSnapshot(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*fsx.Snapshot); ok {
 		return output, err

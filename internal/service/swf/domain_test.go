@@ -10,7 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/swf"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -28,22 +30,23 @@ func testAccPreCheckDomainTestingEnabled(t *testing.T) {
 }
 
 func TestAccSWFDomain_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_swf_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckDomainTestingEnabled(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, swf.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainExists(resourceName),
+					testAccCheckDomainExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "swf", regexp.MustCompile(`/domain/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -62,23 +65,24 @@ func TestAccSWFDomain_basic(t *testing.T) {
 }
 
 func TestAccSWFDomain_nameGenerated(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_swf_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckDomainTestingEnabled(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, swf.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_nameGenerated(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainExists(resourceName),
+					testAccCheckDomainExists(ctx, resourceName),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", resource.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -91,21 +95,22 @@ func TestAccSWFDomain_nameGenerated(t *testing.T) {
 }
 
 func TestAccSWFDomain_namePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_swf_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckDomainTestingEnabled(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, swf.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_namePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainExists(resourceName),
+					testAccCheckDomainExists(ctx, resourceName),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 				),
@@ -120,22 +125,23 @@ func TestAccSWFDomain_namePrefix(t *testing.T) {
 }
 
 func TestAccSWFDomain_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_swf_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckDomainTestingEnabled(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, swf.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainExists(resourceName),
+					testAccCheckDomainExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -148,7 +154,7 @@ func TestAccSWFDomain_tags(t *testing.T) {
 			{
 				Config: testAccDomainConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainExists(resourceName),
+					testAccCheckDomainExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -157,7 +163,7 @@ func TestAccSWFDomain_tags(t *testing.T) {
 			{
 				Config: testAccDomainConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainExists(resourceName),
+					testAccCheckDomainExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -167,22 +173,23 @@ func TestAccSWFDomain_tags(t *testing.T) {
 }
 
 func TestAccSWFDomain_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_swf_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckDomainTestingEnabled(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, swf.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_description(rName, "description1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainExists(resourceName),
+					testAccCheckDomainExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
 			},
@@ -195,36 +202,38 @@ func TestAccSWFDomain_description(t *testing.T) {
 	})
 }
 
-func testAccCheckDomainDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SWFConn
+func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SWFConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_swf_domain" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_swf_domain" {
+				continue
+			}
+
+			// Retrying as Read after Delete is not always consistent.
+			err := retry.RetryContext(ctx, 2*time.Minute, func() *retry.RetryError {
+				_, err := tfswf.FindDomainByName(ctx, conn, rs.Primary.ID)
+
+				if tfresource.NotFound(err) {
+					return nil
+				}
+
+				if err != nil {
+					return retry.NonRetryableError(err)
+				}
+
+				return retry.RetryableError(fmt.Errorf("SWF Domain still exists: %s", rs.Primary.ID))
+			})
+
+			return err
 		}
 
-		// Retrying as Read after Delete is not always consistent.
-		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-			_, err := tfswf.FindDomainByName(context.Background(), conn, rs.Primary.ID)
-
-			if tfresource.NotFound(err) {
-				return nil
-			}
-
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
-			return resource.RetryableError(fmt.Errorf("SWF Domain still exists: %s", rs.Primary.ID))
-		})
-
-		return err
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckDomainExists(n string) resource.TestCheckFunc {
+func testAccCheckDomainExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -235,9 +244,9 @@ func testAccCheckDomainExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No SWF Domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SWFConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SWFConn()
 
-		_, err := tfswf.FindDomainByName(context.Background(), conn, rs.Primary.ID)
+		_, err := tfswf.FindDomainByName(ctx, conn, rs.Primary.ID)
 
 		return err
 	}

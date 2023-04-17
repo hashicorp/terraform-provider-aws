@@ -13,12 +13,16 @@ import (
 )
 
 func TestAccAMPWorkspacesDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rCount := strconv.Itoa(sdkacctest.RandIntRange(1, 4))
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_prometheus_workspaces.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                  func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, prometheusservice.EndpointsID)
+		},
 		ErrorCheck:                acctest.ErrorCheck(t, prometheusservice.EndpointsID),
 		PreventPostDestroyRefresh: true,
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -40,12 +44,16 @@ func TestAccAMPWorkspacesDataSource_basic(t *testing.T) {
 }
 
 func TestAccAMPWorkspacesDataSource_aliasPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	rCount := strconv.Itoa(sdkacctest.RandIntRange(1, 4))
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_prometheus_workspaces.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                  func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, prometheusservice.EndpointsID)
+		},
 		ErrorCheck:                acctest.ErrorCheck(t, prometheusservice.EndpointsID),
 		PreventPostDestroyRefresh: true,
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,

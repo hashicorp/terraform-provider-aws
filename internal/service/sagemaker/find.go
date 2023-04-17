@@ -1,21 +1,23 @@
 package sagemaker
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // FindCodeRepositoryByName returns the code repository corresponding to the specified name.
 // Returns nil if no code repository is found.
-func FindCodeRepositoryByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeCodeRepositoryOutput, error) {
+func FindCodeRepositoryByName(ctx context.Context, conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeCodeRepositoryOutput, error) {
 	input := &sagemaker.DescribeCodeRepositoryInput{
 		CodeRepositoryName: aws.String(name),
 	}
 
-	output, err := conn.DescribeCodeRepository(input)
+	output, err := conn.DescribeCodeRepositoryWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -30,12 +32,12 @@ func FindCodeRepositoryByName(conn *sagemaker.SageMaker, name string) (*sagemake
 
 // FindModelPackageGroupByName returns the Model Package Group corresponding to the specified name.
 // Returns nil if no Model Package Group is found.
-func FindModelPackageGroupByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeModelPackageGroupOutput, error) {
+func FindModelPackageGroupByName(ctx context.Context, conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeModelPackageGroupOutput, error) {
 	input := &sagemaker.DescribeModelPackageGroupInput{
 		ModelPackageGroupName: aws.String(name),
 	}
 
-	output, err := conn.DescribeModelPackageGroup(input)
+	output, err := conn.DescribeModelPackageGroupWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -48,16 +50,16 @@ func FindModelPackageGroupByName(conn *sagemaker.SageMaker, name string) (*sagem
 	return output, nil
 }
 
-func FindModelPackageGroupPolicyByName(conn *sagemaker.SageMaker, name string) (*sagemaker.GetModelPackageGroupPolicyOutput, error) {
+func FindModelPackageGroupPolicyByName(ctx context.Context, conn *sagemaker.SageMaker, name string) (*sagemaker.GetModelPackageGroupPolicyOutput, error) {
 	input := &sagemaker.GetModelPackageGroupPolicyInput{
 		ModelPackageGroupName: aws.String(name),
 	}
 
-	output, err := conn.GetModelPackageGroupPolicy(input)
+	output, err := conn.GetModelPackageGroupPolicyWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Cannot find Model Package Group") ||
 		tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Cannot find resource policy") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -76,12 +78,12 @@ func FindModelPackageGroupPolicyByName(conn *sagemaker.SageMaker, name string) (
 
 // FindImageByName returns the Image corresponding to the specified name.
 // Returns nil if no Image is found.
-func FindImageByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeImageOutput, error) {
+func FindImageByName(ctx context.Context, conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeImageOutput, error) {
 	input := &sagemaker.DescribeImageInput{
 		ImageName: aws.String(name),
 	}
 
-	output, err := conn.DescribeImage(input)
+	output, err := conn.DescribeImageWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -96,12 +98,12 @@ func FindImageByName(conn *sagemaker.SageMaker, name string) (*sagemaker.Describ
 
 // FindImageVersionByName returns the Image Version corresponding to the specified name.
 // Returns nil if no Image Version is found.
-func FindImageVersionByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeImageVersionOutput, error) {
+func FindImageVersionByName(ctx context.Context, conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeImageVersionOutput, error) {
 	input := &sagemaker.DescribeImageVersionInput{
 		ImageName: aws.String(name),
 	}
 
-	output, err := conn.DescribeImageVersion(input)
+	output, err := conn.DescribeImageVersionWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -114,17 +116,17 @@ func FindImageVersionByName(conn *sagemaker.SageMaker, name string) (*sagemaker.
 	return output, nil
 }
 
-func FindDeviceByName(conn *sagemaker.SageMaker, deviceFleetName, deviceName string) (*sagemaker.DescribeDeviceOutput, error) {
+func FindDeviceByName(ctx context.Context, conn *sagemaker.SageMaker, deviceFleetName, deviceName string) (*sagemaker.DescribeDeviceOutput, error) {
 	input := &sagemaker.DescribeDeviceInput{
 		DeviceFleetName: aws.String(deviceFleetName),
 		DeviceName:      aws.String(deviceName),
 	}
 
-	output, err := conn.DescribeDevice(input)
+	output, err := conn.DescribeDeviceWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "No device with name") ||
 		tfawserr.ErrMessageContains(err, ErrCodeValidationException, "No device fleet with name") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -143,15 +145,15 @@ func FindDeviceByName(conn *sagemaker.SageMaker, deviceFleetName, deviceName str
 
 // FindDeviceFleetByName returns the Device Fleet corresponding to the specified Device Fleet name.
 // Returns nil if no Device Fleet is found.
-func FindDeviceFleetByName(conn *sagemaker.SageMaker, id string) (*sagemaker.DescribeDeviceFleetOutput, error) {
+func FindDeviceFleetByName(ctx context.Context, conn *sagemaker.SageMaker, id string) (*sagemaker.DescribeDeviceFleetOutput, error) {
 	input := &sagemaker.DescribeDeviceFleetInput{
 		DeviceFleetName: aws.String(id),
 	}
 
-	output, err := conn.DescribeDeviceFleet(input)
+	output, err := conn.DescribeDeviceFleetWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "No devicefleet with name") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -170,15 +172,15 @@ func FindDeviceFleetByName(conn *sagemaker.SageMaker, id string) (*sagemaker.Des
 
 // FindDomainByName returns the domain corresponding to the specified domain id.
 // Returns nil if no domain is found.
-func FindDomainByName(conn *sagemaker.SageMaker, domainID string) (*sagemaker.DescribeDomainOutput, error) {
+func FindDomainByName(ctx context.Context, conn *sagemaker.SageMaker, domainID string) (*sagemaker.DescribeDomainOutput, error) {
 	input := &sagemaker.DescribeDomainInput{
 		DomainId: aws.String(domainID),
 	}
 
-	output, err := conn.DescribeDomain(input)
+	output, err := conn.DescribeDomainWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -195,15 +197,15 @@ func FindDomainByName(conn *sagemaker.SageMaker, domainID string) (*sagemaker.De
 	return output, nil
 }
 
-func FindFeatureGroupByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeFeatureGroupOutput, error) {
+func FindFeatureGroupByName(ctx context.Context, conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeFeatureGroupOutput, error) {
 	input := &sagemaker.DescribeFeatureGroupInput{
 		FeatureGroupName: aws.String(name),
 	}
 
-	output, err := conn.DescribeFeatureGroup(input)
+	output, err := conn.DescribeFeatureGroupWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -222,16 +224,16 @@ func FindFeatureGroupByName(conn *sagemaker.SageMaker, name string) (*sagemaker.
 
 // FindUserProfileByName returns the domain corresponding to the specified domain id.
 // Returns nil if no domain is found.
-func FindUserProfileByName(conn *sagemaker.SageMaker, domainID, userProfileName string) (*sagemaker.DescribeUserProfileOutput, error) {
+func FindUserProfileByName(ctx context.Context, conn *sagemaker.SageMaker, domainID, userProfileName string) (*sagemaker.DescribeUserProfileOutput, error) {
 	input := &sagemaker.DescribeUserProfileInput{
 		DomainId:        aws.String(domainID),
 		UserProfileName: aws.String(userProfileName),
 	}
 
-	output, err := conn.DescribeUserProfile(input)
+	output, err := conn.DescribeUserProfileWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -250,12 +252,12 @@ func FindUserProfileByName(conn *sagemaker.SageMaker, domainID, userProfileName 
 
 // FindAppImageConfigByName returns the App Image Config corresponding to the specified App Image Config ID.
 // Returns nil if no App Image Cofnig is found.
-func FindAppImageConfigByName(conn *sagemaker.SageMaker, appImageConfigID string) (*sagemaker.DescribeAppImageConfigOutput, error) {
+func FindAppImageConfigByName(ctx context.Context, conn *sagemaker.SageMaker, appImageConfigID string) (*sagemaker.DescribeAppImageConfigOutput, error) {
 	input := &sagemaker.DescribeAppImageConfigInput{
 		AppImageConfigName: aws.String(appImageConfigID),
 	}
 
-	output, err := conn.DescribeAppImageConfig(input)
+	output, err := conn.DescribeAppImageConfigWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -268,23 +270,39 @@ func FindAppImageConfigByName(conn *sagemaker.SageMaker, appImageConfigID string
 	return output, nil
 }
 
-func listAppsByName(conn *sagemaker.SageMaker, domainID, userProfileOrSpaceName, appType, appName string) (*sagemaker.AppDetails, error) {
+func listAppsByName(ctx context.Context, conn *sagemaker.SageMaker, domainID, userProfileOrSpaceName, appType, appName string) (*sagemaker.AppDetails, error) {
+	var apps []*sagemaker.AppDetails
+
 	input := &sagemaker.ListAppsInput{
 		DomainIdEquals: aws.String(domainID),
 	}
 
-	output, err := conn.ListApps(input)
+	err := conn.ListAppsPagesWithContext(ctx, input, func(page *sagemaker.ListAppsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, app := range page.Apps {
+			if app == nil {
+				continue
+			}
+
+			apps = append(apps, app)
+		}
+
+		return !lastPage
+	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil {
+	if len(apps) == 0 {
 		return nil, nil
 	}
 
 	var foundApp *sagemaker.AppDetails
-	for _, app := range output.Apps {
+	for _, app := range apps {
 		if aws.StringValue(app.AppName) == appName &&
 			aws.StringValue(app.AppType) == appType &&
 			(aws.StringValue(app.SpaceName) == userProfileOrSpaceName ||
@@ -302,8 +320,8 @@ func listAppsByName(conn *sagemaker.SageMaker, domainID, userProfileOrSpaceName,
 
 // FindAppByName returns the domain corresponding to the specified domain id.
 // Returns nil if no domain is found.
-func FindAppByName(conn *sagemaker.SageMaker, domainID, userProfileOrSpaceName, appType, appName string) (*sagemaker.DescribeAppOutput, error) {
-	foundApp, err := listAppsByName(conn, domainID, userProfileOrSpaceName, appType, appName)
+func FindAppByName(ctx context.Context, conn *sagemaker.SageMaker, domainID, userProfileOrSpaceName, appType, appName string) (*sagemaker.DescribeAppOutput, error) {
+	foundApp, err := listAppsByName(ctx, conn, domainID, userProfileOrSpaceName, appType, appName)
 
 	if err != nil {
 		return nil, err
@@ -323,10 +341,10 @@ func FindAppByName(conn *sagemaker.SageMaker, domainID, userProfileOrSpaceName, 
 		input.UserProfileName = foundApp.UserProfileName
 	}
 
-	output, err := conn.DescribeApp(input)
+	output, err := conn.DescribeAppWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "RecordNotFound") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -341,7 +359,7 @@ func FindAppByName(conn *sagemaker.SageMaker, domainID, userProfileOrSpaceName, 
 	}
 
 	if state := aws.StringValue(output.Status); state == sagemaker.AppStatusDeleted {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     state,
 			LastRequest: input,
 		}
@@ -350,15 +368,15 @@ func FindAppByName(conn *sagemaker.SageMaker, domainID, userProfileOrSpaceName, 
 	return output, nil
 }
 
-func FindWorkforceByName(conn *sagemaker.SageMaker, name string) (*sagemaker.Workforce, error) {
+func FindWorkforceByName(ctx context.Context, conn *sagemaker.SageMaker, name string) (*sagemaker.Workforce, error) {
 	input := &sagemaker.DescribeWorkforceInput{
 		WorkforceName: aws.String(name),
 	}
 
-	output, err := conn.DescribeWorkforce(input)
+	output, err := conn.DescribeWorkforceWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "No workforce") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -375,15 +393,15 @@ func FindWorkforceByName(conn *sagemaker.SageMaker, name string) (*sagemaker.Wor
 	return output.Workforce, nil
 }
 
-func FindWorkteamByName(conn *sagemaker.SageMaker, name string) (*sagemaker.Workteam, error) {
+func FindWorkteamByName(ctx context.Context, conn *sagemaker.SageMaker, name string) (*sagemaker.Workteam, error) {
 	input := &sagemaker.DescribeWorkteamInput{
 		WorkteamName: aws.String(name),
 	}
 
-	output, err := conn.DescribeWorkteam(input)
+	output, err := conn.DescribeWorkteamWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "The work team") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -400,15 +418,15 @@ func FindWorkteamByName(conn *sagemaker.SageMaker, name string) (*sagemaker.Work
 	return output.Workteam, nil
 }
 
-func FindHumanTaskUIByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeHumanTaskUiOutput, error) {
+func FindHumanTaskUIByName(ctx context.Context, conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeHumanTaskUiOutput, error) {
 	input := &sagemaker.DescribeHumanTaskUiInput{
 		HumanTaskUiName: aws.String(name),
 	}
 
-	output, err := conn.DescribeHumanTaskUi(input)
+	output, err := conn.DescribeHumanTaskUiWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -425,15 +443,15 @@ func FindHumanTaskUIByName(conn *sagemaker.SageMaker, name string) (*sagemaker.D
 	return output, nil
 }
 
-func FindEndpointByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeEndpointOutput, error) {
+func FindEndpointByName(ctx context.Context, conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeEndpointOutput, error) {
 	input := &sagemaker.DescribeEndpointInput{
 		EndpointName: aws.String(name),
 	}
 
-	output, err := conn.DescribeEndpoint(input)
+	output, err := conn.DescribeEndpointWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Could not find endpoint") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -454,15 +472,15 @@ func FindEndpointByName(conn *sagemaker.SageMaker, name string) (*sagemaker.Desc
 	return output, nil
 }
 
-func FindEndpointConfigByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeEndpointConfigOutput, error) {
+func FindEndpointConfigByName(ctx context.Context, conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeEndpointConfigOutput, error) {
 	input := &sagemaker.DescribeEndpointConfigInput{
 		EndpointConfigName: aws.String(name),
 	}
 
-	output, err := conn.DescribeEndpointConfig(input)
+	output, err := conn.DescribeEndpointConfigWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Could not find endpoint configuration") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -479,15 +497,15 @@ func FindEndpointConfigByName(conn *sagemaker.SageMaker, name string) (*sagemake
 	return output, nil
 }
 
-func FindFlowDefinitionByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeFlowDefinitionOutput, error) {
+func FindFlowDefinitionByName(ctx context.Context, conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeFlowDefinitionOutput, error) {
 	input := &sagemaker.DescribeFlowDefinitionInput{
 		FlowDefinitionName: aws.String(name),
 	}
 
-	output, err := conn.DescribeFlowDefinition(input)
+	output, err := conn.DescribeFlowDefinitionWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -504,15 +522,15 @@ func FindFlowDefinitionByName(conn *sagemaker.SageMaker, name string) (*sagemake
 	return output, nil
 }
 
-func FindStudioLifecycleConfigByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeStudioLifecycleConfigOutput, error) {
+func FindStudioLifecycleConfigByName(ctx context.Context, conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeStudioLifecycleConfigOutput, error) {
 	input := &sagemaker.DescribeStudioLifecycleConfigInput{
 		StudioLifecycleConfigName: aws.String(name),
 	}
 
-	output, err := conn.DescribeStudioLifecycleConfig(input)
+	output, err := conn.DescribeStudioLifecycleConfigWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -529,15 +547,15 @@ func FindStudioLifecycleConfigByName(conn *sagemaker.SageMaker, name string) (*s
 	return output, nil
 }
 
-func FindProjectByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeProjectOutput, error) {
+func FindProjectByName(ctx context.Context, conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeProjectOutput, error) {
 	input := &sagemaker.DescribeProjectInput{
 		ProjectName: aws.String(name),
 	}
 
-	output, err := conn.DescribeProject(input)
+	output, err := conn.DescribeProjectWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, "ValidationException", "does not exist") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -553,7 +571,7 @@ func FindProjectByName(conn *sagemaker.SageMaker, name string) (*sagemaker.Descr
 
 	status := aws.StringValue(output.ProjectStatus)
 	if status == sagemaker.ProjectStatusDeleteCompleted {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
 		}
@@ -562,15 +580,15 @@ func FindProjectByName(conn *sagemaker.SageMaker, name string) (*sagemaker.Descr
 	return output, nil
 }
 
-func FindNotebookInstanceByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeNotebookInstanceOutput, error) {
+func FindNotebookInstanceByName(ctx context.Context, conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeNotebookInstanceOutput, error) {
 	input := &sagemaker.DescribeNotebookInstanceInput{
 		NotebookInstanceName: aws.String(name),
 	}
 
-	output, err := conn.DescribeNotebookInstance(input)
+	output, err := conn.DescribeNotebookInstanceWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, "ValidationException", "RecordNotFound") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -587,16 +605,16 @@ func FindNotebookInstanceByName(conn *sagemaker.SageMaker, name string) (*sagema
 	return output, nil
 }
 
-func FindSpaceByName(conn *sagemaker.SageMaker, domainId, name string) (*sagemaker.DescribeSpaceOutput, error) {
+func FindSpaceByName(ctx context.Context, conn *sagemaker.SageMaker, domainId, name string) (*sagemaker.DescribeSpaceOutput, error) {
 	input := &sagemaker.DescribeSpaceInput{
 		SpaceName: aws.String(name),
 		DomainId:  aws.String(domainId),
 	}
 
-	output, err := conn.DescribeSpace(input)
+	output, err := conn.DescribeSpaceWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, "ValidationException", "RecordNotFound") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

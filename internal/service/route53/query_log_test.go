@@ -18,6 +18,7 @@ import (
 )
 
 func TestAccRoute53QueryLog_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
 	resourceName := "aws_route53_query_log.test"
 	route53ZoneResourceName := "aws_route53_zone.test"
@@ -27,7 +28,7 @@ func TestAccRoute53QueryLog_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			// AWS Commercial: https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/query-logs.html
 			// AWS GovCloud (US) - only private DNS: https://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-r53.html
 			// AWS China - not available yet: https://docs.amazonaws.cn/en_us/aws/latest/userguide/route53.html
@@ -35,12 +36,12 @@ func TestAccRoute53QueryLog_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckQueryLogDestroy,
+		CheckDestroy:             testAccCheckQueryLogDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueryLogConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQueryLogExists(resourceName, &v),
+					testAccCheckQueryLogExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "route53", regexp.MustCompile("queryloggingconfig/.+")),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_log_group_arn", cloudwatchLogGroupResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "zone_id", route53ZoneResourceName, "zone_id"),
@@ -56,22 +57,23 @@ func TestAccRoute53QueryLog_basic(t *testing.T) {
 }
 
 func TestAccRoute53QueryLog_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_route53_query_log.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 	var v route53.QueryLoggingConfig
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckQueryLogDestroy,
+		CheckDestroy:             testAccCheckQueryLogDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueryLogConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQueryLogExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceQueryLog(), resourceName),
+					testAccCheckQueryLogExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53.ResourceQueryLog(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -80,6 +82,7 @@ func TestAccRoute53QueryLog_disappears(t *testing.T) {
 }
 
 func TestAccRoute53QueryLog_Disappears_hostedZone(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_route53_query_log.test"
 	route53ZoneResourceName := "aws_route53_zone.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -87,16 +90,16 @@ func TestAccRoute53QueryLog_Disappears_hostedZone(t *testing.T) {
 	var v route53.QueryLoggingConfig
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckQueryLogDestroy,
+		CheckDestroy:             testAccCheckQueryLogDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueryLogConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQueryLogExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceZone(), route53ZoneResourceName),
+					testAccCheckQueryLogExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53.ResourceZone(), route53ZoneResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -104,7 +107,7 @@ func TestAccRoute53QueryLog_Disappears_hostedZone(t *testing.T) {
 	})
 }
 
-func testAccCheckQueryLogExists(n string, v *route53.QueryLoggingConfig) resource.TestCheckFunc {
+func testAccCheckQueryLogExists(ctx context.Context, n string, v *route53.QueryLoggingConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -115,9 +118,9 @@ func testAccCheckQueryLogExists(n string, v *route53.QueryLoggingConfig) resourc
 			return fmt.Errorf("No Route53 Query Logging Config ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
 
-		output, err := tfroute53.FindQueryLoggingConfigByID(context.Background(), conn, rs.Primary.ID)
+		output, err := tfroute53.FindQueryLoggingConfigByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -129,28 +132,30 @@ func testAccCheckQueryLogExists(n string, v *route53.QueryLoggingConfig) resourc
 	}
 }
 
-func testAccCheckQueryLogDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
+func testAccCheckQueryLogDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_route53_query_log" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_route53_query_log" {
+				continue
+			}
+
+			_, err := tfroute53.FindQueryLoggingConfigByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Route53 Query Logging Config %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfroute53.FindQueryLoggingConfigByID(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Route53 Query Logging Config %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccQueryLogConfig_basic(rName, domainName string) string {

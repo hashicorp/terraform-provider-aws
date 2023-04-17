@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_prometheus_workspaces")
 func DataSourceWorkspaces() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceWorkspacesRead,
@@ -38,7 +39,7 @@ func DataSourceWorkspaces() *schema.Resource {
 }
 
 func dataSourceWorkspacesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AMPConn
+	conn := meta.(*conns.AWSClient).AMPConn()
 
 	alias_prefix := d.Get("alias_prefix").(string)
 	workspaces, err := FindWorkspaces(ctx, conn, alias_prefix)

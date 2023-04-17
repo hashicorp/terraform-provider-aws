@@ -1,6 +1,7 @@
 package directconnect_test
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func testAccCheckVirtualInterfaceExists(name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
+func testAccCheckVirtualInterfaceExists(ctx context.Context, name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn()
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -24,7 +25,7 @@ func testAccCheckVirtualInterfaceExists(name string, vif *directconnect.VirtualI
 			return fmt.Errorf("No ID is set")
 		}
 
-		resp, err := conn.DescribeVirtualInterfaces(&directconnect.DescribeVirtualInterfacesInput{
+		resp, err := conn.DescribeVirtualInterfacesWithContext(ctx, &directconnect.DescribeVirtualInterfacesInput{
 			VirtualInterfaceId: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
@@ -43,8 +44,8 @@ func testAccCheckVirtualInterfaceExists(name string, vif *directconnect.VirtualI
 	}
 }
 
-func testAccCheckVirtualInterfaceDestroy(s *terraform.State, t string) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
+func testAccCheckVirtualInterfaceDestroy(ctx context.Context, s *terraform.State, t string) error { // nosemgrep:ci.semgrep.acctest.naming.destroy-check-signature
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != t {
@@ -54,7 +55,7 @@ func testAccCheckVirtualInterfaceDestroy(s *terraform.State, t string) error {
 			return fmt.Errorf("No ID is set")
 		}
 
-		resp, err := conn.DescribeVirtualInterfaces(&directconnect.DescribeVirtualInterfacesInput{
+		resp, err := conn.DescribeVirtualInterfacesWithContext(ctx, &directconnect.DescribeVirtualInterfacesInput{
 			VirtualInterfaceId: aws.String(rs.Primary.ID),
 		})
 		if tfawserr.ErrMessageContains(err, directconnect.ErrCodeClientException, "does not exist") {
