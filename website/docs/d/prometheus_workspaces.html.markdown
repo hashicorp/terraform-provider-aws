@@ -15,8 +15,7 @@ Provides the aliases, ARNs, and workspace IDs of Amazon Prometheus workspaces.
 The following example returns all of the workspaces in a region:
 
 ```terraform
-data "aws_prometheus_workspaces" "example" {
-}
+data "aws_prometheus_workspaces" "example" {}
 ```
 
 The following example filters the workspaces by alias. Only the workspaces with
@@ -24,7 +23,7 @@ aliases that begin with the value of `alias_prefix` will be returned:
 
 ```terraform
 data "aws_prometheus_workspaces" "example" {
-    alias_prefix = "example"
+  alias_prefix = "example"
 }
 ```
 
