@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -30,7 +29,7 @@ func ResourceListenerRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerRuleCreate,
 		ReadWithoutTimeout:   resourceListenerRuleRead,
-		UpdateWithoutTimeout: resourceListenerRuleUpdate,
+		// UpdateWithoutTimeout: resourceListenerRuleUpdate,
 		DeleteWithoutTimeout: resourceListenerRuleDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -206,10 +205,6 @@ func ResourceListenerRule() *schema.Resource {
 				Computed: true,
 				ForceNew: false,
 			},
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 
 			"listener_identifier": {
 				Type:     schema.TypeString,
@@ -247,7 +242,6 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 		ServiceIdentifier:  aws.String(d.Get("service_identifier").(string)),
 		Tags:               GetTagsIn(ctx),
 	}
-
 	if v, ok := d.GetOk("action"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		in.Action = expandRuleAction(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -274,7 +268,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
-	out, err := FindListenerRuleByID(ctx, conn, d.Id())
+	out, err := FindListenerRuleByID(ctx, conn, d.Id(), d.Get("listener_identifier").(string), d.Get("service_identifier").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VpcLattice Listener Rule (%s) not found, removing from state", d.Id())
@@ -301,224 +295,148 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	return nil
 }
 
-func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// TIP: ==== RESOURCE UPDATE ====
-	// Not all resources have Update functions. There are a few reasons:
-	// a. The AWS API does not support changing a resource
-	// b. All arguments have ForceNew: true, set
-	// c. The AWS API uses a create call to modify an existing resource
-	//
-	// In the cases of a. and b., the main resource function will not have a
-	// UpdateWithoutTimeout defined. In the case of c., Update and Create are
-	// the same.
-	//
-	// The rest of the time, there should be an Update function and it should
-	// do the following things. Make sure there is a good reason if you don't
-	// do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Populate a modify input structure and check for changes
-	// 3. Call the AWS modify/update function
-	// 4. Use a waiter to wait for update to complete
-	// 5. Call the Read function in the Update return
+// func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
-	// TIP: -- 1. Get a client connection to the relevant service
-	conn := meta.(*conns.AWSClient).VpcLatticeClient()
+// 	conn := meta.(*conns.AWSClient).VpcLatticeClient()
 
-	// TIP: -- 2. Populate a modify input structure and check for changes
-	//
-	// When creating the input structure, only include mandatory fields. Other
-	// fields are set as needed. You can use a flag, such as update below, to
-	// determine if a certain portion of arguments have been changed and
-	// whether to call the AWS update function.
-	update := false
+// 	update := false
 
-	in := &vpclattice.UpdateListenerRuleInput{
-		Id: aws.String(d.Id()),
-	}
+// 	in := &vpclattice.BatchUpdateRuleInput{
+// 		Id: aws.String(d.Id()),
+// 	}
 
-	if d.HasChanges("an_argument") {
-		in.AnArgument = aws.String(d.Get("an_argument").(string))
-		update = true
-	}
+// 	if d.HasChanges("an_argument") {
+// 		in.AnArgument = aws.String(d.Get("an_argument").(string))
+// 		update = true
+// 	}
 
-	if !update {
-		// TIP: If update doesn't do anything at all, which is rare, you can
-		// return nil. Otherwise, return a read call, as below.
-		return nil
-	}
+// 	if !update {
+// 		// TIP: If update doesn't do anything at all, which is rare, you can
+// 		// return nil. Otherwise, return a read call, as below.
+// 		return nil
+// 	}
 
-	// TIP: -- 3. Call the AWS modify/update function
-	log.Printf("[DEBUG] Updating VpcLattice ListenerRule (%s): %#v", d.Id(), in)
-	out, err := conn.UpdateListenerRule(ctx, in)
-	if err != nil {
-		return create.DiagError(names.VpcLattice, create.ErrActionUpdating, ResNameListenerRule, d.Id(), err)
-	}
+// 	// TIP: -- 3. Call the AWS modify/update function
+// 	log.Printf("[DEBUG] Updating VpcLattice ListenerRule (%s): %#v", d.Id(), in)
+// 	out, err := conn.UpdateListenerRule(ctx, in)
+// 	if err != nil {
+// 		return create.DiagError(names.VpcLattice, create.ErrActionUpdating, ResNameListenerRule, d.Id(), err)
+// 	}
 
-	// TIP: -- 4. Use a waiter to wait for update to complete
-	if _, err := waitListenerRuleUpdated(ctx, conn, aws.ToString(out.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return create.DiagError(names.VpcLattice, create.ErrActionWaitingForUpdate, ResNameListenerRule, d.Id(), err)
-	}
+// 	// TIP: -- 4. Use a waiter to wait for update to complete
+// 	if _, err := waitListenerRuleUpdated(ctx, conn, aws.ToString(out.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
+// 		return create.DiagError(names.VpcLattice, create.ErrActionWaitingForUpdate, ResNameListenerRule, d.Id(), err)
+// 	}
 
-	// TIP: -- 5. Call the Read function in the Update return
-	return resourceListenerRuleRead(ctx, d, meta)
-}
+// 	// TIP: -- 5. Call the Read function in the Update return
+// 	return resourceListenerRuleRead(ctx, d, meta)
+// }
 
 func resourceListenerRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// TIP: ==== RESOURCE DELETE ====
-	// Most resources have Delete functions. There are rare situations
-	// where you might not need a delete:
-	// a. The AWS API does not provide a way to delete the resource
-	// b. The point of your resource is to perform an action (e.g., reboot a
-	//    server) and deleting serves no purpose.
-	//
-	// The Delete function should do the following things. Make sure there
-	// is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Populate a delete input structure
-	// 3. Call the AWS delete function
-	// 4. Use a waiter to wait for delete to complete
-	// 5. Return nil
+	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
-	// TIP: -- 1. Get a client connection to the relevant service
-	conn := meta.(*conns.AWSClient).VpcLatticeClient()
-
-	// TIP: -- 2. Populate a delete input structure
-	log.Printf("[INFO] Deleting VpcLattice ListenerRule %s", d.Id())
-
-	// TIP: -- 3. Call the AWS delete function
-	_, err := conn.DeleteListenerRule(ctx, &vpclattice.DeleteListenerRuleInput{
-		Id: aws.String(d.Id()),
+	log.Printf("[INFO] Deleting VpcLattice ListeningRule: %s", d.Id())
+	_, err := conn.DeleteRule(ctx, &vpclattice.DeleteRuleInput{
+		RuleIdentifier:     aws.String(d.Id()),
+		ListenerIdentifier: aws.String(d.Get("listener_identifier").(string)),
+		ServiceIdentifier:  aws.String(d.Get("service_identifier").(string)),
 	})
 
-	// TIP: On rare occassions, the API returns a not found error after deleting a
-	// resource. If that happens, we don't want it to show up as an error.
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
 			return nil
 		}
 
-		return create.DiagError(names.VpcLattice, create.ErrActionDeleting, ResNameListenerRule, d.Id(), err)
+		return create.DiagError(names.VPCLattice, create.ErrActionDeleting, ResNameTargetGroup, d.Id(), err)
 	}
 
-	// TIP: -- 4. Use a waiter to wait for delete to complete
-	if _, err := waitListenerRuleDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.VpcLattice, create.ErrActionWaitingForDeletion, ResNameListenerRule, d.Id(), err)
+	if _, err := waitTargetGroupDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return create.DiagError(names.VPCLattice, create.ErrActionWaitingForDeletion, ResNameTargetGroup, d.Id(), err)
 	}
 
-	// TIP: -- 5. Return nil
 	return nil
 }
 
-const (
-	statusChangePending = "Pending"
-	statusDeleting      = "Deleting"
-	statusNormal        = "Normal"
-	statusUpdated       = "Updated"
-)
+// const (
+// 	statusChangePending = "Pending"
+// 	statusDeleting      = "Deleting"
+// 	statusNormal        = "Normal"
+// 	statusUpdated       = "Updated"
+// )
 
-// TIP: ==== WAITERS ====
-// Some resources of some services have waiters provided by the AWS API.
-// Unless they do not work properly, use them rather than defining new ones
-// here.
-//
-// Sometimes we define the wait, status, and find functions in separate
-// files, wait.go, status.go, and find.go. Follow the pattern set out in the
-// service and define these where it makes the most sense.
-//
-// If these functions are used in the _test.go file, they will need to be
-// exported (i.e., capitalized).
-//
-// You will need to adjust the parameters and names to fit the service.
+// func waitListenerRuleCreated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.ListenerRule, error) {
+// 	stateConf := &resource.StateChangeConf{
+// 		Pending:                   []string{},
+// 		Target:                    []string{statusNormal},
+// 		Refresh:                   statusListenerRule(ctx, conn, id),
+// 		Timeout:                   timeout,
+// 		NotFoundChecks:            20,
+// 		ContinuousTargetOccurence: 2,
+// 	}
 
-func waitListenerRuleCreated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.ListenerRule, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{statusNormal},
-		Refresh:                   statusListenerRule(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
+// 	outputRaw, err := stateConf.WaitForStateContext(ctx)
+// 	if out, ok := outputRaw.(*vpclattice.ListenerRule); ok {
+// 		return out, err
+// 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*vpclattice.ListenerRule); ok {
-		return out, err
-	}
+// 	return nil, err
+// }
 
-	return nil, err
-}
+// func waitListenerRuleUpdated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetRuleOutput, error) {
+// 	stateConf := &resource.StateChangeConf{
+// 		Pending:                   []string{statusChangePending},
+// 		Target:                    []string{statusUpdated},
+// 		Refresh:                   statusListenerRule(ctx, conn, id),
+// 		Timeout:                   timeout,
+// 		NotFoundChecks:            20,
+// 		ContinuousTargetOccurence: 2,
+// 	}
 
-// TIP: It is easier to determine whether a resource is updated for some
-// resources than others. The best case is a status flag that tells you when
-// the update has been fully realized. Other times, you can check to see if a
-// key resource argument is updated to a new value or not.
+// 	outputRaw, err := stateConf.WaitForStateContext(ctx)
+// 	if out, ok := outputRaw.(*vpclattice.ListenerRule); ok {
+// 		return out, err
+// 	}
 
-func waitListenerRuleUpdated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetRuleOutput, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending:                   []string{statusChangePending},
-		Target:                    []string{statusUpdated},
-		Refresh:                   statusListenerRule(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
+// 	return nil, err
+// }
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*vpclattice.ListenerRule); ok {
-		return out, err
-	}
+// func waitListenerRuleDeleted(ctx context.Context, conn *vpclattice.Client, id, listenerIdentifier, serviceIdentifier string, timeout time.Duration) (*vpclattice.GetRuleOutput, error) {
+// 	stateConf := &resource.StateChangeConf{
+// 		Pending: []string{statusDeleting, statusNormal},
+// 		Target:  []string{},
+// 		Refresh: statusListenerRule(ctx, conn, id, listenerIdentifier, serviceIdentifier),
+// 		Timeout: timeout,
+// 	}
 
-	return nil, err
-}
+// 	outputRaw, err := stateConf.WaitForStateContext(ctx)
+// 	if out, ok := outputRaw.(*vpclattice.ListenerRule); ok {
+// 		return out, err
+// 	}
 
-// TIP: A deleted waiter is almost like a backwards created waiter. There may
-// be additional pending states, however.
+// 	return nil, err
+// }
 
-func waitListenerRuleDeleted(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.ListenerRule, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{statusDeleting, statusNormal},
-		Target:  []string{},
-		Refresh: statusListenerRule(ctx, conn, id),
-		Timeout: timeout,
-	}
+// func statusListenerRule(ctx context.Context, conn *vpclattice.Client, id, listenerIdentifier, serviceIdentifier string) resource.StateRefreshFunc {
+// 	return func() (interface{}, string, error) {
+// 		out, err := FindListenerRuleByID(ctx, conn, id, listenerIdentifier, serviceIdentifier)
+// 		if tfresource.NotFound(err) {
+// 			return nil, "", nil
+// 		}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*vpclattice.ListenerRule); ok {
-		return out, err
-	}
+// 		if err != nil {
+// 			return nil, "", err
+// 		}
 
-	return nil, err
-}
+// 		return out, aws.ToString(out.), nil
+// 	}
+// }
 
-// TIP: ==== STATUS ====
-// The status function can return an actual status when that field is
-// available from the API (e.g., out.Status). Otherwise, you can use custom
-// statuses to communicate the states of the resource.
-//
-// Waiters consume the values returned by status functions. Design status so
-// that it can be reused by a create, update, and delete waiter, if possible.
-
-func statusListenerRule(ctx context.Context, conn *vpclattice.Client, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := FindListenerRuleByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return out, aws.ToString(out.Status), nil
-	}
-}
-
-func FindListenerRuleByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetRuleOutput, error) {
+func FindListenerRuleByID(ctx context.Context, conn *vpclattice.Client, id, listenerIdentifier, serviceIdentifier string) (*vpclattice.GetRuleOutput, error) {
 	in := &vpclattice.GetRuleInput{
-		RuleIdentifier: aws.String(id),
+		RuleIdentifier:     aws.String(id),
+		ListenerIdentifier: aws.String(listenerIdentifier),
+		ServiceIdentifier:  aws.String(serviceIdentifier),
 	}
 	out, err := conn.GetRule(ctx, in)
 	if err != nil {
@@ -532,7 +450,6 @@ func FindListenerRuleByID(ctx context.Context, conn *vpclattice.Client, id strin
 
 		return nil, err
 	}
-
 	if out == nil || out.Id == nil {
 		return nil, tfresource.NewEmptyResultError(in)
 	}
@@ -565,7 +482,7 @@ func flattenRuleActionMemberFixedResponse(apiObject *types.RuleActionMemberFixed
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Value.StatusCode; v != nil {
-		tfMap["status"] = aws.ToInt32(v)
+		tfMap["status_code"] = aws.ToInt32(v)
 	}
 
 	return tfMap
@@ -617,6 +534,7 @@ func flattenWeightedTargetGroup(apiObject *types.WeightedTargetGroup) map[string
 
 	return tfMap
 }
+
 func flattenRuleMatch(apiObject types.RuleMatch) map[string]interface{} {
 	if apiObject == nil {
 		return nil
@@ -624,12 +542,13 @@ func flattenRuleMatch(apiObject types.RuleMatch) map[string]interface{} {
 
 	tfMap := make(map[string]interface{})
 
-	if v, ok := apiObject.(*types.HttpMatch); ok {
-		tfMap["http_match"] = flattenHttpMatch(v)
+	if v, ok := apiObject.(*types.RuleMatchMemberHttpMatch); ok {
+		tfMap["http_match"] = flattenHttpMatch(&v.Value)
 	}
 
 	return tfMap
 }
+
 func flattenHttpMatch(apiObject *types.HttpMatch) map[string]interface{} {
 	if apiObject == nil {
 		return nil
@@ -637,8 +556,12 @@ func flattenHttpMatch(apiObject *types.HttpMatch) map[string]interface{} {
 
 	tfMap := map[string]interface{}{}
 
+	if v := apiObject.Method; v != nil {
+		tfMap["method"] = aws.ToString(v)
+	}
+
 	if v := apiObject.HeaderMatches; v != nil {
-		tfMap["headers_matches"] = flattenHeaderMatches(v)
+		tfMap["headers_matches"] = []interface{}{flattenHeaderMatches(v)}
 	}
 
 	if v := apiObject.PathMatch; v != nil {
@@ -678,33 +601,41 @@ func flattenHeaderMatch(apiObject *types.HeaderMatch) map[string]interface{} {
 	}
 
 	if v := apiObject.Match; v != nil {
-		tfMap["match"] = []interface{}{flattenHeaderMatchType(v.(*types.HeaderMatchType))}
+		if exact, ok := v.(*types.HeaderMatchTypeMemberExact); ok {
+			tfMap["exact"] = flattenHeaderMatchTypeMemberExact(exact)
+		}
+		if prefix, ok := v.(*types.HeaderMatchTypeMemberPrefix); ok {
+			tfMap["prefix"] = flattenHeaderMatchTypeMemberPrefix(prefix)
+		}
+		if contains, ok := v.(*types.HeaderMatchTypeMemberContains); ok {
+			tfMap["contains"] = flattenHeaderMatchTypeMemberContains(contains)
+		}
 	}
 
 	return tfMap
 }
 
-func flattenHeaderMatchType(apiObject types.HeaderMatchType) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
+// func flattenHeaderMatchType(apiObject types.HeaderMatchType) map[string]interface{} {
+// 	if apiObject == nil {
+// 		return nil
+// 	}
 
-	tfMap := make(map[string]interface{})
+// 	tfMap := make(map[string]interface{})
 
-	if v, ok := apiObject.(*types.HeaderMatchTypeMemberExact); ok {
-		tfMap["exact"] = []interface{}{flattenHeaderMatchTypeMemberExact(v)}
-	}
+// 	if v, ok := apiObject.(*types.HeaderMatchTypeMemberExact); ok {
+// 		tfMap["exact"] = []interface{}{flattenHeaderMatchTypeMemberExact(v)}
+// 	}
 
-	if v, ok := apiObject.(*types.HeaderMatchTypeMemberPrefix); ok {
-		tfMap["prefix"] = []interface{}{flattenHeaderMatchTypeMemberPrefix(v)}
-	}
+// 	if v, ok := apiObject.(*types.HeaderMatchTypeMemberPrefix); ok {
+// 		tfMap["prefix"] = []interface{}{flattenHeaderMatchTypeMemberPrefix(v)}
+// 	}
 
-	if v, ok := apiObject.(*types.HeaderMatchTypeMemberContains); ok {
-		tfMap["prefix"] = []interface{}{flattenHeaderMatchTypeMemberContains(v)}
-	}
+// 	if v, ok := apiObject.(*types.HeaderMatchTypeMemberContains); ok {
+// 		tfMap["contains"] = []interface{}{flattenHeaderMatchTypeMemberContains(v)}
+// 	}
 
-	return tfMap
-}
+// 	return tfMap
+// }
 
 func flattenHeaderMatchTypeMemberContains(apiObject *types.HeaderMatchTypeMemberContains) map[string]interface{} {
 	if apiObject == nil {
@@ -754,25 +685,12 @@ func flattenPathMatch(apiObject *types.PathMatch) map[string]interface{} {
 	}
 
 	if v := apiObject.Match; v != nil {
-		tfMap["match"] = []interface{}{flattenPathMatchType(v)}
-	}
-
-	return tfMap
-}
-
-func flattenPathMatchType(apiObject types.PathMatchType) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := make(map[string]interface{})
-
-	if v, ok := apiObject.(*types.PathMatchTypeMemberExact); ok {
-		tfMap["exact"] = flattenPathMatchTypeMemberExact(v)
-	}
-
-	if v, ok := apiObject.(*types.PathMatchTypeMemberPrefix); ok {
-		tfMap["prefix"] = flattenPathMatchTypeMemberPrefix(v)
+		if exact, ok := v.(*types.PathMatchTypeMemberExact); ok {
+			tfMap["exact"] = flattenPathMatchTypeMemberExact(exact)
+		}
+		if prefix, ok := v.(*types.PathMatchTypeMemberPrefix); ok {
+			tfMap["prefix"] = flattenPathMatchTypeMemberPrefix(prefix)
+		}
 	}
 
 	return tfMap
