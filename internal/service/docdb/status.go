@@ -7,11 +7,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusGlobalClusterRefreshFunc(ctx context.Context, conn *docdb.DocDB, globalClusterID string) resource.StateRefreshFunc {
+func statusGlobalClusterRefreshFunc(ctx context.Context, conn *docdb.DocDB, globalClusterID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		globalCluster, err := FindGlobalClusterById(ctx, conn, globalClusterID)
 
@@ -27,7 +27,7 @@ func statusGlobalClusterRefreshFunc(ctx context.Context, conn *docdb.DocDB, glob
 	}
 }
 
-func statusDBClusterRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBClusterID string) resource.StateRefreshFunc {
+func statusDBClusterRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBClusterID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		dBCluster, err := FindDBClusterById(ctx, conn, dBClusterID)
 
@@ -43,7 +43,7 @@ func statusDBClusterRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBCluste
 	}
 }
 
-func statusDBClusterSnapshotRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBClusterSnapshotID string) resource.StateRefreshFunc {
+func statusDBClusterSnapshotRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBClusterSnapshotID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		dBClusterSnapshot, err := FindDBClusterSnapshotById(ctx, conn, dBClusterSnapshotID)
 
@@ -59,7 +59,7 @@ func statusDBClusterSnapshotRefreshFunc(ctx context.Context, conn *docdb.DocDB, 
 	}
 }
 
-func statusDBInstanceRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBInstanceID string) resource.StateRefreshFunc {
+func statusDBInstanceRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBInstanceID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		dBInstance, err := FindDBInstanceById(ctx, conn, dBInstanceID)
 
@@ -75,7 +75,7 @@ func statusDBInstanceRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBInsta
 	}
 }
 
-func statusDBSubnetGroupRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBSubnetGroupName string) resource.StateRefreshFunc {
+func statusDBSubnetGroupRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBSubnetGroupName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		dBSubnetGroup, err := FindDBSubnetGroupByName(ctx, conn, dBSubnetGroupName)
 
@@ -91,7 +91,7 @@ func statusDBSubnetGroupRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBSu
 	}
 }
 
-func statusEventSubscription(ctx context.Context, conn *docdb.DocDB, id string) resource.StateRefreshFunc {
+func statusEventSubscription(ctx context.Context, conn *docdb.DocDB, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindEventSubscriptionByID(ctx, conn, id)
 

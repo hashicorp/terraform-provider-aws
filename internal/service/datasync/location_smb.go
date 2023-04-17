@@ -15,9 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_datasync_location_smb")
+// @SDKResource("aws_datasync_location_smb", name="Location SMB")
+// @Tags(identifierAttribute="id")
 func ResourceLocationSMB() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationSMBCreate,
@@ -91,8 +93,8 @@ func ResourceLocationSMB() *schema.Resource {
 				},
 				*/
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"uri": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -111,8 +113,6 @@ func ResourceLocationSMB() *schema.Resource {
 func resourceLocationSMBCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &datasync.CreateLocationSmbInput{
 		AgentArns:      flex.ExpandStringSet(d.Get("agent_arns").(*schema.Set)),
@@ -120,7 +120,7 @@ func resourceLocationSMBCreate(ctx context.Context, d *schema.ResourceData, meta
 		Password:       aws.String(d.Get("password").(string)),
 		ServerHostname: aws.String(d.Get("server_hostname").(string)),
 		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
-		Tags:           Tags(tags.IgnoreAWS()),
+		Tags:           GetTagsIn(ctx),
 		User:           aws.String(d.Get("user").(string)),
 	}
 
@@ -141,8 +141,6 @@ func resourceLocationSMBCreate(ctx context.Context, d *schema.ResourceData, meta
 func resourceLocationSMBRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &datasync.DescribeLocationSmbInput{
 		LocationArn: aws.String(d.Id()),
@@ -159,17 +157,6 @@ func resourceLocationSMBRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading DataSync Location SMB (%s): %s", d.Id(), err)
-	}
-
-	tagsInput := &datasync.ListTagsForResourceInput{
-		ResourceArn: output.LocationArn,
-	}
-
-	log.Printf("[DEBUG] Reading DataSync Location SMB tags: %s", tagsInput)
-	tagsOutput, err := conn.ListTagsForResourceWithContext(ctx, tagsInput)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading DataSync Location SMB (%s) tags: %s", d.Id(), err)
 	}
 
 	subdirectory, err := SubdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
@@ -189,20 +176,7 @@ func resourceLocationSMBRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set("subdirectory", subdirectory)
-
-	tags := KeyValueTags(ctx, tagsOutput.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	d.Set("user", output.User)
-
 	d.Set("uri", output.LocationUri)
 
 	return diags
@@ -232,13 +206,6 @@ func resourceLocationSMBUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating DataSync SMB location (%s) tags: %s", d.Id(), err)
-		}
-	}
 	return append(diags, resourceLocationSMBRead(ctx, d, meta)...)
 }
 

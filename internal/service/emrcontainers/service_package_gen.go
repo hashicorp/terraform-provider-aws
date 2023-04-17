@@ -33,6 +33,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceVirtualCluster,
 			TypeName: "aws_emrcontainers_virtual_cluster",
+			Name:     "Virtual Cluster",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }

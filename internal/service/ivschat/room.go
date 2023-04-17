@@ -22,7 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ivschat_room")
+// @SDKResource("aws_ivschat_room", name="Room")
+// @Tags(identifierAttribute="id")
 func ResourceRoom() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRoomCreate,
@@ -90,8 +91,8 @@ func ResourceRoom() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-_]{0,128}$`), "must contain only alphanumeric, hyphen, and underscore characters, with max length of 128 characters"),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -105,7 +106,9 @@ const (
 func resourceRoomCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).IVSChatClient()
 
-	in := &ivschat.CreateRoomInput{}
+	in := &ivschat.CreateRoomInput{
+		Tags: GetTagsIn(ctx),
+	}
 
 	if v, ok := d.GetOk("logging_configuration_identifiers"); ok {
 		in.LoggingConfigurationIdentifiers = flex.ExpandStringValueList(v.([]interface{}))
@@ -125,13 +128,6 @@ func resourceRoomCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if v, ok := d.GetOk("name"); ok {
 		in.Name = aws.String(v.(string))
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	out, err := conn.CreateRoom(ctx, in)
@@ -182,23 +178,6 @@ func resourceRoomRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	d.Set("name", out.Name)
 
-	tags, err := ListTags(ctx, conn, d.Id())
-	if err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionReading, ResNameRoom, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionSetting, ResNameRoom, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionSetting, ResNameRoom, d.Id(), err)
-	}
-
 	return nil
 }
 
@@ -234,14 +213,6 @@ func resourceRoomUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	if d.HasChanges("name") {
 		in.Name = aws.String(d.Get("name").(string))
 		update = true
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return create.DiagError(names.IVS, create.ErrActionUpdating, ResNameRoom, d.Id(), err)
-		}
 	}
 
 	if !update {

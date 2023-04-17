@@ -28,6 +28,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDataCatalog,
 			TypeName: "aws_athena_data_catalog",
+			Name:     "Data Catalog",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceDatabase,
@@ -40,6 +44,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceWorkGroup,
 			TypeName: "aws_athena_workgroup",
+			Name:     "WorkGroup",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }

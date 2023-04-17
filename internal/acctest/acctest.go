@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -349,7 +350,7 @@ func CheckResourceAttrNameFromPrefix(resourceName string, attributeName string, 
 
 // Regexp for "<start-of-string>terraform-<26 lowercase hex digits><additional suffix><end-of-string>".
 func resourceUniqueIDPrefixPlusAdditionalSuffixRegexp(prefix, suffix string) *regexp.Regexp {
-	return regexp.MustCompile(fmt.Sprintf("^%s[[:xdigit:]]{%d}%s$", prefix, resource.UniqueIDSuffixLength, suffix))
+	return regexp.MustCompile(fmt.Sprintf("^%s[[:xdigit:]]{%d}%s$", prefix, id.UniqueIDSuffixLength, suffix))
 }
 
 // CheckResourceAttrNameWithSuffixFromPrefix verifies that the state attribute value matches name with suffix generated from given prefix
@@ -368,7 +369,7 @@ func CheckResourceAttrNameGenerated(resourceName string, attributeName string) r
 // CheckResourceAttrNameWithSuffixGenerated verifies that the state attribute value matches name with suffix automatically generated without prefix
 func CheckResourceAttrNameWithSuffixGenerated(resourceName string, attributeName string, suffix string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return resource.TestMatchResourceAttr(resourceName, attributeName, resourceUniqueIDPrefixPlusAdditionalSuffixRegexp(resource.UniqueIdPrefix, suffix))(s)
+		return resource.TestMatchResourceAttr(resourceName, attributeName, resourceUniqueIDPrefixPlusAdditionalSuffixRegexp(id.UniqueIdPrefix, suffix))(s)
 	}
 }
 
@@ -1629,7 +1630,7 @@ func CheckACMPCACertificateAuthorityActivateRootCA(ctx context.Context, certific
 		issueCertOutput, err := conn.IssueCertificateWithContext(ctx, &acmpca.IssueCertificateInput{
 			CertificateAuthorityArn: aws.String(arn),
 			Csr:                     []byte(aws.StringValue(getCsrOutput.Csr)),
-			IdempotencyToken:        aws.String(resource.UniqueId()),
+			IdempotencyToken:        aws.String(id.UniqueId()),
 			SigningAlgorithm:        certificateAuthority.CertificateAuthorityConfiguration.SigningAlgorithm,
 			TemplateArn:             aws.String(fmt.Sprintf("arn:%s:acm-pca:::template/RootCACertificate/V1", Partition())),
 			Validity: &acmpca.Validity{
@@ -1697,7 +1698,7 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, r
 		issueCertOutput, err := conn.IssueCertificateWithContext(ctx, &acmpca.IssueCertificateInput{
 			CertificateAuthorityArn: aws.String(rootCertificateAuthorityArn),
 			Csr:                     []byte(aws.StringValue(getCsrOutput.Csr)),
-			IdempotencyToken:        aws.String(resource.UniqueId()),
+			IdempotencyToken:        aws.String(id.UniqueId()),
 			SigningAlgorithm:        certificateAuthority.CertificateAuthorityConfiguration.SigningAlgorithm,
 			TemplateArn:             aws.String(fmt.Sprintf("arn:%s:acm-pca:::template/SubordinateCACertificate_PathLen0/V1", Partition())),
 			Validity: &acmpca.Validity{
@@ -2291,4 +2292,12 @@ func modulePrimaryInstanceState(ms *terraform.ModuleState, name string) (*terraf
 	}
 
 	return is, nil
+}
+
+func ExpectErrorAttrAtLeastOneOf(attrs ...string) *regexp.Regexp {
+	return regexp.MustCompile(fmt.Sprintf("one of\\s+`%s`\\s+must be specified", strings.Join(attrs, ",")))
+}
+
+func ExpectErrorAttrMinItems(attr string, expected, actual int) *regexp.Regexp {
+	return regexp.MustCompile(fmt.Sprintf(`Attribute %s requires %d\s+item minimum, but config has only %d declared`, attr, expected, actual))
 }

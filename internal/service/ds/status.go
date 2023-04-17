@@ -5,11 +5,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusDirectoryStage(ctx context.Context, conn *directoryservice.DirectoryService, id string) resource.StateRefreshFunc {
+func statusDirectoryStage(ctx context.Context, conn *directoryservice.DirectoryService, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDirectoryByID(ctx, conn, id)
 
@@ -25,7 +25,7 @@ func statusDirectoryStage(ctx context.Context, conn *directoryservice.DirectoryS
 	}
 }
 
-func statusDirectoryShareStatus(ctx context.Context, conn *directoryservice.DirectoryService, id string) resource.StateRefreshFunc {
+func statusDirectoryShareStatus(ctx context.Context, conn *directoryservice.DirectoryService, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDirectoryByID(ctx, conn, id)
 
@@ -41,7 +41,7 @@ func statusDirectoryShareStatus(ctx context.Context, conn *directoryservice.Dire
 	}
 }
 
-func statusDomainController(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, domainControllerID string) resource.StateRefreshFunc {
+func statusDomainController(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, domainControllerID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDomainController(ctx, conn, directoryID, domainControllerID)
 
@@ -57,7 +57,7 @@ func statusDomainController(ctx context.Context, conn *directoryservice.Director
 	}
 }
 
-func statusRadius(ctx context.Context, conn *directoryservice.DirectoryService, directoryID string) resource.StateRefreshFunc {
+func statusRadius(ctx context.Context, conn *directoryservice.DirectoryService, directoryID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDirectoryByID(ctx, conn, directoryID)
 
@@ -73,7 +73,7 @@ func statusRadius(ctx context.Context, conn *directoryservice.DirectoryService, 
 	}
 }
 
-func statusRegion(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, regionName string) resource.StateRefreshFunc {
+func statusRegion(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, regionName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindRegion(ctx, conn, directoryID, regionName)
 
@@ -89,7 +89,7 @@ func statusRegion(ctx context.Context, conn *directoryservice.DirectoryService, 
 	}
 }
 
-func statusSharedDirectory(ctx context.Context, conn *directoryservice.DirectoryService, ownerDirectoryID, sharedDirectoryID string) resource.StateRefreshFunc {
+func statusSharedDirectory(ctx context.Context, conn *directoryservice.DirectoryService, ownerDirectoryID, sharedDirectoryID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSharedDirectory(ctx, conn, ownerDirectoryID, sharedDirectoryID)
 

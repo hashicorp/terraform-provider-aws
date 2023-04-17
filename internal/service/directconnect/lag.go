@@ -16,9 +16,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_dx_lag")
+// @SDKResource("aws_dx_lag", name="LAG")
+// @Tags(identifierAttribute="arn")
 func ResourceLag() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLagCreate,
@@ -77,8 +79,8 @@ func ResourceLag() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -88,14 +90,13 @@ func ResourceLag() *schema.Resource {
 func resourceLagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &directconnect.CreateLagInput{
 		ConnectionsBandwidth: aws.String(d.Get("connections_bandwidth").(string)),
 		LagName:              aws.String(name),
 		Location:             aws.String(d.Get("location").(string)),
+		Tags:                 GetTagsIn(ctx),
 	}
 
 	var connectionIDSpecified bool
@@ -111,10 +112,6 @@ func resourceLagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.ProviderName = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	log.Printf("[DEBUG] Creating Direct Connect LAG: %s", input)
 	output, err := conn.CreateLagWithContext(ctx, input)
 
@@ -126,9 +123,7 @@ func resourceLagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	// Delete unmanaged connection.
 	if !connectionIDSpecified {
-		err = deleteConnection(ctx, conn, aws.StringValue(output.Connections[0].ConnectionId), waitConnectionDeleted)
-
-		if err != nil {
+		if err := deleteConnection(ctx, conn, aws.StringValue(output.Connections[0].ConnectionId), waitConnectionDeleted); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -139,8 +134,6 @@ func resourceLagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceLagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	lag, err := FindLagByID(ctx, conn, d.Id())
 
@@ -170,23 +163,6 @@ func resourceLagRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("owner_account_id", lag.OwnerAccount)
 	d.Set("provider_name", lag.ProviderName)
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Direct Connect LAG (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -208,15 +184,6 @@ func resourceLagUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	}
 
-	arn := d.Get("arn").(string)
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Direct Connect LAG (%s) tags: %s", arn, err)
-		}
-	}
-
 	return append(diags, resourceLagRead(ctx, d, meta)...)
 }
 
@@ -232,9 +199,7 @@ func resourceLagDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 
 		for _, connection := range lag.Connections {
-			err = deleteConnection(ctx, conn, aws.StringValue(connection.ConnectionId), waitConnectionDeleted)
-
-			if err != nil {
+			if err := deleteConnection(ctx, conn, aws.StringValue(connection.ConnectionId), waitConnectionDeleted); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}

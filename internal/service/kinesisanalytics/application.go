@@ -22,9 +22,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_kinesis_analytics_application")
+// @SDKResource("aws_kinesis_analytics_application", name="Application")
+// @Tags(identifierAttribute="arn")
 func ResourceApplication() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceApplicationCreate,
@@ -606,9 +608,8 @@ func ResourceApplication() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tftags.TagsSchema(),
-
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 
 			"version": {
 				Type:     schema.TypeInt,
@@ -621,10 +622,8 @@ func ResourceApplication() *schema.Resource {
 func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-	applicationName := d.Get("name").(string)
 
+	applicationName := d.Get("name").(string)
 	input := &kinesisanalytics.CreateApplicationInput{
 		ApplicationCode:          aws.String(d.Get("code").(string)),
 		ApplicationDescription:   aws.String(d.Get("description").(string)),
@@ -632,13 +631,8 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		CloudWatchLoggingOptions: expandCloudWatchLoggingOptions(d.Get("cloudwatch_logging_options").([]interface{})),
 		Inputs:                   expandInputs(d.Get("inputs").([]interface{})),
 		Outputs:                  expandOutputs(d.Get("outputs").(*schema.Set).List()),
+		Tags:                     GetTagsIn(ctx),
 	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating Kinesis Analytics Application: %s", input)
 
 	outputRaw, err := waitIAMPropagation(ctx, func() (interface{}, error) {
 		return conn.CreateApplicationWithContext(ctx, input)
@@ -707,8 +701,6 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	application, err := FindApplicationDetailByName(ctx, conn, d.Get("name").(string))
 
@@ -746,23 +738,6 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	if err := d.Set("reference_data_sources", flattenReferenceDataSourceDescriptions(application.ReferenceDataSourceDescriptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting reference_data_sources: %s", err)
-	}
-
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Kinesis Analytics Application (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	return diags
@@ -1112,14 +1087,6 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 			if _, err := waitApplicationUpdated(ctx, conn, applicationName); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics Application (%s) to update: %s", d.Id(), err)
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		arn := d.Get("arn").(string)
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Kinesis Analytics Application (%s) tags: %s", arn, err)
 		}
 	}
 

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -21,7 +21,7 @@ const (
 
 // WaitEventSubscriptionDeleted waits for a EventSubscription to return Deleted
 func WaitEventSubscriptionDeleted(ctx context.Context, conn *neptune.Neptune, subscriptionName string) (*neptune.EventSubscription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"deleting"},
 		Target:  []string{EventSubscriptionStatusNotFound},
 		Refresh: StatusEventSubscription(ctx, conn, subscriptionName),
@@ -39,7 +39,7 @@ func WaitEventSubscriptionDeleted(ctx context.Context, conn *neptune.Neptune, su
 
 // WaitDBClusterEndpointAvailable waits for a DBClusterEndpoint to return Available
 func WaitDBClusterEndpointAvailable(ctx context.Context, conn *neptune.Neptune, id string) (*neptune.DBClusterEndpoint, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"creating", "modifying"},
 		Target:  []string{"available"},
 		Refresh: StatusDBClusterEndpoint(ctx, conn, id),
@@ -57,7 +57,7 @@ func WaitDBClusterEndpointAvailable(ctx context.Context, conn *neptune.Neptune, 
 
 // WaitDBClusterEndpointDeleted waits for a DBClusterEndpoint to return Deleted
 func WaitDBClusterEndpointDeleted(ctx context.Context, conn *neptune.Neptune, id string) (*neptune.DBClusterEndpoint, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"deleting"},
 		Target:  []string{},
 		Refresh: StatusDBClusterEndpoint(ctx, conn, id),

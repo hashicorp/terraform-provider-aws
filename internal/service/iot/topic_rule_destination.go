@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -265,7 +265,7 @@ func flattenVPCDestinationProperties(apiObject *iot.VpcDestinationProperties) ma
 	return tfMap
 }
 
-func statusTopicRuleDestination(ctx context.Context, conn *iot.IoT, arn string) resource.StateRefreshFunc {
+func statusTopicRuleDestination(ctx context.Context, conn *iot.IoT, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindTopicRuleDestinationByARN(ctx, conn, arn)
 
@@ -282,7 +282,7 @@ func statusTopicRuleDestination(ctx context.Context, conn *iot.IoT, arn string) 
 }
 
 func waitTopicRuleDestinationCreated(ctx context.Context, conn *iot.IoT, arn string, timeout time.Duration) (*iot.TopicRuleDestination, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{iot.TopicRuleDestinationStatusInProgress},
 		Target:  []string{iot.TopicRuleDestinationStatusEnabled},
 		Refresh: statusTopicRuleDestination(ctx, conn, arn),
@@ -301,7 +301,7 @@ func waitTopicRuleDestinationCreated(ctx context.Context, conn *iot.IoT, arn str
 }
 
 func waitTopicRuleDestinationDeleted(ctx context.Context, conn *iot.IoT, arn string, timeout time.Duration) (*iot.TopicRuleDestination, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{iot.TopicRuleDestinationStatusDeleting},
 		Target:  []string{},
 		Refresh: statusTopicRuleDestination(ctx, conn, arn),
@@ -320,7 +320,7 @@ func waitTopicRuleDestinationDeleted(ctx context.Context, conn *iot.IoT, arn str
 }
 
 func waitTopicRuleDestinationDisabled(ctx context.Context, conn *iot.IoT, arn string, timeout time.Duration) (*iot.TopicRuleDestination, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{iot.TopicRuleDestinationStatusInProgress},
 		Target:  []string{iot.TopicRuleDestinationStatusDisabled},
 		Refresh: statusTopicRuleDestination(ctx, conn, arn),
@@ -339,7 +339,7 @@ func waitTopicRuleDestinationDisabled(ctx context.Context, conn *iot.IoT, arn st
 }
 
 func waitTopicRuleDestinationEnabled(ctx context.Context, conn *iot.IoT, arn string, timeout time.Duration) (*iot.TopicRuleDestination, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{iot.TopicRuleDestinationStatusInProgress},
 		Target:  []string{iot.TopicRuleDestinationStatusEnabled},
 		Refresh: statusTopicRuleDestination(ctx, conn, arn),

@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -59,7 +60,7 @@ func TestAccComprehendDocumentClassifier_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
-					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", resource.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", id.UniqueIdPrefix),
 					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 				),
@@ -237,7 +238,7 @@ func TestAccComprehendDocumentClassifier_versionNameGenerated(t *testing.T) {
 					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
 					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
-					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", resource.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", id.UniqueIdPrefix),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
 				),
 			},
@@ -325,7 +326,7 @@ func TestAccComprehendDocumentClassifier_testDocuments(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
-					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", resource.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", id.UniqueIdPrefix),
 					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 				),
@@ -415,7 +416,7 @@ func TestAccComprehendDocumentClassifier_multiLabel_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
-					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", resource.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", id.UniqueIdPrefix),
 					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 				),
@@ -825,7 +826,7 @@ func TestAccComprehendDocumentClassifier_multiLabel_labelDelimiter(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
-					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", resource.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", id.UniqueIdPrefix),
 					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 				),
