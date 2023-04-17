@@ -2193,6 +2193,21 @@ func CheckResourceAttrGreaterThanValue(n, key, value string) resource.TestCheckF
 	}
 }
 
+func ImageBuilderECRImageFromEnv(t *testing.T, platform string) string {
+
+	ecrImage := os.Getenv(fmt.Sprintf("IMAGE_BUILDER_ECR_IMAGE_%s", strings.ToUpper(platform)))
+
+	if ecrImage == "" {
+		t.Skip(
+			fmt.Sprintf("Environment variable IMAGE_BUILDER_ECR_IMAGE_%s is not set. "+
+				"For AWS EC2 Image Builder tests using an ECR Image"+
+				"as the Parent Image the ECR Image must be accessible for"+
+				"testing.", strings.ToUpper(platform)))
+	}
+
+	return ecrImage
+}
+
 // RunSerialTests1Level runs test cases in parallel, optionally sleeping between each.
 func RunSerialTests1Level(t *testing.T, testCases map[string]func(t *testing.T), d time.Duration) {
 	t.Helper()

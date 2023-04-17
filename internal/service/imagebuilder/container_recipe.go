@@ -105,6 +105,12 @@ func ResourceContainerRecipe() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"image_os_version_override": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
+			},
 			"instance_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -240,7 +246,7 @@ func ResourceContainerRecipe() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"Linux", "Windows"}, false),
+				ValidateFunc: validation.StringInSlice(imagebuilder.Platform_Values(), false),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -295,6 +301,10 @@ func resourceContainerRecipeCreate(ctx context.Context, d *schema.ResourceData, 
 
 	if v, ok := d.GetOk("container_type"); ok {
 		input.ContainerType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("image_os_version_override"); ok {
+		input.ImageOsVersionOverride = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("description"); ok {

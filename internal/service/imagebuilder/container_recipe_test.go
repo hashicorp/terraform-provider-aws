@@ -589,6 +589,143 @@ func TestAccImageBuilderContainerRecipe_kmsKeyID(t *testing.T) {
 	})
 }
 
+func TestAccImageBuilderContainerRecipe_platform_override_linux(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_container_recipe.test"
+	ecrImage := acctest.ImageBuilderECRImageFromEnv(t, imagebuilder.PlatformLinux)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContainerRecipePlatformOverrideLinuxConfig(rName, ecrImage),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContainerRecipeExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "parent_image", ecrImage),
+					resource.TestCheckResourceAttr(resourceName, "platform_override", imagebuilder.PlatformLinux),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"platform_override"},
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderContainerRecipe_platform_override_linux_wrong_parent_image(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	parentImage := "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccContainerRecipePlatformOverrideLinuxConfig(rName, parentImage),
+				ExpectError: regexp.MustCompile("You cannot specify a platform override when using an Image Builder Image as your parent."),
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderContainerRecipe_platform_override_linux_without_override(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ecrImage := acctest.ImageBuilderECRImageFromEnv(t, imagebuilder.PlatformLinux)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccContainerRecipePlatformOverrideLinuxWithoutPlatformOverrideConfig(rName, ecrImage),
+				ExpectError: regexp.MustCompile("You must specify a platform override when using ECR Public Repositories as your parent image."),
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderContainerRecipe_platform_override_windows(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_container_recipe.test"
+	ecrImage := acctest.ImageBuilderECRImageFromEnv(t, imagebuilder.PlatformWindows)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContainerRecipePlatformOverrideWindowsConfig(rName, ecrImage),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContainerRecipeExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "parent_image", ecrImage),
+					resource.TestCheckResourceAttr(resourceName, "platform_override", imagebuilder.PlatformWindows),
+					resource.TestCheckResourceAttr(resourceName, "image_os_version_override", "Microsoft Windows Server 2022"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"platform_override", "image_os_version_override"},
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderContainerRecipe_platform_override_windows_without_platform_override(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ecrImage := acctest.ImageBuilderECRImageFromEnv(t, imagebuilder.PlatformWindows)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccContainerRecipePlatformOverrideWindowsWithoutPlatformOverrideConfig(rName, ecrImage),
+				ExpectError: regexp.MustCompile("You must specify a platform override when using ECR Public Repositories as your parent image."),
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderContainerRecipe_platform_override_windows_without_image_os_version_override(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ecrImage := acctest.ImageBuilderECRImageFromEnv(t, imagebuilder.PlatformWindows)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccContainerRecipePlatformOverrideWindowsWithoutImageOSVersionOverrideConfig(rName, ecrImage),
+				ExpectError: regexp.MustCompile("You must specify an image OsVersion override when using ECR Repositories as your parent image for Windows Platform."),
+			},
+		},
+	})
+}
+
 func TestAccImageBuilderContainerRecipe_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -665,6 +802,7 @@ func TestAccImageBuilderContainerRecipe_platformOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_container_recipe.test"
+	ecrImage := acctest.ImageBuilderECRImageFromEnv(t, imagebuilder.PlatformLinux)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -674,7 +812,7 @@ func TestAccImageBuilderContainerRecipe_platformOverride(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// A public ecr image can only be used if platform override is set, so this test will only pass if it is set correctly
-				Config: testAccContainerRecipeConfig_platformOverride(rName),
+				Config: testAccContainerRecipePlatformOverrideLinuxConfig(rName, ecrImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "platform", "Linux"),
@@ -837,7 +975,7 @@ parameters:
   - Parameter1:
       type: string
   - Parameter2:
-      type: string  
+      type: string
 schemaVersion: 1.0
 EOF
 
@@ -1547,16 +1685,46 @@ EOF
 `, rName))
 }
 
-func testAccContainerRecipeConfig_platformOverride(rName string) string {
+func testAccContainerRecipePlatformOverrideLinuxConfig(rName, ecrImage string) string {
+	return acctest.ConfigCompose(
+		testAccContainerRecipeBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_container_recipe" "test" {
+  name = %[1]q
+
+  container_type = "DOCKER"
+	parent_image   = %[2]q
+  version        = "1.0.0"
+
+  component {
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+  }
+
+  dockerfile_template_data = <<EOF
+FROM {{{ imagebuilder:parentImage }}}
+{{{ imagebuilder:environments }}}
+{{{ imagebuilder:components }}}
+EOF
+
+  target_repository {
+    repository_name = aws_ecr_repository.test.name
+    service         = "ECR"
+  }
+
+  platform_override = "Linux"
+}
+`, rName, ecrImage))
+}
+
+func testAccContainerRecipePlatformOverrideLinuxWithoutPlatformOverrideConfig(rName, ecrImage string) string {
 	return acctest.ConfigCompose(
 		testAccContainerRecipeBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_container_recipe" "test" {
   name              = %[1]q
   container_type    = "DOCKER"
-  parent_image      = "public.ecr.aws/amazonlinux/amazonlinux:latest"
+  parent_image      = %[2]q
   version           = "1.0.0"
-  platform_override = "Linux"
 
   component {
     component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
@@ -1573,5 +1741,99 @@ EOF
     service         = "ECR"
   }
 }
-`, rName))
+`, rName, ecrImage))
+}
+
+func testAccContainerRecipePlatformOverrideWindowsConfig(rName, ecrImage string) string {
+	return acctest.ConfigCompose(
+		testAccContainerRecipeBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_container_recipe" "test" {
+  name = %[1]q
+
+  container_type = "DOCKER"
+	parent_image   = %[2]q
+  version        = "1.0.0"
+
+  component {
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-windows/x.x.x"
+  }
+
+  dockerfile_template_data = <<EOF
+FROM {{{ imagebuilder:parentImage }}}
+{{{ imagebuilder:environments }}}
+{{{ imagebuilder:components }}}
+EOF
+
+  target_repository {
+    repository_name = aws_ecr_repository.test.name
+    service         = "ECR"
+  }
+
+  image_os_version_override = "Microsoft Windows Server 2022"
+  platform_override = "Windows"
+}
+`, rName, ecrImage))
+}
+
+func testAccContainerRecipePlatformOverrideWindowsWithoutPlatformOverrideConfig(rName, ecrImage string) string {
+	return acctest.ConfigCompose(
+		testAccContainerRecipeBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_container_recipe" "test" {
+  name = %[1]q
+
+  container_type = "DOCKER"
+	parent_image   = %[2]q
+  version        = "1.0.0"
+
+  component {
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-windows/x.x.x"
+  }
+
+  dockerfile_template_data = <<EOF
+FROM {{{ imagebuilder:parentImage }}}
+{{{ imagebuilder:environments }}}
+{{{ imagebuilder:components }}}
+EOF
+
+  target_repository {
+    repository_name = aws_ecr_repository.test.name
+    service         = "ECR"
+  }
+
+  image_os_version_override = "Microsoft Windows Server 2022"
+}
+`, rName, ecrImage))
+}
+
+func testAccContainerRecipePlatformOverrideWindowsWithoutImageOSVersionOverrideConfig(rName, ecrImage string) string {
+	return acctest.ConfigCompose(
+		testAccContainerRecipeBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_container_recipe" "test" {
+  name = %[1]q
+
+  container_type = "DOCKER"
+	parent_image   = %[2]q
+  version        = "1.0.0"
+
+  component {
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-windows/x.x.x"
+  }
+
+  dockerfile_template_data = <<EOF
+FROM {{{ imagebuilder:parentImage }}}
+{{{ imagebuilder:environments }}}
+{{{ imagebuilder:components }}}
+EOF
+
+  target_repository {
+    repository_name = aws_ecr_repository.test.name
+    service         = "ECR"
+  }
+
+  platform_override = "Windows"
+}
+`, rName, ecrImage))
 }
