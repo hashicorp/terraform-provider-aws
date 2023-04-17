@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -1109,7 +1110,7 @@ func testAccAddRolePolicy(ctx context.Context, n string) resource.TestCheckFunc 
     "Resource": "*"
   }
 }`),
-			PolicyName: aws.String(resource.UniqueId()),
+			PolicyName: aws.String(id.UniqueId()),
 		}
 
 		_, err := conn.PutRolePolicyWithContext(ctx, input)

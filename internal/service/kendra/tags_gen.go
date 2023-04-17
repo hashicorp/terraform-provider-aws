@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists kendra service tags.
@@ -104,7 +105,7 @@ func UpdateTags(ctx context.Context, conn *kendra.Client, identifier string, old
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &kendra.UntagResourceInput{
 			ResourceARN: aws.String(identifier),
-			TagKeys:     removedTags.IgnoreAWS().Keys(),
+			TagKeys:     removedTags.IgnoreSystem(names.Kendra).Keys(),
 		}
 
 		_, err := conn.UntagResource(ctx, input)
@@ -117,7 +118,7 @@ func UpdateTags(ctx context.Context, conn *kendra.Client, identifier string, old
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &kendra.TagResourceInput{
 			ResourceARN: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreAWS()),
+			Tags:        Tags(updatedTags.IgnoreSystem(names.Kendra)),
 		}
 
 		_, err := conn.TagResource(ctx, input)

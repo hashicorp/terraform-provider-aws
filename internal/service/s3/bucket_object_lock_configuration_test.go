@@ -5,15 +5,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccS3BucketObjectLockConfiguration_basic(t *testing.T) {
@@ -218,31 +217,22 @@ func testAccCheckBucketObjectLockConfigurationDestroy(ctx context.Context) resou
 			}
 
 			bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
+
 			if err != nil {
 				return err
 			}
 
-			input := &s3.GetObjectLockConfigurationInput{
-				Bucket: aws.String(bucket),
-			}
+			_, err = tfs3.FindObjectLockConfiguration(ctx, conn, bucket, expectedBucketOwner)
 
-			if expectedBucketOwner != "" {
-				input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
-			}
-
-			output, err := conn.GetObjectLockConfigurationWithContext(ctx, input)
-
-			if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket, tfs3.ErrCodeObjectLockConfigurationNotFound) {
-				continue
+			if tfresource.NotFound(err) {
+				return nil
 			}
 
 			if err != nil {
-				return fmt.Errorf("error getting S3 Bucket Object Lock configuration (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
-			if output != nil {
-				return fmt.Errorf("S3 Bucket Object Lock configuration (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("S3 Bucket Object Lock configuration (%s) still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -260,32 +250,17 @@ func testAccCheckBucketObjectLockConfigurationExists(ctx context.Context, resour
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
-
 		bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		input := &s3.GetObjectLockConfigurationInput{
-			Bucket: aws.String(bucket),
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
-		if expectedBucketOwner != "" {
-			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
-		}
+		_, err = tfs3.FindObjectLockConfiguration(ctx, conn, bucket, expectedBucketOwner)
 
-		output, err := conn.GetObjectLockConfigurationWithContext(ctx, input)
-
-		if err != nil {
-			return fmt.Errorf("error getting S3 Bucket Object Lock configuration (%s): %w", rs.Primary.ID, err)
-		}
-
-		if output == nil || output.ObjectLockConfiguration == nil {
-			return fmt.Errorf("S3 Bucket Object Lock configuration (%s) not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 

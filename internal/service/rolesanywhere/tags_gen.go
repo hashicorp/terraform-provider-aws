@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists rolesanywhere service tags.
@@ -104,7 +105,7 @@ func UpdateTags(ctx context.Context, conn *rolesanywhere.Client, identifier stri
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &rolesanywhere.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     removedTags.IgnoreAWS().Keys(),
+			TagKeys:     removedTags.IgnoreSystem(names.RolesAnywhere).Keys(),
 		}
 
 		_, err := conn.UntagResource(ctx, input)
@@ -117,7 +118,7 @@ func UpdateTags(ctx context.Context, conn *rolesanywhere.Client, identifier stri
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &rolesanywhere.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreAWS()),
+			Tags:        Tags(updatedTags.IgnoreSystem(names.RolesAnywhere)),
 		}
 
 		_, err := conn.TagResource(ctx, input)

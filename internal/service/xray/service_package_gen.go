@@ -32,10 +32,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceGroup,
 			TypeName: "aws_xray_group",
+			Name:     "Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceSamplingRule,
 			TypeName: "aws_xray_sampling_rule",
+			Name:     "Sampling Rule",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }

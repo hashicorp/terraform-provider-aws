@@ -304,6 +304,7 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 		servicePackageName := sp.ServicePackageName()
 
 		for _, v := range sp.FrameworkDataSources(ctx) {
+			v := v
 			inner, err := v.Factory(ctx)
 
 			if err != nil {
@@ -347,6 +348,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 		servicePackageName := sp.ServicePackageName()
 
 		for _, v := range sp.FrameworkResources(ctx) {
+			v := v
 			inner, err := v.Factory(ctx)
 
 			if err != nil {

@@ -21,7 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ivs_channel")
+// @SDKResource("aws_ivs_channel", name="Channel")
+// @Tags(identifierAttribute="id")
 func ResourceChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceChannelCreate,
@@ -75,8 +76,8 @@ func ResourceChannel() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -96,7 +97,9 @@ const (
 func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).IVSConn()
 
-	in := &ivs.CreateChannelInput{}
+	in := &ivs.CreateChannelInput{
+		Tags: GetTagsIn(ctx),
+	}
 
 	if v, ok := d.GetOk("authorized"); ok {
 		in.Authorized = aws.Bool(v.(bool))
@@ -112,13 +115,6 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if v, ok := d.GetOk("recording_configuration_arn"); ok {
 		in.RecordingConfigurationArn = aws.String(v.(string))
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("type"); ok {
@@ -167,23 +163,6 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("recording_configuration_arn", out.RecordingConfigurationArn)
 	d.Set("type", out.Type)
 
-	tags, err := ListTags(ctx, conn, d.Id())
-	if err != nil {
-		return create.DiagError(names.IVS, create.ErrActionReading, ResNameChannel, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.IVS, create.ErrActionSetting, ResNameChannel, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.IVS, create.ErrActionSetting, ResNameChannel, d.Id(), err)
-	}
-
 	return nil
 }
 
@@ -220,14 +199,6 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChanges("type") {
 		in.Type = aws.String(d.Get("type").(string))
 		update = true
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return create.DiagError(names.IVS, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
-		}
 	}
 
 	if !update {
