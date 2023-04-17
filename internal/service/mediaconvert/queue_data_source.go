@@ -1,19 +1,22 @@
 package mediaconvert
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediaconvert"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_media_convert_queue", name="Queue")
 func DataSourceQueue() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceQueueRead,
+		ReadWithoutTimeout: dataSourceQueueRead,
 
 		Schema: map[string]*schema.Schema{
 			"id": {
@@ -42,26 +45,28 @@ func DataSourceQueue() *schema.Resource {
 	}
 }
 
-func dataSourceQueueRead(d *schema.ResourceData, meta interface{}) error {
-	conn, err := GetAccountClient(meta.(*conns.AWSClient))
+func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conn, err := GetAccountClient(ctx, meta.(*conns.AWSClient))
 	if err != nil {
-		return fmt.Errorf("error getting Media Convert Account Client: %w", err)
+		return sdkdiag.AppendErrorf(diags, "error getting Media Convert Account Client: %s", err)
 	}
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("id").(string)
 
-	resp, err := conn.GetQueue(&mediaconvert.GetQueueInput{
+	resp, err := conn.GetQueueWithContext(ctx, &mediaconvert.GetQueueInput{
 		Name: aws.String(id),
 	})
 
 	if err != nil {
-		return fmt.Errorf("error getting Media Convert Queue (%s): %w", id, err)
+		return sdkdiag.AppendErrorf(diags, "error getting Media Convert Queue (%s): %s", id, err)
 	}
 
 	if resp == nil || resp.Queue == nil {
-		return fmt.Errorf("error getting Media Convert Queue (%s): empty response", id)
+		return sdkdiag.AppendErrorf(diags, "error getting Media Convert Queue (%s): empty response", id)
 	}
 
 	d.SetId(aws.StringValue(resp.Queue.Name))
@@ -69,15 +74,15 @@ func dataSourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", resp.Queue.Arn)
 	d.Set("status", resp.Queue.Status)
 
-	tags, err := ListTags(conn, aws.StringValue(resp.Queue.Arn))
+	tags, err := ListTags(ctx, conn, aws.StringValue(resp.Queue.Arn))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Media Convert Queue (%s): %w", id, err)
+		return sdkdiag.AppendErrorf(diags, "error listing tags for Media Convert Queue (%s): %s", id, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "error setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }
