@@ -26,6 +26,7 @@ const (
 	CloudWatchLogsEndpointID             = "logs"
 	ComprehendEndpointID                 = "comprehend"
 	ComputeOptimizerEndpointID           = "computeoptimizer"
+	DocDBElasticEndpointID               = "docdbelastic"
 	IdentityStoreEndpointID              = "identitystore"
 	Inspector2EndpointID                 = "inspector2"
 	IVSChatEndpointID                    = "ivschat"
