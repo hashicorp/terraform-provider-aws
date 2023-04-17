@@ -75,8 +75,8 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("name", aws.StringValue(output.Policy.PolicySummary.Name))
 	d.Set("description", aws.StringValue(output.Policy.PolicySummary.Description))
 	d.Set("type", aws.StringValue(output.Policy.PolicySummary.Type))
-	d.Set("context", aws.StringValue(output.Policy.Context))
-	d.Set("aws_managed", aws.StringValue(output.Policy.PolicySummary.AwsManaged))
+	d.Set("content", aws.StringValue(output.Policy.Content))
+	d.Set("aws_managed", aws.BoolValue(output.Policy.PolicySummary.AwsManaged))
 
 	return diags
 }

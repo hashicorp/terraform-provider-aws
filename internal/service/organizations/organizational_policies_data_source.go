@@ -12,7 +12,7 @@ import (
 )
 
 // @SDKDataSource("aws_organizations_organizational_policies")
-func DataSourceOrganizationPolicies() *schema.Resource {
+func DataSourceOrganizationalPolicies() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOrganizationPoliciesRead,
 
