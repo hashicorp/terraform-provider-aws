@@ -63,7 +63,7 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
-	input := &organizations.DescribeOrganizationInput{
+	input := &organizations.DescribePolicyInput{
 		PolicyId: aws.String(policyID),
 	}
 	output, err := conn.DescribePolicyWithContext(ctx, input)
