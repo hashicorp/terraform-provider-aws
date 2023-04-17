@@ -14,7 +14,7 @@ import (
 // @SDKDataSource("aws_organizations_organizational_policies")
 func DataSourceOrganizationalPolicies() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceOrganizationPoliciesRead,
+		ReadWithoutTimeout: dataSourceOrganizationalPoliciesRead,
 
 		Schema: map[string]*schema.Schema{
 			"target_id": {
