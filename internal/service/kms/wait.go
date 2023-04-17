@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -34,12 +34,22 @@ const (
 
 // WaitIAMPropagation retries the specified function if the returned error indicates an IAM eventual consistency issue.
 // If the retries time out the specified function is called one last time.
-func WaitIAMPropagation(ctx context.Context, f func() (interface{}, error)) (interface{}, error) {
-	return tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, f, kms.ErrCodeMalformedPolicyDocumentException)
+func WaitIAMPropagation[T any](ctx context.Context, f func() (T, error)) (T, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+		return f()
+	},
+		kms.ErrCodeMalformedPolicyDocumentException)
+
+	if err != nil {
+		var zero T
+		return zero, err
+	}
+
+	return outputRaw.(T), err
 }
 
 func WaitKeyDeleted(ctx context.Context, conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{kms.KeyStateDisabled, kms.KeyStateEnabled},
 		Target:  []string{},
 		Refresh: StatusKeyState(ctx, conn, id),
@@ -78,7 +88,7 @@ func WaitKeyDescriptionPropagated(ctx context.Context, conn *kms.KMS, id string,
 }
 
 func WaitKeyMaterialImported(ctx context.Context, conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{kms.KeyStatePendingImport},
 		Target:  []string{kms.KeyStateDisabled, kms.KeyStateEnabled},
 		Refresh: StatusKeyState(ctx, conn, id),
@@ -215,7 +225,7 @@ func WaitTagsPropagated(ctx context.Context, conn *kms.KMS, id string, tags tfta
 }
 
 func WaitReplicaExternalKeyCreated(ctx context.Context, conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{kms.KeyStateCreating},
 		Target:  []string{kms.KeyStatePendingImport},
 		Refresh: StatusKeyState(ctx, conn, id),
@@ -232,7 +242,7 @@ func WaitReplicaExternalKeyCreated(ctx context.Context, conn *kms.KMS, id string
 }
 
 func WaitReplicaKeyCreated(ctx context.Context, conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{kms.KeyStateCreating},
 		Target:  []string{kms.KeyStateEnabled},
 		Refresh: StatusKeyState(ctx, conn, id),

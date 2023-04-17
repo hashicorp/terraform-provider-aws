@@ -10,6 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudfront/cloudfrontiface"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists cloudfront service tags.
@@ -29,8 +31,20 @@ func ListTags(ctx context.Context, conn cloudfrontiface.CloudFrontAPI, identifie
 	return KeyValueTags(ctx, output.Tags.Items), nil
 }
 
-func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
-	return ListTags(ctx, meta.(*conns.AWSClient).CloudFrontConn(), identifier)
+// ListTags lists cloudfront service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).CloudFrontConn(), identifier)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(tags)
+	}
+
+	return nil
 }
 
 // []*SERVICE.Tag handling
@@ -62,6 +76,25 @@ func KeyValueTags(ctx context.Context, tags []*cloudfront.Tag) tftags.KeyValueTa
 	return tftags.New(ctx, m)
 }
 
+// GetTagsIn returns cloudfront service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*cloudfront.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets cloudfront service tags in Context.
+func SetTagsOut(ctx context.Context, tags []*cloudfront.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
+}
+
 // UpdateTags updates cloudfront service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -73,7 +106,7 @@ func UpdateTags(ctx context.Context, conn cloudfrontiface.CloudFrontAPI, identif
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &cloudfront.UntagResourceInput{
 			Resource: aws.String(identifier),
-			TagKeys:  &cloudfront.TagKeys{Items: aws.StringSlice(removedTags.IgnoreAWS().Keys())},
+			TagKeys:  &cloudfront.TagKeys{Items: aws.StringSlice(removedTags.IgnoreSystem(names.CloudFront).Keys())},
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -99,6 +132,8 @@ func UpdateTags(ctx context.Context, conn cloudfrontiface.CloudFrontAPI, identif
 	return nil
 }
 
+// UpdateTags updates cloudfront service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).CloudFrontConn(), identifier, oldTags, newTags)
 }

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/workspaces"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -32,7 +32,7 @@ const (
 )
 
 func WaitDirectoryRegistered(ctx context.Context, conn *workspaces.WorkSpaces, directoryID string) (*workspaces.WorkspaceDirectory, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{workspaces.WorkspaceDirectoryStateRegistering},
 		Target:  []string{workspaces.WorkspaceDirectoryStateRegistered},
 		Refresh: StatusDirectoryState(ctx, conn, directoryID),
@@ -49,7 +49,7 @@ func WaitDirectoryRegistered(ctx context.Context, conn *workspaces.WorkSpaces, d
 }
 
 func WaitDirectoryDeregistered(ctx context.Context, conn *workspaces.WorkSpaces, directoryID string) (*workspaces.WorkspaceDirectory, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			workspaces.WorkspaceDirectoryStateRegistering,
 			workspaces.WorkspaceDirectoryStateRegistered,
@@ -70,7 +70,7 @@ func WaitDirectoryDeregistered(ctx context.Context, conn *workspaces.WorkSpaces,
 }
 
 func WaitWorkspaceAvailable(ctx context.Context, conn *workspaces.WorkSpaces, workspaceID string, timeout time.Duration) (*workspaces.Workspace, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			workspaces.WorkspaceStatePending,
 			workspaces.WorkspaceStateStarting,
@@ -90,7 +90,7 @@ func WaitWorkspaceAvailable(ctx context.Context, conn *workspaces.WorkSpaces, wo
 }
 
 func WaitWorkspaceTerminated(ctx context.Context, conn *workspaces.WorkSpaces, workspaceID string, timeout time.Duration) (*workspaces.Workspace, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			workspaces.WorkspaceStatePending,
 			workspaces.WorkspaceStateAvailable,
@@ -126,7 +126,7 @@ func WaitWorkspaceTerminated(ctx context.Context, conn *workspaces.WorkSpaces, w
 func WaitWorkspaceUpdated(ctx context.Context, conn *workspaces.WorkSpaces, workspaceID string, timeout time.Duration) (*workspaces.Workspace, error) {
 	// OperationInProgressException: The properties of this WorkSpace are currently under modification. Please try again in a moment.
 	// AWS Workspaces service doesn't change instance status to "Updating" during property modification. Respective AWS Support feature request has been created. Meanwhile, artificial delay is placed here as a workaround.
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			workspaces.WorkspaceStateUpdating,
 		},

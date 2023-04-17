@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/account"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -15,7 +15,7 @@ const (
 	statusNotUpdated = "NOT_UPDATED"
 )
 
-func statusAlternateContact(ctx context.Context, conn *account.Account, accountID, contactType string) resource.StateRefreshFunc {
+func statusAlternateContact(ctx context.Context, conn *account.Account, accountID, contactType string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindAlternateContactByAccountIDAndContactType(ctx, conn, accountID, contactType)
 
@@ -31,7 +31,7 @@ func statusAlternateContact(ctx context.Context, conn *account.Account, accountI
 	}
 }
 
-func statusAlternateContactUpdate(ctx context.Context, conn *account.Account, accountID, contactType, email, name, phone, title string) resource.StateRefreshFunc {
+func statusAlternateContactUpdate(ctx context.Context, conn *account.Account, accountID, contactType, email, name, phone, title string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindAlternateContactByAccountIDAndContactType(ctx, conn, accountID, contactType)
 

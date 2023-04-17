@@ -15,9 +15,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_schemas_discoverer")
+// @SDKResource("aws_schemas_discoverer", name="Discoverer")
+// @Tags(identifierAttribute="arn")
 func ResourceDiscoverer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDiscovererCreate,
@@ -46,9 +48,8 @@ func ResourceDiscoverer() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -58,20 +59,15 @@ func ResourceDiscoverer() *schema.Resource {
 func resourceDiscovererCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	sourceARN := d.Get("source_arn").(string)
 	input := &schemas.CreateDiscovererInput{
 		SourceArn: aws.String(sourceARN),
+		Tags:      GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating EventBridge Schemas Discoverer: %s", input)
@@ -89,8 +85,6 @@ func resourceDiscovererCreate(ctx context.Context, d *schema.ResourceData, meta 
 func resourceDiscovererRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := FindDiscovererByID(ctx, conn, d.Id())
 
@@ -107,22 +101,6 @@ func resourceDiscovererRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("arn", output.DiscovererArn)
 	d.Set("description", output.Description)
 	d.Set("source_arn", output.SourceArn)
-
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for EventBridge Schemas Discoverer (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
 
 	return diags
 }
@@ -142,13 +120,6 @@ func resourceDiscovererUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EventBridge Schemas Discoverer (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
