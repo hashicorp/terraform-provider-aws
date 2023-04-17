@@ -29,7 +29,7 @@ func ResourceListenerRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerRuleCreate,
 		ReadWithoutTimeout:   resourceListenerRuleRead,
-		// UpdateWithoutTimeout: resourceListenerRuleUpdate,
+		UpdateWithoutTimeout: resourceListenerRuleUpdate,
 		DeleteWithoutTimeout: resourceListenerRuleDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -256,7 +256,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameService, name, err)
 	}
 
-	d.SetId(aws.ToString(out.Id))
+	d.SetId(aws.ToString(out.Id)) //Concatinate my ids to one
 
 	if _, err := waitTargetGroupCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionWaitingForCreation, ResNameTargetGroup, d.Id(), err)
@@ -267,6 +267,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	//split the concatinate ids
 
 	out, err := FindListenerRuleByID(ctx, conn, d.Id(), d.Get("listener_identifier").(string), d.Get("service_identifier").(string))
 
@@ -295,43 +296,30 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	return nil
 }
 
-// func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
-// 	conn := meta.(*conns.AWSClient).VpcLatticeClient()
+	if d.HasChangesExcept("tags", "tags_all") {
+		in := &vpclattice.BatchUpdateRuleInput{
+			// Rules:              []aws.String(d.Id()),
+			ListenerIdentifier: aws.String(d.Get("listener_identifier").(string)),
+			ServiceIdentifier:  aws.String(d.Get("service_identifier").(string)),
+		}
 
-// 	update := false
+		// out, err :=
+		conn.BatchUpdateRule(ctx, in)
 
-// 	in := &vpclattice.BatchUpdateRuleInput{
-// 		Id: aws.String(d.Id()),
-// 	}
+		// if err != nil {
+		// 	return create.DiagError(names.VPCLattice, create.ErrActionUpdating, ResNameTargetGroup, d.Id(), err)
+		// }
 
-// 	if d.HasChanges("an_argument") {
-// 		in.AnArgument = aws.String(d.Get("an_argument").(string))
-// 		update = true
-// 	}
+		// if _, err := waitTargetGroupUpdated(ctx, conn, aws.ToString(out.Id), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		// 	return create.DiagError(names.VPCLattice, create.ErrActionWaitingForUpdate, ResNameTargetGroup, d.Id(), err)
+		// }
+	}
 
-// 	if !update {
-// 		// TIP: If update doesn't do anything at all, which is rare, you can
-// 		// return nil. Otherwise, return a read call, as below.
-// 		return nil
-// 	}
-
-// 	// TIP: -- 3. Call the AWS modify/update function
-// 	log.Printf("[DEBUG] Updating VpcLattice ListenerRule (%s): %#v", d.Id(), in)
-// 	out, err := conn.UpdateListenerRule(ctx, in)
-// 	if err != nil {
-// 		return create.DiagError(names.VpcLattice, create.ErrActionUpdating, ResNameListenerRule, d.Id(), err)
-// 	}
-
-// 	// TIP: -- 4. Use a waiter to wait for update to complete
-// 	if _, err := waitListenerRuleUpdated(ctx, conn, aws.ToString(out.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
-// 		return create.DiagError(names.VpcLattice, create.ErrActionWaitingForUpdate, ResNameListenerRule, d.Id(), err)
-// 	}
-
-// 	// TIP: -- 5. Call the Read function in the Update return
-// 	return resourceListenerRuleRead(ctx, d, meta)
-// }
-
+	return resourceTargetGroupRead(ctx, d, meta)
+}
 func resourceListenerRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
