@@ -29,7 +29,7 @@ func DataSourceDataLakeSettings() *schema.Resource {
 			},
 			"allow_external_data_filtering": {
 				Type:     schema.TypeBool,
-				Optional: true,
+				Computed: true,
 			},
 			"authorized_session_tag_value_list": {
 				Type:     schema.TypeList,
