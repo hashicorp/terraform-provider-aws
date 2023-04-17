@@ -133,7 +133,7 @@ func ResourceNodeGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"node_group_name"},
-				ValidateFunc:  validation.StringLenBetween(0, 63-resource.UniqueIDSuffixLength),
+				ValidateFunc:  validation.StringLenBetween(0, 63-id.UniqueIDSuffixLength),
 			},
 			"node_role_arn": {
 				Type:         schema.TypeString,
