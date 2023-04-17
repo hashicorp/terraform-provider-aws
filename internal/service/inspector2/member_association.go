@@ -41,6 +41,18 @@ func ResourceMemberAssociation() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
+			"delegated_admin_account_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"relationship_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"updated_at": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -82,6 +94,9 @@ func resourceMemberAssociationRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	d.Set("account_id", member.AccountId)
+	d.Set("delegated_admin_account_id", member.DelegatedAdminAccountId)
+	d.Set("relationship_status", member.RelationshipStatus)
+	d.Set("updated_at", aws.ToTime(member.UpdatedAt).Format(time.RFC3339))
 
 	return diags
 }
