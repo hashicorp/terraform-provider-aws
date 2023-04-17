@@ -9,7 +9,6 @@ import (
 	"log"
 	//"reflect"
 	//"regexp"
-	"encoding/json"
 	"strings"
 	"time"
 
@@ -261,6 +260,8 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	fmt.Println("Beginning read function...")
+
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
 	// GetListener requires the ID or Amazon Resource Name (ARN) of the service
@@ -294,6 +295,8 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#data-handling-and-conversion
 	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#flatten-functions-for-blocks
 	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#root-typeset-of-resource-and-aws-list-of-structure
+
+	fmt.Println("Attempting to set default action...")
 
 	if err := d.Set("default_action", flattenListenerRuleActions(out.DefaultAction)); err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameListener, d.Id(), err)
@@ -585,7 +588,7 @@ func flattenListenerRuleActions(config types.RuleAction) []interface{} {
 	return []interface{}{m}
 }
 
-// Flatten function for fixed response
+// Flatten function for fixed_response action
 func flattenRuleActionMemberFixedResponse(response *types.FixedResponseAction) []interface{} {
 	tfMap := map[string]interface{}{}
 
@@ -596,73 +599,36 @@ func flattenRuleActionMemberFixedResponse(response *types.FixedResponseAction) [
 	return []interface{}{tfMap}
 }
 
-//
-// Flatten functions for forward action
-//
-
-func flattenComplexDefaultActionForward(forwardAction *types.ForwardAction) map[string]interface{} {
-	// Create an empty map with key type `string` and value of `interface{}`
-	m := map[string]interface{}{}
-
-	// Create slice with `interface{}` type based on length of target group list
-	targetGroups := make([]interface{}, len(forwardAction.TargetGroups))
-
-	// Flatten each target group
-	for i, tg := range forwardAction.TargetGroups {
-		targetGroup := map[string]interface{}{
-			"target_group_identifier": aws.ToString(tg.TargetGroupIdentifier),
-			"weight":                  aws.ToInt32(tg.Weight),
-		}
-		targetGroups[i] = targetGroup
-
+// Flatten function for forward action
+func flattenComplexDefaultActionForward(forwardAction *types.ForwardAction) []interface{} {
+	if forwardAction == nil {
+		return []interface{}{}
 	}
 
-	// forward := map[string]interface{}{}
-	m["target_groups"] = targetGroups
-
-	j, err := json.Marshal(m)
-	if err != nil {
-		log.Fatal(err)
+	m := map[string]interface{}{
+		"target_groups": flattenDefaultActionForwardTargetGroups(forwardAction.TargetGroups),
 	}
-	fmt.Println(string(j))
 
-	return m
-
+	return []interface{}{m}
 }
 
-func expandForwardTargetGroupList(tfList []interface{}) []types.WeightedTargetGroup {
-	var weightedTargetGroups []types.WeightedTargetGroup
+// Flatten function for target_groups
+func flattenDefaultActionForwardTargetGroups(groups []types.WeightedTargetGroup) []interface{} {
+	if len(groups) == 0 {
+		return []interface{}{}
+	}
 
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-		if !ok {
-			continue
+	var targetGroups []interface{}
+
+	for _, targetGroup := range groups {
+		m := map[string]interface{}{
+			"target_group_identifier": aws.ToString(targetGroup.TargetGroupIdentifier),
+			"weight":                  aws.ToInt32(targetGroup.Weight),
 		}
-
-		targetGroup := expandForwardTargetGroup(tfMap)
-
-		weightedTargetGroups = append(weightedTargetGroups, *targetGroup)
-
+		targetGroups = append(targetGroups, m)
 	}
 
-	return weightedTargetGroups
-}
-
-func expandForwardTargetGroup(tfMap map[string]interface{}) *types.WeightedTargetGroup {
-	if tfMap == nil {
-		return nil
-	}
-
-	targetGroup := &types.WeightedTargetGroup{}
-
-	if v, ok := tfMap["target_group_identifier"].(string); ok && v != "" {
-		targetGroup.TargetGroupIdentifier = aws.String(v)
-	}
-	if v, ok := tfMap["weight"].(int); ok && v != 0 {
-		targetGroup.Weight = aws.Int32(int32(v))
-	}
-
-	return targetGroup
+	return targetGroups
 }
 
 // Expand function for default_action
@@ -673,16 +639,9 @@ func expandDefaultAction(l []interface{}) types.RuleAction {
 	lRaw := l[0].(map[string]interface{})
 
 	if v, ok := lRaw["forward"].([]interface{}); ok && len(v) > 0 {
-		foo := &types.RuleActionMemberForward{
+		return &types.RuleActionMemberForward{
 			Value: *expandDefaultActionForwardAction(v),
 		}
-		j, err := json.Marshal(foo)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println("Returning from defaultAction:", string(j))
-
-		return foo
 	} else if v, ok := lRaw["fixed_response"].([]interface{}); ok && len(v) > 0 {
 		return &types.RuleActionMemberFixedResponse{
 			Value: *expandDefaultActionFixedResponseStatus(v),
@@ -692,7 +651,7 @@ func expandDefaultAction(l []interface{}) types.RuleAction {
 	}
 }
 
-// Expand function for forward
+// Expand function for forward action
 func expandDefaultActionForwardAction(l []interface{}) *types.ForwardAction {
 	lRaw := l[0].(map[string]interface{})
 
@@ -702,16 +661,32 @@ func expandDefaultActionForwardAction(l []interface{}) *types.ForwardAction {
 		forwardAction.TargetGroups = expandForwardTargetGroupList(v)
 	}
 
-	j, err := json.Marshal(forwardAction)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("Returning from forwardAction:", string(j))
-
 	return forwardAction
 }
 
-// Expand function for fixed_response
+// Expand function for target_groups
+func expandForwardTargetGroupList(tfList []interface{}) []types.WeightedTargetGroup {
+	var targetGroups []types.WeightedTargetGroup
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		targetGroup := &types.WeightedTargetGroup{
+			TargetGroupIdentifier: aws.String((tfMap["target_group_identifier"].(string))),
+			Weight:                aws.Int32(int32(tfMap["weight"].(int))),
+		}
+
+		targetGroups = append(targetGroups, *targetGroup)
+
+	}
+
+	return targetGroups
+}
+
+// Expand function for fixed_response action
 func expandDefaultActionFixedResponseStatus(l []interface{}) *types.FixedResponseAction {
 	lRaw := l[0].(map[string]interface{})
 

@@ -140,6 +140,59 @@ func TestAccVpcLatticeListener_httpForwardRuleToId(t *testing.T) {
 
 }
 
+func TestAccVpcLatticeListener_httpForwardRuleMultipleTargetGroups(t *testing.T) {
+	ctx := acctest.Context(t)
+	targetGroupName0 := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
+	targetGroupName1 := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
+
+	var listener vpclattice.GetListenerOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_listener.test"
+	targetGroupResourceName := "aws_vpclattice_target_group.test"
+	targetGroup1ResourceName := "aws_vpclattice_target_group.test1"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerConfig_httpForwardRuleMultiTarget(rName, targetGroupName0, targetGroupName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &listener),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.forward.0.target_groups.0.target_group_identifier", targetGroupResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_groups.0.weight", "80"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.forward.0.target_groups.1.target_group_identifier", targetGroup1ResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_groups.1.weight", "20"),
+					// resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
+					// resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
+					// 	"console_access": "false",
+					// 	"groups.#":       "0",
+					// 	"username":       "Test",
+					// 	"password":       "TestTest1234",
+					// }),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile(`service\/svc-.*\/listener\/listener-.+`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				//ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			},
+		},
+	})
+
+}
+
 // func TestAccVPCLatticeListener_basic(t *testing.T) {
 // 	ctx := acctest.Context(t)
 // 	// TIP: This is a long-running test guard for tests that run longer than
@@ -349,10 +402,10 @@ resource "aws_vpclattice_listener" "test" {
 `, rName))
 }
 
-func testAccListenerConfig_httpForwardRuleMultiTarget(rName string) string {
+func testAccListenerConfig_httpForwardRuleMultiTarget(rName string, targetGroupName0 string, targetGroupName1 string) string {
 	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
-resource "aws_vpclattice_target_group" "canary" {
-  name = %[1]q
+resource "aws_vpclattice_target_group" "test1" {
+  name = %[2]q
   type = "INSTANCE"
 
   config {
@@ -364,6 +417,7 @@ resource "aws_vpclattice_target_group" "canary" {
 
 resource "aws_vpclattice_listener" "test" {
   name               = %[1]q
+  port               = 80
   protocol           = "HTTP"
   service_identifier = aws_vpclattice_service.test.id
   default_action {
@@ -373,13 +427,13 @@ resource "aws_vpclattice_listener" "test" {
         weight                  = 80
       }
       target_groups {
-        target_group_identifier = aws_vpclattice_target_group.canary.id
+        target_group_identifier = aws_vpclattice_target_group.test1.id
         weight                  = 20
       }
     }
   }
 }
-`, rName))
+`, rName, targetGroupName1))
 }
 
 func testAccListenerConfig_httpFixedResponse(rName string) string {
