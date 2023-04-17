@@ -66,7 +66,7 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	input := &organizations.DescribeOrganizationInput{
 		PolicyId: aws.String(policyID),
 	}
-	output, err := conn.DescribeOrganizationWithContext(ctx, input)
+	output, err := conn.DescribePolicyWithContext(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "describing Policy (%s): %s", input, err)
 	}
