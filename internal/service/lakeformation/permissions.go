@@ -133,6 +133,12 @@ func ResourcePermissions() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"catalog_id": {
+							Type:     schema.TypeString,
+							ForceNew: true,
+							Optional: true,
+							Computed: true,
+						},
 						"key": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -150,12 +156,6 @@ func ResourcePermissions() *schema.Resource {
 								ValidateFunc: validateLFTagValues(),
 							},
 							Set: schema.HashString,
-						},
-						"catalog_id": {
-							Type:     schema.TypeString,
-							ForceNew: true,
-							Optional: true,
-							Computed: true,
 						},
 					},
 				},
