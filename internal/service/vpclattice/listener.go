@@ -152,8 +152,8 @@ func ResourceListener() *schema.Resource {
 				Optional:     true,
 				AtLeastOneOf: []string{"service_arn", "service_identifier"},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -170,7 +170,8 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	in := &vpclattice.CreateListenerInput{
 		Name:          aws.String(d.Get("name").(string)),
 		DefaultAction: expandDefaultAction(d.Get("default_action").([]interface{})),
-		Protocol: types.ListenerProtocol(d.Get("protocol").(string)),
+		Protocol:      types.ListenerProtocol(d.Get("protocol").(string)),
+		Tags:          GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("port"); ok && v != nil {
@@ -286,9 +287,10 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
+	serviceId := d.Get("service_identifier").(string)
+	listenerId := d.Get("listener_id").(string)
+
 	if d.HasChangesExcept("tags", "tags_all") {
-		serviceId := d.Get("service_identifier").(string)
-		listenerId := d.Get("listener_id").(string)
 
 		in := &vpclattice.UpdateListenerInput{
 			ListenerIdentifier: aws.String(listenerId),
@@ -307,6 +309,15 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			return create.DiagError(names.VPCLattice, create.ErrActionUpdating, ResNameListener, d.Id(), err)
 		}
 	}
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return diag.Errorf("updating tags: %s", err)
+		}
+	}
+
 	// TIP: -- 4. Use a waiter to wait for update to complete
 	// if _, err := waitListenerUpdated(ctx, conn, aws.ToString(out.Id), d.Timeout(schema.TimeoutUpdate)); err != nil {
 	// 	return create.DiagError(names.VPCLattice, create.ErrActionWaitingForUpdate, ResNameListener, d.Id(), err)

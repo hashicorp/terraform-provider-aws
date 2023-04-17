@@ -635,7 +635,7 @@ func testAccListenerConfig_forwardTargetGroupHttpsSvcArn(rName string) string {
 	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener" "test" {
   name        = %[1]q
-  protocol           = "HTTPS"
+  protocol    = "HTTPS"
   service_arn = aws_vpclattice_service.test.arn
   default_action {
     forward {
@@ -651,7 +651,7 @@ resource "aws_vpclattice_listener" "test" {
 func testAccListenerConfig_forwardTargetGroupHttpsSvcId(rName string) string {
 	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener" "test" {
-  name        = %[1]q
+  name               = %[1]q
   protocol           = "HTTPS"
   service_identifier = aws_vpclattice_service.test.id
   default_action {
@@ -668,7 +668,7 @@ resource "aws_vpclattice_listener" "test" {
 func testAccListenerConfig_forwardTargetGroupHttpsSvcIdCustomPort(rName string) string {
 	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener" "test" {
-  name        = %[1]q
+  name               = %[1]q
   port               = 8443
   protocol           = "HTTPS"
   service_identifier = aws_vpclattice_service.test.id
