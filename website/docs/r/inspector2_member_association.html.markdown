@@ -25,3 +25,7 @@ resource "aws_inspector2_member_association" "example" {
 The following arguments are required:
 
 * `account_id` - (Required) ID of the account to associate
+
+## Attributes Reference
+
+No additional attributes are exported.
