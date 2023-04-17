@@ -2,6 +2,8 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_prometheus_workspaces` ([#28574](https://github.com/hashicorp/terraform-provider-aws/issues/28574))
+* **New Data Source:** `aws_sesv2_configuration_set` ([#30108](https://github.com/hashicorp/terraform-provider-aws/issues/30108))
 * **New Resource:** `aws_cloudwatch_event_endpoint` ([#25846](https://github.com/hashicorp/terraform-provider-aws/issues/25846))
 
 ENHANCEMENTS:
@@ -23,10 +25,16 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_lakeformation_permissions: Change `lf_tag_policy.expression` from `TypeList` to `TypeSet` as order is not significant ([#26643](https://github.com/hashicorp/terraform-provider-aws/issues/26643))
+* data-source/aws_lakeformation_permissions: Remove limit on number of `lf_tag_policy.expression` blocks ([#26643](https://github.com/hashicorp/terraform-provider-aws/issues/26643))
 * resource/aws_cloudwatch_event_rule: Add retry to read step, resolving `couldn't find resource` error ([#25846](https://github.com/hashicorp/terraform-provider-aws/issues/25846))
 * resource/aws_default_vpc: Fix adoption of default VPC with generated IPv6 ([#29083](https://github.com/hashicorp/terraform-provider-aws/issues/29083))
 * resource/aws_dx_gateway: Remove plan time validation from `name` argument ([#30739](https://github.com/hashicorp/terraform-provider-aws/issues/30739))
 * resource/aws_ecs_service: Fix error importing service with an IAM role with a path ([#30170](https://github.com/hashicorp/terraform-provider-aws/issues/30170))
+* resource/aws_lakeformation_permissions: Change `lf_tag_policy.expression` from `TypeList` to `TypeSet` as order is not significant ([#26643](https://github.com/hashicorp/terraform-provider-aws/issues/26643))
+* resource/aws_lakeformation_permissions: Change `lf_tag`, `lf_tag.values`, `lf_tag_policy`, `lf_tag_policy.expression.key`, `lf_tag_policy.expression.values` and `lf_tag_policy.resource_type` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#26643](https://github.com/hashicorp/terraform-provider-aws/issues/26643))
+* resource/aws_lakeformation_permissions: Remove limit on number of `lf_tag_policy.expression` blocks ([#26643](https://github.com/hashicorp/terraform-provider-aws/issues/26643))
+* resource/aws_medialive_channel: Fix to properly expand `destinations.media_package_settings` field ([#30660](https://github.com/hashicorp/terraform-provider-aws/issues/30660))
 * resource/aws_quicksight_data_set: Correct custom_sql documentation ([#30742](https://github.com/hashicorp/terraform-provider-aws/issues/30742))
 * resource/aws_quicksight_data_set: Correctly persist `create_columns_operation.expression` field ([#30708](https://github.com/hashicorp/terraform-provider-aws/issues/30708))
 * resource/aws_quicksight_data_set: Fix to properly expand `project_operation.projected_columns` field ([#30699](https://github.com/hashicorp/terraform-provider-aws/issues/30699))
