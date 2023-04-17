@@ -351,7 +351,7 @@ func flattenDataLakeSettingsAdmins(apiObjects []*lakeformation.DataLakePrincipal
 	tfSlice := make([]interface{}, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
-		tfSlice = append(tfSlice, *apiObject.DataLakePrincipalIdentifier)
+		tfSlice = append(tfSlice, aws.StringValue(apiObject.DataLakePrincipalIdentifier))
 	}
 
 	return tfSlice
@@ -381,7 +381,7 @@ func flattenDataLakeSettingsDataFilteringAllowList(apiObjects []*lakeformation.D
 	tfSlice := make([]interface{}, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
-		tfSlice = append(tfSlice, *apiObject.DataLakePrincipalIdentifier)
+		tfSlice = append(tfSlice, aws.StringValue(apiObject.DataLakePrincipalIdentifier))
 	}
 
 	return tfSlice
