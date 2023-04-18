@@ -31,7 +31,7 @@ jobs:
                 }
               }
             }')
-          INPROJECT=$(echo $PROJCOLUMNS | jq '.data.repository.issue.projectCards.nodes[].column | select(.id=="${{ env.DESTINATION_COLUMN_ID }}")')          
+          INPROJECT=$(echo $PROJCOLUMNS | jq '.data.repository.issue.projectCards.nodes[].column | select(.id=="${{ env.DESTINATION_COLUMN_ID }}")')
           if [ -z "$INPROJECT" ];
           then
             gh api graphql -f query='mutation {
