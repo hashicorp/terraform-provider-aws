@@ -419,6 +419,18 @@ func (tags KeyValueTags) ContainsAll(target KeyValueTags) bool {
 	return true
 }
 
+func (tags KeyValueTags) Difference(target KeyValueTags) KeyValueTags {
+	result := make(KeyValueTags)
+
+	for k, v := range tags {
+		if val, ok := target[k]; !ok || (v.ValueString() != val.ValueString()) {
+			result[k] = v
+		}
+	}
+
+	return result
+}
+
 func (tags KeyValueTags) HasZeroValue() bool {
 	for _, v := range tags {
 		if v.ValueString() == "" {

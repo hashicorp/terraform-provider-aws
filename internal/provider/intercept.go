@@ -360,12 +360,15 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 					}
 				}
 
-				tagsAll := stateTags
+				tagsAll := tftags.New(ctx, stateTags)
 				// if tags_all was computed because not wholly known
 				// Merge the resource's configured tags with any provider configured default_tags.
-				toAdd := tagsInContext.DefaultConfig.MergeTags(tftags.New(ctx, configTags))
+				configAll := tagsInContext.DefaultConfig.MergeTags(tftags.New(ctx, configTags))
 				// Remove system tags.
-				toAdd = toAdd.IgnoreSystem(inContext.ServicePackageName)
+				configAll = configAll.IgnoreSystem(inContext.ServicePackageName)
+
+				toAdd := configAll.Difference(tagsAll)
+				toRemove := tagsAll.Difference(configAll)
 
 				var identifier string
 				if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute == "id" {
@@ -379,11 +382,11 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 				if v, ok := sp.(interface {
 					UpdateTags(context.Context, any, string, any, any) error
 				}); ok {
-					err = v.UpdateTags(ctx, meta, identifier, tagsAll, toAdd)
+					err = v.UpdateTags(ctx, meta, identifier, toRemove, toAdd)
 				} else if v, ok := sp.(interface {
 					UpdateTags(context.Context, any, string, string, any, any) error
 				}); ok && r.tags.ResourceType != "" {
-					err = v.UpdateTags(ctx, meta, identifier, r.tags.ResourceType, tagsAll, toAdd)
+					err = v.UpdateTags(ctx, meta, identifier, r.tags.ResourceType, toRemove, toAdd)
 				}
 
 				if verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {

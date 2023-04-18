@@ -3,7 +3,6 @@ package verify
 import (
 	"context"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -32,7 +31,6 @@ func SetTagsDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{
 	}
 
 	allTags := defaultTagsConfig.MergeTags(resourceTags).IgnoreConfig(ignoreTagsConfig)
-	log.Printf("[DEBUG] all_tags: %v", allTags)
 	// To ensure "tags_all" is correctly computed, we explicitly set the attribute diff
 	// when the merger of resource-level tags onto provider-level tags results in n > 0 tags,
 	// otherwise we mark the attribute as "Computed" only when there is a known diff (excluding an empty map)
