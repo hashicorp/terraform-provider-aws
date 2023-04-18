@@ -452,6 +452,31 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
+	// Increase ThroughputCapacity first to avoid errors like
+	// "BadRequest: Unable to perform the storage capacity update. Updating storage capacity requires your file system to have at least 16 MB/s of throughput capacity."
+	if d.HasChange("throughput_capacity") {
+		o, n := d.GetChange("throughput_capacity")
+		if o, n := o.(int), n.(int); n > o {
+			input := &fsx.UpdateFileSystemInput{
+				ClientRequestToken: aws.String(id.UniqueId()),
+				FileSystemId:       aws.String(d.Id()),
+				WindowsConfiguration: &fsx.UpdateFileSystemWindowsConfiguration{
+					ThroughputCapacity: aws.Int64(int64(n)),
+				},
+			}
+
+			_, err := conn.UpdateFileSystemWithContext(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating FSx Windows File System (%s) ThroughputCapacity: %s", d.Id(), err)
+			}
+
+			if _, err := waitAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for FSx Windows File System (%s) update: %s", d.Id(), err)
+			}
+		}
+	}
+
 	if d.HasChangesExcept("aliases", "tags", "tags_all") {
 		input := &fsx.UpdateFileSystemInput{
 			ClientRequestToken:   aws.String(id.UniqueId()),

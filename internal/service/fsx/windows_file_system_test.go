@@ -595,10 +595,11 @@ func TestAccFSxWindowsFileSystem_storageCapacity(t *testing.T) {
 		CheckDestroy:             testAccCheckWindowsFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWindowsFileSystemConfig_storageCapacity(rName, domainName, 32),
+				Config: testAccWindowsFileSystemConfig_storageCapacity(rName, domainName, 32, 8),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "32"),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "8"),
 				),
 			},
 			{
@@ -611,11 +612,12 @@ func TestAccFSxWindowsFileSystem_storageCapacity(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccWindowsFileSystemConfig_storageCapacity(rName, domainName, 36),
+				Config: testAccWindowsFileSystemConfig_storageCapacity(rName, domainName, 64, 16),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckWindowsFileSystemNotRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "36"),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "64"),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "16"),
 				),
 			},
 		},
@@ -1153,16 +1155,16 @@ resource "aws_fsx_windows_file_system" "test" {
 `, username))
 }
 
-func testAccWindowsFileSystemConfig_storageCapacity(rName, domain string, storageCapacity int) string {
+func testAccWindowsFileSystemConfig_storageCapacity(rName, domain string, storageCapacity, throughputCapacity int) string {
 	return acctest.ConfigCompose(testAccWindowsFileSystemConfig_base(rName, domain), fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = aws_directory_service_directory.test.id
   skip_final_backup   = true
   storage_capacity    = %[1]d
   subnet_ids          = [aws_subnet.test[0].id]
-  throughput_capacity = 16
+  throughput_capacity = %[2]d
 }
-`, storageCapacity))
+`, storageCapacity, throughputCapacity))
 }
 
 func testAccWindowsFileSystemConfig_subnetIDs1(rName, domain string) string {
