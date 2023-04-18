@@ -26,10 +26,11 @@ const (
 )
 
 const (
-	storageTypeStandard = "standard"
-	storageTypeGP2      = "gp2"
-	storageTypeGP3      = "gp3"
-	storageTypeIO1      = "io1"
+	storageTypeStandard    = "standard"
+	storageTypeGP2         = "gp2"
+	storageTypeGP3         = "gp3"
+	storageTypeIO1         = "io1"
+	storageTypeAuroraIOPT1 = "aurora-iopt1"
 )
 
 func StorageType_Values() []string {
@@ -38,6 +39,7 @@ func StorageType_Values() []string {
 		storageTypeGP2,
 		storageTypeGP3,
 		storageTypeIO1,
+		storageTypeAuroraIOPT1,
 	}
 }
 
