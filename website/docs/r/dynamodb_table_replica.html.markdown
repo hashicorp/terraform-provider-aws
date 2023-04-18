@@ -89,10 +89,10 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DynamoDB table replicas can be imported using the `table-name:main-region`, _e.g._,
+DynamoDB table replicas can be imported using the `table-name,main-region`, _e.g._,
 
 ~> **Note:** When importing, use the region where the initial or _main_ global table resides, _not_ the region of the replica.
 
 ```
-$ terraform import aws_dynamodb_table_replica.example TestTable:us-west-2
+$ terraform import aws_dynamodb_table_replica.example TestTable,us-west-2
 ```
