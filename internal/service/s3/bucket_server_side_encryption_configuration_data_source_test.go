@@ -86,17 +86,17 @@ resource "aws_s3_bucket" "bucket" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "aes256" {
-	bucket = aws_s3_bucket.bucket.id
+  bucket = aws_s3_bucket.bucket.id
 
-	rule {
-	  apply_server_side_encryption_by_default {
-			sse_algorithm     = "AES256"
-	  }
-	}
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm     = "AES256"  
+    }
+  }
 }
 
 data "aws_s3_bucket_server_side_encryption_configuration" "bucket" {
-	bucket = aws_s3_bucket.bucket.id
+  bucket = aws_s3_bucket.bucket.id
 }
 `, bucketName)
 }
@@ -112,18 +112,18 @@ resource "aws_s3_bucket" "bucket" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "kms" {
-	bucket = aws_s3_bucket.bucket.id
+  bucket = aws_s3_bucket.bucket.id
   
-	rule {
-	  apply_server_side_encryption_by_default {
-			kms_master_key_id = data.aws_kms_alias.s3.id
-			sse_algorithm     = "aws:kms"
-	  }
-	}
+  rule {
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = data.aws_kms_alias.s3.id
+      sse_algorithm     = "aws:kms"
+    }
+  }
 }
 
 data "aws_s3_bucket_server_side_encryption_configuration" "bucket" {
-	bucket = aws_s3_bucket.bucket.id
+  bucket = aws_s3_bucket.bucket.id
 }
 `, bucketName)
 }
@@ -135,7 +135,7 @@ resource "aws_s3_bucket" "bucket" {
 }
 
 data "aws_s3_bucket_server_side_encryption_configuration" "bucket" {
-	bucket = aws_s3_bucket.bucket.id
+  bucket = aws_s3_bucket.bucket.id
 }
 `, bucketName)
 }
