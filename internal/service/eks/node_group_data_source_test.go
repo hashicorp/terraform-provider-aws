@@ -39,6 +39,8 @@ func TestAccEKSNodeGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceResourceName, "instance_types.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_type", dataSourceResourceName, "instance_type"),
 					resource.TestCheckResourceAttrPair(resourceName, "labels.%", dataSourceResourceName, "labels.%"),
+					resource.TestCheckResourceAttr(dataSourceResourceName, "launch_template.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template", dataSourceResourceName, "launch_template"),
 					resource.TestCheckResourceAttrPair(resourceName, "node_group_name", dataSourceResourceName, "node_group_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "node_role_arn", dataSourceResourceName, "node_role_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "release_version", dataSourceResourceName, "release_version"),

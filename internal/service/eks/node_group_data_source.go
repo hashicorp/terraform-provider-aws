@@ -48,6 +48,26 @@ func DataSourceNodeGroup() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"launch_template": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"version": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"node_group_name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -182,6 +202,11 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("disk_size", nodeGroup.DiskSize)
 	d.Set("instance_types", nodeGroup.InstanceTypes)
 	d.Set("labels", nodeGroup.Labels)
+
+	if err := d.Set("launch_template", flattenLaunchTemplateSpecification(nodeGroup.LaunchTemplate)); err != nil {
+		return diag.Errorf("error setting launch_template: %s", err)
+	}
+
 	d.Set("node_group_name", nodeGroup.NodegroupName)
 	d.Set("node_role_arn", nodeGroup.NodeRole)
 	d.Set("release_version", nodeGroup.ReleaseVersion)
