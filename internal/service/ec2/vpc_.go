@@ -510,7 +510,11 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	// If the VPC's CIDR block was allocated from an IPAM pool, wait for the allocation to disappear.
-	if ipamPoolID := d.Get("ipv6_ipam_pool_id").(string); ipamPoolID != "" && ipamPoolID != amazonIPv6PoolID {
+	ipamPoolID := d.Get("ipv4_ipam_pool_id").(string)
+	if ipamPoolID == "" {
+		ipamPoolID = d.Get("ipv6_ipam_pool_id").(string)
+	}
+	if ipamPoolID != "" && ipamPoolID != amazonIPv6PoolID {
 		const (
 			timeout = 20 * time.Minute // IPAM eventual consistency
 		)
