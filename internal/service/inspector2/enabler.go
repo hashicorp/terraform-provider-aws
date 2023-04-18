@@ -21,9 +21,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/mitchellh/mapstructure"
+	"golang.org/x/exp/maps"
 )
 
 // @SDKResource("aws_inspector2_enabler")
@@ -130,7 +133,7 @@ func resourceEnablerDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	in := &inspector2.DisableInput{
 		AccountIds:    flex.ExpandStringValueSet(d.Get("account_ids").(*schema.Set)),
-		ResourceTypes: flex.ExpandStringyValueSet[types.ResourceScanType](d.Get("resource_types").(*schema.Set)),
+		ResourceTypes: types.ResourceScanType("").Values(),
 	}
 
 	_, err := conn.Disable(ctx, in)
@@ -167,15 +170,41 @@ func waitEnabled(ctx context.Context, conn *inspector2.Client, id string, timeou
 
 func waitDisabled(ctx context.Context, conn *inspector2.Client, id string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: append(enum.Slice(types.StatusDisabling, types.StatusEnabled), StatusDisabledEnabled, StatusInProgress),
-		Target:  enum.Slice(types.StatusDisabled),
-		Refresh: statusEnable(ctx, conn, id),
+		Pending: []string{StatusInProgress},
+		Target:  []string{},
+		Refresh: statusEnablerAccount(ctx, conn, id),
 		Timeout: timeout,
 	}
 
 	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
+}
+
+// statusEnablerAccount checks only the status of Inspector for the account as a whole
+func statusEnablerAccount(ctx context.Context, conn *inspector2.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		st, err := AccountStatuses(ctx, conn, id)
+		if err != nil {
+			return nil, "", err
+		}
+
+		if All(maps.Values(st), func(v AccountResourceStatus) bool {
+			return v.Status == types.StatusDisabled
+		}) {
+			return nil, "", nil
+		}
+		return st, StatusInProgress, nil
+	}
+}
+
+func All[T any](s []T, f tfslices.FilterFunc[T]) bool {
+	for _, e := range s {
+		if !f(e) {
+			return false
+		}
+	}
+	return true
 }
 
 func statusEnable(ctx context.Context, conn *inspector2.Client, id string) retry.StateRefreshFunc {
@@ -311,6 +340,49 @@ func FindAccountStatuses(ctx context.Context, conn *inspector2.Client, id string
 	}
 
 	return s, errs.ErrorOrNil()
+}
+
+type AccountResourceStatus struct {
+	Status           types.Status
+	ResourceStatuses map[types.ResourceScanType]types.Status
+}
+
+func AccountStatuses(ctx context.Context, conn *inspector2.Client, id string) (map[string]AccountResourceStatus, error) {
+	accountIDs, _, err := parseEnablerID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	in := &inspector2.BatchGetAccountStatusInput{
+		AccountIds: accountIDs,
+	}
+	out, err := conn.BatchGetAccountStatus(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+
+	results := make(map[string]AccountResourceStatus, len(out.Accounts))
+	for _, a := range out.Accounts {
+		if a.AccountId == nil || a.State == nil {
+			continue
+		}
+		status := AccountResourceStatus{
+			Status:           a.State.Status,
+			ResourceStatuses: make(map[types.ResourceScanType]types.Status, len(enum.Values[types.ResourceScanType]())),
+		}
+		var m map[string]*types.State
+		e := mapstructure.Decode(a.ResourceState, &m)
+		if e != nil {
+			err = multierror.Append(err, e)
+			continue
+		}
+		for k, v := range m {
+			status.ResourceStatuses[types.ResourceScanType(k)] = v.Status
+		}
+		results[aws.ToString(a.AccountId)] = status
+	}
+
+	return results, err
 }
 
 // compositeStatus returns the status of ec2 and/or ecr scans depending on which are set by resource.

@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/inspector2/types"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -160,18 +161,21 @@ func testAccCheckEnablerDestroy(ctx context.Context) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client()
 
-		st, err := tfinspector2.FindAccountStatuses(ctx, conn, id)
+		st, err := tfinspector2.AccountStatuses(ctx, conn, id)
 		if err != nil {
 			return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameEnabler, id, err)
 		}
 
-		for _, s := range st {
-			if s.Status != string(types.StatusDisabled) {
-				return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameEnabler, id, fmt.Errorf("after destroy, expected DISABLED for account %s, got: %s", s.AccountID, s.Status))
+		for k, v := range st {
+			if v.Status != types.StatusDisabled {
+				err = multierror.Append(err,
+					create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameEnabler, id,
+						fmt.Errorf("after destroy, expected DISABLED for account %s, got: %s", k, v),
+					),
+				)
 			}
 		}
-
-		return nil
+		return err
 	}
 }
 
