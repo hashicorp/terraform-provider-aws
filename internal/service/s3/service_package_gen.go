@@ -49,6 +49,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  DataSourceObjects,
 			TypeName: "aws_s3_objects",
 		},
+		{
+			Factory:  DataSourceBucketServerSideEncryptionConfiguration,
+			TypeName: "aws_s3_bucket_server_side_encryption_configuration",
+		},
 	}
 }
 

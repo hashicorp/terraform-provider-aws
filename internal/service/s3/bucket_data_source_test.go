@@ -60,26 +60,6 @@ func TestAccS3BucketDataSource_website(t *testing.T) {
 	})
 }
 
-func TestAccS3BucketDataSource_encryption(t *testing.T) {
-	ctx := acctest.Context(t)
-	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccBucketDataSourceConfig_encryption(bucketName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(ctx, "data.aws_s3_bucket.bucket"),
-					//resource.TestCheckResourceAttr("data.aws_s3_bucket.bucket", "server_side_encryption_configuration", aws_s3_bucket_server_side_encryption_configuration),
-				),
-			},
-		},
-	})
-}
-
 func testAccBucketDataSourceConfig_basic(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
@@ -111,28 +91,6 @@ resource "aws_s3_bucket_website_configuration" "test" {
 data "aws_s3_bucket" "bucket" {
   # Must have bucket website configured first
   bucket = aws_s3_bucket_website_configuration.test.id
-}
-`, bucketName)
-}
-
-func testAccBucketDataSourceConfig_encryption(bucketName string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "bucket" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
-  bucket = aws_s3_bucket.bucket.id
-
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm     = "AES256"
-    }
-  }
-}
-
-data "aws_s3_bucket" "server_side_encryption_configuration" {
-  bucket = aws_s3_bucket.bucket.server_side_encryption_configuration
 }
 `, bucketName)
 }

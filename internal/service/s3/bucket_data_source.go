@@ -54,10 +54,6 @@ func DataSourceBucket() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"server_side_encryption_configuration": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -98,18 +94,6 @@ func dataSourceBucketRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket regional domain name: %s", err)
 	}
 	d.Set("bucket_regional_domain_name", regionalDomainName)
-
-	// Get and set bucket encryption data.
-	encryptionInput := &s3.GetBucketEncryptionInput{
-		Bucket: aws.String(bucket),
-	}
-	log.Printf("[DEBUG] Reading S3 bucket encryption: %s", encryptionInput)
-	encryptionOutput, err := conn.GetBucketEncryptionWithContext(ctx, encryptionInput)
-	if err != nil {
-		if err := d.Set("server_side_encryption_configuration", encryptionOutput.ServerSideEncryptionConfiguration); err != nil {
-			return sdkdiag.AppendErrorf(diags, "error setting server_side_encryption_configuration: %s", err)
-		}
-	}
 
 	return diags
 }
