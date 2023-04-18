@@ -225,7 +225,8 @@ func vpnConnectionType_Values() []string {
 }
 
 const (
-	AmazonIPv6PoolID = "Amazon"
+	amazonIPv6PoolID      = "Amazon"
+	ipamManagedIPv6PoolID = "IPAM Managed"
 )
 
 const (
