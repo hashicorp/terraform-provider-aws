@@ -348,7 +348,6 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 		switch why {
 		case Update:
 			if !d.GetRawPlan().GetAttr("tags_all").IsWhollyKnown() {
-
 				configTags := make(map[string]string)
 				if config := d.GetRawConfig(); !config.IsNull() && config.IsKnown() {
 					c := config.GetAttr("tags")
