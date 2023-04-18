@@ -3,6 +3,7 @@ package ec2
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -20,6 +21,12 @@ func ResourceMainRouteTableAssociation() *schema.Resource {
 		ReadWithoutTimeout:   resourceMainRouteTableAssociationRead,
 		UpdateWithoutTimeout: resourceMainRouteTableAssociationUpdate,
 		DeleteWithoutTimeout: resourceMainRouteTableAssociationDelete,
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(2 * time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			// We use this field to record the main route table that is automatically
@@ -72,7 +79,7 @@ func resourceMainRouteTableAssociationCreate(ctx context.Context, d *schema.Reso
 	d.SetId(aws.StringValue(output.NewAssociationId))
 
 	log.Printf("[DEBUG] Waiting for Main Route Table Association (%s) creation", d.Id())
-	if _, err := WaitRouteTableAssociationUpdated(ctx, conn, d.Id()); err != nil {
+	if _, err := WaitRouteTableAssociationUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Main Route Table Association (%s) create: %s", d.Id(), err)
 	}
 
@@ -122,7 +129,7 @@ func resourceMainRouteTableAssociationUpdate(ctx context.Context, d *schema.Reso
 	d.SetId(aws.StringValue(output.NewAssociationId))
 
 	log.Printf("[DEBUG] Waiting for Main Route Table Association (%s) update", d.Id())
-	if _, err := WaitRouteTableAssociationUpdated(ctx, conn, d.Id()); err != nil {
+	if _, err := WaitRouteTableAssociationUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Main Route Table Association (%s) update: %s", d.Id(), err)
 	}
 
@@ -146,7 +153,7 @@ func resourceMainRouteTableAssociationDelete(ctx context.Context, d *schema.Reso
 	}
 
 	log.Printf("[DEBUG] Waiting for Main Route Table Association (%s) deletion", d.Id())
-	if _, err := WaitRouteTableAssociationUpdated(ctx, conn, aws.StringValue(output.NewAssociationId)); err != nil {
+	if _, err := WaitRouteTableAssociationUpdated(ctx, conn, aws.StringValue(output.NewAssociationId), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Main Route Table Association (%s) delete: %s", d.Id(), err)
 	}
 
