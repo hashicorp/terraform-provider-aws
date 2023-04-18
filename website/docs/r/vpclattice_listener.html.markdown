@@ -13,6 +13,7 @@ Terraform resource for managing an AWS VPC Lattice Listener.
 ## Example Usage
 
 ### Fixed response action
+
 ```
 resource "aws_vpclattice_service" "test" {
   name = %[1]q
@@ -31,6 +32,7 @@ resource "aws_vpclattice_listener" "test" {
 ```
 
 ### Forward action
+
 ```
 resource "aws_vpclattice_service" "test" {
   name = "example"
@@ -62,6 +64,7 @@ resource "aws_vpclattice_listener" "example" {
 ```
 
 ### Forward action with weighted target groups
+
 ```
 resource "aws_vpclattice_service" "test" {
   name = "example"
@@ -124,7 +127,7 @@ The following arguments are supported:
 ### Default Action
 Default action blocks (for `default_action`) must include at least one of the following argument blocks:
 
-* `fixed-response` - (Optional) Configuration block for returning a fixed response. See Fixed Response blocks below. 
+* `fixed-response` - (Optional) Configuration block for returning a fixed response. See Fixed Response blocks below.
 * `forward` - (Optional) Route requests to one or more target groups. See Forward blocks below.
 
 -> **NOTE:** You must specify exactly one of the following argument blocks: `fixed_response` or `forward`.
