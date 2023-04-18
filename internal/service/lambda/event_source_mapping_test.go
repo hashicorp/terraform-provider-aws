@@ -1940,7 +1940,7 @@ resource "aws_docdb_subnet_group" "test" {
   subnet_ids = aws_subnet.test[*].id
 }
 
-resource "aws_docdb_cluster" "default" {
+resource "aws_docdb_cluster" "test" {
   cluster_identifier = %[1]q
 
   db_subnet_group_name            = aws_docdb_subnet_group.test.name
