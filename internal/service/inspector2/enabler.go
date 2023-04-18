@@ -79,7 +79,7 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 		ClientToken:   aws.String(id.UniqueId()),
 	}
 
-	id := EnablerID(in.AccountIds, flex.ExpandStringValueSet(d.Get("resource_types").(*schema.Set)))
+	id := EnablerID(in.AccountIds, flex.ExpandStringyValueSet[types.ResourceScanType](d.Get("resource_types").(*schema.Set)))
 
 	out, err := conn.Enable(ctx, in)
 	if err != nil {
@@ -100,11 +100,12 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Inspector2Client()
 
-	s, err := FindAccountStatuses(ctx, conn, d.Id())
+	s, err := AccountStatuses(ctx, conn, d.Id())
 	if err != nil {
-		return create.DiagError(names.Inspector2, create.ErrActionReading, ResNameEnabler, d.Id(), err)
+		return append(diags, create.DiagError(names.Inspector2, create.ErrActionReading, ResNameEnabler, d.Id(), err)...)
 	}
 
 	// probably a NotFound is not possible but including for linting/completeness
@@ -115,14 +116,26 @@ func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	var enabledAccounts []string
-	for _, a := range s {
-		if a.Status == string(types.StatusEnabled) {
-			enabledAccounts = append(enabledAccounts, a.AccountID)
+	for k, a := range s {
+		if a.Status == types.StatusEnabled {
+			enabledAccounts = append(enabledAccounts, k)
+		}
+	}
+
+	accountStatuses := maps.Values(s)
+	x, accountStatuses := accountStatuses[0], accountStatuses[1:]
+	var resourceTypes []types.ResourceScanType
+	for k, a := range x.ResourceStatuses {
+		if a == types.StatusEnabled {
+			resourceTypes = append(resourceTypes, k)
 		}
 	}
 
 	if err := d.Set("account_ids", flex.FlattenStringValueSet(enabledAccounts)); err != nil {
-		return create.DiagError(names.Inspector2, create.ErrActionReading, ResNameEnabler, d.Id(), err)
+		return append(diags, create.DiagError(names.Inspector2, create.ErrActionReading, ResNameEnabler, d.Id(), err)...)
+	}
+	if err := d.Set("resource_types", flex.FlattenStringValueSet(enum.Slice(resourceTypes...))); err != nil {
+		return append(diags, create.DiagError(names.Inspector2, create.ErrActionReading, ResNameEnabler, d.Id(), err)...)
 	}
 
 	return nil
@@ -377,7 +390,7 @@ func AccountStatuses(ctx context.Context, conn *inspector2.Client, id string) (m
 			continue
 		}
 		for k, v := range m {
-			status.ResourceStatuses[types.ResourceScanType(k)] = v.Status
+			status.ResourceStatuses[types.ResourceScanType(strings.ToUpper(k))] = v.Status
 		}
 		results[aws.ToString(a.AccountId)] = status
 	}
@@ -420,8 +433,8 @@ func compositeStatus(ec2, ecr bool, ec2Status, ecrStatus string) string {
 	return string(types.StatusSuspended)
 }
 
-func EnablerID(accountIDs []string, types []string) string {
-	return fmt.Sprintf("%s-%s", strings.Join(accountIDs, ":"), strings.Join(types, ":"))
+func EnablerID(accountIDs []string, types []types.ResourceScanType) string {
+	return fmt.Sprintf("%s-%s", strings.Join(accountIDs, ":"), strings.Join(enum.Slice(types...), ":"))
 }
 
 func parseEnablerID(id string) ([]string, []string, error) {

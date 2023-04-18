@@ -14,13 +14,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tfinspector2 "github.com/hashicorp/terraform-provider-aws/internal/service/inspector2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccEnabler_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_inspector2_enabler.test"
+	resourceTypes := []types.ResourceScanType{"ECR"}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -34,9 +37,10 @@ func testAccEnabler_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnablerConfig_basic([]string{"ECR"}),
+				Config: testAccEnablerConfig_basic(resourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, []string{"ECR"}),
+					testAccCheckEnablerExists(ctx, resourceTypes),
+					testAccCheckEnablerID(resourceName, resourceTypes),
 					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.current", "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "1"),
@@ -49,7 +53,9 @@ func testAccEnabler_basic(t *testing.T) {
 
 func testAccEnabler_accountID(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_inspector2_enabler.test"
+	resourceTypes := []types.ResourceScanType{"EC2", "ECR"}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -63,9 +69,10 @@ func testAccEnabler_accountID(t *testing.T) {
 		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnablerConfig_basic([]string{"EC2", "ECR"}),
+				Config: testAccEnablerConfig_basic(resourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, []string{"EC2", "ECR"}),
+					testAccCheckEnablerExists(ctx, resourceTypes),
+					testAccCheckEnablerID(resourceName, resourceTypes),
 					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "2"),
@@ -79,7 +86,9 @@ func testAccEnabler_accountID(t *testing.T) {
 
 func testAccEnabler_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_inspector2_enabler.test"
+	resourceTypes := []types.ResourceScanType{"ECR"}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -93,9 +102,9 @@ func testAccEnabler_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnablerConfig_basic([]string{"ECR"}),
+				Config: testAccEnablerConfig_basic(resourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, []string{"ECR"}),
+					testAccCheckEnablerExists(ctx, resourceTypes),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfinspector2.ResourceEnabler(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -106,7 +115,10 @@ func testAccEnabler_disappears(t *testing.T) {
 
 func testAccEnabler_updateResourceTypes(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_inspector2_enabler.test"
+	originalResourceTypes := []types.ResourceScanType{"EC2"}
+	updatedResourceTypes := []types.ResourceScanType{"ECR"}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -120,9 +132,10 @@ func testAccEnabler_updateResourceTypes(t *testing.T) {
 		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnablerConfig_basic([]string{"EC2"}),
+				Config: testAccEnablerConfig_basic(originalResourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, []string{"EC2"}),
+					testAccCheckEnablerExists(ctx, originalResourceTypes),
+					testAccCheckEnablerID(resourceName, originalResourceTypes),
 					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "1"),
@@ -130,9 +143,10 @@ func testAccEnabler_updateResourceTypes(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEnablerConfig_basic([]string{"ECR"}),
+				Config: testAccEnablerConfig_basic(updatedResourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, []string{"ECR"}),
+					testAccCheckEnablerExists(ctx, updatedResourceTypes),
+					testAccCheckEnablerID(resourceName, updatedResourceTypes),
 					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "1"),
@@ -179,26 +193,37 @@ func testAccCheckEnablerDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckEnablerExists(ctx context.Context, t []string) resource.TestCheckFunc {
+func testAccCheckEnablerExists(ctx context.Context, t []types.ResourceScanType) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client()
 
 		id := tfinspector2.EnablerID([]string{acctest.Provider.Meta().(*conns.AWSClient).AccountID}, t)
-		st, err := tfinspector2.FindAccountStatuses(ctx, conn, id)
+		st, err := tfinspector2.AccountStatuses(ctx, conn, id)
 		if err != nil {
 			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameEnabler, id, err)
 		}
 
-		for _, s := range st {
-			if s.Status != string(types.StatusEnabled) {
-				return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameEnabler, id, fmt.Errorf("after create, expected ENABLED for account %s, got: %s", s.AccountID, s.Status))
+		for k, s := range st {
+			if s.Status != types.StatusEnabled {
+				err = multierror.Append(err, create.Error(
+					names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameEnabler, id,
+					fmt.Errorf("after create, expected ENABLED for account %s, got: %s", k, s.Status)),
+				)
 			}
 		}
-		return nil
+		return err
 	}
 }
 
-func testAccEnablerConfig_basic(types []string) string {
+func testAccCheckEnablerID(resourceName string, types []types.ResourceScanType) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		accountID := acctest.AccountID()
+		id := tfinspector2.EnablerID([]string{accountID}, types)
+		return resource.TestCheckResourceAttr(resourceName, "id", id)(s)
+	}
+}
+
+func testAccEnablerConfig_basic(types []types.ResourceScanType) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -206,5 +231,5 @@ resource "aws_inspector2_enabler" "test" {
   account_ids    = [data.aws_caller_identity.current.account_id]
   resource_types = ["%[1]s"]
 }
-`, strings.Join(types, `", "`))
+`, strings.Join(enum.Slice(types...), `", "`))
 }
