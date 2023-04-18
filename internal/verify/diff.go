@@ -38,6 +38,13 @@ func SetTagsDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/18366
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19005
 
+	if !diff.GetRawPlan().GetAttr("tags").IsWhollyKnown() {
+		if err := diff.SetNewComputed("tags_all"); err != nil {
+			return fmt.Errorf("error setting tags_all to computed: %w", err)
+		}
+		return nil
+	}
+
 	if diff.HasChange("tags") {
 		_, n := diff.GetChange("tags")
 		newTags := tftags.New(ctx, n.(map[string]interface{}))
