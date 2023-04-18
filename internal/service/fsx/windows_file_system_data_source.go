@@ -129,8 +129,7 @@ func DataSourceWindowsFileSystem() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"throughput_capacity": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -155,11 +154,10 @@ func dataSourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("id").(string)
-
 	filesystem, err := FindFileSystemByID(ctx, conn, id)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "error reading FSx Windows File System (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading FSx Windows File System (%s): %s", d.Id(), err)
 	}
 
 	if filesystem.LustreConfiguration != nil {
@@ -167,11 +165,16 @@ func dataSourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	if filesystem.WindowsConfiguration == nil {
-		return sdkdiag.AppendErrorf(diags, "error describing FSx Windows File System (%s): empty Windows configuration", d.Id())
+		return sdkdiag.AppendErrorf(diags, "reading FSx Windows File System (%s): empty WindowsConfiguration", d.Id())
 	}
 
+	d.SetId(aws.StringValue(filesystem.FileSystemId))
 	d.Set("active_directory_id", filesystem.WindowsConfiguration.ActiveDirectoryId)
+	d.Set("aliases", aws.StringValueSlice(expandAliasValues(filesystem.WindowsConfiguration.Aliases)))
 	d.Set("arn", filesystem.ResourceARN)
+	if err := d.Set("audit_log_configuration", flattenWindowsAuditLogConfiguration(filesystem.WindowsConfiguration.AuditLogConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting audit_log_configuration: %s", err)
+	}
 	d.Set("automatic_backup_retention_days", filesystem.WindowsConfiguration.AutomaticBackupRetentionDays)
 	d.Set("copy_tags_to_backups", filesystem.WindowsConfiguration.CopyTagsToBackups)
 	d.Set("daily_automatic_backup_start_time", filesystem.WindowsConfiguration.DailyAutomaticBackupStartTime)
@@ -179,43 +182,23 @@ func dataSourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData
 	d.Set("dns_name", filesystem.DNSName)
 	d.Set("id", filesystem.FileSystemId)
 	d.Set("kms_key_id", filesystem.KmsKeyId)
+	d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds))
 	d.Set("owner_id", filesystem.OwnerId)
 	d.Set("preferred_subnet_id", filesystem.WindowsConfiguration.PreferredSubnetId)
 	d.Set("preferred_file_server_ip", filesystem.WindowsConfiguration.PreferredFileServerIp)
 	d.Set("storage_capacity", filesystem.StorageCapacity)
 	d.Set("storage_type", filesystem.StorageType)
+	d.Set("subnet_ids", aws.StringValueSlice(filesystem.SubnetIds))
 	d.Set("throughput_capacity", filesystem.WindowsConfiguration.ThroughputCapacity)
 	d.Set("vpc_id", filesystem.VpcId)
 	d.Set("weekly_maintenance_start_time", filesystem.WindowsConfiguration.WeeklyMaintenanceStartTime)
-
-	if err := d.Set("aliases", aws.StringValueSlice(expandAliasValues(filesystem.WindowsConfiguration.Aliases))); err != nil {
-		return sdkdiag.AppendErrorf(diags, "error setting aliases: %s", err)
-	}
-
-	if err := d.Set("audit_log_configuration", flattenWindowsAuditLogConfiguration(filesystem.WindowsConfiguration.AuditLogConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "error setting audit_log_configuration: %s", err)
-	}
-
-	if err := d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "error setting network_interface_ids: %s", err)
-	}
-
-	if err := d.Set("subnet_ids", aws.StringValueSlice(filesystem.SubnetIds)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "error setting subnet_ids: %s", err)
-	}
 
 	tags := KeyValueTags(ctx, filesystem.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "error setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "error setting tags_all: %s", err)
-	}
-
-	d.SetId(aws.StringValue(filesystem.FileSystemId))
 
 	return nil
 }
