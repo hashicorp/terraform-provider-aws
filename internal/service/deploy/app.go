@@ -14,10 +14,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	AppIdPartsCount = 2
+	ResNameApp      = "App"
 )
 
 // @SDKResource("aws_codedeploy_app", name="App")
@@ -30,9 +37,9 @@ func ResourceApp() *schema.Resource {
 		DeleteWithoutTimeout: resourceAppDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				idParts := strings.Split(d.Id(), ":")
+				partCount := flex.ResourceIdPartCount(d.Id())
 
-				if len(idParts) == 2 {
+				if partCount == 2 {
 					return []*schema.ResourceData{d}, nil
 				}
 
@@ -54,7 +61,18 @@ func ResourceApp() *schema.Resource {
 					return []*schema.ResourceData{}, fmt.Errorf("error reading CodeDeploy Application (%s): empty response", applicationName)
 				}
 
-				d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(output.Application.ApplicationId), applicationName))
+				idParts := []string{
+					aws.StringValue(output.Application.ApplicationId),
+					applicationName,
+				}
+
+				id, err := flex.FlattenResourceId(idParts, AppIdPartsCount)
+
+				if err != nil {
+					return []*schema.ResourceData{}, err
+				}
+
+				d.SetId(id)
 				d.Set("name", applicationName)
 
 				return []*schema.ResourceData{d}, nil
@@ -119,7 +137,18 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	// the state file. This allows us to reliably detect both when the TF
 	// config file changes and when the user deletes the app without removing
 	// it first from the TF config.
-	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(resp.ApplicationId), application))
+	idParts := []string{
+		aws.StringValue(resp.ApplicationId),
+		application,
+	}
+
+	id, err := flex.FlattenResourceId(idParts, AppIdPartsCount)
+
+	if err != nil {
+		return create.DiagError(names.Deploy, create.ErrActionFlatteningResourceId, ResNameApp, application, err)
+	}
+
+	d.SetId(id)
 
 	return append(diags, resourceAppRead(ctx, d, meta)...)
 }
@@ -128,7 +157,12 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeployConn()
 
-	application := resourceAppParseID(d.Id())
+	application, err := resourceAppParseID(d.Id())
+
+	if err != nil {
+		return create.DiagError(names.Deploy, create.ErrActionExpandingResourceId, ResNameApp, d.Id(), err)
+	}
+
 	name := d.Get("name").(string)
 	if name != "" && application != name {
 		application = name
@@ -152,7 +186,18 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 	appName := aws.StringValue(app.ApplicationName)
 
 	if !strings.Contains(d.Id(), appName) {
-		d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(app.ApplicationId), appName))
+		idParts := []string{
+			aws.StringValue(app.ApplicationId),
+			appName,
+		}
+
+		id, err := flex.FlattenResourceId(idParts, AppIdPartsCount)
+
+		if err != nil {
+			return create.DiagError(names.Deploy, create.ErrActionFlatteningResourceId, ResNameApp, appName, err)
+		}
+
+		d.SetId(id)
 	}
 
 	appArn := arn.ARN{
@@ -211,8 +256,13 @@ func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceAppParseID(id string) string {
-	parts := strings.SplitN(id, ":", 2)
+func resourceAppParseID(id string) (string, error) {
+	idParts, err := flex.ExpandResourceId(id, AppIdPartsCount)
+
+	if err != nil {
+		return "", err
+	}
+
 	// We currently omit the application ID as it is not currently used anywhere
-	return parts[1]
+	return idParts[1], nil
 }
