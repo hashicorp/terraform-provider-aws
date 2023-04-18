@@ -2,7 +2,6 @@ package networkfirewall
 
 import (
 	"context"
-	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -13,17 +12,18 @@ import (
 // @SDKDataSource("aws_networkfirewall_resource_policy")
 func DataSourceFirewallResourcePolicy() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceFirewallResourcePolicyRead,
+		ReadWithoutTimeout: dataSourceFirewallResourcePolicyRead,
+
 		Schema: map[string]*schema.Schema{
+			"policy": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"resource_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
-			},
-			"policy": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
@@ -32,24 +32,20 @@ func DataSourceFirewallResourcePolicy() *schema.Resource {
 func dataSourceFirewallResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
 
-	resourceArn := d.Get("resource_arn").(string)
-
-	log.Printf("[DEBUG] Reading NetworkFirewall Resource Policy for resource: %s", resourceArn)
-
-	policy, err := FindResourcePolicy(ctx, conn, resourceArn)
+	resourceARN := d.Get("resource_arn").(string)
+	policy, err := FindResourcePolicy(ctx, conn, resourceARN)
 
 	if err != nil {
-		return diag.Errorf("reading NetworkFirewall Resource Policy (for resource: %s): %s", resourceArn, err)
+		return diag.Errorf("reading NetworkFirewall Resource Policy (%s): %s", resourceARN, err)
 	}
 
 	if policy == nil {
-		return diag.Errorf("reading NetworkFirewall Resource Policy (for resource: %s): empty output", resourceArn)
+		return diag.Errorf("reading NetworkFirewall Resource Policy (%s): empty output", resourceARN)
 	}
 
-	// Id is identical to the resource ARN
-	d.SetId(resourceArn)
-	d.Set("resource_arn", resourceArn)
+	d.SetId(resourceARN)
 	d.Set("policy", policy)
+	d.Set("resource_arn", resourceARN)
 
 	return nil
 }

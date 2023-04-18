@@ -24,11 +24,8 @@ func TestAccNetworkFirewallFirewallResourcePolicyDataSource_basic(t *testing.T) 
 			{
 				Config: testAccResourcePolicyDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					// Verify the resource policy exists
-					testAccCheckResourcePolicyExists(ctx, resourceName),
-					// Validate that the arn and policy match
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_networkfirewall_firewall_policy.test", "arn"),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"Action":\["network-firewall:AssociateFirewallPolicy","network-firewall:ListFirewallPolicies"\]`)),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_networkfirewall_firewall_policy.test", "arn"),
 				),
 			},
 		},
@@ -46,7 +43,8 @@ data "aws_networkfirewall_resource_policy" "test" {
 }
 
 resource "aws_networkfirewall_firewall_policy" "test" {
-  name = %q
+  name = %[1]q
+
   firewall_policy {
     stateless_fragment_default_actions = ["aws:drop"]
     stateless_default_actions          = ["aws:pass"]
@@ -55,7 +53,7 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 
 resource "aws_networkfirewall_resource_policy" "test" {
   resource_arn = aws_networkfirewall_firewall_policy.test.arn
-  # policy's Action element must include all of the following operations
+
   policy = jsonencode({
     Statement = [{
       Action = [
