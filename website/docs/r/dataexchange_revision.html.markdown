@@ -35,8 +35,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DataExchange Revisions can be imported by their `data-set-id:revision-id`:
+DataExchange Revisions can be imported by their `data-set-id,revision-id`:
 
 ```
-$ terraform import aws_dataexchange_revision.example 4fa784c7-ccb4-4dbf-ba4f-02198320daa1:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
+$ terraform import aws_dataexchange_revision.example 4fa784c7-ccb4-4dbf-ba4f-02198320daa1,4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```
