@@ -62,7 +62,6 @@ One of the following target arguments must be supplied:
 * `core_network_arn` - (Optional) The Amazon Resource Name (ARN) of a core network.
 * `egress_only_gateway_id` - (Optional) Identifier of a VPC Egress Only Internet Gateway.
 * `gateway_id` - (Optional) Identifier of a VPC internet gateway or a virtual private gateway. Specify `local` when updating a previously [imported](#import) local route.
-* `instance_id` - (Optional, **Deprecated** use `network_interface_id` instead) Identifier of an EC2 instance.
 * `nat_gateway_id` - (Optional) Identifier of a VPC NAT gateway.
 * `local_gateway_id` - (Optional) Identifier of a Outpost local gateway.
 * `network_interface_id` - (Optional) Identifier of an EC2 network interface.
@@ -79,6 +78,7 @@ In addition to all arguments above, the following attributes are exported:
 ~> **NOTE:** Only the arguments that are configured (one of the above) will be exported as an attribute once the resource is created.
 
 * `id` - Route identifier computed from the routing table identifier and route destination.
+* `instance_id` - Identifier of an EC2 instance.
 * `instance_owner_id` - The AWS account ID of the owner of the EC2 instance.
 * `origin` - How the route was created - `CreateRouteTable`, `CreateRoute` or `EnableVgwRoutePropagation`.
 * `state` - The state of the route - `active` or `blackhole`.
