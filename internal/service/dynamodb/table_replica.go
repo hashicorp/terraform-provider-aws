@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -19,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -27,7 +27,8 @@ import (
 )
 
 const (
-	ResNameTableReplica = "Table Replica"
+	TableReplicaIdPartsCount = 2
+	ResNameTableReplica      = "Table Replica"
 )
 
 // @SDKResource("aws_dynamodb_table_replica", name="Table Replica")
@@ -167,7 +168,18 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 		return create.DiagError(names.DynamoDB, create.ErrActionWaitingForCreation, ResNameTableReplica, d.Get("global_table_arn").(string), err)
 	}
 
-	d.SetId(tableReplicaID(tableName, mainRegion))
+	idParts := []string{
+		tableName,
+		mainRegion,
+	}
+
+	id, err := flex.FlattenResourceId(idParts, TableReplicaIdPartsCount)
+
+	if err != nil {
+		return create.DiagError(names.DynamoDB, create.ErrActionFlatteningResourceId, ResNameTableReplica, tableName, err)
+	}
+
+	d.SetId(id)
 
 	repARN, err := ARNForNewRegion(d.Get("global_table_arn").(string), replicaRegion)
 	if err != nil {
@@ -194,7 +206,7 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	tableName, mainRegion, err := TableReplicaParseID(d.Id())
 	if err != nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), err)
+		return create.DiagError(names.DynamoDB, create.ErrActionExpandingResourceId, ResNameTableReplica, d.Id(), err)
 	}
 
 	globalTableARN := arn.ARN{
@@ -284,7 +296,7 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 
 	tableName, _, err := TableReplicaParseID(d.Id())
 	if err != nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), err)
+		return create.DiagError(names.DynamoDB, create.ErrActionExpandingResourceId, ResNameTableReplica, d.Id(), err)
 	}
 
 	result, err := conn.DescribeTableWithContext(ctx, &dynamodb.DescribeTableInput{
@@ -350,7 +362,7 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	tableName, mainRegion, err := TableReplicaParseID(d.Id())
 	if err != nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionUpdating, ResNameTableReplica, d.Id(), err)
+		return create.DiagError(names.DynamoDB, create.ErrActionExpandingResourceId, ResNameTableReplica, d.Id(), err)
 	}
 
 	replicaRegion := aws.StringValue(repConn.Config.Region)
@@ -453,7 +465,7 @@ func resourceTableReplicaDelete(ctx context.Context, d *schema.ResourceData, met
 
 	tableName, mainRegion, err := TableReplicaParseID(d.Id())
 	if err != nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionDeleting, ResNameTableReplica, d.Id(), err)
+		return create.DiagError(names.DynamoDB, create.ErrActionExpandingResourceId, ResNameTableReplica, d.Id(), err)
 	}
 
 	conn := meta.(*conns.AWSClient).DynamoDBConn()
@@ -512,17 +524,13 @@ func resourceTableReplicaDelete(ctx context.Context, d *schema.ResourceData, met
 }
 
 func TableReplicaParseID(id string) (string, string, error) {
-	parts := strings.Split(id, ":")
+	idParts, err := flex.ExpandResourceId(id, TableReplicaIdPartsCount)
 
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], nil
+	if err != nil {
+		return "", "", err
 	}
 
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected table-name:main-table-region", id)
-}
-
-func tableReplicaID(tableName, mainRegion string) string {
-	return fmt.Sprintf("%s:%s", tableName, mainRegion)
+	return idParts[0], idParts[1], nil
 }
 
 func FilterReplicasByRegion(replicas []*dynamodb.ReplicaDescription, region string) (*dynamodb.ReplicaDescription, error) {
