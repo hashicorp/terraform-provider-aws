@@ -3,8 +3,6 @@ package configservice
 import (
 	"context"
 	"errors"
-	"fmt"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
@@ -13,10 +11,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	AggregateAuthorizationIdPartsCount = 2
 )
 
 // @SDKResource("aws_config_aggregate_authorization", name="Aggregate Authorization")
@@ -73,7 +76,18 @@ func resourceAggregateAuthorizationPut(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "Error creating aggregate authorization: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", accountId, region))
+	idParts := []string{
+		accountId,
+		region,
+	}
+
+	id, err := flex.FlattenResourceId(idParts, AggregateAuthorizationIdPartsCount)
+
+	if err != nil {
+		return create.DiagError(names.ConfigService, create.ErrActionFlatteningResourceId, ResNameAggregateAuthorization, accountId, err)
+	}
+
+	d.SetId(id)
 
 	return append(diags, resourceAggregateAuthorizationRead(ctx, d, meta)...)
 }
@@ -84,7 +98,7 @@ func resourceAggregateAuthorizationRead(ctx context.Context, d *schema.ResourceD
 
 	accountId, region, err := AggregateAuthorizationParseID(d.Id())
 	if err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id(), err)
+		return create.DiagError(names.ConfigService, create.ErrActionExpandingResourceId, ResNameAggregateAuthorization, d.Id(), err)
 	}
 
 	d.Set("account_id", accountId)
@@ -138,7 +152,7 @@ func resourceAggregateAuthorizationDelete(ctx context.Context, d *schema.Resourc
 
 	accountId, region, err := AggregateAuthorizationParseID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Config Aggregate Authorization (%s): %s", d.Id(), err)
+		return create.DiagError(names.ConfigService, create.ErrActionExpandingResourceId, ResNameAggregateAuthorization, d.Id(), err)
 	}
 
 	req := &configservice.DeleteAggregationAuthorizationInput{
@@ -174,10 +188,12 @@ func DescribeAggregateAuthorizations(ctx context.Context, conn *configservice.Co
 }
 
 func AggregateAuthorizationParseID(id string) (string, string, error) {
-	idParts := strings.Split(id, ":")
-	if len(idParts) != 2 {
-		return "", "", fmt.Errorf("Please make sure the ID is in the form account_id:region (i.e. 123456789012:us-east-1") // lintignore:AWSAT003
+	idParts, err := flex.ExpandResourceId(id, AggregateAuthorizationIdPartsCount)
+
+	if err != nil {
+		return "", "", err
 	}
+
 	accountId := idParts[0]
 	region := idParts[1]
 	return accountId, region, nil
