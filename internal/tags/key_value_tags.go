@@ -410,12 +410,18 @@ func (tags KeyValueTags) Chunks(size int) []KeyValueTags {
 
 // ContainsAll returns whether or not all the target tags are contained.
 func (tags KeyValueTags) ContainsAll(target KeyValueTags) bool {
-	return reflect.DeepEqual(tags, target)
+	for key, value := range target {
+		if v, ok := tags[key]; !ok || !v.Equal(value) {
+			return false
+		}
+	}
+
+	return true
 }
 
 func (tags KeyValueTags) HasZeroValue() bool {
-	for _, v := range tags.Map() {
-		if v == "" {
+	for _, v := range tags {
+		if v.ValueString() == "" {
 			return true
 		}
 	}
@@ -449,6 +455,10 @@ func (tags KeyValueTags) Equal(other KeyValueTags) bool {
 	}
 
 	return true
+}
+
+func (tags KeyValueTags) DeepEqual(target KeyValueTags) bool {
+	return reflect.DeepEqual(tags, target)
 }
 
 // Hash returns a stable hash value.
@@ -635,6 +645,10 @@ type TagData struct {
 
 	// Tag value.
 	Value *string
+}
+
+func (td *TagData) ValueString() string {
+	return *td.Value
 }
 
 func (td *TagData) Equal(other *TagData) bool {

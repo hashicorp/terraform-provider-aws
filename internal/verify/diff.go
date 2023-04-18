@@ -3,6 +3,7 @@ package verify
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -31,7 +32,7 @@ func SetTagsDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{
 	}
 
 	allTags := defaultTagsConfig.MergeTags(resourceTags).IgnoreConfig(ignoreTagsConfig)
-
+	log.Printf("[DEBUG] all_tags: %v", allTags)
 	// To ensure "tags_all" is correctly computed, we explicitly set the attribute diff
 	// when the merger of resource-level tags onto provider-level tags results in n > 0 tags,
 	// otherwise we mark the attribute as "Computed" only when there is a known diff (excluding an empty map)
@@ -50,14 +51,16 @@ func SetTagsDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{
 		}
 	} else if tagsAll, ok := diff.Get("tags_all").(map[string]interface{}); ok {
 		ta := tftags.New(ctx, tagsAll)
-		if !ta.ContainsAll(allTags) {
+		if !ta.DeepEqual(allTags) {
 			if allTags.HasZeroValue() {
 				if err := diff.SetNewComputed("tags_all"); err != nil {
 					return fmt.Errorf("error setting tags_all to computed: %w", err)
 				}
 			}
 		}
-	} else if len(allTags) > 0 && !allTags.HasZeroValue() {
+	}
+
+	if len(allTags) > 0 && !allTags.HasZeroValue() {
 		if err := diff.SetNew("tags_all", allTags.Map()); err != nil {
 			return fmt.Errorf("error setting new tags_all diff: %w", err)
 		}
