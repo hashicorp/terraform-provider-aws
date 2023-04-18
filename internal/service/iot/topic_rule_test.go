@@ -2305,7 +2305,7 @@ resource "aws_iot_topic_rule" "test" {
     input_name = "fake_input_name"
     role_arn   = aws_iam_role.test.arn
     message_id = "fake_message_id"
-    batch_mode   = %[2]t
+    batch_mode = %[2]t
   }
 }
 `, rName, batchMode))
