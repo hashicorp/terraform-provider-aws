@@ -211,15 +211,6 @@ func statusEnablerAccount(ctx context.Context, conn *inspector2.Client, id strin
 	}
 }
 
-func All[T any](s []T, f tfslices.FilterFunc[T]) bool {
-	for _, e := range s {
-		if !f(e) {
-			return false
-		}
-	}
-	return true
-}
-
 func statusEnable(ctx context.Context, conn *inspector2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		st, err := FindAccountStatuses(ctx, conn, id)
