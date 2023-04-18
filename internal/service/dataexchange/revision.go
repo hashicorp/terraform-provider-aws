@@ -2,9 +2,7 @@ package dataexchange
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dataexchange"
@@ -13,11 +11,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	RevisionIdPartsCount = 2
+	ResNameRevision      = "Revision"
 )
 
 // @SDKResource("aws_dataexchange_revision", name="Revision")
@@ -73,7 +78,18 @@ func resourceRevisionCreate(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "Error creating DataExchange Revision: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(out.DataSetId), aws.StringValue(out.Id)))
+	idParts := []string{
+		aws.StringValue(out.DataSetId),
+		aws.StringValue(out.Id),
+	}
+
+	id, err := flex.FlattenResourceId(idParts, RevisionIdPartsCount)
+
+	if err != nil {
+		return create.DiagError(names.DataExchange, create.ErrActionFlatteningResourceId, ResNameRevision, d.Get("data_set_id").(string), err)
+	}
+
+	d.SetId(id)
 
 	return append(diags, resourceRevisionRead(ctx, d, meta)...)
 }
@@ -84,7 +100,7 @@ func resourceRevisionRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	dataSetId, revisionId, err := RevisionParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading DataExchange Revision (%s): %s", d.Id(), err)
+		return create.DiagError(names.DataExchange, create.ErrActionExpandingResourceId, ResNameRevision, d.Id(), err)
 	}
 
 	revision, err := FindRevisionById(ctx, conn, dataSetId, revisionId)
@@ -155,11 +171,11 @@ func resourceRevisionDelete(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func RevisionParseResourceID(id string) (string, string, error) {
-	parts := strings.Split(id, ":")
+	idParts, err := flex.ExpandResourceId(id, RevisionIdPartsCount)
 
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], nil
+	if err != nil {
+		return "", "", err
 	}
 
-	return "", "", fmt.Errorf("unexpected format for ID (%s), expected DATA-SET_ID:REVISION-ID", id)
+	return idParts[0], idParts[1], nil
 }
