@@ -113,9 +113,9 @@ resource "aws_vpclattice_listener" "example" {
 The following arguments are supported:
 
 * `default_action` - (Required) Default action block for the default listener rule. Default action blocks are defined below.
-* `name` - (Required) Name of the listener. A listener name must be unique within a service. Valid characters are a-z, 0-9, and hyphens (-). You can't use a hyphen as the first or last character, or immediately after another hyphen.
-* `port` - (Optional) Listener port. You can specify a value from 1 to 65535. If `port` is not specified and `protocol` is HTTP, the value will default to 80. If `port` is not specified and `protocol` is HTTPS, the value will default to 443.
-* `protocol` - (Required) Protocol for the listener. Supported values are `HTTP` or `HTTPS`
+* `name` - (Required, Forces new resource) Name of the listener. A listener name must be unique within a service. Valid characters are a-z, 0-9, and hyphens (-). You can't use a hyphen as the first or last character, or immediately after another hyphen.
+* `port` - (Optional, Forces new resource) Listener port. You can specify a value from 1 to 65535. If `port` is not specified and `protocol` is HTTP, the value will default to 80. If `port` is not specified and `protocol` is HTTPS, the value will default to 443.
+* `protocol` - (Required, Forces new resource) Protocol for the listener. Supported values are `HTTP` or `HTTPS`
 * `service_arn` - (Optional) Amazon Resource Name (ARN) of the VPC Lattice service. You must include either the `service_arn` or `service_identifier` arguments.
 * `service_identifier` - (Optional) ID of the VPC Lattice service. You must include either the `service_arn` or `service_identifier` arguments.
 -> **NOTE:** You must specify one of the following arguments: `service_arn` or `service_identifier`.
@@ -157,7 +157,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-VPC Lattice Listener can be imported by using the `listener_id` of the listener, and the `id` of the VPC Lattice service, e.g.,
+VPC Lattice Listener can be imported by using the `listener_id` of the listener and the `id` of the VPC Lattice service combined with a `/` character, e.g.:
 
 ```
 $ terraform import aws_vpclattice_listener.example svc-1a2b3c4d/listener-987654321

@@ -125,11 +125,13 @@ func ResourceListener() *schema.Resource {
 				Type:         schema.TypeInt,
 				Computed:     true,
 				Optional:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.IsPortNumber,
 			},
 			"protocol": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice([]string{"HTTP", "HTTPS"}, true),
 			},
 			"service_arn": {
