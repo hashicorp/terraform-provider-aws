@@ -27,6 +27,8 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_cloudtrail" "foobar" {
+  depends_on = [aws_s3_bucket_policy.foo]
+
   name                          = "tf-trail-foobar"
   s3_bucket_name                = aws_s3_bucket.foo.id
   s3_key_prefix                 = "prefix"
