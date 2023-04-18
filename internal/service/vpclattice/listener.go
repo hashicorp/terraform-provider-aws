@@ -276,7 +276,6 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	listenerId := d.Get("listener_id").(string)
 
 	if d.HasChangesExcept("tags", "tags_all") {
-
 		in := &vpclattice.UpdateListenerInput{
 			ListenerIdentifier: aws.String(listenerId),
 			ServiceIdentifier:  aws.String(serviceId),
@@ -465,7 +464,6 @@ func expandForwardTargetGroupList(tfList []interface{}) []types.WeightedTargetGr
 		}
 
 		targetGroups = append(targetGroups, *targetGroup)
-
 	}
 
 	return targetGroups

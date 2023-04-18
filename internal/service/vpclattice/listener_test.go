@@ -110,7 +110,6 @@ func TestAccVPCLatticeListener_fixedResponsehttp(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func TestAccVPCLatticeListener_fixedResponsehttps(t *testing.T) {
@@ -191,7 +190,6 @@ func TestAccVPCLatticeListener_forwardhttpTargetGroup(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func TestAccVPCLatticeListener_forwardhttpTargetGroupCustomPort(t *testing.T) {
@@ -233,7 +231,6 @@ func TestAccVPCLatticeListener_forwardhttpTargetGroupCustomPort(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func TestAccVPCLatticeListener_forwardhttpsTargetGroupArn(t *testing.T) {
@@ -276,7 +273,6 @@ func TestAccVPCLatticeListener_forwardhttpsTargetGroupArn(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func TestAccVPCLatticeListener_forwardhttpsTargetGroupCustomPort(t *testing.T) {
@@ -319,12 +315,10 @@ func TestAccVPCLatticeListener_forwardhttpsTargetGroupCustomPort(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func TestAccVPCLatticeListener_forwardhttpMultipleTargetGroups(t *testing.T) {
 	ctx := acctest.Context(t)
-	targetGroupName0 := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
 	targetGroupName1 := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
 
 	var listener vpclattice.GetListenerOutput
@@ -345,7 +339,7 @@ func TestAccVPCLatticeListener_forwardhttpMultipleTargetGroups(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_forwardMultiTargetGrouphttp(rName, targetGroupName0, targetGroupName1),
+				Config: testAccListenerConfig_forwardMultiTargetGrouphttp(rName, targetGroupName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -366,7 +360,6 @@ func TestAccVPCLatticeListener_forwardhttpMultipleTargetGroups(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func TestAccVPCLatticeListener_disappears(t *testing.T) {
@@ -451,7 +444,6 @@ func TestAccVPCLatticeListener_tags(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func testAccCheckListenerDestroy(ctx context.Context) resource.TestCheckFunc {
@@ -560,7 +552,7 @@ resource "aws_vpclattice_listener" "test" {
 `, rName))
 }
 
-func testAccListenerConfig_forwardMultiTargetGrouphttp(rName string, targetGroupName0 string, targetGroupName1 string) string {
+func testAccListenerConfig_forwardMultiTargetGrouphttp(rName string, targetGroupName1 string) string {
 	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
 resource "aws_vpclattice_target_group" "test1" {
   name = %[2]q
