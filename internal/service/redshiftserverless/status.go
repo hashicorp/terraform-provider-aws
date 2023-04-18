@@ -5,11 +5,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusNamespace(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string) resource.StateRefreshFunc {
+func statusNamespace(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindNamespaceByName(ctx, conn, name)
 
@@ -25,7 +25,7 @@ func statusNamespace(ctx context.Context, conn *redshiftserverless.RedshiftServe
 	}
 }
 
-func statusWorkgroup(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string) resource.StateRefreshFunc {
+func statusWorkgroup(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindWorkgroupByName(ctx, conn, name)
 
@@ -41,7 +41,7 @@ func statusWorkgroup(ctx context.Context, conn *redshiftserverless.RedshiftServe
 	}
 }
 
-func statusEndpointAccess(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string) resource.StateRefreshFunc {
+func statusEndpointAccess(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindEndpointAccessByName(ctx, conn, name)
 
@@ -57,7 +57,7 @@ func statusEndpointAccess(ctx context.Context, conn *redshiftserverless.Redshift
 	}
 }
 
-func statusSnapshot(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string) resource.StateRefreshFunc {
+func statusSnapshot(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSnapshotByName(ctx, conn, name)
 

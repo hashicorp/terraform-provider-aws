@@ -5,40 +5,99 @@ package neptune
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_neptune_engine_version":        DataSourceEngineVersion,
-		"aws_neptune_orderable_db_instance": DataSourceOrderableDBInstance,
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceEngineVersion,
+			TypeName: "aws_neptune_engine_version",
+		},
+		{
+			Factory:  DataSourceOrderableDBInstance,
+			TypeName: "aws_neptune_orderable_db_instance",
+		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_neptune_cluster":                 ResourceCluster,
-		"aws_neptune_cluster_endpoint":        ResourceClusterEndpoint,
-		"aws_neptune_cluster_instance":        ResourceClusterInstance,
-		"aws_neptune_cluster_parameter_group": ResourceClusterParameterGroup,
-		"aws_neptune_cluster_snapshot":        ResourceClusterSnapshot,
-		"aws_neptune_event_subscription":      ResourceEventSubscription,
-		"aws_neptune_global_cluster":          ResourceGlobalCluster,
-		"aws_neptune_parameter_group":         ResourceParameterGroup,
-		"aws_neptune_subnet_group":            ResourceSubnetGroup,
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceCluster,
+			TypeName: "aws_neptune_cluster",
+			Name:     "Cluster",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceClusterEndpoint,
+			TypeName: "aws_neptune_cluster_endpoint",
+			Name:     "Cluster Endpoint",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceClusterInstance,
+			TypeName: "aws_neptune_cluster_instance",
+			Name:     "Cluster",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceClusterParameterGroup,
+			TypeName: "aws_neptune_cluster_parameter_group",
+			Name:     "Cluster Parameter Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceClusterSnapshot,
+			TypeName: "aws_neptune_cluster_snapshot",
+		},
+		{
+			Factory:  ResourceEventSubscription,
+			TypeName: "aws_neptune_event_subscription",
+			Name:     "Event Subscription",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceGlobalCluster,
+			TypeName: "aws_neptune_global_cluster",
+		},
+		{
+			Factory:  ResourceParameterGroup,
+			TypeName: "aws_neptune_parameter_group",
+			Name:     "Parameter Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceSubnetGroup,
+			TypeName: "aws_neptune_subnet_group",
+			Name:     "Subnet Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
 	}
 }
 

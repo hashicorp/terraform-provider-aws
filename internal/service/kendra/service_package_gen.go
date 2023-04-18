@@ -5,40 +5,91 @@ package kendra
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_kendra_experience":                   DataSourceExperience,
-		"aws_kendra_faq":                          DataSourceFaq,
-		"aws_kendra_index":                        DataSourceIndex,
-		"aws_kendra_query_suggestions_block_list": DataSourceQuerySuggestionsBlockList,
-		"aws_kendra_thesaurus":                    DataSourceThesaurus,
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceExperience,
+			TypeName: "aws_kendra_experience",
+		},
+		{
+			Factory:  DataSourceFaq,
+			TypeName: "aws_kendra_faq",
+		},
+		{
+			Factory:  DataSourceIndex,
+			TypeName: "aws_kendra_index",
+		},
+		{
+			Factory:  DataSourceQuerySuggestionsBlockList,
+			TypeName: "aws_kendra_query_suggestions_block_list",
+		},
+		{
+			Factory:  DataSourceThesaurus,
+			TypeName: "aws_kendra_thesaurus",
+		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_kendra_data_source":                  ResourceDataSource,
-		"aws_kendra_experience":                   ResourceExperience,
-		"aws_kendra_faq":                          ResourceFaq,
-		"aws_kendra_index":                        ResourceIndex,
-		"aws_kendra_query_suggestions_block_list": ResourceQuerySuggestionsBlockList,
-		"aws_kendra_thesaurus":                    ResourceThesaurus,
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceDataSource,
+			TypeName: "aws_kendra_data_source",
+			Name:     "Data Source",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceExperience,
+			TypeName: "aws_kendra_experience",
+		},
+		{
+			Factory:  ResourceFaq,
+			TypeName: "aws_kendra_faq",
+			Name:     "FAQ",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceIndex,
+			TypeName: "aws_kendra_index",
+			Name:     "Index",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceQuerySuggestionsBlockList,
+			TypeName: "aws_kendra_query_suggestions_block_list",
+			Name:     "Query Suggestions Block List",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceThesaurus,
+			TypeName: "aws_kendra_thesaurus",
+			Name:     "Thesaurus",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
 	}
 }
 

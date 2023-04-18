@@ -23,7 +23,7 @@ func TestAccInspectorAssessmentTemplate_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, inspector.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
@@ -56,7 +56,7 @@ func TestAccInspectorAssessmentTemplate_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, inspector.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
@@ -80,7 +80,7 @@ func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, inspector.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
@@ -137,7 +137,7 @@ func TestAccInspectorAssessmentTemplate_eventSubscription(t *testing.T) {
 	event2 := "ASSESSMENT_RUN_STATE_CHANGED"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, inspector.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
@@ -204,7 +204,7 @@ func testAccCheckTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			if err != nil {
-				return fmt.Errorf("Error finding Inspector Assessment Template: %s", err)
+				return fmt.Errorf("finding Inspector Classic Assessment Template: %s", err)
 			}
 
 			if len(resp.AssessmentTemplates) > 0 {
@@ -236,7 +236,7 @@ func testAccCheckTemplateExists(ctx context.Context, name string, v *inspector.A
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Inspector assessment template ID is set")
+			return fmt.Errorf("No Inspector Classic Assessment template ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn()
@@ -249,7 +249,7 @@ func testAccCheckTemplateExists(ctx context.Context, name string, v *inspector.A
 		}
 
 		if resp.AssessmentTemplates == nil || len(resp.AssessmentTemplates) == 0 {
-			return fmt.Errorf("Inspector assessment template not found")
+			return fmt.Errorf("Inspector Classic Assessment template not found")
 		}
 
 		*v = *resp.AssessmentTemplates[0]

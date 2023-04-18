@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -32,6 +32,11 @@ func ResourceBudgetAction() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -245,7 +250,7 @@ func resourceBudgetActionCreate(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(BudgetActionCreateResourceID(accountID, actionID, budgetName))
 
-	if _, err := waitActionAvailable(ctx, conn, accountID, actionID, budgetName); err != nil {
+	if _, err := waitActionAvailable(ctx, conn, accountID, actionID, budgetName, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("waiting for Budget Action (%s) create: %s", d.Id(), err)
 	}
 
@@ -346,7 +351,7 @@ func resourceBudgetActionUpdate(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("updating Budget Action (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitActionAvailable(ctx, conn, accountID, actionID, budgetName); err != nil {
+	if _, err := waitActionAvailable(ctx, conn, accountID, actionID, budgetName, d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return diag.Errorf("waiting for Budget Action (%s) update: %s", d.Id(), err)
 	}
 
@@ -413,7 +418,7 @@ func FindActionByThreePartKey(ctx context.Context, conn *budgets.Budgets, accoun
 	output, err := conn.DescribeBudgetActionWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, budgets.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -430,7 +435,7 @@ func FindActionByThreePartKey(ctx context.Context, conn *budgets.Budgets, accoun
 	return output.Action, nil
 }
 
-func statusAction(ctx context.Context, conn *budgets.Budgets, accountID, actionID, budgetName string) resource.StateRefreshFunc {
+func statusAction(ctx context.Context, conn *budgets.Budgets, accountID, actionID, budgetName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindActionByThreePartKey(ctx, conn, accountID, actionID, budgetName)
 
@@ -446,12 +451,8 @@ func statusAction(ctx context.Context, conn *budgets.Budgets, accountID, actionI
 	}
 }
 
-const (
-	actionAvailableTimeout = 2 * time.Minute
-)
-
-func waitActionAvailable(ctx context.Context, conn *budgets.Budgets, accountID, actionID, budgetName string) (*budgets.Action, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+func waitActionAvailable(ctx context.Context, conn *budgets.Budgets, accountID, actionID, budgetName string, timeout time.Duration) (*budgets.Action, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			budgets.ActionStatusExecutionInProgress,
 			budgets.ActionStatusStandby,
@@ -462,7 +463,7 @@ func waitActionAvailable(ctx context.Context, conn *budgets.Budgets, accountID, 
 			budgets.ActionStatusPending,
 		},
 		Refresh: statusAction(ctx, conn, accountID, actionID, budgetName),
-		Timeout: actionAvailableTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

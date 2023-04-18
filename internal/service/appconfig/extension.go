@@ -21,7 +21,8 @@ const (
 	ResExtension = "Extension"
 )
 
-// @SDKResource("aws_appconfig_extension")
+// @SDKResource("aws_appconfig_extension", name="Extension")
+// @Tags(identifierAttribute="arn")
 func ResourceExtension() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceExtensionCreate,
@@ -108,8 +109,8 @@ func ResourceExtension() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchemaForceNew(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"version": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -121,13 +122,11 @@ func ResourceExtension() *schema.Resource {
 
 func resourceExtensionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppConfigConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	in := appconfig.CreateExtensionInput{
 		Actions: expandExtensionActionPoints(d.Get("action_point").(*schema.Set).List()),
 		Name:    aws.String(d.Get("name").(string)),
-		Tags:    Tags(tags.IgnoreAWS()),
+		Tags:    GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -155,8 +154,6 @@ func resourceExtensionCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceExtensionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppConfigConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	out, err := FindExtensionById(ctx, conn, d.Id())
 
@@ -176,23 +173,6 @@ func resourceExtensionRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("parameter", flattenExtensionParameters(out.Parameters))
 	d.Set("name", out.Name)
 	d.Set("version", out.VersionNumber)
-
-	tags, err := ListTags(ctx, conn, *out.Arn)
-
-	if err != nil {
-		return create.DiagError(names.AppConfig, create.ErrActionReading, ResExtension, d.Get("name").(string), errors.New("error listing tags for AppConfig Extension"))
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResExtension, d.Id(), errors.New("Error setting tags"))
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResExtension, d.Id(), errors.New("Error setting tags_all"))
-	}
 
 	return nil
 }

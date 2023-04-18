@@ -22,7 +22,7 @@ func TestAccIoTThingGroupMembership_basic(t *testing.T) {
 	resourceName := "aws_iot_thing_group_membership.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckThingGroupMembershipDestroy(ctx),
@@ -52,7 +52,7 @@ func TestAccIoTThingGroupMembership_disappears(t *testing.T) {
 	resourceName := "aws_iot_thing_group_membership.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckThingGroupMembershipDestroy(ctx),
@@ -77,7 +77,7 @@ func TestAccIoTThingGroupMembership_disappears_Thing(t *testing.T) {
 	thingResourceName := "aws_iot_thing.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckThingGroupMembershipDestroy(ctx),
@@ -102,7 +102,7 @@ func TestAccIoTThingGroupMembership_disappears_ThingGroup(t *testing.T) {
 	thingGroupResourceName := "aws_iot_thing_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckThingGroupMembershipDestroy(ctx),
@@ -126,7 +126,7 @@ func TestAccIoTThingGroupMembership_overrideDynamicGroup(t *testing.T) {
 	resourceName := "aws_iot_thing_group_membership.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckThingGroupMembershipDestroy(ctx),

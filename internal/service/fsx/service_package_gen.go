@@ -5,42 +5,123 @@ package fsx
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_fsx_openzfs_snapshot":    DataSourceOpenzfsSnapshot,
-		"aws_fsx_windows_file_system": DataSourceWindowsFileSystem,
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceOpenzfsSnapshot,
+			TypeName: "aws_fsx_openzfs_snapshot",
+		},
+		{
+			Factory:  DataSourceWindowsFileSystem,
+			TypeName: "aws_fsx_windows_file_system",
+		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_fsx_backup":                        ResourceBackup,
-		"aws_fsx_data_repository_association":   ResourceDataRepositoryAssociation,
-		"aws_fsx_file_cache":                    ResourceFileCache,
-		"aws_fsx_lustre_file_system":            ResourceLustreFileSystem,
-		"aws_fsx_ontap_file_system":             ResourceOntapFileSystem,
-		"aws_fsx_ontap_storage_virtual_machine": ResourceOntapStorageVirtualMachine,
-		"aws_fsx_ontap_volume":                  ResourceOntapVolume,
-		"aws_fsx_openzfs_file_system":           ResourceOpenzfsFileSystem,
-		"aws_fsx_openzfs_snapshot":              ResourceOpenzfsSnapshot,
-		"aws_fsx_openzfs_volume":                ResourceOpenzfsVolume,
-		"aws_fsx_windows_file_system":           ResourceWindowsFileSystem,
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceBackup,
+			TypeName: "aws_fsx_backup",
+			Name:     "Backup",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceDataRepositoryAssociation,
+			TypeName: "aws_fsx_data_repository_association",
+			Name:     "Data Repository Association",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceFileCache,
+			TypeName: "aws_fsx_file_cache",
+			Name:     "File Cache",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceLustreFileSystem,
+			TypeName: "aws_fsx_lustre_file_system",
+			Name:     "Lustre File System",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceOntapFileSystem,
+			TypeName: "aws_fsx_ontap_file_system",
+			Name:     "ONTAP File System",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceOntapStorageVirtualMachine,
+			TypeName: "aws_fsx_ontap_storage_virtual_machine",
+			Name:     "ONTAP Storage Virtual Machine",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceOntapVolume,
+			TypeName: "aws_fsx_ontap_volume",
+			Name:     "ONTAP Volume",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceOpenzfsFileSystem,
+			TypeName: "aws_fsx_openzfs_file_system",
+			Name:     "OpenZFS File System",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceOpenzfsSnapshot,
+			TypeName: "aws_fsx_openzfs_snapshot",
+			Name:     "OpenZFS Snapshot",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceOpenzfsVolume,
+			TypeName: "aws_fsx_openzfs_volume",
+			Name:     "OpenZFS Volume",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceWindowsFileSystem,
+			TypeName: "aws_fsx_windows_file_system",
+			Name:     "Windows File System",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
 	}
 }
 

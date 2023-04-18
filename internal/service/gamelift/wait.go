@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -17,7 +17,7 @@ const (
 )
 
 func waitBuildReady(ctx context.Context, conn *gamelift.GameLift, id string) (*gamelift.Build, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{gamelift.BuildStatusInitialized},
 		Target:  []string{gamelift.BuildStatusReady},
 		Refresh: statusBuild(ctx, conn, id),
@@ -34,7 +34,7 @@ func waitBuildReady(ctx context.Context, conn *gamelift.GameLift, id string) (*g
 }
 
 func waitFleetActive(ctx context.Context, conn *gamelift.GameLift, id string, timeout time.Duration) (*gamelift.FleetAttributes, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			gamelift.FleetStatusActivating,
 			gamelift.FleetStatusBuilding,
@@ -57,7 +57,7 @@ func waitFleetActive(ctx context.Context, conn *gamelift.GameLift, id string, ti
 }
 
 func waitFleetTerminated(ctx context.Context, conn *gamelift.GameLift, id string, timeout time.Duration) (*gamelift.FleetAttributes, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			gamelift.FleetStatusActive,
 			gamelift.FleetStatusDeleting,
@@ -148,7 +148,7 @@ func isEventFailure(event *gamelift.Event) bool {
 }
 
 func waitGameServerGroupActive(ctx context.Context, conn *gamelift.GameLift, name string, timeout time.Duration) (*gamelift.GameServerGroup, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			gamelift.GameServerGroupStatusNew,
 			gamelift.GameServerGroupStatusActivating,
@@ -168,7 +168,7 @@ func waitGameServerGroupActive(ctx context.Context, conn *gamelift.GameLift, nam
 }
 
 func waitGameServerGroupTerminated(ctx context.Context, conn *gamelift.GameLift, name string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			gamelift.GameServerGroupStatusDeleteScheduled,
 			gamelift.GameServerGroupStatusDeleting,

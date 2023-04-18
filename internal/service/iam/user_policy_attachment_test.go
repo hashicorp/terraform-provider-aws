@@ -25,7 +25,7 @@ func TestAccIAMUserPolicyAttachment_basic(t *testing.T) {
 	policyName3 := fmt.Sprintf("test-policy-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserPolicyAttachmentDestroy,
@@ -41,7 +41,7 @@ func TestAccIAMUserPolicyAttachment_basic(t *testing.T) {
 				ResourceName:      "aws_iam_user_policy_attachment.test-attach",
 				ImportState:       true,
 				ImportStateIdFunc: testAccUserPolicyAttachmentImportStateIdFunc("aws_iam_user_policy_attachment.test-attach"),
-				// We do not have a way to align IDs since the Create function uses resource.PrefixedUniqueId()
+				// We do not have a way to align IDs since the Create function uses id.PrefixedUniqueId()
 				// Failed state verification, resource with ID USER-POLICYARN not found
 				// ImportStateVerify: true,
 				ImportStateCheck: func(s []*terraform.InstanceState) error {

@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -273,15 +273,15 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 	log.Printf("[DEBUG] Deleting DocDB Global Cluster (%s): %s", d.Id(), input)
 
 	// Allow for eventual consistency
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		_, err := conn.DeleteGlobalClusterWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, docdb.ErrCodeInvalidGlobalClusterStateFault, "is not empty") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -355,13 +355,13 @@ func resourceGlobalClusterUpgradeMinorEngineVersion(ctx context.Context, cluster
 				DBClusterIdentifier: aws.String(clusterMemberArn.(string)),
 				EngineVersion:       aws.String(engineVersion),
 			}
-			err := resource.RetryContext(ctx, timeout, func() *resource.RetryError {
+			err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 				_, err := conn.ModifyDBClusterWithContext(ctx, modInput)
 				if err != nil {
 					if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
-						return resource.RetryableError(err)
+						return retry.RetryableError(err)
 					}
-					return resource.NonRetryableError(err)
+					return retry.NonRetryableError(err)
 				}
 				return nil
 			})

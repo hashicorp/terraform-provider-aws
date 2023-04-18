@@ -10,8 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/autoscaling/autoscalingiface"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // GetTag fetches an individual autoscaling service tag for a resource.
@@ -19,7 +22,7 @@ import (
 // This function will optimise the handling over ListTags, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func GetTag(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identifier string, resourceType string, key string) (*tftags.TagData, error) {
+func GetTag(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identifier, resourceType, key string) (*tftags.TagData, error) {
 	input := &autoscaling.DescribeTagsInput{
 		Filters: []*autoscaling.Filter{
 			{
@@ -51,7 +54,7 @@ func GetTag(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identifie
 // ListTags lists autoscaling service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identifier string, resourceType string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identifier, resourceType string) (tftags.KeyValueTags, error) {
 	input := &autoscaling.DescribeTagsInput{
 		Filters: []*autoscaling.Filter{
 			{
@@ -70,6 +73,22 @@ func ListTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identif
 	return KeyValueTags(ctx, output.Tags, identifier, resourceType), nil
 }
 
+// ListTags lists autoscaling service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) error {
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).AutoScalingConn(), identifier, resourceType)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(tags)
+	}
+
+	return nil
+}
+
 // []*SERVICE.Tag handling
 
 // ListOfMap returns a list of autoscaling in flattened map.
@@ -79,11 +98,11 @@ func ListTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identif
 // This function strips tag resource identifier and type. Generally, this is
 // the desired behavior so the tag schema does not require those attributes.
 // Use (tftags.KeyValueTags).ListOfMap() for full tag information.
-func ListOfMap(tags tftags.KeyValueTags) []interface{} {
-	var result []interface{}
+func ListOfMap(tags tftags.KeyValueTags) []any {
+	var result []any
 
 	for _, key := range tags.Keys() {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"key":   key,
 			"value": aws.StringValue(tags.KeyValue(key)),
 
@@ -100,8 +119,8 @@ func ListOfMap(tags tftags.KeyValueTags) []interface{} {
 //
 // Compatible with setting Terraform state for legacy []map[string]string schema.
 // Deprecated: Will be removed in a future major version without replacement.
-func ListOfStringMap(tags tftags.KeyValueTags) []interface{} {
-	var result []interface{}
+func ListOfStringMap(tags tftags.KeyValueTags) []any {
+	var result []any
 
 	for _, key := range tags.Keys() {
 		m := map[string]string{
@@ -141,9 +160,9 @@ func Tags(tags tftags.KeyValueTags) []*autoscaling.Tag {
 // Accepts the following types:
 //   - []*autoscaling.Tag
 //   - []*autoscaling.TagDescription
-//   - []interface{} (Terraform TypeList configuration block compatible)
+//   - []any (Terraform TypeList configuration block compatible)
 //   - *schema.Set (Terraform TypeSet configuration block compatible)
-func KeyValueTags(ctx context.Context, tags interface{}, identifier string, resourceType string) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags any, identifier, resourceType string) tftags.KeyValueTags {
 	switch tags := tags.(type) {
 	case []*autoscaling.Tag:
 		m := make(map[string]*tftags.TagData, len(tags))
@@ -182,11 +201,11 @@ func KeyValueTags(ctx context.Context, tags interface{}, identifier string, reso
 		return tftags.New(ctx, m)
 	case *schema.Set:
 		return KeyValueTags(ctx, tags.List(), identifier, resourceType)
-	case []interface{}:
+	case []any:
 		result := make(map[string]*tftags.TagData)
 
 		for _, tfMapRaw := range tags {
-			tfMap, ok := tfMapRaw.(map[string]interface{})
+			tfMap, ok := tfMapRaw.(map[string]any)
 
 			if !ok {
 				continue
@@ -228,16 +247,35 @@ func KeyValueTags(ctx context.Context, tags interface{}, identifier string, reso
 	}
 }
 
+// GetTagsIn returns autoscaling service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*autoscaling.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets autoscaling service tags in Context.
+func SetTagsOut(ctx context.Context, tags any, identifier, resourceType string) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags, identifier, resourceType))
+	}
+}
+
 // UpdateTags updates autoscaling service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identifier string, resourceType string, oldTagsSet interface{}, newTagsSet interface{}) error {
+func UpdateTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identifier, resourceType string, oldTagsSet, newTagsSet any) error {
 	oldTags := KeyValueTags(ctx, oldTagsSet, identifier, resourceType)
 	newTags := KeyValueTags(ctx, newTagsSet, identifier, resourceType)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &autoscaling.DeleteTagsInput{
-			Tags: Tags(removedTags.IgnoreAWS()),
+			Tags: Tags(removedTags.IgnoreSystem(names.AutoScaling)),
 		}
 
 		_, err := conn.DeleteTagsWithContext(ctx, input)
@@ -249,7 +287,7 @@ func UpdateTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, ident
 
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &autoscaling.CreateOrUpdateTagsInput{
-			Tags: Tags(updatedTags.IgnoreAWS()),
+			Tags: Tags(updatedTags.IgnoreSystem(names.AutoScaling)),
 		}
 
 		_, err := conn.CreateOrUpdateTagsWithContext(ctx, input)
@@ -260,4 +298,10 @@ func UpdateTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, ident
 	}
 
 	return nil
+}
+
+// UpdateTags updates autoscaling service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier, resourceType string, oldTags, newTags any) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).AutoScalingConn(), identifier, resourceType, oldTags, newTags)
 }

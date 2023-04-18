@@ -3,7 +3,7 @@ subcategory: "App Mesh"
 layout: "aws"
 page_title: "AWS: aws_appmesh_mesh"
 description: |-
-    Provides details about an App Mesh Mesh service mesh resource.
+    Terraform data source for managing an AWS App Mesh Mesh.
 ---
 
 # Data Source: aws_appmesh_mesh
@@ -42,13 +42,5 @@ In addition to all arguments above, the following attributes are exported:
 * `created_date` - Creation date of the service mesh.
 * `last_updated_date` - Last update date of the service mesh.
 * `resource_owner` - Resource owner's AWS account ID.
-* `spec` - Service mesh specification.
+* `spec` - Service mesh specification. See the [`aws_appmesh_mesh`](/docs/providers/aws/r/appmesh_mesh.html#spec) resource for details.
 * `tags` - Map of tags.
-
-### Spec
-
-* `egress_filter` - Egress filter rules for the service mesh.
-
-### Egress Filter
-
-* `type` - Egress filter type.
