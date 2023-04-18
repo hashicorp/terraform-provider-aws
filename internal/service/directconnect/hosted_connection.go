@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_dx_hosted_connection")
 func ResourceHostedConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHostedConnectionCreate,
@@ -161,7 +162,8 @@ func resourceHostedConnectionDelete(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	if err := deleteConnection(ctx, conn, d.Id(), waitHostedConnectionDeleted); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Direct Connect Hosted Connection (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
+
 	return diags
 }

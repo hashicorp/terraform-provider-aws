@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_route53_resolver_firewall_domain_list")
 func DataSourceFirewallDomainList() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFirewallDomainListRead,

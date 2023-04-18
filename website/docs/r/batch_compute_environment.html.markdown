@@ -21,23 +21,22 @@ otherwise, the policy may be destroyed too soon and the compute environment will
 ### EC2 Type
 
 ```terraform
-resource "aws_iam_role" "ecs_instance_role" {
-  name = "ecs_instance_role"
+data "aws_iam_policy_document" "ec2_assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-	{
-	    "Action": "sts:AssumeRole",
-	    "Effect": "Allow",
-	    "Principal": {
-	        "Service": "ec2.amazonaws.com"
-	    }
-	}
-    ]
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-EOF
+
+resource "aws_iam_role" "ecs_instance_role" {
+  name               = "ecs_instance_role"
+  assume_role_policy = data.aws_iam_policy_document.ec2_assume_role.json
 }
 
 resource "aws_iam_role_policy_attachment" "ecs_instance_role" {
@@ -50,23 +49,22 @@ resource "aws_iam_instance_profile" "ecs_instance_role" {
   role = aws_iam_role.ecs_instance_role.name
 }
 
-resource "aws_iam_role" "aws_batch_service_role" {
-  name = "aws_batch_service_role"
+data "aws_iam_policy_document" "batch_assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-	{
-	    "Action": "sts:AssumeRole",
-	    "Effect": "Allow",
-	    "Principal": {
-		"Service": "batch.amazonaws.com"
-	    }
-	}
-    ]
+    principals {
+      type        = "Service"
+      identifiers = ["batch.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-EOF
+
+resource "aws_iam_role" "aws_batch_service_role" {
+  name               = "aws_batch_service_role"
+  assume_role_policy = data.aws_iam_policy_document.batch_assume_role.json
 }
 
 resource "aws_iam_role_policy_attachment" "aws_batch_service_role" {
@@ -223,4 +221,3 @@ $ terraform import aws_batch_compute_environment.sample sample
 [1]: http://docs.aws.amazon.com/batch/latest/userguide/what-is-batch.html
 [2]: http://docs.aws.amazon.com/batch/latest/userguide/compute_environments.html
 [3]: http://docs.aws.amazon.com/batch/latest/userguide/troubleshooting.html
-[4]: https://docs.aws.amazon.com/batch/latest/userguide/allocation-strategies.html

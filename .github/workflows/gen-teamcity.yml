@@ -1,5 +1,9 @@
 name: TeamCity Config Generator
 on:
+  push:
+    branches:
+      - main
+      - "release/**"
   pull_request:
     paths:
       - .teamcity/**
@@ -9,7 +13,7 @@ jobs:
     name: Validate TeamCity Configuration
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
       - uses: actions/setup-java@v3
         with:
           distribution: adopt

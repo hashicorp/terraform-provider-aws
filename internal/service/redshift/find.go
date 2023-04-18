@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -29,7 +29,7 @@ func findClusters(ctx context.Context, conn *redshift.Redshift, input *redshift.
 	})
 
 	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeClusterNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -73,7 +73,7 @@ func FindClusterByID(ctx context.Context, conn *redshift.Redshift, id string) (*
 
 	// Eventual consistency check.
 	if aws.StringValue(output.ClusterIdentifier) != id {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -89,7 +89,7 @@ func FindScheduledActionByName(ctx context.Context, conn *redshift.Redshift, nam
 	output, err := conn.DescribeScheduledActionsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeScheduledActionNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -123,7 +123,7 @@ func FindScheduleAssociationById(ctx context.Context, conn *redshift.Redshift, i
 	resp, err := conn.DescribeSnapshotSchedulesWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeSnapshotScheduleNotFoundFault) {
-		return "", nil, &resource.NotFoundError{
+		return "", nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -165,7 +165,7 @@ func FindHSMClientCertificateByID(ctx context.Context, conn *redshift.Redshift, 
 
 	out, err := conn.DescribeHsmClientCertificatesWithContext(ctx, &input)
 	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeHsmClientCertificateNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -193,7 +193,7 @@ func FindHSMConfigurationByID(ctx context.Context, conn *redshift.Redshift, id s
 
 	out, err := conn.DescribeHsmConfigurationsWithContext(ctx, &input)
 	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeHsmConfigurationNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -222,7 +222,7 @@ func FindUsageLimitByID(ctx context.Context, conn *redshift.Redshift, id string)
 	output, err := conn.DescribeUsageLimitsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeUsageLimitNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -250,7 +250,7 @@ func FindAuthenticationProfileByID(ctx context.Context, conn *redshift.Redshift,
 
 	out, err := conn.DescribeAuthenticationProfilesWithContext(ctx, &input)
 	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeAuthenticationProfileNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -279,7 +279,7 @@ func FindEventSubscriptionByName(ctx context.Context, conn *redshift.Redshift, n
 	output, err := conn.DescribeEventSubscriptionsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeSubscriptionNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -308,7 +308,7 @@ func FindSubnetGroupByName(ctx context.Context, conn *redshift.Redshift, name st
 	output, err := conn.DescribeClusterSubnetGroupsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeClusterSubnetGroupNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -337,7 +337,7 @@ func FindEndpointAccessByName(ctx context.Context, conn *redshift.Redshift, name
 	output, err := conn.DescribeEndpointAccessWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeEndpointNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -372,7 +372,7 @@ func FindEndpointAuthorizationById(ctx context.Context, conn *redshift.Redshift,
 	output, err := conn.DescribeEndpointAuthorizationWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeEndpointAuthorizationNotFoundFault) || tfawserr.ErrCodeEquals(err, redshift.ErrCodeClusterNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -409,7 +409,7 @@ func FindPartnerById(ctx context.Context, conn *redshift.Redshift, id string) (*
 	output, err := conn.DescribePartnersWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeClusterNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -428,4 +428,40 @@ func FindPartnerById(ctx context.Context, conn *redshift.Redshift, id string) (*
 	}
 
 	return output.PartnerIntegrationInfoList[0], nil
+}
+
+func FindClusterSnapshotByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.Snapshot, error) {
+	input := &redshift.DescribeClusterSnapshotsInput{
+		SnapshotIdentifier: aws.String(id),
+	}
+
+	output, err := conn.DescribeClusterSnapshotsWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeClusterNotFoundFault) || tfawserr.ErrCodeEquals(err, redshift.ErrCodeClusterSnapshotNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Snapshots) == 0 || output.Snapshots[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.Snapshots); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	if status := aws.StringValue(output.Snapshots[0].Status); status == clusterSnapshotStatusDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
+	}
+
+	return output.Snapshots[0], nil
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
 )
 
+// @SDKDataSource("aws_secretsmanager_secrets")
 func DataSourceSecrets() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSecretsRead,

@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -18,7 +18,7 @@ func FindDevEndpointByName(ctx context.Context, conn *glue.Glue, name string) (*
 	output, err := conn.GetDevEndpointWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -43,7 +43,7 @@ func FindJobByName(ctx context.Context, conn *glue.Glue, name string) (*glue.Job
 	output, err := conn.GetJobWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -170,7 +170,7 @@ func FindConnectionByName(ctx context.Context, conn *glue.Glue, name, catalogID 
 
 	output, err := conn.GetConnectionWithContext(ctx, input)
 	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -205,7 +205,7 @@ func FindPartitionIndexByName(ctx context.Context, conn *glue.Glue, id string) (
 	output, err := conn.GetPartitionIndexesWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -231,7 +231,7 @@ func FindPartitionIndexByName(ctx context.Context, conn *glue.Glue, id string) (
 	}
 
 	if result == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -247,7 +247,7 @@ func FindClassifierByName(ctx context.Context, conn *glue.Glue, name string) (*g
 
 	output, err := conn.GetClassifierWithContext(ctx, input)
 	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -271,7 +271,7 @@ func FindCrawlerByName(ctx context.Context, conn *glue.Glue, name string) (*glue
 
 	output, err := conn.GetCrawlerWithContext(ctx, input)
 	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

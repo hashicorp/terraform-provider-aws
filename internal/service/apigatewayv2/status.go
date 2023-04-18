@@ -3,16 +3,14 @@ package apigatewayv2
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 // StatusDeployment fetches the Deployment and its Status
-func StatusDeployment(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, apiId, deploymentId string) resource.StateRefreshFunc {
+func StatusDeployment(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, apiId, deploymentId string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &apigatewayv2.GetDeploymentInput{
 			ApiId:        aws.String(apiId),
@@ -35,28 +33,8 @@ func StatusDeployment(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, apiI
 	}
 }
 
-func StatusDomainName(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, name string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		domainName, err := FindDomainNameByName(ctx, conn, name)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if statusMessage := aws.StringValue(domainName.DomainNameConfigurations[0].DomainNameStatusMessage); statusMessage != "" {
-			log.Printf("[INFO] API Gateway v2 domain name (%s) status message: %s", name, statusMessage)
-		}
-
-		return domainName, aws.StringValue(domainName.DomainNameConfigurations[0].DomainNameStatus), nil
-	}
-}
-
 // StatusVPCLink fetches the VPC Link and its Status
-func StatusVPCLink(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, vpcLinkId string) resource.StateRefreshFunc {
+func StatusVPCLink(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, vpcLinkId string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &apigatewayv2.GetVpcLinkInput{
 			VpcLinkId: aws.String(vpcLinkId),

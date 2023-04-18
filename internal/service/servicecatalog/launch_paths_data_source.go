@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_servicecatalog_launch_paths")
 func DataSourceLaunchPaths() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLaunchPathsRead,
@@ -80,7 +81,7 @@ func dataSourceLaunchPathsRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "describing Service Catalog Launch Paths: %s", err)
 	}
 
-	if err := d.Set("summaries", flattenLaunchPathSummaries(summaries, ignoreTagsConfig)); err != nil {
+	if err := d.Set("summaries", flattenLaunchPathSummaries(ctx, summaries, ignoreTagsConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting summaries: %s", err)
 	}
 
@@ -89,7 +90,7 @@ func dataSourceLaunchPathsRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func flattenLaunchPathSummary(apiObject *servicecatalog.LaunchPathSummary, ignoreTagsConfig *tftags.IgnoreConfig) map[string]interface{} {
+func flattenLaunchPathSummary(ctx context.Context, apiObject *servicecatalog.LaunchPathSummary, ignoreTagsConfig *tftags.IgnoreConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -108,14 +109,14 @@ func flattenLaunchPathSummary(apiObject *servicecatalog.LaunchPathSummary, ignor
 		tfMap["name"] = aws.StringValue(apiObject.Name)
 	}
 
-	tags := KeyValueTags(apiObject.Tags)
+	tags := KeyValueTags(ctx, apiObject.Tags)
 
 	tfMap["tags"] = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
 
 	return tfMap
 }
 
-func flattenLaunchPathSummaries(apiObjects []*servicecatalog.LaunchPathSummary, ignoreTagsConfig *tftags.IgnoreConfig) []interface{} {
+func flattenLaunchPathSummaries(ctx context.Context, apiObjects []*servicecatalog.LaunchPathSummary, ignoreTagsConfig *tftags.IgnoreConfig) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -127,7 +128,7 @@ func flattenLaunchPathSummaries(apiObjects []*servicecatalog.LaunchPathSummary, 
 			continue
 		}
 
-		tfList = append(tfList, flattenLaunchPathSummary(apiObject, ignoreTagsConfig))
+		tfList = append(tfList, flattenLaunchPathSummary(ctx, apiObject, ignoreTagsConfig))
 	}
 
 	return tfList

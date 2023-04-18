@@ -26,7 +26,7 @@ func TestAccCloudFormationStackSet_basic(t *testing.T) {
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckStackSet(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckStackSet(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
@@ -71,7 +71,7 @@ func TestAccCloudFormationStackSet_disappears(t *testing.T) {
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckStackSet(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckStackSet(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
@@ -97,7 +97,7 @@ func TestAccCloudFormationStackSet_administrationRoleARN(t *testing.T) {
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckStackSet(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckStackSet(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
@@ -137,7 +137,7 @@ func TestAccCloudFormationStackSet_description(t *testing.T) {
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckStackSet(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckStackSet(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
@@ -177,7 +177,7 @@ func TestAccCloudFormationStackSet_executionRoleName(t *testing.T) {
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckStackSet(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckStackSet(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
@@ -218,7 +218,7 @@ func TestAccCloudFormationStackSet_name(t *testing.T) {
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckStackSet(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckStackSet(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
@@ -274,7 +274,7 @@ func TestAccCloudFormationStackSet_operationPreferences(t *testing.T) {
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckStackSet(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckStackSet(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
@@ -372,7 +372,7 @@ func TestAccCloudFormationStackSet_parameters(t *testing.T) {
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckStackSet(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckStackSet(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
@@ -434,7 +434,7 @@ func TestAccCloudFormationStackSet_Parameters_default(t *testing.T) {
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckStackSet(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckStackSet(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
@@ -488,7 +488,7 @@ func TestAccCloudFormationStackSet_Parameters_noEcho(t *testing.T) {
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckStackSet(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckStackSet(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
@@ -533,7 +533,7 @@ func TestAccCloudFormationStackSet_PermissionModel_serviceManaged(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckStackSet(ctx, t)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
@@ -573,7 +573,7 @@ func TestAccCloudFormationStackSet_tags(t *testing.T) {
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckStackSet(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckStackSet(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
@@ -631,7 +631,7 @@ func TestAccCloudFormationStackSet_templateBody(t *testing.T) {
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckStackSet(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckStackSet(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
@@ -671,7 +671,7 @@ func TestAccCloudFormationStackSet_templateURL(t *testing.T) {
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckStackSet(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckStackSet(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
@@ -842,7 +842,7 @@ Outputs:
 `, rName)
 }
 
-func testAccStackSetTemplateBodyParametersDefault1(rName string) string { //nolint:unused // This function is used in a skipped acceptance test
+func testAccStackSetTemplateBodyParametersDefault1(rName string) string {
 	return fmt.Sprintf(`
 Parameters:
   Parameter1:
@@ -866,7 +866,7 @@ Outputs:
 `, rName)
 }
 
-func testAccStackSetTemplateBodyParametersNoEcho1(rName string) string { //nolint:unused // This function is used in a skipped acceptance test
+func testAccStackSetTemplateBodyParametersNoEcho1(rName string) string {
 	return fmt.Sprintf(`
 Parameters:
   Parameter1:
@@ -1217,7 +1217,7 @@ TEMPLATE
 `, rName, testAccStackSetTemplateBodyParameters2(rName), value1, value2)
 }
 
-func testAccStackSetConfig_parametersDefault0(rName string) string { //nolint:unused // This function is used in a skipped acceptance test
+func testAccStackSetConfig_parametersDefault0(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   assume_role_policy = <<EOF
@@ -1253,7 +1253,7 @@ TEMPLATE
 `, rName, testAccStackSetTemplateBodyParametersDefault1(rName))
 }
 
-func testAccStackSetConfig_parametersDefault1(rName, value1 string) string { //nolint:unused // This function is used in a skipped acceptance test
+func testAccStackSetConfig_parametersDefault1(rName, value1 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   assume_role_policy = <<EOF
@@ -1293,7 +1293,7 @@ TEMPLATE
 `, rName, testAccStackSetTemplateBodyParametersDefault1(rName), value1)
 }
 
-func testAccStackSetConfig_parametersNoEcho1(rName, value1 string) string { //nolint:unused // This function is used in a skipped acceptance test
+func testAccStackSetConfig_parametersNoEcho1(rName, value1 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   assume_role_policy = <<EOF
@@ -1556,7 +1556,7 @@ resource "aws_cloudformation_stack_set" "test" {
 `, rName, testAccStackSetTemplateBodyVPC(rName+"2"))
 }
 
-func testAccStackSetConfig_permissionModel(rName string) string { //nolint:unused // This function is used in a skipped acceptance test
+func testAccStackSetConfig_permissionModel(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack_set" "test" {
   name             = %[1]q

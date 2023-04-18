@@ -17,7 +17,7 @@ func TestAccRedshiftOrderableClusterDataSource_clusterType(t *testing.T) {
 	dataSourceName := "data.aws_redshift_orderable_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableClusterPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableClusterPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -37,7 +37,7 @@ func TestAccRedshiftOrderableClusterDataSource_clusterVersion(t *testing.T) {
 	dataSourceName := "data.aws_redshift_orderable_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableClusterPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableClusterPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -58,7 +58,7 @@ func TestAccRedshiftOrderableClusterDataSource_nodeType(t *testing.T) {
 	nodeType := "dc2.8xlarge"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableClusterPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableClusterPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -79,7 +79,7 @@ func TestAccRedshiftOrderableClusterDataSource_preferredNodeTypes(t *testing.T) 
 	preferredNodeType := "dc2.8xlarge"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableClusterPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableClusterPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,

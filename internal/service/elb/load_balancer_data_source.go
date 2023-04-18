@@ -3,7 +3,6 @@ package elb
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -17,6 +16,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_elb")
 func DataSourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLoadBalancerRead,
@@ -60,7 +60,6 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
-				Set:      schema.HashString,
 			},
 
 			"connection_draining": {
@@ -125,7 +124,6 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
-				Set:      schema.HashString,
 			},
 
 			"internal": {
@@ -171,7 +169,6 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
-				Set:      schema.HashString,
 			},
 
 			"source_security_group": {
@@ -188,7 +185,6 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
-				Set:      schema.HashString,
 			},
 
 			"desync_mitigation_mode": {
@@ -209,46 +205,38 @@ func DataSourceLoadBalancer() *schema.Resource {
 func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBConn()
+	ec2conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	lbName := d.Get("name").(string)
+	lb, err := FindLoadBalancerByName(ctx, conn, lbName)
 
-	input := &elb.DescribeLoadBalancersInput{
-		LoadBalancerNames: aws.StringSlice([]string{lbName}),
-	}
-
-	log.Printf("[DEBUG] Reading ELB: %s", input)
-	resp, err := conn.DescribeLoadBalancersWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "retrieving LB: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading ELB Classic Load Balancer (%s): %s", lbName, err)
 	}
-	if len(resp.LoadBalancerDescriptions) != 1 {
-		return sdkdiag.AppendErrorf(diags, "search returned %d results, please revise so only one is returned", len(resp.LoadBalancerDescriptions))
+
+	d.SetId(aws.StringValue(lb.LoadBalancerName))
+
+	input := &elb.DescribeLoadBalancerAttributesInput{
+		LoadBalancerName: aws.String(d.Id()),
 	}
-	d.SetId(aws.StringValue(resp.LoadBalancerDescriptions[0].LoadBalancerName))
+
+	output, err := conn.DescribeLoadBalancerAttributesWithContext(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading ELB Classic Load Balancer (%s) attributes: %s", d.Id(), err)
+	}
+
+	lbAttrs := output.LoadBalancerAttributes
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "elasticloadbalancing",
 		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("loadbalancer/%s", aws.StringValue(resp.LoadBalancerDescriptions[0].LoadBalancerName)),
+		Resource:  fmt.Sprintf("loadbalancer/%s", d.Id()),
 	}
 	d.Set("arn", arn.String())
-
-	lb := resp.LoadBalancerDescriptions[0]
-	ec2conn := meta.(*conns.AWSClient).EC2Conn()
-
-	describeAttrsOpts := &elb.DescribeLoadBalancerAttributesInput{
-		LoadBalancerName: aws.String(d.Id()),
-	}
-	describeAttrsResp, err := conn.DescribeLoadBalancerAttributesWithContext(ctx, describeAttrsOpts)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "retrieving ELB: %s", err)
-	}
-
-	lbAttrs := describeAttrsResp.LoadBalancerAttributes
-
 	d.Set("name", lb.LoadBalancerName)
 	d.Set("dns_name", lb.DNSName)
 	d.Set("zone_id", lb.CanonicalHostedZoneNameID)
@@ -273,7 +261,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 		var elbVpc string
 		if lb.VPCId != nil {
 			elbVpc = aws.StringValue(lb.VPCId)
-			sg, err := tfec2.FindSecurityGroupByNameAndVPCID(ctx, ec2conn, aws.StringValue(lb.SourceSecurityGroup.GroupName), elbVpc)
+			sg, err := tfec2.FindSecurityGroupByNameAndVPCIDAndOwnerID(ctx, ec2conn, aws.StringValue(lb.SourceSecurityGroup.GroupName), elbVpc, aws.StringValue(lb.SourceSecurityGroup.OwnerAlias))
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "looking up ELB Security Group ID: %s", err)
 			} else {

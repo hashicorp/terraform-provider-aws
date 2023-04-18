@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_db_proxy_target")
 func ResourceProxyTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProxyTargetCreate,
@@ -112,7 +113,6 @@ func resourceProxyTargetCreate(ctx context.Context, d *schema.ResourceData, meta
 			return conn.RegisterDBProxyTargetsWithContext(ctx, input)
 		},
 		rds.ErrCodeInvalidDBInstanceStateFault, "CREATING")
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "registering RDS DB Proxy (%s/%s) Target: %s", dbProxyName, targetGroupName, err)
 	}

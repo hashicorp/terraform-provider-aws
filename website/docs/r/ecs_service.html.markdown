@@ -158,7 +158,7 @@ The following arguments are optional:
 
 The `alarms` configuration block supports the following:
 
-* `alarms_names` - (Required) One or more CloudWatch alarm names.
+* `alarm_names` - (Required) One or more CloudWatch alarm names.
 * `enable` - (Required) Determines whether to use the CloudWatch alarm option in the service deployment process.
 * `rollback` - (Required) Determines whether to configure Amazon ECS to roll back the service if a service deployment fails. If rollback is used, when a service deployment fails, the service is rolled back to the last deployment that completed successfully.
 
@@ -245,7 +245,7 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 `log_configuration` supports the following:
 
-* `log_driver` - (Optional) The log driver to use for the container.
+* `log_driver` - (Required) The log driver to use for the container.
 * `options` - (Optional) The configuration options to send to the log driver.
 * `secret_option` - (Optional) The secrets to pass to the log configuration. See below.
 
@@ -253,8 +253,8 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 `secret_option` supports the following:
 
-* `name` - (Optional) The name of the secret.
-* `value_from` - (Optional) The secret to expose to the container. The supported values are either the full ARN of the AWS Secrets Manager secret or the full ARN of the parameter in the SSM Parameter Store.
+* `name` - (Required) The name of the secret.
+* `value_from` - (Required) The secret to expose to the container. The supported values are either the full ARN of the AWS Secrets Manager secret or the full ARN of the parameter in the SSM Parameter Store.
 
 ### service
 

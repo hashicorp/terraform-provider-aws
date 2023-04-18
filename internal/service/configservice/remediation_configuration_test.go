@@ -34,7 +34,7 @@ func testAccRemediationConfiguration_basic(t *testing.T) {
 	expectedName := fmt.Sprintf("%s-tf-acc-test-%d", prefix, rInt)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRemediationConfigurationDestroy(ctx),
@@ -76,7 +76,7 @@ func testAccRemediationConfiguration_basicBackwardCompatible(t *testing.T) {
 	expectedName := fmt.Sprintf("%s-tf-acc-test-%d", prefix, rInt)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRemediationConfigurationDestroy(ctx),
@@ -114,7 +114,7 @@ func testAccRemediationConfiguration_disappears(t *testing.T) {
 	sseAlgorithm := "AES256"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRemediationConfigurationDestroy(ctx),
@@ -148,7 +148,7 @@ func testAccRemediationConfiguration_recreates(t *testing.T) {
 	sseAlgorithm := "AES256"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRemediationConfigurationDestroy(ctx),
@@ -194,7 +194,7 @@ func testAccRemediationConfiguration_updates(t *testing.T) {
 	updatedSseAlgorithm := "aws:kms"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRemediationConfigurationDestroy(ctx),
@@ -247,7 +247,7 @@ func testAccRemediationConfiguration_values(t *testing.T) {
 	sseAlgorithm := "AES256"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRemediationConfigurationDestroy(ctx),

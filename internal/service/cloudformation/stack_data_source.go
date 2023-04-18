@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_cloudformation_stack")
 func DataSourceStack() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceStackRead,
@@ -102,7 +103,7 @@ func dataSourceStackRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.Set("parameters", flattenAllParameters(stack.Parameters))
-	if err := d.Set("tags", KeyValueTags(stack.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, stack.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 	d.Set("outputs", flattenOutputs(stack.Outputs))
