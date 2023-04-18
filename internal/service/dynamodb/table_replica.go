@@ -14,11 +14,12 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -29,6 +30,8 @@ const (
 	ResNameTableReplica = "Table Replica"
 )
 
+// @SDKResource("aws_dynamodb_table_replica", name="Table Replica")
+// @Tags
 func ResourceTableReplica() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -52,7 +55,7 @@ func ResourceTableReplica() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
-			"arn": { // direct to replica
+			names.AttrARN: { // direct to replica
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -63,11 +66,12 @@ func ResourceTableReplica() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"kms_key_arn": { // through main table
+			names.AttrKMSKeyARN: { // through main table
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
+				ForceNew:     true,
 			},
 			"point_in_time_recovery": { // direct to replica
 				Type:     schema.TypeBool,
@@ -81,8 +85,8 @@ func ResourceTableReplica() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(dynamodb.TableClass_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),         // direct to replica
-			"tags_all": tftags.TagsSchemaComputed(), // direct to replica
+			names.AttrTags:    tftags.TagsSchema(),         // direct to replica
+			names.AttrTagsAll: tftags.TagsSchemaComputed(), // direct to replica
 		},
 	}
 }
@@ -113,7 +117,7 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 
 	replicaInput.RegionName = aws.String(replicaRegion)
 
-	if v, ok := d.GetOk("kms_key_arn"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
 		replicaInput.KMSMasterKeyId = aws.String(v.(string))
 	}
 
@@ -128,27 +132,25 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 
 	input := &dynamodb.UpdateTableInput{
 		TableName: aws.String(tableName),
-		ReplicaUpdates: []*dynamodb.ReplicationGroupUpdate{
-			{
-				Create: replicaInput,
-			},
-		},
+		ReplicaUpdates: []*dynamodb.ReplicationGroupUpdate{{
+			Create: replicaInput,
+		}},
 	}
 
-	err = resource.RetryContext(ctx, maxDuration(replicaUpdateTimeout, d.Timeout(schema.TimeoutCreate)), func() *resource.RetryError {
+	err = retry.RetryContext(ctx, maxDuration(replicaUpdateTimeout, d.Timeout(schema.TimeoutCreate)), func() *retry.RetryError {
 		_, err := conn.UpdateTableWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "simultaneously") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceInUseException) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -172,7 +174,7 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 		return create.DiagError(names.DynamoDB, create.ErrActionCreating, ResNameTableReplica, d.Id(), err)
 	}
 
-	d.Set("arn", repARN)
+	d.Set(names.AttrARN, repARN)
 
 	return append(diags, resourceTableReplicaUpdate(ctx, d, meta)...)
 }
@@ -250,7 +252,16 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 		return create.DiagError(names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), err)
 	}
 
-	d.Set("kms_key_arn", replica.KMSMasterKeyId)
+	dk, err := kms.FindDefaultKey(ctx, "dynamodb", replicaRegion, meta)
+	if err != nil {
+		return create.DiagError(names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), err)
+	}
+
+	if replica.KMSMasterKeyId == nil || aws.StringValue(replica.KMSMasterKeyId) == dk {
+		d.Set(names.AttrKMSKeyARN, nil)
+	} else {
+		d.Set(names.AttrKMSKeyARN, replica.KMSMasterKeyId)
+	}
 
 	if replica.ReplicaTableClassSummary != nil {
 		d.Set("table_class_override", replica.ReplicaTableClassSummary.TableClass)
@@ -299,7 +310,7 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 		return diags
 	}
 
-	d.Set("arn", result.Table.TableArn)
+	d.Set(names.AttrARN, result.Table.TableArn)
 
 	pitrOut, err := conn.DescribeContinuousBackupsWithContext(ctx, &dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(tableName),
@@ -315,25 +326,13 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 		d.Set("point_in_time_recovery", false)
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get(names.AttrARN).(string))
 	// When a Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`
 	if err != nil && !(tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") || tfresource.NotFound(err)) {
 		return create.DiagError(names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), fmt.Errorf("tags: %w", err))
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagSettingError(names.DynamoDB, ResNameTableReplica, d.Id(), "tags", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagSettingError(names.DynamoDB, ResNameTableReplica, d.Id(), "tags_all", err)
-	}
+	SetTagsOut(ctx, Tags(tags))
 
 	return diags
 }
@@ -372,35 +371,40 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 		RegionName: aws.String(replicaRegion),
 	}
 
-	if d.HasChange("kms_key_arn") {
-		viaMainChanges = true
-		viaMainInput.KMSMasterKeyId = aws.String(d.Get("kms_key_arn").(string))
+	if d.HasChange(names.AttrKMSKeyARN) && !d.IsNewResource() { // create ends with update and sets kms_key_arn causing change that is not
+		dk, err := kms.FindDefaultKey(ctx, "dynamodb", replicaRegion, meta)
+		if err != nil {
+			return create.DiagError(names.DynamoDB, create.ErrActionUpdating, ResNameTableReplica, d.Id(), fmt.Errorf("region %s: %w", replicaRegion, err))
+		}
+
+		if d.Get(names.AttrKMSKeyARN).(string) != dk {
+			viaMainChanges = true
+			viaMainInput.KMSMasterKeyId = aws.String(d.Get(names.AttrKMSKeyARN).(string))
+		}
 	}
 
 	if viaMainChanges {
 		input := &dynamodb.UpdateTableInput{
-			ReplicaUpdates: []*dynamodb.ReplicationGroupUpdate{
-				{
-					Update: viaMainInput,
-				},
-			},
+			ReplicaUpdates: []*dynamodb.ReplicationGroupUpdate{{
+				Update: viaMainInput,
+			}},
 			TableName: aws.String(tableName),
 		}
 
-		err := resource.RetryContext(ctx, maxDuration(replicaUpdateTimeout, d.Timeout(schema.TimeoutUpdate)), func() *resource.RetryError {
+		err := retry.RetryContext(ctx, maxDuration(replicaUpdateTimeout, d.Timeout(schema.TimeoutUpdate)), func() *retry.RetryError {
 			_, err := tabConn.UpdateTableWithContext(ctx, input)
 			if err != nil {
 				if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 				if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 				if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceInUseException) {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			return nil
 		})
@@ -421,10 +425,10 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 	// handled direct to replica
 	// * point_in_time_recovery
 	// * tags
-	if d.HasChanges("point_in_time_recovery", "tags_all") {
-		if d.HasChange("tags_all") {
-			o, n := d.GetChange("tags_all")
-			if err := UpdateTags(ctx, repConn, d.Get("arn").(string), o, n); err != nil {
+	if d.HasChanges("point_in_time_recovery", names.AttrTagsAll) {
+		if d.HasChange(names.AttrTagsAll) {
+			o, n := d.GetChange(names.AttrTagsAll)
+			if err := UpdateTags(ctx, repConn, d.Get(names.AttrARN).(string), o, n); err != nil {
 				return create.DiagError(names.DynamoDB, create.ErrActionUpdating, ResNameTableReplica, d.Id(), err)
 			}
 		}
@@ -474,20 +478,20 @@ func resourceTableReplicaDelete(ctx context.Context, d *schema.ResourceData, met
 		},
 	}
 
-	err = resource.RetryContext(ctx, updateTableTimeout, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, updateTableTimeout, func() *retry.RetryError {
 		_, err := conn.UpdateTableWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceInUseException) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})

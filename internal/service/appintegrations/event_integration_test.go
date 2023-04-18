@@ -34,8 +34,8 @@ func TestAccAppIntegrationsEventIntegration_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(appintegrationsservice.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, appintegrationsservice.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -93,8 +93,8 @@ func TestAccAppIntegrationsEventIntegration_updateTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(appintegrationsservice.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, appintegrationsservice.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -173,8 +173,8 @@ func TestAccAppIntegrationsEventIntegration_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(appintegrationsservice.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, appintegrationsservice.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

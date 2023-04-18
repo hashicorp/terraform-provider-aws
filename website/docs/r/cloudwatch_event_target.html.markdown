@@ -37,19 +37,18 @@ resource "aws_cloudwatch_event_rule" "console" {
   name        = "capture-ec2-scaling-events"
   description = "Capture all EC2 scaling events"
 
-  event_pattern = <<PATTERN
-{
-  "source": [
-    "aws.autoscaling"
-  ],
-  "detail-type": [
-    "EC2 Instance Launch Successful",
-    "EC2 Instance Terminate Successful",
-    "EC2 Instance Launch Unsuccessful",
-    "EC2 Instance Terminate Unsuccessful"
-  ]
-}
-PATTERN
+  event_pattern = jsonencode({
+    source = [
+      "aws.autoscaling"
+    ]
+
+    detail-type = [
+      "EC2 Instance Launch Successful",
+      "EC2 Instance Terminate Successful",
+      "EC2 Instance Launch Unsuccessful",
+      "EC2 Instance Terminate Unsuccessful"
+    ]
+  })
 }
 
 resource "aws_kinesis_stream" "test_stream" {
@@ -111,25 +110,21 @@ resource "aws_ssm_document" "stop_instance" {
   name          = "stop_instance"
   document_type = "Command"
 
-  content = <<DOC
-  {
-    "schemaVersion": "1.2",
-    "description": "Stop an instance",
-    "parameters": {
-
-    },
-    "runtimeConfig": {
-      "aws:runShellScript": {
-        "properties": [
+  content = jsonencode({
+    schemaVersion = "1.2"
+    description   = "Stop an instance"
+    parameters    = {}
+    runtimeConfig = {
+      "aws:runShellScript" = {
+        properties = [
           {
-            "id": "0.aws:runShellScript",
-            "runCommand": ["halt"]
+            id         = "0.aws:runShellScript"
+            runCommand = ["halt"]
           }
         ]
       }
     }
-  }
-DOC
+  })
 }
 
 resource "aws_cloudwatch_event_rule" "stop_instances" {
@@ -177,47 +172,41 @@ resource "aws_cloudwatch_event_target" "stop_instances" {
 ### ECS Run Task with Role and Task Override Usage
 
 ```terraform
-resource "aws_iam_role" "ecs_events" {
-  name = "ecs_events"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<DOC
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "events.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
+    principals {
+      type        = "Service"
+      identifiers = ["events.amazonaws.com"]
     }
-  ]
-}
-DOC
+
+    actions = ["sts:AssumeRole"]
+  }
 }
 
+resource "aws_iam_role" "ecs_events" {
+  name               = "ecs_events"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "ecs_events_run_task_with_any_role" {
+  statement {
+    effect    = "Allow"
+    actions   = ["iam:PassRole"]
+    resources = ["*"]
+  }
+
+  statement {
+    effect    = "Allow"
+    actions   = ["ecs:RunTask"]
+    resources = [replace(aws_ecs_task_definition.task_name.arn, "/:\\d+$/", ":*")]
+  }
+}
 resource "aws_iam_role_policy" "ecs_events_run_task_with_any_role" {
-  name = "ecs_events_run_task_with_any_role"
-  role = aws_iam_role.ecs_events.id
-
-  policy = <<DOC
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": "iam:PassRole",
-            "Resource": "*"
-        },
-        {
-            "Effect": "Allow",
-            "Action": "ecs:RunTask",
-            "Resource": "${replace(aws_ecs_task_definition.task_name.arn, "/:\\d+$/", ":*")}"
-        }
-    ]
-}
-DOC
+  name   = "ecs_events_run_task_with_any_role"
+  role   = aws_iam_role.ecs_events.id
+  policy = data.aws_iam_policy_document.ecs_events_run_task_with_any_role.json
 }
 
 resource "aws_cloudwatch_event_target" "ecs_scheduled_task" {
@@ -231,16 +220,17 @@ resource "aws_cloudwatch_event_target" "ecs_scheduled_task" {
     task_definition_arn = aws_ecs_task_definition.task_name.arn
   }
 
-  input = <<DOC
-{
-  "containerOverrides": [
-    {
-      "name": "name-of-container-to-override",
-      "command": ["bin/console", "scheduled-task"]
-    }
-  ]
-}
-DOC
+  input = jsonencode({
+    containerOverrides = [
+      {
+        name = "name-of-container-to-override",
+        command = [
+          "bin/console",
+          "scheduled-task"
+        ]
+      }
+    ]
+  })
 }
 ```
 
@@ -280,22 +270,22 @@ resource "aws_api_gateway_stage" "example" {
 ### Cross-Account Event Bus target
 
 ```terraform
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["events.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
 resource "aws_iam_role" "event_bus_invoke_remote_event_bus" {
   name               = "event-bus-invoke-remote-event-bus"
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "events.amazonaws.com"
-      },
-      "Effect": "Allow"
-    }
-  ]
-}
-EOF
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 data "aws_iam_policy_document" "event_bus_invoke_remote_event_bus" {
@@ -474,7 +464,8 @@ The following arguments are optional:
 * `batch_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Batch Job. Documented below. A maximum of 1 are allowed.
 * `dead_letter_config` - (Optional)  Parameters used when you are providing a dead letter config. Documented below. A maximum of 1 are allowed.
 * `ecs_target` - (Optional) Parameters used when you are using the rule to invoke Amazon ECS Task. Documented below. A maximum of 1 are allowed.
-* `event_bus_name` - (Optional) The event bus to associate with the rule. If you omit this, the `default` event bus is used.
+* `event_bus_name` - (Optional) The name or ARN of the event bus to associate with the rule.
+  If you omit this, the `default` event bus is used.
 * `http_target` - (Optional) Parameters used when you are using the rule to invoke an API Gateway REST endpoint. Documented below. A maximum of 1 is allowed.
 * `input` - (Optional) Valid JSON text passed to the target. Conflicts with `input_path` and `input_transformer`.
 * `input_path` - (Optional) The value of the [JSONPath](http://goessner.net/articles/JsonPath/) that is used for extracting part of the matched event when passing it to the target. Conflicts with `input` and `input_transformer`.
@@ -503,7 +494,7 @@ The following arguments are optional:
 ### dead_letter_config
 
 * `arn` - (Optional) - ARN of the SQS queue specified as the target for the dead-letter queue.
-  
+
 ### ecs_target
 
 * `task_definition_arn` - (Required) The ARN of the task definition to use if the event target is an Amazon ECS cluster.

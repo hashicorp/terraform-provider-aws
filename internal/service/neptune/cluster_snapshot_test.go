@@ -6,14 +6,14 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccNeptuneClusterSnapshot_basic(t *testing.T) {
@@ -23,7 +23,7 @@ func TestAccNeptuneClusterSnapshot_basic(t *testing.T) {
 	resourceName := "aws_neptune_cluster_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx),
@@ -56,6 +56,30 @@ func TestAccNeptuneClusterSnapshot_basic(t *testing.T) {
 	})
 }
 
+func TestAccNeptuneClusterSnapshot_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbClusterSnapshot neptune.DBClusterSnapshot
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_neptune_cluster_snapshot.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterSnapshotConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterSnapshotExists(ctx, resourceName, &dbClusterSnapshot),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfneptune.ResourceClusterSnapshot(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckClusterSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
@@ -65,54 +89,43 @@ func testAccCheckClusterSnapshotDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			input := &neptune.DescribeDBClusterSnapshotsInput{
-				DBClusterSnapshotIdentifier: aws.String(rs.Primary.ID),
+			_, err := tfneptune.FindClusterSnapshotByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			output, err := conn.DescribeDBClusterSnapshotsWithContext(ctx, input)
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterSnapshotNotFoundFault) {
-					continue
-				}
 				return err
 			}
 
-			if output != nil && len(output.DBClusterSnapshots) > 0 && output.DBClusterSnapshots[0] != nil && aws.StringValue(output.DBClusterSnapshots[0].DBClusterSnapshotIdentifier) == rs.Primary.ID {
-				return fmt.Errorf("Neptune DB Cluster Snapshot %q still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("Neptune Cluster Snapshot %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckClusterSnapshotExists(ctx context.Context, resourceName string, dbClusterSnapshot *neptune.DBClusterSnapshot) resource.TestCheckFunc {
+func testAccCheckClusterSnapshotExists(ctx context.Context, n string, v *neptune.DBClusterSnapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set for %s", resourceName)
+			return fmt.Errorf("No Neptune Cluster Snapshot ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
 
-		input := &neptune.DescribeDBClusterSnapshotsInput{
-			DBClusterSnapshotIdentifier: aws.String(rs.Primary.ID),
-		}
+		output, err := tfneptune.FindClusterSnapshotByID(ctx, conn, rs.Primary.ID)
 
-		output, err := conn.DescribeDBClusterSnapshotsWithContext(ctx, input)
 		if err != nil {
 			return err
 		}
 
-		if output == nil || len(output.DBClusterSnapshots) == 0 || output.DBClusterSnapshots[0] == nil || aws.StringValue(output.DBClusterSnapshots[0].DBClusterSnapshotIdentifier) != rs.Primary.ID {
-			return fmt.Errorf("Neptune DB Cluster Snapshot %q not found", rs.Primary.ID)
-		}
-
-		*dbClusterSnapshot = *output.DBClusterSnapshots[0]
+		*v = *output
 
 		return nil
 	}
@@ -123,6 +136,8 @@ func testAccClusterSnapshotConfig_basic(rName string) string {
 resource "aws_neptune_cluster" "test" {
   cluster_identifier  = %[1]q
   skip_final_snapshot = true
+
+  neptune_cluster_parameter_group_name = "default.neptune1.2"
 }
 
 resource "aws_neptune_cluster_snapshot" "test" {

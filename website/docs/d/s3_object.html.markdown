@@ -44,7 +44,7 @@ data "aws_s3_object" "lambda" {
 }
 
 resource "aws_lambda_function" "test_lambda" {
-  s3_bucket         = data.aws_s3_object.lambda.bucket
+  s3_bucket         = data.aws_s3_object.lambda.id
   s3_key            = data.aws_s3_object.lambda.key
   s3_object_version = data.aws_s3_object.lambda.version_id
   function_name     = "lambda_function_name"

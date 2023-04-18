@@ -11,12 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_route53_resolver_dnssec_config")
 func ResourceDNSSECConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDNSSECConfigCreate,
@@ -155,11 +156,11 @@ func FindResolverDNSSECConfigByID(ctx context.Context, conn *route53resolver.Rou
 	}
 
 	if output == nil {
-		return nil, &resource.NotFoundError{LastRequest: input}
+		return nil, &retry.NotFoundError{LastRequest: input}
 	}
 
 	if validationStatus := aws.StringValue(output.ValidationStatus); validationStatus == route53resolver.ResolverDNSSECValidationStatusDisabled {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     validationStatus,
 			LastRequest: input,
 		}
@@ -168,7 +169,7 @@ func FindResolverDNSSECConfigByID(ctx context.Context, conn *route53resolver.Rou
 	return output, nil
 }
 
-func statusDNSSECConfig(ctx context.Context, conn *route53resolver.Route53Resolver, id string) resource.StateRefreshFunc {
+func statusDNSSECConfig(ctx context.Context, conn *route53resolver.Route53Resolver, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindResolverDNSSECConfigByID(ctx, conn, id)
 
@@ -190,7 +191,7 @@ const (
 )
 
 func waitDNSSECConfigCreated(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.ResolverDnssecConfig, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{route53resolver.ResolverDNSSECValidationStatusEnabling},
 		Target:  []string{route53resolver.ResolverDNSSECValidationStatusEnabled},
 		Refresh: statusDNSSECConfig(ctx, conn, id),
@@ -207,7 +208,7 @@ func waitDNSSECConfigCreated(ctx context.Context, conn *route53resolver.Route53R
 }
 
 func waitDNSSECConfigDeleted(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.ResolverDnssecConfig, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{route53resolver.ResolverDNSSECValidationStatusDisabling},
 		Target:  []string{},
 		Refresh: statusDNSSECConfig(ctx, conn, id),

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -24,6 +25,8 @@ const (
 	ErrActionWaitingForCreation   = "waiting for creation"
 	ErrActionWaitingForDeletion   = "waiting for delete"
 	ErrActionWaitingForUpdate     = "waiting for update"
+	ErrActionExpandingResourceId  = "expanding resource id"
+	ErrActionFlatteningResourceId = "flattening resource id"
 )
 
 // ProblemStandardMessage is a standardized message for reporting errors and warnings
@@ -55,6 +58,13 @@ func DiagError(service, action, resource, id string, gotError error) diag.Diagno
 			Summary:  ProblemStandardMessage(service, action, resource, id, gotError),
 		},
 	}
+}
+
+func DiagErrorFramework(service, action, resource, id string, gotError error) fwdiag.Diagnostic {
+	return fwdiag.NewErrorDiagnostic(
+		ProblemStandardMessage(service, action, resource, id, nil),
+		gotError.Error(),
+	)
 }
 
 func DiagErrorMessage(service, action, resource, id, message string) diag.Diagnostics {

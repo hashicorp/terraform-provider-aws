@@ -16,15 +16,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_cloudfront_response_headers_policy")
 func ResourceResponseHeadersPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResponseHeadersPolicyCreate,
 		ReadWithoutTimeout:   resourceResponseHeadersPolicyRead,
 		UpdateWithoutTimeout: resourceResponseHeadersPolicyUpdate,
 		DeleteWithoutTimeout: resourceResponseHeadersPolicyDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"comment": {
 				Type:     schema.TypeString,
@@ -355,7 +358,6 @@ func resourceResponseHeadersPolicyCreate(ctx context.Context, d *schema.Resource
 		ResponseHeadersPolicyConfig: apiObject,
 	}
 
-	log.Printf("[DEBUG] Creating CloudFront Response Headers Policy: (%s)", input)
 	output, err := conn.CreateResponseHeadersPolicyWithContext(ctx, input)
 
 	if err != nil {
@@ -403,7 +405,7 @@ func resourceResponseHeadersPolicyRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("name", apiObject.Name)
 	if apiObject.RemoveHeadersConfig != nil {
 		if err := d.Set("remove_headers_config", []interface{}{flattenResponseHeadersPolicyRemoveHeadersConfig(apiObject.RemoveHeadersConfig)}); err != nil {
-			return fmt.Errorf("error setting remove_headers_config: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting remove_headers_config: %s", err)
 		}
 	} else {
 		d.Set("remove_headers_config", nil)
@@ -469,7 +471,6 @@ func resourceResponseHeadersPolicyUpdate(ctx context.Context, d *schema.Resource
 		ResponseHeadersPolicyConfig: apiObject,
 	}
 
-	log.Printf("[DEBUG] Updating CloudFront Response Headers Policy: (%s)", input)
 	_, err := conn.UpdateResponseHeadersPolicyWithContext(ctx, input)
 
 	if err != nil {
@@ -1259,7 +1260,7 @@ func expandResponseHeadersPolicyServerTimingHeadersConfig(tfMap map[string]inter
 		apiObject.Enabled = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["sampling_rate"].(float64); ok && v != 0 {
+	if v, ok := tfMap["sampling_rate"].(float64); ok {
 		apiObject.SamplingRate = aws.Float64(v)
 	}
 

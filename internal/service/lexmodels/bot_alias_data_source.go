@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_lex_bot_alias")
 func DataSourceBotAlias() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBotAliasRead,

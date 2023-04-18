@@ -34,5 +34,11 @@ data "aws_iam_role" "example" {
 * `max_session_duration` - Maximum session duration.
 * `path` - Path to the role.
 * `permissions_boundary` - The ARN of the policy that is used to set the permissions boundary for the role.
+* `role_last_used` - Contains information about the last time that an IAM role was used. See [`role_last_used`](#role_last_used) for details.
 * `unique_id` - Stable and unique string identifying the role.
 * `tags` - Tags attached to the role.
+
+### role_last_used
+
+* `region` - The name of the AWS Region in which the role was last used.
+* `last_used_time` - The date and time, in RFC 3339 format, that the role was last used.

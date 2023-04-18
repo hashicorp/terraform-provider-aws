@@ -20,7 +20,7 @@ func TestAccInspectorResourceGroup_basic(t *testing.T) {
 	resourceName := "aws_inspector_resource_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, inspector.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -65,7 +65,7 @@ func testAccCheckResourceGroupExists(ctx context.Context, name string, rg *inspe
 			return err
 		}
 		if len(output.ResourceGroups) == 0 {
-			return fmt.Errorf("No matching Inspector resource groups")
+			return fmt.Errorf("No matching Inspector Classic Resource Groups")
 		}
 
 		*rg = *output.ResourceGroups[0]
@@ -77,7 +77,7 @@ func testAccCheckResourceGroupExists(ctx context.Context, name string, rg *inspe
 func testAccCheckResourceGroupRecreated(v1, v2 *inspector.ResourceGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if v2.CreatedAt.Equal(*v1.CreatedAt) {
-			return fmt.Errorf("Inspector resource group not recreated when changing tags")
+			return fmt.Errorf("Inspector Classic Resource Group not recreated when changing tags")
 		}
 
 		return nil
