@@ -23,6 +23,7 @@ type ServiceDatum struct {
 	HumanFriendly   string
 	VpcLock         bool
 	Parallelism     int
+	Region          string
 }
 
 type TemplateData struct {
@@ -42,13 +43,13 @@ func main() {
 	serviceConfigs, err := acctestConfigurations(serviceConfigFile)
 
 	if err != nil {
-		g.Fatalf("error reading %s: %s", serviceConfigFile, err.Error())
+		g.Fatalf("error reading %s: %s", serviceConfigFile, err)
 	}
 
 	data, err := common.ReadAllCSVData(namesDataFile)
 
 	if err != nil {
-		g.Fatalf("error reading %s: %s", namesDataFile, err.Error())
+		g.Fatalf("error reading %s: %s", namesDataFile, err)
 	}
 
 	td := TemplateData{}
@@ -72,12 +73,6 @@ func main() {
 			p = l[names.ColProviderPackageActual]
 		}
 
-		// TODO: Remove this when we have a method for scheduling specific services
-		if p == "kendra" || p == "kinesisanalytics" || p == "kinesisanalyticsv2" {
-			g.Infof("Skipping service %q...", p)
-			continue
-		}
-
 		if _, err := os.Stat(fmt.Sprintf("../../service/%s", p)); err != nil || errors.Is(err, fs.ErrNotExist) {
 			continue
 		}
@@ -90,6 +85,12 @@ func main() {
 		if ok {
 			sd.VpcLock = serviceConfig.VpcLock
 			sd.Parallelism = serviceConfig.Parallelism
+			sd.Region = serviceConfig.Region
+		}
+
+		if serviceConfig.Skip {
+			g.Infof("Skipping service %q...", p)
+			continue
 		}
 
 		td.Services = append(td.Services, sd)
@@ -102,7 +103,11 @@ func main() {
 	d := g.NewUnformattedFileDestination(servicesAllFile)
 
 	if err := d.WriteTemplate("teamcity", tmpl, td); err != nil {
-		g.Fatalf("error: %s", err.Error())
+		g.Fatalf("generating file (%s): %s", servicesAllFile, err)
+	}
+
+	if err := d.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", servicesAllFile, err)
 	}
 }
 
@@ -117,6 +122,8 @@ type acctestServiceConfig struct {
 	Service     string `hcl:",label"`
 	VpcLock     bool   `hcl:"vpc_lock,optional"`
 	Parallelism int    `hcl:"parallelism,optional"`
+	Skip        bool   `hcl:"skip,optional"`
+	Region      string `hcl:"region,optional"`
 }
 
 func acctestConfigurations(filename string) (map[string]acctestServiceConfig, error) {

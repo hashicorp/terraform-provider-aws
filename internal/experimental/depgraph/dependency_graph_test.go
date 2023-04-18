@@ -8,6 +8,8 @@ import (
 )
 
 func TestDependencyGraphAddAndRemoveNodes(t *testing.T) {
+	t.Parallel()
+
 	g := New()
 
 	if got, expected := g.Len(), 0; got != expected {
@@ -56,6 +58,8 @@ func TestDependencyGraphAddAndRemoveNodes(t *testing.T) {
 }
 
 func TestDependencyGraphDirectDependenciesAndDependents(t *testing.T) {
+	t.Parallel()
+
 	var expected []string
 	g := New()
 
@@ -160,6 +164,8 @@ func TestDependencyGraphDirectDependenciesAndDependents(t *testing.T) {
 }
 
 func TestDependencyGraphDependenciesAndDependents(t *testing.T) {
+	t.Parallel()
+
 	var expected []string
 	g := New()
 
@@ -259,6 +265,8 @@ func TestDependencyGraphDependenciesAndDependents(t *testing.T) {
 }
 
 func TestDependencyGraphDetectCycles(t *testing.T) {
+	t.Parallel()
+
 	// Detect cycle when all nodes have dependents (incoming edges).
 	g := New()
 
@@ -333,6 +341,8 @@ func TestDependencyGraphDetectCycles(t *testing.T) {
 }
 
 func TestDependencyGraphOverallOrder(t *testing.T) {
+	t.Parallel()
+
 	g := New()
 
 	got, err := g.OverallOrder()

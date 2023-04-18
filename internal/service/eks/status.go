@@ -5,11 +5,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusAddon(ctx context.Context, conn *eks.EKS, clusterName, addonName string) resource.StateRefreshFunc {
+func statusAddon(ctx context.Context, conn *eks.EKS, clusterName, addonName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindAddonByClusterNameAndAddonName(ctx, conn, clusterName, addonName)
 
@@ -25,7 +25,7 @@ func statusAddon(ctx context.Context, conn *eks.EKS, clusterName, addonName stri
 	}
 }
 
-func statusAddonUpdate(ctx context.Context, conn *eks.EKS, clusterName, addonName, id string) resource.StateRefreshFunc {
+func statusAddonUpdate(ctx context.Context, conn *eks.EKS, clusterName, addonName, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindAddonUpdateByClusterNameAddonNameAndID(ctx, conn, clusterName, addonName, id)
 
@@ -41,9 +41,9 @@ func statusAddonUpdate(ctx context.Context, conn *eks.EKS, clusterName, addonNam
 	}
 }
 
-func statusFargateProfile(conn *eks.EKS, clusterName, fargateProfileName string) resource.StateRefreshFunc {
+func statusFargateProfile(ctx context.Context, conn *eks.EKS, clusterName, fargateProfileName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindFargateProfileByClusterNameAndFargateProfileName(conn, clusterName, fargateProfileName)
+		output, err := FindFargateProfileByClusterNameAndFargateProfileName(ctx, conn, clusterName, fargateProfileName)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -57,9 +57,9 @@ func statusFargateProfile(conn *eks.EKS, clusterName, fargateProfileName string)
 	}
 }
 
-func statusNodegroup(conn *eks.EKS, clusterName, nodeGroupName string) resource.StateRefreshFunc {
+func statusNodegroup(ctx context.Context, conn *eks.EKS, clusterName, nodeGroupName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindNodegroupByClusterNameAndNodegroupName(conn, clusterName, nodeGroupName)
+		output, err := FindNodegroupByClusterNameAndNodegroupName(ctx, conn, clusterName, nodeGroupName)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -73,9 +73,9 @@ func statusNodegroup(conn *eks.EKS, clusterName, nodeGroupName string) resource.
 	}
 }
 
-func statusNodegroupUpdate(conn *eks.EKS, clusterName, nodeGroupName, id string) resource.StateRefreshFunc {
+func statusNodegroupUpdate(ctx context.Context, conn *eks.EKS, clusterName, nodeGroupName, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindNodegroupUpdateByClusterNameNodegroupNameAndID(conn, clusterName, nodeGroupName, id)
+		output, err := FindNodegroupUpdateByClusterNameNodegroupNameAndID(ctx, conn, clusterName, nodeGroupName, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -89,7 +89,7 @@ func statusNodegroupUpdate(conn *eks.EKS, clusterName, nodeGroupName, id string)
 	}
 }
 
-func statusOIDCIdentityProviderConfig(ctx context.Context, conn *eks.EKS, clusterName, configName string) resource.StateRefreshFunc {
+func statusOIDCIdentityProviderConfig(ctx context.Context, conn *eks.EKS, clusterName, configName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindOIDCIdentityProviderConfigByClusterNameAndConfigName(ctx, conn, clusterName, configName)
 

@@ -20,8 +20,8 @@ resource "aws_qldb_stream" "example" {
   inclusive_start_time = "2021-01-01T00:00:00Z"
 
   kinesis_configuration {
-    aggegation_enabled = false
-    stream_arn         = "arn:aws:kinesis:us-east-1:xxxxxxxxxxxx:stream/example-kinesis-stream"
+    aggregation_enabled = false
+    stream_arn          = "arn:aws:kinesis:us-east-1:xxxxxxxxxxxx:stream/example-kinesis-stream"
   }
 
   tags = {

@@ -11,15 +11,19 @@ import (
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_eks_addon", name="Add-On")
+// @Tags(identifierAttribute="arn")
 func ResourceAddon() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAddonCreate,
@@ -92,25 +96,23 @@ func ResourceAddon() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	addonName := d.Get("addon_name").(string)
 	clusterName := d.Get("cluster_name").(string)
-	id := AddonCreateResourceID(clusterName, addonName)
-
+	addonId := AddonCreateResourceID(clusterName, addonName)
 	input := &eks.CreateAddonInput{
 		AddonName:          aws.String(addonName),
-		ClientRequestToken: aws.String(resource.UniqueId()),
+		ClientRequestToken: aws.String(id.UniqueId()),
 		ClusterName:        aws.String(clusterName),
+		Tags:               GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("addon_version"); ok {
@@ -129,23 +131,19 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.ConfigurationValues = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err := conn.CreateAddonWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "CREATE_FAILED") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "does not exist") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -156,10 +154,10 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating EKS Add-On (%s): %w", id, err))
+		return diag.FromErr(fmt.Errorf("creating EKS Add-On (%s): %w", addonId, err))
 	}
 
-	d.SetId(id)
+	d.SetId(addonId)
 
 	_, err = waitAddonCreated(ctx, conn, clusterName, addonName, d.Timeout(schema.TimeoutCreate))
 
@@ -182,8 +180,6 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterName, addonName, err := AddonParseResourceID(d.Id())
 
@@ -212,16 +208,7 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("modified_at", aws.TimeValue(addon.ModifiedAt).Format(time.RFC3339))
 	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
 
-	tags := KeyValueTags(addon.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
-	}
+	SetTagsOut(ctx, addon.Tags)
 
 	return nil
 }
@@ -238,7 +225,7 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChanges("addon_version", "service_account_role_arn", "configuration_values") {
 		input := &eks.UpdateAddonInput{
 			AddonName:          aws.String(addonName),
-			ClientRequestToken: aws.String(resource.UniqueId()),
+			ClientRequestToken: aws.String(id.UniqueId()),
 			ClusterName:        aws.String(clusterName),
 		}
 
@@ -280,13 +267,6 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 
 			return diag.FromErr(fmt.Errorf("error waiting for EKS Add-On (%s) update (%s): %w", d.Id(), updateID, err))
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
 		}
 	}
 

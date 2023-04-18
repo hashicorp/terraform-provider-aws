@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3control"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -20,10 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func init() {
-	_sp.registerSDKResourceFactory("aws_s3_access_point", resourceAccessPoint)
-}
-
+// @SDKResource("aws_s3_access_point")
 func resourceAccessPoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccessPointCreate,
@@ -32,7 +29,7 @@ func resourceAccessPoint() *schema.Resource {
 		DeleteWithoutTimeout: resourceAccessPointDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -88,11 +85,12 @@ func resourceAccessPoint() *schema.Resource {
 				Computed: true,
 			},
 			"policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Optional:              true,
+				Computed:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -203,7 +201,6 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	if v, ok := d.GetOk("policy"); ok && v.(string) != "" && v.(string) != "{}" {
 		policy, err := structure.NormalizeJsonString(v.(string))
-
 		if err != nil {
 			return diag.Errorf("policy (%s) is invalid JSON: %s", v.(string), err)
 		}
@@ -316,7 +313,6 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), policy)
-
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -344,7 +340,6 @@ func resourceAccessPointUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("policy") {
 		if v, ok := d.GetOk("policy"); ok && v.(string) != "" && v.(string) != "{}" {
 			policy, err := structure.NormalizeJsonString(v.(string))
-
 			if err != nil {
 				return diag.Errorf("policy (%s) is invalid JSON: %s", v.(string), err)
 			}
@@ -410,7 +405,7 @@ func FindAccessPointByTwoPartKey(ctx context.Context, conn *s3control.S3Control,
 	output, err := conn.GetAccessPointWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

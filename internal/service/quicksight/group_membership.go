@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKResource("aws_quicksight_group_membership", name="Group Membership")
 func ResourceGroupMembership() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupMembershipCreate,
@@ -106,7 +107,7 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 		GroupName:    aws.String(groupName),
 	}
 
-	found, err := FindGroupMembership(conn, listInput, userName)
+	found, err := FindGroupMembership(ctx, conn, listInput, userName)
 	if err != nil {
 		return diag.Errorf("Error listing QuickSight Group Memberships (%s): %s", d.Id(), err)
 	}

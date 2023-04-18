@@ -1,6 +1,7 @@
 package directconnect
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -8,20 +9,23 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_dx_macsec_key_association")
 func ResourceMacSecKeyAssociation() *schema.Resource {
 	return &schema.Resource{
 		// MacSecKey resource only supports create (Associate), read (Describe) and delete (Disassociate)
-		Create: resourceMacSecKeyCreate,
-		Read:   resourceMacSecKeyRead,
-		Delete: resourceMacSecKeyDelete,
+		CreateWithoutTimeout: resourceMacSecKeyCreate,
+		ReadWithoutTimeout:   resourceMacSecKeyRead,
+		DeleteWithoutTimeout: resourceMacSecKeyDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -65,7 +69,8 @@ func ResourceMacSecKeyAssociation() *schema.Resource {
 	}
 }
 
-func resourceMacSecKeyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceMacSecKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	input := &directconnect.AssociateMacSecKeyInput{
@@ -82,10 +87,10 @@ func resourceMacSecKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating MACSec secret key on Direct Connect Connection: %s", *input.ConnectionId)
-	output, err := conn.AssociateMacSecKey(input)
+	output, err := conn.AssociateMacSecKeyWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating MACSec secret key on Direct Connect Connection (%s): %w", *input.ConnectionId, err)
+		return sdkdiag.AppendErrorf(diags, "creating MACSec secret key on Direct Connect Connection (%s): %s", *input.ConnectionId, err)
 	}
 
 	secret_arn := MacSecKeyParseSecretARN(output)
@@ -95,24 +100,25 @@ func resourceMacSecKeyCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("secret_arn", secret_arn)
 
-	return resourceMacSecKeyRead(d, meta)
+	return append(diags, resourceMacSecKeyRead(ctx, d, meta)...)
 }
 
-func resourceMacSecKeyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceMacSecKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	secretArn, connId, err := MacSecKeyParseID(d.Id())
 	if err != nil {
-		return fmt.Errorf("unexpected format of ID (%s), expected secretArn_connectionId", d.Id())
+		return sdkdiag.AppendErrorf(diags, "unexpected format of ID (%s), expected secretArn_connectionId", d.Id())
 	}
 
-	connection, err := FindConnectionByID(conn, connId)
+	connection, err := FindConnectionByID(ctx, conn, connId)
 	if err != nil {
-		return fmt.Errorf("error reading Direct Connect Connection (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Direct Connect Connection (%s): %s", d.Id(), err)
 	}
 
 	if connection.MacSecKeys == nil {
-		return fmt.Errorf("no MACSec keys found on Direct Connect Connection (%s)", d.Id())
+		return sdkdiag.AppendErrorf(diags, "no MACSec keys found on Direct Connect Connection (%s)", d.Id())
 	}
 
 	for _, key := range connection.MacSecKeys {
@@ -125,10 +131,11 @@ func resourceMacSecKeyRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return nil
+	return diags
 }
 
-func resourceMacSecKeyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceMacSecKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	input := &directconnect.DisassociateMacSecKeyInput{
@@ -137,13 +144,13 @@ func resourceMacSecKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Disassociating MACSec secret key on Direct Connect Connection: %s", *input.ConnectionId)
-	_, err := conn.DisassociateMacSecKey(input)
+	_, err := conn.DisassociateMacSecKeyWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("Unable to disassociate MACSec secret key on Direct Connect Connection (%s): %w", *input.ConnectionId, err)
+		return sdkdiag.AppendErrorf(diags, "Unable to disassociate MACSec secret key on Direct Connect Connection (%s): %s", *input.ConnectionId, err)
 	}
 
-	return nil
+	return diags
 }
 
 // MacSecKeyParseSecretARN parses the secret ARN returned from a CMK or secret_arn
@@ -164,7 +171,7 @@ func MacSecKeyParseID(id string) (string, string, error) {
 	parts := strings.SplitN(id, "_", 2)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", &resource.NotFoundError{}
+		return "", "", &retry.NotFoundError{}
 	}
 
 	return parts[0], parts[1], nil

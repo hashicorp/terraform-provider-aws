@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -16,7 +16,7 @@ const (
 )
 
 func waitClusterCreated(ctx context.Context, conn *kafka.Kafka, arn string, timeout time.Duration) (*kafka.ClusterInfo, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{kafka.ClusterStateCreating},
 		Target:  []string{kafka.ClusterStateActive},
 		Refresh: statusClusterState(ctx, conn, arn),
@@ -37,7 +37,7 @@ func waitClusterCreated(ctx context.Context, conn *kafka.Kafka, arn string, time
 }
 
 func waitClusterDeleted(ctx context.Context, conn *kafka.Kafka, arn string, timeout time.Duration) (*kafka.ClusterInfo, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{kafka.ClusterStateDeleting},
 		Target:  []string{},
 		Refresh: statusClusterState(ctx, conn, arn),
@@ -58,7 +58,7 @@ func waitClusterDeleted(ctx context.Context, conn *kafka.Kafka, arn string, time
 }
 
 func waitClusterOperationCompleted(ctx context.Context, conn *kafka.Kafka, arn string, timeout time.Duration) (*kafka.ClusterOperationInfo, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{ClusterOperationStatePending, ClusterOperationStateUpdateInProgress},
 		Target:  []string{ClusterOperationStateUpdateComplete},
 		Refresh: statusClusterOperationState(ctx, conn, arn),
@@ -78,15 +78,15 @@ func waitClusterOperationCompleted(ctx context.Context, conn *kafka.Kafka, arn s
 	return nil, err
 }
 
-func waitConfigurationDeleted(conn *kafka.Kafka, arn string) (*kafka.DescribeConfigurationOutput, error) {
-	stateConf := &resource.StateChangeConf{
+func waitConfigurationDeleted(ctx context.Context, conn *kafka.Kafka, arn string) (*kafka.DescribeConfigurationOutput, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{kafka.ConfigurationStateDeleting},
 		Target:  []string{},
-		Refresh: statusConfigurationState(conn, arn),
+		Refresh: statusConfigurationState(ctx, conn, arn),
 		Timeout: configurationDeletedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*kafka.DescribeConfigurationOutput); ok {
 		return output, err

@@ -11,10 +11,15 @@ import (
 )
 
 func TestAccTransitGatewayDataSource_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"Attachment": {
 			"Filter": testAccTransitGatewayAttachmentDataSource_Filter,
 			"ID":     testAccTransitGatewayAttachmentDataSource_ID,
+		},
+		"Attachments": {
+			"Filter": testAccTransitGatewayAttachmentsDataSource_Filter,
 		},
 		"Connect": {
 			"Filter": testAccTransitGatewayConnectDataSource_Filter,
@@ -53,6 +58,14 @@ func TestAccTransitGatewayDataSource_serial(t *testing.T) {
 			"Tags":   testAccTransitGatewayRouteTablesDataSource_tags,
 			"Empty":  testAccTransitGatewayRouteTablesDataSource_empty,
 		},
+		"RouteTableAssociations": {
+			"Filter": testAccTransitGatewayRouteTableAssociationsDataSource_filter,
+			"basic":  testAccTransitGatewayRouteTableAssociationsDataSource_basic,
+		},
+		"RouteTablePropagations": {
+			"Filter": testAccTransitGatewayRouteTablePropagationsDataSource_filter,
+			"basic":  testAccTransitGatewayRouteTablePropagationsDataSource_basic,
+		},
 		"VpcAttachment": {
 			"Filter": testAccTransitGatewayVPCAttachmentDataSource_Filter,
 			"ID":     testAccTransitGatewayVPCAttachmentDataSource_ID,
@@ -66,29 +79,20 @@ func TestAccTransitGatewayDataSource_serial(t *testing.T) {
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
 func testAccTransitGatewayDataSource_Filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_transit_gateway.test"
 	resourceName := "aws_ec2_transit_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayDestroy,
+		CheckDestroy:             testAccCheckTransitGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayDataSourceConfig_filter(rName),
@@ -114,15 +118,16 @@ func testAccTransitGatewayDataSource_Filter(t *testing.T) {
 }
 
 func testAccTransitGatewayDataSource_ID(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_transit_gateway.test"
 	resourceName := "aws_ec2_transit_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayDestroy,
+		CheckDestroy:             testAccCheckTransitGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayDataSourceConfig_id(rName),
