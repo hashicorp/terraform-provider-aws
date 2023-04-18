@@ -1,14 +1,14 @@
 ---
-subcategory: "Inspector"
+subcategory: "Inspector Classic"
 layout: "aws"
 page_title: "AWS: aws_inspector_assessment_target"
 description: |-
-  Provides a Inspector assessment target.
+  Provides an Inspector Classic Assessment Target.
 ---
 
 # Resource: aws_inspector_assessment_target
 
-Provides a Inspector assessment target
+Provides an Inspector Classic Assessment Target
 
 ## Example Usage
 
@@ -41,7 +41,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Inspector Assessment Targets can be imported via their Amazon Resource Name (ARN), e.g.,
+Inspector Classic Assessment Targets can be imported via their Amazon Resource Name (ARN), e.g.,
 
 ```sh
 $ terraform import aws_inspector_assessment_target.example arn:aws:inspector:us-east-1:123456789012:target/0-xxxxxxx

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -32,7 +32,7 @@ const (
 )
 
 func waitQueueAttributesPropagated(ctx context.Context, conn *sqs.SQS, url string, expected map[string]string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{queueAttributeStateNotEqual},
 		Target:                    []string{queueAttributeStateEqual},
 		Refresh:                   statusQueueAttributeState(ctx, conn, url, expected),
@@ -48,7 +48,7 @@ func waitQueueAttributesPropagated(ctx context.Context, conn *sqs.SQS, url strin
 }
 
 func waitQueueDeleted(ctx context.Context, conn *sqs.SQS, url string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{queueStateExists},
 		Target:                    []string{},
 		Refresh:                   statusQueueState(ctx, conn, url),

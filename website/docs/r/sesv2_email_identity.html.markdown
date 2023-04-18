@@ -46,15 +46,11 @@ resource "aws_sesv2_email_identity" "example" {
 #### DKIM Signing Attributes (BYODKIM)
 
 ```terraform
-resource "tls_private_key" "example" {
-  algorithm = "RSA"
-}
-
-resource "aws_sesv2_configuration_set" "example" {
+resource "aws_sesv2_email_identity" "example" {
   email_identity = "example.com"
 
   dkim_signing_attributes {
-    domain_signing_private_key = base64encode(tls_private_key.example.private_key_pem)
+    domain_signing_private_key = "MIIJKAIBAAKCAgEA2Se7p8zvnI4yh+Gh9j2rG5e2aRXjg03Y8saiupLnadPH9xvM..." #PEM private key without headers or newline characters
     domain_signing_selector    = "example"
   }
 }
@@ -71,6 +67,9 @@ The following arguments are supported:
 ### dkim_signing_attributes
 
 * `domain_signing_private_key` - (Optional) [Bring Your Own DKIM] A private key that's used to generate a DKIM signature. The private key must use 1024 or 2048-bit RSA encryption, and must be encoded using base64 encoding.
+
+-> **NOTE:** You have to delete the first and last lines ('-----BEGIN PRIVATE KEY-----' and '-----END PRIVATE KEY-----', respectively) of the generated private key. Additionally, you have to remove the line breaks in the generated private key. The resulting value is a string of characters with no spaces or line breaks.
+
 * `domain_signing_selector` - (Optional) [Bring Your Own DKIM] A string that's used to identify a public key in the DNS configuration for a domain.
 * `next_signing_key_length` - (Optional) [Easy DKIM] The key length of the future DKIM key pair to be generated. This can be changed at most once per day. Valid values: `RSA_1024_BIT`, `RSA_2048_BIT`.
 

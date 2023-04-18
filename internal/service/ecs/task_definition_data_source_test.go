@@ -12,11 +12,12 @@ import (
 )
 
 func TestAccECSTaskDefinitionDataSource_ecsTaskDefinition(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "data.aws_ecs_task_definition.mongo"
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{

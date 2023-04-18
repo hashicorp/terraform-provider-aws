@@ -1,12 +1,14 @@
 package cloudtrail
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 // See http://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html
@@ -24,6 +26,7 @@ var ServiceAccountPerRegionMap = map[string]string{
 	endpoints.ApSoutheast1RegionID: "903692715234",
 	endpoints.ApSoutheast2RegionID: "284668455005",
 	endpoints.ApSoutheast3RegionID: "069019280451",
+	endpoints.ApSoutheast4RegionID: "187074758985",
 	endpoints.CaCentral1RegionID:   "819402241893",
 	endpoints.CnNorth1RegionID:     "193415116832",
 	endpoints.CnNorthwest1RegionID: "681348832753",
@@ -46,9 +49,10 @@ var ServiceAccountPerRegionMap = map[string]string{
 	endpoints.UsWest2RegionID:      "113285607260",
 }
 
+// @SDKDataSource("aws_cloudtrail_service_account")
 func DataSourceServiceAccount() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceServiceAccountRead,
+		ReadWithoutTimeout: dataSourceServiceAccountRead,
 
 		Schema: map[string]*schema.Schema{
 			"region": {
@@ -63,7 +67,8 @@ func DataSourceServiceAccount() *schema.Resource {
 	}
 }
 
-func dataSourceServiceAccountRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceServiceAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	region := meta.(*conns.AWSClient).Region
 	if v, ok := d.GetOk("region"); ok {
 		region = v.(string)
@@ -79,8 +84,8 @@ func dataSourceServiceAccountRead(d *schema.ResourceData, meta interface{}) erro
 		}.String()
 		d.Set("arn", arn)
 
-		return nil
+		return diags
 	}
 
-	return fmt.Errorf("Unknown region (%q)", region)
+	return sdkdiag.AppendErrorf(diags, "Unknown region (%q)", region)
 }

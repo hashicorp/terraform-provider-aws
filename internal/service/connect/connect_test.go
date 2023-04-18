@@ -1,9 +1,15 @@
 package connect_test
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+)
 
 // Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
 func TestAccConnect_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"BotAssociation": {
 			"basic":            testAccBotAssociation_basic,
@@ -137,15 +143,5 @@ func TestAccConnect_serial(t *testing.T) {
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }

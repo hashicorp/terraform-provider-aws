@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_s3_bucket_server_side_encryption_configuration")
 func ResourceBucketServerSideEncryptionConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketServerSideEncryptionConfigurationCreate,
@@ -90,13 +91,12 @@ func resourceBucketServerSideEncryptionConfigurationCreate(ctx context.Context, 
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(
-		propagationTimeout,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.PutBucketEncryptionWithContext(ctx, input)
 		},
 		s3.ErrCodeNoSuchBucket,
-		ErrCodeOperationAborted,
+		errCodeOperationAborted,
 	)
 
 	if err != nil {
@@ -124,8 +124,7 @@ func resourceBucketServerSideEncryptionConfigurationRead(ctx context.Context, d 
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	resp, err := tfresource.RetryWhenAWSErrCodeEquals(
-		propagationTimeout,
+	resp, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.GetBucketEncryptionWithContext(ctx, input)
 		},
@@ -183,13 +182,12 @@ func resourceBucketServerSideEncryptionConfigurationUpdate(ctx context.Context, 
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(
-		propagationTimeout,
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.PutBucketEncryptionWithContext(ctx, input)
 		},
 		s3.ErrCodeNoSuchBucket,
-		ErrCodeOperationAborted,
+		errCodeOperationAborted,
 	)
 
 	if err != nil {

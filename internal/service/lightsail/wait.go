@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lightsail"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -35,17 +35,17 @@ const (
 )
 
 // waitOperation waits for an Operation to return Succeeded or Completed
-func waitOperation(conn *lightsail.Lightsail, oid *string) error {
-	stateConf := &resource.StateChangeConf{
+func waitOperation(ctx context.Context, conn *lightsail.Lightsail, oid *string) error {
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{lightsail.OperationStatusStarted},
 		Target:     []string{lightsail.OperationStatusCompleted, lightsail.OperationStatusSucceeded},
-		Refresh:    statusOperation(conn, oid),
+		Refresh:    statusOperation(ctx, conn, oid),
 		Timeout:    OperationTimeout,
 		Delay:      OperationDelay,
 		MinTimeout: OperationMinTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if _, ok := outputRaw.(*lightsail.GetOperationOutput); ok {
 		return err
@@ -56,10 +56,10 @@ func waitOperation(conn *lightsail.Lightsail, oid *string) error {
 
 // waitDatabaseModified waits for a Modified Database return available
 func waitDatabaseModified(ctx context.Context, conn *lightsail.Lightsail, db *string) (*lightsail.GetRelationalDatabaseOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{DatabaseStateModifying},
 		Target:     []string{DatabaseStateAvailable},
-		Refresh:    statusDatabase(conn, db),
+		Refresh:    statusDatabase(ctx, conn, db),
 		Timeout:    DatabaseTimeout,
 		Delay:      DatabaseDelay,
 		MinTimeout: DatabaseMinTimeout,
@@ -77,10 +77,10 @@ func waitDatabaseModified(ctx context.Context, conn *lightsail.Lightsail, db *st
 // waitDatabaseBackupRetentionModified waits for a Modified  BackupRetention on Database return available
 
 func waitDatabaseBackupRetentionModified(ctx context.Context, conn *lightsail.Lightsail, db *string, target bool) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{strconv.FormatBool(!target)},
 		Target:     []string{strconv.FormatBool(target)},
-		Refresh:    statusDatabaseBackupRetention(conn, db),
+		Refresh:    statusDatabaseBackupRetention(ctx, conn, db),
 		Timeout:    DatabaseTimeout,
 		Delay:      DatabaseDelay,
 		MinTimeout: DatabaseMinTimeout,
@@ -96,10 +96,10 @@ func waitDatabaseBackupRetentionModified(ctx context.Context, conn *lightsail.Li
 }
 
 func waitDatabasePubliclyAccessibleModified(ctx context.Context, conn *lightsail.Lightsail, db *string, target bool) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{strconv.FormatBool(!target)},
 		Target:     []string{strconv.FormatBool(target)},
-		Refresh:    statusDatabasePubliclyAccessible(conn, db),
+		Refresh:    statusDatabasePubliclyAccessible(ctx, conn, db),
 		Timeout:    DatabaseTimeout,
 		Delay:      DatabaseDelay,
 		MinTimeout: DatabaseMinTimeout,
@@ -115,7 +115,7 @@ func waitDatabasePubliclyAccessibleModified(ctx context.Context, conn *lightsail
 }
 
 func waitContainerServiceCreated(ctx context.Context, conn *lightsail.Lightsail, serviceName string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{lightsail.ContainerServiceStatePending},
 		Target:     []string{lightsail.ContainerServiceStateReady},
 		Refresh:    statusContainerService(ctx, conn, serviceName),
@@ -138,7 +138,7 @@ func waitContainerServiceCreated(ctx context.Context, conn *lightsail.Lightsail,
 }
 
 func waitContainerServiceDisabled(ctx context.Context, conn *lightsail.Lightsail, serviceName string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{lightsail.ContainerServiceStateUpdating},
 		Target:     []string{lightsail.ContainerServiceStateDisabled},
 		Refresh:    statusContainerService(ctx, conn, serviceName),
@@ -161,7 +161,7 @@ func waitContainerServiceDisabled(ctx context.Context, conn *lightsail.Lightsail
 }
 
 func waitContainerServiceUpdated(ctx context.Context, conn *lightsail.Lightsail, serviceName string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{lightsail.ContainerServiceStateUpdating},
 		Target:     []string{lightsail.ContainerServiceStateReady, lightsail.ContainerServiceStateRunning},
 		Refresh:    statusContainerService(ctx, conn, serviceName),
@@ -184,7 +184,7 @@ func waitContainerServiceUpdated(ctx context.Context, conn *lightsail.Lightsail,
 }
 
 func waitContainerServiceDeleted(ctx context.Context, conn *lightsail.Lightsail, serviceName string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{lightsail.ContainerServiceStateDeleting},
 		Target:     []string{},
 		Refresh:    statusContainerService(ctx, conn, serviceName),
@@ -207,7 +207,7 @@ func waitContainerServiceDeleted(ctx context.Context, conn *lightsail.Lightsail,
 }
 
 func waitContainerServiceDeploymentVersionActive(ctx context.Context, conn *lightsail.Lightsail, serviceName string, version int, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{lightsail.ContainerServiceDeploymentStateActivating},
 		Target:     []string{lightsail.ContainerServiceDeploymentStateActive},
 		Refresh:    statusContainerServiceDeploymentVersion(ctx, conn, serviceName, version),
@@ -230,10 +230,10 @@ func waitContainerServiceDeploymentVersionActive(ctx context.Context, conn *ligh
 }
 
 func waitInstanceStateWithContext(ctx context.Context, conn *lightsail.Lightsail, id *string) (*lightsail.GetInstanceStateOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"pending", "stopping"},
 		Target:     []string{"stopped", "running"},
-		Refresh:    statusInstance(conn, id),
+		Refresh:    statusInstance(ctx, conn, id),
 		Timeout:    OperationTimeout,
 		Delay:      OperationDelay,
 		MinTimeout: OperationMinTimeout,
@@ -246,24 +246,4 @@ func waitInstanceStateWithContext(ctx context.Context, conn *lightsail.Lightsail
 	}
 
 	return nil, err
-}
-
-// waitOperation waits for an Operation to return Succeeded or Completed with context
-func waitOperationWithContext(ctx context.Context, conn *lightsail.Lightsail, oid *string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{lightsail.OperationStatusStarted},
-		Target:     []string{lightsail.OperationStatusCompleted, lightsail.OperationStatusSucceeded},
-		Refresh:    statusOperation(conn, oid),
-		Timeout:    OperationTimeout,
-		Delay:      OperationDelay,
-		MinTimeout: OperationMinTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if _, ok := outputRaw.(*lightsail.GetOperationOutput); ok {
-		return err
-	}
-
-	return err
 }

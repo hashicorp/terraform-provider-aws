@@ -1,5 +1,5 @@
 ---
-subcategory: "DS (Directory Service)"
+subcategory: "Directory Service"
 layout: "aws"
 page_title: "AWS: aws_directory_service_conditional_forwarder"
 description: |-

@@ -41,6 +41,7 @@ func init() {
 }
 
 func sweepBotAliases(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -53,7 +54,7 @@ func sweepBotAliases(region string) error {
 
 	input := &lexmodelbuildingservice.GetBotsInput{}
 
-	err = conn.GetBotsPages(input, func(page *lexmodelbuildingservice.GetBotsOutput, lastPage bool) bool {
+	err = conn.GetBotsPagesWithContext(ctx, input, func(page *lexmodelbuildingservice.GetBotsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -63,7 +64,7 @@ func sweepBotAliases(region string) error {
 				BotName: bot.Name,
 			}
 
-			err := conn.GetBotAliasesPages(input, func(page *lexmodelbuildingservice.GetBotAliasesOutput, lastPage bool) bool {
+			err := conn.GetBotAliasesPagesWithContext(ctx, input, func(page *lexmodelbuildingservice.GetBotAliasesOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -101,7 +102,7 @@ func sweepBotAliases(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing Lex Bot Alias for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Lex Bot Alias for %s: %w", region, err))
 	}
 
@@ -114,6 +115,7 @@ func sweepBotAliases(region string) error {
 }
 
 func sweepBots(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -126,7 +128,7 @@ func sweepBots(region string) error {
 
 	input := &lexmodelbuildingservice.GetBotsInput{}
 
-	err = conn.GetBotsPages(input, func(page *lexmodelbuildingservice.GetBotsOutput, lastPage bool) bool {
+	err = conn.GetBotsPagesWithContext(ctx, input, func(page *lexmodelbuildingservice.GetBotsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -147,7 +149,7 @@ func sweepBots(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing Lex Bot for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Lex Bot for %s: %w", region, err))
 	}
 
@@ -160,6 +162,7 @@ func sweepBots(region string) error {
 }
 
 func sweepIntents(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -172,7 +175,7 @@ func sweepIntents(region string) error {
 
 	input := &lexmodelbuildingservice.GetIntentsInput{}
 
-	err = conn.GetIntentsPages(input, func(page *lexmodelbuildingservice.GetIntentsOutput, lastPage bool) bool {
+	err = conn.GetIntentsPagesWithContext(ctx, input, func(page *lexmodelbuildingservice.GetIntentsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -193,7 +196,7 @@ func sweepIntents(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing Lex Intent for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Lex Intent for %s: %w", region, err))
 	}
 
@@ -206,6 +209,7 @@ func sweepIntents(region string) error {
 }
 
 func sweepSlotTypes(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -218,7 +222,7 @@ func sweepSlotTypes(region string) error {
 
 	input := &lexmodelbuildingservice.GetSlotTypesInput{}
 
-	err = conn.GetSlotTypesPages(input, func(page *lexmodelbuildingservice.GetSlotTypesOutput, lastPage bool) bool {
+	err = conn.GetSlotTypesPagesWithContext(ctx, input, func(page *lexmodelbuildingservice.GetSlotTypesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -239,7 +243,7 @@ func sweepSlotTypes(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing Lex Slot Type for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Lex Slot Type for %s: %w", region, err))
 	}
 

@@ -30,6 +30,7 @@ func init() {
 }
 
 func sweepConnections(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -38,7 +39,7 @@ func sweepConnections(region string) error {
 	input := &codestarconnections.ListConnectionsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListConnectionsPages(input, func(page *codestarconnections.ListConnectionsOutput, lastPage bool) bool {
+	err = conn.ListConnectionsPagesWithContext(ctx, input, func(page *codestarconnections.ListConnectionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -63,7 +64,7 @@ func sweepConnections(region string) error {
 		return fmt.Errorf("error listing CodeStar Connections Connections (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CodeStar Connections Connections (%s): %w", region, err)
@@ -73,6 +74,7 @@ func sweepConnections(region string) error {
 }
 
 func sweepHosts(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -81,7 +83,7 @@ func sweepHosts(region string) error {
 	input := &codestarconnections.ListHostsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListHostsPages(input, func(page *codestarconnections.ListHostsOutput, lastPage bool) bool {
+	err = conn.ListHostsPagesWithContext(ctx, input, func(page *codestarconnections.ListHostsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -106,7 +108,7 @@ func sweepHosts(region string) error {
 		return fmt.Errorf("error listing CodeStar Connections Hosts (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CodeStar Connections Hosts (%s): %w", region, err)

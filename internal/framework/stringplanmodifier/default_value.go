@@ -8,26 +8,26 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-type stringDefaultValue struct {
-	DefaultValue types.String
+type defaultValue struct {
+	val string
 }
 
-// StringDefaultValue return a string plan modifier that sets the specified value if the planned value is Null.
-func StringDefaultValue(s types.String) planmodifier.String {
-	return stringDefaultValue{
-		DefaultValue: s,
+// DefaultValue return a string plan modifier that sets the specified value if the planned value is Null.
+func DefaultValue(s string) planmodifier.String {
+	return defaultValue{
+		val: s,
 	}
 }
 
-func (m stringDefaultValue) Description(context.Context) string {
-	return fmt.Sprintf("If value is not configured, defaults to %s", m.DefaultValue)
+func (m defaultValue) Description(context.Context) string {
+	return fmt.Sprintf("If value is not configured, defaults to %s", m.val)
 }
 
-func (m stringDefaultValue) MarkdownDescription(ctx context.Context) string {
+func (m defaultValue) MarkdownDescription(ctx context.Context) string {
 	return m.Description(ctx)
 }
 
-func (m stringDefaultValue) PlanModifyString(ctx context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+func (m defaultValue) PlanModifyString(ctx context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
 	// If the attribute configuration is not null, we are done here
 	if !req.ConfigValue.IsNull() {
 		return
@@ -39,5 +39,5 @@ func (m stringDefaultValue) PlanModifyString(ctx context.Context, req planmodifi
 		return
 	}
 
-	resp.PlanValue = m.DefaultValue
+	resp.PlanValue = types.StringValue(m.val)
 }

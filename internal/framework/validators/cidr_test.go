@@ -44,6 +44,8 @@ func TestIPv4CIDRNetworkAddressValidator(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			request := validator.StringRequest{
 				Path:           path.Root("test"),
 				PathExpression: path.MatchRoot("test"),
@@ -97,6 +99,8 @@ func TestIPv6CIDRNetworkAddressValidator(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			request := validator.StringRequest{
 				Path:           path.Root("test"),
 				PathExpression: path.MatchRoot("test"),

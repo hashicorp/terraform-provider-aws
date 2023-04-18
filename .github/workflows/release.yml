@@ -9,30 +9,22 @@ permissions:
   contents: write
 
 jobs:
-  go-version:
-    runs-on: macos-latest
-    outputs:
-      version: ${{ steps.go-version.outputs.version }}
-    steps:
-      - uses: actions/checkout@v3
-      - id: go-version
-        run: echo "version=$(cat ./.go-version)" >> "$GITHUB_OUTPUT"
   release-notes:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
         with:
           fetch-depth: 0
       - name: Generate Release Notes
         run: sed -n -e "1{/# /d;}" -e "2{/^$/d;}" -e "/# $(git describe --abbrev=0 --exclude="$(git describe --abbrev=0 --match='v*.*.*' --tags)" --match='v*.*.*' --tags | tr -d v)/q;p" CHANGELOG.md > release-notes.txt
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce
         with:
           name: release-notes
           path: release-notes.txt
           retention-days: 1
   terraform-provider-release:
     name: 'Terraform Provider Release'
-    needs: [go-version, release-notes]
+    needs: [release-notes]
     uses: hashicorp/ghaction-terraform-provider-release/.github/workflows/hashicorp.yml@v2
     secrets:
       hc-releases-key-prod: '${{ secrets.HC_RELEASES_KEY_PROD }}'
@@ -47,7 +39,7 @@ jobs:
     with:
       goreleaser-release-args: '--timeout 3h --parallelism 4'
       release-notes: true
-      setup-go-version: '${{ needs.go-version.outputs.version }}'
+      setup-go-version-file: go.mod
       # Product Version (e.g. v1.2.3 or github.ref_name)
       product-version: '${{ github.ref_name }}'
   highest-version-tag:
@@ -56,7 +48,7 @@ jobs:
     outputs:
       tag: ${{ steps.highest-version-tag.outputs.tag }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
         with:
           # Allow tag to be fetched when ref is a commit
           fetch-depth: 0
@@ -74,7 +66,7 @@ jobs:
     if: github.ref_name == needs.highest-version-tag.outputs.tag
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
         with:
           fetch-depth: 0
           ref: main
@@ -111,7 +103,7 @@ jobs:
     steps:
       - name: Save Release Tag
         run: echo ${{ github.ref_name }} > release-tag.data
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce
         with:
           name: release-tag
           path: release-tag.data

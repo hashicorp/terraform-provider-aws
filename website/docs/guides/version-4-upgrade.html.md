@@ -21,8 +21,6 @@ See [Changes to Authentication](#changes-to-authentication) for more details.
 
 ~> **NOTE:** Version 4.0.0 of the AWS Provider will be the last major version to support [EC2-Classic resources](#ec2-classic-resource-and-data-source-support) as AWS plans to fully retire EC2-Classic Networking. See the [AWS News Blog](https://aws.amazon.com/blogs/aws/ec2-classic-is-retiring-heres-how-to-prepare/) for additional details.
 
-~> **NOTE:** Version 4.0.0 and 4.x.x versions of the AWS Provider will be the last versions compatible with Terraform 0.12-0.15.
-
 Upgrade topics:
 
 <!-- TOC depthFrom:2 depthTo:2 -->
@@ -1201,7 +1199,7 @@ When you create an object whose `version_id` you need and an `aws_s3_bucket_vers
 
 ~> **NOTE:** For critical and/or production S3 objects, do not create a bucket, enable versioning, and create an object in the bucket within the same configuration. Doing so will not allow the AWS-recommended 15 minutes between enabling versioning and writing to the bucket.
 
-This example shows the `aws_s3_object.example` depending implicitly on the versioning resource through the reference to `aws_s3_bucket_versioning.example.bucket` to define `bucket`:
+This example shows the `aws_s3_object.example` depending implicitly on the versioning resource through the reference to `aws_s3_bucket_versioning.example.id` to define `bucket`:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
@@ -1217,7 +1215,7 @@ resource "aws_s3_bucket_versioning" "example" {
 }
 
 resource "aws_s3_object" "example" {
-  bucket = aws_s3_bucket_versioning.example.bucket
+  bucket = aws_s3_bucket_versioning.example.id
   key    = "droeloe"
   source = "example.txt"
 }
@@ -2697,7 +2695,7 @@ resource "aws_s3_bucket_versioning" "example" {
 }
 
 resource "aws_s3_object" "example" {
-  bucket = aws_s3_bucket_versioning.example.bucket
+  bucket = aws_s3_bucket_versioning.example.id
   key    = "droeloe"
   source = "example.txt"
 }

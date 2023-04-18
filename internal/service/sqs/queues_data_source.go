@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_sqs_queues")
 func DataSourceQueues() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceQueuesRead,

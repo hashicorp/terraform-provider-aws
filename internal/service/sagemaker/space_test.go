@@ -1,6 +1,7 @@
 package sagemaker_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"regexp"
@@ -18,20 +19,21 @@ import (
 )
 
 func testAccSpace_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var domain sagemaker.DescribeSpaceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_space.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpaceDestroy,
+		CheckDestroy:             testAccCheckSpaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSpaceExists(resourceName, &domain),
+					testAccCheckSpaceExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "space_name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_id", "aws_sagemaker_domain.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.#", "0"),
@@ -50,20 +52,21 @@ func testAccSpace_basic(t *testing.T) {
 }
 
 func testAccSpace_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var domain sagemaker.DescribeSpaceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_space.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpaceDestroy,
+		CheckDestroy:             testAccCheckSpaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpaceConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSpaceExists(resourceName, &domain),
+					testAccCheckSpaceExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -76,7 +79,7 @@ func testAccSpace_tags(t *testing.T) {
 			{
 				Config: testAccSpaceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSpaceExists(resourceName, &domain),
+					testAccCheckSpaceExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -85,7 +88,7 @@ func testAccSpace_tags(t *testing.T) {
 			{
 				Config: testAccSpaceConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSpaceExists(resourceName, &domain),
+					testAccCheckSpaceExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -95,20 +98,21 @@ func testAccSpace_tags(t *testing.T) {
 }
 
 func testAccSpace_kernelGatewayAppSettings(t *testing.T) {
+	ctx := acctest.Context(t)
 	var domain sagemaker.DescribeSpaceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_space.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpaceDestroy,
+		CheckDestroy:             testAccCheckSpaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpaceConfig_kernelGatewayAppSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSpaceExists(resourceName, &domain),
+					testAccCheckSpaceExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.kernel_gateway_app_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", "1"),
@@ -125,20 +129,21 @@ func testAccSpace_kernelGatewayAppSettings(t *testing.T) {
 }
 
 func testAccSpace_kernelGatewayAppSettings_lifecycleconfig(t *testing.T) {
+	ctx := acctest.Context(t)
 	var domain sagemaker.DescribeSpaceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_space.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpaceDestroy,
+		CheckDestroy:             testAccCheckSpaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpaceConfig_kernelGatewayAppSettingsLifecycle(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSpaceExists(resourceName, &domain),
+					testAccCheckSpaceExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.kernel_gateway_app_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.kernel_gateway_app_settings.0.lifecycle_config_arns.#", "1"),
@@ -157,6 +162,7 @@ func testAccSpace_kernelGatewayAppSettings_lifecycleconfig(t *testing.T) {
 }
 
 func testAccSpace_kernelGatewayAppSettings_imageconfig(t *testing.T) {
+	ctx := acctest.Context(t)
 	if os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE") == "" {
 		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BASE_IMAGE is not set")
 	}
@@ -167,15 +173,15 @@ func testAccSpace_kernelGatewayAppSettings_imageconfig(t *testing.T) {
 	baseImage := os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpaceDestroy,
+		CheckDestroy:             testAccCheckSpaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpaceConfig_kernelGatewayAppSettingsImage(rName, baseImage),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSpaceExists(resourceName, &domain),
+					testAccCheckSpaceExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.kernel_gateway_app_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.kernel_gateway_app_settings.0.lifecycle_config_arns.#", "1"),
@@ -194,20 +200,21 @@ func testAccSpace_kernelGatewayAppSettings_imageconfig(t *testing.T) {
 }
 
 func testAccSpace_jupyterServerAppSettings(t *testing.T) {
+	ctx := acctest.Context(t)
 	var domain sagemaker.DescribeSpaceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_space.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpaceDestroy,
+		CheckDestroy:             testAccCheckSpaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpaceConfig_jupyterServerAppSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSpaceExists(resourceName, &domain),
+					testAccCheckSpaceExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_server_app_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_server_app_settings.0.default_resource_spec.#", "1"),
@@ -224,21 +231,22 @@ func testAccSpace_jupyterServerAppSettings(t *testing.T) {
 }
 
 func testAccSpace_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var domain sagemaker.DescribeSpaceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_space.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpaceDestroy,
+		CheckDestroy:             testAccCheckSpaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSpaceExists(resourceName, &domain),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceSpace(), resourceName),
+					testAccCheckSpaceExists(ctx, resourceName, &domain),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceSpace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -246,37 +254,39 @@ func testAccSpace_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSpaceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+func testAccCheckSpaceDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_sagemaker_space" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_sagemaker_space" {
+				continue
+			}
+
+			domainID := rs.Primary.Attributes["domain_id"]
+			spaceName := rs.Primary.Attributes["space_name"]
+
+			space, err := tfsagemaker.FindSpaceByName(ctx, conn, domainID, spaceName)
+
+			if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("reading SageMaker Space (%s): %w", rs.Primary.ID, err)
+			}
+
+			spaceArn := aws.StringValue(space.SpaceArn)
+			if spaceArn == rs.Primary.ID {
+				return fmt.Errorf("SageMaker Space %q still exists", rs.Primary.ID)
+			}
 		}
 
-		domainID := rs.Primary.Attributes["domain_id"]
-		spaceName := rs.Primary.Attributes["space_name"]
-
-		space, err := tfsagemaker.FindSpaceByName(conn, domainID, spaceName)
-
-		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("reading SageMaker Space (%s): %w", rs.Primary.ID, err)
-		}
-
-		spaceArn := aws.StringValue(space.SpaceArn)
-		if spaceArn == rs.Primary.ID {
-			return fmt.Errorf("SageMaker Space %q still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckSpaceExists(n string, space *sagemaker.DescribeSpaceOutput) resource.TestCheckFunc {
+func testAccCheckSpaceExists(ctx context.Context, n string, space *sagemaker.DescribeSpaceOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -292,7 +302,7 @@ func testAccCheckSpaceExists(n string, space *sagemaker.DescribeSpaceOutput) res
 		domainID := rs.Primary.Attributes["domain_id"]
 		spaceName := rs.Primary.Attributes["space_name"]
 
-		resp, err := tfsagemaker.FindSpaceByName(conn, domainID, spaceName)
+		resp, err := tfsagemaker.FindSpaceByName(ctx, conn, domainID, spaceName)
 		if err != nil {
 			return err
 		}

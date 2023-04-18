@@ -1,6 +1,8 @@
 package storagegateway
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	authenticationActiveDirectory = "ActiveDirectory"

@@ -6,19 +6,19 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 )
 
-func init() {
-	_sp.registerFrameworkDataSourceFactory(newDataSourceRegion)
-}
-
-// newDataSourceRegion instantiates a new DataSource for the aws_region data source.
+// @FrameworkDataSource
 func newDataSourceRegion(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceRegion{}, nil
+	d := &dataSourceRegion{}
+	d.SetMigratedFromPluginSDK(true)
+
+	return d, nil
 }
 
 type dataSourceRegion struct {
@@ -110,7 +110,7 @@ func (d *dataSourceRegion) Read(ctx context.Context, request datasource.ReadRequ
 		region = matchingRegion
 	}
 
-	regionEndpointEC2, err := region.ResolveEndpoint(endpoints.Ec2ServiceID)
+	regionEndpointEC2, err := region.ResolveEndpoint(ec2.EndpointsID)
 
 	if err != nil {
 		response.Diagnostics.AddError("resolving EC2 endpoint", err.Error())
@@ -136,7 +136,7 @@ type dataSourceRegionData struct {
 func FindRegionByEndpoint(endpoint string) (*endpoints.Region, error) {
 	for _, partition := range endpoints.DefaultPartitions() {
 		for _, region := range partition.Regions() {
-			regionEndpointEC2, err := region.ResolveEndpoint(endpoints.Ec2ServiceID)
+			regionEndpointEC2, err := region.ResolveEndpoint(ec2.EndpointsID)
 
 			if err != nil {
 				return nil, err

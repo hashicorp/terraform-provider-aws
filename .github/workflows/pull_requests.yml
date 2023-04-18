@@ -3,35 +3,38 @@ on:
 
 name: Pull Request Target (All types)
 
-env:
-  IN_MAINTAINER_LIST: ${{ contains(secrets.MAINTAINER_LIST, github.actor) }}
-
 jobs:
+  community_check:
+    uses: ./.github/workflows/community-check.yml
+    secrets: inherit
+
   Labeler:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
       - name: Apply Labels
         uses: actions/labeler@v4
         with:
           configuration-path: .github/labeler-pr-triage.yml
           repo-token: ${{ secrets.GITHUB_TOKEN }}
+
   NeedsTriageLabeler:
+    needs: community_check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
       - name: Apply needs-triage Label
         uses: actions/labeler@v4
-        if: github.event.action == 'opened' && env.IN_MAINTAINER_LIST == 'false'
+        if: github.event.action == 'opened' && needs.community_check.outputs.maintainer == 'false'
         with:
           configuration-path: .github/labeler-pr-needs-triage.yml
           repo-token: ${{ secrets.GITHUB_TOKEN }}
+
   SizeLabeler:
     runs-on: ubuntu-latest
     steps:
-      # See also: https://github.com/CodelyTV/pr-size-labeler/pull/26
       - name: Apply Size Label
-        uses: bflad/pr-size-labeler@d56e9ca5fe93539a256a7e7b4efd971f4f19fe00
+        uses: codelytv/pr-size-labeler@v1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           xs_label: 'size/XS'
@@ -44,6 +47,7 @@ jobs:
           l_max_size: '300'
           xl_label: 'size/XL'
           message_if_xl: ''
+
   PullRequestComments:
     runs-on: ubuntu-latest
     steps:

@@ -12,12 +12,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -32,6 +32,7 @@ type ssmClient interface {
 	SSMClient() *ssm.Client
 }
 
+// @SDKResource("aws_ssm_default_patch_baseline")
 func ResourceDefaultPatchBaseline() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDefaultPatchBaselineCreate,
@@ -252,15 +253,15 @@ func defaultPatchBaselineRestoreOSDefault(ctx context.Context, meta ssmClient, o
 
 	baselineID, err := FindDefaultDefaultPatchBaselineIDForOS(ctx, conn, os)
 	if errors.Is(err, tfresource.ErrEmptyResult) {
-		diags = errs.AppendWarningf(diags, "no AWS-owned default Patch Baseline found for operating system %q", os)
+		diags = sdkdiag.AppendWarningf(diags, "no AWS-owned default Patch Baseline found for operating system %q", os)
 		return
 	}
 	var tmr *tfresource.TooManyResultsError
 	if errors.As(err, &tmr) {
-		diags = errs.AppendWarningf(diags, "found %d AWS-owned default Patch Baselines found for operating system %q", tmr.Count, os)
+		diags = sdkdiag.AppendWarningf(diags, "found %d AWS-owned default Patch Baselines found for operating system %q", tmr.Count, os)
 	}
 	if err != nil {
-		diags = errs.AppendErrorf(diags, "finding AWS-owned default Patch Baseline for operating system %q: %s", os, err)
+		diags = sdkdiag.AppendErrorf(diags, "finding AWS-owned default Patch Baseline for operating system %q: %s", os, err)
 	}
 
 	log.Printf("[INFO] Restoring SSM Default Patch Baseline for operating system %q to %q", os, baselineID)
@@ -270,7 +271,7 @@ func defaultPatchBaselineRestoreOSDefault(ctx context.Context, meta ssmClient, o
 	}
 	_, err = conn.RegisterDefaultPatchBaseline(ctx, in)
 	if err != nil {
-		diags = errs.AppendErrorf(diags, "restoring SSM Default Patch Baseline for operating system %q to %q: %s", os, baselineID, err)
+		diags = sdkdiag.AppendErrorf(diags, "restoring SSM Default Patch Baseline for operating system %q to %q: %s", os, baselineID, err)
 	}
 
 	return
@@ -284,7 +285,7 @@ func FindDefaultPatchBaseline(ctx context.Context, conn *ssm.Client, os types.Op
 	if err != nil {
 		var nfe *types.DoesNotExistException
 		if errors.As(err, &nfe) {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -308,7 +309,7 @@ func findPatchBaselineByID(ctx context.Context, conn *ssm.Client, id string) (*s
 	if err != nil {
 		var nfe *types.DoesNotExistException
 		if errors.As(err, &nfe) {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
