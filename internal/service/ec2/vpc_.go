@@ -378,7 +378,9 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 		d.Set("ipv6_association_id", ipv6CIDRBlockAssociation.AssociationId)
 		d.Set("ipv6_cidr_block", cidrBlock)
 		d.Set("ipv6_cidr_block_network_border_group", ipv6CIDRBlockAssociation.NetworkBorderGroup)
-		if !isAmazonIPv6Pool {
+		if isAmazonIPv6Pool {
+			d.Set("ipv6_ipam_pool_id", nil)
+		} else {
 			if ipv6PoolID == ipamManagedIPv6PoolID {
 				d.Set("ipv6_ipam_pool_id", d.Get("ipv6_ipam_pool_id"))
 			} else {
