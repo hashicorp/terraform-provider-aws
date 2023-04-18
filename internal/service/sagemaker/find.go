@@ -333,6 +333,10 @@ func FindAppByName(ctx context.Context, conn *sagemaker.SageMaker, domainID, use
 		AppName:  aws.String(appName),
 	}
 
+	if foundApp == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
 	if foundApp.SpaceName != nil {
 		input.SpaceName = foundApp.SpaceName
 	}
