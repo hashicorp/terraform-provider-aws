@@ -81,7 +81,7 @@ func ResourceEventSourceMapping() *schema.Resource {
 					}
 
 					switch serviceName {
-					case "dynamodb", "kinesis", "kafka", "mq":
+					case "dynamodb", "kinesis", "kafka", "mq", "rds":
 						return old == "100"
 					case "sqs":
 						return old == "10"
