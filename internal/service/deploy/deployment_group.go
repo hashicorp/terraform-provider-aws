@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"sort"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -27,6 +26,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	DeploymentGroupIdPartsCount = 2
+	ResNameDeploymentGroup      = "DeploymentGroup"
+)
+
 // @SDKResource("aws_codedeploy_deployment_group", name="Deployment Group")
 // @Tags(identifierAttribute="arn")
 func ResourceDeploymentGroup() *schema.Resource {
@@ -37,10 +41,10 @@ func ResourceDeploymentGroup() *schema.Resource {
 		DeleteWithoutTimeout: resourceDeploymentGroupDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				idParts := strings.Split(d.Id(), ":")
+				idParts, err := flex.ExpandResourceId(d.Id(), DeploymentGroupIdPartsCount)
 
-				if len(idParts) != 2 {
-					return []*schema.ResourceData{}, fmt.Errorf("expected ID in format ApplicationName:DeploymentGroupName, received: %s", d.Id())
+				if err != nil {
+					return []*schema.ResourceData{}, err
 				}
 
 				applicationName := idParts[0]
