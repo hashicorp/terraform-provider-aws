@@ -339,10 +339,6 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 			if err := d.Set(names.AttrTagsAll, tags.Map()); err != nil {
 				return ctx, sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTagsAll, err)
 			}
-
-			if why == Create {
-				break
-			}
 		}
 	case Finally:
 		switch why {

@@ -410,17 +410,7 @@ func (tags KeyValueTags) Chunks(size int) []KeyValueTags {
 
 // ContainsAll returns whether or not all the target tags are contained.
 func (tags KeyValueTags) ContainsAll(target KeyValueTags) bool {
-	//for key, value := range target {
-	//	if v, ok := tags[key]; !ok || !v.Equal(value) {
-	//		return false
-	//	}
-	//}
-
-	if !reflect.DeepEqual(tags, target) {
-		return false
-	}
-
-	return true
+	return reflect.DeepEqual(tags, target)
 }
 
 func (tags KeyValueTags) HasZeroValue() bool {
