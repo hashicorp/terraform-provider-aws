@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_waf_sql_injection_match_set")
 func ResourceSQLInjectionMatchSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSQLInjectionMatchSetCreate,

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKDataSource("aws_lakeformation_data_lake_settings")
 func DataSourceDataLakeSettings() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDataLakeSettingsRead,
@@ -23,6 +24,15 @@ func DataSourceDataLakeSettings() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"admins": {
 				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"allow_external_data_filtering": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"authorized_session_tag_value_list": {
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -64,6 +74,11 @@ func DataSourceDataLakeSettings() *schema.Resource {
 					},
 				},
 			},
+			"external_data_filtering_allow_list": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"trusted_resource_owners": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -102,9 +117,12 @@ func dataSourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData,
 
 	settings := output.DataLakeSettings
 
+	d.Set("admins", flattenDataLakeSettingsAdmins(settings.DataLakeAdmins))
+	d.Set("allow_external_data_filtering", settings.AllowExternalDataFiltering)
+	d.Set("authorized_session_tag_value_list", flex.FlattenStringList(settings.AuthorizedSessionTagValueList))
 	d.Set("create_database_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateDatabaseDefaultPermissions))
 	d.Set("create_table_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateTableDefaultPermissions))
-	d.Set("admins", flattenDataLakeSettingsAdmins(settings.DataLakeAdmins))
+	d.Set("external_data_filtering_allow_list", flattenDataLakeSettingsDataFilteringAllowList(settings.ExternalDataFilteringAllowList))
 	d.Set("trusted_resource_owners", flex.FlattenStringList(settings.TrustedResourceOwners))
 
 	return diags

@@ -10,10 +10,11 @@ import (
 )
 
 func TestAccOutpostsOutpostInstanceTypeDataSource_instanceType(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_outposts_outpost_instance_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, outposts.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -29,10 +30,11 @@ func TestAccOutpostsOutpostInstanceTypeDataSource_instanceType(t *testing.T) {
 }
 
 func TestAccOutpostsOutpostInstanceTypeDataSource_preferredInstanceTypes(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_outposts_outpost_instance_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, outposts.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,

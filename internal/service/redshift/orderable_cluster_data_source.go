@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_redshift_orderable_cluster")
 func DataSourceOrderableCluster() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOrderableClusterRead,

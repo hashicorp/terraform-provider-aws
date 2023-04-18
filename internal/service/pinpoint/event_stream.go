@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_pinpoint_event_stream")
 func ResourceEventStream() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventStreamUpsert,
@@ -63,15 +64,15 @@ func resourceEventStreamUpsert(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	// Retry for IAM eventual consistency
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err := conn.PutEventStreamWithContext(ctx, &req)
 
 		if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeBadRequestException, "make sure the IAM Role is configured correctly") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil

@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emrserverless"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -18,7 +18,7 @@ func FindApplicationByID(ctx context.Context, conn *emrserverless.EMRServerless,
 	output, err := conn.GetApplicationWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, emrserverless.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

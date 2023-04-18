@@ -158,7 +158,7 @@ func TestAccSiteVPNConnection_basic(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -254,7 +254,7 @@ func TestAccSiteVPNConnection_withoutTGWorVGW(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -348,7 +348,7 @@ func TestAccSiteVPNConnection_cloudWatchLogOptions(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -398,7 +398,7 @@ func TestAccSiteVPNConnection_transitGatewayID(t *testing.T) {
 	resourceName := "aws_vpn_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -428,7 +428,7 @@ func TestAccSiteVPNConnection_tunnel1InsideCIDR(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -458,7 +458,7 @@ func TestAccSiteVPNConnection_tunnel1InsideIPv6CIDR(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -488,7 +488,7 @@ func TestAccSiteVPNConnection_tunnel1PreSharedKey(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -559,7 +559,7 @@ func TestAccSiteVPNConnection_tunnelOptions(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -698,7 +698,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 	tunnel2Updated.tunnelCidr = tunnel2.tunnelCidr
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -1198,7 +1198,7 @@ func TestAccSiteVPNConnection_staticRoutes(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -1227,7 +1227,7 @@ func TestAccSiteVPNConnection_outsideAddressTypePrivate(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -1256,7 +1256,7 @@ func TestAccSiteVPNConnection_outsideAddressTypePublic(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -1285,7 +1285,7 @@ func TestAccSiteVPNConnection_enableAcceleration(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -1314,7 +1314,7 @@ func TestAccSiteVPNConnection_ipv6(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -1342,7 +1342,7 @@ func TestAccSiteVPNConnection_tags(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -1389,7 +1389,7 @@ func TestAccSiteVPNConnection_specifyIPv4(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -1427,7 +1427,7 @@ func TestAccSiteVPNConnection_specifyIPv6(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -1452,7 +1452,7 @@ func TestAccSiteVPNConnection_disappears(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -1478,7 +1478,7 @@ func TestAccSiteVPNConnection_updateCustomerGatewayID(t *testing.T) {
 	var vpn1, vpn2 ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -1515,7 +1515,7 @@ func TestAccSiteVPNConnection_updateVPNGatewayID(t *testing.T) {
 	var vpn1, vpn2 ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -1552,7 +1552,7 @@ func TestAccSiteVPNConnection_updateTransitGatewayID(t *testing.T) {
 	var vpn1, vpn2 ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -1591,7 +1591,7 @@ func TestAccSiteVPNConnection_vpnGatewayIDToTransitGatewayID(t *testing.T) {
 	var vpn1, vpn2 ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
@@ -1630,7 +1630,7 @@ func TestAccSiteVPNConnection_transitGatewayIDToVPNGatewayID(t *testing.T) {
 	var vpn1, vpn2 ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),

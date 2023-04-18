@@ -26,7 +26,7 @@ func TestAccKeyspacesKeyspace_basic(t *testing.T) {
 	resourceName := "aws_keyspaces_keyspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, keyspaces.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyspaceDestroy(ctx),
@@ -55,7 +55,7 @@ func TestAccKeyspacesKeyspace_disappears(t *testing.T) {
 	resourceName := "aws_keyspaces_keyspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, keyspaces.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyspaceDestroy(ctx),
@@ -78,7 +78,7 @@ func TestAccKeyspacesKeyspace_tags(t *testing.T) {
 	resourceName := "aws_keyspaces_keyspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, keyspaces.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyspaceDestroy(ctx),

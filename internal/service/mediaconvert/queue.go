@@ -16,8 +16,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_media_convert_queue", name="Queue")
+// @Tags
 func ResourceQueue() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQueueCreate,
@@ -91,8 +94,8 @@ func ResourceQueue() *schema.Resource {
 					mediaconvert.QueueStatusPaused,
 				}, false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -101,19 +104,16 @@ func ResourceQueue() *schema.Resource {
 
 func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn, err := GetAccountClient(meta.(*conns.AWSClient))
+	conn, err := GetAccountClient(ctx, meta.(*conns.AWSClient))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Media Convert Account Client: %s", err)
 	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	createOpts := &mediaconvert.CreateQueueInput{
 		Name:        aws.String(d.Get("name").(string)),
 		Status:      aws.String(d.Get("status").(string)),
 		PricingPlan: aws.String(d.Get("pricing_plan").(string)),
-		Tags:        Tags(tags.IgnoreAWS()),
+		Tags:        GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -136,13 +136,10 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn, err := GetAccountClient(meta.(*conns.AWSClient))
+	conn, err := GetAccountClient(ctx, meta.(*conns.AWSClient))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Media Convert Account Client: %s", err)
 	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	getOpts := &mediaconvert.GetQueueInput{
 		Name: aws.String(d.Id()),
@@ -174,23 +171,14 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "listing tags for Media Convert Queue (%s): %s", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, Tags(tags))
 
 	return diags
 }
 
 func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn, err := GetAccountClient(meta.(*conns.AWSClient))
+	conn, err := GetAccountClient(ctx, meta.(*conns.AWSClient))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Media Convert Account Client: %s", err)
 	}
@@ -228,7 +216,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn, err := GetAccountClient(meta.(*conns.AWSClient))
+	conn, err := GetAccountClient(ctx, meta.(*conns.AWSClient))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Media Convert Account Client: %s", err)
 	}
@@ -248,7 +236,7 @@ func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func GetAccountClient(awsClient *conns.AWSClient) (*mediaconvert.MediaConvert, error) {
+func GetAccountClient(ctx context.Context, awsClient *conns.AWSClient) (*mediaconvert.MediaConvert, error) {
 	const mutexKey = `mediaconvertaccountconn`
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
@@ -261,7 +249,7 @@ func GetAccountClient(awsClient *conns.AWSClient) (*mediaconvert.MediaConvert, e
 		Mode: aws.String(mediaconvert.DescribeEndpointsModeDefault),
 	}
 
-	output, err := awsClient.MediaConvertConn().DescribeEndpoints(input)
+	output, err := awsClient.MediaConvertConn().DescribeEndpointsWithContext(ctx, input)
 
 	if err != nil {
 		return nil, fmt.Errorf("error describing MediaConvert Endpoints: %w", err)

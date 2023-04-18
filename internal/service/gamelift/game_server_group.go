@@ -12,7 +12,7 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +21,7 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -28,6 +29,8 @@ const (
 	gameServerGroupDeletedDefaultTimeout = 30 * time.Minute
 )
 
+// @SDKResource("aws_gamelift_game_server_group", name="Game Server Group")
+// @Tags(identifierAttribute="arn")
 func ResourceGameServerGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGameServerGroupCreate,
@@ -170,8 +173,8 @@ func ResourceGameServerGroup() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_subnets": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -189,8 +192,6 @@ func ResourceGameServerGroup() *schema.Resource {
 func resourceGameServerGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &gamelift.CreateGameServerGroupInput{
 		GameServerGroupName: aws.String(d.Get("game_server_group_name").(string)),
@@ -199,7 +200,7 @@ func resourceGameServerGroupCreate(ctx context.Context, d *schema.ResourceData, 
 		MaxSize:             aws.Int64(int64(d.Get("max_size").(int))),
 		MinSize:             aws.Int64(int64(d.Get("min_size").(int))),
 		RoleArn:             aws.String(d.Get("role_arn").(string)),
-		Tags:                Tags(tags.IgnoreAWS()),
+		Tags:                GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("auto_scaling_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -220,16 +221,16 @@ func resourceGameServerGroupCreate(ctx context.Context, d *schema.ResourceData, 
 
 	log.Printf("[INFO] Creating GameLift Game Server Group: %s", input)
 	var out *gamelift.CreateGameServerGroupOutput
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
 		out, err = conn.CreateGameServerGroupWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, "GameLift is not authorized to perform") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -256,12 +257,9 @@ func resourceGameServerGroupRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftConn()
 	autoscalingConn := meta.(*conns.AWSClient).AutoScalingConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	gameServerGroupName := d.Id()
 
-	log.Printf("[INFO] Describing GameLift Game Server Group: %s", gameServerGroupName)
 	gameServerGroup, err := FindGameServerGroupByName(ctx, conn, gameServerGroupName)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] GameLift Game Server Group (%s) not found, removing from state", gameServerGroupName)
@@ -320,27 +318,6 @@ func resourceGameServerGroupRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "setting launch_template: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, fmt.Sprintf("Resource %s is not in a taggable state", d.Id())) {
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Game Lift Game Server Group (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -371,15 +348,6 @@ func resourceGameServerGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		arn := d.Get("arn").(string)
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Game Lift Game Server Group (%s) tags: %s", arn, err)
-		}
-	}
-
 	return append(diags, resourceGameServerGroupRead(ctx, d, meta)...)
 }
 
@@ -391,14 +359,14 @@ func resourceGameServerGroupDelete(ctx context.Context, d *schema.ResourceData, 
 	input := &gamelift.DeleteGameServerGroupInput{
 		GameServerGroupName: aws.String(d.Id()),
 	}
-	err := resource.RetryContext(ctx, gameServerGroupDeletedDefaultTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, gameServerGroupDeletedDefaultTimeout, func() *retry.RetryError {
 		_, err := conn.DeleteGameServerGroupWithContext(ctx, input)
 		if err != nil {
 			msg := fmt.Sprintf("Cannot delete game server group %s: %s", d.Id(), err)
 			if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, msg) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})

@@ -18,8 +18,8 @@ func TestAccRoute53ResolverQueryLogConfigDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(route53resolver.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, route53resolver.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
@@ -51,8 +51,8 @@ func TestAccRoute53ResolverQueryLogConfigDataSource_filter(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(route53resolver.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, route53resolver.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),

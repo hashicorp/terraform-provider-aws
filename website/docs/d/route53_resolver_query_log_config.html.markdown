@@ -47,8 +47,6 @@ In addition to all arguments above, the following attributes are exported:
 * `name` - The name of the query logging configuration.
 * `owner_id` - The AWS account ID for the account that created the query logging configuration.
 * `share_status` - An indication of whether the query logging configuration is shared with other AWS accounts or was shared with the current account by another AWS account.
-* `tags` - Map of tags to assign to the service. If configured with a provider [`default_tags` configuration block][2] present tags with matching keys will overwrite those defined at the provider-level.
-* `tags_all` - Map of tags assigned to the resource including those inherited from the provider [`default_tags` configuration block][2].
+* `tags` - Map of tags to assign to the service.
 
 [1]: https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53resolver_Filter.html
-[2]: https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block

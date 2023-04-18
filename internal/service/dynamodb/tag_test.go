@@ -17,7 +17,7 @@ func TestAccDynamoDBTag_basic(t *testing.T) {
 	resourceName := "aws_dynamodb_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTagDestroy(ctx),
@@ -45,7 +45,7 @@ func TestAccDynamoDBTag_disappears(t *testing.T) {
 	resourceName := "aws_dynamodb_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTagDestroy(ctx),
@@ -70,11 +70,11 @@ func TestAccDynamoDBTag_ResourceARN_tableReplica(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -99,7 +99,7 @@ func TestAccDynamoDBTag_value(t *testing.T) {
 	resourceName := "aws_dynamodb_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTagDestroy(ctx),

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_eip_association")
 func ResourceEIPAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEIPAssociationCreate,

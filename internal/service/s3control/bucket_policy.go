@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3control"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -18,10 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func init() {
-	_sp.registerSDKResourceFactory("aws_s3control_bucket_policy", resourceBucketPolicy)
-}
-
+// @SDKResource("aws_s3control_bucket_policy")
 func resourceBucketPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketPolicyCreate,
@@ -30,7 +27,7 @@ func resourceBucketPolicy() *schema.Resource {
 		DeleteWithoutTimeout: resourceBucketPolicyDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -179,7 +176,7 @@ func FindBucketPolicyByTwoPartKey(ctx context.Context, conn *s3control.S3Control
 	output, err := conn.GetBucketPolicyWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchBucketPolicy, errCodeNoSuchOutpost) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

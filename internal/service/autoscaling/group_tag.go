@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_autoscaling_group_tag")
 func ResourceGroupTag() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupTagCreate,

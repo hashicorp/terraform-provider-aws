@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ram_principal_association")
 func ResourcePrincipalAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePrincipalAssociationCreate,
@@ -58,7 +59,7 @@ func resourcePrincipalAssociationCreate(ctx context.Context, d *schema.ResourceD
 	principal := d.Get("principal").(string)
 
 	request := &ram.AssociateResourceShareInput{
-		ClientToken:      aws.String(resource.UniqueId()),
+		ClientToken:      aws.String(id.UniqueId()),
 		ResourceShareArn: aws.String(resourceShareArn),
 		Principals:       []*string{aws.String(principal)},
 	}

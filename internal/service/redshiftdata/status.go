@@ -5,11 +5,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshiftdataapiservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusStatement(ctx context.Context, conn *redshiftdataapiservice.RedshiftDataAPIService, id string) resource.StateRefreshFunc {
+func statusStatement(ctx context.Context, conn *redshiftdataapiservice.RedshiftDataAPIService, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindStatementByID(ctx, conn, id)
 

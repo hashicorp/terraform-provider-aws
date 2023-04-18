@@ -35,7 +35,7 @@ func TestAccElastiCacheGlobalReplicationGroup_basic(t *testing.T) {
 	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
@@ -87,7 +87,7 @@ func TestAccElastiCacheGlobalReplicationGroup_disappears(t *testing.T) {
 	resourceName := "aws_elasticache_global_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -118,7 +118,7 @@ func TestAccElastiCacheGlobalReplicationGroup_description(t *testing.T) {
 	resourceName := "aws_elasticache_global_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -159,7 +159,7 @@ func TestAccElastiCacheGlobalReplicationGroup_nodeType_createNoChange(t *testing
 	resourceName := "aws_elasticache_global_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -194,7 +194,7 @@ func TestAccElastiCacheGlobalReplicationGroup_nodeType_createWithChange(t *testi
 	resourceName := "aws_elasticache_global_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -229,7 +229,7 @@ func TestAccElastiCacheGlobalReplicationGroup_nodeType_setNoChange(t *testing.T)
 	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -271,7 +271,7 @@ func TestAccElastiCacheGlobalReplicationGroup_nodeType_update(t *testing.T) {
 	resourceName := "aws_elasticache_global_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -312,7 +312,7 @@ func TestAccElastiCacheGlobalReplicationGroup_automaticFailover_createNoChange(t
 	resourceName := "aws_elasticache_global_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -347,7 +347,7 @@ func TestAccElastiCacheGlobalReplicationGroup_automaticFailover_createWithChange
 	resourceName := "aws_elasticache_global_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -382,7 +382,7 @@ func TestAccElastiCacheGlobalReplicationGroup_automaticFailover_setNoChange(t *t
 	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -424,7 +424,7 @@ func TestAccElastiCacheGlobalReplicationGroup_automaticFailover_update(t *testin
 	resourceName := "aws_elasticache_global_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -464,11 +464,11 @@ func TestAccElastiCacheGlobalReplicationGroup_multipleSecondaries(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 3)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -493,11 +493,11 @@ func TestAccElastiCacheGlobalReplicationGroup_ReplaceSecondary_differentRegion(t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 3)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -531,7 +531,7 @@ func TestAccElastiCacheGlobalReplicationGroup_clusterMode_basic(t *testing.T) {
 	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -571,7 +571,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetNumNodeGroupsOnCreate_NoChange(
 	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -611,7 +611,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetNumNodeGroupsOnCreate_Increase(
 	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -660,7 +660,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetNumNodeGroupsOnCreate_Decrease(
 	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -704,7 +704,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetNumNodeGroupsOnUpdate_Increase(
 	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -770,7 +770,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetNumNodeGroupsOnUpdate_Decrease(
 	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -828,7 +828,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_NoChange_
 	resourceName := "aws_elasticache_global_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -861,7 +861,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_NoChange_
 	resourceName := "aws_elasticache_global_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -895,7 +895,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_NoChange_
 	resourceName := "aws_elasticache_global_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -931,7 +931,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_MinorUpgr
 	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -969,7 +969,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_MinorUpgr
 	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -1002,7 +1002,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_MajorUpgr
 	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -1041,7 +1041,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_MajorUpgr
 	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -1075,7 +1075,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_MinorDown
 	primaryReplicationGroupId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -1094,7 +1094,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetParameterGroupOnCreate_NoVersio
 	primaryReplicationGroupId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -1114,7 +1114,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetParameterGroupOnCreate_MinorUpg
 	primaryReplicationGroupId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -1140,7 +1140,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnUpdate_MinorUpgr
 	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -1177,7 +1177,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnUpdate_MinorUpgr
 	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -1211,7 +1211,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnUpdate_MinorDown
 	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -1258,7 +1258,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnUpdate_MajorUpgr
 	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -1300,7 +1300,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnUpdate_MajorUpgr
 	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -1343,7 +1343,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetParameterGroupOnUpdate_NoVersio
 	resourceName := "aws_elasticache_global_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -1378,7 +1378,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetParameterGroupOnUpdate_MinorUpg
 	resourceName := "aws_elasticache_global_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
@@ -1414,7 +1414,7 @@ func TestAccElastiCacheGlobalReplicationGroup_UpdateParameterGroupName(t *testin
 	resourceName := "aws_elasticache_global_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),

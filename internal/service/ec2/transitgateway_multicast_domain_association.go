@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_ec2_transit_gateway_multicast_domain_association")
 func ResourceTransitGatewayMulticastDomainAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayMulticastDomainAssociationCreate,

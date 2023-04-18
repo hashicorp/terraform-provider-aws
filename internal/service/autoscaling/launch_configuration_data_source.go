@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_launch_configuration")
 func DataSourceLaunchConfiguration() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLaunchConfigurationRead,

@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ram_resource_share_accepter")
 func ResourceResourceShareAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceShareAccepterCreate,
@@ -101,7 +102,7 @@ func resourceResourceShareAccepterCreate(ctx context.Context, d *schema.Resource
 	}
 
 	input := &ram.AcceptResourceShareInvitationInput{
-		ClientToken:                aws.String(resource.UniqueId()),
+		ClientToken:                aws.String(id.UniqueId()),
 		ResourceShareInvitationArn: invitation.ResourceShareInvitationArn,
 	}
 
@@ -203,7 +204,7 @@ func resourceResourceShareAccepterDelete(ctx context.Context, d *schema.Resource
 	}
 
 	input := &ram.DisassociateResourceShareInput{
-		ClientToken:      aws.String(resource.UniqueId()),
+		ClientToken:      aws.String(id.UniqueId()),
 		ResourceShareArn: aws.String(d.Id()),
 		Principals:       []*string{aws.String(receiverAccountID)},
 	}

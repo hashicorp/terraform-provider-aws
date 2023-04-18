@@ -3,7 +3,6 @@ package route53resolver
 import (
 	"context"
 	"errors"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
@@ -16,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_route53_resolver_query_log_config")
 func DataSourceQueryLogConfig() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceQueryLogConfigRead,
@@ -47,8 +47,7 @@ func DataSourceQueryLogConfig() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -67,8 +66,6 @@ func dataSourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, m
 	if v, ok := d.GetOk("filter"); ok && v.(*schema.Set).Len() > 0 {
 		input.Filters = namevaluesfilters.New(v.(*schema.Set)).Route53resolverFilters()
 	}
-
-	log.Printf("[DEBUG] Reading Resolver Query Log Config: %s", input)
 
 	var configs []*route53resolver.ResolverQueryLogConfig
 
@@ -127,10 +124,6 @@ func dataSourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, m
 
 		//lintignore:AWSR002
 		if err := d.Set("tags", tags.Map()); err != nil {
-			return create.DiagError(names.AppConfig, create.ErrActionSetting, DSNameQueryLogConfig, configID, err)
-		}
-
-		if err := d.Set("tags_all", tags.Map()); err != nil {
 			return create.DiagError(names.AppConfig, create.ErrActionSetting, DSNameQueryLogConfig, configID, err)
 		}
 	}

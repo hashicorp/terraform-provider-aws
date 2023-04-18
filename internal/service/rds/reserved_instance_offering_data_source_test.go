@@ -9,10 +9,11 @@ import (
 )
 
 func TestAccRDSInstanceOffering_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_rds_reserved_instance_offering.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),

@@ -20,7 +20,7 @@ func TestAccRDSOrderableInstanceDataSource_basic(t *testing.T) {
 	storageType := "standard"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -49,7 +49,7 @@ func TestAccRDSOrderableInstanceDataSource_preferredClass(t *testing.T) {
 	preferredClass := "db.t3.micro"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -73,7 +73,7 @@ func TestAccRDSOrderableInstanceDataSource_preferredVersion(t *testing.T) {
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -97,7 +97,7 @@ func TestAccRDSOrderableInstanceDataSource_preferredClassAndVersion(t *testing.T
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -122,7 +122,7 @@ func TestAccRDSOrderableInstanceDataSource_supportsEnhancedMonitoring(t *testing
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -146,7 +146,7 @@ func TestAccRDSOrderableInstanceDataSource_supportsIAMDatabaseAuthentication(t *
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -170,7 +170,7 @@ func TestAccRDSOrderableInstanceDataSource_supportsIops(t *testing.T) {
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -194,7 +194,7 @@ func TestAccRDSOrderableInstanceDataSource_supportsKerberosAuthentication(t *tes
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -219,7 +219,7 @@ func TestAccRDSOrderableInstanceDataSource_supportsPerformanceInsights(t *testin
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccOrderableInstancePreCheck(ctx, t)
 			testAccPerformanceInsightsDefaultVersionPreCheck(ctx, t, "mysql")
 		},
@@ -246,7 +246,7 @@ func TestAccRDSOrderableInstanceDataSource_supportsStorageAutoScaling(t *testing
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -270,7 +270,7 @@ func TestAccRDSOrderableInstanceDataSource_supportsStorageEncryption(t *testing.
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,

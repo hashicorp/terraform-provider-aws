@@ -12,6 +12,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_connect_contact_flow")
 func DataSourceContactFlow() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceContactFlowRead,
@@ -100,7 +101,7 @@ func dataSourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("content", contactFlow.Content)
 	d.Set("type", contactFlow.Type)
 
-	if err := d.Set("tags", KeyValueTags(contactFlow.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, contactFlow.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting tags: %s", err))
 	}
 

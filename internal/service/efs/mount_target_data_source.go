@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKDataSource("aws_efs_mount_target")
 func DataSourceMountTarget() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceMountTargetRead,
