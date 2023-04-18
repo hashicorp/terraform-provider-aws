@@ -2152,7 +2152,7 @@ resource "aws_iot_topic_rule" "test" {
   firehose {
     delivery_stream_name = "mystream"
     role_arn             = aws_iam_role.test.arn
-    batch_mode           = %t
+    batch_mode           = %[2]t
   }
 }
 `, rName, batchMode))
@@ -2266,7 +2266,7 @@ resource "aws_iot_topic_rule" "test" {
   iot_analytics {
     channel_name = "fakedata"
     role_arn     = aws_iam_role.test.arn
-	batch_mode   = %t
+    batch_mode   = %[2]t
   }
 }
 `, rName, batchMode))
@@ -2305,7 +2305,7 @@ resource "aws_iot_topic_rule" "test" {
     input_name = "fake_input_name"
     role_arn   = aws_iam_role.test.arn
     message_id = "fake_message_id"
-	batch_mode   = %t
+    batch_mode   = %[2]t
   }
 }
 `, rName, batchMode))
