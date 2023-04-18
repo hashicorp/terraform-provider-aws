@@ -57,7 +57,7 @@ func dataSourceBucketServerSideEncryptionConfigurationRead(ctx context.Context, 
 	output, err := conn.GetBucketEncryptionWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "[ERROR] Reading S3 bucket encryption configuration: %s", output)
+		return sdkdiag.AppendErrorf(diags, "Reading S3 bucket encryption configuration: %s", output)
 	}
 
 	log.Printf("[INFO] S3 Bucket (%s) server side encryption configuration is: %v", bucket, output)
