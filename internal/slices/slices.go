@@ -63,6 +63,16 @@ func All[T any](s []T, f FilterFunc[T]) bool {
 	return true
 }
 
+// Any returns `true` if the filter function `f` retruns `true` for any item
+func Any[T any](s []T, f FilterFunc[T]) bool {
+	for _, e := range s {
+		if f(e) {
+			return true
+		}
+	}
+	return false
+}
+
 // Chunks returns a slice of S, each of the specified size (or less).
 func Chunks[S ~[]E, E any](s S, size int) []S {
 	chunks := make([]S, 0)
