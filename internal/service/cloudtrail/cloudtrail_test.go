@@ -910,14 +910,18 @@ resource "aws_s3_bucket_policy" "test" {
       {
         Sid       = "AWSCloudTrailAclCheck"
         Effect    = "Allow"
-        Principal = "*"
+        Principal = {
+					Service = "cloudtrail.amazonaws.com"
+				}
         Action    = "s3:GetBucketAcl"
         Resource  = "arn:${data.aws_partition.current.partition}:s3:::%[1]s"
       },
       {
         Sid       = "AWSCloudTrailWrite"
         Effect    = "Allow"
-        Principal = "*"
+        Principal = {
+					Service = "cloudtrail.amazonaws.com"
+				}
         Action    = "s3:PutObject"
         Resource  = "arn:${data.aws_partition.current.partition}:s3:::%[1]s/*"
         Condition = {
@@ -1609,14 +1613,18 @@ resource "aws_s3_bucket_policy" "test" {
     {
       "Sid": "AWSCloudTrailAclCheck",
       "Effect": "Allow",
-      "Principal": "*",
+      "Principal": {
+				"Service": "cloudtrail.amazonaws.com"
+			},
       "Action": "s3:GetBucketAcl",
       "Resource": "arn:${data.aws_partition.current.partition}:s3:::%[1]s-1"
     },
     {
       "Sid": "AWSCloudTrailWrite",
       "Effect": "Allow",
-      "Principal": "*",
+      "Principal": {
+				"Service": "cloudtrail.amazonaws.com"
+			},
       "Action": "s3:PutObject",
       "Resource": "arn:${data.aws_partition.current.partition}:s3:::%[1]s-1/*",
       "Condition": {
