@@ -31,8 +31,8 @@ jobs:
                 }
               }
             }')
-          INPROJECT=$(echo $PROJCOLUMNS | jq '.data.repository.issue.projectCards.nodes[].column | select(.id=="${{ env.DESTINATION_COLUMN_ID }}")')            
-          if [ -z "$INPROJECT" ]; 
+          INPROJECT=$(echo $PROJCOLUMNS | jq '.data.repository.issue.projectCards.nodes[].column | select(.id=="${{ env.DESTINATION_COLUMN_ID }}")')          
+          if [ -z "$INPROJECT" ];
           then
             gh api graphql -f query='mutation {
               addProjectCard(input: {projectColumnId: "${{ env.DESTINATION_COLUMN_ID }}", contentId: "${{ github.event.issue.node_id }}"}) {
