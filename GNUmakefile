@@ -132,7 +132,6 @@ gen:
 	rm -f internal/sweep/sweep_test.go
 	rm -f names/caps.md
 	rm -f names/*_gen.go
-	rm -f website/allowed-subcategories.txt
 	rm -f website/docs/guides/custom-service-endpoints.html.md
 	rm -f .ci/.semgrep-caps-aws-ec2.yml
 	rm -f .ci/.semgrep-configs.yml

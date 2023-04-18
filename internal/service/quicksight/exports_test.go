@@ -2,6 +2,7 @@ package quicksight
 
 // Exports for use in tests only.
 var (
-	ResourceIngestion           = newResourceIngestion
 	ResourceIAMPolicyAssignment = newResourceIAMPolicyAssignment
+	ResourceIngestion           = newResourceIngestion
+	ResourceNamespace           = newResourceNamespace
 )

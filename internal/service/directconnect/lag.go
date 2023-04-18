@@ -123,9 +123,7 @@ func resourceLagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	// Delete unmanaged connection.
 	if !connectionIDSpecified {
-		err = deleteConnection(ctx, conn, aws.StringValue(output.Connections[0].ConnectionId), waitConnectionDeleted)
-
-		if err != nil {
+		if err := deleteConnection(ctx, conn, aws.StringValue(output.Connections[0].ConnectionId), waitConnectionDeleted); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -201,9 +199,7 @@ func resourceLagDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 
 		for _, connection := range lag.Connections {
-			err = deleteConnection(ctx, conn, aws.StringValue(connection.ConnectionId), waitConnectionDeleted)
-
-			if err != nil {
+			if err := deleteConnection(ctx, conn, aws.StringValue(connection.ConnectionId), waitConnectionDeleted); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}

@@ -3,7 +3,6 @@ package rds
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -29,10 +28,12 @@ func ResourceReservedInstance() *schema.Resource {
 		CreateWithoutTimeout: resourceReservedInstanceCreate,
 		ReadWithoutTimeout:   resourceReservedInstanceRead,
 		UpdateWithoutTimeout: resourceReservedInstanceUpdate,
-		DeleteWithoutTimeout: resourceReservedInstanceDelete,
+		DeleteWithoutTimeout: schema.NoopContext,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(10 * time.Minute),
@@ -193,24 +194,8 @@ func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceReservedInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return create.DiagError(names.RDS, create.ErrActionUpdating, ResNameTags, d.Id(), err)
-		}
-	}
-
+	// Tags only.
 	return resourceReservedInstanceRead(ctx, d, meta)
-}
-
-func resourceReservedInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// Reservations cannot be deleted. Removing from state.
-	log.Printf("[DEBUG] %s %s cannot be deleted. Removing from state.: %s", names.RDS, ResNameReservedInstance, d.Id())
-
-	return nil
 }
 
 func flattenRecurringCharges(recurringCharges []*rds.RecurringCharge) []interface{} {

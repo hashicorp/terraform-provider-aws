@@ -503,10 +503,6 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if !update && !bundleUpdate && !d.HasChange("tags_all") {
-		return nil
-	}
-
 	if update {
 		log.Printf("[DEBUG] Updating Lightsail Distribution (%s): %#v", d.Id(), in)
 		out, err := conn.UpdateDistributionWithContext(ctx, in)
@@ -532,14 +528,6 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 
 		if diag != nil {
 			return diag
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return create.DiagError(names.Lightsail, create.ErrActionUpdating, ResNameDistribution, d.Id(), err)
 		}
 	}
 

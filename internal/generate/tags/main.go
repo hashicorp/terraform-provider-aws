@@ -22,6 +22,7 @@ const (
 )
 
 var (
+	createTags         = flag.Bool("CreateTags", false, "whether to generate CreateTags")
 	getTag             = flag.Bool("GetTag", false, "whether to generate GetTag")
 	listTags           = flag.Bool("ListTags", false, "whether to generate ListTags")
 	serviceTagsMap     = flag.Bool("ServiceTagsMap", false, "whether to generate service tags for map")
@@ -29,6 +30,7 @@ var (
 	untagInNeedTagType = flag.Bool("UntagInNeedTagType", false, "whether Untag input needs tag type")
 	updateTags         = flag.Bool("UpdateTags", false, "whether to generate UpdateTags")
 
+	createTagsFunc        = flag.String("CreateTagsFunc", "createTags", "createTagsFunc")
 	getTagFunc            = flag.String("GetTagFunc", "GetTag", "getTagFunc")
 	listTagsFunc          = flag.String("ListTagsFunc", "ListTags", "listTagsFunc")
 	listTagsInFiltIDName  = flag.String("ListTagsInFiltIDName", "", "listTagsInFiltIDName")
@@ -123,6 +125,7 @@ type TemplateData struct {
 	ProviderNameUpper      string
 	ServicePackage         string
 
+	CreateTagsFunc          string
 	GetTagFunc              string
 	ListTagsFunc            string
 	ListTagsInFiltIDName    string
@@ -207,6 +210,14 @@ func main() {
 		g.Fatalf("encountered: %s", err)
 	}
 
+	createTagsFunc := *createTagsFunc
+	if *createTags && !*updateTags {
+		g.Infof("CreateTags only valid with UpdateTags")
+		createTagsFunc = ""
+	} else if !*createTags {
+		createTagsFunc = ""
+	}
+
 	var clientType string
 	if *sdkVersion == sdkV1 {
 		clientType = fmt.Sprintf("%siface.%sAPI", awsPkg, clientTypeName)
@@ -239,6 +250,7 @@ func main() {
 		StrConvPkg:       awsPkg == "autoscaling",
 		TfResourcePkg:    *getTag,
 
+		CreateTagsFunc:          createTagsFunc,
 		GetTagFunc:              *getTagFunc,
 		ListTagsFunc:            *listTagsFunc,
 		ListTagsInFiltIDName:    *listTagsInFiltIDName,

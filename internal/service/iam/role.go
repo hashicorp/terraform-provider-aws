@@ -160,6 +160,22 @@ func ResourceRole() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"role_last_used": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"region": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"last_used_date": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"unique_id": {
@@ -309,6 +325,10 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	inlinePolicies, err := readRoleInlinePolicies(ctx, aws.StringValue(role.RoleName), meta)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading inline policies for IAM role %s, error: %s", d.Id(), err)
+	}
+
+	if err := d.Set("role_last_used", flattenRoleLastUsed(role.RoleLastUsed)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting role_last_used: %s", err)
 	}
 
 	var configPoliciesList []*iam.PutRolePolicyInput
@@ -711,6 +731,21 @@ func deleteRoleInlinePolicies(ctx context.Context, conn *iam.IAM, roleName strin
 	}
 
 	return nil
+}
+
+func flattenRoleLastUsed(apiObject *iam.RoleLastUsed) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"region": aws.StringValue(apiObject.Region),
+	}
+
+	if apiObject.LastUsedDate != nil {
+		tfMap["last_used_date"] = apiObject.LastUsedDate.Format(time.RFC3339)
+	}
+	return []interface{}{tfMap}
 }
 
 func flattenRoleInlinePolicy(apiObject *iam.PutRolePolicyInput) map[string]interface{} {
