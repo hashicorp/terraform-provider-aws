@@ -1,6 +1,8 @@
 package autoscaling
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	TagResourceTypeGroup = `auto-scaling-group`
@@ -42,6 +44,20 @@ const (
 	LoadBalancerTargetGroupStateRemoving  = "Removing"
 	LoadBalancerTargetGroupStateRemoved   = "Removed"
 )
+
+const (
+	DesiredCapacityTypeMemoryMiB = "memory-mib"
+	DesiredCapacityTypeUnits     = "units"
+	DesiredCapacityTypeVCPU      = "vcpu"
+)
+
+func DesiredCapacityType_Values() []string {
+	return []string{
+		DesiredCapacityTypeMemoryMiB,
+		DesiredCapacityTypeUnits,
+		DesiredCapacityTypeVCPU,
+	}
+}
 
 const (
 	PolicyTypePredictiveScaling     = "PredictiveScaling"

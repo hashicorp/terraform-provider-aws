@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_networkfirewall_resource_policy")
 func DataSourceFirewallResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceFirewallResourcePolicyRead,
@@ -29,7 +30,7 @@ func DataSourceFirewallResourcePolicy() *schema.Resource {
 }
 
 func dataSourceFirewallResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
 
 	resourceArn := d.Get("resource_arn").(string)
 

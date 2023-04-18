@@ -14,8 +14,9 @@ import (
 )
 
 func TestAccRoute53TrafficPolicyDocumentDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		Steps: []resource.TestStep{
@@ -31,8 +32,9 @@ func TestAccRoute53TrafficPolicyDocumentDataSource_basic(t *testing.T) {
 }
 
 func TestAccRoute53TrafficPolicyDocumentDataSource_complete(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		Steps: []resource.TestStep{
@@ -56,25 +58,25 @@ func testAccCheckTrafficPolicySameJSON(resourceName, jsonExpected string) resour
 
 		var j, j2 tfrouter53.Route53TrafficPolicyDoc
 		if err := json.Unmarshal([]byte(rs.Primary.Attributes["json"]), &j); err != nil {
-			return fmt.Errorf("[ERROR] json.Unmarshal %v", err)
+			return fmt.Errorf("json.Unmarshal: %w", err)
 		}
 		if err := json.Unmarshal([]byte(jsonExpected), &j2); err != nil {
-			return fmt.Errorf("[ERROR] json.Unmarshal %v", err)
+			return fmt.Errorf("json.Unmarshal: %w", err)
 		}
 		// Marshall again so it can re order the json data because of arrays
 		jsonDoc, err := json.Marshal(j)
 		if err != nil {
-			return fmt.Errorf("[ERROR] json.marshal %v", err)
+			return fmt.Errorf("json.Marshal: %w", err)
 		}
 		jsonDoc2, err := json.Marshal(j2)
 		if err != nil {
-			return fmt.Errorf("[ERROR] json.marshal %v", err)
+			return fmt.Errorf("json.Marshal: %w", err)
 		}
 		if err = json.Unmarshal(jsonDoc, &j); err != nil {
-			return fmt.Errorf("[ERROR] json.Unmarshal %v", err)
+			return fmt.Errorf("json.Unmarshal: %w", err)
 		}
 		if err = json.Unmarshal(jsonDoc2, &j); err != nil {
-			return fmt.Errorf("[ERROR] json.Unmarshal %v", err)
+			return fmt.Errorf("json.Unmarshal: %w", err)
 		}
 
 		if !awsutil.DeepEqual(&j, &j2) {

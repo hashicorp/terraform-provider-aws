@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"time"
@@ -8,15 +9,17 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_customer_gateway")
 func DataSourceCustomerGateway() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCustomerGatewayRead,
+		ReadWithoutTimeout: dataSourceCustomerGatewayRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -58,8 +61,8 @@ func DataSourceCustomerGateway() *schema.Resource {
 	}
 }
 
-func dataSourceCustomerGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeCustomerGatewaysInput{}
@@ -69,13 +72,13 @@ func dataSourceCustomerGatewayRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if v, ok := d.GetOk("id"); ok {
-		input.CustomerGatewayIds = []*string{aws.String(v.(string))}
+		input.CustomerGatewayIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	cgw, err := FindCustomerGateway(conn, input)
+	cgw, err := FindCustomerGateway(ctx, conn, input)
 
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("EC2 Customer Gateway", err)
+		return diag.FromErr(tfresource.SingularDataSourceFindError("EC2 Customer Gateway", err))
 	}
 
 	d.SetId(aws.StringValue(cgw.CustomerGatewayId))
@@ -92,7 +95,7 @@ func dataSourceCustomerGatewayRead(d *schema.ResourceData, meta interface{}) err
 		v, err := strconv.ParseInt(v, 0, 0)
 
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		d.Set("bgp_asn", v)
@@ -104,8 +107,8 @@ func dataSourceCustomerGatewayRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("ip_address", cgw.IpAddress)
 	d.Set("type", cgw.Type)
 
-	if err := d.Set("tags", KeyValueTags(cgw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	if err := d.Set("tags", KeyValueTags(ctx, cgw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	return nil

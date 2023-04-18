@@ -1,32 +1,37 @@
 package fms
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fms"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_fms_policy", name="Policy")
+// @Tags(identifierAttribute="arn")
 func ResourcePolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePolicyCreate,
-		Read:   resourcePolicyRead,
-		Update: resourcePolicyUpdate,
-		Delete: resourcePolicyDelete,
+		CreateWithoutTimeout: resourcePolicyCreate,
+		ReadWithoutTimeout:   resourcePolicyRead,
+		UpdateWithoutTimeout: resourcePolicyUpdate,
+		DeleteWithoutTimeout: resourcePolicyDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -45,6 +50,10 @@ func ResourcePolicy() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"exclude_resource_tags": {
 				Type:     schema.TypeBool,
@@ -146,128 +155,130 @@ func ResourcePolicy() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FMSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FMSConn()
 
 	input := &fms.PutPolicyInput{
 		Policy:  resourcePolicyExpandPolicy(d),
-		TagList: Tags(tags.IgnoreAWS()),
+		TagList: GetTagsIn(ctx),
 	}
 
-	output, err := conn.PutPolicy(input)
+	output, err := conn.PutPolicyWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating FMS Policy: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating FMS Policy: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.Policy.PolicyId))
 
-	return resourcePolicyRead(d, meta)
+	return append(diags, resourcePolicyRead(ctx, d, meta)...)
 }
 
-func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FMSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FMSConn()
 
-	output, err := FindPolicyByID(conn, d.Id())
+	output, err := FindPolicyByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FMS Policy %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading FMS Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading FMS Policy (%s): %s", d.Id(), err)
 	}
 
-	if err := resourcePolicyFlattenPolicy(d, output); err != nil {
-		return err
+	arn := aws.StringValue(output.PolicyArn)
+	d.Set("arn", arn)
+	policy := output.Policy
+	d.Set("delete_unused_fm_managed_resources", policy.DeleteUnusedFMManagedResources)
+	d.Set("description", policy.PolicyDescription)
+	if err := d.Set("exclude_map", flattenPolicyMap(policy.ExcludeMap)); err != nil {
+		sdkdiag.AppendErrorf(diags, "setting exclude_map: %s", err)
+	}
+	d.Set("exclude_resource_tags", policy.ExcludeResourceTags)
+	if err := d.Set("include_map", flattenPolicyMap(policy.IncludeMap)); err != nil {
+		sdkdiag.AppendErrorf(diags, "setting include_map: %s", err)
+	}
+	d.Set("name", policy.PolicyName)
+	d.Set("policy_update_token", policy.PolicyUpdateToken)
+	d.Set("remediation_enabled", policy.RemediationEnabled)
+	if err := d.Set("resource_tags", flattenResourceTags(policy.ResourceTags)); err != nil {
+		sdkdiag.AppendErrorf(diags, "setting resource_tags: %s", err)
+	}
+	d.Set("resource_type", policy.ResourceType)
+	if err := d.Set("resource_type_list", policy.ResourceTypeList); err != nil {
+		sdkdiag.AppendErrorf(diags, "setting resource_type_list: %s", err)
+	}
+	securityServicePolicy := []map[string]string{{
+		"type":                 aws.StringValue(policy.SecurityServicePolicyData.Type),
+		"managed_service_data": aws.StringValue(policy.SecurityServicePolicyData.ManagedServiceData),
+	}}
+	if err := d.Set("security_service_policy_data", securityServicePolicy); err != nil {
+		sdkdiag.AppendErrorf(diags, "setting security_service_policy_data: %s", err)
 	}
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for FMS Policy (%s): %w", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FMSConn
+func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FMSConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &fms.PutPolicyInput{
 			Policy: resourcePolicyExpandPolicy(d),
 		}
 
-		_, err := conn.PutPolicy(input)
+		_, err := conn.PutPolicyWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating FMS Policy (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating FMS Policy (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating FMS Policy (%s) tags: %w", d.Id(), err)
-		}
-	}
-
-	return resourcePolicyRead(d, meta)
+	return append(diags, resourcePolicyRead(ctx, d, meta)...)
 }
 
-func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FMSConn
+func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FMSConn()
 
 	log.Printf("[DEBUG] Deleting FMS Policy: %s", d.Id())
-	_, err := conn.DeletePolicy(&fms.DeletePolicyInput{
+	_, err := conn.DeletePolicyWithContext(ctx, &fms.DeletePolicyInput{
 		PolicyId:                 aws.String(d.Id()),
 		DeleteAllPolicyResources: aws.Bool(d.Get("delete_all_policy_resources").(bool)),
 	})
 
 	if tfawserr.ErrCodeEquals(err, fms.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting FMS Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting FMS Policy (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func FindPolicyByID(conn *fms.FMS, id string) (*fms.GetPolicyOutput, error) {
+func FindPolicyByID(ctx context.Context, conn *fms.FMS, id string) (*fms.GetPolicyOutput, error) {
 	input := &fms.GetPolicyInput{
 		PolicyId: aws.String(id),
 	}
 
-	output, err := conn.GetPolicy(input)
+	output, err := conn.GetPolicyWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, fms.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -277,44 +288,11 @@ func FindPolicyByID(conn *fms.FMS, id string) (*fms.GetPolicyOutput, error) {
 		return nil, err
 	}
 
-	if output == nil {
+	if output == nil || output.Policy == nil || output.Policy.SecurityServicePolicyData == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output, nil
-}
-
-func resourcePolicyFlattenPolicy(d *schema.ResourceData, resp *fms.GetPolicyOutput) error {
-	d.Set("arn", resp.PolicyArn)
-
-	d.Set("name", resp.Policy.PolicyName)
-	d.Set("exclude_resource_tags", resp.Policy.ExcludeResourceTags)
-	if err := d.Set("exclude_map", flattenPolicyMap(resp.Policy.ExcludeMap)); err != nil {
-		return err
-	}
-	if err := d.Set("include_map", flattenPolicyMap(resp.Policy.IncludeMap)); err != nil {
-		return err
-	}
-	d.Set("remediation_enabled", resp.Policy.RemediationEnabled)
-	if err := d.Set("resource_type_list", resp.Policy.ResourceTypeList); err != nil {
-		return err
-	}
-	d.Set("delete_unused_fm_managed_resources", resp.Policy.DeleteUnusedFMManagedResources)
-	d.Set("resource_type", resp.Policy.ResourceType)
-	d.Set("policy_update_token", resp.Policy.PolicyUpdateToken)
-	if err := d.Set("resource_tags", flattenResourceTags(resp.Policy.ResourceTags)); err != nil {
-		return err
-	}
-
-	securityServicePolicy := []map[string]string{{
-		"type":                 *resp.Policy.SecurityServicePolicyData.Type,
-		"managed_service_data": *resp.Policy.SecurityServicePolicyData.ManagedServiceData,
-	}}
-	if err := d.Set("security_service_policy_data", securityServicePolicy); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func resourcePolicyExpandPolicy(d *schema.ResourceData) *fms.Policy {
@@ -325,12 +303,13 @@ func resourcePolicyExpandPolicy(d *schema.ResourceData) *fms.Policy {
 	}
 
 	fmsPolicy := &fms.Policy{
+		DeleteUnusedFMManagedResources: aws.Bool(d.Get("delete_unused_fm_managed_resources").(bool)),
+		ExcludeResourceTags:            aws.Bool(d.Get("exclude_resource_tags").(bool)),
+		PolicyDescription:              aws.String(d.Get("description").(string)),
 		PolicyName:                     aws.String(d.Get("name").(string)),
 		RemediationEnabled:             aws.Bool(d.Get("remediation_enabled").(bool)),
 		ResourceType:                   resourceType,
 		ResourceTypeList:               resourceTypeList,
-		ExcludeResourceTags:            aws.Bool(d.Get("exclude_resource_tags").(bool)),
-		DeleteUnusedFMManagedResources: aws.Bool(d.Get("delete_unused_fm_managed_resources").(bool)),
 	}
 
 	if d.Id() != "" {

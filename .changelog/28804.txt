@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_glacier_vault: Improve refresh to avoid unnecessary diffs in `access_policy`
+```
+
+```release-note:bug
+resource/aws_glacier_vault_lock: Improve refresh to avoid unnecessary diffs in `policy`
+```

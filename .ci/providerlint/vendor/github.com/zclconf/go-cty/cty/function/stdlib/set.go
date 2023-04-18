@@ -10,6 +10,7 @@ import (
 )
 
 var SetHasElementFunc = function.New(&function.Spec{
+	Description: `Returns true if the given set contains the given element, or false otherwise.`,
 	Params: []function.Parameter{
 		{
 			Name:             "set",
@@ -22,13 +23,15 @@ var SetHasElementFunc = function.New(&function.Spec{
 			AllowDynamicType: true,
 		},
 	},
-	Type: function.StaticReturnType(cty.Bool),
+	Type:         function.StaticReturnType(cty.Bool),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (ret cty.Value, err error) {
 		return args[0].HasElement(args[1]), nil
 	},
 })
 
 var SetUnionFunc = function.New(&function.Spec{
+	Description: `Returns the union of all given sets.`,
 	Params: []function.Parameter{
 		{
 			Name:             "first_set",
@@ -41,13 +44,15 @@ var SetUnionFunc = function.New(&function.Spec{
 		Type:             cty.Set(cty.DynamicPseudoType),
 		AllowDynamicType: true,
 	},
-	Type: setOperationReturnType,
+	Type:         setOperationReturnType,
+	RefineResult: refineNonNull,
 	Impl: setOperationImpl(func(s1, s2 cty.ValueSet) cty.ValueSet {
 		return s1.Union(s2)
 	}, true),
 })
 
 var SetIntersectionFunc = function.New(&function.Spec{
+	Description: `Returns the intersection of all given sets.`,
 	Params: []function.Parameter{
 		{
 			Name:             "first_set",
@@ -60,13 +65,15 @@ var SetIntersectionFunc = function.New(&function.Spec{
 		Type:             cty.Set(cty.DynamicPseudoType),
 		AllowDynamicType: true,
 	},
-	Type: setOperationReturnType,
+	Type:         setOperationReturnType,
+	RefineResult: refineNonNull,
 	Impl: setOperationImpl(func(s1, s2 cty.ValueSet) cty.ValueSet {
 		return s1.Intersection(s2)
 	}, false),
 })
 
 var SetSubtractFunc = function.New(&function.Spec{
+	Description: `Returns the relative complement of the two given sets.`,
 	Params: []function.Parameter{
 		{
 			Name:             "a",
@@ -79,13 +86,15 @@ var SetSubtractFunc = function.New(&function.Spec{
 			AllowDynamicType: true,
 		},
 	},
-	Type: setOperationReturnType,
+	Type:         setOperationReturnType,
+	RefineResult: refineNonNull,
 	Impl: setOperationImpl(func(s1, s2 cty.ValueSet) cty.ValueSet {
 		return s1.Subtract(s2)
 	}, false),
 })
 
 var SetSymmetricDifferenceFunc = function.New(&function.Spec{
+	Description: `Returns the symmetric difference of the two given sets.`,
 	Params: []function.Parameter{
 		{
 			Name:             "first_set",
@@ -98,7 +107,8 @@ var SetSymmetricDifferenceFunc = function.New(&function.Spec{
 		Type:             cty.Set(cty.DynamicPseudoType),
 		AllowDynamicType: true,
 	},
-	Type: setOperationReturnType,
+	Type:         setOperationReturnType,
+	RefineResult: refineNonNull,
 	Impl: setOperationImpl(func(s1, s2 cty.ValueSet) cty.ValueSet {
 		return s1.SymmetricDifference(s2)
 	}, false),

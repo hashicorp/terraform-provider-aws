@@ -6,24 +6,23 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 )
 
-func init() {
-	registerFrameworkDataSourceFactory(newDataSourceRegion)
-}
-
-// newDataSourceRegion instantiates a new DataSource for the aws_region data source.
+// @FrameworkDataSource
 func newDataSourceRegion(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceRegion{}, nil
+	d := &dataSourceRegion{}
+	d.SetMigratedFromPluginSDK(true)
+
+	return d, nil
 }
 
 type dataSourceRegion struct {
-	meta *conns.AWSClient
+	framework.DataSourceWithConfigure
 }
 
 // Metadata should return the full name of the data source, such as
@@ -32,41 +31,26 @@ func (d *dataSourceRegion) Metadata(_ context.Context, request datasource.Metada
 	response.TypeName = "aws_region"
 }
 
-// GetSchema returns the schema for this data source.
-func (d *dataSourceRegion) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	schema := tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"description": {
-				Type:     types.StringType,
+// Schema returns the schema for this data source.
+func (d *dataSourceRegion) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"description": schema.StringAttribute{
 				Computed: true,
 			},
-			"endpoint": {
-				Type:     types.StringType,
+			"endpoint": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
-			"id": {
-				Type:     types.StringType,
+			"id": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
-			"name": {
-				Type:     types.StringType,
+			"name": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
 		},
-	}
-
-	return schema, nil
-}
-
-// Configure enables provider-level data or clients to be set in the
-// provider-defined DataSource type. It is separately executed for each
-// ReadDataSource RPC.
-func (d *dataSourceRegion) Configure(_ context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
-	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
-		d.meta = v
 	}
 }
 
@@ -84,7 +68,7 @@ func (d *dataSourceRegion) Read(ctx context.Context, request datasource.ReadRequ
 	var region *endpoints.Region
 
 	if !data.Endpoint.IsNull() {
-		matchingRegion, err := FindRegionByEndpoint(data.Endpoint.Value)
+		matchingRegion, err := FindRegionByEndpoint(data.Endpoint.ValueString())
 
 		if err != nil {
 			response.Diagnostics.AddError("finding Region by endpoint", err.Error())
@@ -96,7 +80,7 @@ func (d *dataSourceRegion) Read(ctx context.Context, request datasource.ReadRequ
 	}
 
 	if !data.Name.IsNull() {
-		matchingRegion, err := FindRegionByName(data.Name.Value)
+		matchingRegion, err := FindRegionByName(data.Name.ValueString())
 
 		if err != nil {
 			response.Diagnostics.AddError("finding Region by name", err.Error())
@@ -115,7 +99,7 @@ func (d *dataSourceRegion) Read(ctx context.Context, request datasource.ReadRequ
 
 	// Default to provider current region if no other filters matched
 	if region == nil {
-		matchingRegion, err := FindRegionByName(d.meta.Region)
+		matchingRegion, err := FindRegionByName(d.Meta().Region)
 
 		if err != nil {
 			response.Diagnostics.AddError("finding Region by name", err.Error())
@@ -126,7 +110,7 @@ func (d *dataSourceRegion) Read(ctx context.Context, request datasource.ReadRequ
 		region = matchingRegion
 	}
 
-	regionEndpointEC2, err := region.ResolveEndpoint(endpoints.Ec2ServiceID)
+	regionEndpointEC2, err := region.ResolveEndpoint(ec2.EndpointsID)
 
 	if err != nil {
 		response.Diagnostics.AddError("resolving EC2 endpoint", err.Error())
@@ -134,10 +118,10 @@ func (d *dataSourceRegion) Read(ctx context.Context, request datasource.ReadRequ
 		return
 	}
 
-	data.Description = types.String{Value: region.Description()}
-	data.Endpoint = types.String{Value: strings.TrimPrefix(regionEndpointEC2.URL, "https://")}
-	data.ID = types.String{Value: region.ID()}
-	data.Name = types.String{Value: region.ID()}
+	data.Description = types.StringValue(region.Description())
+	data.Endpoint = types.StringValue(strings.TrimPrefix(regionEndpointEC2.URL, "https://"))
+	data.ID = types.StringValue(region.ID())
+	data.Name = types.StringValue(region.ID())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -152,7 +136,7 @@ type dataSourceRegionData struct {
 func FindRegionByEndpoint(endpoint string) (*endpoints.Region, error) {
 	for _, partition := range endpoints.DefaultPartitions() {
 		for _, region := range partition.Regions() {
-			regionEndpointEC2, err := region.ResolveEndpoint(endpoints.Ec2ServiceID)
+			regionEndpointEC2, err := region.ResolveEndpoint(ec2.EndpointsID)
 
 			if err != nil {
 				return nil, err

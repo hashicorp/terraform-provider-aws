@@ -21,6 +21,7 @@ import (
 )
 
 func testAccCustomKeyStore_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if os.Getenv("CLOUD_HSM_CLUSTER_ID") == "" {
 		t.Skip("CLOUD_HSM_CLUSTER_ID environment variable not set")
 	}
@@ -42,18 +43,18 @@ func testAccCustomKeyStore_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(kms.EndpointsID, t)
-			testAccCustomKeyStoresPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, kms.EndpointsID)
+			testAccCustomKeyStoresPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomKeyStoreDestroy,
+		CheckDestroy:             testAccCheckCustomKeyStoreDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomKeyStoreConfig_basic(rName, clusterId, trustAnchorCertificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomKeyStoreExists(resourceName, &customkeystore),
+					testAccCheckCustomKeyStoreExists(ctx, resourceName, &customkeystore),
 					resource.TestCheckResourceAttr(resourceName, "cloud_hsm_cluster_id", clusterId),
 				),
 			},
@@ -68,6 +69,7 @@ func testAccCustomKeyStore_basic(t *testing.T) {
 }
 
 func testAccCustomKeyStore_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	if os.Getenv("CLOUD_HSM_CLUSTER_ID") == "" {
 		t.Skip("CLOUD_HSM_CLUSTER_ID environment variable not set")
 	}
@@ -89,18 +91,18 @@ func testAccCustomKeyStore_update(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(kms.EndpointsID, t)
-			testAccCustomKeyStoresPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, kms.EndpointsID)
+			testAccCustomKeyStoresPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomKeyStoreDestroy,
+		CheckDestroy:             testAccCheckCustomKeyStoreDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomKeyStoreConfig_basic(fmt.Sprintf("%s-updated", rName), clusterId, trustAnchorCertificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomKeyStoreExists(resourceName, &customkeystore),
+					testAccCheckCustomKeyStoreExists(ctx, resourceName, &customkeystore),
 					resource.TestCheckResourceAttr(resourceName, "cloud_hsm_cluster_id", clusterId),
 					resource.TestCheckResourceAttr(resourceName, "custom_key_store_name", fmt.Sprintf("%s-updated", rName)),
 				),
@@ -110,6 +112,7 @@ func testAccCustomKeyStore_update(t *testing.T) {
 }
 
 func testAccCustomKeyStore_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	if os.Getenv("CLOUD_HSM_CLUSTER_ID") == "" {
 		t.Skip("CLOUD_HSM_CLUSTER_ID environment variable not set")
 	}
@@ -131,19 +134,19 @@ func testAccCustomKeyStore_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(kms.EndpointsID, t)
-			testAccCustomKeyStoresPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, kms.EndpointsID)
+			testAccCustomKeyStoresPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomKeyStoreDestroy,
+		CheckDestroy:             testAccCheckCustomKeyStoreDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomKeyStoreConfig_basic(rName, clusterId, trustAnchorCertificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomKeyStoreExists(resourceName, &customkeystore),
-					acctest.CheckResourceDisappears(acctest.Provider, tfkms.ResourceCustomKeyStore(), resourceName),
+					testAccCheckCustomKeyStoreExists(ctx, resourceName, &customkeystore),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkms.ResourceCustomKeyStore(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -151,31 +154,32 @@ func testAccCustomKeyStore_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckCustomKeyStoreDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
-	ctx := context.Background()
+func testAccCheckCustomKeyStoreDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_kms_custom_key_store" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_kms_custom_key_store" {
+				continue
+			}
+
+			in := &kms.DescribeCustomKeyStoresInput{
+				CustomKeyStoreId: aws.String(rs.Primary.ID),
+			}
+			_, err := tfkms.FindCustomKeyStoreByID(ctx, conn, in)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			return create.Error(names.KMS, create.ErrActionCheckingDestroyed, tfkms.ResNameCustomKeyStore, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
-		in := &kms.DescribeCustomKeyStoresInput{
-			CustomKeyStoreId: aws.String(rs.Primary.ID),
-		}
-		_, err := tfkms.FindCustomKeyStoreByID(ctx, conn, in)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		return create.Error(names.KMS, create.ErrActionCheckingDestroyed, tfkms.ResNameCustomKeyStore, rs.Primary.ID, errors.New("not destroyed"))
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckCustomKeyStoreExists(name string, customkeystore *kms.CustomKeyStoresListEntry) resource.TestCheckFunc {
+func testAccCheckCustomKeyStoreExists(ctx context.Context, name string, customkeystore *kms.CustomKeyStoresListEntry) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -186,8 +190,7 @@ func testAccCheckCustomKeyStoreExists(name string, customkeystore *kms.CustomKey
 			return create.Error(names.KMS, create.ErrActionCheckingExistence, tfkms.ResNameCustomKeyStore, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
-		ctx := context.Background()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
 
 		in := &kms.DescribeCustomKeyStoresInput{
 			CustomKeyStoreId: aws.String(rs.Primary.ID),
@@ -204,9 +207,8 @@ func testAccCheckCustomKeyStoreExists(name string, customkeystore *kms.CustomKey
 	}
 }
 
-func testAccCustomKeyStoresPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
-	ctx := context.Background()
+func testAccCustomKeyStoresPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
 
 	input := &kms.DescribeCustomKeyStoresInput{}
 	_, err := conn.DescribeCustomKeyStoresWithContext(ctx, input)

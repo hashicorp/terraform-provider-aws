@@ -23,15 +23,16 @@ func init() {
 }
 
 func sweepKeyspaces(region string) error { // nosemgrep:ci.keyspaces-in-func-name
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).KeyspacesConn
+	conn := client.(*conns.AWSClient).KeyspacesConn()
 	input := &keyspaces.ListKeyspacesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListKeyspacesPages(input, func(page *keyspaces.ListKeyspacesOutput, lastPage bool) bool {
+	err = conn.ListKeyspacesPagesWithContext(ctx, input, func(page *keyspaces.ListKeyspacesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -64,7 +65,7 @@ func sweepKeyspaces(region string) error { // nosemgrep:ci.keyspaces-in-func-nam
 		return fmt.Errorf("error listing Keyspaces Keyspaces (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Keyspaces Keyspaces (%s): %w", region, err)

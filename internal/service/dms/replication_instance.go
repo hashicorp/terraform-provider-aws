@@ -1,37 +1,42 @@
 package dms
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_dms_replication_instance", name="Replication Instance")
+// @Tags(identifierAttribute="replication_instance_arn")
 func ResourceReplicationInstance() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceReplicationInstanceCreate,
-		Read:   resourceReplicationInstanceRead,
-		Update: resourceReplicationInstanceUpdate,
-		Delete: resourceReplicationInstanceDelete,
+		CreateWithoutTimeout: resourceReplicationInstanceCreate,
+		ReadWithoutTimeout:   resourceReplicationInstanceRead,
+		UpdateWithoutTimeout: resourceReplicationInstanceUpdate,
+		DeleteWithoutTimeout: resourceReplicationInstanceDelete,
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Minute),
+			Create: schema.DefaultTimeout(40 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -121,8 +126,8 @@ func ResourceReplicationInstance() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -136,10 +141,9 @@ func ResourceReplicationInstance() *schema.Resource {
 	}
 }
 
-func resourceReplicationInstanceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSConn()
 
 	request := &dms.CreateReplicationInstanceInput{
 		AutoMinorVersionUpgrade:       aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
@@ -147,7 +151,7 @@ func resourceReplicationInstanceCreate(d *schema.ResourceData, meta interface{})
 		MultiAZ:                       aws.Bool(d.Get("multi_az").(bool)),
 		ReplicationInstanceClass:      aws.String(d.Get("replication_instance_class").(string)),
 		ReplicationInstanceIdentifier: aws.String(d.Get("replication_instance_id").(string)),
-		Tags:                          Tags(tags.IgnoreAWS()),
+		Tags:                          GetTagsIn(ctx),
 	}
 
 	// WARNING: GetOk returns the zero value for the type if the key is omitted in config. This means for optional
@@ -178,37 +182,36 @@ func resourceReplicationInstanceCreate(d *schema.ResourceData, meta interface{})
 
 	log.Println("[DEBUG] DMS create replication instance:", request)
 
-	_, err := conn.CreateReplicationInstance(request)
+	_, err := conn.CreateReplicationInstanceWithContext(ctx, request)
 	if err != nil {
-		return fmt.Errorf("error creating DMS Replication Instance: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating DMS Replication Instance: %s", err)
 	}
 
 	d.SetId(d.Get("replication_instance_id").(string))
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"creating", "modifying"},
 		Target:     []string{"available"},
-		Refresh:    resourceReplicationInstanceStateRefreshFunc(conn, d.Id()),
+		Refresh:    resourceReplicationInstanceStateRefreshFunc(ctx, conn, d.Id()),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting
 	}
 
 	// Wait, catching any errors
-	_, err = stateConf.WaitForState()
+	_, err = stateConf.WaitForStateContext(ctx)
 	if err != nil {
-		return fmt.Errorf("error waiting for DMS Replication Instance (%s) creation: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Instance (%s) creation: %s", d.Id(), err)
 	}
 
-	return resourceReplicationInstanceRead(d, meta)
+	return append(diags, resourceReplicationInstanceRead(ctx, d, meta)...)
 }
 
-func resourceReplicationInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSConn()
 
-	response, err := conn.DescribeReplicationInstances(&dms.DescribeReplicationInstancesInput{
+	response, err := conn.DescribeReplicationInstancesWithContext(ctx, &dms.DescribeReplicationInstancesInput{
 		Filters: []*dms.Filter{
 			{
 				Name:   aws.String("replication-instance-id"),
@@ -220,17 +223,17 @@ func resourceReplicationInstanceRead(d *schema.ResourceData, meta interface{}) e
 	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
 		log.Printf("[WARN] DMS Replication Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing DMS Replication Instance (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing DMS Replication Instance (%s): %s", d.Id(), err)
 	}
 
 	if response == nil || len(response.ReplicationInstances) == 0 || response.ReplicationInstances[0] == nil {
 		log.Printf("[WARN] DMS Replication Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	instance := response.ReplicationInstances[0]
@@ -248,11 +251,11 @@ func resourceReplicationInstanceRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("replication_instance_id", instance.ReplicationInstanceIdentifier)
 
 	if err := d.Set("replication_instance_private_ips", aws.StringValueSlice(instance.ReplicationInstancePrivateIpAddresses)); err != nil {
-		return fmt.Errorf("error setting replication_instance_private_ips: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting replication_instance_private_ips: %s", err)
 	}
 
 	if err := d.Set("replication_instance_public_ips", aws.StringValueSlice(instance.ReplicationInstancePublicIpAddresses)); err != nil {
-		return fmt.Errorf("error setting replication_instance_private_ips: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting replication_instance_private_ips: %s", err)
 	}
 
 	d.Set("replication_subnet_group_id", instance.ReplicationSubnetGroup.ReplicationSubnetGroupIdentifier)
@@ -263,31 +266,15 @@ func resourceReplicationInstanceRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if err := d.Set("vpc_security_group_ids", vpc_security_group_ids); err != nil {
-		return fmt.Errorf("error setting vpc_security_group_ids: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting vpc_security_group_ids: %s", err)
 	}
 
-	tags, err := ListTags(conn, d.Get("replication_instance_arn").(string))
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for DMS Replication Instance (%s): %s", d.Get("replication_instance_arn").(string), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceReplicationInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+func resourceReplicationInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSConn()
 
 	request := &dms.ModifyReplicationInstanceInput{
 		ApplyImmediately:       aws.Bool(d.Get("apply_immediately").(bool)),
@@ -344,42 +331,34 @@ func resourceReplicationInstanceUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		arn := d.Get("replication_instance_arn").(string)
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating DMS Replication Instance (%s) tags: %s", arn, err)
-		}
-	}
-
 	if hasChanges {
-		_, err := conn.ModifyReplicationInstance(request)
+		_, err := conn.ModifyReplicationInstanceWithContext(ctx, request)
 		if err != nil {
-			return fmt.Errorf("error modifying DMS Replication Instance (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying DMS Replication Instance (%s): %s", d.Id(), err)
 		}
 
-		stateConf := &resource.StateChangeConf{
+		stateConf := &retry.StateChangeConf{
 			Pending:    []string{"modifying", "upgrading"},
 			Target:     []string{"available"},
-			Refresh:    resourceReplicationInstanceStateRefreshFunc(conn, d.Id()),
+			Refresh:    resourceReplicationInstanceStateRefreshFunc(ctx, conn, d.Id()),
 			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			MinTimeout: 10 * time.Second,
 			Delay:      30 * time.Second, // Wait 30 secs before starting
 		}
 
 		// Wait, catching any errors
-		_, err = stateConf.WaitForState()
+		_, err = stateConf.WaitForStateContext(ctx)
 		if err != nil {
-			return fmt.Errorf("error waiting for DMS Replication Instance (%s) modification: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Instance (%s) modification: %s", d.Id(), err)
 		}
 	}
 
-	return resourceReplicationInstanceRead(d, meta)
+	return append(diags, resourceReplicationInstanceRead(ctx, d, meta)...)
 }
 
-func resourceReplicationInstanceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+func resourceReplicationInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSConn()
 
 	request := &dms.DeleteReplicationInstanceInput{
 		ReplicationInstanceArn: aws.String(d.Get("replication_instance_arn").(string)),
@@ -387,37 +366,37 @@ func resourceReplicationInstanceDelete(d *schema.ResourceData, meta interface{})
 
 	log.Printf("[DEBUG] DMS delete replication instance: %#v", request)
 
-	_, err := conn.DeleteReplicationInstance(request)
+	_, err := conn.DeleteReplicationInstanceWithContext(ctx, request)
 
 	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting DMS Replication Instance (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting DMS Replication Instance (%s): %s", d.Id(), err)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"deleting"},
 		Target:     []string{},
-		Refresh:    resourceReplicationInstanceStateRefreshFunc(conn, d.Id()),
+		Refresh:    resourceReplicationInstanceStateRefreshFunc(ctx, conn, d.Id()),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting
 	}
 
 	// Wait, catching any errors
-	_, err = stateConf.WaitForState()
+	_, err = stateConf.WaitForStateContext(ctx)
 	if err != nil {
-		return fmt.Errorf("error waiting for DMS Replication Instance (%s) deletion: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Instance (%s) deletion: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceReplicationInstanceStateRefreshFunc(conn *dms.DatabaseMigrationService, replicationInstanceID string) resource.StateRefreshFunc {
+func resourceReplicationInstanceStateRefreshFunc(ctx context.Context, conn *dms.DatabaseMigrationService, replicationInstanceID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		v, err := conn.DescribeReplicationInstances(&dms.DescribeReplicationInstancesInput{
+		v, err := conn.DescribeReplicationInstancesWithContext(ctx, &dms.DescribeReplicationInstancesInput{
 			Filters: []*dms.Filter{
 				{
 					Name:   aws.String("replication-instance-id"),

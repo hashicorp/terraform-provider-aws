@@ -12,6 +12,8 @@ import (
 )
 
 func TestFindRegionByEC2Endpoint(t *testing.T) {
+	t.Parallel()
+
 	var testCases = []struct {
 		Value    string
 		ErrCount int
@@ -46,6 +48,8 @@ func TestFindRegionByEC2Endpoint(t *testing.T) {
 }
 
 func TestFindRegionByName(t *testing.T) {
+	t.Parallel()
+
 	var testCases = []struct {
 		Value    string
 		ErrCount int
@@ -76,10 +80,11 @@ func TestFindRegionByName(t *testing.T) {
 }
 
 func TestAccMetaRegionDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -96,10 +101,11 @@ func TestAccMetaRegionDataSource_basic(t *testing.T) {
 }
 
 func TestAccMetaRegionDataSource_endpoint(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -116,10 +122,11 @@ func TestAccMetaRegionDataSource_endpoint(t *testing.T) {
 }
 
 func TestAccMetaRegionDataSource_endpointAndName(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -136,10 +143,11 @@ func TestAccMetaRegionDataSource_endpointAndName(t *testing.T) {
 }
 
 func TestAccMetaRegionDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
