@@ -1,12 +1,45 @@
 ## 4.64.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_prometheus_workspaces` ([#28574](https://github.com/hashicorp/terraform-provider-aws/issues/28574))
+* **New Data Source:** `aws_sesv2_configuration_set` ([#30108](https://github.com/hashicorp/terraform-provider-aws/issues/30108))
+* **New Resource:** `aws_cloudwatch_event_endpoint` ([#25846](https://github.com/hashicorp/terraform-provider-aws/issues/25846))
+
 ENHANCEMENTS:
 
+* data-source/aws_iam_role: Add `role_last_used` attribute ([#30750](https://github.com/hashicorp/terraform-provider-aws/issues/30750))
+* data-source/aws_lakeformation_data_lake_settings: Add `allow_external_data_filtering`, `external_data_filtering_allow_list` and `authorized_session_tag_value_list` attributes ([#30207](https://github.com/hashicorp/terraform-provider-aws/issues/30207))
+* data-source/aws_outposts_outpost: Add `lifecycle_status`, `site_arn`, `supported_hardware_type` and `tags` attributes ([#30754](https://github.com/hashicorp/terraform-provider-aws/issues/30754))
+* resource/aws_dms_replication_instance: Increase default timeout for `create` ([#29905](https://github.com/hashicorp/terraform-provider-aws/issues/29905))
+* resource/aws_eks_node_group: Add plan time validation to `node_group_name` and `node_group_name_prefix` arguments ([#29975](https://github.com/hashicorp/terraform-provider-aws/issues/29975))
 * resource/aws_fis_experiment_template: Add support for `Subnets` Network Actions to `actions.*.target` ([#30211](https://github.com/hashicorp/terraform-provider-aws/issues/30211))
+* resource/aws_iam_role: Add `role_last_used` attribute ([#30750](https://github.com/hashicorp/terraform-provider-aws/issues/30750))
+* resource/aws_lakeformation_data_lake_settings: Add `allow_external_data_filtering`, `external_data_filtering_allow_list` and `authorized_session_tag_value_list` arguments ([#30207](https://github.com/hashicorp/terraform-provider-aws/issues/30207))
+* resource/aws_lambda_event_source_mapping: Add `document_db_event_source_config` configuration block ([#28586](https://github.com/hashicorp/terraform-provider-aws/issues/28586))
+* resource/aws_lambda_function: Add support for `python3.10` `runtime` value ([#30781](https://github.com/hashicorp/terraform-provider-aws/issues/30781))
+* resource/aws_lambda_layer_version: Add support for `python3.10` `compatible_runtimes` value ([#30781](https://github.com/hashicorp/terraform-provider-aws/issues/30781))
+* resource/aws_route: Allow `gateway_id` value of `local` when updating a Route ([#24507](https://github.com/hashicorp/terraform-provider-aws/issues/24507))
+* resource/aws_s3_bucket: Correct S3 Object Lock error handling for third-party S3-compatible API implementations ([#26317](https://github.com/hashicorp/terraform-provider-aws/issues/26317))
+* resource/aws_s3_bucket_object_lock_configuration: Correct error handling for third-party S3-compatible API implementations ([#26317](https://github.com/hashicorp/terraform-provider-aws/issues/26317))
+* resource/aws_ssoadmin_account_assignment: Extend timeout delay and min timeout ([#25849](https://github.com/hashicorp/terraform-provider-aws/issues/25849))
+* resource/aws_ssoadmin_permission_set: Extend timeout delay and min timeout ([#25849](https://github.com/hashicorp/terraform-provider-aws/issues/25849))
+* resource/aws_vpc_endpoint_service_allowed_principal: Changed id to use ServicePermissionId ([#27640](https://github.com/hashicorp/terraform-provider-aws/issues/27640))
 
 BUG FIXES:
 
+* data-source/aws_lakeformation_permissions: Change `lf_tag_policy.expression` from `TypeList` to `TypeSet` as order is not significant ([#26643](https://github.com/hashicorp/terraform-provider-aws/issues/26643))
+* data-source/aws_lakeformation_permissions: Remove limit on number of `lf_tag_policy.expression` blocks ([#26643](https://github.com/hashicorp/terraform-provider-aws/issues/26643))
+* resource/aws_cloudwatch_event_rule: Add retry to read step, resolving `couldn't find resource` error ([#25846](https://github.com/hashicorp/terraform-provider-aws/issues/25846))
+* resource/aws_default_vpc: Fix adoption of default VPC with generated IPv6 ([#29083](https://github.com/hashicorp/terraform-provider-aws/issues/29083))
 * resource/aws_dx_gateway: Remove plan time validation from `name` argument ([#30739](https://github.com/hashicorp/terraform-provider-aws/issues/30739))
+* resource/aws_ecs_service: Fix error importing service with an IAM role with a path ([#30170](https://github.com/hashicorp/terraform-provider-aws/issues/30170))
+* resource/aws_lakeformation_permissions: Change `lf_tag_policy.expression` from `TypeList` to `TypeSet` as order is not significant ([#26643](https://github.com/hashicorp/terraform-provider-aws/issues/26643))
+* resource/aws_lakeformation_permissions: Change `lf_tag`, `lf_tag.values`, `lf_tag_policy`, `lf_tag_policy.expression.key`, `lf_tag_policy.expression.values` and `lf_tag_policy.resource_type` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#26643](https://github.com/hashicorp/terraform-provider-aws/issues/26643))
+* resource/aws_lakeformation_permissions: Remove limit on number of `lf_tag_policy.expression` blocks ([#26643](https://github.com/hashicorp/terraform-provider-aws/issues/26643))
+* resource/aws_lambda_event_source_mapping: Fix IAM eventual consistency errors on resource Update ([#28586](https://github.com/hashicorp/terraform-provider-aws/issues/28586))
+* resource/aws_medialive_channel: Fix to properly expand `destinations.media_package_settings` field ([#30660](https://github.com/hashicorp/terraform-provider-aws/issues/30660))
+* resource/aws_quicksight_data_set: Correct custom_sql documentation ([#30742](https://github.com/hashicorp/terraform-provider-aws/issues/30742))
 * resource/aws_quicksight_data_set: Correctly persist `create_columns_operation.expression` field ([#30708](https://github.com/hashicorp/terraform-provider-aws/issues/30708))
 * resource/aws_quicksight_data_set: Fix to properly expand `project_operation.projected_columns` field ([#30699](https://github.com/hashicorp/terraform-provider-aws/issues/30699))
 * resource/aws_quicksight_data_set: Fix to properly flatten `cast_column_type_operation.format` field ([#30701](https://github.com/hashicorp/terraform-provider-aws/issues/30701))
