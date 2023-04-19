@@ -35,3 +35,35 @@ func TestValidName(t *testing.T) {
 		}
 	}
 }
+
+func TestValidPrefix(t *testing.T) {
+	t.Parallel()
+
+	maxLength := 37
+	validPrefixes := []string{
+		"ValidSageMakerName",
+		"Valid-5a63Mak3r-Name",
+		"123-456-789",
+		"1234",
+		strings.Repeat("W", maxLength),
+	}
+	for _, v := range validPrefixes {
+		_, errors := validPrefix(v, "name_prefix")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid SageMaker prefix with maximum length %d chars: %q", v, maxLength, errors)
+		}
+	}
+
+	invalidPrefixes := []string{
+		"Invalid prefix",                 // blanks are not allowed
+		"1#{}nook",                       // other non-alphanumeric chars
+		"-nook",                          // cannot start with hyphen
+		strings.Repeat("W", maxLength+1), // length > maxLength
+	}
+	for _, v := range invalidPrefixes {
+		_, errors := validPrefix(v, "name_prefix")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid SageMaker prefix", v)
+		}
+	}
+}

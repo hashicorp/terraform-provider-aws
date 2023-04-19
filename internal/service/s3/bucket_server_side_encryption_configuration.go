@@ -96,7 +96,7 @@ func resourceBucketServerSideEncryptionConfigurationCreate(ctx context.Context, 
 			return conn.PutBucketEncryptionWithContext(ctx, input)
 		},
 		s3.ErrCodeNoSuchBucket,
-		ErrCodeOperationAborted,
+		errCodeOperationAborted,
 	)
 
 	if err != nil {
@@ -187,7 +187,7 @@ func resourceBucketServerSideEncryptionConfigurationUpdate(ctx context.Context, 
 			return conn.PutBucketEncryptionWithContext(ctx, input)
 		},
 		s3.ErrCodeNoSuchBucket,
-		ErrCodeOperationAborted,
+		errCodeOperationAborted,
 	)
 
 	if err != nil {

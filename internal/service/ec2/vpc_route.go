@@ -51,6 +51,7 @@ func ResourceRoute() *schema.Resource {
 		ReadWithoutTimeout:   resourceRouteRead,
 		UpdateWithoutTimeout: resourceRouteUpdate,
 		DeleteWithoutTimeout: resourceRouteDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceRouteImport,
 		},
@@ -243,7 +244,6 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "creating Route: unexpected route target attribute: %q", targetAttributeKey)
 	}
 
-	log.Printf("[DEBUG] Creating Route: %s", input)
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate),
 		func() (interface{}, error) {
 			return conn.CreateRouteWithContext(ctx, input)
@@ -252,16 +252,19 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		errCodeInvalidTransitGatewayIDNotFound,
 	)
 
+	// Local routes cannot be created manually.
+	if tfawserr.ErrMessageContains(err, errCodeInvalidGatewayIDNotFound, "The gateway ID 'local' does not exist") {
+		return sdkdiag.AppendErrorf(diags, "cannot create local Route, use `terraform import` to manage existing local Routes")
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Route in Route Table (%s) with destination (%s): %s", routeTableID, destination, err)
 	}
 
 	d.SetId(RouteCreateID(routeTableID, destination))
 
-	_, err = WaitRouteReady(ctx, conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutCreate))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Route in Route Table (%s) with destination (%s) to become available: %s", routeTableID, destination, err)
+	if _, err := WaitRouteReady(ctx, conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Route in Route Table (%s) with destination (%s) create: %s", routeTableID, destination, err)
 	}
 
 	return append(diags, resourceRouteRead(ctx, d, meta)...)
@@ -368,6 +371,7 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "updating Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
 
+	localTarget := target == gatewayIDLocal
 	switch target := aws.String(target); targetAttributeKey {
 	case "carrier_gateway_id":
 		input.CarrierGatewayId = target
@@ -376,7 +380,11 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	case "egress_only_gateway_id":
 		input.EgressOnlyInternetGatewayId = target
 	case "gateway_id":
-		input.GatewayId = target
+		if localTarget {
+			input.LocalTarget = aws.Bool(true)
+		} else {
+			input.GatewayId = target
+		}
 	case "instance_id":
 		input.InstanceId = target
 	case "local_gateway_id":
@@ -402,10 +410,8 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "updating Route in Route Table (%s) with destination (%s): %s", routeTableID, destination, err)
 	}
 
-	_, err = WaitRouteReady(ctx, conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutUpdate))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Route in Route Table (%s) with destination (%s) to become available: %s", routeTableID, destination, err)
+	if _, err := WaitRouteReady(ctx, conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Route in Route Table (%s) with destination (%s) update: %s", routeTableID, destination, err)
 	}
 
 	return append(diags, resourceRouteRead(ctx, d, meta)...)
@@ -463,10 +469,8 @@ func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "deleting Route in Route Table (%s) with destination (%s): %s", routeTableID, destination, err)
 	}
 
-	_, err = WaitRouteDeleted(ctx, conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutDelete))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Route in Route Table (%s) with destination (%s) to delete: %s", routeTableID, destination, err)
+	if _, err := WaitRouteDeleted(ctx, conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Route in Route Table (%s) with destination (%s) delete: %s", routeTableID, destination, err)
 	}
 
 	return diags

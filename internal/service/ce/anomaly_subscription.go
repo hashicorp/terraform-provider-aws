@@ -18,7 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ce_anomaly_subscription")
+// @SDKResource("aws_ce_anomaly_subscription", name="Anomaly Subscription")
+// @Tags(identifierAttribute="id")
 func ResourceAnomalySubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAnomalySubscriptionCreate,
@@ -91,8 +92,8 @@ func ResourceAnomalySubscription() *schema.Resource {
 				Optional: true,
 				Elem:     schemaCostCategoryRule(),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -101,8 +102,6 @@ func ResourceAnomalySubscription() *schema.Resource {
 
 func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CEConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &costexplorer.CreateAnomalySubscriptionInput{
 		AnomalySubscription: &costexplorer.AnomalySubscription{
@@ -111,6 +110,7 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 			MonitorArnList:   aws.StringSlice(expandAnomalySubscriptionMonitorARNList(d.Get("monitor_arn_list").([]interface{}))),
 			Subscribers:      expandAnomalySubscriptionSubscribers(d.Get("subscriber").(*schema.Set).List()),
 		},
+		ResourceTags: GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("account_id"); ok {
@@ -118,15 +118,11 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if v, ok := d.GetOk("threshold"); ok {
-		input.AnomalySubscription.Threshold = aws.Float64(v.(float64))
+		input.AnomalySubscription.Threshold = aws.Float64(v.(float64)) //nolint:staticcheck // see https://github.com/hashicorp/terraform-provider-aws/issues/30326
 	}
 
 	if v, ok := d.GetOk("threshold_expression"); ok {
 		input.AnomalySubscription.ThresholdExpression = expandCostExpression(v.([]interface{})[0].(map[string]interface{}))
-	}
-
-	if len(tags) > 0 {
-		input.ResourceTags = Tags(tags.IgnoreAWS())
 	}
 
 	resp, err := conn.CreateAnomalySubscriptionWithContext(ctx, input)
@@ -146,8 +142,6 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 
 func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CEConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	subscription, err := FindAnomalySubscriptionByARN(ctx, conn, d.Id())
 
@@ -166,27 +160,11 @@ func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData
 	d.Set("frequency", subscription.Frequency)
 	d.Set("monitor_arn_list", subscription.MonitorArnList)
 	d.Set("subscriber", flattenAnomalySubscriptionSubscribers(subscription.Subscribers))
-	d.Set("threshold", subscription.Threshold)
+	d.Set("threshold", subscription.Threshold) //nolint:staticcheck // see https://github.com/hashicorp/terraform-provider-aws/issues/30326
 	d.Set("name", subscription.SubscriptionName)
 
 	if err = d.Set("threshold_expression", []interface{}{flattenCostCategoryRuleExpression(subscription.ThresholdExpression)}); err != nil {
 		return create.DiagError(names.CE, "setting threshold_expression", ResNameAnomalySubscription, d.Id(), err)
-	}
-
-	tags, err := ListTags(ctx, conn, aws.StringValue(subscription.SubscriptionArn))
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err != nil {
-		return create.DiagError(names.CE, create.ErrActionReading, ResNameAnomalySubscription, d.Id(), err)
-	}
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.CE, create.ErrActionUpdating, ResNameAnomalySubscription, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.CE, create.ErrActionUpdating, ResNameAnomalySubscription, d.Id(), err)
 	}
 
 	return nil
@@ -213,7 +191,7 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 
 		if d.HasChange("threshold") {
-			input.Threshold = aws.Float64(d.Get("threshold").(float64))
+			input.Threshold = aws.Float64(d.Get("threshold").(float64)) //nolint:staticcheck // see https://github.com/hashicorp/terraform-provider-aws/issues/30326
 		}
 
 		if d.HasChange("threshold_expression") {
@@ -223,22 +201,6 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 		_, err := conn.UpdateAnomalySubscriptionWithContext(ctx, input)
 
 		if err != nil {
-			return create.DiagError(names.CE, create.ErrActionUpdating, ResNameAnomalySubscription, d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return create.DiagError(names.CE, create.ErrActionUpdating, ResNameAnomalySubscription, d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return create.DiagError(names.CE, create.ErrActionUpdating, ResNameAnomalySubscription, d.Id(), err)
 		}
 	}

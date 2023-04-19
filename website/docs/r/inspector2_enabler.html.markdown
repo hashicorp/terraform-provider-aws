@@ -1,14 +1,14 @@
 ---
-subcategory: "Inspector V2"
+subcategory: "Inspector"
 layout: "aws"
 page_title: "AWS: aws_inspector2_enabler"
 description: |-
-  Terraform resource for enabling AWS Inspector V2 resource scans.
+  Terraform resource for enabling Amazon Inspector resource scans.
 ---
 
 # Resource: aws_inspector2_enabler
 
-Terraform resource for enabling AWS Inspector V2 resource scans.
+Terraform resource for enabling Amazon Inspector resource scans.
 
 ~> **NOTE:** Due to testing limitations, we provide this resource as best effort. If you use it or have the ability to test it, and notice problems, please consider reaching out to us on [GitHub](https://github.com/hashicorp/terraform-provider-aws/issues/new/choose).
 

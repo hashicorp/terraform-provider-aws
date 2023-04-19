@@ -118,7 +118,7 @@ func Tags(tags tftags.KeyValueTags) []*{{ .TagPackage }}.{{ .TagType }} {
 //   - []any (Terraform TypeList configuration block compatible)
 //   - *schema.Set (Terraform TypeSet configuration block compatible)
 {{- end }}
-func KeyValueTags(ctx context.Context, tags any{{ if .TagTypeIDElem }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}{{ end }}) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags any{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string{{ end }}) tftags.KeyValueTags {
 	switch tags := tags.(type) {
 	case []*{{ .TagPackage }}.{{ .TagType }}:
 		{{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem) }}
@@ -255,5 +255,32 @@ func KeyValueTags(ctx context.Context, tags []*{{ .TagPackage }}.{{ .TagType }})
 	}
 
 	return tftags.New(ctx, m)
+}
+{{- end }}
+
+// GetTagsIn returns {{ .ServicePackage }} service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*{{ .TagPackage }}.{{ .TagType }} {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets {{ .ServicePackage }} service tags in Context.
+{{- if or ( .TagType2 ) ( .TagTypeAddBoolElem ) }}
+func SetTagsOut(ctx context.Context, tags any{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string{{ end }}) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}))
+	}
+}
+{{- else }}
+func SetTagsOut(ctx context.Context, tags []*{{ .TagPackage }}.{{ .TagType }}) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
 }
 {{- end }}

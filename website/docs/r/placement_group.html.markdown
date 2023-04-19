@@ -27,10 +27,10 @@ The following arguments are supported:
 * `name` - (Required) The name of the placement group.
 * `partition_count` - (Optional) The number of partitions to create in the
   placement group.  Can only be specified when the `strategy` is set to
-  `"partition"`.  Valid values are 1 - 7 (default is `2`).
+  `partition`.  Valid values are 1 - 7 (default is `2`).
 * `spread_level` - (Optional) Determines how placement groups spread instances. Can only be used
-   when the `strategy` is set to `"spread"`. Can be `"host"` or `"rack"`. `"host"` can only be used for Outpost placement groups.
-* `strategy` - (Required) The placement strategy. Can be `"cluster"`, `"partition"` or `"spread"`.
+   when the `strategy` is set to `spread`. Can be `host` or `rack`. `host` can only be used for Outpost placement groups. Defaults to `rack`.
+* `strategy` - (Required) The placement strategy. Can be `cluster`, `partition` or `spread`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference

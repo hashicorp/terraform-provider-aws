@@ -43,6 +43,14 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the association
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `5m`)
+- `update` - (Default `2m`)
+- `delete` - (Default `5m`)
+
 ## Import
 
 ~> **NOTE:** Attempting to associate a route table with a subnet or gateway, where either

@@ -573,7 +573,6 @@ func testAccCheckProxyExists(ctx context.Context, n string, v *rds.DBProxy) reso
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 		output, err := tfrds.FindDBProxyByName(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

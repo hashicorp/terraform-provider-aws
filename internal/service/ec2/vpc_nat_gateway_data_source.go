@@ -27,6 +27,10 @@ func DataSourceNATGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"association_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"connectivity_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -114,8 +118,9 @@ func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("vpc_id", ngw.VpcId)
 
 	for _, address := range ngw.NatGatewayAddresses {
-		if aws.StringValue(address.AllocationId) != "" {
+		if aws.BoolValue(address.IsPrimary) {
 			d.Set("allocation_id", address.AllocationId)
+			d.Set("association_id", address.AssociationId)
 			d.Set("network_interface_id", address.NetworkInterfaceId)
 			d.Set("private_ip", address.PrivateIp)
 			d.Set("public_ip", address.PublicIp)

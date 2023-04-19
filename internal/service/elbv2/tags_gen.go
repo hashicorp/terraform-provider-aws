@@ -10,6 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/elbv2/elbv2iface"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists elbv2 service tags.
@@ -29,8 +31,20 @@ func ListTags(ctx context.Context, conn elbv2iface.ELBV2API, identifier string) 
 	return KeyValueTags(ctx, output.TagDescriptions[0].Tags), nil
 }
 
-func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) (tftags.KeyValueTags, error) {
-	return ListTags(ctx, meta.(*conns.AWSClient).ELBV2Conn(), identifier)
+// ListTags lists elbv2 service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).ELBV2Conn(), identifier)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(tags)
+	}
+
+	return nil
 }
 
 // []*SERVICE.Tag handling
@@ -62,6 +76,25 @@ func KeyValueTags(ctx context.Context, tags []*elbv2.Tag) tftags.KeyValueTags {
 	return tftags.New(ctx, m)
 }
 
+// GetTagsIn returns elbv2 service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*elbv2.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets elbv2 service tags in Context.
+func SetTagsOut(ctx context.Context, tags []*elbv2.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
+}
+
 // UpdateTags updates elbv2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -73,7 +106,7 @@ func UpdateTags(ctx context.Context, conn elbv2iface.ELBV2API, identifier string
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &elbv2.RemoveTagsInput{
 			ResourceArns: aws.StringSlice([]string{identifier}),
-			TagKeys:      aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:      aws.StringSlice(removedTags.IgnoreSystem(names.ELBV2).Keys()),
 		}
 
 		_, err := conn.RemoveTagsWithContext(ctx, input)
@@ -86,7 +119,7 @@ func UpdateTags(ctx context.Context, conn elbv2iface.ELBV2API, identifier string
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &elbv2.AddTagsInput{
 			ResourceArns: aws.StringSlice([]string{identifier}),
-			Tags:         Tags(updatedTags.IgnoreAWS()),
+			Tags:         Tags(updatedTags.IgnoreSystem(names.ELBV2)),
 		}
 
 		_, err := conn.AddTagsWithContext(ctx, input)
@@ -99,6 +132,8 @@ func UpdateTags(ctx context.Context, conn elbv2iface.ELBV2API, identifier string
 	return nil
 }
 
+// UpdateTags updates elbv2 service tags.
+// It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return UpdateTags(ctx, meta.(*conns.AWSClient).ELBV2Conn(), identifier, oldTags, newTags)
 }
