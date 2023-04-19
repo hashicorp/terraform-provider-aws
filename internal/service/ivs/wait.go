@@ -5,11 +5,11 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/ivs"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 func waitPlaybackKeyPairCreated(ctx context.Context, conn *ivs.IVS, id string, timeout time.Duration) (*ivs.PlaybackKeyPair, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
 		Refresh:                   statusPlaybackKeyPair(ctx, conn, id),
@@ -27,7 +27,7 @@ func waitPlaybackKeyPairCreated(ctx context.Context, conn *ivs.IVS, id string, t
 }
 
 func waitPlaybackKeyPairDeleted(ctx context.Context, conn *ivs.IVS, id string, timeout time.Duration) (*ivs.PlaybackKeyPair, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusNormal},
 		Target:  []string{},
 		Refresh: statusPlaybackKeyPair(ctx, conn, id),
@@ -43,7 +43,7 @@ func waitPlaybackKeyPairDeleted(ctx context.Context, conn *ivs.IVS, id string, t
 }
 
 func waitRecordingConfigurationCreated(ctx context.Context, conn *ivs.IVS, id string, timeout time.Duration) (*ivs.RecordingConfiguration, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{ivs.RecordingConfigurationStateCreating},
 		Target:                    []string{ivs.RecordingConfigurationStateActive},
 		Refresh:                   statusRecordingConfiguration(ctx, conn, id),
@@ -61,7 +61,7 @@ func waitRecordingConfigurationCreated(ctx context.Context, conn *ivs.IVS, id st
 }
 
 func waitRecordingConfigurationDeleted(ctx context.Context, conn *ivs.IVS, id string, timeout time.Duration) (*ivs.RecordingConfiguration, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{ivs.RecordingConfigurationStateActive},
 		Target:  []string{},
 		Refresh: statusRecordingConfiguration(ctx, conn, id),
@@ -77,7 +77,7 @@ func waitRecordingConfigurationDeleted(ctx context.Context, conn *ivs.IVS, id st
 }
 
 func waitChannelCreated(ctx context.Context, conn *ivs.IVS, id string, timeout time.Duration) (*ivs.Channel, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
 		Refresh:                   statusChannel(ctx, conn, id, nil),
@@ -95,7 +95,7 @@ func waitChannelCreated(ctx context.Context, conn *ivs.IVS, id string, timeout t
 }
 
 func waitChannelUpdated(ctx context.Context, conn *ivs.IVS, id string, timeout time.Duration, updateDetails *ivs.UpdateChannelInput) (*ivs.Channel, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusChangePending},
 		Target:                    []string{statusUpdated},
 		Refresh:                   statusChannel(ctx, conn, id, updateDetails),
@@ -113,7 +113,7 @@ func waitChannelUpdated(ctx context.Context, conn *ivs.IVS, id string, timeout t
 }
 
 func waitChannelDeleted(ctx context.Context, conn *ivs.IVS, id string, timeout time.Duration) (*ivs.Channel, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusNormal},
 		Target:  []string{},
 		Refresh: statusChannel(ctx, conn, id, nil),

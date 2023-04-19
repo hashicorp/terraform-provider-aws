@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/glacier"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -176,7 +176,7 @@ func resourceVaultLockDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func vaultLockRefreshFunc(ctx context.Context, conn *glacier.Glacier, vaultName string) resource.StateRefreshFunc {
+func vaultLockRefreshFunc(ctx context.Context, conn *glacier.Glacier, vaultName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &glacier.GetVaultLockInput{
 			AccountId: aws.String("-"),
@@ -203,7 +203,7 @@ func vaultLockRefreshFunc(ctx context.Context, conn *glacier.Glacier, vaultName 
 }
 
 func waitVaultLockCompletion(ctx context.Context, conn *glacier.Glacier, vaultName string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"InProgress"},
 		Target:  []string{"Locked"},
 		Refresh: vaultLockRefreshFunc(ctx, conn, vaultName),

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -25,6 +26,12 @@ func ResourceRouteTableAssociation() *schema.Resource {
 		DeleteWithoutTimeout: resourceRouteTableAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceRouteTableAssociationImport,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(2 * time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -80,7 +87,7 @@ func resourceRouteTableAssociationCreate(ctx context.Context, d *schema.Resource
 	d.SetId(aws.StringValue(output.(*ec2.AssociateRouteTableOutput).AssociationId))
 
 	log.Printf("[DEBUG] Waiting for Route Table Association (%s) creation", d.Id())
-	if _, err := WaitRouteTableAssociationCreated(ctx, conn, d.Id()); err != nil {
+	if _, err := WaitRouteTableAssociationCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Route Table Association (%s) create: %s", d.Id(), err)
 	}
 
@@ -144,7 +151,7 @@ func resourceRouteTableAssociationUpdate(ctx context.Context, d *schema.Resource
 	d.SetId(aws.StringValue(output.NewAssociationId))
 
 	log.Printf("[DEBUG] Waiting for Route Table Association (%s) update", d.Id())
-	if _, err := WaitRouteTableAssociationUpdated(ctx, conn, d.Id()); err != nil {
+	if _, err := WaitRouteTableAssociationUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Route Table Association (%s) update: %s", d.Id(), err)
 	}
 
@@ -155,7 +162,7 @@ func resourceRouteTableAssociationDelete(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	if err := routeTableAssociationDelete(ctx, conn, d.Id()); err != nil {
+	if err := routeTableAssociationDelete(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 	return diags
@@ -209,7 +216,7 @@ func resourceRouteTableAssociationImport(ctx context.Context, d *schema.Resource
 }
 
 // routeTableAssociationDelete attempts to delete a route table association.
-func routeTableAssociationDelete(ctx context.Context, conn *ec2.EC2, associationID string) error {
+func routeTableAssociationDelete(ctx context.Context, conn *ec2.EC2, associationID string, timeout time.Duration) error {
 	log.Printf("[INFO] Deleting Route Table Association: %s", associationID)
 	_, err := conn.DisassociateRouteTableWithContext(ctx, &ec2.DisassociateRouteTableInput{
 		AssociationId: aws.String(associationID),
@@ -224,7 +231,7 @@ func routeTableAssociationDelete(ctx context.Context, conn *ec2.EC2, association
 	}
 
 	log.Printf("[DEBUG] Waiting for Route Table Association (%s) deletion", associationID)
-	if _, err := WaitRouteTableAssociationDeleted(ctx, conn, associationID); err != nil {
+	if _, err := WaitRouteTableAssociationDeleted(ctx, conn, associationID, timeout); err != nil {
 		return fmt.Errorf("deleting Route Table Association (%s): waiting for completion: %w", associationID, err)
 	}
 

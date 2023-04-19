@@ -15,7 +15,7 @@ import (
 	{{- if .AWSService }}
 	"github.com/aws/aws-sdk-go-v2/service/{{ .AWSService }}"
 	{{- if not .SkipTypesImp }}
-	"github.com/aws/aws-sdk-go-v2/service/{{ .AWSService }}/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .AWSService }}/types"
 	{{- end }}
 	{{- end }}
 	{{- if .HelperSchemaPkg }}
@@ -30,5 +30,11 @@ import (
 	{{- end }}
 	{{- if .TfResourcePkg }}
     "github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	{{- end }}
+	{{- if .InternalTypesPkg }}
+    "github.com/hashicorp/terraform-provider-aws/internal/types"
+	{{- end }}
+	{{- if .NamesPkg }}
+    "github.com/hashicorp/terraform-provider-aws/names"
 	{{- end }}
 )
