@@ -23,7 +23,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_basic(t *testing.T) {
 	updatedSegmentValue := "segmentValue2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCoreNetworkPolicyAttachmentDestroy(ctx),
@@ -64,7 +64,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_vpcAttachment(t *testing.T
 	segmentValue := "segmentValue"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCoreNetworkPolicyAttachmentDestroy(ctx),
@@ -105,7 +105,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_vpcAttachmentMultiRegion(t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),

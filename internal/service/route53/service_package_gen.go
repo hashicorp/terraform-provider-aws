@@ -5,46 +5,100 @@ package route53
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){
-		newResourceCIDRCollection,
-		newResourceCIDRLocation,
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newResourceCIDRCollection,
+		},
+		{
+			Factory: newResourceCIDRLocation,
+		},
 	}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_route53_delegation_set":          DataSourceDelegationSet,
-		"aws_route53_traffic_policy_document": DataSourceTrafficPolicyDocument,
-		"aws_route53_zone":                    DataSourceZone,
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceDelegationSet,
+			TypeName: "aws_route53_delegation_set",
+		},
+		{
+			Factory:  DataSourceTrafficPolicyDocument,
+			TypeName: "aws_route53_traffic_policy_document",
+		},
+		{
+			Factory:  DataSourceZone,
+			TypeName: "aws_route53_zone",
+		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{
-		"aws_route53_delegation_set":                ResourceDelegationSet,
-		"aws_route53_health_check":                  ResourceHealthCheck,
-		"aws_route53_hosted_zone_dnssec":            ResourceHostedZoneDNSSEC,
-		"aws_route53_key_signing_key":               ResourceKeySigningKey,
-		"aws_route53_query_log":                     ResourceQueryLog,
-		"aws_route53_record":                        ResourceRecord,
-		"aws_route53_traffic_policy":                ResourceTrafficPolicy,
-		"aws_route53_traffic_policy_instance":       ResourceTrafficPolicyInstance,
-		"aws_route53_vpc_association_authorization": ResourceVPCAssociationAuthorization,
-		"aws_route53_zone":                          ResourceZone,
-		"aws_route53_zone_association":              ResourceZoneAssociation,
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceDelegationSet,
+			TypeName: "aws_route53_delegation_set",
+		},
+		{
+			Factory:  ResourceHealthCheck,
+			TypeName: "aws_route53_health_check",
+			Name:     "Health Check",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+				ResourceType:        "healthcheck",
+			},
+		},
+		{
+			Factory:  ResourceHostedZoneDNSSEC,
+			TypeName: "aws_route53_hosted_zone_dnssec",
+		},
+		{
+			Factory:  ResourceKeySigningKey,
+			TypeName: "aws_route53_key_signing_key",
+		},
+		{
+			Factory:  ResourceQueryLog,
+			TypeName: "aws_route53_query_log",
+		},
+		{
+			Factory:  ResourceRecord,
+			TypeName: "aws_route53_record",
+		},
+		{
+			Factory:  ResourceTrafficPolicy,
+			TypeName: "aws_route53_traffic_policy",
+		},
+		{
+			Factory:  ResourceTrafficPolicyInstance,
+			TypeName: "aws_route53_traffic_policy_instance",
+		},
+		{
+			Factory:  ResourceVPCAssociationAuthorization,
+			TypeName: "aws_route53_vpc_association_authorization",
+		},
+		{
+			Factory:  ResourceZone,
+			TypeName: "aws_route53_zone",
+			Name:     "Hosted Zone",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+				ResourceType:        "hostedzone",
+			},
+		},
+		{
+			Factory:  ResourceZoneAssociation,
+			TypeName: "aws_route53_zone_association",
+		},
 	}
 }
 

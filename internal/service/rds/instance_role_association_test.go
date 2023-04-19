@@ -29,7 +29,7 @@ func TestAccRDSInstanceRoleAssociation_basic(t *testing.T) {
 	resourceName := "aws_db_instance_role_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceRoleAssociationDestroy(ctx),
@@ -65,7 +65,7 @@ func TestAccRDSInstanceRoleAssociation_disappears(t *testing.T) {
 	resourceName := "aws_db_instance_role_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceRoleAssociationDestroy(ctx),
@@ -92,7 +92,6 @@ func testAccCheckInstanceRoleAssociationExists(ctx context.Context, resourceName
 		}
 
 		dbInstanceIdentifier, roleArn, err := tfrds.InstanceRoleAssociationDecodeID(rs.Primary.ID)
-
 		if err != nil {
 			return fmt.Errorf("error reading resource ID: %s", err)
 		}
@@ -127,7 +126,6 @@ func testAccCheckInstanceRoleAssociationDestroy(ctx context.Context) resource.Te
 			}
 
 			dbInstanceIdentifier, roleArn, err := tfrds.InstanceRoleAssociationDecodeID(rs.Primary.ID)
-
 			if err != nil {
 				return fmt.Errorf("error reading resource ID: %s", err)
 			}
@@ -158,7 +156,6 @@ func testAccCheckInstanceRoleAssociationDisappears(ctx context.Context, dbInstan
 		}
 
 		_, err := conn.RemoveRoleFromDBInstanceWithContext(ctx, input)
-
 		if err != nil {
 			return err
 		}

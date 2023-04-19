@@ -22,9 +22,11 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_transfer_server")
+// @SDKResource("aws_transfer_server", name="Server")
+// @Tags(identifierAttribute="arn")
 func ResourceServer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServerCreate,
@@ -168,6 +170,43 @@ func ResourceServer() *schema.Resource {
 				Sensitive:    true,
 				ValidateFunc: validation.StringLenBetween(0, 512),
 			},
+			"protocol_details": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"as2_transports": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringInSlice(transfer.As2Transport_Values(), false),
+							},
+						},
+						"passive_ip": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringLenBetween(0, 15),
+						},
+						"set_stat_option": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(transfer.SetStatOption_Values(), false),
+						},
+						"tls_session_resumption_mode": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(transfer.TlsSessionResumptionMode_Values(), false),
+						},
+					},
+				},
+			},
 			"protocols": {
 				Type:     schema.TypeSet,
 				MinItems: 1,
@@ -185,8 +224,8 @@ func ResourceServer() *schema.Resource {
 				Default:      SecurityPolicyName2018_11,
 				ValidateFunc: validation.StringInSlice(SecurityPolicyName_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"url": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -245,10 +284,10 @@ func ResourceServer() *schema.Resource {
 func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-	input := &transfer.CreateServerInput{}
+	input := &transfer.CreateServerInput{
+		Tags: GetTagsIn(ctx),
+	}
 
 	if v, ok := d.GetOk("certificate"); ok {
 		input.Certificate = aws.String(v.(string))
@@ -317,6 +356,10 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.PreAuthenticationLoginBanner = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("protocol_details"); ok && len(v.([]interface{})) > 0 {
+		input.ProtocolDetails = expandProtocolDetails(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("protocols"); ok && v.(*schema.Set).Len() > 0 {
 		input.Protocols = flex.ExpandStringSet(v.(*schema.Set))
 	}
@@ -335,10 +378,6 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if v, ok := d.GetOk("workflow_details"); ok && len(v.([]interface{})) > 0 {
 		input.WorkflowDetails = expandWorkflowDetails(v.([]interface{}))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	output, err := conn.CreateServerWithContext(ctx, input)
@@ -381,8 +420,6 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := FindServerByID(ctx, conn, d.Id())
 
@@ -444,6 +481,9 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("logging_role", output.LoggingRole)
 	d.Set("post_authentication_login_banner", output.PostAuthenticationLoginBanner)
 	d.Set("pre_authentication_login_banner", output.PreAuthenticationLoginBanner)
+	if err := d.Set("protocol_details", flattenProtocolDetails(output.ProtocolDetails)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting protocol_details: %s", err)
+	}
 	d.Set("protocols", aws.StringValueSlice(output.Protocols))
 	d.Set("security_policy_name", output.SecurityPolicyName)
 	if output.IdentityProviderDetails != nil {
@@ -455,16 +495,7 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "setting workflow_details: %s", err)
 	}
 
-	tags := KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, output.Tags)
 
 	return diags
 }
@@ -620,6 +651,10 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.PreAuthenticationLoginBanner = aws.String(d.Get("pre_authentication_login_banner").(string))
 		}
 
+		if d.HasChange("protocol_details") {
+			input.ProtocolDetails = expandProtocolDetails(d.Get("protocol_details").([]interface{}))
+		}
+
 		if d.HasChange("protocols") {
 			input.Protocols = flex.ExpandStringSet(d.Get("protocols").(*schema.Set))
 		}
@@ -672,14 +707,6 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			if err := startServer(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Transfer Server (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -809,6 +836,60 @@ func flattenEndpointDetails(apiObject *transfer.EndpointDetails, securityGroupID
 	}
 
 	return tfMap
+}
+
+func expandProtocolDetails(m []interface{}) *transfer.ProtocolDetails {
+	if len(m) < 1 || m[0] == nil {
+		return nil
+	}
+
+	tfMap := m[0].(map[string]interface{})
+
+	apiObject := &transfer.ProtocolDetails{}
+
+	if v, ok := tfMap["as2_transports"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.As2Transports = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["passive_ip"].(string); ok && len(v) > 0 {
+		apiObject.PassiveIp = aws.String(v)
+	}
+
+	if v, ok := tfMap["set_stat_option"].(string); ok && len(v) > 0 {
+		apiObject.SetStatOption = aws.String(v)
+	}
+
+	if v, ok := tfMap["tls_session_resumption_mode"].(string); ok && len(v) > 0 {
+		apiObject.TlsSessionResumptionMode = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenProtocolDetails(apiObject *transfer.ProtocolDetails) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.As2Transports; v != nil {
+		tfMap["as2_transports"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.PassiveIp; v != nil {
+		tfMap["passive_ip"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.SetStatOption; v != nil {
+		tfMap["set_stat_option"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.TlsSessionResumptionMode; v != nil {
+		tfMap["tls_session_resumption_mode"] = aws.StringValue(v)
+	}
+
+	return []interface{}{tfMap}
 }
 
 func expandWorkflowDetails(tfMap []interface{}) *transfer.WorkflowDetails {

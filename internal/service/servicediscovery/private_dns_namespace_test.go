@@ -23,7 +23,7 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -58,7 +58,7 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -85,7 +85,7 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -113,7 +113,7 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_Error_overlap(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -136,7 +136,7 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},

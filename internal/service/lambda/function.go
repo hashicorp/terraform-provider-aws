@@ -18,7 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -30,6 +30,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	homedir "github.com/mitchellh/go-homedir"
 )
 
@@ -39,7 +40,8 @@ const (
 	listVersionsMaxItems  = 10000
 )
 
-// @SDKResource("aws_lambda_function")
+// @SDKResource("aws_lambda_function", name="Function")
+// @Tags(identifierAttribute="arn")
 func ResourceFunction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFunctionCreate,
@@ -111,6 +113,17 @@ func ResourceFunction() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
+				},
+				// Suppress diff if change is to an empty list
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "0" && new == "1" {
+						_, n := d.GetChange("environment.0.variables")
+						newn, ok := n.(map[string]interface{})
+						if ok && len(newn) == 0 {
+							return true
+						}
+					}
+					return false
 				},
 			},
 			"ephemeral_storage": {
@@ -326,8 +339,8 @@ func ResourceFunction() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"timeout": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -411,8 +424,6 @@ const (
 func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	functionName := d.Get("function_name").(string)
 	packageType := types.PackageType(d.Get("package_type").(string))
@@ -424,6 +435,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 		PackageType:  packageType,
 		Publish:      d.Get("publish").(bool),
 		Role:         aws.String(d.Get("role").(string)),
+		Tags:         GetTagsIn(ctx),
 		Timeout:      aws.Int32(int32(d.Get("timeout").(int))),
 	}
 
@@ -521,10 +533,6 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	_, err := retryFunctionOp(ctx, func() (interface{}, error) {
 		return conn.CreateFunction(ctx, input)
 	})
@@ -564,8 +572,6 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &lambda.GetFunctionInput{
 		FunctionName: aws.String(d.Id()),
@@ -638,6 +644,8 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("runtime", function.Runtime)
 	d.Set("signing_job_arn", function.SigningJobArn)
 	d.Set("signing_profile_version_arn", function.SigningProfileVersionArn)
+	// Support in-place update of non-refreshable attribute.
+	d.Set("skip_destroy", d.Get("skip_destroy"))
 	if err := d.Set("snap_start", flattenSnapStart(function.SnapStart)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting snap_start: %s", err)
 	}
@@ -675,18 +683,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("qualified_invoke_arn", functionInvokeARN(qualifiedARN, meta))
 		d.Set("version", latest.Version)
 
-		// Tagging operations are permitted on Lambda functions only.
-		// Tags on aliases and versions are not supported.
-		tags := KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-		//lintignore:AWSR002
-		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-		}
-
-		if err := d.Set("tags_all", tags.Map()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-		}
+		SetTagsOut(ctx, output.Tags)
 	}
 
 	// Currently, this functionality is only enabled in AWS Commercial partition
@@ -740,15 +737,6 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "deleting Lambda Function (%s) code signing config: %s", d.Id(), err)
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		arn := d.Get("arn").(string)
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Lambda Function (%s) tags: %s", arn, err)
 		}
 	}
 
@@ -1046,7 +1034,7 @@ func findFunction(ctx context.Context, conn *lambda.Client, input *lambda.GetFun
 	output, err := conn.GetFunction(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1139,7 +1127,7 @@ func replaceSecurityGroups(ctx context.Context, d *schema.ResourceData, meta int
 	return nil
 }
 
-func statusFunctionLastUpdateStatus(ctx context.Context, conn *lambda.Client, name string) resource.StateRefreshFunc {
+func statusFunctionLastUpdateStatus(ctx context.Context, conn *lambda.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindFunctionByName(ctx, conn, name)
 
@@ -1155,7 +1143,7 @@ func statusFunctionLastUpdateStatus(ctx context.Context, conn *lambda.Client, na
 	}
 }
 
-func statusFunctionState(ctx context.Context, conn *lambda.Client, name string) resource.StateRefreshFunc {
+func statusFunctionState(ctx context.Context, conn *lambda.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindFunctionByName(ctx, conn, name)
 
@@ -1172,7 +1160,7 @@ func statusFunctionState(ctx context.Context, conn *lambda.Client, name string) 
 }
 
 func waitFunctionCreated(ctx context.Context, conn *lambda.Client, name string, timeout time.Duration) (*types.FunctionConfiguration, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.StatePending),
 		Target:  enum.Slice(types.StateActive),
 		Refresh: statusFunctionState(ctx, conn, name),
@@ -1192,7 +1180,7 @@ func waitFunctionCreated(ctx context.Context, conn *lambda.Client, name string, 
 }
 
 func waitFunctionUpdated(ctx context.Context, conn *lambda.Client, functionName string, timeout time.Duration) (*types.FunctionConfiguration, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.LastUpdateStatusInProgress),
 		Target:  enum.Slice(types.LastUpdateStatusSuccessful),
 		Refresh: statusFunctionLastUpdateStatus(ctx, conn, functionName),

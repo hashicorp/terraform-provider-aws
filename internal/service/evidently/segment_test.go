@@ -25,7 +25,7 @@ func TestAccEvidentlySegment_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, cloudwatchevidently.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
@@ -65,7 +65,7 @@ func TestAccEvidentlySegment_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, cloudwatchevidently.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
@@ -98,7 +98,7 @@ func TestAccEvidentlySegment_patternJSON(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, cloudwatchevidently.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
@@ -130,7 +130,7 @@ func TestAccEvidentlySegment_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, cloudwatchevidently.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
@@ -185,7 +185,7 @@ func TestAccEvidentlySegment_disappears(t *testing.T) {
 	resourceName := "aws_evidently_segment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSegmentDestroy(ctx),

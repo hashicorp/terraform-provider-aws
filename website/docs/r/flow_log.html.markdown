@@ -181,6 +181,7 @@ resource "aws_s3_bucket" "example" {
 The following arguments are supported:
 
 * `traffic_type` - (Required) The type of traffic to capture. Valid values: `ACCEPT`,`REJECT`, `ALL`.
+* `deliver_cross_account_role` - (Optional) ARN of the IAM role that allows Amazon EC2 to publish flow logs across accounts.
 * `eni_id` - (Optional) Elastic Network Interface ID to attach to
 * `iam_role_arn` - (Optional) The ARN for the IAM role that's used to post flow logs to a CloudWatch Logs log group
 * `log_destination_type` - (Optional) The type of the logging destination. Valid values: `cloud-watch-logs`, `s3`, `kinesis-data-firehose`. Default: `cloud-watch-logs`.
