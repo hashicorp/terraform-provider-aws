@@ -38,6 +38,7 @@ Chime SDK Media Pipelines
 Chime SDK Meetings
 Chime SDK Messaging
 Chime SDK Voice
+Clean Rooms
 Cloud Control API
 Cloud Directory
 Cloud Map
@@ -150,7 +151,7 @@ IAM Access Analyzer
 IVS (Interactive Video)
 IVS (Interactive Video) Chat
 Inspector
-Inspector V2
+Inspector Classic
 IoT 1-Click Devices
 IoT 1-Click Projects
 IoT Analytics

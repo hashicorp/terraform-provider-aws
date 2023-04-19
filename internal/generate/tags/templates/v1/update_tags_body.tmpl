@@ -129,6 +129,17 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 	return nil
 }
 
+{{- if ne .CreateTagsFunc "" }}
+// {{ .CreateTagsFunc }} creates {{ .ServicePackage }} service tags for new resources.
+func {{ .CreateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, tags []*{{ .TagPackage }}.{{ .TagType }}) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return  {{ .UpdateTagsFunc }}(ctx, conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, nil, KeyValueTags(ctx, tags))
+}
+{{- end }}
+
 // {{ .UpdateTagsFunc }} updates {{ .ServicePackage }} service tags.
 // It is called from outside this package.
 func (p *servicePackage) {{ .UpdateTagsFunc }}(ctx context.Context, meta any, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, oldTags, newTags any) error {
