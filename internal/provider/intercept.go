@@ -367,8 +367,10 @@ func finalTagsUpdate(ctx context.Context, d resourceDiff, sp conns.ServicePackag
 		configTags := make(map[string]string)
 		if config := d.GetRawConfig(); !config.IsNull() && config.IsKnown() {
 			c := config.GetAttr("tags")
-			for k, v := range c.AsValueMap() {
-				configTags[k] = v.AsString()
+			if !c.IsNull() {
+				for k, v := range c.AsValueMap() {
+					configTags[k] = v.AsString()
+				}
 			}
 		}
 

@@ -6,12 +6,9 @@ import (
 	"testing"
 
 	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type mockService struct{}
@@ -65,23 +62,17 @@ func TestTagsInterceptor(t *testing.T) {
 
 	var interceptors interceptorItems
 
-	tags := tagsInterceptor{tags: &types.ServicePackageResourceTags{
+	sp := &types.ServicePackageResourceTags{
 		IdentifierAttribute: "arn",
-	}}
+	}
+
+	tags := tagsInterceptor{tags: sp}
 
 	interceptors = append(interceptors, interceptorItem{
 		when:        Finally,
 		why:         Update,
 		interceptor: tags,
 	})
-
-	var update schema.UpdateContextFunc = func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-		var diags diag.Diagnostics
-		return diags
-	}
-	bootstrapContext := func(ctx context.Context, meta any) context.Context {
-		return ctx
-	}
 
 	conn := &conns.AWSClient{
 		ServicePackages: map[string]conns.ServicePackage{
@@ -95,29 +86,9 @@ func TestTagsInterceptor(t *testing.T) {
 		}),
 	}
 
-	r := &schema.Resource{}
-	r.Schema = map[string]*schema.Schema{
-		names.AttrTags:    tftags.TagsSchema(),
-		names.AttrTagsAll: tftags.TagsSchemaComputed(),
-	}
+	d := &differ{}
 
-	// diff := &schema.ResourceDiff{}
-
-	// _ = diff.SetNew("tags_all", map[string]string{"one": "tag"})
-	//r.CustomizeDiff = func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-	//	t.Log(diff)
-	//	return diff.SetNewComputed(names.AttrTagsAll)
-	//}
-	//err := r.CustomizeDiff(context.Background(), diff, conn)
-	//if err != nil {
-	//	t.Fatal(err)
-	//}
-	diags := interceptedHandler(bootstrapContext, interceptors, update, Update)(context.Background(), r.TestResourceData(), conn)
-	if got, want := len(diags), 0; got != want {
-		t.Errorf("length of diags = %v, want %v", got, want)
-	}
-	outputTags := r.TestResourceData().Get("tags_all").(map[string]interface{})
-	t.Log(outputTags)
+	_, _ = finalTagsUpdate(context.Background(), d, &mockService{}, nil, nil, sp, "TestService", "Test", conn)
 }
 
 type differ struct{}

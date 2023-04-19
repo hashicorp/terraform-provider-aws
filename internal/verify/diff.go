@@ -60,10 +60,20 @@ func SetTagsDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{
 				return fmt.Errorf("error setting new tags_all diff: %w", err)
 			}
 		}
+
+		if len(allTags) == 0 {
+			if err := diff.SetNewComputed("tags_all"); err != nil {
+				return fmt.Errorf("error setting tags_all to computed: %w", err)
+			}
+		}
 	} else if !diff.HasChange("tags") {
 		if len(allTags) > 0 && !allTags.HasZeroValue() {
 			if err := diff.SetNew("tags_all", allTags.Map()); err != nil {
 				return fmt.Errorf("error setting new tags_all diff: %w", err)
+			}
+		} else if len(allTags) > 0 && allTags.HasZeroValue() {
+			if err := diff.SetNewComputed("tags_all"); err != nil {
+				return fmt.Errorf("error setting tags_all to computed: %w", err)
 			}
 		}
 	} else if tagsAll, ok := diff.Get("tags_all").(map[string]interface{}); ok {
