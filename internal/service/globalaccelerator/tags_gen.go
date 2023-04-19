@@ -98,7 +98,6 @@ func SetTagsOut(ctx context.Context, tags []*globalaccelerator.Tag) {
 // UpdateTags updates globalaccelerator service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-
 func UpdateTags(ctx context.Context, conn globalacceleratoriface.GlobalAcceleratorAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)

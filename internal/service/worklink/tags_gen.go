@@ -81,7 +81,6 @@ func SetTagsOut(ctx context.Context, tags map[string]*string) {
 // UpdateTags updates worklink service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-
 func UpdateTags(ctx context.Context, conn worklinkiface.WorkLinkAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)

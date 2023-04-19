@@ -98,7 +98,6 @@ func SetTagsOut(ctx context.Context, tags []*sns.Tag) {
 // UpdateTags updates sns service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-
 func UpdateTags(ctx context.Context, conn snsiface.SNSAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)

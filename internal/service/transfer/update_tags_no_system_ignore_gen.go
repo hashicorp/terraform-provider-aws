@@ -15,7 +15,6 @@ import (
 // UpdateTagsNoIgnoreSystem updates transfer service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-
 func UpdateTagsNoIgnoreSystem(ctx context.Context, conn transferiface.TransferAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)

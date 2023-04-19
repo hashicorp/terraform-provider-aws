@@ -98,7 +98,6 @@ func SetTagsOut(ctx context.Context, tags []*iotanalytics.Tag) {
 // UpdateTags updates iotanalytics service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-
 func UpdateTags(ctx context.Context, conn iotanalyticsiface.IoTAnalyticsAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)

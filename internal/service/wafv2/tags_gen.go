@@ -98,7 +98,6 @@ func SetTagsOut(ctx context.Context, tags []*wafv2.Tag) {
 // UpdateTags updates wafv2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-
 func UpdateTags(ctx context.Context, conn wafv2iface.WAFV2API, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
