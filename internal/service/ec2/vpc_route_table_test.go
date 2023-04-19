@@ -2077,9 +2077,9 @@ resource "aws_vpc_endpoint" "test" {
 }
 
 func testAccVPCRouteTableConfig_multiples(rName,
-	destinationAttr1, destinationValue1, targetAttribute1, targetValue1,
-	destinationAttr2, destinationValue2, targetAttribute2, targetValue2,
-	destinationAttr3, destinationValue3, targetAttribute3, targetValue3 string) string {
+	destinationAttr1, destinationValue1, targetAttribute1, targetValue1, targetID1,
+	destinationAttr2, destinationValue2, targetAttribute2, targetValue2, targetID2,
+	destinationAttr3, destinationValue3, targetAttribute3, targetValue3, targetID3 string) string {
 	return acctest.ConfigCompose(
 		testAccLatestAmazonNatInstanceAMIConfig(),
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
@@ -2198,7 +2198,7 @@ resource "aws_route_table" "test" {
     Name = %[1]q
   }
 }
-`, rName, destinationAttr1, destinationValue1, targetAttribute1, targetValue1, destinationAttr2, destinationValue2, targetAttribute2, targetValue2, destinationAttr3, destinationValue3, targetAttribute3, targetValue3))
+`, rName, destinationAttr1, destinationValue1, targetAttribute1, targetValue1, targetID1, destinationAttr2, destinationValue2, targetAttribute2, targetValue2, targetID2, destinationAttr3, destinationValue3, targetAttribute3, targetValue3, targetID3))
 }
 
 // testAccLatestAmazonNatInstanceAMIConfig returns the configuration for a data source that
