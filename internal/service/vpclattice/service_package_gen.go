@@ -31,6 +31,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
+			Factory:  ResourceListener,
+			TypeName: "aws_vpclattice_listener",
+			Name:     "Listener",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceService,
 			TypeName: "aws_vpclattice_service",
 			Name:     "Service",
