@@ -660,6 +660,10 @@ type TagData struct {
 }
 
 func (td *TagData) ValueString() string {
+	if td.Value == nil {
+		return ""
+	}
+
 	return *td.Value
 }
 
