@@ -1,7 +1,6 @@
 package elasticbeanstalk_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
@@ -12,9 +11,9 @@ import (
 
 func TestAccElasticBeanstalkApplicationDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceResourceName := "data.aws_elastic_beanstalk_application.test"
-	resourceName := "aws_elastic_beanstalk_application.tftest"
+	resourceName := "aws_elastic_beanstalk_application.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -40,7 +39,7 @@ func TestAccElasticBeanstalkApplicationDataSource_basic(t *testing.T) {
 func testAccApplicationDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccApplicationConfig_maxAge(rName), `
 data "aws_elastic_beanstalk_application" "test" {
-  name = aws_elastic_beanstalk_application.tftest.name
+  name = aws_elastic_beanstalk_application.test.name
 }
 `)
 }
