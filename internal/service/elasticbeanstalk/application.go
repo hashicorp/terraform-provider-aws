@@ -83,24 +83,24 @@ func ResourceApplication() *schema.Resource {
 
 func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	beanstalkConn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 
 	name := d.Get("name").(string)
-	description := d.Get("description").(string)
-	req := &elasticbeanstalk.CreateApplicationInput{
+	input := &elasticbeanstalk.CreateApplicationInput{
 		ApplicationName: aws.String(name),
-		Description:     aws.String(description),
+		Description:     aws.String(d.Get("description").(string)),
 		Tags:            GetTagsIn(ctx),
 	}
 
-	app, err := beanstalkConn.CreateApplicationWithContext(ctx, req)
+	output, err := conn.CreateApplicationWithContext(ctx, input)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Elastic Beanstalk Application (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
-	if err = resourceApplicationAppVersionLifecycleUpdate(ctx, beanstalkConn, d, app.Application); err != nil {
+	if err = resourceApplicationAppVersionLifecycleUpdate(ctx, conn, d, output.Application); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Elastic Beanstalk Application (%s): %s", name, err)
 	}
 
@@ -259,35 +259,48 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	beanstalkConn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 
-	_, err := beanstalkConn.DeleteApplicationWithContext(ctx, &elasticbeanstalk.DeleteApplicationInput{
+	log.Printf("[DEBUG] Deleting Elastic Beanstalk Application: %s", d.Id())
+	_, err := conn.DeleteApplicationWithContext(ctx, &elasticbeanstalk.DeleteApplicationInput{
 		ApplicationName: aws.String(d.Id()),
 	})
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Elastic Beanstalk Application (%s): %s", d.Id(), err)
 	}
 
-	var app *elasticbeanstalk.ApplicationDescription
-	err = retry.RetryContext(ctx, 10*time.Second, func() *retry.RetryError {
-		app, err = getApplication(ctx, d.Id(), meta.(*conns.AWSClient).ElasticBeanstalkConn())
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		if app != nil {
-			return retry.RetryableError(
-				fmt.Errorf("Beanstalk Application (%s) still exists: %s", d.Id(), err))
-		}
-		return nil
+	_, err = tfresource.RetryUntilNotFound(ctx, 10*time.Second, func() (interface{}, error) {
+		return FindApplicationByName(ctx, conn, d.Id())
 	})
-	if tfresource.TimedOut(err) {
-		app, err = getApplication(ctx, d.Id(), meta.(*conns.AWSClient).ElasticBeanstalkConn())
-	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Elastic Beanstalk Application (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Elastic Beanstalk Application (%s) delete: %s", d.Id(), err)
 	}
+
 	return diags
+}
+
+func FindApplicationByName(ctx context.Context, conn *elasticbeanstalk.ElasticBeanstalk, name string) (*elasticbeanstalk.ApplicationDescription, error) {
+	input := &elasticbeanstalk.DescribeApplicationsInput{
+		ApplicationNames: aws.StringSlice([]string{name}),
+	}
+
+	output, err := conn.DescribeApplicationsWithContext(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Applications) == 0 || output.Applications[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.Applications); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.Applications[0], nil
 }
 
 func getApplication(ctx context.Context, id string, conn *elasticbeanstalk.ElasticBeanstalk) (*elasticbeanstalk.ApplicationDescription, error) {
