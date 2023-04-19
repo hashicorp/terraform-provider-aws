@@ -137,10 +137,8 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Application (%s): %s", d.Id(), err)
 	}
 
-	if app.ResourceLifecycleConfig != nil {
-		if err := d.Set("appversion_lifecycle", []interface{}{flattenApplicationResourceLifecycleConfig(app.ResourceLifecycleConfig)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting appversion_lifecycle: %s", err)
-		}
+	if err := d.Set("appversion_lifecycle", flattenApplicationResourceLifecycleConfig(app.ResourceLifecycleConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting appversion_lifecycle: %s", err)
 	}
 	d.Set("arn", app.ApplicationArn)
 	d.Set("description", app.Description)
@@ -275,7 +273,7 @@ func expandApplicationResourceLifecycleConfig(tfMap map[string]interface{}) *ela
 	return apiObject
 }
 
-func flattenApplicationResourceLifecycleConfig(apiObject *elasticbeanstalk.ApplicationResourceLifecycleConfig) map[string]interface{} {
+func flattenApplicationResourceLifecycleConfig(apiObject *elasticbeanstalk.ApplicationResourceLifecycleConfig) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -312,5 +310,5 @@ func flattenApplicationResourceLifecycleConfig(apiObject *elasticbeanstalk.Appli
 		tfMap["service_role"] = aws.StringValue(v)
 	}
 
-	return tfMap
+	return []interface{}{tfMap}
 }

@@ -5,17 +5,17 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfelasticbeanstalk "github.com/hashicorp/terraform-provider-aws/internal/service/elasticbeanstalk"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccElasticBeanstalkApplication_BeanstalkApp_basic(t *testing.T) {
+func TestAccElasticBeanstalkApplication_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var app elasticbeanstalk.ApplicationDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -42,7 +42,7 @@ func TestAccElasticBeanstalkApplication_BeanstalkApp_basic(t *testing.T) {
 	})
 }
 
-func TestAccElasticBeanstalkApplication_BeanstalkApp_appVersionLifecycle(t *testing.T) {
+func TestAccElasticBeanstalkApplication_appVersionLifecycle(t *testing.T) {
 	ctx := acctest.Context(t)
 	var app elasticbeanstalk.ApplicationDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -103,7 +103,7 @@ func TestAccElasticBeanstalkApplication_BeanstalkApp_appVersionLifecycle(t *test
 	})
 }
 
-func TestAccElasticBeanstalkApplication_BeanstalkApp_tags(t *testing.T) {
+func TestAccElasticBeanstalkApplication_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var app elasticbeanstalk.ApplicationDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -170,28 +170,24 @@ func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			// Try to find the application
-			DescribeBeanstalkAppOpts := &elasticbeanstalk.DescribeApplicationsInput{
-				ApplicationNames: []*string{aws.String(rs.Primary.ID)},
-			}
-			resp, err := conn.DescribeApplicationsWithContext(ctx, DescribeBeanstalkAppOpts)
-			if err == nil {
-				if len(resp.Applications) > 0 {
-					return fmt.Errorf("Elastic Beanstalk Application still exists.")
-				}
-				return nil
+			_, err := tfelasticbeanstalk.FindApplicationByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			if !tfawserr.ErrCodeEquals(err, "InvalidBeanstalkAppID.NotFound") {
+			if err != nil {
 				return err
 			}
+
+			return fmt.Errorf("Elastic Beanstalk Application %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckApplicationExists(ctx context.Context, n string, app *elasticbeanstalk.ApplicationDescription) resource.TestCheckFunc {
+func testAccCheckApplicationExists(ctx context.Context, n string, v *elasticbeanstalk.ApplicationDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -199,22 +195,18 @@ func testAccCheckApplicationExists(ctx context.Context, n string, app *elasticbe
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("Elastic Beanstalk app ID is not set")
+			return fmt.Errorf("No Elastic Beanstalk Application ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn()
-		DescribeBeanstalkAppOpts := &elasticbeanstalk.DescribeApplicationsInput{
-			ApplicationNames: []*string{aws.String(rs.Primary.ID)},
-		}
-		resp, err := conn.DescribeApplicationsWithContext(ctx, DescribeBeanstalkAppOpts)
+
+		output, err := tfelasticbeanstalk.FindApplicationByName(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if len(resp.Applications) == 0 {
-			return fmt.Errorf("Elastic Beanstalk Application not found.")
-		}
 
-		*app = *resp.Applications[0]
+		*v = *output
 
 		return nil
 	}

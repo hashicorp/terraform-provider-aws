@@ -67,10 +67,8 @@ func dataSourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.SetId(name)
-	if app.ResourceLifecycleConfig != nil {
-		if err := d.Set("appversion_lifecycle", []interface{}{flattenApplicationResourceLifecycleConfig(app.ResourceLifecycleConfig)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting appversion_lifecycle: %s", err)
-		}
+	if err := d.Set("appversion_lifecycle", flattenApplicationResourceLifecycleConfig(app.ResourceLifecycleConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting appversion_lifecycle: %s", err)
 	}
 	d.Set("arn", app.ApplicationArn)
 	d.Set("description", app.Description)
