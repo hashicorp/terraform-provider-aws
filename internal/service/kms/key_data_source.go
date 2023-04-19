@@ -211,7 +211,7 @@ func dataSourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("valid_to", aws.TimeValue(keyMetadata.ValidTo).Format(time.RFC3339))
 	}
 	if keyMetadata.XksKeyConfiguration != nil {
-		if err := d.Set("xks_key_configuration", []interface{}{flattenXksKeyConfiguration(keyMetadata.XksKeyConfiguration)}); err != nil {
+		if err := d.Set("xks_key_configuration", []interface{}{flattenXksKeyConfigurationType(keyMetadata.XksKeyConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting xks_key_configuration: %s", err)
 		}
 	} else {
@@ -279,7 +279,7 @@ func flattenMultiRegionKeys(apiObjects []*kms.MultiRegionKey) []interface{} {
 	return tfList
 }
 
-func flattenXksKeyConfiguration(apiObject *kms.XksKeyConfigurationType) map[string]interface{} {
+func flattenXksKeyConfigurationType(apiObject *kms.XksKeyConfigurationType) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
