@@ -314,7 +314,7 @@ func TestAccVPCRouteTable_requireRouteTarget(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCRouteTableConfig_noTarget(rName),
-				ExpectError: regexp.MustCompile(`error creating route: one of .*\begress_only_gateway_id\b`),
+				ExpectError: regexp.MustCompile(`creating route: one of .*\begress_only_gateway_id\b`),
 			},
 		},
 	})
@@ -847,40 +847,6 @@ func TestAccVPCRouteTable_vpcMultipleCIDRs(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCRouteTableConfig_multipleCIDRs(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
-					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "route.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccVPCRouteTable_vpcClassicLink(t *testing.T) {
-	ctx := acctest.Context(t)
-	var routeTable ec2.RouteTable
-	resourceName := "aws_route_table.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVPCRouteTableConfig_classicLink(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
@@ -2074,27 +2040,6 @@ resource "aws_vpc_ipv4_cidr_block_association" "test" {
 
 resource "aws_route_table" "test" {
   vpc_id = aws_vpc_ipv4_cidr_block_association.test.vpc_id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName)
-}
-
-func testAccVPCRouteTableConfig_classicLink(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block         = "10.1.0.0/16"
-  enable_classiclink = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_route_table" "test" {
-  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
