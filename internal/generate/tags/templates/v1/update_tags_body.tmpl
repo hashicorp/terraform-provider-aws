@@ -5,7 +5,7 @@
 func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, oldTagsSet, newTagsSet any) error {
 	oldTags := KeyValueTags(ctx, oldTagsSet, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
 	newTags := KeyValueTags(ctx, newTagsSet, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
-{{- else }}
+{{- else -}}
 func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
