@@ -11,8 +11,8 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 	newTags := tftags.New(ctx, newTagsMap)
 {{- end }}
 	{{- if eq (.TagOp) (.UntagOp) }}
-	removedTags := oldTags.Removed(newTags)
-	updatedTags := oldTags.Updated(newTags)
+	removedTags := oldTags.Removed(newTags).IgnoreSystem(names.{{ .ProviderNameUpper }})
+	updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.{{ .ProviderNameUpper }})
 
 	// Ensure we do not send empty requests
 	if len(removedTags) == 0 && len(updatedTags) == 0 {
@@ -33,14 +33,14 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 	}
 
 	if len(updatedTags) > 0 {
-		input.{{ .TagInTagsElem }} = Tags(updatedTags.IgnoreSystem(names.{{ .ProviderNameUpper }}))
+		input.{{ .TagInTagsElem }} = Tags(updatedTags)
 	}
 
 	if len(removedTags) > 0 {
 		{{- if .UntagInNeedTagType }}
-		input.{{ .UntagInTagsElem }} = Tags(removedTags.IgnoreSystem(names.{{ .ProviderNameUpper }}))
+		input.{{ .UntagInTagsElem }} = Tags(removedTags)
 		{{- else if .UntagInNeedTagKeyType }}
-		input.{{ .UntagInTagsElem }} = TagKeys(removedTags.IgnoreSystem(names.{{ .ProviderNameUpper }}))
+		input.{{ .UntagInTagsElem }} = TagKeys(removedTags)
 		{{- else if .UntagInCustomVal }}
 		input.{{ .UntagInTagsElem }} = {{ .UntagInCustomVal }}
 		{{- else }}
@@ -56,7 +56,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 
 	{{- else }}
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	if removedTags := oldTags.Removed(newTags).IgnoreSystem(names.{{ .ProviderNameUpper }}); len(removedTags) > 0 {
 		{{- if .TagOpBatchSize }}
 		for _, removedTags := range removedTags.Chunks({{ .TagOpBatchSize }}) {
 		{{- end }}
@@ -72,13 +72,13 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 			{{- end }}
 			{{- end }}
 			{{- if .UntagInNeedTagType }}
-			{{ .UntagInTagsElem }}:       Tags(removedTags.IgnoreSystem(names.{{ .ProviderNameUpper }})),
+			{{ .UntagInTagsElem }}:       Tags(removedTags),
 			{{- else if .UntagInNeedTagKeyType }}
-			{{ .UntagInTagsElem }}:       TagKeys(removedTags.IgnoreSystem(names.{{ .ProviderNameUpper }})),
+			{{ .UntagInTagsElem }}:       TagKeys(removedTags),
 			{{- else if .UntagInCustomVal }}
 			{{ .UntagInTagsElem }}:       {{ .UntagInCustomVal }},
 			{{- else }}
-			{{ .UntagInTagsElem }}:       removedTags.IgnoreSystem(names.{{ .ProviderNameUpper }}).Keys(),
+			{{ .UntagInTagsElem }}:       removedTags.Keys(),
 			{{- end }}
 		}
 
@@ -92,7 +92,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		{{- end }}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.{{ .ProviderNameUpper }}); len(updatedTags) > 0 {
 		{{- if .TagOpBatchSize }}
 		for _, updatedTags := range updatedTags.Chunks({{ .TagOpBatchSize }}) {
 		{{- end }}
@@ -110,7 +110,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 			{{- if .TagInCustomVal }}
 			{{ .TagInTagsElem }}:       {{ .TagInCustomVal }},
 			{{- else }}
-			{{ .TagInTagsElem }}:       Tags(updatedTags.IgnoreSystem(names.{{ .ProviderNameUpper }})),
+			{{ .TagInTagsElem }}:       Tags(updatedTags),
 			{{- end }}
 		}
 
