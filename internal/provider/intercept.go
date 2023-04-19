@@ -18,17 +18,29 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// schemaResourceData is an interface that implements functions from schema.ResourceData
+type schemaResourceData interface {
+	Id() string
+	Get(key string) any
+	GetRawPlan() cty.Value
+	GetRawConfig() cty.Value
+	GetRawState() cty.Value
+	GetChange(key string) (interface{}, interface{})
+	HasChange(key string) bool
+	Set(string, any) error
+}
+
 // An interceptor is functionality invoked during the CRUD request lifecycle.
 // If a Before interceptor returns Diagnostics indicating an error occurred then
 // no further interceptors in the chain are run and neither is the schema's method.
 // In other cases all interceptors in the chain are run.
 type interceptor interface {
-	run(context.Context, resourceDiff, any, when, why, diag.Diagnostics) (context.Context, diag.Diagnostics)
+	run(context.Context, schemaResourceData, any, when, why, diag.Diagnostics) (context.Context, diag.Diagnostics)
 }
 
-type interceptorFunc func(context.Context, resourceDiff, any, when, why, diag.Diagnostics) (context.Context, diag.Diagnostics)
+type interceptorFunc func(context.Context, schemaResourceData, any, when, why, diag.Diagnostics) (context.Context, diag.Diagnostics)
 
-func (f interceptorFunc) run(ctx context.Context, d resourceDiff, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+func (f interceptorFunc) run(ctx context.Context, d schemaResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 	return f(ctx, d, meta, when, why, diags)
 }
 
@@ -179,7 +191,7 @@ func (r *wrappedResource) StateUpgrade(f schema.StateUpgradeFunc) schema.StateUp
 	}
 }
 
-type tagsCRUDFunc func(context.Context, resourceDiff, conns.ServicePackage, *types.ServicePackageResourceTags, string, string, any, diag.Diagnostics) (context.Context, diag.Diagnostics)
+type tagsCRUDFunc func(context.Context, schemaResourceData, conns.ServicePackage, *types.ServicePackageResourceTags, string, string, any, diag.Diagnostics) (context.Context, diag.Diagnostics)
 
 // tagsInterceptor implements transparent tagging.
 type tagsInterceptor struct {
@@ -188,7 +200,7 @@ type tagsInterceptor struct {
 	readFunc tagsCRUDFunc
 }
 
-func (r tagsInterceptor) run(ctx context.Context, d resourceDiff, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+func (r tagsInterceptor) run(ctx context.Context, d schemaResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 	if r.tags == nil {
 		return ctx, diags
 	}
@@ -356,15 +368,4 @@ func (r tagsInterceptor) run(ctx context.Context, d resourceDiff, meta any, when
 	}
 
 	return ctx, diags
-}
-
-type resourceDiff interface {
-	Id() string
-	Get(key string) any
-	GetRawPlan() cty.Value
-	GetRawConfig() cty.Value
-	GetRawState() cty.Value
-	GetChange(key string) (interface{}, interface{})
-	HasChange(key string) bool
-	Set(string, any) error
 }

@@ -55,7 +55,7 @@ func SetTagsDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{
 			}
 		}
 
-		if len(allTags) > 0 && !allTags.HasZeroValue() {
+		if len(allTags) > 0 && (!newTags.HasZeroValue() || !allTags.HasZeroValue()) {
 			if err := diff.SetNew("tags_all", allTags.Map()); err != nil {
 				return fmt.Errorf("error setting new tags_all diff: %w", err)
 			}
@@ -71,10 +71,18 @@ func SetTagsDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{
 			if err := diff.SetNew("tags_all", allTags.Map()); err != nil {
 				return fmt.Errorf("error setting new tags_all diff: %w", err)
 			}
-		} else if len(allTags) > 0 && allTags.HasZeroValue() {
+			return nil
+		}
+
+		var ta tftags.KeyValueTags
+		if tagsAll, ok := diff.Get("tags_all").(map[string]interface{}); ok {
+			ta = tftags.New(ctx, tagsAll)
+		}
+		if len(allTags) > 0 && !ta.DeepEqual(allTags) && allTags.HasZeroValue() {
 			if err := diff.SetNewComputed("tags_all"); err != nil {
 				return fmt.Errorf("error setting tags_all to computed: %w", err)
 			}
+			return nil
 		}
 	} else if tagsAll, ok := diff.Get("tags_all").(map[string]interface{}); ok {
 		ta := tftags.New(ctx, tagsAll)
