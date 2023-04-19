@@ -58,10 +58,6 @@ func ResourceListenerRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"action": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -112,6 +108,22 @@ func ResourceListenerRule() *schema.Resource {
 						},
 					},
 				},
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"listener_arn": {
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				AtLeastOneOf: []string{"listener_arn", "listener_identifier"},
+			},
+			"listener_identifier": {
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				AtLeastOneOf: []string{"listener_arn", "listener_identifier"},
 			},
 			"match": {
 				Type:             schema.TypeList,
@@ -219,40 +231,22 @@ func ResourceListenerRule() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.IntBetween(1, 100),
 			},
-
 			"rule_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"listener_arn": {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				AtLeastOneOf: []string{"listener_arn", "listener_identifier"},
-			},
-
-			"listener_identifier": {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				AtLeastOneOf: []string{"listener_arn", "listener_identifier"},
-			},
-
 			"service_arn": {
 				Type:         schema.TypeString,
 				Computed:     true,
 				Optional:     true,
 				AtLeastOneOf: []string{"service_arn", "service_identifier"},
 			},
-
 			"service_identifier": {
 				Type:         schema.TypeString,
 				Computed:     true,
 				Optional:     true,
 				AtLeastOneOf: []string{"service_arn", "service_identifier"},
 			},
-
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -465,20 +459,6 @@ func flattenRuleAction(apiObject types.RuleAction) map[string]interface{} {
 	}
 	if v, ok := apiObject.(*types.RuleActionMemberForward); ok {
 		tfMap["forward"] = []interface{}{flattenForwardAction(v)}
-	}
-
-	return tfMap
-}
-
-func flattenRuleActionMemberFixedResponse(apiObject *types.RuleActionMemberFixedResponse) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.Value.StatusCode; v != nil {
-		tfMap["status_code"] = aws.ToInt32(v)
 	}
 
 	return tfMap
