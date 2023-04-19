@@ -46,26 +46,26 @@ func ResourceAccount() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"enable_default_standards": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  true,
-			},
-			"control_finding_generator": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(securityhub.ControlFindingGenerator_Values(), false),
-				Default:      "SECURITY_CONTROL",
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"auto_enable_controls": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"control_finding_generator": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      securityhub.ControlFindingGeneratorSecurityControl,
+				ValidateFunc: validation.StringInSlice(securityhub.ControlFindingGenerator_Values(), false),
+			},
+			"enable_default_standards": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+				Default:  true,
 			},
 		},
 	}
@@ -100,27 +100,30 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	_, err := FindStandardsSubscriptions(ctx, conn, &securityhub.GetEnabledStandardsInput{})
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Security Hub Account %s not found, removing from state", d.Id())
+		log.Printf("[WARN] Security Hub Standards Subscriptions %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Security Hub Account (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Security Hub Standards Subscriptions: %s", d.Id(), err)
 	}
 
 	hub, err := conn.DescribeHubWithContext(ctx, &securityhub.DescribeHubInput{
 		HubArn: aws.String(accountHubARN(meta.(*conns.AWSClient))),
 	})
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Security Hub Account (%s): %s", d.Id(), err)
 	}
 
-	// enable_default_standards is never returned
-	d.Set("enable_default_standards", d.Get("enable_default_standards"))
+	d.Set("arn", hub.HubArn)
 	d.Set("auto_enable_controls", hub.AutoEnableControls)
 	d.Set("control_finding_generator", hub.ControlFindingGenerator)
-	d.Set("arn", hub.HubArn)
+	// enable_default_standards is never returned
+	d.Set("enable_default_standards", d.Get("enable_default_standards"))
 
 	return diags
 }
@@ -137,7 +140,7 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	_, err := conn.UpdateSecurityHubConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Security Hub Account configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating Security Hub Account (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourceAccountRead(ctx, d, meta)...)
