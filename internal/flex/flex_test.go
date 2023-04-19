@@ -67,7 +67,7 @@ func TestExpandResourceId(t *testing.T) {
 	t.Parallel()
 
 	id := "foo,bar,baz"
-	got, _ := ExpandResourceId(id, 3)
+	got, _ := ExpandResourceId(id, 3, false)
 	want := []string{
 		"foo",
 		"bar",
@@ -83,10 +83,27 @@ func TestExpandResourceIdEmptyPart(t *testing.T) {
 	t.Parallel()
 
 	resourceId := "foo,,baz"
-	_, err := ExpandResourceId(resourceId, 3)
+	_, err := ExpandResourceId(resourceId, 3, false)
 
 	if !strings.Contains(err.Error(), "format for ID (foo,,baz), the following id parts indexes are blank ([1])") {
 		t.Fatalf("Expected an error when parsing ResourceId with an empty part")
+	}
+}
+
+func TestExpandResourceIdAllowEmptyPart(t *testing.T) {
+	t.Parallel()
+
+	resourceId := "foo,,baz"
+	got, _ := ExpandResourceId(resourceId, 3, true)
+
+	want := []string{
+		"foo",
+		"",
+		"baz",
+	}
+
+	if !cmp.Equal(got, want) {
+		t.Errorf("expanded = %v, want = %v", got, want)
 	}
 }
 
@@ -94,7 +111,7 @@ func TestExpandResourceIdIncorrectPartCount(t *testing.T) {
 	t.Parallel()
 
 	resourceId := "foo,bar,baz"
-	_, err := ExpandResourceId(resourceId, 2)
+	_, err := ExpandResourceId(resourceId, 2, false)
 
 	if !strings.Contains(err.Error(), "unexpected format for ID (foo,bar,baz), expected (2) parts separated by (,)") {
 		t.Fatalf("Expected an error when parsing ResourceId with incorrect part count")
@@ -105,7 +122,7 @@ func TestExpandResourceIdSinglePart(t *testing.T) {
 	t.Parallel()
 
 	resourceId := "foo"
-	_, err := ExpandResourceId(resourceId, 2)
+	_, err := ExpandResourceId(resourceId, 2, false)
 
 	if !strings.Contains(err.Error(), "unexpected format for ID ([foo]), expected more than one part") {
 		t.Fatalf("Expected an error when parsing ResourceId with single part count")
@@ -116,7 +133,7 @@ func TestFlattenResourceId(t *testing.T) {
 	t.Parallel()
 
 	idParts := []string{"foo", "bar", "baz"}
-	got, _ := FlattenResourceId(idParts, 3)
+	got, _ := FlattenResourceId(idParts, 3, false)
 	want := "foo,bar,baz"
 
 	if !cmp.Equal(got, want) {
@@ -128,7 +145,7 @@ func TestFlattenResourceIdEmptyPart(t *testing.T) {
 	t.Parallel()
 
 	idParts := []string{"foo", "", "baz"}
-	_, err := FlattenResourceId(idParts, 3)
+	_, err := FlattenResourceId(idParts, 3, false)
 
 	if !strings.Contains(err.Error(), "unexpected format for ID parts ([foo  baz]), the following id parts indexes are blank ([1])") {
 		t.Fatalf("Expected an error when parsing ResourceId with an empty part")
@@ -139,7 +156,7 @@ func TestFlattenResourceIdIncorrectPartCount(t *testing.T) {
 	t.Parallel()
 
 	idParts := []string{"foo", "bar", "baz"}
-	_, err := FlattenResourceId(idParts, 2)
+	_, err := FlattenResourceId(idParts, 2, false)
 
 	if !strings.Contains(err.Error(), "unexpected format for ID parts ([foo bar baz]), expected (2) parts") {
 		t.Fatalf("Expected an error when parsing ResourceId with incorrect part count")
@@ -150,7 +167,7 @@ func TestFlattenResourceIdSinglePart(t *testing.T) {
 	t.Parallel()
 
 	idParts := []string{"foo"}
-	_, err := FlattenResourceId(idParts, 2)
+	_, err := FlattenResourceId(idParts, 2, false)
 
 	if !strings.Contains(err.Error(), "unexpected format for ID parts ([foo]), expected more than one part") {
 		t.Fatalf("Expected an error when parsing ResourceId with single part count")
