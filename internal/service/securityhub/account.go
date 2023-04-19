@@ -108,7 +108,7 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Security Hub Standards Subscriptions: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Security Hub Standards Subscriptions: %s", err)
 	}
 
 	hub, err := conn.DescribeHubWithContext(ctx, &securityhub.DescribeHubInput{
