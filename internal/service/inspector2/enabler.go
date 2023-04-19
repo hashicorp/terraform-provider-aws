@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -83,13 +84,59 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	id := EnablerID(in.AccountIds, flex.ExpandStringyValueSet[types.ResourceScanType](d.Get("resource_types").(*schema.Set)))
 
-	out, err := conn.Enable(ctx, in)
+	var out *inspector2.EnableOutput
+	err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
+		var err error
+		out, err = conn.Enable(ctx, in)
+		if err != nil {
+			return retry.NonRetryableError(err)
+		}
+		if out == nil {
+			return retry.RetryableError(tfresource.NewEmptyResultError(nil))
+		}
+
+		if len(out.FailedAccounts) == 0 {
+			return nil
+		}
+
+		var errs *multierror.Error
+		for _, acct := range out.FailedAccounts {
+			errs = multierror.Append(errs, newFailedAccountError(acct))
+		}
+		err = failedAccountsError(*errs)
+
+		if tfslices.All(out.FailedAccounts, func(acct types.FailedAccount) bool {
+			switch acct.ErrorCode {
+			case types.ErrorCodeAccessDenied, // Account membership not propagated
+				types.ErrorCodeSsmThrottled,
+				types.ErrorCodeEventbridgeThrottled,
+				types.ErrorCodeEnableInProgress,
+				types.ErrorCodeDisableInProgress,
+				types.ErrorCodeSuspendInProgress:
+				return true
+			}
+			return false
+		}) {
+			return retry.RetryableError(err)
+		}
+
+		return retry.NonRetryableError(err)
+	})
+	if tfresource.TimedOut(err) {
+		out, err = conn.Enable(ctx, in)
+	}
 	if err != nil {
 		return append(diags, create.DiagError(names.Inspector2, create.ErrActionCreating, ResNameEnabler, id, err)...)
 	}
 
 	if out == nil {
-		return append(diags, create.DiagError(names.Inspector2, create.ErrActionCreating, ResNameEnabler, id, errors.New("empty output"))...)
+		return append(diags, create.DiagError(names.Inspector2, create.ErrActionCreating, ResNameEnabler, id, tfresource.NewEmptyResultError(nil))...)
+	}
+
+	if len(out.FailedAccounts) > 0 {
+		for _, acct := range out.FailedAccounts {
+			diags = sdkdiag.AppendErrorf(diags, "enabling Amazon Inspector for Account %q: %s: %s", aws.ToString(acct.AccountId), acct.ErrorCode, aws.ToString(acct.ErrorMessage))
+		}
 	}
 
 	d.SetId(id)
@@ -215,6 +262,36 @@ func resourceEnablerDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	return diags
+}
+
+var (
+	errFailedAccount      = errors.New("failed accounts")
+	errRetryableCondition = errors.New("retryable condition")
+)
+
+type failedAccountsError multierror.Error
+
+func (e failedAccountsError) Error() string {
+	m := multierror.Error(e)
+	return m.Error()
+}
+
+type failedAccountError struct {
+	accountID string
+	code      types.ErrorCode
+	message   string
+}
+
+func newFailedAccountError(a types.FailedAccount) error {
+	return &failedAccountError{
+		accountID: aws.ToString(a.AccountId),
+		code:      a.ErrorCode,
+		message:   aws.ToString(a.ErrorMessage),
+	}
+}
+
+func (e failedAccountError) Error() string {
+	return fmt.Sprintf("account %s: %s: %s", e.accountID, e.code, e.message)
 }
 
 const (

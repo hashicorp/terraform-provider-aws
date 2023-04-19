@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -246,6 +247,41 @@ func testAccEnabler_lambda(t *testing.T) {
 	})
 }
 
+func testAccEnabler_multiAccount_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_inspector2_enabler.test"
+	resourceTypes := []types.ResourceScanType{types.ResourceScanTypeEcr}
+
+	providers := make(map[string]*schema.Provider)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamed(ctx, t, providers),
+		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnablerConfig_MultiAccount(resourceTypes),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEnablerExists(ctx, resourceTypes),
+					testAccCheckEnablerMulitAccountID(resourceName, acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers), resourceTypes),
+					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "resource_types.*", string(types.ResourceScanTypeEcr)),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckEnablerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		id := ""
@@ -312,6 +348,16 @@ func testAccCheckEnablerID(resourceName string, types []types.ResourceScanType) 
 	}
 }
 
+func testAccCheckEnablerMulitAccountID(resourceName string, providerF func() *schema.Provider, types []types.ResourceScanType) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		id := tfinspector2.EnablerID([]string{
+			acctest.AccountID(),
+			providerF().Meta().(*conns.AWSClient).AccountID,
+		}, types)
+		return resource.TestCheckResourceAttr(resourceName, "id", id)(s)
+	}
+}
+
 func testAccEnablerConfig_basic(types []types.ResourceScanType) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
@@ -321,4 +367,37 @@ resource "aws_inspector2_enabler" "test" {
   resource_types = ["%[1]s"]
 }
 `, strings.Join(enum.Slice(types...), `", "`))
+}
+
+func testAccEnablerConfig_MultiAccount(types []types.ResourceScanType) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAlternateAccountProvider(),
+		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_caller_identity" "member" {
+  provider = "awsalternate"
+}
+
+resource "aws_inspector2_enabler" "test" {
+  account_ids    = [
+	data.aws_caller_identity.current.account_id,
+	data.aws_caller_identity.member.account_id,
+	]
+  resource_types = ["%[1]s"]
+
+  depends_on = [aws_inspector2_member_association.test]
+}
+
+resource "aws_inspector2_member_association" "test" {
+  account_id = data.aws_caller_identity.member.account_id
+
+  depends_on = [aws_inspector2_delegated_admin_account.test]
+}
+
+resource "aws_inspector2_delegated_admin_account" "test" {
+  account_id = data.aws_caller_identity.current.account_id
+}
+`, strings.Join(enum.Slice(types...), `", "`)),
+	)
 }
