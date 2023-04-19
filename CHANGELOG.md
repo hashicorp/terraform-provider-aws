@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_dms_endpoint` ([#30717](https://github.com/hashicorp/terraform-provider-aws/issues/30717))
 * **New Data Source:** `aws_fsx_windows_file_system` ([#28622](https://github.com/hashicorp/terraform-provider-aws/issues/28622))
 * **New Data Source:** `aws_networkfirewall_resource_policy` ([#25474](https://github.com/hashicorp/terraform-provider-aws/issues/25474))
 * **New Data Source:** `aws_prometheus_workspaces` ([#28574](https://github.com/hashicorp/terraform-provider-aws/issues/28574))
@@ -16,12 +17,14 @@ ENHANCEMENTS:
 * data-source/aws_ecs_task_definition: Add `execution_role_arn` attribute ([#28662](https://github.com/hashicorp/terraform-provider-aws/issues/28662))
 * data-source/aws_eks_node_group: Add `launch_template` attribute ([#30780](https://github.com/hashicorp/terraform-provider-aws/issues/30780))
 * data-source/aws_iam_role: Add `role_last_used` attribute ([#30750](https://github.com/hashicorp/terraform-provider-aws/issues/30750))
+* data-source/aws_kms_key: Add `cloud_hsm_cluster_id`, `custom_key_store_id`, `key_spec`, `pending_deletion_window_in_days`, and `xks_key_configuration` attributes ([#29250](https://github.com/hashicorp/terraform-provider-aws/issues/29250))
 * data-source/aws_lakeformation_data_lake_settings: Add `allow_external_data_filtering`, `external_data_filtering_allow_list` and `authorized_session_tag_value_list` attributes ([#30207](https://github.com/hashicorp/terraform-provider-aws/issues/30207))
 * data-source/aws_outposts_outpost: Add `lifecycle_status`, `site_arn`, `supported_hardware_type` and `tags` attributes ([#30754](https://github.com/hashicorp/terraform-provider-aws/issues/30754))
 * data-source/aws_subnet: Add `enable_lni_at_device_index` attribute ([#30798](https://github.com/hashicorp/terraform-provider-aws/issues/30798))
 * resource/aws_cloudfront_response_headers_policy: Add `remove_headers_config` argument ([#28940](https://github.com/hashicorp/terraform-provider-aws/issues/28940))
 * resource/aws_dms_replication_instance: Increase default timeout for `create` ([#29905](https://github.com/hashicorp/terraform-provider-aws/issues/29905))
 * resource/aws_eks_node_group: Add plan time validation to `node_group_name` and `node_group_name_prefix` arguments ([#29975](https://github.com/hashicorp/terraform-provider-aws/issues/29975))
+* resource/aws_elastic_beanstalk_application: Add plan time validation to `appversion_lifecycle.service_role` and `name` arguments ([#17727](https://github.com/hashicorp/terraform-provider-aws/issues/17727))
 * resource/aws_fis_experiment_template: Add support for `Subnets` Network Actions to `actions.*.target` ([#30211](https://github.com/hashicorp/terraform-provider-aws/issues/30211))
 * resource/aws_iam_role: Add `role_last_used` attribute ([#30750](https://github.com/hashicorp/terraform-provider-aws/issues/30750))
 * resource/aws_iot_topic_rule: Add `error_action.firehose.batch_mode`, `error_action.iot_analytics.batch_mode`, `error_action.iot_events.batch_mode`, `firehose.batch_mode`, `iot_analytics.batch_mode` and `iot_events.batch_mode` arguments ([#28568](https://github.com/hashicorp/terraform-provider-aws/issues/28568))
