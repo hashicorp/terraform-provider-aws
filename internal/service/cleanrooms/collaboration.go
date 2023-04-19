@@ -405,7 +405,6 @@ func flattenCreatorAbilities(members []types.MemberSummary, ownerAccount *string
 	flattenedAbilities := []string{}
 	for _, member := range members {
 		if awsv1.StringValue(member.AccountId) == awsv1.StringValue(ownerAccount) {
-			log.Printf("They match!")
 			return flattenMemberAbilities(member.Abilities)
 		}
 	}
