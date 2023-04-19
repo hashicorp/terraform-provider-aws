@@ -11,10 +11,16 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 	newTags := tftags.New(ctx, newTagsMap)
 {{- end }}
 	{{- if eq (.TagOp) (.UntagOp) }}
-	removedTags := oldTags.Removed(newTags).IgnoreSystem(names.{{ .ProviderNameUpper }})
-	updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.{{ .ProviderNameUpper }})
+	removedTags := oldTags.Removed(newTags)
+	{{- if .UpdateTagsIgnoreSystem }}
+	removedTags = removedTags.IgnoreSystem(names.{{ .ProviderNameUpper }})
+	{{- end }}
+	updatedTags := oldTags.Updated(newTags)
+	{{- if .UpdateTagsIgnoreSystem }}
+	updatedTags = updatedTags.IgnoreSystem(names.{{ .ProviderNameUpper }})
+	{{- end }}
 
-	// Ensure we do not send empty requests
+	// Ensure we do not send empty requests.
 	if len(removedTags) == 0 && len(updatedTags) == 0 {
 		return nil
 	}
@@ -56,7 +62,11 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 
 	{{- else }}
 
-	if removedTags := oldTags.Removed(newTags).IgnoreSystem(names.{{ .ProviderNameUpper }}); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	{{- if .UpdateTagsIgnoreSystem }}
+	removedTags = removedTags.IgnoreSystem(names.{{ .ProviderNameUpper }})
+	{{- end }}
+	if len(removedTags) > 0 {
 		{{- if .TagOpBatchSize }}
 		for _, removedTags := range removedTags.Chunks({{ .TagOpBatchSize }}) {
 		{{- end }}
@@ -92,7 +102,11 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		{{- end }}
 	}
 
-	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.{{ .ProviderNameUpper }}); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	{{- if .UpdateTagsIgnoreSystem }}
+	updatedTags = updatedTags.IgnoreSystem(names.{{ .ProviderNameUpper }})
+	{{- end }}
+	if len(updatedTags) > 0 {
 		{{- if .TagOpBatchSize }}
 		for _, updatedTags := range updatedTags.Chunks({{ .TagOpBatchSize }}) {
 		{{- end }}
