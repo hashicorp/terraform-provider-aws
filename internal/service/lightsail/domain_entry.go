@@ -146,7 +146,6 @@ func resourceDomainEntryRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	// This code is intended to update the Id to use the common separator for resources still using the old separator
 	if partCount == 1 {
-
 		idParts := []string{
 			name,
 			domainName,
@@ -317,7 +316,6 @@ func FindDomainEntryById(ctx context.Context, conn *lightsail.Lightsail, id stri
 
 	// if there is not more than one partCount, the legacy separator will be used.
 	if partCount == 1 {
-
 		idParts := strings.Split(id, "_")
 		idLength := len(idParts)
 		var index int
