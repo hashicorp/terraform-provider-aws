@@ -179,9 +179,13 @@ func (r *wrappedResource) StateUpgrade(f schema.StateUpgradeFunc) schema.StateUp
 	}
 }
 
+type tagsCRUDFunc func(context.Context, *schema.ResourceData, conns.ServicePackage, *types.ServicePackageResourceTags, string, string, any, diag.Diagnostics) (context.Context, diag.Diagnostics)
+
 // tagsInterceptor implements transparent tagging.
 type tagsInterceptor struct {
-	tags *types.ServicePackageResourceTags
+	tags     *types.ServicePackageResourceTags
+	listFunc tagsCRUDFunc
+	readFunc tagsCRUDFunc
 }
 
 func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
@@ -344,7 +348,10 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 	case Finally:
 		switch why {
 		case Update:
-			ctx, diags = finalTagsUpdate(ctx, d, sp, tagsInContext, inContext, r.tags, serviceName, resourceName, meta)
+			if !d.GetRawPlan().GetAttr("tags_all").IsWhollyKnown() {
+				ctx, diags = r.listFunc(ctx, d, sp, r.tags, serviceName, resourceName, meta, diags)
+				ctx, diags = r.readFunc(ctx, d, sp, r.tags, serviceName, resourceName, meta, diags)
+			}
 		}
 	}
 
@@ -360,8 +367,18 @@ type resourceDiff interface {
 	Set(string, any) error
 }
 
-func finalTagsUpdate(ctx context.Context, d resourceDiff, sp conns.ServicePackage, tagsInContext *tftags.InContext, inContext *conns.InContext, r *types.ServicePackageResourceTags, serviceName, resourceName string, meta any) (context.Context, diag.Diagnostics) {
+func finalTagsUpdate(ctx context.Context, d resourceDiff, sp conns.ServicePackage, r *types.ServicePackageResourceTags, serviceName, resourceName string, meta any) (context.Context, diag.Diagnostics) {
 	var diags diag.Diagnostics
+
+	inContext, ok := conns.FromContext(ctx)
+	if !ok {
+		return ctx, diags
+	}
+
+	tagsInContext, ok := tftags.FromContext(ctx)
+	if !ok {
+		return ctx, diags
+	}
 
 	if !d.GetRawPlan().GetAttr("tags_all").IsWhollyKnown() {
 		configTags := make(map[string]string)

@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"github.com/hashicorp/go-cty/cty"
@@ -26,16 +25,7 @@ func (t *mockService) SDKDataSources(ctx context.Context) []*types.ServicePackag
 }
 
 func (t *mockService) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{
-		{
-			Factory:  nil,
-			TypeName: "aws_test",
-			Name:     "Test",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
-			},
-		},
-	}
+	return []*types.ServicePackageSDKResource{}
 }
 
 func (t *mockService) ServicePackageName() string {
@@ -50,7 +40,7 @@ func (t *mockService) ListTags(ctx context.Context, meta any, identifier string)
 		inContext.TagsOut = types.Some(tags)
 	}
 
-	return errors.New("test error")
+	return nil
 }
 
 func (t *mockService) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
@@ -63,7 +53,7 @@ func TestTagsInterceptor(t *testing.T) {
 	var interceptors interceptorItems
 
 	sp := &types.ServicePackageResourceTags{
-		IdentifierAttribute: "arn",
+		IdentifierAttribute: "id",
 	}
 
 	tags := tagsInterceptor{tags: sp}
@@ -86,39 +76,55 @@ func TestTagsInterceptor(t *testing.T) {
 		}),
 	}
 
-	d := &differ{}
+	bootstrapContext := func(ctx context.Context, meta any) context.Context {
+		ctx = conns.NewContext(ctx, "Test", "aws_test")
+		if v, ok := meta.(*conns.AWSClient); ok {
+			ctx = tftags.NewContext(ctx, v.DefaultTagsConfig, v.IgnoreTagsConfig)
+		}
 
-	_, _ = finalTagsUpdate(context.Background(), d, &mockService{}, nil, nil, sp, "TestService", "Test", conn)
+		return ctx
+	}
+
+	ctx := context.Background()
+	ctx = bootstrapContext(ctx, conn)
+	d := &resourceData{}
+
+	_, diags := finalTagsUpdate(ctx, d, &mockService{}, sp, "TestService", "Test", conn)
+	if got, want := len(diags), 0; got != want {
+		t.Errorf("length of diags = %v, want %v", got, want)
+	}
 }
 
-type differ struct{}
+type resourceData struct{}
 
-func (d *differ) GetRawConfig() cty.Value {
-	return cty.MapVal(map[string]cty.Value{
-		"tags_all": cty.StringVal(""),
+func (d *resourceData) GetRawConfig() cty.Value {
+	return cty.ObjectVal(map[string]cty.Value{
+		"tags": cty.MapVal(map[string]cty.Value{
+			"tag1": cty.StringVal("value1"),
+		}),
 	})
 }
 
-func (d *differ) GetRawPlan() cty.Value {
-	return cty.MapVal(map[string]cty.Value{
+func (d *resourceData) GetRawPlan() cty.Value {
+	return cty.ObjectVal(map[string]cty.Value{
 		"tags_all": cty.MapVal(map[string]cty.Value{
 			"tag1": cty.UnknownVal(cty.String),
 		}),
 	})
 }
 
-func (d *differ) GetRawState() cty.Value {
+func (d *resourceData) GetRawState() cty.Value { // nosemgrep:ci.aws-in-func-name
 	return cty.Value{}
 }
 
-func (d *differ) Get(key string) any {
+func (d *resourceData) Get(key string) any {
 	return nil
 }
 
-func (d *differ) Id() string {
+func (d *resourceData) Id() string {
 	return "id"
 }
 
-func (d *differ) Set(string, any) error {
+func (d *resourceData) Set(string, any) error {
 	return nil
 }
