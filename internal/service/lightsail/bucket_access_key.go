@@ -79,7 +79,7 @@ func resourceBucketAccessKeyCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	idParts := []string{d.Get("bucket_name").(string), *out.AccessKey.AccessKeyId}
-	id, err := flex.FlattenResourceId(idParts, BucketAccessKeyIdPartsCount)
+	id, err := flex.FlattenResourceId(idParts, BucketAccessKeyIdPartsCount, false)
 
 	if err != nil {
 		return create.DiagError(names.Lightsail, create.ErrActionFlatteningResourceId, ResBucketAccessKey, d.Get("bucket_name").(string), err)
@@ -116,7 +116,7 @@ func resourceBucketAccessKeyRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceBucketAccessKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LightsailConn()
-	parts, err := flex.ExpandResourceId(d.Id(), BucketAccessKeyIdPartsCount)
+	parts, err := flex.ExpandResourceId(d.Id(), BucketAccessKeyIdPartsCount, false)
 
 	if err != nil {
 		return create.DiagError(names.Lightsail, create.ErrActionExpandingResourceId, ResBucketAccessKey, d.Id(), err)
