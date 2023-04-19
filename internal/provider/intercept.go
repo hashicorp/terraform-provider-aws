@@ -20,13 +20,13 @@ import (
 
 // schemaResourceData is an interface that implements functions from schema.ResourceData
 type schemaResourceData interface {
-	Id() string
 	Get(key string) any
-	GetRawPlan() cty.Value
-	GetRawConfig() cty.Value
-	GetRawState() cty.Value
 	GetChange(key string) (any, any)
+	GetRawConfig() cty.Value
+	GetRawPlan() cty.Value
+	GetRawState() cty.Value
 	HasChange(key string) bool
+	Id() string
 	Set(string, any) error
 }
 
@@ -360,7 +360,7 @@ func (r tagsInterceptor) run(ctx context.Context, d schemaResourceData, meta any
 	case Finally:
 		switch why {
 		case Update:
-			if !d.GetRawPlan().GetAttr("tags_all").IsWhollyKnown() {
+			if !d.GetRawPlan().GetAttr(names.AttrTagsAll).IsWhollyKnown() {
 				ctx, diags = r.updateFunc(ctx, d, sp, r.tags, serviceName, resourceName, meta, diags)
 				ctx, diags = r.readFunc(ctx, d, sp, r.tags, serviceName, resourceName, meta, diags)
 			}

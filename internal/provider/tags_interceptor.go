@@ -28,7 +28,7 @@ func tagsUpdateFunc(ctx context.Context, d schemaResourceData, sp conns.ServiceP
 
 	configTags := make(map[string]string)
 	if config := d.GetRawConfig(); !config.IsNull() && config.IsKnown() {
-		c := config.GetAttr("tags")
+		c := config.GetAttr(names.AttrTags)
 		if !c.IsNull() {
 			for k, v := range c.AsValueMap() {
 				configTags[k] = v.AsString()
@@ -38,7 +38,7 @@ func tagsUpdateFunc(ctx context.Context, d schemaResourceData, sp conns.ServiceP
 
 	stateTags := make(map[string]string)
 	if state := d.GetRawState(); !state.IsNull() && state.IsKnown() {
-		s := state.GetAttr("tags_all")
+		s := state.GetAttr(names.AttrTagsAll)
 		for k, v := range s.AsValueMap() {
 			stateTags[k] = v.AsString()
 		}
