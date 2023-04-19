@@ -3,8 +3,6 @@ package elasticbeanstalk
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -61,30 +59,22 @@ func dataSourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 
-	// Get the name and description
 	name := d.Get("name").(string)
+	app, err := FindApplicationByName(ctx, conn, name)
 
-	resp, err := conn.DescribeApplicationsWithContext(ctx, &elasticbeanstalk.DescribeApplicationsInput{
-		ApplicationNames: []*string{aws.String(name)},
-	})
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing Applications (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Application (%s): %s", name, err)
 	}
-
-	if len(resp.Applications) > 1 || len(resp.Applications) < 1 {
-		return sdkdiag.AppendErrorf(diags, "%d Applications matched, expected 1", len(resp.Applications))
-	}
-
-	app := resp.Applications[0]
 
 	d.SetId(name)
-	d.Set("arn", app.ApplicationArn)
-	d.Set("name", app.ApplicationName)
-	d.Set("description", app.Description)
-
 	if app.ResourceLifecycleConfig != nil {
-		d.Set("appversion_lifecycle", flattenApplicationResourceLifecycleConfig(app.ResourceLifecycleConfig))
+		if err := d.Set("appversion_lifecycle", []interface{}{flattenApplicationResourceLifecycleConfig(app.ResourceLifecycleConfig)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting appversion_lifecycle: %s", err)
+		}
 	}
+	d.Set("arn", app.ApplicationArn)
+	d.Set("description", app.Description)
+	d.Set("name", app.ApplicationName)
 
 	return diags
 }
