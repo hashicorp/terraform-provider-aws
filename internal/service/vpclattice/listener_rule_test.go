@@ -156,72 +156,73 @@ func TestAccVPCLatticeListenerRule_tags(t *testing.T) {
 
 func testAcclistenerRule_basic(rName string) string {
 	return fmt.Sprintf(`
-	resource "aws_vpclattice_listener_rule" "test" {
-		name = %q
-		listener_identifier = "listener-0f84b4608eae14610"
-		service_identifier = "svc-05cad7dcf6ee78d45"
-		priority     = 20
-		match {
-			http_match {
+resource "aws_vpclattice_listener_rule" "test" {
+  name                = %q
+  listener_identifier = "listener-0f84b4608eae14610"
+  service_identifier  = "svc-05cad7dcf6ee78d45"
+  priority            = 20
+  match {
+    http_match {
 
-				header_matches {
-					name = "example-header"
-					case_sensitive = false
-			
-					match {
-					  exact = "example-contains"
-					}
-				  }
+      header_matches {
+        name           = "example-header"
+        case_sensitive = false
 
-				path_match {
-					case_sensitive = true
-					match {
-						prefix = "/example-path"
-					  }
-				}
-			}
-		}	  
-		action  {
-			forward {
-				target_groups{
-					target_group_identifier = "tg-00153386728e69d10"
-					weight = 1
-				}
-				target_groups{
-					target_group_identifier = "tg-0fcd8d514d231b311"
-					weight = 2
-				}
-			}
-			
-		}
-	}
+        match {
+          exact = "example-contains"
+        }
+      }
+
+      path_match {
+        case_sensitive = true
+        match {
+          prefix = "/example-path"
+        }
+      }
+    }
+  }
+  action {
+    forward {
+      target_groups {
+        target_group_identifier = "tg-00153386728e69d10"
+        weight                  = 1
+      }
+      target_groups {
+        target_group_identifier = "tg-0fcd8d514d231b311"
+        weight                  = 2
+      }
+    }
+
+  }
+}
 `, rName)
 }
 
 func testAcclistenerRule_fixedResponse(rName string) string {
 	return fmt.Sprintf(`
 
-	resource "aws_vpclattice_listener_rule" "test" {
-		name = %q
-		listener_identifier = "listener-0f84b4608eae14610"
-		service_identifier = "svc-05cad7dcf6ee78d45"
-		priority = 10
-		match {
-			http_match {
-				path_match {
-					case_sensitive = false
-					match {
-						exact = "/example-path"
-					}
-				}
-			}
-		}
-		action {
-			fixed_response {
-				status_code = 404
-			}
-		}
-	}
+
+resource "aws_vpclattice_listener_rule" "test" {
+  name                = %q
+  listener_identifier = "listener-0f84b4608eae14610"
+  service_identifier  = "svc-05cad7dcf6ee78d45"
+  priority            = 10
+  match {
+    http_match {
+      path_match {
+        case_sensitive = false
+        match {
+          exact = "/example-path"
+        }
+      }
+    }
+  }
+  action {
+    fixed_response {
+      status_code = 404
+    }
+  }
+}
 `, rName)
 }
 
@@ -295,105 +296,105 @@ func testAccChecklistenerRuleDestroy(ctx context.Context) resource.TestCheckFunc
 
 func testAccListenerRule_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-	resource "aws_vpclattice_listener_rule" "test" {
-		name = %q
-		listener_identifier = "listener-0f84b4608eae14610"
-		service_identifier = "svc-05cad7dcf6ee78d45"
-		priority = 30
-		match {
-			http_match {
-				path_match {
-					case_sensitive = false
-					match {
-						prefix = "/example-path"
-					}
-				}
-			}
-		}
-		action {
-			fixed_response {
-				status_code = 404
-			}
-		}
-		tags = {
-			%[2]q = %[3]q
-		  }
-	}
+resource "aws_vpclattice_listener_rule" "test" {
+  name                = %q
+  listener_identifier = "listener-0f84b4608eae14610"
+  service_identifier  = "svc-05cad7dcf6ee78d45"
+  priority            = 30
+  match {
+    http_match {
+      path_match {
+        case_sensitive = false
+        match {
+          prefix = "/example-path"
+        }
+      }
+    }
+  }
+  action {
+    fixed_response {
+      status_code = 404
+    }
+  }
+  tags = {
+    %[2]q = %[3]q
+  }
+}
 `, rName, tagKey1, tagValue1)
 }
 
 func testAccListenerRule_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-	resource "aws_vpclattice_listener_rule" "test" {
-		name = %q
-		listener_identifier = "listener-0f84b4608eae14610"
-		service_identifier = "svc-05cad7dcf6ee78d45"
-		priority = 30
-		match {
-			http_match {
-				path_match {
-					case_sensitive = false
-					match {
-						prefix = "/example-path"
-					}
-				}
-			}
-		}
-		action {
-			fixed_response {
-				status_code = 404
-			}
-		}
-		tags = {
-			%[2]q = %[3]q
-			%[4]q = %[5]q
-		  }
-	}
+resource "aws_vpclattice_listener_rule" "test" {
+  name                = %q
+  listener_identifier = "listener-0f84b4608eae14610"
+  service_identifier  = "svc-05cad7dcf6ee78d45"
+  priority            = 30
+  match {
+    http_match {
+      path_match {
+        case_sensitive = false
+        match {
+          prefix = "/example-path"
+        }
+      }
+    }
+  }
+  action {
+    fixed_response {
+      status_code = 404
+    }
+  }
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAcclistenerRule_methodMatch(rName string) string {
 	return fmt.Sprintf(`
-	resource "aws_vpclattice_listener_rule" "test" {
-		name = %q
-		listener_identifier = "listener-0f84b4608eae14610"
-		service_identifier = "svc-05cad7dcf6ee78d45"
-		priority = 40
-		match {
-			http_match {
+resource "aws_vpclattice_listener_rule" "test" {
+  name                = %q
+  listener_identifier = "listener-0f84b4608eae14610"
+  service_identifier  = "svc-05cad7dcf6ee78d45"
+  priority            = 40
+  match {
+    http_match {
 
-				method = "POST"
+      method = "POST"
 
-				header_matches {
-					name = "example-header"
-					case_sensitive = false
+      header_matches {
+        name           = "example-header"
+        case_sensitive = false
 
-					match {
-						contains = "example-contains"
-					}
-				}
+        match {
+          contains = "example-contains"
+        }
+      }
 
-				path_match {
-					case_sensitive = true
-					match {
-						prefix = "/example-path"
-					}
-				}
+      path_match {
+        case_sensitive = true
+        match {
+          prefix = "/example-path"
+        }
+      }
 
-			}
-		}
-		action {
-			forward {
-				target_groups {
-					target_group_identifier = "tg-00153386728e69d10"
-					weight = 1
-				}
-				target_groups {
-					target_group_identifier = "tg-0fcd8d514d231b311"
-					weight = 2
-				}
-			}
-		}
-	}
+    }
+  }
+  action {
+    forward {
+      target_groups {
+        target_group_identifier = "tg-00153386728e69d10"
+        weight                  = 1
+      }
+      target_groups {
+        target_group_identifier = "tg-0fcd8d514d231b311"
+        weight                  = 2
+      }
+    }
+  }
+}
 `, rName)
 }

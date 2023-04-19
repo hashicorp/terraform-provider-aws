@@ -376,7 +376,6 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 	ruleId := d.Get("rule_id").(string)
 
 	if d.HasChangesExcept("tags", "tags_all") {
-
 		in := &vpclattice.UpdateRuleInput{
 			RuleIdentifier:     aws.String(ruleId),
 			ListenerIdentifier: aws.String(listenerId),
@@ -398,7 +397,6 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 		if err != nil {
 			return create.DiagError(names.VPCLattice, create.ErrActionUpdating, ResNameListenerRule, d.Id(), err)
 		}
-
 	}
 
 	return resourceListenerRuleRead(ctx, d, meta)
@@ -431,7 +429,6 @@ func resourceListenerRuleDelete(ctx context.Context, d *schema.ResourceData, met
 }
 
 func FindListenerRuleByID(ctx context.Context, conn *vpclattice.Client, serviceIdentifier string, listenerIdentifier string, ruleId string) (*vpclattice.GetRuleOutput, error) {
-
 	in := &vpclattice.GetRuleInput{
 		ListenerIdentifier: aws.String(listenerIdentifier),
 		RuleIdentifier:     aws.String(ruleId),
@@ -516,7 +513,6 @@ func flattenWeightedTargetGroups(apiObjects []types.WeightedTargetGroup) []inter
 }
 
 func flattenWeightedTargetGroup(apiObject *types.WeightedTargetGroup) map[string]interface{} {
-
 	if apiObject == nil {
 		return nil
 	}
@@ -542,13 +538,13 @@ func flattenRuleMatch(apiObject types.RuleMatch) map[string]interface{} {
 	tfMap := make(map[string]interface{})
 
 	if v, ok := apiObject.(*types.RuleMatchMemberHttpMatch); ok {
-		tfMap["http_match"] = []interface{}{flattenHttpMatch(&v.Value)}
+		tfMap["http_match"] = []interface{}{flattenHTTPMatch(&v.Value)}
 	}
 
 	return tfMap
 }
 
-func flattenHttpMatch(apiObject *types.HttpMatch) map[string]interface{} {
+func flattenHTTPMatch(apiObject *types.HttpMatch) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -789,14 +785,13 @@ func expandRuleMatch(tfMap map[string]interface{}) types.RuleMatch {
 	apiObject := &types.RuleMatchMemberHttpMatch{}
 
 	if v, ok := tfMap["http_match"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Value = expandHttpMatch(v[0].(map[string]interface{}))
-
+		apiObject.Value = expandHTTPMatch(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
 }
 
-func expandHttpMatch(tfMap map[string]interface{}) types.HttpMatch {
+func expandHTTPMatch(tfMap map[string]interface{}) types.HttpMatch {
 	apiObject := types.HttpMatch{}
 
 	if v, ok := tfMap["header_matches"].([]interface{}); ok && len(v) > 0 && v != nil {
