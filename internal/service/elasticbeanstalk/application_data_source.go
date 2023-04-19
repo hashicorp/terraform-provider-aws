@@ -17,25 +17,13 @@ func DataSourceApplication() *schema.Resource {
 		ReadWithoutTimeout: dataSourceApplicationRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"appversion_lifecycle": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"service_role": {
-							Type:     schema.TypeString,
+						"delete_source_from_s3": {
+							Type:     schema.TypeBool,
 							Computed: true,
 						},
 						"max_age_in_days": {
@@ -46,12 +34,24 @@ func DataSourceApplication() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"delete_source_from_s3": {
-							Type:     schema.TypeBool,
+						"service_role": {
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 		},
 	}
@@ -83,7 +83,7 @@ func dataSourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("description", app.Description)
 
 	if app.ResourceLifecycleConfig != nil {
-		d.Set("appversion_lifecycle", flattenResourceLifecycleConfig(app.ResourceLifecycleConfig))
+		d.Set("appversion_lifecycle", flattenApplicationResourceLifecycleConfig(app.ResourceLifecycleConfig))
 	}
 
 	return diags
