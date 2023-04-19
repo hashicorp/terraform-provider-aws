@@ -56,6 +56,8 @@ BUG FIXES:
 * resource/aws_lakeformation_permissions: Remove limit on number of `lf_tag_policy.expression` blocks ([#26643](https://github.com/hashicorp/terraform-provider-aws/issues/26643))
 * resource/aws_lambda_event_source_mapping: Fix IAM eventual consistency errors on resource Update ([#28586](https://github.com/hashicorp/terraform-provider-aws/issues/28586))
 * resource/aws_medialive_channel: Fix to properly expand `destinations.media_package_settings` field ([#30660](https://github.com/hashicorp/terraform-provider-aws/issues/30660))
+* resource/aws_networkfirewall_firewall_policy: Fix unexpected `encryption_configuration.type` updates from `Customer_KMS` to `AWS_KMS` ([#30821](https://github.com/hashicorp/terraform-provider-aws/issues/30821))
+* resource/aws_networkfirewall_rule_group: Fix unexpected `encryption_configuration.type` updates from `Customer_KMS` to `AWS_KMS` ([#30821](https://github.com/hashicorp/terraform-provider-aws/issues/30821))
 * resource/aws_quicksight_data_set: Correct custom_sql documentation ([#30742](https://github.com/hashicorp/terraform-provider-aws/issues/30742))
 * resource/aws_quicksight_data_set: Correctly persist `create_columns_operation.expression` field ([#30708](https://github.com/hashicorp/terraform-provider-aws/issues/30708))
 * resource/aws_quicksight_data_set: Fix to properly expand `project_operation.projected_columns` field ([#30699](https://github.com/hashicorp/terraform-provider-aws/issues/30699))
