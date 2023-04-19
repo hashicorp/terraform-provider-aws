@@ -2,10 +2,12 @@ name: "Pull Request Feed"
 on:
   pull_request_target:
     types: [opened, closed]
-  env:
-    SLACK_WEBHOOK_URL: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
-    SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-    GH_TOKEN: ${{ github.token }}
+
+env:
+  SLACK_WEBHOOK_URL: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
+  SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+  GH_TOKEN: ${{ github.token }}
+
 jobs:
   community_check:
     uses: ./.github/workflows/community-check.yml
