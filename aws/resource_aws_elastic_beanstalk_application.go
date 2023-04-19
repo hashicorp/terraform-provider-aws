@@ -46,7 +46,6 @@ func resourceAwsElasticBeanstalkApplication() *schema.Resource {
 						"service_role": {
 							Type:     schema.TypeString,
 							Required: true,
-							ValidateFunc: validateArn,
 						},
 						"max_age_in_days": {
 							Type:     schema.TypeInt,
