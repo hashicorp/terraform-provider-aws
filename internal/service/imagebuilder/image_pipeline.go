@@ -338,14 +338,6 @@ func resourceImagePipelineUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags for Image Builder Image Pipeline (%s): %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceImagePipelineRead(ctx, d, meta)...)
 }
 

@@ -4,6 +4,7 @@ package conns
 import (
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
+	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	"github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
@@ -610,6 +611,11 @@ func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
 	client.auditmanagerClient = auditmanager.NewFromConfig(cfg, func(o *auditmanager.Options) {
 		if endpoint := c.Endpoints[names.AuditManager]; endpoint != "" {
 			o.EndpointResolver = auditmanager.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.cleanroomsClient = cleanrooms.NewFromConfig(cfg, func(o *cleanrooms.Options) {
+		if endpoint := c.Endpoints[names.CleanRooms]; endpoint != "" {
+			o.EndpointResolver = cleanrooms.EndpointResolverFromURL(endpoint)
 		}
 	})
 	client.cloudcontrolClient = cloudcontrol.NewFromConfig(cfg, func(o *cloudcontrol.Options) {

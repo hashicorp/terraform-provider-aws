@@ -24,13 +24,15 @@ import (
 )
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @SDKResource("aws_vpclattice_listener")
+// @SDKResource("aws_vpclattice_listener", name="Listener")
+// @Tags(identifierAttribute="arn")
 func ResourceListener() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerCreate,
 		ReadWithoutTimeout:   resourceListenerRead,
 		UpdateWithoutTimeout: resourceListenerUpdate,
 		DeleteWithoutTimeout: resourceListenerDelete,
+
 		// Id returned by GetListener does not contain required service name, use a custom import function
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -44,11 +46,13 @@ func ResourceListener() *schema.Resource {
 				return []*schema.ResourceData{d}, nil
 			},
 		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -184,13 +188,6 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.FromErr(fmt.Errorf("must specify either service_arn or service_identifier"))
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	out, err := conn.CreateListener(ctx, in)
 	if err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameListener, d.Get("name").(string), err)
@@ -248,24 +245,6 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameListener, d.Id(), err)
 	}
 
-	// ListTags requires ARN, not ID
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameListener, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameListener, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameListener, d.Id(), err)
-	}
-
 	return nil
 }
 
@@ -290,14 +269,6 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		_, err := conn.UpdateListener(ctx, in)
 		if err != nil {
 			return create.DiagError(names.VPCLattice, create.ErrActionUpdating, ResNameListener, d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating tags: %s", err)
 		}
 	}
 

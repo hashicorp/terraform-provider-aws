@@ -40,10 +40,6 @@ issues:
       text: "SA1019: apiObject.ImageId is deprecated: This field is deprecated"
     - linters:
         - staticcheck
-      path: internal/service/ce/
-      text: "SA1019: [a-zA-Z0-9.]+.\\w+ is deprecated: \\w+ has been deprecated"
-    - linters:
-        - staticcheck
       path: "internal/service/cloudfront"
       text: "SA1019: \\w+.(\\w+) is deprecated: (\\w+) has been deprecated"
     - linters:

@@ -59,7 +59,7 @@ func resourceAssessmentTargetCreate(ctx context.Context, d *schema.ResourceData,
 
 	resp, err := conn.CreateAssessmentTargetWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Inspector Assessment Target: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Inspector Classic Assessment Target: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.AssessmentTargetArn))
@@ -74,11 +74,11 @@ func resourceAssessmentTargetRead(ctx context.Context, d *schema.ResourceData, m
 	assessmentTarget, err := DescribeAssessmentTarget(ctx, conn, d.Id())
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing Inspector Assessment Target (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing Inspector Classic Assessment Target (%s): %s", d.Id(), err)
 	}
 
 	if assessmentTarget == nil {
-		log.Printf("[WARN] Inspector Assessment Target (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Inspector Classic Assessment Target (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
@@ -105,7 +105,7 @@ func resourceAssessmentTargetUpdate(ctx context.Context, d *schema.ResourceData,
 
 	_, err := conn.UpdateAssessmentTargetWithContext(ctx, &input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Inspector Assessment Target (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Inspector Classic Assessment Target (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourceAssessmentTargetRead(ctx, d, meta)...)
@@ -134,7 +134,7 @@ func resourceAssessmentTargetDelete(ctx context.Context, d *schema.ResourceData,
 		_, err = conn.DeleteAssessmentTargetWithContext(ctx, input)
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Inspector Assessment Target: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Inspector Classic Assessment Target: %s", err)
 	}
 	return diags
 }

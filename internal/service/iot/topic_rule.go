@@ -442,6 +442,11 @@ func ResourceTopicRule() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"batch_mode": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
 									"delivery_stream_name": {
 										Type:     schema.TypeString,
 										Required: true,
@@ -502,6 +507,11 @@ func ResourceTopicRule() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"batch_mode": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
 									"channel_name": {
 										Type:     schema.TypeString,
 										Required: true,
@@ -521,6 +531,11 @@ func ResourceTopicRule() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"batch_mode": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
 									"input_name": {
 										Type:     schema.TypeString,
 										Required: true,
@@ -791,6 +806,11 @@ func ResourceTopicRule() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"batch_mode": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"delivery_stream_name": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -847,6 +867,11 @@ func ResourceTopicRule() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"batch_mode": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"channel_name": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -864,6 +889,11 @@ func ResourceTopicRule() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"batch_mode": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"input_name": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -1175,7 +1205,6 @@ func resourceTopicRuleCreate(ctx context.Context, d *schema.ResourceData, meta i
 		TopicRulePayload: expandTopicRulePayload(d),
 	}
 
-	log.Printf("[INFO] Creating IoT Topic Rule: %s", input)
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateTopicRuleWithContext(ctx, input)
@@ -1303,11 +1332,10 @@ func resourceTopicRuleUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &iot.ReplaceTopicRuleInput{
-			RuleName:         aws.String(d.Get("name").(string)),
+			RuleName:         aws.String(d.Id()),
 			TopicRulePayload: expandTopicRulePayload(d),
 		}
 
-		log.Printf("[INFO] Replacing IoT Topic Rule: %s", input)
 		_, err := conn.ReplaceTopicRuleWithContext(ctx, input)
 
 		if err != nil {
@@ -1539,6 +1567,10 @@ func expandFirehoseAction(tfList []interface{}) *iot.FirehoseAction {
 	apiObject := &iot.FirehoseAction{}
 	tfMap := tfList[0].(map[string]interface{})
 
+	if v, ok := tfMap["batch_mode"].(bool); ok {
+		apiObject.BatchMode = aws.Bool(v)
+	}
+
 	if v, ok := tfMap["delivery_stream_name"].(string); ok && v != "" {
 		apiObject.DeliveryStreamName = aws.String(v)
 	}
@@ -1598,6 +1630,10 @@ func expandAnalyticsAction(tfList []interface{}) *iot.IotAnalyticsAction {
 	apiObject := &iot.IotAnalyticsAction{}
 	tfMap := tfList[0].(map[string]interface{})
 
+	if v, ok := tfMap["batch_mode"].(bool); ok {
+		apiObject.BatchMode = aws.Bool(v)
+	}
+
 	if v, ok := tfMap["channel_name"].(string); ok && v != "" {
 		apiObject.ChannelName = aws.String(v)
 	}
@@ -1616,6 +1652,10 @@ func expandEventsAction(tfList []interface{}) *iot.IotEventsAction {
 
 	apiObject := &iot.IotEventsAction{}
 	tfMap := tfList[0].(map[string]interface{})
+
+	if v, ok := tfMap["batch_mode"].(bool); ok {
+		apiObject.BatchMode = aws.Bool(v)
+	}
 
 	if v, ok := tfMap["input_name"].(string); ok && v != "" {
 		apiObject.InputName = aws.String(v)
@@ -2623,6 +2663,10 @@ func flattenFirehoseAction(apiObject *iot.FirehoseAction) []interface{} {
 
 	tfMap := make(map[string]interface{})
 
+	if v := apiObject.BatchMode; v != nil {
+		tfMap["batch_mode"] = aws.BoolValue(v)
+	}
+
 	if v := apiObject.DeliveryStreamName; v != nil {
 		tfMap["delivery_stream_name"] = aws.StringValue(v)
 	}
@@ -2710,6 +2754,10 @@ func flattenAnalyticsAction(apiObject *iot.IotAnalyticsAction) []interface{} {
 
 	tfMap := make(map[string]interface{})
 
+	if v := apiObject.BatchMode; v != nil {
+		tfMap["batch_mode"] = aws.BoolValue(v)
+	}
+
 	if v := apiObject.ChannelName; v != nil {
 		tfMap["channel_name"] = aws.StringValue(v)
 	}
@@ -2744,6 +2792,10 @@ func flattenEventsAction(apiObject *iot.IotEventsAction) []interface{} {
 	}
 
 	tfMap := make(map[string]interface{})
+
+	if v := apiObject.BatchMode; v != nil {
+		tfMap["batch_mode"] = aws.BoolValue(v)
+	}
 
 	if v := apiObject.InputName; v != nil {
 		tfMap["input_name"] = aws.StringValue(v)

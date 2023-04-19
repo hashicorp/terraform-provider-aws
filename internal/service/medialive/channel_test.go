@@ -771,7 +771,7 @@ func testAccChannelsPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccChannelBaseConfig(rName string) string {
+func testAccChannelConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -819,29 +819,19 @@ resource "aws_iam_role_policy" "test" {
 `, rName)
 }
 
-func testAccChannelBaseS3Config(rName string) string {
+func testAccChannelConfig_baseS3(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test1" {
   bucket = "%[1]s-1"
 }
 
-resource "aws_s3_bucket_acl" "test1" {
-  bucket = aws_s3_bucket.test1.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket" "test2" {
   bucket = "%[1]s-2"
-}
-
-resource "aws_s3_bucket_acl" "test2" {
-  bucket = aws_s3_bucket.test2.id
-  acl    = "private"
 }
 `, rName)
 }
 
-func testAccChannelBaseMultiplexConfig(rName string) string {
+func testAccChannelConfig_baseMultiplex(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_medialive_input_security_group" "test" {
   whitelist_rules {
@@ -869,9 +859,9 @@ resource "aws_medialive_input" "test" {
 
 func testAccChannelConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccChannelBaseConfig(rName),
-		testAccChannelBaseS3Config(rName),
-		testAccChannelBaseMultiplexConfig(rName),
+		testAccChannelConfig_base(rName),
+		testAccChannelConfig_baseS3(rName),
+		testAccChannelConfig_baseMultiplex(rName),
 		fmt.Sprintf(`
 resource "aws_medialive_channel" "test" {
   name          = %[1]q
@@ -950,8 +940,8 @@ resource "aws_medialive_channel" "test" {
 
 func testAccChannelConfig_udpOutputSettings(rName string) string {
 	return acctest.ConfigCompose(
-		testAccChannelBaseConfig(rName),
-		testAccChannelBaseMultiplexConfig(rName),
+		testAccChannelConfig_base(rName),
+		testAccChannelConfig_baseMultiplex(rName),
 		fmt.Sprintf(`
 resource "aws_medialive_channel" "test" {
   name          = %[1]q
@@ -1036,8 +1026,8 @@ resource "aws_medialive_channel" "test" {
 
 func testAccChannelConfig_msSmoothOutputSettings(rName string) string {
 	return acctest.ConfigCompose(
-		testAccChannelBaseConfig(rName),
-		testAccChannelBaseMultiplexConfig(rName),
+		testAccChannelConfig_base(rName),
+		testAccChannelConfig_baseMultiplex(rName),
 		fmt.Sprintf(`
 resource "aws_medialive_channel" "test" {
   name          = %[1]q
@@ -1109,9 +1099,9 @@ resource "aws_medialive_channel" "test" {
 
 func testAccChannelConfig_m2tsSettings(rName string) string {
 	return acctest.ConfigCompose(
-		testAccChannelBaseConfig(rName),
-		testAccChannelBaseS3Config(rName),
-		testAccChannelBaseMultiplexConfig(rName),
+		testAccChannelConfig_base(rName),
+		testAccChannelConfig_baseS3(rName),
+		testAccChannelConfig_baseMultiplex(rName),
 		fmt.Sprintf(`
 resource "aws_medialive_channel" "test" {
   name          = %[1]q
@@ -1203,9 +1193,9 @@ resource "aws_medialive_channel" "test" {
 
 func testAccChannelConfig_audioDescriptionCodecSettings(rName string) string {
 	return acctest.ConfigCompose(
-		testAccChannelBaseConfig(rName),
-		testAccChannelBaseS3Config(rName),
-		testAccChannelBaseMultiplexConfig(rName),
+		testAccChannelConfig_base(rName),
+		testAccChannelConfig_baseS3(rName),
+		testAccChannelConfig_baseMultiplex(rName),
 		fmt.Sprintf(`
 resource "aws_medialive_channel" "test" {
   name          = %[1]q
@@ -1302,9 +1292,9 @@ resource "aws_medialive_channel" "test" {
 
 func testAccChannelConfig_videoDescriptionCodecSettingsH264Settings(rName string) string {
 	return acctest.ConfigCompose(
-		testAccChannelBaseConfig(rName),
-		testAccChannelBaseS3Config(rName),
-		testAccChannelBaseMultiplexConfig(rName),
+		testAccChannelConfig_base(rName),
+		testAccChannelConfig_baseS3(rName),
+		testAccChannelConfig_baseMultiplex(rName),
 		fmt.Sprintf(`
 resource "aws_medialive_channel" "test" {
   name          = %[1]q
@@ -1428,9 +1418,9 @@ resource "aws_medialive_channel" "test" {
 
 func testAccChannelConfig_hls(rName string) string {
 	return acctest.ConfigCompose(
-		testAccChannelBaseConfig(rName),
-		testAccChannelBaseS3Config(rName),
-		testAccChannelBaseMultiplexConfig(rName),
+		testAccChannelConfig_base(rName),
+		testAccChannelConfig_baseS3(rName),
+		testAccChannelConfig_baseMultiplex(rName),
 		fmt.Sprintf(`
 resource "aws_medialive_channel" "test" {
   name          = %[1]q
@@ -1509,9 +1499,9 @@ resource "aws_medialive_channel" "test" {
 
 func testAccChannelConfig_start(rName string, start bool) string {
 	return acctest.ConfigCompose(
-		testAccChannelBaseConfig(rName),
-		testAccChannelBaseS3Config(rName),
-		testAccChannelBaseMultiplexConfig(rName),
+		testAccChannelConfig_base(rName),
+		testAccChannelConfig_baseS3(rName),
+		testAccChannelConfig_baseMultiplex(rName),
 		fmt.Sprintf(`
 resource "aws_medialive_channel" "test" {
   name          = %[1]q
@@ -1591,9 +1581,9 @@ resource "aws_medialive_channel" "test" {
 
 func testAccChannelConfig_update(rName, rNameUpdated, codec, inputResolution string) string {
 	return acctest.ConfigCompose(
-		testAccChannelBaseConfig(rName),
-		testAccChannelBaseS3Config(rName),
-		testAccChannelBaseMultiplexConfig(rName),
+		testAccChannelConfig_base(rName),
+		testAccChannelConfig_baseS3(rName),
+		testAccChannelConfig_baseMultiplex(rName),
 		fmt.Sprintf(`
 resource "aws_medialive_channel" "test" {
   name          = %[2]q
@@ -1672,9 +1662,9 @@ resource "aws_medialive_channel" "test" {
 
 func testAccChannelConfig_tags1(rName, key1, value1 string) string {
 	return acctest.ConfigCompose(
-		testAccChannelBaseConfig(rName),
-		testAccChannelBaseS3Config(rName),
-		testAccChannelBaseMultiplexConfig(rName),
+		testAccChannelConfig_base(rName),
+		testAccChannelConfig_baseS3(rName),
+		testAccChannelConfig_baseMultiplex(rName),
 		fmt.Sprintf(`
 resource "aws_medialive_channel" "test" {
   name          = %[1]q
@@ -1757,9 +1747,9 @@ resource "aws_medialive_channel" "test" {
 
 func testAccChannelConfig_tags2(rName, key1, value1, key2, value2 string) string {
 	return acctest.ConfigCompose(
-		testAccChannelBaseConfig(rName),
-		testAccChannelBaseS3Config(rName),
-		testAccChannelBaseMultiplexConfig(rName),
+		testAccChannelConfig_base(rName),
+		testAccChannelConfig_baseS3(rName),
+		testAccChannelConfig_baseMultiplex(rName),
 		fmt.Sprintf(`
 resource "aws_medialive_channel" "test" {
   name          = %[1]q

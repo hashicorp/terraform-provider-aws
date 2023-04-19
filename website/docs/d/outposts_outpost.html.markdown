@@ -33,5 +33,9 @@ In addition to all arguments above, the following attributes are exported:
 
 * `availability_zone` - Availability Zone name.
 * `availability_zone_id` - Availability Zone identifier.
-* `description` - Description.
-* `site_id` - Site identifier.
+* `description` - The description of the Outpost.
+* `lifecycle_status` - The life cycle status.
+* `site_arn` - The Amazon Resource Name (ARN) of the site.
+* `site_id` - The ID of the site.
+* `supported_hardware_type` - The hardware type.
+* `tags` - The Outpost tags.
