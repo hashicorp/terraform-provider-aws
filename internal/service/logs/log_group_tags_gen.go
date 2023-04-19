@@ -50,15 +50,16 @@ func (p *servicePackage) ListLogGroupTags(ctx context.Context, meta any, identif
 // UpdateLogGroupTags updates logs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-
 func UpdateLogGroupTags(ctx context.Context, conn cloudwatchlogsiface.CloudWatchLogsAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.Logs)
+	if len(removedTags) > 0 {
 		input := &cloudwatchlogs.UntagLogGroupInput{
 			LogGroupName: aws.String(identifier),
-			Tags:         aws.StringSlice(removedTags.IgnoreSystem(names.Logs).Keys()),
+			Tags:         aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.UntagLogGroupWithContext(ctx, input)
@@ -68,10 +69,12 @@ func UpdateLogGroupTags(ctx context.Context, conn cloudwatchlogsiface.CloudWatch
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.Logs)
+	if len(updatedTags) > 0 {
 		input := &cloudwatchlogs.TagLogGroupInput{
 			LogGroupName: aws.String(identifier),
-			Tags:         Tags(updatedTags.IgnoreSystem(names.Logs)),
+			Tags:         Tags(updatedTags),
 		}
 
 		_, err := conn.TagLogGroupWithContext(ctx, input)
