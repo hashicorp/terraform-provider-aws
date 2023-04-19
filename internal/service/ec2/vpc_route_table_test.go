@@ -929,9 +929,9 @@ func TestAccVPCRouteTable_multipleRoutes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCRouteTableConfig_multiples(rName,
-					"cidr_block", destinationCidr1, "gateway_id", igwResourceName, "id",
-					"cidr_block", destinationCidr2, "network_interface_id", instanceResourceName, "primary_network_interface_id",
-					"ipv6_cidr_block", destinationCidr4, "egress_only_gateway_id", eoigwResourceName, "id"),
+					"cidr_block", destinationCidr1, "gateway_id", fmt.Sprintf(`%s.%s`, igwResourceName, "id"),
+					"cidr_block", destinationCidr2, "network_interface_id", fmt.Sprintf(`%s.%s`, instanceResourceName, "primary_network_interface_id"),
+					"ipv6_cidr_block", destinationCidr4, "egress_only_gateway_id", fmt.Sprintf(`%s.%s`, eoigwResourceName, "id")),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 5),
@@ -948,9 +948,9 @@ func TestAccVPCRouteTable_multipleRoutes(t *testing.T) {
 			},
 			{
 				Config: testAccVPCRouteTableConfig_multiples(rName,
-					"cidr_block", destinationCidr1, "vpc_peering_connection_id", pcxResourceName, "id",
-					"cidr_block", destinationCidr3, "network_interface_id", instanceResourceName, "primary_network_interface_id",
-					"ipv6_cidr_block", destinationCidr4, "egress_only_gateway_id", eoigwResourceName, "id"),
+					"cidr_block", destinationCidr1, "vpc_peering_connection_id", fmt.Sprintf(`%s.%s`, pcxResourceName, "id"),
+					"cidr_block", destinationCidr3, "network_interface_id", fmt.Sprintf(`%s.%s`, instanceResourceName, "primary_network_interface_id"),
+					"ipv6_cidr_block", destinationCidr4, "egress_only_gateway_id", fmt.Sprintf(`%s.%s`, eoigwResourceName, "id")),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 5),
@@ -967,9 +967,9 @@ func TestAccVPCRouteTable_multipleRoutes(t *testing.T) {
 			},
 			{
 				Config: testAccVPCRouteTableConfig_multiples(rName,
-					"ipv6_cidr_block", destinationCidr4, "vpc_peering_connection_id", pcxResourceName, "id",
-					"cidr_block", destinationCidr3, "gateway_id", igwResourceName, "id",
-					"cidr_block", destinationCidr2, "network_interface_id", instanceResourceName, "primary_network_interface_id"),
+					"ipv6_cidr_block", destinationCidr4, "vpc_peering_connection_id", fmt.Sprintf(`%s.%s`, pcxResourceName, "id"),
+					"cidr_block", destinationCidr3, "gateway_id", fmt.Sprintf(`%s.%s`, igwResourceName, "id"),
+					"cidr_block", destinationCidr2, "network_interface_id", fmt.Sprintf(`%s.%s`, instanceResourceName, "primary_network_interface_id")),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 5),
@@ -2077,9 +2077,9 @@ resource "aws_vpc_endpoint" "test" {
 }
 
 func testAccVPCRouteTableConfig_multiples(rName,
-	destinationAttr1, destinationValue1, targetAttribute1, targetValue1, targetID1,
-	destinationAttr2, destinationValue2, targetAttribute2, targetValue2, targetID2,
-	destinationAttr3, destinationValue3, targetAttribute3, targetValue3, targetID3 string) string {
+	destinationAttr1, destinationValue1, targetAttribute1, targetValue1,
+	destinationAttr2, destinationValue2, targetAttribute2, targetValue2,
+	destinationAttr3, destinationValue3, targetAttribute3, targetValue3 string) string {
 	return acctest.ConfigCompose(
 		testAccLatestAmazonNatInstanceAMIConfig(),
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
@@ -2154,19 +2154,19 @@ locals {
       destination_attr  = %[2]q
       destination_value = %[3]q
       target_attr       = %[4]q
-      target_value      = %[5]s.%[6]s
+      target_value      = %[5]s
     },
     {
-      destination_attr  = %[7]q
-      destination_value = %[8]q
-      target_attr       = %[9]q
-      target_value      = %[10]s.%[11]s
+      destination_attr  = %[6]q
+      destination_value = %[7]q
+      target_attr       = %[8]q
+      target_value      = %[9]s
     },
     {
-      destination_attr  = %[12]q
-      destination_value = %[13]q
-      target_attr       = %[14]q
-      target_value      = %[15]s.%[16]s
+      destination_attr  = %[10]q
+      destination_value = %[11]q
+      target_attr       = %[12]q
+      target_value      = %[13]s
     }
   ]
 }
@@ -2198,7 +2198,7 @@ resource "aws_route_table" "test" {
     Name = %[1]q
   }
 }
-`, rName, destinationAttr1, destinationValue1, targetAttribute1, targetValue1, targetID1, destinationAttr2, destinationValue2, targetAttribute2, targetValue2, targetID2, destinationAttr3, destinationValue3, targetAttribute3, targetValue3, targetID3))
+`, rName, destinationAttr1, destinationValue1, targetAttribute1, targetValue1, destinationAttr2, destinationValue2, targetAttribute2, targetValue2, destinationAttr3, destinationValue3, targetAttribute3, targetValue3))
 }
 
 // testAccLatestAmazonNatInstanceAMIConfig returns the configuration for a data source that
