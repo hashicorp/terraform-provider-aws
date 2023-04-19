@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230201104953-d1d05f4e2bfb
-	github.com/aws/aws-sdk-go v1.44.244
+	github.com/aws/aws-sdk-go v1.44.245
 	github.com/aws/aws-sdk-go-v2 v1.17.8
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.2
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.24.5
@@ -21,7 +21,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.11.9
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.4.3
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.39.2
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.32.0
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.31.2
 	github.com/aws/aws-sdk-go-v2/service/oam v1.1.9
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.2.2
