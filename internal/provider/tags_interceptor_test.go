@@ -59,9 +59,9 @@ func TestTagsInterceptor(t *testing.T) {
 	}
 
 	tags := tagsInterceptor{
-		tags:     sp,
-		listFunc: tagsListFunc,
-		readFunc: tagsReadFunc,
+		tags:       sp,
+		updateFunc: tagsUpdateFunc,
+		readFunc:   tagsReadFunc,
 	}
 
 	interceptors = append(interceptors, interceptorItem{

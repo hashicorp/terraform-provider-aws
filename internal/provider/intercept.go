@@ -25,7 +25,7 @@ type schemaResourceData interface {
 	GetRawPlan() cty.Value
 	GetRawConfig() cty.Value
 	GetRawState() cty.Value
-	GetChange(key string) (interface{}, interface{})
+	GetChange(key string) (any, any)
 	HasChange(key string) bool
 	Set(string, any) error
 }
@@ -195,9 +195,9 @@ type tagsCRUDFunc func(context.Context, schemaResourceData, conns.ServicePackage
 
 // tagsInterceptor implements transparent tagging.
 type tagsInterceptor struct {
-	tags     *types.ServicePackageResourceTags
-	listFunc tagsCRUDFunc
-	readFunc tagsCRUDFunc
+	tags       *types.ServicePackageResourceTags
+	updateFunc tagsCRUDFunc
+	readFunc   tagsCRUDFunc
 }
 
 func (r tagsInterceptor) run(ctx context.Context, d schemaResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
@@ -361,7 +361,7 @@ func (r tagsInterceptor) run(ctx context.Context, d schemaResourceData, meta any
 		switch why {
 		case Update:
 			if !d.GetRawPlan().GetAttr("tags_all").IsWhollyKnown() {
-				ctx, diags = r.listFunc(ctx, d, sp, r.tags, serviceName, resourceName, meta, diags)
+				ctx, diags = r.updateFunc(ctx, d, sp, r.tags, serviceName, resourceName, meta, diags)
 				ctx, diags = r.readFunc(ctx, d, sp, r.tags, serviceName, resourceName, meta, diags)
 			}
 		}

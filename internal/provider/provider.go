@@ -365,9 +365,9 @@ func New(ctx context.Context) (*schema.Provider, error) {
 					when: Before | After | Finally,
 					why:  Create | Read | Update,
 					interceptor: tagsInterceptor{
-						tags:     v.Tags,
-						listFunc: tagsListFunc,
-						readFunc: tagsReadFunc,
+						tags:       v.Tags,
+						updateFunc: tagsUpdateFunc,
+						readFunc:   tagsReadFunc,
 					},
 				})
 			}
