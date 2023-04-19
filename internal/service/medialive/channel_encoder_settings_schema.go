@@ -1598,7 +1598,250 @@ func channelEncoderSettingsSchema() *schema.Schema {
 												},
 											},
 										},
-										// TODO h265_settings
+										"h265_settings": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"framerate_denominator": {
+														Type: schema.TypeInt,
+													},
+													"framerate_numerator": {
+														Type: schema.TypeInt,
+													},
+													"adaptive_quantization": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[types.H265AdaptiveQuantization](),
+													},
+													"afd_signaling": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[types.AfdSignaling](),
+													},
+													"alternative_transfer_function": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[types.H265AlternativeTransferFunction](),
+													},
+													"bitrate": {
+														Type: schema.TypeInt,
+													},
+													"buf_size": {
+														Type:     schema.TypeInt,
+														Optional: true,
+													},
+													"color_metadata": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[types.H265ColorMetadata](),
+													},
+													"color_space_settings": {
+														Type:     schema.TypeMap,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"color_space_settings": {
+																	Type:     schema.TypeMap,
+																	Optional: true,
+																},
+																"color_space_passthrough_settings": {
+																	Type:     schema.TypeMap,
+																	Optional: true,
+																},
+																"dolby_vision81_settings": {
+																	Type:     schema.TypeMap,
+																	Optional: true,
+																},
+																"hdr10_settings": {
+																	Type:     schema.TypeMap,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"max_cll": {
+																				Type:     schema.TypeInt,
+																				Optional: true,
+																			},
+																			"max_fall": {
+																				Type:     schema.TypeInt,
+																				Optional: true,
+																			},
+																		},
+																	},
+																},
+																"rec601_settings": {
+																	Type:     schema.TypeMap,
+																	Optional: true,
+																},
+																"rec709_settings": {
+																	Type:     schema.TypeMap,
+																	Optional: true,
+																},
+															},
+														},
+													},
+													"filter_settings": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"temporal_filter_settings": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"post_filter_sharpening": {
+																				Type:             schema.TypeString,
+																				Optional:         true,
+																				ValidateDiagFunc: enum.Validate[types.TemporalFilterPostFilterSharpening](),
+																			},
+																			"strength": {
+																				Type:             schema.TypeString,
+																				Optional:         true,
+																				ValidateDiagFunc: enum.Validate[types.TemporalFilterStrength](),
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+													"fixed_afd": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[types.FixedAfd](),
+													},
+													"flicker_aq": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[types.H265FlickerAq](),
+													},
+
+													"gop_closed_cadence": {
+														Type:     schema.TypeInt,
+														Optional: true,
+													},
+													"gop_size": {
+														Type:     schema.TypeFloat,
+														Optional: true,
+													},
+													"gop_size_units": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[types.H265GopSizeUnits](),
+													},
+													"level": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[types.H265Level](),
+													},
+													"look_ahead_rate_control": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[types.H265LookAheadRateControl](),
+													},
+													"max_bitrate": {
+														Type:     schema.TypeInt,
+														Optional: true,
+													},
+													"min_i_interval": {
+														Type:     schema.TypeInt,
+														Optional: true,
+													},
+													"par_denominator": {
+														Type:     schema.TypeInt,
+														Optional: true,
+													},
+													"par_numerator": {
+														Type:     schema.TypeInt,
+														Optional: true,
+													},
+													"profile": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[types.H265Profile](),
+													},
+													"qvbr_quality_level": {
+														Type:     schema.TypeInt,
+														Optional: true,
+													},
+													"rate_control_mode": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[types.H265RateControlMode](),
+													},
+													"scan_type": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[types.H265ScanType](),
+													},
+													"scene_change_detect": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[types.H265SceneChangeDetect](),
+													},
+													"slices": {
+														Type:     schema.TypeInt,
+														Optional: true,
+													},
+													"tier": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[types.H265Tier](),
+													},
+													"timecode_burnin_settings": {
+														Type:     schema.TypeMap,
+														Optional: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"timecode_burnin_font_size": {
+																	Type:             schema.TypeString,
+																	Optional:         true,
+																	Computed:         true,
+																	ValidateDiagFunc: enum.Validate[types.TimecodeBurninFontSize](),
+																},
+																"timecode_burnin_position": {
+																	Type:             schema.TypeString,
+																	Optional:         true,
+																	Computed:         true,
+																	ValidateDiagFunc: enum.Validate[types.TimecodeBurninPosition](),
+																},
+																"timecode_insertion": {
+																	Type:             schema.TypeString,
+																	Optional:         true,
+																	Computed:         true,
+																	ValidateDiagFunc: enum.Validate[types.H265TimecodeInsertionBehavior](),
+																},
+																"prefix": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																	Computed: true,
+																},
+															},
+														},
+													},
+												},
+											},
+										},
 										// TODO mgeg2_settings
 									},
 								},
@@ -4238,6 +4481,9 @@ func expandChannelEncoderSettingsVideoDescriptionsCodecSettings(tfList []interfa
 	if v, ok := m["h264_settings"].([]interface{}); ok && len(v) > 0 {
 		out.H264Settings = expandsVideoDescriptionsCodecSettingsH264Settings(v)
 	}
+	if v, ok := m["h265_settings"].([]interface{}); ok && len(v) > 0 {
+		out.H265Settings = expandsVideoDescriptionsCodecSettingsH265Settings(v)
+	}
 
 	return &out
 }
@@ -4420,6 +4666,207 @@ func expandH264FilterSettingsTemporalFilterSettings(tfList []interface{}) *types
 	}
 	if v, ok := m["strength"].(string); ok && v != "" {
 		out.Strength = types.TemporalFilterStrength(v)
+	}
+
+	return &out
+}
+
+func expandsVideoDescriptionsCodecSettingsH265Settings(tfList []interface{}) *types.H265Settings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.H265Settings
+	if v, ok := m["framerate_denominator"].(int32); ok {
+		out.FramerateDenominator = v
+	}
+	if v, ok := m["framerate_numerator"].(int32); ok {
+		out.FramerateNumerator = v
+	}
+	if v, ok := m["adaptive_quantization"].(string); ok && v != "" {
+		out.AdaptiveQuantization = types.H265AdaptiveQuantization(v)
+	}
+	if v, ok := m["afd_signaling"].(string); ok && v != "" {
+		out.AfdSignaling = types.AfdSignaling(v)
+	}
+	if v, ok := m["alternative_transfer_function"].(string); ok && v != "" {
+		out.AlternativeTransferFunction = types.H265AlternativeTransferFunction(v)
+	}
+	if v, ok := m["bitrate"].(int32); ok {
+		out.Bitrate = v
+	}
+	if v, ok := m["buf_size"].(int32); ok {
+		out.BufSize = v
+	}
+	if v, ok := m["color_metadata"].(string); ok && v != "" {
+		out.ColorMetadata = types.H265ColorMetadata(v)
+	}
+	if v, ok := m["color_space_settings"].([]interface{}); ok && len(v) > 0 {
+		out.ColorSpaceSettings = expandH265ColorSpaceSettings(v)
+	}
+	if v, ok := m["filter_settings"].([]interface{}); ok && len(v) > 0 {
+		out.FilterSettings = expandH265FilterSettings(v)
+	}
+	if v, ok := m["fixed_afd"].(string); ok && v != "" {
+		out.FixedAfd = types.FixedAfd(v)
+	}
+	if v, ok := m["flicker_aq"].(string); ok && v != "" {
+		out.FlickerAq = types.H265FlickerAq(v)
+	}
+	if v, ok := m["gop_closed_cadence"].(int32); ok {
+		out.GopClosedCadence = v
+	}
+	if v, ok := m["gop_size"].(float64); ok {
+		out.GopSize = v
+	}
+	if v, ok := m["gop_size_units"].(string); ok && v != "" {
+		out.GopSizeUnits = types.H265GopSizeUnits(v)
+	}
+	if v, ok := m["level"].(string); ok && v != "" {
+		out.Level = types.H265Level(v)
+	}
+	if v, ok := m["look_ahead_rate_control"].(string); ok && v != "" {
+		out.LookAheadRateControl = types.H265LookAheadRateControl(v)
+	}
+	if v, ok := m["max_bitrate"].(int32); ok {
+		out.MaxBitrate = v
+	}
+	if v, ok := m["min_i_interval"].(int32); ok {
+		out.MinIInterval = v
+	}
+	if v, ok := m["par_denominator"].(int32); ok {
+		out.ParDenominator = v
+	}
+	if v, ok := m["par_numerator"].(int32); ok {
+		out.ParNumerator = v
+	}
+	if v, ok := m["profile"].(string); ok && v != "" {
+		out.Profile = types.H265Profile(v)
+	}
+	if v, ok := m["qvbr_quality_level"].(int32); ok {
+		out.QvbrQualityLevel = v
+	}
+	if v, ok := m["rate_control_mode"].(string); ok && v != "" {
+		out.RateControlMode = types.H265RateControlMode(v)
+	}
+	if v, ok := m["scan_type"].(string); ok && v != "" {
+		out.ScanType = types.H265ScanType(v)
+	}
+	if v, ok := m["scene_change_detect"].(string); ok && v != "" {
+		out.SceneChangeDetect = types.H265SceneChangeDetect(v)
+	}
+	if v, ok := m["slices"].(int32); ok {
+		out.Slices = v
+	}
+	if v, ok := m["tier"].(string); ok && v != "" {
+		out.Tier = types.H265Tier(v)
+	}
+	if v, ok := m["timecode_burnin_settings"].([]interface{}); ok && len(v) > 0 {
+		out.TimecodeBurninSettings = expandH265TimecodeBurninSettings(v)
+	}
+	if v, ok := m["timecode_insertion"].(string); ok && v != "" {
+		out.TimecodeInsertion = types.H265TimecodeInsertionBehavior(v)
+	}
+
+	return &out
+}
+
+func expandH265ColorSpaceSettings(tfList []interface{}) *types.H265ColorSpaceSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.H265ColorSpaceSettings
+	if _, ok := m["color_space_passthrough_settings"].([]interface{}); ok {
+		out.ColorSpacePassthroughSettings = &types.ColorSpacePassthroughSettings{}
+	}
+	if _, ok := m["dolby_vision81_settings"].([]interface{}); ok {
+		out.DolbyVision81Settings = &types.DolbyVision81Settings{}
+	}
+	if v, ok := m["hdr10_settings"].([]interface{}); ok && len(v) > 0 {
+		out.Hdr10Settings = expandH265Hdr10Settings(v)
+	}
+	if _, ok := m["rec601_settings"].([]interface{}); ok {
+		out.Rec601Settings = &types.Rec601Settings{}
+	}
+	if _, ok := m["rec709_settings"].([]interface{}); ok {
+		out.Rec709Settings = &types.Rec709Settings{}
+	}
+
+	return &out
+}
+
+func expandH265Hdr10Settings(tfList []interface{}) *types.Hdr10Settings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.Hdr10Settings
+	if v, ok := m["max_cll"].(int32); ok {
+		out.MaxCll = v
+	}
+	if v, ok := m["max_fall"].(int32); ok {
+		out.MaxFall = v
+	}
+
+	return &out
+}
+
+func expandH265FilterSettings(tfList []interface{}) *types.H265FilterSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.H265FilterSettings
+	if v, ok := m["temporal_filter_settings"].([]interface{}); ok && len(v) > 0 {
+		out.TemporalFilterSettings = expandH265FilterSettingsTemporalFilterSettings(v)
+	}
+
+	return &out
+}
+
+func expandH265FilterSettingsTemporalFilterSettings(tfList []interface{}) *types.TemporalFilterSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.TemporalFilterSettings
+	if v, ok := m["post_filter_sharpening"].(string); ok && v != "" {
+		out.PostFilterSharpening = types.TemporalFilterPostFilterSharpening(v)
+	}
+	if v, ok := m["strength"].(string); ok && v != "" {
+		out.Strength = types.TemporalFilterStrength(v)
+	}
+
+	return &out
+}
+
+func expandH265TimecodeBurninSettings(tfList []interface{}) *types.TimecodeBurninSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.TimecodeBurninSettings
+	if v, ok := m["timecode_burnin_font_size"].(string); ok && v != "" {
+		out.FontSize = types.TimecodeBurninFontSize(v)
+	}
+	if v, ok := m["timecode_burnin_position"].(string); ok && v != "" {
+		out.Position = types.TimecodeBurninPosition(v)
+	}
+	if v, ok := m["prefix"].(string); ok && v != "" {
+		out.Prefix = &v
 	}
 
 	return &out
@@ -5372,6 +5819,7 @@ func flattenVideoDescriptionsCodecSettings(in *types.VideoCodecSettings) []inter
 	m := map[string]interface{}{
 		"frame_capture_settings": flattenCodecSettingsFrameCaptureSettings(in.FrameCaptureSettings),
 		"h264_settings":          flattenCodecSettingsH264Settings(in.H264Settings),
+		"h265_settings":          flattenCodecSettingsH265Settings(in.H265Settings),
 	}
 
 	return []interface{}{m}
@@ -5460,6 +5908,113 @@ func flattenFilterSettingsTemporalFilterSettings(in *types.TemporalFilterSetting
 	m := map[string]interface{}{
 		"post_filter_sharpening": string(in.PostFilterSharpening),
 		"strength":               string(in.Strength),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCodecSettingsH265Settings(in *types.H265Settings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"framerate_denominator":         in.FramerateDenominator,
+		"framerate_numerator":           in.FramerateNumerator,
+		"adaptive_quantization":         string(in.AdaptiveQuantization),
+		"afd_signaling":                 string(in.AfdSignaling),
+		"alternative_transfer_function": string(in.AlternativeTransferFunction),
+		"bitrate":                       in.Bitrate,
+		"buf_size":                      in.BufSize,
+		"color_metadata":                string(in.ColorMetadata),
+		"color_space_settings":          flattenH265ColorSpaceSettings(in.ColorSpaceSettings),
+		"filter_settings":               flattenH265FilterSettings(in.FilterSettings),
+		"fixed_afd":                     string(in.FixedAfd),
+		"flicker_aq":                    string(in.FlickerAq),
+		"gop_closed_cadence":            in.GopClosedCadence,
+		"gop_size":                      in.GopSize,
+		"gop_size_units":                string(in.GopSizeUnits),
+		"level":                         string(in.Level),
+		"look_ahead_rate_control":       string(in.LookAheadRateControl),
+		"max_bitrate":                   in.MaxBitrate,
+		"min_i_interval":                in.MinIInterval,
+		"par_denominator":               in.ParDenominator,
+		"par_numerator":                 in.ParNumerator,
+		"profile":                       string(in.Profile),
+		"qvbr_quality_level":            in.QvbrQualityLevel,
+		"rate_control_mode":             string(in.RateControlMode),
+		"scan_type":                     string(in.ScanType),
+		"scene_change_detect":           string(in.SceneChangeDetect),
+		"slices":                        in.Slices,
+		"tier":                          string(in.Tier),
+		"timecode_burnin_settings":      flattenH265TimecodeBurninSettings(in.TimecodeBurninSettings),
+		"timecode_insertion":            string(in.TimecodeInsertion),
+	}
+	return []interface{}{m}
+}
+
+func flattenH265ColorSpaceSettings(in *types.H265ColorSpaceSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"color_space_passthrough_settings": in.ColorSpacePassthroughSettings,
+		"dolby_vision81_settings":          in.DolbyVision81Settings,
+		"hdr10_settings":                   flattenH265Hdr10Settings(in.Hdr10Settings),
+		"rec601_settings":                  in.Rec601Settings,
+		"rec709_settings":                  in.Rec709Settings,
+	}
+	return []interface{}{m}
+}
+
+func flattenH265Hdr10Settings(in *types.Hdr10Settings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"max_cll":  int(in.MaxCll),
+		"max_fall": int(in.MaxFall),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenH265FilterSettings(in *types.H265FilterSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"temporal_filter_settings": flattenH265FilterSettingsTemporalFilterSettings(in.TemporalFilterSettings),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenH265FilterSettingsTemporalFilterSettings(in *types.TemporalFilterSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"post_filter_sharpening": in.PostFilterSharpening,
+		"strength":               string(in.Strength),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenH265TimecodeBurninSettings(in *types.TimecodeBurninSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"timecode_burnin_font_size": string(in.FontSize),
+		"timecode_burnin_position":  string(in.Position),
+		"prefix":                    in.Prefix,
 	}
 
 	return []interface{}{m}
