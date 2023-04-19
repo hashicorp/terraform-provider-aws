@@ -69,10 +69,12 @@ func UpdateTags(ctx context.Context, conn redshiftiface.RedshiftAPI, identifier 
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.Redshift)
+	if len(removedTags) > 0 {
 		input := &redshift.DeleteTagsInput{
 			ResourceName: aws.String(identifier),
-			TagKeys:      aws.StringSlice(removedTags.IgnoreSystem(names.Redshift).Keys()),
+			TagKeys:      aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.DeleteTagsWithContext(ctx, input)
@@ -82,10 +84,12 @@ func UpdateTags(ctx context.Context, conn redshiftiface.RedshiftAPI, identifier 
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.Redshift)
+	if len(updatedTags) > 0 {
 		input := &redshift.CreateTagsInput{
 			ResourceName: aws.String(identifier),
-			Tags:         Tags(updatedTags.IgnoreSystem(names.Redshift)),
+			Tags:         Tags(updatedTags),
 		}
 
 		_, err := conn.CreateTagsWithContext(ctx, input)

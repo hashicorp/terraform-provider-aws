@@ -103,11 +103,13 @@ func UpdateTags(ctx context.Context, conn ssoadminiface.SSOAdminAPI, identifier,
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.SSOAdmin)
+	if len(removedTags) > 0 {
 		input := &ssoadmin.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
 			InstanceArn: aws.String(resourceType),
-			TagKeys:     aws.StringSlice(removedTags.IgnoreSystem(names.SSOAdmin).Keys()),
+			TagKeys:     aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -117,11 +119,13 @@ func UpdateTags(ctx context.Context, conn ssoadminiface.SSOAdminAPI, identifier,
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.SSOAdmin)
+	if len(updatedTags) > 0 {
 		input := &ssoadmin.TagResourceInput{
 			ResourceArn: aws.String(identifier),
 			InstanceArn: aws.String(resourceType),
-			Tags:        Tags(updatedTags.IgnoreSystem(names.SSOAdmin)),
+			Tags:        Tags(updatedTags),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)

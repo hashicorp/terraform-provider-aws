@@ -85,10 +85,12 @@ func UpdateTags(ctx context.Context, conn resourcegroupsiface.ResourceGroupsAPI,
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.ResourceGroups)
+	if len(removedTags) > 0 {
 		input := &resourcegroups.UntagInput{
 			Arn:  aws.String(identifier),
-			Keys: aws.StringSlice(removedTags.IgnoreSystem(names.ResourceGroups).Keys()),
+			Keys: aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.UntagWithContext(ctx, input)
@@ -98,10 +100,12 @@ func UpdateTags(ctx context.Context, conn resourcegroupsiface.ResourceGroupsAPI,
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.ResourceGroups)
+	if len(updatedTags) > 0 {
 		input := &resourcegroups.TagInput{
 			Arn:  aws.String(identifier),
-			Tags: Tags(updatedTags.IgnoreSystem(names.ResourceGroups)),
+			Tags: Tags(updatedTags),
 		}
 
 		_, err := conn.TagWithContext(ctx, input)

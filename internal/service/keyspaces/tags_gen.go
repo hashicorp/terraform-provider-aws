@@ -102,10 +102,12 @@ func UpdateTags(ctx context.Context, conn keyspacesiface.KeyspacesAPI, identifie
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.Keyspaces)
+	if len(removedTags) > 0 {
 		input := &keyspaces.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(removedTags.IgnoreSystem(names.Keyspaces)),
+			Tags:        Tags(removedTags),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -115,10 +117,12 @@ func UpdateTags(ctx context.Context, conn keyspacesiface.KeyspacesAPI, identifie
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.Keyspaces)
+	if len(updatedTags) > 0 {
 		input := &keyspaces.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreSystem(names.Keyspaces)),
+			Tags:        Tags(updatedTags),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)

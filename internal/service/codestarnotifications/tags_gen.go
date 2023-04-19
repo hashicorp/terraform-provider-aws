@@ -85,10 +85,12 @@ func UpdateTags(ctx context.Context, conn codestarnotificationsiface.CodeStarNot
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.CodeStarNotifications)
+	if len(removedTags) > 0 {
 		input := &codestarnotifications.UntagResourceInput{
 			Arn:     aws.String(identifier),
-			TagKeys: aws.StringSlice(removedTags.IgnoreSystem(names.CodeStarNotifications).Keys()),
+			TagKeys: aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -98,10 +100,12 @@ func UpdateTags(ctx context.Context, conn codestarnotificationsiface.CodeStarNot
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.CodeStarNotifications)
+	if len(updatedTags) > 0 {
 		input := &codestarnotifications.TagResourceInput{
 			Arn:  aws.String(identifier),
-			Tags: Tags(updatedTags.IgnoreSystem(names.CodeStarNotifications)),
+			Tags: Tags(updatedTags),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)

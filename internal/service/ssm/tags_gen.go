@@ -103,11 +103,13 @@ func UpdateTags(ctx context.Context, conn ssmiface.SSMAPI, identifier, resourceT
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.SSM)
+	if len(removedTags) > 0 {
 		input := &ssm.RemoveTagsFromResourceInput{
 			ResourceId:   aws.String(identifier),
 			ResourceType: aws.String(resourceType),
-			TagKeys:      aws.StringSlice(removedTags.IgnoreSystem(names.SSM).Keys()),
+			TagKeys:      aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.RemoveTagsFromResourceWithContext(ctx, input)
@@ -117,11 +119,13 @@ func UpdateTags(ctx context.Context, conn ssmiface.SSMAPI, identifier, resourceT
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.SSM)
+	if len(updatedTags) > 0 {
 		input := &ssm.AddTagsToResourceInput{
 			ResourceId:   aws.String(identifier),
 			ResourceType: aws.String(resourceType),
-			Tags:         Tags(updatedTags.IgnoreSystem(names.SSM)),
+			Tags:         Tags(updatedTags),
 		}
 
 		_, err := conn.AddTagsToResourceWithContext(ctx, input)

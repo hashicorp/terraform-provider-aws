@@ -85,10 +85,12 @@ func UpdateTags(ctx context.Context, conn pinpointiface.PinpointAPI, identifier 
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.Pinpoint)
+	if len(removedTags) > 0 {
 		input := &pinpoint.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.IgnoreSystem(names.Pinpoint).Keys()),
+			TagKeys:     aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -98,7 +100,9 @@ func UpdateTags(ctx context.Context, conn pinpointiface.PinpointAPI, identifier 
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.Pinpoint)
+	if len(updatedTags) > 0 {
 		input := &pinpoint.TagResourceInput{
 			ResourceArn: aws.String(identifier),
 			TagsModel:   &pinpoint.TagsModel{Tags: Tags(updatedTags.IgnoreAWS())},

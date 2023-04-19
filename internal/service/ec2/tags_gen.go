@@ -159,10 +159,12 @@ func UpdateTags(ctx context.Context, conn ec2iface.EC2API, identifier string, ol
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.EC2)
+	if len(removedTags) > 0 {
 		input := &ec2.DeleteTagsInput{
 			Resources: aws.StringSlice([]string{identifier}),
-			Tags:      Tags(removedTags.IgnoreSystem(names.EC2)),
+			Tags:      Tags(removedTags),
 		}
 
 		_, err := conn.DeleteTagsWithContext(ctx, input)
@@ -172,10 +174,12 @@ func UpdateTags(ctx context.Context, conn ec2iface.EC2API, identifier string, ol
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.EC2)
+	if len(updatedTags) > 0 {
 		input := &ec2.CreateTagsInput{
 			Resources: aws.StringSlice([]string{identifier}),
-			Tags:      Tags(updatedTags.IgnoreSystem(names.EC2)),
+			Tags:      Tags(updatedTags),
 		}
 
 		_, err := conn.CreateTagsWithContext(ctx, input)

@@ -102,10 +102,12 @@ func UpdateTags(ctx context.Context, conn elasticsearchserviceiface.Elasticsearc
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.Elasticsearch)
+	if len(removedTags) > 0 {
 		input := &elasticsearchservice.RemoveTagsInput{
 			ARN:     aws.String(identifier),
-			TagKeys: aws.StringSlice(removedTags.IgnoreSystem(names.Elasticsearch).Keys()),
+			TagKeys: aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.RemoveTagsWithContext(ctx, input)
@@ -115,10 +117,12 @@ func UpdateTags(ctx context.Context, conn elasticsearchserviceiface.Elasticsearc
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.Elasticsearch)
+	if len(updatedTags) > 0 {
 		input := &elasticsearchservice.AddTagsInput{
 			ARN:     aws.String(identifier),
-			TagList: Tags(updatedTags.IgnoreSystem(names.Elasticsearch)),
+			TagList: Tags(updatedTags),
 		}
 
 		_, err := conn.AddTagsWithContext(ctx, input)

@@ -102,10 +102,12 @@ func UpdateTags(ctx context.Context, conn mediastoreiface.MediaStoreAPI, identif
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.MediaStore)
+	if len(removedTags) > 0 {
 		input := &mediastore.UntagResourceInput{
 			Resource: aws.String(identifier),
-			TagKeys:  aws.StringSlice(removedTags.IgnoreSystem(names.MediaStore).Keys()),
+			TagKeys:  aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -115,10 +117,12 @@ func UpdateTags(ctx context.Context, conn mediastoreiface.MediaStoreAPI, identif
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.MediaStore)
+	if len(updatedTags) > 0 {
 		input := &mediastore.TagResourceInput{
 			Resource: aws.String(identifier),
-			Tags:     Tags(updatedTags.IgnoreSystem(names.MediaStore)),
+			Tags:     Tags(updatedTags),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)

@@ -85,10 +85,12 @@ func UpdateTags(ctx context.Context, conn kinesisvideoiface.KinesisVideoAPI, ide
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.KinesisVideo)
+	if len(removedTags) > 0 {
 		input := &kinesisvideo.UntagStreamInput{
 			StreamARN:  aws.String(identifier),
-			TagKeyList: aws.StringSlice(removedTags.IgnoreSystem(names.KinesisVideo).Keys()),
+			TagKeyList: aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.UntagStreamWithContext(ctx, input)
@@ -98,10 +100,12 @@ func UpdateTags(ctx context.Context, conn kinesisvideoiface.KinesisVideoAPI, ide
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.KinesisVideo)
+	if len(updatedTags) > 0 {
 		input := &kinesisvideo.TagStreamInput{
 			StreamARN: aws.String(identifier),
-			Tags:      Tags(updatedTags.IgnoreSystem(names.KinesisVideo)),
+			Tags:      Tags(updatedTags),
 		}
 
 		_, err := conn.TagStreamWithContext(ctx, input)

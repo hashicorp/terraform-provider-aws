@@ -69,10 +69,12 @@ func UpdateTags(ctx context.Context, conn secretsmanageriface.SecretsManagerAPI,
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.SecretsManager)
+	if len(removedTags) > 0 {
 		input := &secretsmanager.UntagResourceInput{
 			SecretId: aws.String(identifier),
-			TagKeys:  aws.StringSlice(removedTags.IgnoreSystem(names.SecretsManager).Keys()),
+			TagKeys:  aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -82,10 +84,12 @@ func UpdateTags(ctx context.Context, conn secretsmanageriface.SecretsManagerAPI,
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.SecretsManager)
+	if len(updatedTags) > 0 {
 		input := &secretsmanager.TagResourceInput{
 			SecretId: aws.String(identifier),
-			Tags:     Tags(updatedTags.IgnoreSystem(names.SecretsManager)),
+			Tags:     Tags(updatedTags),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)

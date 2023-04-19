@@ -102,10 +102,12 @@ func UpdateTags(ctx context.Context, conn workspacesiface.WorkSpacesAPI, identif
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.WorkSpaces)
+	if len(removedTags) > 0 {
 		input := &workspaces.DeleteTagsInput{
 			ResourceId: aws.String(identifier),
-			TagKeys:    aws.StringSlice(removedTags.IgnoreSystem(names.WorkSpaces).Keys()),
+			TagKeys:    aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.DeleteTagsWithContext(ctx, input)
@@ -115,10 +117,12 @@ func UpdateTags(ctx context.Context, conn workspacesiface.WorkSpacesAPI, identif
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.WorkSpaces)
+	if len(updatedTags) > 0 {
 		input := &workspaces.CreateTagsInput{
 			ResourceId: aws.String(identifier),
-			Tags:       Tags(updatedTags.IgnoreSystem(names.WorkSpaces)),
+			Tags:       Tags(updatedTags),
 		}
 
 		_, err := conn.CreateTagsWithContext(ctx, input)

@@ -102,10 +102,12 @@ func UpdateTags(ctx context.Context, conn cloudfrontiface.CloudFrontAPI, identif
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.CloudFront)
+	if len(removedTags) > 0 {
 		input := &cloudfront.UntagResourceInput{
 			Resource: aws.String(identifier),
-			TagKeys:  &cloudfront.TagKeys{Items: aws.StringSlice(removedTags.IgnoreSystem(names.CloudFront).Keys())},
+			TagKeys:  &cloudfront.TagKeys{Items: aws.StringSlice(removedTags.Keys())},
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -115,10 +117,12 @@ func UpdateTags(ctx context.Context, conn cloudfrontiface.CloudFrontAPI, identif
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.CloudFront)
+	if len(updatedTags) > 0 {
 		input := &cloudfront.TagResourceInput{
 			Resource: aws.String(identifier),
-			Tags:     &cloudfront.Tags{Items: Tags(updatedTags.IgnoreAWS())},
+			Tags:     &cloudfront.Tags{Items: Tags(updatedTags)},
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)

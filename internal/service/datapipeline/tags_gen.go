@@ -69,10 +69,12 @@ func UpdateTags(ctx context.Context, conn datapipelineiface.DataPipelineAPI, ide
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.DataPipeline)
+	if len(removedTags) > 0 {
 		input := &datapipeline.RemoveTagsInput{
 			PipelineId: aws.String(identifier),
-			TagKeys:    aws.StringSlice(removedTags.IgnoreSystem(names.DataPipeline).Keys()),
+			TagKeys:    aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.RemoveTagsWithContext(ctx, input)
@@ -82,10 +84,12 @@ func UpdateTags(ctx context.Context, conn datapipelineiface.DataPipelineAPI, ide
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.DataPipeline)
+	if len(updatedTags) > 0 {
 		input := &datapipeline.AddTagsInput{
 			PipelineId: aws.String(identifier),
-			Tags:       Tags(updatedTags.IgnoreSystem(names.DataPipeline)),
+			Tags:       Tags(updatedTags),
 		}
 
 		_, err := conn.AddTagsWithContext(ctx, input)

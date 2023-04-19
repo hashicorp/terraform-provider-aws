@@ -102,10 +102,12 @@ func UpdateTags(ctx context.Context, conn opensearchserviceiface.OpenSearchServi
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.OpenSearch)
+	if len(removedTags) > 0 {
 		input := &opensearchservice.RemoveTagsInput{
 			ARN:     aws.String(identifier),
-			TagKeys: aws.StringSlice(removedTags.IgnoreSystem(names.OpenSearch).Keys()),
+			TagKeys: aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.RemoveTagsWithContext(ctx, input)
@@ -115,10 +117,12 @@ func UpdateTags(ctx context.Context, conn opensearchserviceiface.OpenSearchServi
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.OpenSearch)
+	if len(updatedTags) > 0 {
 		input := &opensearchservice.AddTagsInput{
 			ARN:     aws.String(identifier),
-			TagList: Tags(updatedTags.IgnoreSystem(names.OpenSearch)),
+			TagList: Tags(updatedTags),
 		}
 
 		_, err := conn.AddTagsWithContext(ctx, input)

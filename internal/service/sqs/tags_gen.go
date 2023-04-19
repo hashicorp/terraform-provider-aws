@@ -85,10 +85,12 @@ func UpdateTags(ctx context.Context, conn sqsiface.SQSAPI, identifier string, ol
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.SQS)
+	if len(removedTags) > 0 {
 		input := &sqs.UntagQueueInput{
 			QueueUrl: aws.String(identifier),
-			TagKeys:  aws.StringSlice(removedTags.IgnoreSystem(names.SQS).Keys()),
+			TagKeys:  aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.UntagQueueWithContext(ctx, input)
@@ -98,10 +100,12 @@ func UpdateTags(ctx context.Context, conn sqsiface.SQSAPI, identifier string, ol
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.SQS)
+	if len(updatedTags) > 0 {
 		input := &sqs.TagQueueInput{
 			QueueUrl: aws.String(identifier),
-			Tags:     Tags(updatedTags.IgnoreSystem(names.SQS)),
+			Tags:     Tags(updatedTags),
 		}
 
 		_, err := conn.TagQueueWithContext(ctx, input)
