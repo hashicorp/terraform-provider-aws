@@ -40,7 +40,7 @@ func TestAccVPCLatticeListenerRule_basic(t *testing.T) {
 				Config: testAccListeningRule_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile(`service/.+/listener/.+/rule/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile(`service/svc-.*/listener/listener-.*/rule/rule.+`)),
 				),
 			},
 			{
@@ -56,9 +56,29 @@ func testAccListeningRule_basic(rName string) string {
 	return fmt.Sprintf(`
 	resource "aws_vpclattice_listener_rule" "test" {
 		name = %q
-		listener_identifier = "listener-0238d4e9479096392"
+		listener_identifier = "listener-06284aa0e76529ac7"
 		service_identifier = "svc-05cad7dcf6ee78d45"
-		priority     = 93	  
+		priority     = 13
+		match {
+			http_match {
+
+				header_matches {
+					name = "example-header"
+					case_sensitive = true
+			
+					match {
+					  exact = "example-contains"
+					}
+				  }
+
+				path_match {
+					case_sensitive = true
+					match {
+						prefix = "/example-path"
+					  }
+				}
+			}
+		}	  
 		action  {
 			forward {
 				target_groups{
@@ -68,21 +88,11 @@ func testAccListeningRule_basic(rName string) string {
 			}
 			
 		}
-		match {
-			http_match {
-				path_match {
-					case_sensitive = false
-					match {
-						exact = "/example-path"
-					  }
-				}
-			}
-		}
 	}
 `, rName)
 }
 
-func testAccCheckListenerRuleExists(ctx context.Context, name string, listenerRule *vpclattice.GetRuleOutput) resource.TestCheckFunc {
+func testAccCheckListenerRuleExists(ctx context.Context, name string, rule *vpclattice.GetRuleOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -93,17 +103,12 @@ func testAccCheckListenerRuleExists(ctx context.Context, name string, listenerRu
 			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameListenerRule, name, errors.New("not set"))
 		}
 
-		listenerRuleResource, ok := s.RootModule().Resources["aws_vpclattice_listener_rule.test"]
-		if !ok {
-			return fmt.Errorf("Not found: %s", "aws_vpclattice_listener_rule.test")
-		}
-
-		listenerIdentifier := listenerRuleResource.Primary.Attributes["listener_identifier"]
-		serviceIdentifier := listenerRuleResource.Primary.Attributes["service_identifier"]
+		serviceIdentifier := rs.Primary.Attributes["service_identifier"]
+		listenerIdentifier := rs.Primary.Attributes["listener_identifier"]
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
 		resp, err := conn.GetRule(ctx, &vpclattice.GetRuleInput{
-			RuleIdentifier:     aws.String(rs.Primary.ID),
+			RuleIdentifier:     aws.String(rs.Primary.Attributes["arn"]),
 			ListenerIdentifier: aws.String(listenerIdentifier),
 			ServiceIdentifier:  aws.String(serviceIdentifier),
 		})
@@ -112,7 +117,7 @@ func testAccCheckListenerRuleExists(ctx context.Context, name string, listenerRu
 			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameListenerRule, rs.Primary.ID, err)
 		}
 
-		*listenerRule = *resp
+		*rule = *resp
 
 		return nil
 	}
@@ -136,7 +141,7 @@ func testAccCheckListeningRuleDestroy(ctx context.Context) resource.TestCheckFun
 			serviceIdentifier := listenerRuleResource.Primary.Attributes["service_identifier"]
 
 			_, err := conn.GetRule(ctx, &vpclattice.GetRuleInput{
-				RuleIdentifier:     aws.String(rs.Primary.ID),
+				RuleIdentifier:     aws.String(rs.Primary.Attributes["arn"]),
 				ListenerIdentifier: aws.String(listenerIdentifier),
 				ServiceIdentifier:  aws.String(serviceIdentifier),
 			})
