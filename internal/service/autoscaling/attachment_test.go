@@ -128,12 +128,10 @@ func testAccCheckAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			var err error
 
-			if targetGroupARN := rs.Primary.Attributes["lb_target_group_arn"]; targetGroupARN == "" {
-				targetGroupARN = rs.Primary.Attributes["alb_target_group_arn"]
-
-				err = tfautoscaling.FindAttachmentByTargetGroupARN(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], targetGroupARN)
+			if lbName := rs.Primary.Attributes["elb"]; lbName != "" {
+				err = tfautoscaling.FindAttachmentByLoadBalancerName(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], lbName)
 			} else {
-				err = tfautoscaling.FindAttachmentByLoadBalancerName(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.Attributes["elb"])
+				err = tfautoscaling.FindAttachmentByTargetGroupARN(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.Attributes["lb_target_group_arn"])
 			}
 
 			if tfresource.NotFound(err) {
@@ -173,12 +171,7 @@ func testAccCheckAttachmentByTargetGroupARNExists(ctx context.Context, n string)
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
 
-		targetGroupARN := rs.Primary.Attributes["lb_target_group_arn"]
-		if targetGroupARN == "" {
-			targetGroupARN = rs.Primary.Attributes["alb_target_group_arn"]
-		}
-
-		return tfautoscaling.FindAttachmentByTargetGroupARN(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], targetGroupARN)
+		return tfautoscaling.FindAttachmentByTargetGroupARN(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.Attributes["lb_target_group_arn"])
 	}
 }
 
