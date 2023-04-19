@@ -17,22 +17,22 @@ join the collaboration and can create memberships.
 
 ```terraform
 resource "aws_cleanrooms_collaboration" "test_collaboration" {
-  name = "terraform-example-collaboration"
+  name                     = "terraform-example-collaboration"
   creator_member_abilities = ["CAN_QUERY", "CAN_RECEIVE_RESULTS"]
-  creator_display_name = "Creator "
-  description = "I made this collaboration with terraform!"
-  query_log_status = "DISABLED"
+  creator_display_name     = "Creator "
+  description              = "I made this collaboration with terraform!"
+  query_log_status         = "DISABLED"
 
   data_encryption_metadata {
-    allow_clear_text = true
-    allow_duplicates = true
+    allow_clear_text                            = true
+    allow_duplicates                            = true
     allow_joins_on_columns_with_different_names = true
-    preserve_nulls = false
+    preserve_nulls                              = false
   }
 
   member {
-    account_id = 123456789012
-    display_name = "Other member"
+    account_id       = 123456789012
+    display_name     = "Other member"
     member_abilities = []
   }
 
@@ -58,22 +58,20 @@ emberships. Valid values [may be found here](https://docs.aws.amazon.com/clean-r
 ateCollaboration-request-queryLogStatus).
 * `data_encryption_metadata` - (Required - Forces new resource) - a collection of settings which determine how the [c3r client](https://docs
 aws.amazon.com/clean-rooms/latest/userguide/crypto-computing.html) will encrypt data for use within this collaboration
- * - `allow_clear_text` - (Required - Forces new resource) - Indicates whether encrypted tables can contain cleartext data. This is a boolea
+* `data_encryption_metadata.allow_clear_text` - (Required - Forces new resource) - Indicates whether encrypted tables can contain cleartext data. This is a boolea
  field.
- * - `allow_duplicates` - (Required - Forces new resource ) - Indicates whether Fingerprint columns can contain duplicate entries. This is a
+* `data_encryption_metadata.allow_duplicates` - (Required - Forces new resource ) - Indicates whether Fingerprint columns can contain duplicate entries. This is a
 boolean field.
- * - `allow_joins_on_columns_with_different_names` - (Required - Forces new resource) - Indicates whether Fingerprint columns can be joined
+* `data_encryption_metadata.allow_joins_on_columns_with_different_names` - (Required - Forces new resource) - Indicates whether Fingerprint columns can be joined
 n any other Fingerprint column with a different name. This is a boolean field.
- * - `preserve_nulls` - (Required - Forces new resource) - Indicates whether NULL values are to be copied as NULL to encrypted tables (true)
+* `data_encryption_metadata.preserve_nulls` - (Required - Forces new resource) - Indicates whether NULL values are to be copied as NULL to encrypted tables (true)
 or cryptographically processed (false).
-* - `member` - (Optional - Forces new resource) - Additional members of the collaboration which will be invited to join the collaboration.
- * - `account_id` - (Required - Forces new resource) - The account id for the invited member
- * - `display_name` - (Required - Forces new resource) - The display name for the invited member
- * - `member_abilities` - (Required - Forces new resource) - The list of abilities for the invited member. Valid values [may be found here](
-ttps://docs.aws.amazon.com/clean-rooms/latest/apireference/API_CreateCollaboration.html#API-CreateCollaboration-request-creatorMemberAbiliti
+* `member` - (Optional - Forces new resource) - Additional members of the collaboration which will be invited to join the collaboration.
+* `member.account_id` - (Required - Forces new resource) - The account id for the invited member
+* `member.display_name` - (Required - Forces new resource) - The display name for the invited member
+* `member.member_abilities` - (Required - Forces new resource) - The list of abilities for the invited member. Valid values [may be found here](https://docs.aws.amazon.com/clean-rooms/latest/apireference/API_CreateCollaboration.html#API-CreateCollaboration-request-creatorMemberAbiliti
 s
- * - `tags` - (Optional) - Key value pairs which tag the collaboration.
-
+* `tags` - (Optional) - Key value pairs which tag the collaboration.
 
 ## Attributes Reference
 
@@ -85,7 +83,10 @@ In addition to all arguments above, the following attributes are exported:
 * `member status` - For each member included in the collaboration an additional computed attribute of status is added. These values [may be
 ound here](https://docs.aws.amazon.com/clean-rooms/latest/apireference/API_MemberSummary.html#API-Type-MemberSummary-status)
 * `updated_time` - The date and time he collaboration was last updated
+<<<<<<< HEAD
 
+=======
+>>>>>>> ec8e21306e (Add collaboration resource for aws cleanrooms)
 
 ## Timeouts
 
