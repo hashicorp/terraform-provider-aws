@@ -52,7 +52,7 @@ func TestAccVPCLatticeListener_defaultActionUpdate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccListenerConfig_forwardTargetGrouphttpsSvcId(rName),
+				Config: testAccListenerConfig_forwardTargetGrouphttpsSvcID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -171,7 +171,7 @@ func TestAccVPCLatticeListener_forwardhttpTargetGroup(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_forwardTargetGrouphttpSvcId(rName),
+				Config: testAccListenerConfig_forwardTargetGrouphttpSvcID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -212,7 +212,7 @@ func TestAccVPCLatticeListener_forwardhttpTargetGroupCustomPort(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_forwardTargetGrouphttpSvcIdCustomPort(rName),
+				Config: testAccListenerConfig_forwardTargetGrouphttpSvcIDCustomPort(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -233,7 +233,7 @@ func TestAccVPCLatticeListener_forwardhttpTargetGroupCustomPort(t *testing.T) {
 	})
 }
 
-func TestAccVPCLatticeListener_forwardhttpsTargetGroupArn(t *testing.T) {
+func TestAccVPCLatticeListener_forwardhttpsTargetGroupARN(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var listener vpclattice.GetListenerOutput
@@ -253,7 +253,7 @@ func TestAccVPCLatticeListener_forwardhttpsTargetGroupArn(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_forwardTargetGrouphttpsSvcArn(rName),
+				Config: testAccListenerConfig_forwardTargetGrouphttpsSvcARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -295,7 +295,7 @@ func TestAccVPCLatticeListener_forwardhttpsTargetGroupCustomPort(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_forwardTargetGrouphttpsSvcIdCustomPort(rName),
+				Config: testAccListenerConfig_forwardTargetGrouphttpsSvcIDCustomPort(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -383,7 +383,7 @@ func TestAccVPCLatticeListener_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_forwardTargetGrouphttpSvcId(rName),
+				Config: testAccListenerConfig_forwardTargetGrouphttpSvcID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &listener),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceListener(), resourceName),
@@ -585,7 +585,7 @@ resource "aws_vpclattice_listener" "test" {
 `, rName, targetGroupName1))
 }
 
-func testAccListenerConfig_forwardTargetGrouphttpSvcId(rName string) string {
+func testAccListenerConfig_forwardTargetGrouphttpSvcID(rName string) string {
 	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener" "test" {
   name               = %[1]q
@@ -603,7 +603,7 @@ resource "aws_vpclattice_listener" "test" {
 `, rName))
 }
 
-func testAccListenerConfig_forwardTargetGrouphttpSvcIdCustomPort(rName string) string {
+func testAccListenerConfig_forwardTargetGrouphttpSvcIDCustomPort(rName string) string {
 	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener" "test" {
   name               = %[1]q
@@ -622,7 +622,7 @@ resource "aws_vpclattice_listener" "test" {
 `, rName))
 }
 
-func testAccListenerConfig_forwardTargetGrouphttpsSvcArn(rName string) string {
+func testAccListenerConfig_forwardTargetGrouphttpsSvcARN(rName string) string {
 	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener" "test" {
   name        = %[1]q
@@ -639,7 +639,7 @@ resource "aws_vpclattice_listener" "test" {
 }`, rName))
 }
 
-func testAccListenerConfig_forwardTargetGrouphttpsSvcId(rName string) string {
+func testAccListenerConfig_forwardTargetGrouphttpsSvcID(rName string) string {
 	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener" "test" {
   name               = %[1]q
@@ -656,7 +656,7 @@ resource "aws_vpclattice_listener" "test" {
 }`, rName))
 }
 
-func testAccListenerConfig_forwardTargetGrouphttpsSvcIdCustomPort(rName string) string {
+func testAccListenerConfig_forwardTargetGrouphttpsSvcIDCustomPort(rName string) string {
 	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener" "test" {
   name               = %[1]q
