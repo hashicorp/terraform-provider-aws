@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 	"time"
 
@@ -266,9 +267,7 @@ func statusEnablerAccountAndResourceTypes(ctx context.Context, conn *inspector2.
 			return nil, "", err
 		}
 
-		if tfslices.All(maps.Values(st), func(v AccountResourceStatus) bool {
-			return v.Status == types.StatusDisabled
-		}) {
+		if tfslices.All(maps.Values(st), accountStatusEquals(types.StatusDisabled)) {
 			return nil, "", nil
 		}
 
@@ -279,6 +278,9 @@ func statusEnablerAccountAndResourceTypes(ctx context.Context, conn *inspector2.
 			if tfslices.Any(maps.Values(v.ResourceStatuses), func(v types.Status) bool {
 				return slices.Contains(pendingStates, v)
 			}) {
+				return true
+			}
+			if v.Status == types.StatusEnabled && tfslices.All(maps.Values(v.ResourceStatuses), tfslices.FilterEquals(types.StatusDisabled)) {
 				return true
 			}
 			return false
@@ -298,9 +300,7 @@ func statusEnablerAccount(ctx context.Context, conn *inspector2.Client, id strin
 			return nil, "", err
 		}
 
-		if tfslices.All(maps.Values(st), func(v AccountResourceStatus) bool {
-			return v.Status == types.StatusDisabled
-		}) {
+		if tfslices.All(maps.Values(st), accountStatusEquals(types.StatusDisabled)) {
 			return nil, "", nil
 		}
 		return st, StatusInProgress, nil
@@ -310,6 +310,12 @@ func statusEnablerAccount(ctx context.Context, conn *inspector2.Client, id strin
 type AccountResourceStatus struct {
 	Status           types.Status
 	ResourceStatuses map[types.ResourceScanType]types.Status
+}
+
+func accountStatusEquals(s types.Status) func(AccountResourceStatus) bool {
+	return func(v AccountResourceStatus) bool {
+		return v.Status == s
+	}
 }
 
 func AccountStatuses(ctx context.Context, conn *inspector2.Client, id string) (map[string]AccountResourceStatus, error) {
@@ -351,7 +357,10 @@ func AccountStatuses(ctx context.Context, conn *inspector2.Client, id string) (m
 }
 
 func EnablerID(accountIDs []string, types []types.ResourceScanType) string {
-	return fmt.Sprintf("%s-%s", strings.Join(accountIDs, ":"), strings.Join(enum.Slice(types...), ":"))
+	sort.Strings(accountIDs)
+	t := enum.Slice(types...)
+	sort.Strings(t)
+	return fmt.Sprintf("%s-%s", strings.Join(accountIDs, ":"), strings.Join(t, ":"))
 }
 
 func parseEnablerID(id string) ([]string, []string, error) {
