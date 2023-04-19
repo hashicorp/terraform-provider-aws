@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-
 	tfcleanrooms "github.com/hashicorp/terraform-provider-aws/internal/service/cleanrooms"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -110,7 +109,7 @@ func TestAccCleanRoomsCollaboration_mutableProperties(t *testing.T) {
 			{
 				Config: testAccCollaborationConfig_basic(updatedName, "updated Description", "Not Terraform"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollaborationIsTheSame(ctx, resourceName, &collaboration),
+					testAccCheckCollaborationIsTheSame(resourceName, &collaboration),
 					resource.TestCheckResourceAttr(resourceName, "name", updatedName),
 					resource.TestCheckResourceAttr(resourceName, "description", "updated Description"),
 					testAccCollaborationTags(ctx, resourceName, map[string]string{
@@ -149,7 +148,7 @@ func TestAccCleanRoomsCollaboration_updateCreatorDisplayName(t *testing.T) {
 			{
 				Config: testAccCollaborationConfig_creatorDisplayName(TEST_NAME, TEST_DESCRIPTION, TEST_TAG, "updatedName"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollaborationRecreated(ctx, resourceName, &collaboration),
+					testAccCheckCollaborationRecreated(resourceName, &collaboration),
 					resource.TestCheckResourceAttr(resourceName, "creator_display_name", "updatedName"),
 				),
 			},
@@ -183,7 +182,7 @@ func TestAccCleanRoomsCollaboration_updateQueryLogStatus(t *testing.T) {
 			{
 				Config: testAccCollaborationConfig_queryLogStatus(TEST_NAME, TEST_DESCRIPTION, TEST_TAG, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollaborationRecreated(ctx, resourceName, &collaboration),
+					testAccCheckCollaborationRecreated(resourceName, &collaboration),
 					resource.TestCheckResourceAttr(resourceName, "query_log_status", "ENABLED"),
 				),
 			},
@@ -217,7 +216,7 @@ func TestAccCleanRoomsCollaboration_dataEncryptionSettings(t *testing.T) {
 			{
 				Config: testAccCollaborationConfig_updatedDataEncryptionSettings(TEST_NAME, TEST_DESCRIPTION, TEST_TAG),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollaborationRecreated(ctx, resourceName, &collaboration),
+					testAccCheckCollaborationRecreated(resourceName, &collaboration),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "data_encryption_metadata.*", map[string]string{
 						"allow_clear_text": "true",
 						"allow_duplicates": "true",
@@ -229,7 +228,7 @@ func TestAccCleanRoomsCollaboration_dataEncryptionSettings(t *testing.T) {
 			{
 				Config: testAccCollaborationConfig_noDataEncryptionSettings(TEST_NAME, TEST_DESCRIPTION, TEST_TAG),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollaborationRecreated(ctx, resourceName, &collaboration),
+					testAccCheckCollaborationRecreated(resourceName, &collaboration),
 					resource.TestCheckResourceAttr(resourceName, "data_encryption_metadata.#", "0"),
 				),
 			},
@@ -268,7 +267,7 @@ func TestAccCleanRoomsCollaboration_updateMemberAbilities(t *testing.T) {
 			{
 				Config: testAccCollaborationConfig_swapMemberAbilities(TEST_NAME, TEST_DESCRIPTION, TEST_TAG),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollaborationRecreated(ctx, resourceName, &collaboration),
+					testAccCheckCollaborationRecreated(resourceName, &collaboration),
 					resource.TestCheckResourceAttr(resourceName, "creator_member_abilities.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "member.0.member_abilities.#", "2"),
 				),
@@ -337,15 +336,15 @@ func testAccCheckCollaborationExists(ctx context.Context, name string, collabora
 	}
 }
 
-func testAccCheckCollaborationIsTheSame(ctx context.Context, name string, collaboration *cleanrooms.GetCollaborationOutput) resource.TestCheckFunc {
+func testAccCheckCollaborationIsTheSame(name string, collaboration *cleanrooms.GetCollaborationOutput) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
-		return checkCollaborationIsSame(ctx, name, collaboration, state)
+		return checkCollaborationIsSame(name, collaboration, state)
 	}
 }
 
-func testAccCheckCollaborationRecreated(ctx context.Context, name string, collaboration *cleanrooms.GetCollaborationOutput) resource.TestCheckFunc {
+func testAccCheckCollaborationRecreated(name string, collaboration *cleanrooms.GetCollaborationOutput) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
-		err := checkCollaborationIsSame(ctx, name, collaboration, state)
+		err := checkCollaborationIsSame(name, collaboration, state)
 		if err == nil {
 			return fmt.Errorf("Collaboration was expected to be recreated but was updated")
 		}
@@ -353,7 +352,7 @@ func testAccCheckCollaborationRecreated(ctx context.Context, name string, collab
 	}
 }
 
-func checkCollaborationIsSame(ctx context.Context, name string, collaboration *cleanrooms.GetCollaborationOutput, s *terraform.State) error {
+func checkCollaborationIsSame(name string, collaboration *cleanrooms.GetCollaborationOutput, s *terraform.State) error {
 	rs, ok := s.RootModule().Resources[name]
 	if !ok {
 		return create.Error(names.CleanRooms, create.ErrActionCheckingExistence, tfcleanrooms.ResNameCollaboration, name, errors.New("not found"))
@@ -436,7 +435,6 @@ func testAccCollaborationTags(ctx context.Context, name string, expectedTags map
 		}
 		return nil
 	}
-
 }
 
 const TEST_NAME = "name"

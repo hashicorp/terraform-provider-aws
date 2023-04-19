@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	"github.com/aws/aws-sdk-go-v2/service/cleanrooms/types"
+	awsv1 "github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -226,7 +227,6 @@ func resourceCollaborationRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("creator_member_abilities", creatorAbilities)
 
 	return nil
-
 }
 
 func resourceCollaborationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -297,7 +297,6 @@ func findCollaborationByID(ctx context.Context, conn *cleanrooms.Client, id stri
 	if out == nil || out.Collaboration == nil {
 		return nil, tfresource.NewEmptyResultError(in)
 	}
-
 	return out, nil
 }
 
@@ -331,10 +330,8 @@ func expandMemberAbilities(data []interface{}) []types.MemberAbility {
 		switch v.(string) {
 		case "CAN_QUERY":
 			mappedAbilities = append(mappedAbilities, types.MemberAbilityCanQuery)
-			break
 		case "CAN_RECEIVE_RESULTS":
 			mappedAbilities = append(mappedAbilities, types.MemberAbilityCanReceiveResults)
-			break
 		}
 	}
 	return mappedAbilities
@@ -392,7 +389,7 @@ func flattenDataEncryptionMetadata(dataEncryptionMetadata *types.DataEncryptionM
 func flattenMembers(members []types.MemberSummary, ownerAccount *string) []interface{} {
 	flattenedMembers := []interface{}{}
 	for _, member := range members {
-		if *member.AccountId != *ownerAccount {
+		if awsv1.StringValue(member.AccountId) != awsv1.StringValue(ownerAccount) {
 			memberMap := map[string]interface{}{}
 			memberMap["status"] = member.Status
 			memberMap["account_id"] = member.AccountId
@@ -407,7 +404,8 @@ func flattenMembers(members []types.MemberSummary, ownerAccount *string) []inter
 func flattenCreatorAbilities(members []types.MemberSummary, ownerAccount *string) []string {
 	flattenedAbilities := []string{}
 	for _, member := range members {
-		if *member.AccountId == *ownerAccount {
+		if awsv1.StringValue(member.AccountId) == awsv1.StringValue(ownerAccount) {
+			log.Printf("They match!")
 			return flattenMemberAbilities(member.Abilities)
 		}
 	}
