@@ -540,6 +540,41 @@ func TestAccS3Object_kms(t *testing.T) {
 	})
 }
 
+func TestAccS3Object_kmsAlias(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	source := testAccObjectCreateTempFile(t, "{anything will do }")
+	defer os.Remove(source)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {},
+				Config:    testAccObjectConfig_kmsAlias(rName, source),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj),
+					testAccCheckObjectSSE(ctx, resourceName, "aws:kms"),
+					testAccCheckObjectBody(&obj, "{anything will do }"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"acl", "source", "force_destroy"},
+				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
+			},
+		},
+	})
+}
+
 func TestAccS3Object_sse(t *testing.T) {
 	ctx := acctest.Context(t)
 	var obj s3.GetObjectOutput
@@ -1766,6 +1801,21 @@ resource "aws_s3_object" "object" {
   key        = "test-key"
   source     = %[2]q
   kms_key_id = aws_kms_key.kms_key_1.arn
+}
+`, rName, source)
+}
+
+func testAccObjectConfig_kmsAlias(rName string, source string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "object" {
+  bucket     = aws_s3_bucket.test.bucket
+  key        = "test-key"
+  source     = %[2]q
+  kms_key_id = "alias/aws/s3"
 }
 `, rName, source)
 }

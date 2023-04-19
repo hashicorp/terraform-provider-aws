@@ -123,10 +123,9 @@ func ResourceObject() *schema.Resource {
 				ValidateFunc: validation.NoZeroValues,
 			},
 			"kms_key_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// ignore diffs where the user hasn't specified a kms_key_id but the bucket has a default KMS key configured
 					if new == "" && d.Get("server_side_encryption") == s3.ServerSideEncryptionAwsKms {
@@ -483,7 +482,35 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("kms_key_id"); ok {
-		input.SSEKMSKeyId = aws.String(v.(string))
+
+		// Check if alias or valid ARN.
+		if strings.HasPrefix(v.(string), "alias/") {
+			log.Printf("[INFO] KMS Key alias given: %s", v.(string))
+			// Alias given, get associated ARN.
+			kmsClient := meta.(*conns.AWSClient).KMSConn()
+
+			kmsKeyMetadata, err := kms.FindKeyByID(ctx, kmsClient, v.(string))
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "could not find KMS key based on key alias provided (%s): %s", v.(string), err)
+			}
+
+			log.Printf("[INFO] KMS Key ARN returned: %s", *kmsKeyMetadata.Arn)
+			input.SSEKMSKeyId = aws.String(*kmsKeyMetadata.Arn)
+		} else if strings.HasPrefix(v.(string), "arn:") {
+			log.Printf("[INFO] KMS Key ARN given: %s", v.(string))
+			ValidateARN := verify.ValidARNCheck()
+			warnings, errors := ValidateARN(v.(string), "arn")
+			if len(errors) != 0 {
+				return sdkdiag.AppendErrorf(diags, "%s", errors[0])
+			}
+
+			log.Printf("[INFO] KMS Key ARN compliance errors: %v", errors)
+			log.Printf("[INFO] KMS Key ARN compliance warnings: %v", warnings)
+
+			input.SSEKMSKeyId = aws.String(v.(string))
+		}
+
 		input.ServerSideEncryption = aws.String(s3.ServerSideEncryptionAwsKms)
 	}
 
