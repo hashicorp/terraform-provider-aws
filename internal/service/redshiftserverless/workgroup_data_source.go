@@ -37,14 +37,6 @@ func DataSourceWorkgroup() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"vpc_endpoint_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"vpc_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
 									"network_interface": {
 										Type:     schema.TypeList,
 										Computed: true,
@@ -69,6 +61,14 @@ func DataSourceWorkgroup() *schema.Resource {
 											},
 										},
 									},
+									"vpc_endpoint_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"vpc_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
 								},
 							},
 						},
@@ -77,10 +77,6 @@ func DataSourceWorkgroup() *schema.Resource {
 			},
 			"enhanced_vpc_routing": {
 				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"id": {
-				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"namespace_name": {
@@ -130,19 +126,16 @@ func dataSourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.SetId(workgroupName)
-
 	d.Set("arn", resource.WorkgroupArn)
+	if err := d.Set("endpoint", []interface{}{flattenEndpoint(resource.Endpoint)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
+	}
 	d.Set("enhanced_vpc_routing", resource.EnhancedVpcRouting)
 	d.Set("namespace_name", resource.NamespaceName)
 	d.Set("publicly_accessible", resource.PubliclyAccessible)
 	d.Set("security_group_ids", resource.SecurityGroupIds)
 	d.Set("subnet_ids", resource.SubnetIds)
-
 	d.Set("workgroup_id", resource.WorkgroupId)
-
-	if err := d.Set("endpoint", []interface{}{flattenEndpoint(resource.Endpoint)}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
-	}
 
 	return diags
 }
