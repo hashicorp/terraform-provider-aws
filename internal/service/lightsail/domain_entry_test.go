@@ -49,6 +49,15 @@ func TestAccLightsailDomainEntry_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			// Validate that we can import an existing resource using the legacy separator
+			// Validate that the ID is updated to use the new common separator
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccDomainEntryStateLegacyIdFunc(resourceName),
+				ImportStateVerify: true,
+				Check:             resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s,%s,%s,%s", domainEntryName, domainName, "A", "127.0.0.1")),
+			},
 		},
 	})
 }
@@ -80,6 +89,56 @@ func TestAccLightsailDomainEntry_underscore(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			// Validate that we can import an existing resource using the legacy separator
+			// Validate that the ID is updated to use the new common separator
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccDomainEntryStateLegacyIdFunc(resourceName),
+				ImportStateVerify: true,
+				Check:             resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s,%s,%s,%s", domainEntryName, domainName, "A", "127.0.0.1")),
+			},
+		},
+	})
+}
+
+func TestAccLightsailDomainEntry_apex(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domainEntry lightsail.DomainEntry
+	resourceName := "aws_lightsail_domain_entry.test"
+	domainName := acctest.RandomDomainName()
+	domainEntryName := ""
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainEntryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainEntryConfig_basic(domainName, domainEntryName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDomainEntryExists(ctx, resourceName, &domainEntry),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "name", domainEntryName),
+					resource.TestCheckResourceAttr(resourceName, "target", "127.0.0.1"),
+					resource.TestCheckResourceAttr(resourceName, "type", "A"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Validate that we can import an existing resource using the legacy separator
+			// Validate that the ID is updated to use the new common separator
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccDomainEntryStateLegacyIdFunc(resourceName),
+				ImportStateVerify: true,
+				Check:             resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s,%s,%s,%s", domainEntryName, domainName, "A", "127.0.0.1")),
 			},
 		},
 	})
@@ -200,4 +259,15 @@ resource "aws_lightsail_domain_entry" "test" {
   target      = "127.0.0.1"
 }
 `, domainName, domainEntryName)
+}
+
+func testAccDomainEntryStateLegacyIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s_%s_%s_%s", rs.Primary.Attributes["name"], rs.Primary.Attributes["domain_name"], rs.Primary.Attributes["type"], rs.Primary.Attributes["target"]), nil
+	}
 }
