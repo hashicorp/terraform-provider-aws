@@ -173,64 +173,6 @@ func FindDiskAttachmentById(ctx context.Context, conn *lightsail.Lightsail, id s
 	return out.Disk, nil
 }
 
-func FindDomainEntryById(ctx context.Context, conn *lightsail.Lightsail, id string) (*lightsail.DomainEntry, error) {
-	id_parts := strings.Split(id, "_")
-	idLength := len(id_parts)
-	var index int
-	var name string
-
-	in := &lightsail.GetDomainInput{}
-
-	if idLength <= 3 {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	if idLength == 5 {
-		index = 1
-		name = "_" + id_parts[index]
-	} else {
-		index = 0
-		name = id_parts[index]
-	}
-
-	domainName := id_parts[index+1]
-	entryName := expandDomainEntryName(name, domainName)
-	recordType := id_parts[index+2]
-	recordTarget := id_parts[index+3]
-
-	in.DomainName = aws.String(domainName)
-
-	out, err := conn.GetDomainWithContext(ctx, in)
-
-	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	var entry *lightsail.DomainEntry
-	entryExists := false
-
-	for _, n := range out.Domain.DomainEntries {
-		if entryName == aws.StringValue(n.Name) && recordType == aws.StringValue(n.Type) && recordTarget == aws.StringValue(n.Target) {
-			entry = n
-			entryExists = true
-			break
-		}
-	}
-
-	if !entryExists {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return entry, nil
-}
-
 func FindLoadBalancerByName(ctx context.Context, conn *lightsail.Lightsail, name string) (*lightsail.LoadBalancer, error) {
 	in := &lightsail.GetLoadBalancerInput{LoadBalancerName: aws.String(name)}
 	out, err := conn.GetLoadBalancerWithContext(ctx, in)
@@ -467,7 +409,7 @@ func FindInstanceById(ctx context.Context, conn *lightsail.Lightsail, id string)
 }
 
 func FindBucketAccessKeyById(ctx context.Context, conn *lightsail.Lightsail, id string) (*lightsail.AccessKey, error) {
-	parts, err := flex.ExpandResourceId(id, BucketAccessKeyIdPartsCount)
+	parts, err := flex.ExpandResourceId(id, BucketAccessKeyIdPartsCount, false)
 
 	if err != nil {
 		return nil, err
@@ -506,7 +448,7 @@ func FindBucketAccessKeyById(ctx context.Context, conn *lightsail.Lightsail, id 
 }
 
 func FindBucketResourceAccessById(ctx context.Context, conn *lightsail.Lightsail, id string) (*lightsail.ResourceReceivingAccess, error) {
-	parts, err := flex.ExpandResourceId(id, BucketAccessKeyIdPartsCount)
+	parts, err := flex.ExpandResourceId(id, BucketAccessKeyIdPartsCount, false)
 
 	if err != nil {
 		return nil, err
