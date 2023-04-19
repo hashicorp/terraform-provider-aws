@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_cloudfront_public_key: Update docs for issue with setting value for encoded_key needing newline at the end of value. Otherwise, resource will want to be recreated every run.
-```
