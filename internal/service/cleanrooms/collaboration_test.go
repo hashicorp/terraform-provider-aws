@@ -516,21 +516,22 @@ func testAccCollaboration_configurable(name string, description string, tagValue
 	creatorMemberAbilities string, creatorDisplayName string, queryLogStatus string,
 	dataEncryptionMetadata string, additionalMember string) string {
 	return fmt.Sprintf(`
-	resource "aws_cleanrooms_collaboration" "test" {
-		name = %[1]q
-		creator_member_abilities = %[4]s
-		creator_display_name = %[5]q
-		description = %[2]q
-		query_log_status = %[6]q
+resource "aws_cleanrooms_collaboration" "test" {
+  name                     = %[1]q
+  creator_member_abilities = %[4]s
+  creator_display_name     = %[5]q
+  description              = %[2]q
+  query_log_status         = %[6]q
 
 		%[7]s
 
 		%[8]s
 
-		tags = {
-			Project = %[3]q
-		}
+  tags = {
+    Project = %[3]q
+  }
 }
+
 
 	`, name, description, tagValue, creatorMemberAbilities, creatorDisplayName, queryLogStatus,
 		dataEncryptionMetadata, additionalMember)
