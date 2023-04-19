@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_route: Remove `instance_id` as a configurable argument (although it remains as a computed attribute)
+```
+
+```release-note:note
+resource/aws_route: Since `instance_id` can no longer be set in configurations, use `network_interface_id` instead, for example, set to `aws_instance.test.primary_network_interface_id`
+```
+
+```release-note:breaking-change
+resource/aws_route: `instance_id` cannot be set in configurations
+```
