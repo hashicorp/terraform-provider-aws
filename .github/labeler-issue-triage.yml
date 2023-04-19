@@ -99,10 +99,16 @@ service/chime:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chime_'
 service/chimesdkidentity:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chimesdkidentity_'
+service/chimesdkmediapipelines:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chimesdkmediapipelines_'
 service/chimesdkmeetings:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chimesdkmeetings_'
 service/chimesdkmessaging:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chimesdkmessaging_'
+service/chimesdkvoice:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chimesdkvoice_'
+service/cleanrooms:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cleanrooms_'
 service/cloud9:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloud9_'
 service/cloudcontrol:
@@ -195,6 +201,8 @@ service/dms:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_dms_'
 service/docdb:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_docdb_'
+service/docdbelastic:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_docdbelastic_'
 service/drs:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_drs_'
 service/ds:
@@ -206,7 +214,7 @@ service/dynamodbstreams:
 service/ebs:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ebs_'
 service/ec2:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(ami|availability_zone|ec2_(availability|capacity|fleet|host|instance|serial|spot|tag)|eip|instance|key_pair|launch_template|placement_group|spot)'
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(ami|availability_zone|ec2_(availability|capacity|fleet|host|instance|public_ipv4_pool|serial|spot|tag)|eip|instance|key_pair|launch_template|placement_group|spot)'
 service/ec2ebs:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(ebs_|volume_attach|snapshot_create)'
 service/ec2instanceconnect:
@@ -447,6 +455,8 @@ service/networkmanager:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_networkmanager_'
 service/nimble:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_nimble_'
+service/oam:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_oam_'
 service/opensearch:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_opensearch_'
 service/opensearchserverless:
@@ -557,6 +567,8 @@ service/secretsmanager:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_secretsmanager_'
 service/securityhub:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_securityhub_'
+service/securitylake:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_securitylake_'
 service/serverlessrepo:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_serverlessapplicationrepository_'
 service/servicecatalog:
@@ -627,10 +639,14 @@ service/transitgateway:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ec2_transit_gateway'
 service/translate:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_translate_'
+service/verifiedaccess:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_verifiedaccess'
 service/voiceid:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_voiceid_'
 service/vpc:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_((default_)?(network_acl|route_table|security_group|subnet|vpc(?!_ipam))|ec2_(managed|network|subnet|traffic)|egress_only_internet|flow_log|internet_gateway|main_route_table_association|nat_gateway|network_interface|prefix_list|route\b)'
+service/vpclattice:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_vpclattice_'
 service/vpnclient:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ec2_client_vpn'
 service/vpnsite:

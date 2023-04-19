@@ -2,7 +2,6 @@ package sns
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"regexp"
@@ -24,7 +23,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/jmespath/go-jmespath"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 var (
@@ -152,6 +151,12 @@ var (
 				return json
 			},
 		},
+		"signature_version": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Computed:     true,
+			ValidateFunc: validation.IntBetween(1, 2),
+		},
 		"sqs_failure_feedback_role_arn": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -167,8 +172,14 @@ var (
 			Optional:     true,
 			ValidateFunc: validation.IntBetween(0, 100),
 		},
-		"tags":     tftags.TagsSchema(),
-		"tags_all": tftags.TagsSchemaComputed(),
+		names.AttrTags:    tftags.TagsSchema(),
+		names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		"tracing_config": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Computed:     true,
+			ValidateFunc: validation.StringInSlice(TopicTracingConfig_Values(), false),
+		},
 	}
 
 	topicAttributeMap = attrmap.New(map[string]string{
@@ -192,12 +203,16 @@ var (
 		"lambda_success_feedback_sample_rate":   TopicAttributeNameLambdaSuccessFeedbackSampleRate,
 		"owner":                                 TopicAttributeNameOwner,
 		"policy":                                TopicAttributeNamePolicy,
+		"signature_version":                     TopicAttributeNameSignatureVersion,
 		"sqs_failure_feedback_role_arn":         TopicAttributeNameSQSFailureFeedbackRoleARN,
 		"sqs_success_feedback_role_arn":         TopicAttributeNameSQSSuccessFeedbackRoleARN,
 		"sqs_success_feedback_sample_rate":      TopicAttributeNameSQSSuccessFeedbackSampleRate,
+		"tracing_config":                        TopicAttributeNameTracingConfig,
 	}, topicSchema).WithIAMPolicyAttribute("policy").WithMissingSetToNil("*")
 )
 
+// @SDKResource("aws_sns_topic", name="Topic")
+// @Tags(identifierAttribute="id")
 func ResourceTopic() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicCreate,
@@ -219,9 +234,8 @@ func ResourceTopic() *schema.Resource {
 }
 
 func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	var name string
 	fifoTopic := d.Get("fifo_topic").(bool)
@@ -233,6 +247,7 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	input := &sns.CreateTopicInput{
 		Name: aws.String(name),
+		Tags: GetTagsIn(ctx),
 	}
 
 	attributes, err := topicAttributeMap.ResourceDataToAPIAttributesCreate(d)
@@ -250,10 +265,6 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		delete(attributes, TopicAttributeNameFIFOTopic)
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	output, err := conn.CreateTopicWithContext(ctx, input)
 
 	// Some partitions may not support tag-on-create
@@ -264,40 +275,47 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return diag.Errorf("creating SNS Topic (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SNS Topic (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.TopicArn))
 
-	err = putTopicAttributes(ctx, conn, d.Id(), attributes)
+	// Retry for eventual consistency; if ABAC is in use, this takes some time
+	// usually about 10s, presumably for tags really to be there, and we get a
+	// permissions error.
+	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		return nil, putTopicAttributes(ctx, conn, d.Id(), attributes)
+	}, sns.ErrCodeAuthorizationErrorException, "no identity-based policy allows")
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	// Post-create tagging supported in some partitions
-	if input.Tags == nil && len(tags) > 0 {
-		err := UpdateTags(ctx, conn, d.Id(), nil, tags)
 
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-			// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
-			log.Printf("[WARN] failed adding tags after create for SNS Topic (%s): %s", d.Id(), err)
-			return resourceTopicRead(ctx, d, meta)
-		}
+	if input.Tags == nil {
+		if tags := GetTagsIn(ctx); len(tags) > 0 {
+			err := UpdateTags(ctx, conn, d.Id(), nil, KeyValueTags(ctx, tags))
 
-		if err != nil {
-			return diag.Errorf("adding tags after create for SNS Topic (%s): %s", d.Id(), err)
+			if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+				// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
+				log.Printf("[WARN] failed adding tags after create for SNS Topic (%s): %s", d.Id(), err)
+
+				return append(diags, resourceTopicRead(ctx, d, meta)...)
+			}
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "adding tags after create for SNS Topic (%s): %s", d.Id(), err)
+			}
 		}
 	}
 
-	return resourceTopicRead(ctx, d, meta)
+	return append(diags, resourceTopicRead(ctx, d, meta)...)
 }
 
 func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	attributes, err := FindTopicAttributesByARN(ctx, conn, d.Id())
 
@@ -330,83 +348,7 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		d.Set("name_prefix", create.NamePrefixFromName(name))
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id())
-
-	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		// ISO partitions may not support tagging, giving error
-		log.Printf("[WARN] failed listing tags for SNS Topic (%s): %s", d.Id(), err)
-		return nil
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for SNS Topic (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return nil
-}
-
-// policyHasValidAWSPrincipals validates that the Principals in an IAM Policy are valid
-// Assumes that non-"AWS" Principals are valid
-// The value can be a single string or a slice of strings
-// Valid strings are either an ARN or an AWS account ID
-func policyHasValidAWSPrincipals(policy string) (bool, error) { // nosemgrep:ci.aws-in-func-name
-	var policyData any
-	err := json.Unmarshal([]byte(policy), &policyData)
-	if err != nil {
-		return false, fmt.Errorf("parsing policy: %w", err)
-	}
-
-	result, err := jmespath.Search("Statement[*].Principal.AWS", policyData)
-	if err != nil {
-		return false, fmt.Errorf("parsing policy: %w", err)
-	}
-
-	principals, ok := result.([]any)
-	if !ok {
-		return false, fmt.Errorf(`parsing policy: unexpected result: (%[1]T) "%[1]v"`, result)
-	}
-
-	for _, principal := range principals {
-		switch x := principal.(type) {
-		case string:
-			if !isValidAWSPrincipal(x) {
-				return false, nil
-			}
-		case []string:
-			for _, s := range x {
-				if !isValidAWSPrincipal(s) {
-					return false, nil
-				}
-			}
-		}
-	}
-
-	return true, nil
-}
-
-// isValidAWSPrincipal returns true if a string is either an ARN, an AWS account ID, or `*`
-func isValidAWSPrincipal(principal string) bool { // nosemgrep:ci.aws-in-func-name
-	if principal == "*" {
-		return true
-	}
-	if arn.IsARN(principal) {
-		return true
-	}
-	if regexp.MustCompile(`^\d{12}$`).MatchString(principal) {
-		return true
-	}
-	return false
 }
 
 func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -423,22 +365,6 @@ func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		if err != nil {
 			return diag.FromErr(err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := UpdateTags(ctx, conn, d.Id(), o, n)
-
-		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
-			// ISO partitions may not support tagging, giving error
-			log.Printf("[WARN] failed updating tags for SNS Topic (%s): %s", d.Id(), err)
-			return resourceTopicRead(ctx, d, meta)
-		}
-
-		if err != nil {
-			return diag.Errorf("updating tags for SNS Topic (%s): %s", d.Id(), err)
 		}
 	}
 

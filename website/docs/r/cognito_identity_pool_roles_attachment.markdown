@@ -22,55 +22,54 @@ resource "aws_cognito_identity_pool" "main" {
   }
 }
 
-resource "aws_iam_role" "authenticated" {
-  name = "cognito_authenticated"
+data "aws_iam_policy_document" "authenticated" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Federated": "cognito-identity.amazonaws.com"
-      },
-      "Action": "sts:AssumeRoleWithWebIdentity",
-      "Condition": {
-        "StringEquals": {
-          "cognito-identity.amazonaws.com:aud": "${aws_cognito_identity_pool.main.id}"
-        },
-        "ForAnyValue:StringLike": {
-          "cognito-identity.amazonaws.com:amr": "authenticated"
-        }
-      }
+    principals {
+      type        = "Federated"
+      identifiers = ["cognito-identity.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "cognito-identity.amazonaws.com:aud"
+      values   = [aws_cognito_identity_pool.main.id]
+    }
+
+    condition {
+      test     = "ForAnyValue:StringLike"
+      variable = "cognito-identity.amazonaws.com:amr"
+      values   = ["authenticated"]
+    }
+  }
 }
-EOF
+
+resource "aws_iam_role" "authenticated" {
+  name               = "cognito_authenticated"
+  assume_role_policy = data.aws_iam_policy_document.authenticated.json
+}
+
+data "aws_iam_policy_document" "authenticated_role_policy" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "mobileanalytics:PutEvents",
+      "cognito-sync:*",
+      "cognito-identity:*",
+    ]
+
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_role_policy" "authenticated" {
-  name = "authenticated_policy"
-  role = aws_iam_role.authenticated.id
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "mobileanalytics:PutEvents",
-        "cognito-sync:*",
-        "cognito-identity:*"
-      ],
-      "Resource": [
-        "*"
-      ]
-    }
-  ]
-}
-EOF
+  name   = "authenticated_policy"
+  role   = aws_iam_role.authenticated.id
+  policy = data.aws_iam_policy_document.authenticated_role_policy.json
 }
 
 resource "aws_cognito_identity_pool_roles_attachment" "main" {

@@ -25,7 +25,7 @@ func TestAccRDSClusterRoleAssociation_basic(t *testing.T) {
 	resourceName := "aws_rds_cluster_role_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterRoleAssociationDestroy(ctx),
@@ -55,7 +55,7 @@ func TestAccRDSClusterRoleAssociation_disappears(t *testing.T) {
 	resourceName := "aws_rds_cluster_role_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterRoleAssociationDestroy(ctx),
@@ -80,7 +80,7 @@ func TestAccRDSClusterRoleAssociation_Disappears_cluster(t *testing.T) {
 	clusterResourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterRoleAssociationDestroy(ctx),
@@ -105,7 +105,7 @@ func TestAccRDSClusterRoleAssociation_Disappears_role(t *testing.T) {
 	roleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterRoleAssociationDestroy(ctx),
@@ -131,7 +131,6 @@ func testAccCheckClusterRoleAssociationExists(ctx context.Context, resourceName 
 		}
 
 		dbClusterID, roleARN, err := tfrds.ClusterRoleAssociationParseResourceID(rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
@@ -139,7 +138,6 @@ func testAccCheckClusterRoleAssociationExists(ctx context.Context, resourceName 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 		role, err := tfrds.FindDBClusterRoleByDBClusterIDAndRoleARN(ctx, conn, dbClusterID, roleARN)
-
 		if err != nil {
 			return err
 		}
@@ -160,7 +158,6 @@ func testAccCheckClusterRoleAssociationDestroy(ctx context.Context) resource.Tes
 			}
 
 			dbClusterID, roleARN, err := tfrds.ClusterRoleAssociationParseResourceID(rs.Primary.ID)
-
 			if err != nil {
 				return err
 			}

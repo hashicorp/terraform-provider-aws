@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -20,6 +20,7 @@ import (
 
 const EmptyBasePathMappingValue = "(none)"
 
+// @SDKResource("aws_api_gateway_base_path_mapping")
 func ResourceBasePathMapping() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBasePathMappingCreate,
@@ -62,15 +63,15 @@ func resourceBasePathMappingCreate(ctx context.Context, d *schema.ResourceData, 
 		Stage:      aws.String(d.Get("stage_name").(string)),
 	}
 
-	err := resource.RetryContext(ctx, 30*time.Second, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 30*time.Second, func() *retry.RetryError {
 		_, err := conn.CreateBasePathMappingWithContext(ctx, input)
 
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeBadRequestException) {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		return nil

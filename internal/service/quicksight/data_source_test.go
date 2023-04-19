@@ -3,7 +3,6 @@ package quicksight_test
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"regexp"
 	"testing"
 
@@ -12,223 +11,11 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 )
-
-func TestDataSourcePermissionsDiff(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		name            string
-		oldPermissions  []interface{}
-		newPermissions  []interface{}
-		expectedGrants  []*quicksight.ResourcePermission
-		expectedRevokes []*quicksight.ResourcePermission
-	}{
-		{
-			name:            "no changes;empty",
-			oldPermissions:  []interface{}{},
-			newPermissions:  []interface{}{},
-			expectedGrants:  nil,
-			expectedRevokes: nil,
-		},
-		{
-			name: "no changes;same",
-			oldPermissions: []interface{}{
-				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action1",
-						"action2",
-					}),
-				},
-			},
-			newPermissions: []interface{}{
-				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action1",
-						"action2",
-					}),
-				}},
-
-			expectedGrants:  nil,
-			expectedRevokes: nil,
-		},
-		{
-			name:           "grant only",
-			oldPermissions: []interface{}{},
-			newPermissions: []interface{}{
-				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action1",
-						"action2",
-					}),
-				},
-			},
-			expectedGrants: []*quicksight.ResourcePermission{
-				{
-					Actions:   aws.StringSlice([]string{"action1", "action2"}),
-					Principal: aws.String("principal1"),
-				},
-			},
-			expectedRevokes: nil,
-		},
-		{
-			name: "revoke only",
-			oldPermissions: []interface{}{
-				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action1",
-						"action2",
-					}),
-				},
-			},
-			newPermissions: []interface{}{},
-			expectedGrants: nil,
-			expectedRevokes: []*quicksight.ResourcePermission{
-				{
-					Actions:   aws.StringSlice([]string{"action1", "action2"}),
-					Principal: aws.String("principal1"),
-				},
-			},
-		},
-		{
-			name: "grant new action",
-			oldPermissions: []interface{}{
-				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action1",
-					}),
-				},
-			},
-			newPermissions: []interface{}{
-				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action1",
-						"action2",
-					}),
-				},
-			},
-			expectedGrants: []*quicksight.ResourcePermission{
-				{
-					Actions:   aws.StringSlice([]string{"action2"}),
-					Principal: aws.String("principal1"),
-				},
-			},
-			expectedRevokes: nil,
-		},
-		{
-			name: "revoke old action",
-			oldPermissions: []interface{}{
-				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"oldAction",
-						"onlyOldAction",
-					}),
-				},
-			},
-			newPermissions: []interface{}{
-				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"oldAction",
-					}),
-				},
-			},
-			expectedGrants: nil,
-			expectedRevokes: []*quicksight.ResourcePermission{
-				{
-					Actions:   aws.StringSlice([]string{"onlyOldAction"}),
-					Principal: aws.String("principal1"),
-				},
-			},
-		},
-		{
-			name: "multiple permissions",
-			oldPermissions: []interface{}{
-				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action1",
-						"action2",
-					}),
-				},
-				map[string]interface{}{
-					"principal": "principal2",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action1",
-						"action3",
-						"action4",
-					}),
-				},
-				map[string]interface{}{
-					"principal": "principal3",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action5",
-					}),
-				},
-			},
-			newPermissions: []interface{}{
-				map[string]interface{}{
-					"principal": "principal1",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action1",
-						"action2",
-					}),
-				},
-				map[string]interface{}{
-					"principal": "principal2",
-					"actions": schema.NewSet(schema.HashString, []interface{}{
-						"action3",
-						"action5",
-					}),
-				},
-			},
-			expectedGrants: []*quicksight.ResourcePermission{
-				{
-					Actions:   aws.StringSlice([]string{"action5"}),
-					Principal: aws.String("principal2"),
-				},
-			},
-			expectedRevokes: []*quicksight.ResourcePermission{
-				{
-					Actions:   aws.StringSlice([]string{"action1", "action4"}),
-					Principal: aws.String("principal2"),
-				},
-				{
-					Actions:   aws.StringSlice([]string{"action5"}),
-					Principal: aws.String("principal3"),
-				},
-			},
-		},
-	}
-
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
-
-			toGrant, toRevoke := tfquicksight.DiffPermissions(testCase.oldPermissions, testCase.newPermissions)
-			if !reflect.DeepEqual(toGrant, testCase.expectedGrants) {
-				t.Fatalf("Expected: %v, got: %v", testCase.expectedGrants, toGrant)
-			}
-
-			if !reflect.DeepEqual(toRevoke, testCase.expectedRevokes) {
-				t.Fatalf("Expected: %v, got: %v", testCase.expectedRevokes, toRevoke)
-			}
-		})
-	}
-}
 
 func TestAccQuickSightDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -238,7 +25,7 @@ func TestAccQuickSightDataSource_basic(t *testing.T) {
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
@@ -276,7 +63,7 @@ func TestAccQuickSightDataSource_disappears(t *testing.T) {
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
@@ -301,7 +88,7 @@ func TestAccQuickSightDataSource_tags(t *testing.T) {
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
@@ -348,7 +135,7 @@ func TestAccQuickSightDataSource_permissions(t *testing.T) {
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
@@ -482,12 +269,36 @@ resource "aws_s3_bucket" "test" {
   force_destroy = true
 }
 
+resource "aws_s3_bucket_public_access_block" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_ownership_controls" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_acl" "test" {
+  depends_on = [
+    aws_s3_bucket_public_access_block.test,
+    aws_s3_bucket_ownership_controls.test,
+  ]
+
   bucket = aws_s3_bucket.test.id
   acl    = "public-read"
 }
 
 resource "aws_s3_object" "test" {
+  depends_on = [aws_s3_bucket_acl.test]
+
   bucket  = aws_s3_bucket.test.bucket
   key     = %[1]q
   content = <<EOF

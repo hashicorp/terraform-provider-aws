@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -52,8 +53,8 @@ func TestAccGameLiftGameSessionQueue_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
@@ -118,8 +119,8 @@ func TestAccGameLiftGameSessionQueue_tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
@@ -180,8 +181,8 @@ func TestAccGameLiftGameSessionQueue_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
@@ -270,7 +271,7 @@ func testAccCheckGameSessionQueueDestroy(ctx context.Context) resource.TestCheck
 			}
 
 			// Deletions can take a few seconds
-			err := resource.RetryContext(ctx, 30*time.Second, func() *resource.RetryError {
+			err := retry.RetryContext(ctx, 30*time.Second, func() *retry.RetryError {
 				out, err := conn.DescribeGameSessionQueuesWithContext(ctx, input)
 
 				if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
@@ -278,13 +279,13 @@ func testAccCheckGameSessionQueueDestroy(ctx context.Context) resource.TestCheck
 				}
 
 				if err != nil {
-					return resource.NonRetryableError(err)
+					return retry.NonRetryableError(err)
 				}
 
 				attributes := out.GameSessionQueues
 
 				if len(attributes) > 0 {
-					return resource.RetryableError(fmt.Errorf("gamelift Session Queue still exists"))
+					return retry.RetryableError(fmt.Errorf("gamelift Session Queue still exists"))
 				}
 
 				return nil

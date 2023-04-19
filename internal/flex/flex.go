@@ -2,6 +2,7 @@ package flex
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -29,11 +30,14 @@ func ExpandStringList(configured []interface{}) []*string {
 // ExpandStringValueList takes the result of flatmap.Expand for an array of strings
 // and returns a []string
 func ExpandStringValueList(configured []interface{}) []string {
-	vs := make([]string, 0, len(configured))
+	return ExpandStringyValueList[string](configured)
+}
+
+func ExpandStringyValueList[E ~string](configured []any) []E {
+	vs := make([]E, 0, len(configured))
 	for _, v := range configured {
-		val, ok := v.(string)
-		if ok && val != "" {
-			vs = append(vs, v.(string))
+		if val, ok := v.(string); ok && val != "" {
+			vs = append(vs, E(val))
 		}
 	}
 	return vs
@@ -61,11 +65,20 @@ func FlattenStringValueList(list []string) []interface{} {
 	return vs
 }
 
-// Expands a map of string to interface to a map of string to *int32
+// Expands a map of string to interface to a map of string to int32
 func ExpandInt32Map(m map[string]interface{}) map[string]int32 {
 	intMap := make(map[string]int32, len(m))
 	for k, v := range m {
 		intMap[k] = int32(v.(int))
+	}
+	return intMap
+}
+
+// Expands a map of string to interface to a map of string to *int64
+func ExpandInt64Map(m map[string]interface{}) map[string]*int64 {
+	intMap := make(map[string]*int64, len(m))
+	for k, v := range m {
+		intMap[k] = aws.Int64(int64(v.(int)))
 	}
 	return intMap
 }
@@ -104,6 +117,10 @@ func ExpandStringSet(configured *schema.Set) []*string {
 
 func ExpandStringValueSet(configured *schema.Set) []string {
 	return ExpandStringValueList(configured.List()) // nosemgrep:ci.helper-schema-Set-extraneous-ExpandStringList-with-List
+}
+
+func ExpandStringyValueSet[E ~string](configured *schema.Set) []E {
+	return ExpandStringyValueList[E](configured.List())
 }
 
 func FlattenStringSet(list []*string) *schema.Set {
@@ -206,4 +223,10 @@ func FlattenResourceId(idParts []string, partCount int) (string, error) {
 	}
 
 	return strings.Join(idParts, ResourceIdSeparator), nil
+}
+
+// StringToBoolValue converts a string pointer to a Go bool value.
+// Only the string "true" is converted to true, all other values return false.
+func StringToBoolValue(v *string) bool {
+	return aws.StringValue(v) == strconv.FormatBool(true)
 }
