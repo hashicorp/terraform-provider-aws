@@ -23,11 +23,11 @@ func DataSourceAccessKeys() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"create_date": {
+						"access_key_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						"create_date": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -54,8 +54,8 @@ func dataSourceAccessKeysRead(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).IAMConn()
 
 	username := d.Get("user").(string)
-
 	out, err := FindAccessKeys(ctx, conn, username)
+
 	if err != nil {
 		return create.DiagError(names.IAM, create.ErrActionReading, DSNameAccessKeys, username, err)
 	}
@@ -93,11 +93,11 @@ func flattenAccessKey(apiObject *iam.AccessKeyMetadata) map[string]interface{} {
 
 	m := map[string]interface{}{}
 
+	if v := apiObject.AccessKeyId; v != nil {
+		m["access_key_id"] = aws.ToString(v)
+	}
 	if v := apiObject.CreateDate; v != nil {
 		m["create_date"] = aws.ToTime(v).Format(time.RFC3339)
-	}
-	if v := apiObject.AccessKeyId; v != nil {
-		m["id"] = aws.ToString(v)
 	}
 	if v := apiObject.Status; v != nil {
 		m["status"] = aws.ToString(v)

@@ -33,6 +33,6 @@ In addition to all arguments above, the following attributes are exported:
 
 The elements of the `access_keys` are exported with the following attributes:
 
+* `access_key_id` - Access key ID.
 * `create_date` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the access key was created.
-* `id` - Access key ID.
 * `status` - Access key status. Possible values are `Active` and `Inactive`.

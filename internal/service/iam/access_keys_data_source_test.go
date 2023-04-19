@@ -18,7 +18,7 @@ func TestAccIAMAccessKeysDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, iam.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
@@ -30,7 +30,7 @@ func TestAccIAMAccessKeysDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "access_keys.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "access_keys.0.create_date", resourceName, "create_date"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "access_keys.0.id", resourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "access_keys.0.access_key_id", resourceName, "id"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "access_keys.0.status", resourceName, "status"),
 				),
 			},
@@ -47,7 +47,7 @@ func TestAccIAMAccessKeysDataSource_twoKeys(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, iam.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
@@ -58,8 +58,8 @@ func TestAccIAMAccessKeysDataSource_twoKeys(t *testing.T) {
 				Config: testAccAccessKeysDataSourceConfig_twoKeys(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "access_keys.#", "2"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "access_keys.*.id", resourceName1, "id"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "access_keys.*.id", resourceName2, "id"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "access_keys.*.access_key_id", resourceName1, "id"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "access_keys.*.access_key_id", resourceName2, "id"),
 				),
 			},
 		},
