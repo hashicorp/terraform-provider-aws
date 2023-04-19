@@ -161,6 +161,10 @@ func ResourceTaskSet() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"primary": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"scale": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -352,6 +356,20 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
+	if d.Get("primary").(bool) {
+		input := &ecs.UpdateServicePrimaryTaskSetInput{
+			Cluster:        aws.String(cluster),
+			Service:        aws.String(service),
+			PrimaryTaskSet: aws.String(taskSetId),
+		}
+
+		_, err := conn.UpdateServicePrimaryTaskSetWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating ECS Service Primary Task Set (%s): %s", d.Id(), err)
+		}
+	}
+
 	return append(diags, resourceTaskSetRead(ctx, d, meta)...)
 }
 
@@ -413,6 +431,7 @@ func resourceTaskSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("stability_status", taskSet.StabilityStatus)
 	d.Set("task_definition", taskSet.TaskDefinition)
 	d.Set("task_set_id", taskSet.Id)
+	d.Set("primary", aws.StringValue(taskSet.Status) == "PRIMARY")
 
 	if err := d.Set("capacity_provider_strategy", flattenCapacityProviderStrategy(taskSet.CapacityProviderStrategy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting capacity_provider_strategy: %s", err)
@@ -469,6 +488,21 @@ func resourceTaskSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				return sdkdiag.AppendErrorf(diags, "waiting for ECS Task Set (%s) to be stable after update: %s", d.Id(), err)
 			}
 		}
+
+		if d.Get("primary").(bool) {
+			input := &ecs.UpdateServicePrimaryTaskSetInput{
+				Cluster:        aws.String(cluster),
+				Service:        aws.String(service),
+				PrimaryTaskSet: aws.String(taskSetId),
+			}
+
+			_, err := conn.UpdateServicePrimaryTaskSetWithContext(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating ECS Service Primary Task Set (%s): %s", d.Id(), err)
+			}
+		}
+
 	}
 
 	return append(diags, resourceTaskSetRead(ctx, d, meta)...)
