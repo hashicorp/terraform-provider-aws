@@ -2,7 +2,6 @@ package vpclattice
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -76,9 +75,8 @@ func ResourceListenerRule() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"status_code": {
-										Type:         schema.TypeInt,
-										Required:     true,
-										ValidateFunc: validation.IntBetween(100, 599),
+										Type:     schema.TypeInt,
+										Required: true,
 									},
 								},
 							},
@@ -214,13 +212,12 @@ func ResourceListenerRule() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(3, 128),
+				ValidateFunc: validation.StringLenBetween(3, 63),
 			},
 			"priority": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-				ForceNew: false,
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntBetween(1, 100),
 			},
 
 			"rule_id": {
@@ -352,7 +349,6 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	if err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameListenerRule, d.Id(), err)
 	}
-	fmt.Println("Pupulating")
 
 	d.Set("arn", out.Arn)
 	d.Set("priority", out.Priority)
@@ -468,7 +464,7 @@ func flattenRuleAction(apiObject types.RuleAction) map[string]interface{} {
 	tfMap := make(map[string]interface{})
 
 	if v, ok := apiObject.(*types.RuleActionMemberFixedResponse); ok {
-		tfMap["fixed_response"] = flattenRuleActionMemberFixedResponse(v)
+		tfMap["fixed_response"] = []interface{}{flattenRuleActionMemberFixedResponse(v)}
 	}
 	if v, ok := apiObject.(*types.RuleActionMemberForward); ok {
 		tfMap["forward"] = []interface{}{flattenForwardAction(v)}
@@ -606,7 +602,7 @@ func flattenHeaderMatch(apiObject *types.HeaderMatch) map[string]interface{} {
 	if v := apiObject.Match; v != nil {
 		tfMap["match"] = []interface{}{flattenHeaderMatchType(v)}
 	}
-	fmt.Println(tfMap)
+
 	return tfMap
 }
 func flattenHeaderMatchType(apiObject types.HeaderMatchType) map[string]interface{} {
@@ -623,7 +619,7 @@ func flattenHeaderMatchType(apiObject types.HeaderMatchType) map[string]interfac
 	} else if v, ok := apiObject.(*types.HeaderMatchTypeMemberPrefix); ok {
 		return flattenHeaderMatchTypeMemberPrefix(v)
 	}
-	fmt.Println(tfMap)
+
 	return tfMap
 }
 
@@ -636,7 +632,6 @@ func flattenHeaderMatchTypeMemberContains(apiObject *types.HeaderMatchTypeMember
 		"contains": apiObject.Value,
 	}
 
-	fmt.Println(tfMap)
 	return tfMap
 }
 
@@ -695,7 +690,6 @@ func flattenPathMatchType(apiObject types.PathMatchType) map[string]interface{} 
 		return flattenPathMatchTypeMemberPrefix(v)
 	}
 
-	fmt.Println(tfMap)
 	return tfMap
 }
 
@@ -738,7 +732,7 @@ func expandRuleAction(tfMap map[string]interface{}) types.RuleAction {
 func expandFixedResponseAction(tfMap map[string]interface{}) *types.RuleActionMemberFixedResponse {
 	apiObject := &types.RuleActionMemberFixedResponse{}
 
-	if v, ok := tfMap["status"].(int); ok && v != 0 {
+	if v, ok := tfMap["status_code"].(int); ok && v != 0 {
 		apiObject.Value.StatusCode = aws.Int32(int32(v))
 	}
 
@@ -792,18 +786,12 @@ func expandWeightedTargetGroup(tfMap map[string]interface{}) types.WeightedTarge
 }
 
 func expandRuleMatch(tfMap map[string]interface{}) types.RuleMatch {
-	fmt.Println("Running Expand Rule Match")
 	apiObject := &types.RuleMatchMemberHttpMatch{}
 
 	if v, ok := tfMap["http_match"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Value = expandHttpMatch(v[0].(map[string]interface{}))
 
 	}
-	j, err := json.Marshal(apiObject)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("Returning from expandRuleMatch:", string(j))
 
 	return apiObject
 }
@@ -822,11 +810,7 @@ func expandHttpMatch(tfMap map[string]interface{}) types.HttpMatch {
 	if v, ok := tfMap["path_match"].([]interface{}); ok && len(v) > 0 && v != nil {
 		apiObject.PathMatch = expandPathMatch(v[0].(map[string]interface{}))
 	}
-	j, err := json.Marshal(apiObject)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("Returning from expandHttpMatch:", string(j))
+
 	return apiObject
 }
 
@@ -845,11 +829,6 @@ func expandHeaderMatches(tfList []interface{}) []types.HeaderMatch {
 		}
 
 		apiObject := expandHeaderMatch(tfMap)
-		j, err := json.Marshal(expandHeaderMatch(tfMap))
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println("Returning from defaultAction:", string(j))
 
 		apiObjects = append(apiObjects, apiObject)
 	}
