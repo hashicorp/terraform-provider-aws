@@ -169,7 +169,7 @@ func PointersMapToStringList(pointers map[string]*string) map[string]interface{}
 	return list
 }
 
-// Takes a string of resource attributes separated by the ResourceIdSeparator constant and an expected number of Id Parts
+// Takes a string of resource attributes separated by the ResourceIdSeparator constant, an expected number of Id Parts, and a boolean specifying if empty parts are to be allowed
 // Returns a list of the resource attributes strings used to construct the unique Id or an error message if the resource id does not parse properly
 func ExpandResourceId(id string, partCount int, allowEmptyPart bool) ([]string, error) {
 	idParts := strings.Split(id, ResourceIdSeparator)
@@ -199,7 +199,7 @@ func ExpandResourceId(id string, partCount int, allowEmptyPart bool) ([]string, 
 	return idParts, nil
 }
 
-// Takes a list of the resource attributes as strings used to construct the unique Id and an expected number of Id Parts
+// Takes a list of the resource attributes as strings used to construct the unique Id, an expected number of Id Parts, and a boolean specifying if empty parts are to be allowed
 // Returns a string of resource attributes separated by the ResourceIdSeparator constant or an error message if the id parts do not parse properly
 func FlattenResourceId(idParts []string, partCount int, allowEmptyPart bool) (string, error) {
 	if len(idParts) <= 1 {
