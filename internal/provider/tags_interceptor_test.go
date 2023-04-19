@@ -2,9 +2,11 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -40,10 +42,10 @@ func (t *mockService) ListTags(ctx context.Context, meta any, identifier string)
 		inContext.TagsOut = types.Some(tags)
 	}
 
-	return nil
+	return errors.New("test error")
 }
 
-func (t *mockService) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+func (t *mockService) UpdateTags(context.Context, any, string, string, any) error {
 	return nil
 }
 
@@ -56,7 +58,11 @@ func TestTagsInterceptor(t *testing.T) {
 		IdentifierAttribute: "id",
 	}
 
-	tags := tagsInterceptor{tags: sp}
+	tags := tagsInterceptor{
+		tags:     sp,
+		listFunc: tagsListFunc,
+		readFunc: tagsReadFunc,
+	}
 
 	interceptors = append(interceptors, interceptorItem{
 		when:        Finally,
@@ -85,13 +91,15 @@ func TestTagsInterceptor(t *testing.T) {
 		return ctx
 	}
 
-	ctx := context.Background()
-	ctx = bootstrapContext(ctx, conn)
+	ctx := bootstrapContext(context.Background(), conn)
 	d := &resourceData{}
 
-	_, diags := finalTagsUpdate(ctx, d, &mockService{}, sp, "TestService", "Test", conn)
-	if got, want := len(diags), 0; got != want {
-		t.Errorf("length of diags = %v, want %v", got, want)
+	for _, v := range interceptors {
+		var diags diag.Diagnostics
+		_, diags = v.interceptor.run(ctx, d, conn, v.when, v.why, diags)
+		if got, want := len(diags), 1; got != want {
+			t.Errorf("length of diags = %v, want %v", got, want)
+		}
 	}
 }
 
@@ -127,4 +135,12 @@ func (d *resourceData) Id() string {
 
 func (d *resourceData) Set(string, any) error {
 	return nil
+}
+
+func (d *resourceData) GetChange(key string) (interface{}, interface{}) {
+	return nil, nil
+}
+
+func (d *resourceData) HasChange(key string) bool {
+	return false
 }

@@ -17,21 +17,21 @@ func TestInterceptorsWhy(t *testing.T) {
 	interceptors = append(interceptors, interceptorItem{
 		when: Before,
 		why:  Create,
-		interceptor: interceptorFunc(func(ctx context.Context, d *schema.ResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+		interceptor: interceptorFunc(func(ctx context.Context, d resourceDiff, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 			return ctx, diags
 		}),
 	})
 	interceptors = append(interceptors, interceptorItem{
 		when: After,
 		why:  Delete,
-		interceptor: interceptorFunc(func(ctx context.Context, d *schema.ResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+		interceptor: interceptorFunc(func(ctx context.Context, d resourceDiff, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 			return ctx, diags
 		}),
 	})
 	interceptors = append(interceptors, interceptorItem{
 		when: Before,
 		why:  Create,
-		interceptor: interceptorFunc(func(ctx context.Context, d *schema.ResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+		interceptor: interceptorFunc(func(ctx context.Context, d resourceDiff, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 			return ctx, diags
 		}),
 	})
@@ -58,21 +58,21 @@ func TestInterceptedHandler(t *testing.T) {
 	interceptors = append(interceptors, interceptorItem{
 		when: Before,
 		why:  Create,
-		interceptor: interceptorFunc(func(ctx context.Context, d *schema.ResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+		interceptor: interceptorFunc(func(ctx context.Context, d resourceDiff, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 			return ctx, diags
 		}),
 	})
 	interceptors = append(interceptors, interceptorItem{
 		when: After,
 		why:  Delete,
-		interceptor: interceptorFunc(func(ctx context.Context, d *schema.ResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+		interceptor: interceptorFunc(func(ctx context.Context, d resourceDiff, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 			return ctx, diags
 		}),
 	})
 	interceptors = append(interceptors, interceptorItem{
 		when: Before,
 		why:  Create,
-		interceptor: interceptorFunc(func(ctx context.Context, d *schema.ResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+		interceptor: interceptorFunc(func(ctx context.Context, d resourceDiff, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 			return ctx, diags
 		}),
 	})

@@ -23,12 +23,12 @@ import (
 // no further interceptors in the chain are run and neither is the schema's method.
 // In other cases all interceptors in the chain are run.
 type interceptor interface {
-	run(context.Context, *schema.ResourceData, any, when, why, diag.Diagnostics) (context.Context, diag.Diagnostics)
+	run(context.Context, resourceDiff, any, when, why, diag.Diagnostics) (context.Context, diag.Diagnostics)
 }
 
-type interceptorFunc func(context.Context, *schema.ResourceData, any, when, why, diag.Diagnostics) (context.Context, diag.Diagnostics)
+type interceptorFunc func(context.Context, resourceDiff, any, when, why, diag.Diagnostics) (context.Context, diag.Diagnostics)
 
-func (f interceptorFunc) run(ctx context.Context, d *schema.ResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+func (f interceptorFunc) run(ctx context.Context, d resourceDiff, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 	return f(ctx, d, meta, when, why, diags)
 }
 
@@ -179,7 +179,7 @@ func (r *wrappedResource) StateUpgrade(f schema.StateUpgradeFunc) schema.StateUp
 	}
 }
 
-type tagsCRUDFunc func(context.Context, *schema.ResourceData, conns.ServicePackage, *types.ServicePackageResourceTags, string, string, any, diag.Diagnostics) (context.Context, diag.Diagnostics)
+type tagsCRUDFunc func(context.Context, resourceDiff, conns.ServicePackage, *types.ServicePackageResourceTags, string, string, any, diag.Diagnostics) (context.Context, diag.Diagnostics)
 
 // tagsInterceptor implements transparent tagging.
 type tagsInterceptor struct {
@@ -188,7 +188,7 @@ type tagsInterceptor struct {
 	readFunc tagsCRUDFunc
 }
 
-func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+func (r tagsInterceptor) run(ctx context.Context, d resourceDiff, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 	if r.tags == nil {
 		return ctx, diags
 	}
@@ -364,126 +364,7 @@ type resourceDiff interface {
 	GetRawPlan() cty.Value
 	GetRawConfig() cty.Value
 	GetRawState() cty.Value
+	GetChange(key string) (interface{}, interface{})
+	HasChange(key string) bool
 	Set(string, any) error
-}
-
-func finalTagsUpdate(ctx context.Context, d resourceDiff, sp conns.ServicePackage, r *types.ServicePackageResourceTags, serviceName, resourceName string, meta any) (context.Context, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	inContext, ok := conns.FromContext(ctx)
-	if !ok {
-		return ctx, diags
-	}
-
-	tagsInContext, ok := tftags.FromContext(ctx)
-	if !ok {
-		return ctx, diags
-	}
-
-	if !d.GetRawPlan().GetAttr("tags_all").IsWhollyKnown() {
-		configTags := make(map[string]string)
-		if config := d.GetRawConfig(); !config.IsNull() && config.IsKnown() {
-			c := config.GetAttr("tags")
-			if !c.IsNull() {
-				for k, v := range c.AsValueMap() {
-					configTags[k] = v.AsString()
-				}
-			}
-		}
-
-		stateTags := make(map[string]string)
-		if state := d.GetRawState(); !state.IsNull() && state.IsKnown() {
-			s := state.GetAttr("tags_all")
-			for k, v := range s.AsValueMap() {
-				stateTags[k] = v.AsString()
-			}
-		}
-
-		tagsAll := tftags.New(ctx, stateTags)
-		// if tags_all was computed because not wholly known
-		// Merge the resource's configured tags with any provider configured default_tags.
-		configAll := tagsInContext.DefaultConfig.MergeTags(tftags.New(ctx, configTags))
-		// Remove system tags.
-		configAll = configAll.IgnoreSystem(inContext.ServicePackageName)
-
-		toAdd := configAll.Difference(tagsAll)
-		toRemove := tagsAll.Difference(configAll)
-
-		var identifier string
-		if identifierAttribute := r.IdentifierAttribute; identifierAttribute == "id" {
-			identifier = d.Id()
-		} else {
-			identifier = d.Get(identifierAttribute).(string)
-		}
-		// If the service package has a generic resource update tags methods, call it.
-		var err error
-
-		if v, ok := sp.(interface {
-			UpdateTags(context.Context, any, string, any, any) error
-		}); ok {
-			err = v.UpdateTags(ctx, meta, identifier, toRemove, toAdd)
-		} else if v, ok := sp.(interface {
-			UpdateTags(context.Context, any, string, string, any, any) error
-		}); ok && r.ResourceType != "" {
-			err = v.UpdateTags(ctx, meta, identifier, r.ResourceType, toRemove, toAdd)
-		}
-
-		if verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
-			// ISO partitions may not support tagging, giving error
-			tflog.Warn(ctx, "failed updating tags for resource", map[string]interface{}{
-				r.IdentifierAttribute: identifier,
-				"error":               err.Error(),
-			})
-
-			return ctx, diags
-		}
-
-		if err != nil {
-			return ctx, sdkdiag.AppendErrorf(diags, "updating tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
-		}
-
-		if v, ok := sp.(interface {
-			ListTags(context.Context, any, string) error
-		}); ok {
-			err = v.ListTags(ctx, meta, identifier) // Sets tags in Context
-		} else if v, ok := sp.(interface {
-			ListTags(context.Context, any, string, string) error
-		}); ok && r.ResourceType != "" {
-			err = v.ListTags(ctx, meta, identifier, r.ResourceType) // Sets tags in Context
-		}
-
-		if verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
-			// ISO partitions may not support tagging, giving error
-			tflog.Warn(ctx, "failed listing tags for resource", map[string]interface{}{
-				r.IdentifierAttribute: d.Id(),
-				"error":               err.Error(),
-			})
-			return ctx, diags
-		}
-
-		if inContext.ServicePackageName == names.DynamoDB && err != nil {
-			// When a DynamoDB Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`.
-			if tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
-				err = nil
-			}
-		}
-
-		if err != nil {
-			return ctx, sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
-		}
-
-		// Remove any provider configured ignore_tags and system tags from those returned from the service API.
-		toAdd = tagsInContext.TagsOut.UnwrapOrDefault().IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig)
-
-		// The resource's configured tags do not include any provider configured default_tags.
-		if err := d.Set(names.AttrTags, toAdd.RemoveDefaultConfig(tagsInContext.DefaultConfig).Map()); err != nil {
-			return ctx, sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTags, err)
-		}
-
-		// Computed tags_all do.
-		if err := d.Set(names.AttrTagsAll, toAdd.Map()); err != nil {
-			return ctx, sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTagsAll, err)
-		}
-	}
-	return ctx, diags
 }

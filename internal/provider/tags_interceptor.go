@@ -6,7 +6,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -16,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func tagsListFunc(ctx context.Context, d *schema.ResourceData, sp conns.ServicePackage, spt *types.ServicePackageResourceTags, serviceName, resourceName string, meta any, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+func tagsListFunc(ctx context.Context, d resourceDiff, sp conns.ServicePackage, spt *types.ServicePackageResourceTags, serviceName, resourceName string, meta any, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 	inContext, ok := conns.FromContext(ctx)
 	if !ok {
 		return ctx, diags
@@ -91,7 +90,7 @@ func tagsListFunc(ctx context.Context, d *schema.ResourceData, sp conns.ServiceP
 	return ctx, diags
 }
 
-func tagsReadFunc(ctx context.Context, d *schema.ResourceData, sp conns.ServicePackage, spt *types.ServicePackageResourceTags, serviceName, resourceName string, meta any, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+func tagsReadFunc(ctx context.Context, d resourceDiff, sp conns.ServicePackage, spt *types.ServicePackageResourceTags, serviceName, resourceName string, meta any, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 	inContext, ok := conns.FromContext(ctx)
 	if !ok {
 		return ctx, diags
