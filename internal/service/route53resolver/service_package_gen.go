@@ -46,6 +46,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_route53_resolver_firewall_rules",
 		},
 		{
+			Factory:  DataSourceQueryLogConfig,
+			TypeName: "aws_route53_resolver_query_log_config",
+		},
+		{
 			Factory:  DataSourceRule,
 			TypeName: "aws_route53_resolver_rule",
 		},
