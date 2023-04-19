@@ -72,6 +72,7 @@ const (
 )
 
 func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Inspector2Client()
 
 	in := &inspector2.EnableInput{
@@ -84,20 +85,20 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	out, err := conn.Enable(ctx, in)
 	if err != nil {
-		return create.DiagError(names.Inspector2, create.ErrActionCreating, ResNameEnabler, id, err)
+		return append(diags, create.DiagError(names.Inspector2, create.ErrActionCreating, ResNameEnabler, id, err)...)
 	}
 
 	if out == nil {
-		return create.DiagError(names.Inspector2, create.ErrActionCreating, ResNameEnabler, id, errors.New("empty output"))
+		return append(diags, create.DiagError(names.Inspector2, create.ErrActionCreating, ResNameEnabler, id, errors.New("empty output"))...)
 	}
 
 	d.SetId(id)
 
 	if err := waitEnabled(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.Inspector2, create.ErrActionWaitingForCreation, ResNameEnabler, d.Id(), err)
+		return append(diags, create.DiagError(names.Inspector2, create.ErrActionWaitingForCreation, ResNameEnabler, d.Id(), err)...)
 	}
 
-	return resourceEnablerRead(ctx, d, meta)
+	return append(diags, resourceEnablerRead(ctx, d, meta)...)
 }
 
 func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -139,10 +140,11 @@ func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return append(diags, create.DiagError(names.Inspector2, create.ErrActionReading, ResNameEnabler, d.Id(), err)...)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceEnablerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Inspector2Client()
 
 	var enable, disable []types.ResourceScanType
@@ -166,11 +168,11 @@ func resourceEnablerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		_, err := conn.Enable(ctx, in)
 		if err != nil {
-			return create.DiagError(names.Inspector2, create.ErrActionUpdating, ResNameEnabler, id, err)
+			return append(diags, create.DiagError(names.Inspector2, create.ErrActionUpdating, ResNameEnabler, id, err)...)
 		}
 
 		if err := waitEnabled(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return create.DiagError(names.Inspector2, create.ErrActionWaitingForUpdate, ResNameEnabler, d.Id(), err)
+			return append(diags, create.DiagError(names.Inspector2, create.ErrActionWaitingForUpdate, ResNameEnabler, d.Id(), err)...)
 		}
 	}
 
@@ -181,20 +183,21 @@ func resourceEnablerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 		_, err := conn.Disable(ctx, in)
 		if err != nil {
-			return create.DiagError(names.Inspector2, create.ErrActionUpdating, ResNameEnabler, id, err)
+			return append(diags, create.DiagError(names.Inspector2, create.ErrActionUpdating, ResNameEnabler, id, err)...)
 		}
 	}
 
 	d.SetId(id)
 
 	if err := waitEnabled(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.Inspector2, create.ErrActionWaitingForUpdate, ResNameEnabler, d.Id(), err)
+		return append(diags, create.DiagError(names.Inspector2, create.ErrActionWaitingForUpdate, ResNameEnabler, d.Id(), err)...)
 	}
 
-	return resourceEnablerRead(ctx, d, meta)
+	return append(diags, resourceEnablerRead(ctx, d, meta)...)
 }
 
 func resourceEnablerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Inspector2Client()
 
 	in := &inspector2.DisableInput{
@@ -204,14 +207,14 @@ func resourceEnablerDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	_, err := conn.Disable(ctx, in)
 	if err != nil {
-		return create.DiagError(names.Inspector2, create.ErrActionDeleting, ResNameEnabler, d.Id(), err)
+		return append(diags, create.DiagError(names.Inspector2, create.ErrActionDeleting, ResNameEnabler, d.Id(), err)...)
 	}
 
 	if err := waitDisabled(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.Inspector2, create.ErrActionWaitingForDeletion, ResNameEnabler, d.Id(), err)
+		return append(diags, create.DiagError(names.Inspector2, create.ErrActionWaitingForDeletion, ResNameEnabler, d.Id(), err)...)
 	}
 
-	return nil
+	return diags
 }
 
 const (
