@@ -33,6 +33,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ce"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/chime"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/chimesdkmediapipelines"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/chimesdkvoice"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/cleanrooms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloud9"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudcontrol"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
@@ -236,6 +238,8 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		ce.ServicePackage,
 		chime.ServicePackage,
 		chimesdkmediapipelines.ServicePackage,
+		chimesdkvoice.ServicePackage,
+		cleanrooms.ServicePackage,
 		cloud9.ServicePackage,
 		cloudcontrol.ServicePackage,
 		cloudformation.ServicePackage,

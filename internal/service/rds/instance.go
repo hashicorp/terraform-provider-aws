@@ -224,13 +224,11 @@ func ResourceInstance() *schema.Resource {
 					value := v.(string)
 					return strings.ToLower(value)
 				},
-				ConflictsWith: []string{"replicate_source_db"},
 			},
 			"engine_version": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"replicate_source_db"},
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"engine_version_actual": {
 				Type:     schema.TypeString,
@@ -1940,6 +1938,9 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			if d.HasChange("engine_version") {
 				input.EngineVersion = aws.String(d.Get("engine_version").(string))
 				input.AllowMajorVersionUpgrade = d.Get("allow_major_version_upgrade").(bool)
+				// if we were to make life easier for practitioners, we could loop through
+				// replicas at this point to update them first, prior to dbInstanceModify()
+				// for the source
 			}
 
 			if d.HasChange("parameter_group_name") {
@@ -2137,7 +2138,7 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 
 	if d.HasChange("replica_mode") {
 		needsModify = true
-		input.ReplicaMode = d.Get("replica_mode").(types.ReplicaMode)
+		input.ReplicaMode = types.ReplicaMode(d.Get("replica_mode").(string))
 	}
 
 	if d.HasChange("security_group_names") {

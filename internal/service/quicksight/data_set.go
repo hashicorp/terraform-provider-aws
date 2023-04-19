@@ -1396,8 +1396,8 @@ func expandDataSetProjectOperation(tfList []interface{}) *quicksight.ProjectOper
 	}
 
 	projectOperation := &quicksight.ProjectOperation{}
-	if v, ok := tfMap["projected_columns"].([]string); ok && len(v) > 0 {
-		projectOperation.ProjectedColumns = aws.StringSlice(v)
+	if v, ok := tfMap["projected_columns"].([]interface{}); ok && len(v) > 0 {
+		projectOperation.ProjectedColumns = flex.ExpandStringList(v)
 	}
 
 	return projectOperation
@@ -1621,7 +1621,7 @@ func expandDataSetRelationalTable(tfMap map[string]interface{}) *quicksight.Rela
 	if v, ok := tfMap["input_columns"].([]interface{}); ok {
 		relationalTable.InputColumns = expandDataSetInputColumns(v)
 	}
-	if v, ok := tfMap["catelog"].(string); ok {
+	if v, ok := tfMap["catalog"].(string); ok {
 		relationalTable.Catalog = aws.String(v)
 	}
 	if v, ok := tfMap["data_source_arn"].(string); ok {
@@ -1630,8 +1630,8 @@ func expandDataSetRelationalTable(tfMap map[string]interface{}) *quicksight.Rela
 	if v, ok := tfMap["name"].(string); ok {
 		relationalTable.Name = aws.String(v)
 	}
-	if v, ok := tfMap["catelog"].(string); ok {
-		relationalTable.Catalog = aws.String(v)
+	if v, ok := tfMap["schema"].(string); ok {
+		relationalTable.Schema = aws.String(v)
 	}
 
 	return relationalTable
@@ -1976,7 +1976,7 @@ func flattenCastColumnTypeOperation(apiObject *quicksight.CastColumnTypeOperatio
 		tfMap["column_name"] = aws.StringValue(apiObject.ColumnName)
 	}
 	if apiObject.Format != nil {
-		tfMap["cast_column_type_operation"] = aws.StringValue(apiObject.ColumnName)
+		tfMap["format"] = aws.StringValue(apiObject.Format)
 	}
 	if apiObject.NewColumnType != nil {
 		tfMap["new_column_type"] = aws.StringValue(apiObject.NewColumnType)
@@ -2017,7 +2017,7 @@ func flattenCalculatedColumns(apiObject []*quicksight.CalculatedColumn) interfac
 			tfMap["column_name"] = aws.StringValue(column.ColumnName)
 		}
 		if column.Expression != nil {
-			tfMap["column_id"] = aws.StringValue(column.Expression)
+			tfMap["expression"] = aws.StringValue(column.Expression)
 		}
 
 		tfList = append(tfList, tfMap)

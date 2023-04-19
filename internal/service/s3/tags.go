@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Custom S3 tag service update functions using the same format as generated code.
@@ -142,7 +143,7 @@ func ObjectUpdateTags(ctx context.Context, conn s3iface.S3API, bucket, key strin
 			Bucket: aws.String(bucket),
 			Key:    aws.String(key),
 			Tagging: &s3.Tagging{
-				TagSet: Tags(newTags.Merge(ignoredTags).IgnoreAWS()),
+				TagSet: Tags(newTags.Merge(ignoredTags).IgnoreSystem(names.S3)),
 			},
 		}
 
