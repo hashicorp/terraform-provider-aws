@@ -377,7 +377,7 @@ resource "aws_elastic_beanstalk_application" "test" {
 func testAccApplicationConfig_maxCount(rName string) string {
 	return acctest.ConfigCompose(testAccApplicationConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_elastic_beanstalk_application" "test" {
-  name  = %[1]q
+  name = %[1]q
 
   appversion_lifecycle {
     service_role          = aws_iam_role.test.arn
