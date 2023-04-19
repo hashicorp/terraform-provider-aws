@@ -1,5 +1,5 @@
 ---
-subcategory: "ECR"
+subcategory: "ECR (Elastic Container Registry)"
 layout: "aws"
 page_title: "AWS: aws_ecr_repository_policy"
 description: |-
@@ -14,42 +14,43 @@ Note that currently only one policy may be applied to a repository.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ecr_repository" "foo" {
   name = "bar"
 }
 
+data "aws_iam_policy_document" "foopolicy" {
+  statement {
+    sid    = "new policy"
+    effect = "Allow"
+
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    actions = [
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchGetImage",
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:PutImage",
+      "ecr:InitiateLayerUpload",
+      "ecr:UploadLayerPart",
+      "ecr:CompleteLayerUpload",
+      "ecr:DescribeRepositories",
+      "ecr:GetRepositoryPolicy",
+      "ecr:ListImages",
+      "ecr:DeleteRepository",
+      "ecr:BatchDeleteImage",
+      "ecr:SetRepositoryPolicy",
+      "ecr:DeleteRepositoryPolicy",
+    ]
+  }
+}
+
 resource "aws_ecr_repository_policy" "foopolicy" {
   repository = aws_ecr_repository.foo.name
-
-  policy = <<EOF
-{
-    "Version": "2008-10-17",
-    "Statement": [
-        {
-            "Sid": "new policy",
-            "Effect": "Allow",
-            "Principal": "*",
-            "Action": [
-                "ecr:GetDownloadUrlForLayer",
-                "ecr:BatchGetImage",
-                "ecr:BatchCheckLayerAvailability",
-                "ecr:PutImage",
-                "ecr:InitiateLayerUpload",
-                "ecr:UploadLayerPart",
-                "ecr:CompleteLayerUpload",
-                "ecr:DescribeRepositories",
-                "ecr:GetRepositoryPolicy",
-                "ecr:ListImages",
-                "ecr:DeleteRepository",
-                "ecr:BatchDeleteImage",
-                "ecr:SetRepositoryPolicy",
-                "ecr:DeleteRepositoryPolicy"
-            ]
-        }
-    ]
-}
-EOF
+  policy     = data.aws_iam_policy_document.foopolicy.json
 }
 ```
 
@@ -69,7 +70,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-ECR Repository Policy can be imported using the repository name, e.g.
+ECR Repository Policy can be imported using the repository name, e.g.,
 
 ```
 $ terraform import aws_ecr_repository_policy.example example

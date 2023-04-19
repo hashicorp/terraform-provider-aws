@@ -14,7 +14,7 @@ application with the same configuration settings.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_elastic_beanstalk_application" "tftest" {
   name        = "tf-test-name"
   description = "tf-test-desc"
@@ -40,7 +40,6 @@ The following arguments are supported:
   below in [Option Settings](#option-settings)
 * `solution_stack_name` – (Optional) A solution stack to base your Template
 off of. Example stacks can be found in the [Amazon API documentation][1]
-
 
 ## Option Settings
 

@@ -12,7 +12,7 @@ Provides a conditional forwarder for managed Microsoft AD in AWS Directory Servi
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_directory_service_conditional_forwarder" "example" {
   directory_id       = aws_directory_service_directory.ad.id
   remote_domain_name = "example.com"
@@ -28,13 +28,17 @@ resource "aws_directory_service_conditional_forwarder" "example" {
 
 The following arguments are supported:
 
-* `directory_id` - (Required) The id of directory.
+* `directory_id` - (Required) ID of directory.
 * `dns_ips` - (Required) A list of forwarder IP addresses.
 * `remote_domain_name` - (Required) The fully qualified domain name of the remote domain for which forwarders will be used.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
-Conditional forwarders can be imported using the directory id and remote_domain_name, e.g.
+Conditional forwarders can be imported using the directory id and remote_domain_name, e.g.,
 
 ```
 $ terraform import aws_directory_service_conditional_forwarder.example d-1234567890:example.com

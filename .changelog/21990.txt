@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_kms_external_key: Fix order-related diffs in `policy`
+```
+
+```release-note:bug
+resource/aws_kms_replica_external_key: Fix order-related diffs in `policy`
+```
+
+```release-note:bug
+resource/aws_kms_replica_key: Fix order-related diffs in `policy`
+```

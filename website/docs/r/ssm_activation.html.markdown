@@ -1,5 +1,5 @@
 ---
-subcategory: "SSM"
+subcategory: "SSM (Systems Manager)"
 layout: "aws"
 page_title: "AWS: aws_ssm_activation"
 description: |-
@@ -12,20 +12,23 @@ Registers an on-premises server or virtual machine with Amazon EC2 so that it ca
 
 ## Example Usage
 
-```hcl
-resource "aws_iam_role" "test_role" {
-  name = "test_role"
+```terraform
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-  {
-    "Version": "2012-10-17",
-    "Statement": {
-      "Effect": "Allow",
-      "Principal": {"Service": "ssm.amazonaws.com"},
-      "Action": "sts:AssumeRole"
+    principals {
+      type        = "Service"
+      identifiers = ["ssm.amazonaws.com"]
     }
+
+    actions = ["sts:AssumeRole"]
   }
-EOF
+}
+
+resource "aws_iam_role" "test_role" {
+  name               = "test_role"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 resource "aws_iam_role_policy_attachment" "test_attach" {
@@ -51,7 +54,7 @@ The following arguments are supported:
 * `expiration_date` - (Optional) UTC timestamp in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) by which this activation request should expire. The default value is 24 hours from resource creation time. Terraform will only perform drift detection of its value when present in a configuration.
 * `iam_role` - (Required) The IAM Role to attach to the managed instance.
 * `registration_limit` - (Optional) The maximum number of managed instances you want to register. The default value is 1 instance.
-* `tags` - (Optional) A map of tags to assign to the object.
+* `tags` - (Optional) A map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
@@ -66,10 +69,11 @@ In addition to all arguments above, the following attributes are exported:
 * `iam_role` - The IAM Role attached to the managed instance.
 * `registration_limit` - The maximum number of managed instances you want to be registered. The default value is 1 instance.
 * `registration_count` - The number of managed instances that are currently registered using this activation.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-AWS SSM Activation can be imported using the `id`, e.g.
+AWS SSM Activation can be imported using the `id`, e.g.,
 
 ```sh
 $ terraform import aws_ssm_activation.example e488f2f6-e686-4afb-8a04-ef6dfEXAMPLE

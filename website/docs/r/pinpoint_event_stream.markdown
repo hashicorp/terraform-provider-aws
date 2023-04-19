@@ -12,7 +12,7 @@ Provides a Pinpoint Event Stream resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_pinpoint_event_stream" "stream" {
   application_id         = aws_pinpoint_app.app.application_id
   destination_stream_arn = aws_kinesis_stream.test_stream.arn
@@ -26,46 +26,41 @@ resource "aws_kinesis_stream" "test_stream" {
   shard_count = 1
 }
 
-resource "aws_iam_role" "test_role" {
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "pinpoint.us-east-1.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["pinpoint.us-east-1.amazonaws.com"]
     }
-  ]
-}
-EOF
-}
 
-resource "aws_iam_role_policy" "test_role_policy" {
-  name = "test_policy"
-  role = aws_iam_role.test_role.id
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Action": [
-      "kinesis:PutRecords",
-      "kinesis:DescribeStream"
-    ],
-    "Effect": "Allow",
-    "Resource": [
-      "arn:aws:kinesis:us-east-1:*:*/*"
-    ]
+    actions = ["sts:AssumeRole"]
   }
 }
-EOF
+
+resource "aws_iam_role" "test_role" {
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "test_role_policy" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "kinesis:PutRecords",
+      "kinesis:DescribeStream",
+    ]
+
+    resources = ["arn:aws:kinesis:us-east-1:*:*/*"]
+  }
+}
+resource "aws_iam_role_policy" "test_role_policy" {
+  name   = "test_policy"
+  role   = aws_iam_role.test_role.id
+  policy = data.aws_iam_policy_document.test_role_policy.json
 }
 ```
-
 
 ## Argument Reference
 
@@ -75,9 +70,13 @@ The following arguments are supported:
 * `destination_stream_arn` - (Required) The Amazon Resource Name (ARN) of the Amazon Kinesis stream or Firehose delivery stream to which you want to publish events.
 * `role_arn` - (Required) The IAM role that authorizes Amazon Pinpoint to publish events to the stream in your account.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
-Pinpoint Event Stream can be imported using the `application-id`, e.g.
+Pinpoint Event Stream can be imported using the `application-id`, e.g.,
 
 ```
 $ terraform import aws_pinpoint_event_stream.stream application-id

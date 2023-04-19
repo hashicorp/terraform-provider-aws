@@ -12,9 +12,9 @@ Provides an AWS Network Firewall Rule Group Resource
 
 ## Example Usage
 
-### Stateful Inspection
+### Stateful Inspection for denying access to a domain
 
-```hcl
+```terraform
 resource "aws_networkfirewall_rule_group" "example" {
   capacity = 100
   name     = "example"
@@ -36,9 +36,50 @@ resource "aws_networkfirewall_rule_group" "example" {
 }
 ```
 
-### Stateful Inspection compatible with intrusion detection systems like Snort or Suricata
+### Stateful Inspection for permitting packets from a source IP address
 
-```hcl
+```terraform
+resource "aws_networkfirewall_rule_group" "example" {
+  capacity    = 50
+  description = "Permits http traffic from source"
+  name        = "example"
+  type        = "STATEFUL"
+  rule_group {
+    rules_source {
+      dynamic "stateful_rule" {
+        for_each = local.ips
+        content {
+          action = "PASS"
+          header {
+            destination      = "ANY"
+            destination_port = "ANY"
+            protocol         = "HTTP"
+            direction        = "ANY"
+            source_port      = "ANY"
+            source           = stateful_rule.value
+          }
+          rule_option {
+            keyword  = "sid"
+            settings = ["1"]
+          }
+        }
+      }
+    }
+  }
+
+  tags = {
+    Name = "permit HTTP from source"
+  }
+}
+
+locals {
+  ips = ["1.1.1.1/32", "1.0.0.1/32"]
+}
+```
+
+### Stateful Inspection for blocking packets from going to an intended destination
+
+```terraform
 resource "aws_networkfirewall_rule_group" "example" {
   capacity = 100
   name     = "example"
@@ -56,7 +97,8 @@ resource "aws_networkfirewall_rule_group" "example" {
           source_port      = 53
         }
         rule_option {
-          keyword = "sid:1"
+          keyword  = "sid"
+          settings = ["1"]
         }
       }
     }
@@ -71,7 +113,7 @@ resource "aws_networkfirewall_rule_group" "example" {
 
 ### Stateful Inspection from rules specifications defined in Suricata flat format
 
-```hcl
+```terraform
 resource "aws_networkfirewall_rule_group" "example" {
   capacity = 100
   name     = "example"
@@ -85,9 +127,48 @@ resource "aws_networkfirewall_rule_group" "example" {
 }
 ```
 
+### Stateful Inspection from rule group specifications using rule variables and Suricata format rules
+
+```terraform
+resource "aws_networkfirewall_rule_group" "example" {
+  capacity = 100
+  name     = "example"
+  type     = "STATEFUL"
+  rule_group {
+    rule_variables {
+      ip_sets {
+        key = "WEBSERVERS_HOSTS"
+        ip_set {
+          definition = ["10.0.0.0/16", "10.0.1.0/24", "192.168.0.0/16"]
+        }
+      }
+      ip_sets {
+        key = "EXTERNAL_HOST"
+        ip_set {
+          definition = ["1.2.3.4/32"]
+        }
+      }
+      port_sets {
+        key = "HTTP_PORTS"
+        port_set {
+          definition = ["443", "80"]
+        }
+      }
+    }
+    rules_source {
+      rules_string = file("suricata_rules_file")
+    }
+  }
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
+}
+```
+
 ### Stateless Inspection with a Custom Action
 
-```hcl
+```terraform
 resource "aws_networkfirewall_rule_group" "example" {
   description = "Stateless Rate Limiting Rule"
   capacity    = 100
@@ -144,6 +225,38 @@ resource "aws_networkfirewall_rule_group" "example" {
 }
 ```
 
+### IP Set References to the Rule Group
+
+```terraform
+resource "aws_networkfirewall_rule_group" "example" {
+  capacity = 100
+  name     = "example"
+  type     = "STATEFUL"
+  rule_group {
+    rules_source {
+      rules_source_list {
+        generated_rules_type = "DENYLIST"
+        target_types         = ["HTTP_HOST"]
+        targets              = ["test.example.com"]
+      }
+    }
+    reference_sets {
+      ip_set_references {
+        key = "example"
+        ip_set_reference {
+          reference_arn = aws_ec2_managed_prefix_list.this.arn
+        }
+      }
+    }
+  }
+
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -152,23 +265,42 @@ The following arguments are supported:
 
 * `description` - (Optional) A friendly description of the rule group.
 
+* `encryption_configuration` - (Optional) KMS encryption configuration settings. See [Encryption Configuration](#encryption-configuration) below for details.
+
 * `name` - (Required, Forces new resource) A friendly name of the rule group.
 
 * `rule_group` - (Optional) A configuration block that defines the rule group rules. Required unless `rules` is specified. See [Rule Group](#rule-group) below for details.
 
 * `rules` - (Optional) The stateful rule group rules specifications in Suricata file format, with one rule per line. Use this to import your existing Suricata compatible rule groups. Required unless `rule_group` is specified.
 
-* `tags` - (Optional) A map of key:value pairs to associate with the resource.
+* `tags` - (Optional) A map of key:value pairs to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 * `type` - (Required) Whether the rule group is stateless (containing stateless rules) or stateful (containing stateful rules). Valid values include: `STATEFUL` or `STATELESS`.
+
+### Encryption Configuration
+
+`encryption_configuration` settings for customer managed KMS keys. Remove this block to use the default AWS-managed KMS encryption (rather than setting `type` to `AWS_OWNED_KMS_KEY`).
+
+* `key_id` - (Optional) The ID of the customer managed key. You can use any of the [key identifiers](https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#key-id) that KMS supports, unless you're using a key that's managed by another account. If you're using a key managed by another account, then specify the key ARN.
+* `type` - (Required) The type of AWS KMS key to use for encryption of your Network Firewall resources. Valid values are `CUSTOMER_KMS` and `AWS_OWNED_KMS_KEY`.
 
 ### Rule Group
 
 The `rule_group` block supports the following argument:
 
+* `reference_sets` - (Optional) A configuration block that defines the IP Set References for the rule group. See [Reference Sets](#reference-sets) below for details.
+
 * `rule_variables` - (Optional) A configuration block that defines additional settings available to use in the rules defined in the rule group. Can only be specified for **stateful** rule groups. See [Rule Variables](#rule-variables) below for details.
 
 * `rules_source` - (Required) A configuration block that defines the stateful or stateless rules for the rule group. See [Rules Source](#rules-source) below for details.
+
+* `stateful_rule_options` - (Optional) A configuration block that defines stateful rule options for the rule group. See [Stateful Rule Options](#stateful-rule-options) below for details.
+
+### Reference Sets
+
+The `reference_sets` block supports the following arguments:
+
+* `ip_set_reference` - (Optional) Set of configuration blocks that define the IP Reference information. See [IP Set Reference](#ip-set-reference) below for details.
 
 ### Rule Variables
 
@@ -191,6 +323,14 @@ The `ip_sets` block supports the following arguments:
 The `ip_set` configuration block supports the following argument:
 
 * `definition` - (Required) Set of IP addresses and address ranges, in CIDR notation.
+
+### IP Set Reference
+
+The `ip_set_reference` configuration block supports the following argument:
+
+* `key` - (Required) A unique alphanumeric string to identify the `ip_set`.
+
+* `reference_arn` - (Required) Set of Managed Prefix IP ARN(s)
 
 ### Port Sets
 
@@ -219,6 +359,14 @@ The `rules_source` block supports the following arguments:
 * `stateful_rule` - (Optional) Set of configuration blocks containing **stateful** inspection criteria for 5-tuple rules to be used together in a rule group. See [Stateful Rule](#stateful-rule) below for details.
 
 * `stateless_rules_and_custom_actions` - (Optional) A configuration block containing **stateless** inspection criteria for a stateless rule group. See [Stateless Rules and Custom Actions](#stateless-rules-and-custom-actions) below for details.
+
+### Stateful Rule Options
+
+The `stateful_rule_options` block supports the following argument:
+
+~> **NOTE:** If the `STRICT_ORDER` rule order is specified, this rule group can only be referenced in firewall policies that also utilize `STRICT_ORDER` for the stateful engine. `STRICT_ORDER` can only be specified when using a `rules_source` of `rules_string` or `stateful_rule`.
+
+* `rule_order` - (Required) Indicates how to manage the order of the rule evaluation for the rule group. Default value: `DEFAULT_ACTION_ORDER`. Valid values: `DEFAULT_ACTION_ORDER`, `STRICT_ORDER`.
 
 ### Rules Source List
 
@@ -270,7 +418,6 @@ The `rule_option` block supports the following arguments:
 
 * `keyword` - (Required) Keyword defined by open source detection systems like Snort or Suricata for stateful rule inspection.
 See [Snort General Rule Options](http://manual-snort-org.s3-website-us-east-1.amazonaws.com/node31.html) or [Suricata Rule Options](https://suricata.readthedocs.io/en/suricata-5.0.1/rules/intro.html#rule-options) for more details.
-
 * `settings` - (Optional) Set of strings for additional settings to use in stateful rule inspection.
 
 ### Custom Action
@@ -376,6 +523,8 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The Amazon Resource Name (ARN) that identifies the rule group.
 
 * `arn` - The Amazon Resource Name (ARN) that identifies the rule group.
+
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 * `update_token` - A string token used when updating the rule group.
 

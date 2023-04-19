@@ -1,5 +1,5 @@
 ---
-subcategory: "Managed Streaming for Kafka (MSK)"
+subcategory: "Managed Streaming for Kafka"
 layout: "aws"
 page_title: "AWS: aws_msk_scram_secret_association"
 description: |-
@@ -22,7 +22,7 @@ resource](/docs/providers/aws/r/secretsmanager_secret_policy.html) as shown belo
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_msk_scram_secret_association" "example" {
   cluster_arn     = aws_msk_cluster.example.arn
   secret_arn_list = [aws_secretsmanager_secret.example.arn]
@@ -54,22 +54,24 @@ resource "aws_secretsmanager_secret_version" "example" {
   secret_string = jsonencode({ username = "user", password = "pass" })
 }
 
+data "aws_iam_policy_document" "example" {
+  statement {
+    sid    = "AWSKafkaResourcePolicy"
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["kafka.amazonaws.com"]
+    }
+
+    actions   = ["secretsmanager:getSecretValue"]
+    resources = [aws_secretsmanager_secret.example.arn]
+  }
+}
+
 resource "aws_secretsmanager_secret_policy" "example" {
   secret_arn = aws_secretsmanager_secret.example.arn
-  policy     = <<POLICY
-{
-  "Version" : "2012-10-17",
-  "Statement" : [ {
-    "Sid": "AWSKafkaResourcePolicy",
-    "Effect" : "Allow",
-    "Principal" : {
-      "Service" : "kafka.amazonaws.com"
-    },
-    "Action" : "secretsmanager:getSecretValue",
-    "Resource" : "${aws_secretsmanager_secret.example.arn}"
-  } ]
-}
-POLICY
+  policy     = data.aws_iam_policy_document.example.json
 }
 ```
 
@@ -88,7 +90,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-MSK SCRAM Secret Associations can be imported using the `id` e.g.
+MSK SCRAM Secret Associations can be imported using the `id` e.g.,
 
 ```
 $ terraform import aws_msk_scram_secret_association.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3

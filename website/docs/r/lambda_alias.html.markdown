@@ -15,7 +15,7 @@ For information about function aliases, see [CreateAlias][2] and [AliasRoutingCo
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_lambda_alias" "test_lambda_alias" {
   name             = "my_alias"
   description      = "a sample description"
@@ -55,7 +55,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Lambda Function Aliases can be imported using the `function_name/alias`, e.g.
+Lambda Function Aliases can be imported using the `function_name/alias`, e.g.,
 
 ```
 $ terraform import aws_lambda_alias.test_lambda_alias my_test_lambda_function/my_alias

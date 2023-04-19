@@ -12,7 +12,7 @@ Provides a Security Hub member resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_securityhub_account" "example" {}
 
 resource "aws_securityhub_member" "example" {
@@ -28,7 +28,7 @@ resource "aws_securityhub_member" "example" {
 The following arguments are supported:
 
 * `account_id` - (Required) The ID of the member AWS account.
-* `email` - (Required) The email of the member AWS account.
+* `email` - (Optional) The email of the member AWS account.
 * `invite` - (Optional) Boolean whether to invite the account to Security Hub as a member. Defaults to `false`.
 
 ## Attributes Reference
@@ -41,7 +41,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Security Hub members can be imported using their account ID, e.g.
+Security Hub members can be imported using their account ID, e.g.,
 
 ```
 $ terraform import aws_securityhub_member.example 123456789012

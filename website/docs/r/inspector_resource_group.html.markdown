@@ -1,18 +1,18 @@
 ---
-subcategory: "Inspector"
+subcategory: "Inspector Classic"
 layout: "aws"
 page_title: "AWS: aws_inspector_resource_group"
 description: |-
-  Provides an Amazon Inspector resource group resource.
+  Provides an Amazon Inspector Classic Resource Group.
 ---
 
 # Resource: aws_inspector_resource_group
 
-Provides an Amazon Inspector resource group resource.
+Provides an Amazon Inspector Classic Resource Group.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_inspector_resource_group" "example" {
   tags = {
     Name = "foo"

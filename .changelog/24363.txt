@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_rds_cluster: Add `serverlessv2_scaling_configuration` argument to support [Aurora Serverless v2](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless-v2.html)
+```

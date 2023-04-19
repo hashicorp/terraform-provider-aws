@@ -1,5 +1,5 @@
 ---
-subcategory: "Glacier"
+subcategory: "S3 Glacier"
 layout: "aws"
 page_title: "AWS: aws_glacier_vault"
 description: |-
@@ -14,9 +14,28 @@ Provides a Glacier Vault Resource. You can refer to the [Glacier Developer Guide
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_sns_topic" "aws_sns_topic" {
   name = "glacier-sns-topic"
+}
+
+data "aws_iam_policy_document" "my_archive" {
+  statement {
+    sid    = "add-read-only-perm"
+    effect = "Allow"
+
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    actions = [
+      "glacier:InitiateJob",
+      "glacier:GetJobOutput",
+    ]
+
+    resources = ["arn:aws:glacier:eu-west-1:432981146916:vaults/MyArchive"]
+  }
 }
 
 resource "aws_glacier_vault" "my_archive" {
@@ -27,23 +46,7 @@ resource "aws_glacier_vault" "my_archive" {
     events    = ["ArchiveRetrievalCompleted", "InventoryRetrievalCompleted"]
   }
 
-  access_policy = <<EOF
-{
-    "Version":"2012-10-17",
-    "Statement":[
-       {
-          "Sid": "add-read-only-perm",
-          "Principal": "*",
-          "Effect": "Allow",
-          "Action": [
-             "glacier:InitiateJob",
-             "glacier:GetJobOutput"
-          ],
-          "Resource": "arn:aws:glacier:eu-west-1:432981146916:vaults/MyArchive"
-       }
-    ]
-}
-EOF
+  access_policy = data.aws_iam_policy_document.my_archive.json
 
   tags = {
     Test = "MyArchive"
@@ -59,7 +62,7 @@ The following arguments are supported:
 * `access_policy` - (Optional) The policy document. This is a JSON formatted string.
   The heredoc syntax or `file` function is helpful here. Use the [Glacier Developer Guide](https://docs.aws.amazon.com/amazonglacier/latest/dev/vault-access-policy.html) for more information on Glacier Vault Policy
 * `notification` - (Optional) The notifications for the Vault. Fields documented below.
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 **notification** supports the following:
 
@@ -72,10 +75,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `location` - The URI of the vault that was created.
 * `arn` - The ARN of the vault.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-Glacier Vaults can be imported using the `name`, e.g.
+Glacier Vaults can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_glacier_vault.archive my_archive

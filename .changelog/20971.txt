@@ -1,0 +1,7 @@
+```release-note:bug
+resource/efs_file_system: Allow multiple lifecycle policies.
+```
+
+```release-note:enhancement
+data-source/efs_file_system: Add `transition_to_primary_storage_class` to `lifecycle_policy`.
+```
