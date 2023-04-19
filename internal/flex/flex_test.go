@@ -173,3 +173,25 @@ func TestFlattenResourceIdSinglePart(t *testing.T) {
 		t.Fatalf("Expected an error when parsing ResourceId with single part count")
 	}
 }
+
+func TestResourceIdPartCount(t *testing.T) {
+	t.Parallel()
+
+	id := "foo,bar,baz"
+	partCount := ResourceIdPartCount(id)
+	expectedCount := 3
+	if partCount != expectedCount {
+		t.Fatalf("Expected part count of %d.", expectedCount)
+	}
+}
+
+func TestResourceIdPartCountLegacySeparator(t *testing.T) {
+	t.Parallel()
+
+	id := "foo_bar_baz"
+	partCount := ResourceIdPartCount(id)
+	expectedCount := 1
+	if partCount != expectedCount {
+		t.Fatalf("Expected part count of %d.", expectedCount)
+	}
+}
