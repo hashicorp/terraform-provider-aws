@@ -294,10 +294,10 @@ func resourceMetricStreamUpdate(ctx context.Context, d *schema.ResourceData, met
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &cloudwatch.PutMetricStreamInput{
 			FirehoseArn:                  aws.String(d.Get("firehose_arn").(string)),
+			IncludeLinkedAccountsMetrics: aws.Bool(d.Get("include_linked_accounts_metrics").(bool)),
 			Name:                         aws.String(d.Id()),
 			OutputFormat:                 aws.String(d.Get("output_format").(string)),
 			RoleArn:                      aws.String(d.Get("role_arn").(string)),
-			IncludeLinkedAccountsMetrics: aws.Bool(d.Get("include_linked_accounts_metrics").(bool)),
 		}
 
 		if v, ok := d.GetOk("exclude_filter"); ok && v.(*schema.Set).Len() > 0 {

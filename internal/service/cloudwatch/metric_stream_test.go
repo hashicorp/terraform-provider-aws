@@ -46,6 +46,7 @@ func TestAccCloudWatchMetricStream_basic(t *testing.T) {
 					acctest.CheckResourceAttrRFC3339(resourceName, "creation_date"),
 					resource.TestCheckResourceAttr(resourceName, "exclude_filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "include_filter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "include_linked_accounts_metrics", "false"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_update_date"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
@@ -393,7 +394,7 @@ func TestAccCloudWatchMetricStream_includeLinkedAccountsMetrics(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricStreamDestroy(ctx),
