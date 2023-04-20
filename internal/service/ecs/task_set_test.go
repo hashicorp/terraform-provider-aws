@@ -737,48 +737,16 @@ resource "aws_ecs_task_set" "test" {
 
 func testAccTaskSetConfig_primaryTaskSet(rName string, primary, force_delete bool) string {
 	return acctest.ConfigCompose(
+		testAccTaskSetBaseConfig(rName),
 		fmt.Sprintf(`
-resource "aws_ecs_cluster" "test" {
-  name = %[1]q
-}
-
-resource "aws_ecs_task_definition" "test" {
-  family                = %[1]q
-  container_definitions = <<DEFINITION
-[
-  {
-    "cpu": 128,
-    "essential": true,
-    "image": "mongo:latest",
-    "memory": 128,
-    "name": "mongodb"
-  }
-]
-DEFINITION
-}
-
-resource "aws_ecs_service" "test" {
-  name          = %[1]q
-  cluster       = aws_ecs_cluster.test.id
-  desired_count = 1
-  deployment_controller {
-    type = "EXTERNAL"
-  }
-	lifecycle {
-		ignore_changes = [
-			"task_definition",
-		]
-	}
-}
-
 resource "aws_ecs_task_set" "test" {
   service         = aws_ecs_service.test.id
   cluster         = aws_ecs_cluster.test.id
   task_definition = aws_ecs_task_definition.test.arn
-  primary         = %[2]t
-  force_delete    = %[3]t
+  primary         = %[1]t
+  force_delete    = %[2]t
 }
-`, rName, primary, force_delete))
+`, primary, force_delete))
 }
 
 func testAccTaskSetConfig_tags1(rName, tag1Key, tag1Value string) string {
