@@ -39,6 +39,7 @@ func TestAccDSTrust_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustExists(ctx, resourceName, &v),
 					resource.TestMatchResourceAttr(resourceName, "id", regexp.MustCompile(`^t-\w{10}`)),
+					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", "2"),
 					resource.TestCheckResourceAttrPair(resourceName, "directory_id", "aws_directory_service_directory.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "remote_domain_name", domainNameOther),
 					resource.TestCheckResourceAttr(resourceName, "selective_auth", string(awstypes.SelectiveAuthDisabled)),
@@ -283,6 +284,59 @@ func TestAccDSTrust_TrustTypeSpecifyDefault(t *testing.T) {
 			{
 				Config:   testAccTrustConfig_TrustType(rName, domainName, domainNameOther, awstypes.TrustTypeForest),
 				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccDSTrust_ConditionalForwarderIPs(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Trust
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_directory_service_trust.test"
+	domainName := acctest.RandomDomainName()
+	domainNameOther := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckDirectoryService(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrustDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTrustConfig_basic(rName, domainName, domainNameOther),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTrustExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccTrustStateIdFunc(resourceName),
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"trust_password",
+				},
+			},
+			{
+				Config: testAccTrustConfig_ConditionalForwarderIPs(rName, domainName, domainNameOther),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTrustExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccTrustStateIdFunc(resourceName),
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"trust_password",
+				},
 			},
 		},
 	})
@@ -680,5 +734,66 @@ resource "aws_security_group_rule" "other" {
 	source_security_group_id =aws_directory_service_directory.test.security_group_id
 }
 `, domain, domainOther, trustType),
+	)
+}
+
+func testAccTrustConfig_ConditionalForwarderIPs(rName, domain, domainOther string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_directory_service_trust" "test" {
+	directory_id = aws_directory_service_directory.test.id
+
+	remote_domain_name = aws_directory_service_directory.other.name
+	trust_direction    = "Two-Way"
+	trust_password     = "Some0therPassword"
+
+	conditional_forwarder_ip_addrs = toset(slice(tolist(aws_directory_service_directory.other.dns_ip_addresses),0,1))
+}
+
+resource "aws_directory_service_directory" "test" {
+  name     = %[1]q
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+  edition  = "Standard"
+
+  vpc_settings {
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = aws_subnet.test[*].id
+  }
+}
+
+resource "aws_directory_service_directory" "other" {
+  name     = %[2]q
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+  edition  = "Standard"
+
+  vpc_settings {
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = aws_subnet.test[*].id
+  }
+}
+
+resource "aws_security_group_rule" "test" {
+	security_group_id = aws_directory_service_directory.test.security_group_id
+
+	type = "egress"
+	protocol = "all"
+	from_port = 0
+	to_port = 65535
+	source_security_group_id =aws_directory_service_directory.other.security_group_id
+}
+
+resource "aws_security_group_rule" "other" {
+	security_group_id = aws_directory_service_directory.other.security_group_id
+
+	type = "egress"
+	protocol = "all"
+	from_port = 0
+	to_port = 65535
+	source_security_group_id =aws_directory_service_directory.test.security_group_id
+}
+`, domain, domainOther),
 	)
 }

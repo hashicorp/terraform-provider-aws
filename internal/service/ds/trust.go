@@ -219,26 +219,49 @@ func (r *resourceTrust) Update(ctx context.Context, req resource.UpdateRequest, 
 
 	conn := r.Meta().DSClient()
 
-	params := plan.updateInput(ctx)
+	if !plan.SelectiveAuth.IsUnknown() && !state.SelectiveAuth.Equal(plan.SelectiveAuth) {
+		params := plan.updateInput(ctx)
 
-	_, err := conn.UpdateTrust(ctx, params)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("updating Cognito User Pool Client (%s)", plan.ID.ValueString()),
-			err.Error(),
-		)
-		return
+		_, err := conn.UpdateTrust(ctx, params)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				fmt.Sprintf("updating Cognito User Pool Client (%s)", plan.ID.ValueString()),
+				err.Error(),
+			)
+			return
+		}
+
+		trust, err := waitTrustUpdated(ctx, conn, state.DirectoryID.ValueString(), state.ID.ValueString(), trustUpdatedTimeout)
+		if err != nil {
+			resp.Diagnostics.Append(create.DiagErrorFramework(names.DS, create.ErrActionUpdating, ResNameTrust, state.ID.ValueString(), err))
+			return
+		}
+
+		state.update(ctx, trust)
 	}
 
-	trust, err := waitTrustUpdated(ctx, conn, state.DirectoryID.ValueString(), state.ID.ValueString(), trustUpdatedTimeout)
-	if err != nil {
-		resp.Diagnostics.Append(create.DiagErrorFramework(names.DS, create.ErrActionUpdating, ResNameTrust, state.ID.ValueString(), err))
-		return
+	if !plan.ConditionalForwarderIpAddrs.IsUnknown() && !state.ConditionalForwarderIpAddrs.Equal(plan.ConditionalForwarderIpAddrs) {
+		params := plan.updateConditionalForwarderInput(ctx)
+
+		_, err := conn.UpdateConditionalForwarder(ctx, params)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				fmt.Sprintf("updating Cognito User Pool Client (%s) conditional forwarder IPs", plan.ID.ValueString()),
+				err.Error(),
+			)
+			return
+		}
+
+		forwarder, err := findConditionalForwarder(ctx, conn, plan.DirectoryID.ValueString(), plan.RemoteDomainName.ValueString())
+		if err != nil {
+			resp.Diagnostics.Append(create.DiagErrorFramework(names.DS, create.ErrActionReading, ResNameTrust, plan.ID.ValueString(), fmt.Errorf("reading Conditional Forwarder: %w", err)))
+			return
+		}
+
+		state.updateConditionalForwarder(ctx, forwarder)
 	}
 
-	plan.update(ctx, trust)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourceTrust) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -321,6 +344,14 @@ func (data resourceTrustData) updateInput(ctx context.Context) *directoryservice
 	}
 }
 
+func (data resourceTrustData) updateConditionalForwarderInput(ctx context.Context) *directoryservice.UpdateConditionalForwarderInput {
+	return &directoryservice.UpdateConditionalForwarderInput{
+		DirectoryId:      flex.StringFromFramework(ctx, data.DirectoryID),
+		RemoteDomainName: flex.StringFromFramework(ctx, data.RemoteDomainName),
+		DnsIpAddrs:       flex.ExpandFrameworkStringValueSet(ctx, data.ConditionalForwarderIpAddrs),
+	}
+}
+
 func (data resourceTrustData) deleteInput(ctx context.Context) *directoryservice.DeleteTrustInput {
 	return &directoryservice.DeleteTrustInput{
 		TrustId: flex.StringFromFramework(ctx, data.ID),
@@ -330,8 +361,6 @@ func (data resourceTrustData) deleteInput(ctx context.Context) *directoryservice
 
 func (data *resourceTrustData) update(ctx context.Context, in *awstypes.Trust) {
 	data.CreatedDateTime = flex.StringValueToFramework(ctx, in.CreatedDateTime.Format(time.RFC3339))
-	data.DirectoryID = flex.StringToFramework(ctx, in.DirectoryId)
-	data.ID = flex.StringToFramework(ctx, in.TrustId)
 	data.LastUpdatedDateTime = flex.StringValueToFramework(ctx, in.LastUpdatedDateTime.Format(time.RFC3339))
 	data.RemoteDomainName = flex.StringToFramework(ctx, in.RemoteDomainName)
 	data.SelectiveAuth = flex.StringValueToFramework(ctx, in.SelectiveAuth)
