@@ -49,6 +49,7 @@ func TestAccWAFV2WebACL_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", webACLName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "captcha_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "0"),
@@ -2956,9 +2957,9 @@ resource "aws_wafv2_web_acl" "test" {
       sampled_requests_enabled   = false
     }
 
-      captcha_config {
-        immunity_time_property {
-          immunity_time = 240
+    captcha_config {
+      immunity_time_property {
+        immunity_time = 240
       }
     }
   }
