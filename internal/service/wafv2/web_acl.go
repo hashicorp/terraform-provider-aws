@@ -62,6 +62,7 @@ func ResourceWebACL() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"captcha_config":       outerCaptchaConfigSchema(),
 			"custom_response_body": customResponseBodySchema(),
 			"default_action": {
 				Type:     schema.TypeList,
@@ -111,6 +112,7 @@ func ResourceWebACL() *schema.Resource {
 								},
 							},
 						},
+						"captcha_config": outerCaptchaConfigSchema(),
 						"name": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -134,7 +136,6 @@ func ResourceWebACL() *schema.Resource {
 						"rule_label":        ruleLabelsSchema(),
 						"statement":         webACLRootStatementSchema(webACLRootStatementSchemaLevel),
 						"visibility_config": visibilityConfigSchema(),
-						"captcha_config":    outerCaptchaConfigSchema(),
 					},
 				},
 			},
@@ -147,7 +148,6 @@ func ResourceWebACL() *schema.Resource {
 			names.AttrTags:      tftags.TagsSchema(),
 			names.AttrTagsAll:   tftags.TagsSchemaComputed(),
 			"visibility_config": visibilityConfigSchema(),
-			"captcha_config":    outerCaptchaConfigSchema(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
