@@ -348,7 +348,7 @@ func (r tagsInterceptor) run(ctx context.Context, d schemaResourceData, meta any
 			tags := tagsInContext.TagsOut.UnwrapOrDefault().IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig)
 
 			// The resource's configured tags do not include any provider configured default_tags.
-			if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(tagsInContext.DefaultConfig).Map()); err != nil {
+			if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(tagsInContext.DefaultConfig).RemoveDuplicates(ctx, tagsInContext.DefaultConfig, d).Map()); err != nil {
 				return ctx, sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTags, err)
 			}
 

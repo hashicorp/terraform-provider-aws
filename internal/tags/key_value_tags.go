@@ -3,12 +3,14 @@ package tags
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/url"
 	"reflect"
 	"regexp"
 	"sort"
 	"strings"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -735,6 +737,54 @@ func (td *TagData) String() string {
 	}
 
 	return fmt.Sprintf("TagData{%s}", strings.Join(fields, ", "))
+}
+
+// schemaResourceData is an interface that implements functions from schema.ResourceData
+type schemaResourceData interface {
+	GetRawConfig() cty.Value
+	GetRawPlan() cty.Value
+	GetRawState() cty.Value
+	Get(string) interface{}
+}
+
+func (tags KeyValueTags) RemoveDuplicates(ctx context.Context, defaultConfig *DefaultConfig, d schemaResourceData) KeyValueTags {
+	result := make(map[string]string)
+	for k, v := range tags {
+		result[k] = v.ValueString()
+	}
+
+	configTags := make(map[string]string)
+	if config := d.GetRawPlan(); !config.IsNull() && config.IsKnown() {
+		c := config.GetAttr("tags")
+		if !c.IsNull() {
+			for k, v := range c.AsValueMap() {
+				configTags[k] = v.AsString()
+			}
+		}
+	}
+
+	if config := d.GetRawConfig(); !config.IsNull() && config.IsKnown() {
+		c := config.GetAttr("tags")
+		if !c.IsNull() {
+			for k, v := range c.AsValueMap() {
+				if _, ok := configTags[k]; !ok {
+					configTags[k] = v.AsString()
+				}
+			}
+		}
+	}
+
+	log.Printf("[DEBUG] config_tags: %v", configTags)
+	log.Printf("[DEBUG] tags_incoming: %v", result)
+	for k, v := range configTags {
+		if _, ok := result[k]; !ok {
+			log.Printf("[DEBUG] tags_diff: key(%s), value(%s)", k, v)
+			result[k] = v
+		}
+	}
+
+	log.Printf("[DEBUG] tags_outgoing: %v", result)
+	return New(ctx, result)
 }
 
 // ToSnakeCase converts a string to snake case.

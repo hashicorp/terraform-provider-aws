@@ -136,7 +136,7 @@ func TestAccVPC_tags(t *testing.T) {
 	})
 }
 
-func TestAccVPC_DefaultTags_providerOnly(t *testing.T) {
+func TestAccVPC_DefaultTags_providerOnlyTestAccVPC_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
