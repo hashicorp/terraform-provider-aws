@@ -335,7 +335,7 @@ func flattenListenerRuleActions(config types.RuleAction) []interface{} {
 
 	switch v := config.(type) {
 	case *types.RuleActionMemberFixedResponse:
-		m["fixed_response"] = flattenRuleActionMemberFixedResponse(&v.Value)
+		m["fixed_response"] = flattenFixedResponseAction(&v.Value)
 	case *types.RuleActionMemberForward:
 		m["forward"] = flattenComplexDefaultActionForward(&v.Value)
 	}
@@ -344,7 +344,7 @@ func flattenListenerRuleActions(config types.RuleAction) []interface{} {
 }
 
 // Flatten function for fixed_response action
-func flattenRuleActionMemberFixedResponse(response *types.FixedResponseAction) []interface{} {
+func flattenFixedResponseAction(response *types.FixedResponseAction) []interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := response.StatusCode; v != nil {

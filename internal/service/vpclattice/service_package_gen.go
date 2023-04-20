@@ -39,6 +39,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceListenerRule,
+			TypeName: "aws_vpclattice_listener_rule",
+			Name:     "Listener Rule",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceService,
 			TypeName: "aws_vpclattice_service",
 			Name:     "Service",
