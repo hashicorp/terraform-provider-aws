@@ -258,49 +258,6 @@ resource "aws_autoscaling_group" "example" {
 }
 ```
 
-### Interpolated tags
-
-```terraform
-variable "extra_tags" {
-  default = [
-    {
-      key                 = "Foo"
-      value               = "Bar"
-      propagate_at_launch = true
-    },
-    {
-      key                 = "Baz"
-      value               = "Bam"
-      propagate_at_launch = true
-    },
-  ]
-}
-
-resource "aws_autoscaling_group" "bar" {
-  name                 = "foobar3-terraform-test"
-  max_size             = 5
-  min_size             = 2
-  launch_configuration = aws_launch_configuration.foobar.name
-  vpc_zone_identifier  = [aws_subnet.example1.id, aws_subnet.example2.id]
-
-  tags = concat(
-    [
-      {
-        "key"                 = "interpolation1"
-        "value"               = "value3"
-        "propagate_at_launch" = true
-      },
-      {
-        "key"                 = "interpolation2"
-        "value"               = "value4"
-        "propagate_at_launch" = true
-      },
-    ],
-    var.extra_tags,
-  )
-}
-```
-
 ### Automatically refresh all instances after the group is updated
 
 ```terraform
@@ -416,8 +373,7 @@ The following arguments are supported:
 * `termination_policies` (Optional) List of policies to decide how the instances in the Auto Scaling Group should be terminated. The allowed values are `OldestInstance`, `NewestInstance`, `OldestLaunchConfiguration`, `ClosestToNextInstanceHour`, `OldestLaunchTemplate`, `AllocationStrategy`, `Default`. Additionally, the ARN of a Lambda function can be specified for custom termination policies.
 * `suspended_processes` - (Optional) List of processes to suspend for the Auto Scaling Group. The allowed values are `Launch`, `Terminate`, `HealthCheck`, `ReplaceUnhealthy`, `AZRebalance`, `AlarmNotification`, `ScheduledActions`, `AddToLoadBalancer`, `InstanceRefresh`.
 Note that if you suspend either the `Launch` or `Terminate` process types, it can prevent your Auto Scaling Group from functioning properly.
-* `tag` (Optional) Configuration block(s) containing resource tags. Conflicts with `tags`. See [Tag](#tag-and-tags) below for more details.
-* `tags` (Optional, **Deprecated** use `tag` instead) Set of maps containing resource tags. Conflicts with `tag`. See [Tags](#tag-and-tags) below for more details.
+* `tag` (Optional) Configuration block(s) containing resource tags. See [Tag](#tag) below for more details.
 * `placement_group` (Optional) Name of the placement group into which you'll launch your instances, if any.
 * `metrics_granularity` - (Optional) Granularity to associate with the metrics to collect. The only valid value is `1Minute`. Default is `1Minute`.
 * `enabled_metrics` - (Optional) List of metrics to collect. The allowed values are defined by the [underlying AWS API](https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_EnableMetricsCollection.html).
@@ -611,7 +567,7 @@ This configuration block supports the following:
     * `min` - (Required) Minimum.
     * `max` - (Optional) Maximum.
 
-### tag and tags
+### tag
 
 The `tag` attribute accepts exactly one tag declaration with the following fields:
 
@@ -620,10 +576,7 @@ The `tag` attribute accepts exactly one tag declaration with the following field
 * `propagate_at_launch` - (Required) Enables propagation of the tag to
    Amazon EC2 instances launched via this ASG
 
-To declare multiple tags additional `tag` blocks can be specified.
-Alternatively the `tags` attributes can be used, which accepts a list of maps containing the above field names as keys and their respective values.
-This allows the construction of dynamic lists of tags which is not possible using the single `tag` attribute.
-`tag` and `tags` are mutually exclusive, only one of them can be specified.
+To declare multiple tags, additional `tag` blocks can be specified.
 
 ~> **NOTE:** Other AWS APIs may automatically add special tags to their associated Auto Scaling Group for management purposes, such as ECS Capacity Providers adding the `AmazonECSManaged` tag. These generally should be included in the configuration so Terraform does not attempt to remove them and so if the `min_size` was greater than zero on creation, that these tag(s) are applied to any initial EC2 Instances in the Auto Scaling Group. If these tag(s) were missing in the Auto Scaling Group configuration on creation, affected EC2 Instances missing the tags may require manual intervention of adding the tags to ensure they work properly with the other AWS service.
 
