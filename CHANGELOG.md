@@ -9,6 +9,7 @@ FEATURES:
 * **New Data Source:** `aws_redshiftserverless_workgroup` ([#29208](https://github.com/hashicorp/terraform-provider-aws/issues/29208))
 * **New Data Source:** `aws_route53_resolver_query_log_config` ([#29111](https://github.com/hashicorp/terraform-provider-aws/issues/29111))
 * **New Data Source:** `aws_sesv2_configuration_set` ([#30108](https://github.com/hashicorp/terraform-provider-aws/issues/30108))
+* **New Data Source:** `aws_vpclattice_listener` ([#30843](https://github.com/hashicorp/terraform-provider-aws/issues/30843))
 * **New Resource:** `aws_cloudwatch_event_endpoint` ([#25846](https://github.com/hashicorp/terraform-provider-aws/issues/25846))
 * **New Resource:** `aws_vpclattice_listener` ([#30711](https://github.com/hashicorp/terraform-provider-aws/issues/30711))
 * **New Resource:** `aws_vpclattice_listener_rule` ([#30784](https://github.com/hashicorp/terraform-provider-aws/issues/30784))
@@ -24,12 +25,14 @@ ENHANCEMENTS:
 * data-source/aws_outposts_outpost: Add `lifecycle_status`, `site_arn`, `supported_hardware_type` and `tags` attributes ([#30754](https://github.com/hashicorp/terraform-provider-aws/issues/30754))
 * data-source/aws_servicequotas_service_quota: Add `usage_metric` attribute ([#29499](https://github.com/hashicorp/terraform-provider-aws/issues/29499))
 * data-source/aws_subnet: Add `enable_lni_at_device_index` attribute ([#30798](https://github.com/hashicorp/terraform-provider-aws/issues/30798))
+* resource/aws_appsync_datasource: Add `opensearchservice_config` argument ([#29578](https://github.com/hashicorp/terraform-provider-aws/issues/29578))
 * resource/aws_cloudfront_response_headers_policy: Add `remove_headers_config` argument ([#28940](https://github.com/hashicorp/terraform-provider-aws/issues/28940))
 * resource/aws_cloudwatch_event_target: Add `ecs_target.ordered_placement_strategy` argument ([#28384](https://github.com/hashicorp/terraform-provider-aws/issues/28384))
 * resource/aws_cloudwatch_metric_stream: Add `include_linked_accounts_metrics` argument ([#29281](https://github.com/hashicorp/terraform-provider-aws/issues/29281))
 * resource/aws_dms_replication_instance: Increase default timeout for `create` ([#29905](https://github.com/hashicorp/terraform-provider-aws/issues/29905))
 * resource/aws_eks_node_group: Add plan time validation to `node_group_name` and `node_group_name_prefix` arguments ([#29975](https://github.com/hashicorp/terraform-provider-aws/issues/29975))
 * resource/aws_elastic_beanstalk_application: Add plan time validation to `appversion_lifecycle.service_role` and `name` arguments ([#17727](https://github.com/hashicorp/terraform-provider-aws/issues/17727))
+* resource/aws_emr_cluster: Add `placement_group_config` argument ([#30121](https://github.com/hashicorp/terraform-provider-aws/issues/30121))
 * resource/aws_fis_experiment_template: Add support for `Subnets` Network Actions to `actions.*.target` ([#30211](https://github.com/hashicorp/terraform-provider-aws/issues/30211))
 * resource/aws_iam_role: Add `role_last_used` attribute ([#30750](https://github.com/hashicorp/terraform-provider-aws/issues/30750))
 * resource/aws_iot_topic_rule: Add `error_action.firehose.batch_mode`, `error_action.iot_analytics.batch_mode`, `error_action.iot_events.batch_mode`, `firehose.batch_mode`, `iot_analytics.batch_mode` and `iot_events.batch_mode` arguments ([#28568](https://github.com/hashicorp/terraform-provider-aws/issues/28568))
@@ -50,6 +53,9 @@ ENHANCEMENTS:
 * resource/aws_ssoadmin_permission_set: Extend timeout delay and min timeout ([#25849](https://github.com/hashicorp/terraform-provider-aws/issues/25849))
 * resource/aws_subnet: Add `enable_lni_at_device_index` attribute ([#30798](https://github.com/hashicorp/terraform-provider-aws/issues/30798))
 * resource/aws_vpc_endpoint_service_allowed_principal: Changed id to use ServicePermissionId ([#27640](https://github.com/hashicorp/terraform-provider-aws/issues/27640))
+* resource/aws_wafv2_rule_group: Add `rule.action.challenge` argument ([#29690](https://github.com/hashicorp/terraform-provider-aws/issues/29690))
+* resource/aws_wafv2_rule_group: Add `rule.captcha_config` argument ([#29608](https://github.com/hashicorp/terraform-provider-aws/issues/29608))
+* resource/aws_wafv2_web_acl: Add `captcha_config` and `rule.captcha_config` arguments ([#29608](https://github.com/hashicorp/terraform-provider-aws/issues/29608))
 
 BUG FIXES:
 
