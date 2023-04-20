@@ -1,5 +1,5 @@
 ```release-note:enhancement
-resource/aws_wafv2_rule_group: Add `captcha_config` and `rule.captcha_config` arguments
+resource/aws_wafv2_rule_group: Add `rule.captcha_config` argument
 ```
 
 ```release-note:enhancement

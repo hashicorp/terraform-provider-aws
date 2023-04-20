@@ -64,7 +64,6 @@ func ResourceRuleGroup() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IntAtLeast(1),
 			},
-			"captcha_config":       outerCaptchaConfigSchema(),
 			"custom_response_body": customResponseBodySchema(),
 			"description": {
 				Type:         schema.TypeString,
