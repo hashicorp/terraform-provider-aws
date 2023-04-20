@@ -91,22 +91,22 @@ func ResourceServiceQuota() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"service": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
 									"class": {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
 									},
-									"type": {
+									"service": {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
 									},
 									"resource": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"type": {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
