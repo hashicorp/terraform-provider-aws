@@ -30,12 +30,12 @@ func expandRule(m map[string]interface{}) *wafv2.Rule {
 	}
 
 	rule := &wafv2.Rule{
+		Action:           expandRuleAction(m["action"].([]interface{})),
+		CaptchaConfig:    expandCaptchaConfig(m["captcha_config"].([]interface{})),
 		Name:             aws.String(m["name"].(string)),
 		Priority:         aws.Int64(int64(m["priority"].(int))),
-		Action:           expandRuleAction(m["action"].([]interface{})),
 		Statement:        expandRuleGroupRootStatement(m["statement"].([]interface{})),
 		VisibilityConfig: expandVisibilityConfig(m["visibility_config"].([]interface{})),
-		CaptchaConfig:    expandCaptchaConfig(m["captcha_config"].([]interface{})),
 	}
 
 	if v, ok := m["rule_label"].(*schema.Set); ok && v.Len() > 0 {
@@ -875,13 +875,13 @@ func expandWebACLRule(m map[string]interface{}) *wafv2.Rule {
 	}
 
 	rule := &wafv2.Rule{
-		Name:             aws.String(m["name"].(string)),
-		Priority:         aws.Int64(int64(m["priority"].(int))),
 		Action:           expandRuleAction(m["action"].([]interface{})),
+		CaptchaConfig:    expandCaptchaConfig(m["captcha_config"].([]interface{})),
+		Name:             aws.String(m["name"].(string)),
 		OverrideAction:   expandOverrideAction(m["override_action"].([]interface{})),
+		Priority:         aws.Int64(int64(m["priority"].(int))),
 		Statement:        expandWebACLRootStatement(m["statement"].([]interface{})),
 		VisibilityConfig: expandVisibilityConfig(m["visibility_config"].([]interface{})),
-		CaptchaConfig:    expandCaptchaConfig(m["captcha_config"].([]interface{})),
 	}
 
 	if v, ok := m["rule_label"].(*schema.Set); ok && v.Len() > 0 {
@@ -1351,12 +1351,12 @@ func flattenRules(r []*wafv2.Rule) interface{} {
 	for i, rule := range r {
 		m := make(map[string]interface{})
 		m["action"] = flattenRuleAction(rule.Action)
+		m["captcha_config"] = flattenCaptchaConfig(rule.CaptchaConfig)
 		m["name"] = aws.StringValue(rule.Name)
 		m["priority"] = int(aws.Int64Value(rule.Priority))
 		m["rule_label"] = flattenRuleLabels(rule.RuleLabels)
 		m["statement"] = flattenRuleGroupRootStatement(rule.Statement)
 		m["visibility_config"] = flattenVisibilityConfig(rule.VisibilityConfig)
-		m["captcha_config"] = flattenCaptchaConfig(rule.CaptchaConfig)
 		out[i] = m
 	}
 
@@ -2120,13 +2120,13 @@ func flattenWebACLRules(r []*wafv2.Rule) interface{} {
 	for i, rule := range r {
 		m := make(map[string]interface{})
 		m["action"] = flattenRuleAction(rule.Action)
+		m["captcha_config"] = flattenCaptchaConfig(rule.CaptchaConfig)
 		m["override_action"] = flattenOverrideAction(rule.OverrideAction)
 		m["name"] = aws.StringValue(rule.Name)
 		m["priority"] = int(aws.Int64Value(rule.Priority))
 		m["rule_label"] = flattenRuleLabels(rule.RuleLabels)
 		m["statement"] = flattenWebACLRootStatement(rule.Statement)
 		m["visibility_config"] = flattenVisibilityConfig(rule.VisibilityConfig)
-		m["captcha_config"] = flattenCaptchaConfig(rule.CaptchaConfig)
 		out[i] = m
 	}
 
