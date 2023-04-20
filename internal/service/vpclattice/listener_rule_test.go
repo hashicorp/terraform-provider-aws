@@ -37,7 +37,7 @@ func TestAccVPCLatticeListenerRule_basic(t *testing.T) {
 		CheckDestroy:             testAccChecklistenerRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAcclistenerRule_basic(rName),
+				Config: testAccListenerRuleConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
 					resource.TestCheckResourceAttr(resourceName, "priority", "20"),
@@ -70,7 +70,7 @@ func TestAccVPCLatticeListenerRule_fixedResponse(t *testing.T) {
 		CheckDestroy:             testAccChecklistenerRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAcclistenerRule_fixedResponse(rName),
+				Config: testAccListenerRuleConfig_fixedResponse(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -100,7 +100,7 @@ func TestAccVPCLatticeListenerRule_methodMatch(t *testing.T) {
 		CheckDestroy:             testAccChecklistenerRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAcclistenerRule_methodMatch(rName),
+				Config: testAccListenerRuleConfig_methodMatch(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -129,7 +129,7 @@ func TestAccVPCLatticeListenerRule_tags(t *testing.T) {
 		CheckDestroy:             testAccChecklistenerRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerRule_tags1(rName, "key1", "value1"),
+				Config: testAccListenerRuleConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -142,7 +142,7 @@ func TestAccVPCLatticeListenerRule_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccListenerRule_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccListenerRuleConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -152,78 +152,6 @@ func TestAccVPCLatticeListenerRule_tags(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAcclistenerRule_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpclattice_listener_rule" "test" {
-  name                = %q
-  listener_identifier = "listener-0f84b4608eae14610"
-  service_identifier  = "svc-05cad7dcf6ee78d45"
-  priority            = 20
-  match {
-    http_match {
-
-      header_matches {
-        name           = "example-header"
-        case_sensitive = false
-
-        match {
-          exact = "example-contains"
-        }
-      }
-
-      path_match {
-        case_sensitive = true
-        match {
-          prefix = "/example-path"
-        }
-      }
-    }
-  }
-  action {
-    forward {
-      target_groups {
-        target_group_identifier = "tg-00153386728e69d10"
-        weight                  = 1
-      }
-      target_groups {
-        target_group_identifier = "tg-0fcd8d514d231b311"
-        weight                  = 2
-      }
-    }
-
-  }
-}
-`, rName)
-}
-
-func testAcclistenerRule_fixedResponse(rName string) string {
-	return fmt.Sprintf(`
-
-
-resource "aws_vpclattice_listener_rule" "test" {
-  name                = %q
-  listener_identifier = "listener-0f84b4608eae14610"
-  service_identifier  = "svc-05cad7dcf6ee78d45"
-  priority            = 10
-  match {
-    http_match {
-      path_match {
-        case_sensitive = false
-        match {
-          exact = "/example-path"
-        }
-      }
-    }
-  }
-  action {
-    fixed_response {
-      status_code = 404
-    }
-  }
-}
-`, rName)
 }
 
 func testAccCheckListenerRuleExists(ctx context.Context, name string, rule *vpclattice.GetRuleOutput) resource.TestCheckFunc {
@@ -266,13 +194,8 @@ func testAccChecklistenerRuleDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			listenerRuleResource, ok := s.RootModule().Resources["aws_vpclattice_listener_rule.test"]
-			if !ok {
-				return fmt.Errorf("Not found: %s", "aws_vpclattice_listener_rule.test")
-			}
-
-			listenerIdentifier := listenerRuleResource.Primary.Attributes["listener_identifier"]
-			serviceIdentifier := listenerRuleResource.Primary.Attributes["service_identifier"]
+			listenerIdentifier := rs.Primary.Attributes["listener_identifier"]
+			serviceIdentifier := rs.Primary.Attributes["service_identifier"]
 
 			_, err := conn.GetRule(ctx, &vpclattice.GetRuleInput{
 				RuleIdentifier:     aws.String(rs.Primary.Attributes["arn"]),
@@ -294,12 +217,113 @@ func testAccChecklistenerRuleDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-func testAccListenerRule_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
+func testAccListenerRuleConfig_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 0), fmt.Sprintf(`
+resource "aws_vpclattice_service" "test" {
+  name = %[1]q
+}
+
+resource "aws_vpclattice_target_group" "test" {
+  count = 2
+
+  name = "%[1]s-${count.index}"
+  type = "INSTANCE"
+
+  config {
+    port           = 80
+    protocol       = "HTTP"
+    vpc_identifier = aws_vpc.test.id
+  }
+}
+
+resource "aws_vpclattice_listener" "test" {
+  name               = %[1]q
+  protocol           = "HTTP"
+  service_identifier = aws_vpclattice_service.test.id
+  default_action {
+    fixed_response {
+      status_code = 404
+    }
+  }
+}
+`, rName))
+}
+
+func testAccListenerRuleConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener_rule" "test" {
-  name                = %q
-  listener_identifier = "listener-0f84b4608eae14610"
-  service_identifier  = "svc-05cad7dcf6ee78d45"
+  name                = %[1]q
+  listener_identifier = aws_vpclattice_listener.test.id
+  service_identifier  = aws_vpclattice_service.test.id
+  priority            = 20
+  match {
+    http_match {
+
+      header_matches {
+        name           = "example-header"
+        case_sensitive = false
+
+        match {
+          exact = "example-contains"
+        }
+      }
+
+      path_match {
+        case_sensitive = true
+        match {
+          prefix = "/example-path"
+        }
+      }
+    }
+  }
+  action {
+    forward {
+      target_groups {
+        target_group_identifier = aws_vpclattice_target_group.test[0].id
+        weight                  = 1
+      }
+      target_groups {
+        target_group_identifier = aws_vpclattice_target_group.test[1].id
+        weight                  = 2
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccListenerRuleConfig_fixedResponse(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
+resource "aws_vpclattice_listener_rule" "test" {
+  name                = %[1]q
+  listener_identifier = aws_vpclattice_listener.test.id
+  service_identifier  = aws_vpclattice_service.test.id
+  priority            = 10
+  match {
+    http_match {
+      path_match {
+        case_sensitive = false
+        match {
+          exact = "/example-path"
+        }
+      }
+    }
+  }
+  action {
+    fixed_response {
+      status_code = 404
+    }
+  }
+}
+`, rName))
+}
+
+func testAccListenerRuleConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
+resource "aws_vpclattice_listener_rule" "test" {
+  name                = %[1]q
+  listener_identifier = aws_vpclattice_listener.test.id
+  service_identifier  = aws_vpclattice_service.test.id
   priority            = 30
   match {
     http_match {
@@ -320,15 +344,15 @@ resource "aws_vpclattice_listener_rule" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
-func testAccListenerRule_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
+func testAccListenerRuleConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener_rule" "test" {
-  name                = %q
-  listener_identifier = "listener-0f84b4608eae14610"
-  service_identifier  = "svc-05cad7dcf6ee78d45"
+  name                = %[1]q
+  listener_identifier = aws_vpclattice_listener.test.id
+  service_identifier  = aws_vpclattice_service.test.id
   priority            = 30
   match {
     http_match {
@@ -350,15 +374,15 @@ resource "aws_vpclattice_listener_rule" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAcclistenerRule_methodMatch(rName string) string {
-	return fmt.Sprintf(`
+func testAccListenerRuleConfig_methodMatch(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener_rule" "test" {
-  name                = %q
-  listener_identifier = "listener-0f84b4608eae14610"
-  service_identifier  = "svc-05cad7dcf6ee78d45"
+  name                = %[1]q
+  listener_identifier = aws_vpclattice_listener.test.id
+  service_identifier  = aws_vpclattice_service.test.id
   priority            = 40
   match {
     http_match {
@@ -386,15 +410,15 @@ resource "aws_vpclattice_listener_rule" "test" {
   action {
     forward {
       target_groups {
-        target_group_identifier = "tg-00153386728e69d10"
+        target_group_identifier = aws_vpclattice_target_group.test[0].id
         weight                  = 1
       }
       target_groups {
-        target_group_identifier = "tg-0fcd8d514d231b311"
+        target_group_identifier = aws_vpclattice_target_group.test[1].id
         weight                  = 2
       }
     }
   }
 }
-`, rName)
+`, rName))
 }

@@ -517,8 +517,6 @@ resource "aws_vpclattice_target_group" "test" {
     vpc_identifier = aws_vpc.test.id
   }
 }
-
-
 `, rName))
 }
 
