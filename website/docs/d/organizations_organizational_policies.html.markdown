@@ -33,9 +33,9 @@ The following arguments are required:
 In addition to all arguments above, the following attributes are exported:
 
 * `policies` - List of policies on target, which have the following attributes:
-  * `arn` - The Amazon Resource Name (ARN) of the account.
-  * `aws_managed` - Indicates if a policy is AWS managed.
-  * `description` - Description of the policy.
-  * `id` - The unique identifier (ID) of the policy.
-  * `name` - The friendly name of the policy.
-  * `type` - The type of policy.
+    * `arn` - The Amazon Resource Name (ARN) of the account.
+    * `aws_managed` - Indicates if a policy is AWS managed.
+    * `description` - Description of the policy.
+    * `id` - The unique identifier (ID) of the policy.
+    * `name` - The friendly name of the policy.
+    * `type` - The type of policy.
