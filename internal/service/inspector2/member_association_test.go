@@ -37,7 +37,7 @@ func testAccMemberAssociation_basic(t *testing.T) {
 					testAccCheckMemberAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", "data.aws_caller_identity.member", "account_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "delegated_admin_account_id", "data.aws_caller_identity.current", "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "relationship_status", string(types.RelationshipStatusCreated)),
+					resource.TestCheckResourceAttr(resourceName, "relationship_status", string(types.RelationshipStatusEnabled)),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
 				),
 			},
