@@ -1256,6 +1256,7 @@ func TestAccAutoScalingGroup_ALBTargetGroups_elbCapacity(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	subnetCount := 2
 	var tg elbv2.TargetGroup
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1265,7 +1266,7 @@ func TestAccAutoScalingGroup_ALBTargetGroups_elbCapacity(t *testing.T) {
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_targetELBCapacity(rName),
+				Config: testAccGroupConfig_targetELBCapacity(rName, subnetCount),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
 					testAccCheckLBTargetGroupExists(ctx, "aws_lb_target_group.test", &tg),
@@ -4622,10 +4623,10 @@ resource "aws_autoscaling_group" "test" {
 `, rName, targetGroupCount))
 }
 
-func testAccGroupConfig_targetELBCapacity(rName string) string {
+func testAccGroupConfig_targetELBCapacity(rName string, subnetCount int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
-		acctest.ConfigVPCWithSubnets(rName, 2),
+		acctest.ConfigVPCWithSubnets(rName, subnetCount),
 		fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
@@ -4686,7 +4687,7 @@ resource "aws_route_table" "test" {
 }
 
 resource "aws_route_table_association" "test" {
-  count = length(aws_subnet.test[*])
+  count = %[2]d
 
   subnet_id      = aws_subnet.test[count.index].id
   route_table_id = aws_route_table.test.id
@@ -4737,7 +4738,7 @@ resource "aws_autoscaling_group" "test" {
     propagate_at_launch = true
   }
 }
-`, rName))
+`, rName, subnetCount))
 }
 
 func testAccGroupConfig_warmPoolEmpty(rName string) string {
