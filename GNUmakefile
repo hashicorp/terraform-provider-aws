@@ -132,12 +132,15 @@ gen:
 	rm -f internal/sweep/sweep_test.go
 	rm -f names/caps.md
 	rm -f names/*_gen.go
-	rm -f website/allowed-subcategories.txt
 	rm -f website/docs/guides/custom-service-endpoints.html.md
 	rm -f .ci/.semgrep-caps-aws-ec2.yml
 	rm -f .ci/.semgrep-configs.yml
 	rm -f .ci/.semgrep-service-name*.yml
 	$(GO_VER) generate ./...
+	# Generate service package data last as it may depend on output of earlier generators.
+	rm -f internal/service/**/service_package_gen.go
+	rm -f internal/provider/service_packages_gen.go
+	$(GO_VER) generate ./internal/generate/servicepackages
 
 gencheck:
 	@echo "==> Checking generated source code..."
@@ -210,7 +213,7 @@ sanity:
 		./internal/service/s3/... \
 		./internal/service/secretsmanager/... \
 		./internal/service/sts/... \
-		-v -count 1 -parallel 20 -run='TestAccIAMRole_basic|TestAccIAMRole_namePrefix|TestAccIAMRole_disappears|TestAccIAMRole_InlinePolicy_basic|TestAccIAMPolicyDocumentDataSource_basic|TestAccIAMPolicyDocumentDataSource_sourceConflicting|TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON|TestAccIAMRolePolicyAttachment_basic|TestAccIAMRolePolicyAttachment_disappears|TestAccIAMRolePolicyAttachment_Disappears_role|TestAccIAMPolicy_basic|TestAccIAMPolicy_policy|TestAccIAMPolicy_tags|TestAccIAMRolePolicy_basic|TestAccIAMRolePolicy_unknownsInPolicy|TestAccIAMInstanceProfile_basic|TestAccIAMInstanceProfile_tags|TestAccSTSCallerIdentityDataSource_basic|TestAccVPCSecurityGroup_basic|TestAccVPCSecurityGroup_ipRangesWithSameRules|TestAccVPCSecurityGroup_vpcAllEgress|TestAccVPCSecurityGroupRule_race|TestAccVPCSecurityGroupRule_protocolChange|TestAccVPCDataSource_basic|TestAccVPCSubnet_basic|TestAccVPC_tenancy|TestAccVPCRouteTableAssociation_Subnet_basic|TestAccVPCRouteTable_basic|TestAccLogsGroup_basic|TestAccLogsGroup_multiple|TestAccMetaRegionDataSource_basic|TestAccMetaRegionDataSource_endpoint|TestAccMetaPartitionDataSource_basic|TestAccS3Bucket_Basic_basic|TestAccS3Bucket_Security_corsUpdate|TestAccS3BucketPublicAccessBlock_basic|TestAccS3BucketPolicy_basic|TestAccS3BucketACL_updateACL|TestAccRoute53Record_basic|TestAccRoute53Record_Latency_basic|TestAccRoute53ZoneDataSource_name|TestAccLambdaFunction_basic|TestAccLambdaPermission_basic|TestAccKMSKey_basic|TestAccELBV2TargetGroup_basic|TestAccSecretsManagerSecret_basic|TestAccECSTaskDefinition_basic|TestAccECSService_basic'  -timeout 180m
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='TestAccIAMRole_basic|TestAccIAMRole_namePrefix|TestAccIAMRole_disappears|TestAccIAMRole_InlinePolicy_basic|TestAccIAMPolicyDocumentDataSource_basic|TestAccIAMPolicyDocumentDataSource_sourceConflicting|TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON|TestAccIAMRolePolicyAttachment_basic|TestAccIAMRolePolicyAttachment_disappears|TestAccIAMRolePolicyAttachment_Disappears_role|TestAccIAMPolicy_basic|TestAccIAMPolicy_policy|TestAccIAMPolicy_tags|TestAccIAMRolePolicy_basic|TestAccIAMRolePolicy_unknownsInPolicy|TestAccIAMInstanceProfile_basic|TestAccIAMInstanceProfile_tags|TestAccSTSCallerIdentityDataSource_basic|TestAccVPCSecurityGroup_basic|TestAccVPCSecurityGroup_ipRangesWithSameRules|TestAccVPCSecurityGroup_vpcAllEgress|TestAccVPCSecurityGroupRule_race|TestAccVPCSecurityGroupRule_protocolChange|TestAccVPCDataSource_basic|TestAccVPCSubnet_basic|TestAccVPC_tenancy|TestAccVPCRouteTableAssociation_Subnet_basic|TestAccVPCRouteTable_basic|TestAccLogsGroup_basic|TestAccLogsGroup_multiple|TestAccMetaRegionDataSource_basic|TestAccMetaRegionDataSource_endpoint|TestAccMetaPartitionDataSource_basic|TestAccS3Bucket_Basic_basic|TestAccS3Bucket_Security_corsUpdate|TestAccS3BucketPublicAccessBlock_basic|TestAccS3BucketPolicy_basic|TestAccS3BucketACL_updateACL|TestAccRoute53Record_basic|TestAccRoute53Record_Latency_basic|TestAccRoute53ZoneDataSource_name|TestAccLambdaFunction_basic|TestAccLambdaPermission_basic|TestAccKMSKey_basic|TestAccELBV2TargetGroup_basic|TestAccSecretsManagerSecret_basic|TestAccECSTaskDefinition_basic|TestAccECSService_basic' -timeout $(ACCTEST_TIMEOUT)
 
 semall:
 	@echo "==> Running Semgrep checks locally (must have semgrep installed)..."
@@ -288,6 +291,10 @@ testacc-lint-fix:
 	| sort -u \
 	| xargs -I {} terrafmt fmt  --fmtcompat {}
 
+testacc-short: fmtcheck
+	@echo "Running acceptance tests with -short flag"
+	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -short -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
+
 tfsdk2fw:
 	cd tools/tfsdk2fw && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw
 
@@ -303,15 +310,7 @@ tools:
 	cd .ci/tools && $(GO_VER) install github.com/rhysd/actionlint/cmd/actionlint
 	cd .ci/tools && $(GO_VER) install mvdan.cc/gofumpt
 
-top5services:
-	@echo "==> Rapid smoketest of top 5 services"
-	TF_ACC=1 $(GO_VER) test \
-		./internal/service/ec2/... \
-		./internal/service/iam/... \
-		./internal/service/logs/... \
-		./internal/service/meta/... \
-		./internal/service/sts/... \
-		-v -count 1 -parallel 3 -run='TestAccIAMRole_basic|TestAccSTSCallerIdentityDataSource_basic|TestAccVPCSecurityGroup_tags|TestAccLogsGroup_basic|TestAccMetaRegionDataSource_basic'  -timeout 180m
+ts: testacc-short
 
 website-link-check:
 	@.ci/scripts/markdown-link-check.sh
@@ -374,9 +373,10 @@ yamllint:
 	testacc \
 	testacc-lint \
 	testacc-lint-fix \
+	testacc-short \
 	tfsdk2fw \
 	tools \
-	top5services \
+	ts \
 	website-link-check \
 	website-link-check-ghrc \
 	website-lint \

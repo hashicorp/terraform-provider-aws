@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -18,7 +18,7 @@ func FindJobByID(ctx context.Context, conn *backup.Backup, id string) (*backup.D
 	output, err := conn.DescribeBackupJobWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -44,7 +44,7 @@ func FindRecoveryPointByTwoPartKey(ctx context.Context, conn *backup.Backup, bac
 	output, err := conn.DescribeRecoveryPointWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException, errCodeAccessDeniedException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -69,7 +69,7 @@ func FindVaultAccessPolicyByName(ctx context.Context, conn *backup.Backup, name 
 	output, err := conn.GetBackupVaultAccessPolicyWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException, errCodeAccessDeniedException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -94,7 +94,7 @@ func FindVaultByName(ctx context.Context, conn *backup.Backup, name string) (*ba
 	output, err := conn.DescribeBackupVaultWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException, errCodeAccessDeniedException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

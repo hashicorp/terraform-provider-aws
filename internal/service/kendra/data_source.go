@@ -15,7 +15,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kendra/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,6 +25,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -33,6 +35,8 @@ const (
 	validationExceptionMessageDataSourceSecrets = "Secrets Manager throws the exception"
 )
 
+// @SDKResource("aws_kendra_data_source", name="Data Source")
+// @Tags(identifierAttribute="arn")
 func ResourceDataSource() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataSourceCreate,
@@ -466,8 +470,8 @@ func ResourceDataSource() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -585,15 +589,13 @@ func documentAttributeValueSchema() *schema.Schema {
 
 func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KendraClient()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
-
 	input := &kendra.CreateDataSourceInput{
-		ClientToken: aws.String(resource.UniqueId()),
+		ClientToken: aws.String(id.UniqueId()),
 		IndexId:     aws.String(d.Get("index_id").(string)),
 		Name:        aws.String(name),
+		Tags:        GetTagsIn(ctx),
 		Type:        types.DataSourceType(d.Get("type").(string)),
 	}
 
@@ -620,12 +622,6 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	if v, ok := d.GetOk("schedule"); ok {
 		input.Schedule = aws.String(v.(string))
 	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating Kendra Data Source %#v", input)
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
@@ -666,8 +662,6 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KendraClient()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id, indexId, err := DataSourceParseResourceID(d.Id())
 	if err != nil {
@@ -714,21 +708,6 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	if err := d.Set("custom_document_enrichment_configuration", flattenCustomDocumentEnrichmentConfiguration(resp.CustomDocumentEnrichmentConfiguration)); err != nil {
 		return diag.FromErr(err)
-	}
-
-	tags, err := ListTags(ctx, conn, arn)
-	if err != nil {
-		return diag.Errorf("listing tags for resource (%s): %s", arn, err)
-	}
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	return nil
@@ -802,14 +781,6 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("updating Kendra Data Source (%s) tags: %s", d.Id(), err))
-		}
-	}
-
 	return resourceDataSourceRead(ctx, d, meta)
 }
 
@@ -845,7 +816,7 @@ func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func waitDataSourceCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeDataSourceOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.DataSourceStatusCreating),
 		Target:                    enum.Slice(types.DataSourceStatusActive),
 		Timeout:                   timeout,
@@ -867,7 +838,7 @@ func waitDataSourceCreated(ctx context.Context, conn *kendra.Client, id, indexId
 }
 
 func waitDataSourceUpdated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeDataSourceOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.DataSourceStatusUpdating),
 		Target:                    enum.Slice(types.DataSourceStatusActive),
 		Timeout:                   timeout,
@@ -889,7 +860,7 @@ func waitDataSourceUpdated(ctx context.Context, conn *kendra.Client, id, indexId
 }
 
 func waitDataSourceDeleted(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeDataSourceOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.DataSourceStatusDeleting),
 		Target:  []string{},
 		Timeout: timeout,
@@ -907,7 +878,7 @@ func waitDataSourceDeleted(ctx context.Context, conn *kendra.Client, id, indexId
 	return nil, err
 }
 
-func statusDataSource(ctx context.Context, conn *kendra.Client, id, indexId string) resource.StateRefreshFunc {
+func statusDataSource(ctx context.Context, conn *kendra.Client, id, indexId string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDataSourceByID(ctx, conn, id, indexId)
 

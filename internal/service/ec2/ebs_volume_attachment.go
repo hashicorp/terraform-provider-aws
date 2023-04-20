@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_volume_attachment")
 func ResourceVolumeAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVolumeAttachmentCreate,

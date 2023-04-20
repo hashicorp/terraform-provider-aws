@@ -5,28 +5,160 @@ package redshift
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceCluster,
+			TypeName: "aws_redshift_cluster",
+		},
+		{
+			Factory:  DataSourceClusterCredentials,
+			TypeName: "aws_redshift_cluster_credentials",
+		},
+		{
+			Factory:  DataSourceOrderableCluster,
+			TypeName: "aws_redshift_orderable_cluster",
+		},
+		{
+			Factory:  DataSourceServiceAccount,
+			TypeName: "aws_redshift_service_account",
+		},
+		{
+			Factory:  DataSourceSubnetGroup,
+			TypeName: "aws_redshift_subnet_group",
+		},
+	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceAuthenticationProfile,
+			TypeName: "aws_redshift_authentication_profile",
+		},
+		{
+			Factory:  ResourceCluster,
+			TypeName: "aws_redshift_cluster",
+			Name:     "Cluster",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceClusterIAMRoles,
+			TypeName: "aws_redshift_cluster_iam_roles",
+		},
+		{
+			Factory:  ResourceClusterSnapshot,
+			TypeName: "aws_redshift_cluster_snapshot",
+			Name:     "Cluster Snapshot",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceEndpointAccess,
+			TypeName: "aws_redshift_endpoint_access",
+		},
+		{
+			Factory:  ResourceEndpointAuthorization,
+			TypeName: "aws_redshift_endpoint_authorization",
+		},
+		{
+			Factory:  ResourceEventSubscription,
+			TypeName: "aws_redshift_event_subscription",
+			Name:     "Event Subscription",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceHSMClientCertificate,
+			TypeName: "aws_redshift_hsm_client_certificate",
+			Name:     "HSM Client Certificate",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceHSMConfiguration,
+			TypeName: "aws_redshift_hsm_configuration",
+			Name:     "HSM Configuration",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceParameterGroup,
+			TypeName: "aws_redshift_parameter_group",
+			Name:     "Parameter Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourcePartner,
+			TypeName: "aws_redshift_partner",
+		},
+		{
+			Factory:  ResourceScheduledAction,
+			TypeName: "aws_redshift_scheduled_action",
+		},
+		{
+			Factory:  ResourceSecurityGroup,
+			TypeName: "aws_redshift_security_group",
+		},
+		{
+			Factory:  ResourceSnapshotCopyGrant,
+			TypeName: "aws_redshift_snapshot_copy_grant",
+			Name:     "Snapshot Copy Grant",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceSnapshotSchedule,
+			TypeName: "aws_redshift_snapshot_schedule",
+			Name:     "Snapshot Schedule",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceSnapshotScheduleAssociation,
+			TypeName: "aws_redshift_snapshot_schedule_association",
+		},
+		{
+			Factory:  ResourceSubnetGroup,
+			TypeName: "aws_redshift_subnet_group",
+			Name:     "Subnet Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceUsageLimit,
+			TypeName: "aws_redshift_usage_limit",
+			Name:     "Usage Limit",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

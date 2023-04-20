@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,6 +20,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -27,6 +28,8 @@ const (
 	securityGroupsDeletedSleepTime = 30 * time.Second
 )
 
+// @SDKResource("aws_opsworks_stack", name="Stack")
+// @Tags
 func ResourceStack() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStackCreate,
@@ -171,8 +174,8 @@ func ResourceStack() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"use_custom_cookbooks": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -199,8 +202,6 @@ func ResourceStack() *schema.Resource {
 func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpsWorksConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	region := d.Get("region").(string)
@@ -290,7 +291,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(aws.StringValue(outputRaw.(*opsworks.CreateStackOutput).StackId))
 
-	if len(tags) > 0 {
+	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
 		arn := arn.ARN{
 			Partition: meta.(*conns.AWSClient).Partition,
 			Service:   opsworks.ServiceName,
@@ -321,8 +322,6 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	var err error
 	conn := meta.(*conns.AWSClient).OpsWorksConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	if v, ok := d.GetOk("stack_endpoint"); ok {
 		log.Printf(`[DEBUG] overriding region using "stack_endpoint": %s`, v)
@@ -420,16 +419,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "listing tags for OpsWorks Stack (%s): %s", arn, err)
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, Tags(tags))
 
 	return diags
 }
@@ -602,7 +592,7 @@ func FindStackByID(ctx context.Context, conn *opsworks.OpsWorks, id string) (*op
 	output, err := conn.DescribeStacksWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

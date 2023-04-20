@@ -6,6 +6,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -13,13 +14,16 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -28,6 +32,8 @@ const (
 	VPCCIDRMaxIPv6 = 56
 )
 
+// @SDKResource("aws_vpc", name="VPC")
+// @Tags(identifierAttribute="id")
 func ResourceVPC() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -35,6 +41,7 @@ func ResourceVPC() *schema.Resource {
 		ReadWithoutTimeout:   resourceVPCRead,
 		UpdateWithoutTimeout: resourceVPCUpdate,
 		DeleteWithoutTimeout: resourceVPCDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceVPCImport,
 		},
@@ -169,8 +176,8 @@ func ResourceVPC() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -178,8 +185,6 @@ func ResourceVPC() *schema.Resource {
 func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if _, ok := d.GetOk("enable_classiclink"); ok {
 		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic no new VPCs can be created with ClassicLink enabled`)
@@ -188,7 +193,7 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	input := &ec2.CreateVpcInput{
 		AmazonProvidedIpv6CidrBlock: aws.Bool(d.Get("assign_generated_ipv6_cidr_block").(bool)),
 		InstanceTenancy:             aws.String(d.Get("instance_tenancy").(string)),
-		TagSpecifications:           tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpc),
+		TagSpecifications:           getTagSpecificationsIn(ctx, ec2.ResourceTypeVpc),
 	}
 
 	if v, ok := d.GetOk("cidr_block"); ok {
@@ -219,12 +224,16 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.Ipv6NetmaskLength = aws.Int64(int64(v.(int)))
 	}
 
-	log.Printf("[DEBUG] Creating EC2 VPC: %s", input)
-	output, err := conn.CreateVpcWithContext(ctx, input)
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.CreateVpcWithContext(ctx, input)
+		// "UnsupportedOperation: The operation AllocateIpamPoolCidr is not supported. Account 123456789012 is not monitored by IPAM ipam-07b079e3392782a55."
+	}, errCodeUnsupportedOperation, "is not monitored by IPAM")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPC: %s", err)
 	}
+
+	output := outputRaw.(*ec2.CreateVpcOutput)
 
 	d.SetId(aws.StringValue(output.Vpc.VpcId))
 
@@ -263,8 +272,6 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindVPCByID(ctx, conn, d.Id())
@@ -356,31 +363,35 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 		d.Set("default_security_group_id", v.GroupId)
 	}
 
-	d.Set("assign_generated_ipv6_cidr_block", nil)
-	d.Set("ipv6_cidr_block", nil)
-	d.Set("ipv6_cidr_block_network_border_group", nil)
-	d.Set("ipv6_ipam_pool_id", nil)
-	d.Set("ipv6_netmask_length", nil)
-
-	ipv6CIDRBlockAssociation := defaultIPv6CIDRBlockAssociation(vpc, d.Get("ipv6_association_id").(string))
-
-	if ipv6CIDRBlockAssociation == nil {
+	if ipv6CIDRBlockAssociation := defaultIPv6CIDRBlockAssociation(vpc, d.Get("ipv6_association_id").(string)); ipv6CIDRBlockAssociation == nil {
+		d.Set("assign_generated_ipv6_cidr_block", nil)
 		d.Set("ipv6_association_id", nil)
+		d.Set("ipv6_cidr_block", nil)
+		d.Set("ipv6_cidr_block_network_border_group", nil)
+		d.Set("ipv6_ipam_pool_id", nil)
+		d.Set("ipv6_netmask_length", nil)
 	} else {
 		cidrBlock := aws.StringValue(ipv6CIDRBlockAssociation.Ipv6CidrBlock)
 		ipv6PoolID := aws.StringValue(ipv6CIDRBlockAssociation.Ipv6Pool)
-		isAmazonIPv6Pool := ipv6PoolID == AmazonIPv6PoolID
+		isAmazonIPv6Pool := ipv6PoolID == amazonIPv6PoolID
 		d.Set("assign_generated_ipv6_cidr_block", isAmazonIPv6Pool)
 		d.Set("ipv6_association_id", ipv6CIDRBlockAssociation.AssociationId)
 		d.Set("ipv6_cidr_block", cidrBlock)
 		d.Set("ipv6_cidr_block_network_border_group", ipv6CIDRBlockAssociation.NetworkBorderGroup)
-		if !isAmazonIPv6Pool {
-			d.Set("ipv6_ipam_pool_id", ipv6PoolID)
+		if isAmazonIPv6Pool {
+			d.Set("ipv6_ipam_pool_id", nil)
+		} else {
+			if ipv6PoolID == ipamManagedIPv6PoolID {
+				d.Set("ipv6_ipam_pool_id", d.Get("ipv6_ipam_pool_id"))
+			} else {
+				d.Set("ipv6_ipam_pool_id", ipv6PoolID)
+			}
 		}
+		d.Set("ipv6_netmask_length", nil)
 		if ipv6PoolID != "" && !isAmazonIPv6Pool {
 			parts := strings.Split(cidrBlock, "/")
 			if len(parts) == 2 {
-				if v, err := strconv.Atoi(parts[1]); err != nil {
+				if v, err := strconv.Atoi(parts[1]); err == nil {
 					d.Set("ipv6_netmask_length", v)
 				} else {
 					log.Printf("[WARN] Unable to parse CIDR (%s) netmask length: %s", cidrBlock, err)
@@ -391,16 +402,7 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 		}
 	}
 
-	tags := KeyValueTags(ctx, vpc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, vpc.Tags)
 
 	return diags
 }
@@ -477,14 +479,6 @@ func resourceVPCUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("ipv6_association_id", associationID)
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 VPC (%s): updating tags: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceVPCRead(ctx, d, meta)...)
 }
 
@@ -515,6 +509,24 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPC (%s) delete: %s", d.Id(), err)
+	}
+
+	// If the VPC's CIDR block was allocated from an IPAM pool, wait for the allocation to disappear.
+	ipamPoolID := d.Get("ipv4_ipam_pool_id").(string)
+	if ipamPoolID == "" {
+		ipamPoolID = d.Get("ipv6_ipam_pool_id").(string)
+	}
+	if ipamPoolID != "" && ipamPoolID != amazonIPv6PoolID {
+		const (
+			timeout = 20 * time.Minute // IPAM eventual consistency
+		)
+		_, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (interface{}, error) {
+			return findIPAMPoolAllocationsForVPC(ctx, conn, ipamPoolID, d.Id())
+		})
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPC (%s) IPAM Pool (%s) Allocation delete: %s", d.Id(), ipamPoolID, err)
+		}
 	}
 
 	return diags
@@ -802,4 +814,26 @@ func modifyVPCTenancy(ctx context.Context, conn *ec2.EC2, vpcID string, v string
 	}
 
 	return nil
+}
+
+func findIPAMPoolAllocationsForVPC(ctx context.Context, conn *ec2.EC2, poolID, vpcID string) ([]*ec2.IpamPoolAllocation, error) {
+	input := &ec2.GetIpamPoolAllocationsInput{
+		IpamPoolId: aws.String(poolID),
+	}
+
+	output, err := FindIPAMPoolAllocations(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	output = slices.Filter(output, func(v *ec2.IpamPoolAllocation) bool {
+		return aws.StringValue(v.ResourceType) == ec2.IpamPoolAllocationResourceTypeVpc && aws.StringValue(v.ResourceId) == vpcID
+	})
+
+	if len(output) == 0 {
+		return nil, &retry.NotFoundError{}
+	}
+
+	return output, nil
 }

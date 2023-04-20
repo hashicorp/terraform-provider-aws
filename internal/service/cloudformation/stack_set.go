@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,8 +18,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_cloudformation_stack_set", name="Stack Set")
+// @Tags
 func ResourceStackSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStackSetCreate,
@@ -166,8 +169,8 @@ func ResourceStackSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"template_body": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -190,13 +193,12 @@ func ResourceStackSet() *schema.Resource {
 func resourceStackSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &cloudformation.CreateStackSetInput{
-		ClientRequestToken: aws.String(resource.UniqueId()),
+		ClientRequestToken: aws.String(id.UniqueId()),
 		StackSetName:       aws.String(name),
+		Tags:               GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("administration_role_arn"); ok {
@@ -231,10 +233,6 @@ func resourceStackSetCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.CallAs = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	if v, ok := d.GetOk("template_body"); ok {
 		input.TemplateBody = aws.String(v.(string))
 	}
@@ -258,10 +256,8 @@ func resourceStackSetCreate(ctx context.Context, d *schema.ResourceData, meta in
 func resourceStackSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	callAs := d.Get("call_as").(string)
 
+	callAs := d.Get("call_as").(string)
 	stackSet, err := FindStackSetByName(ctx, conn, d.Id(), callAs)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -296,16 +292,7 @@ func resourceStackSetRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set("stack_set_id", stackSet.StackSetId)
 
-	tags := KeyValueTags(ctx, stackSet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, stackSet.Tags)
 
 	d.Set("template_body", stackSet.TemplateBody)
 
@@ -315,11 +302,9 @@ func resourceStackSetRead(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceStackSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &cloudformation.UpdateStackSetInput{
-		OperationId:  aws.String(resource.UniqueId()),
+		OperationId:  aws.String(id.UniqueId()),
 		StackSetName: aws.String(d.Id()),
 		Tags:         []*cloudformation.Tag{},
 		TemplateBody: aws.String(d.Get("template_body").(string)),
@@ -358,8 +343,8 @@ func resourceStackSetUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		input.CallAs = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
+	if tags := GetTagsIn(ctx); len(tags) > 0 {
+		input.Tags = tags
 	}
 
 	if v, ok := d.GetOk("template_url"); ok {

@@ -12,6 +12,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_connect_contact_flow_module")
 func DataSourceContactFlowModule() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceContactFlowModuleRead,

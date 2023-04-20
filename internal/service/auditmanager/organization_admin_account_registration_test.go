@@ -30,6 +30,7 @@ func TestAccAuditManagerOrganizationAdminAccountRegistration_serial(t *testing.T
 }
 
 func testAccOrganizationAdminAccountRegistration_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	adminAccountID := os.Getenv("AUDITMANAGER_ORGANIZATION_ADMIN_ACCOUNT_ID")
 	if adminAccountID == "" {
 		t.Skip("Environment variable AUDITMANAGER_ORGANIZATION_ADMIN_ACCOUNT_ID is not set")
@@ -39,17 +40,17 @@ func testAccOrganizationAdminAccountRegistration_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationAdminAccountRegistrationDestroy,
+		CheckDestroy:             testAccCheckOrganizationAdminAccountRegistrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationAdminAccountRegistrationConfig_basic(adminAccountID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationAdminAccountRegistrationExists(resourceName),
+					testAccCheckOrganizationAdminAccountRegistrationExists(ctx, resourceName),
 				),
 			},
 			{
@@ -62,6 +63,7 @@ func testAccOrganizationAdminAccountRegistration_basic(t *testing.T) {
 }
 
 func testAccOrganizationAdminAccountRegistration_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	adminAccountID := os.Getenv("AUDITMANAGER_ORGANIZATION_ADMIN_ACCOUNT_ID")
 	if adminAccountID == "" {
 		t.Skip("Environment variable AUDITMANAGER_ORGANIZATION_ADMIN_ACCOUNT_ID is not set")
@@ -71,18 +73,18 @@ func testAccOrganizationAdminAccountRegistration_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationAdminAccountRegistrationDestroy,
+		CheckDestroy:             testAccCheckOrganizationAdminAccountRegistrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationAdminAccountRegistrationConfig_basic(adminAccountID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationAdminAccountRegistrationExists(resourceName),
-					acctest.CheckFrameworkResourceDisappears(acctest.Provider, tfauditmanager.ResourceOrganizationAdminAccountRegistration, resourceName),
+					testAccCheckOrganizationAdminAccountRegistrationExists(ctx, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfauditmanager.ResourceOrganizationAdminAccountRegistration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -90,28 +92,29 @@ func testAccOrganizationAdminAccountRegistration_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckOrganizationAdminAccountRegistrationDestroy(s *terraform.State) error {
-	ctx := context.Background()
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient()
+func testAccCheckOrganizationAdminAccountRegistrationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_auditmanager_organization_admin_account_registration" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_auditmanager_organization_admin_account_registration" {
+				continue
+			}
+
+			out, err := conn.GetOrganizationAdminAccount(ctx, &auditmanager.GetOrganizationAdminAccountInput{})
+			if err != nil {
+				return err
+			}
+			if out.AdminAccountId != nil {
+				return create.Error(names.AuditManager, create.ErrActionCheckingDestroyed, tfauditmanager.ResNameOrganizationAdminAccountRegistration, rs.Primary.ID, errors.New("not destroyed"))
+			}
 		}
 
-		out, err := conn.GetOrganizationAdminAccount(ctx, &auditmanager.GetOrganizationAdminAccountInput{})
-		if err != nil {
-			return err
-		}
-		if out.AdminAccountId != nil {
-			return create.Error(names.AuditManager, create.ErrActionCheckingDestroyed, tfauditmanager.ResNameOrganizationAdminAccountRegistration, rs.Primary.ID, errors.New("not destroyed"))
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckOrganizationAdminAccountRegistrationExists(name string) resource.TestCheckFunc {
+func testAccCheckOrganizationAdminAccountRegistrationExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -122,7 +125,6 @@ func testAccCheckOrganizationAdminAccountRegistrationExists(name string) resourc
 			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameOrganizationAdminAccountRegistration, name, errors.New("not set"))
 		}
 
-		ctx := context.Background()
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient()
 		out, err := conn.GetOrganizationAdminAccount(ctx, &auditmanager.GetOrganizationAdminAccountInput{})
 		if err != nil {

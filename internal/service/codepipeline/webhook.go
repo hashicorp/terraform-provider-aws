@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,6 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_codepipeline_webhook", name="Webhook")
+// @Tags(identifierAttribute="id")
 func ResourceWebhook() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWebhookCreate,
@@ -109,8 +111,8 @@ func ResourceWebhook() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -120,10 +122,8 @@ func ResourceWebhook() *schema.Resource {
 func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodePipelineConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-	authType := d.Get("authentication").(string)
 
+	authType := d.Get("authentication").(string)
 	var authConfig map[string]interface{}
 	if v, ok := d.GetOk("authentication_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		authConfig = v.([]interface{})[0].(map[string]interface{})
@@ -138,7 +138,7 @@ func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta int
 			TargetPipeline:              aws.String(d.Get("target_pipeline").(string)),
 			AuthenticationConfiguration: extractWebhookAuthConfig(authType, authConfig),
 		},
-		Tags: Tags(tags.IgnoreAWS()),
+		Tags: GetTagsIn(ctx),
 	}
 
 	webhook, err := conn.PutWebhookWithContext(ctx, request)
@@ -154,8 +154,6 @@ func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodePipelineConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	arn := d.Id()
 	webhook, err := GetWebhook(ctx, conn, arn)
@@ -192,16 +190,7 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting filter: %s", err)
 	}
 
-	tags := KeyValueTags(ctx, webhook.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, webhook.Tags)
 
 	return diags
 }
@@ -232,14 +221,6 @@ func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		_, err := conn.PutWebhookWithContext(ctx, request)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "Error updating webhook: %s", err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating CodePipeline Webhook (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -292,7 +273,7 @@ func GetWebhook(ctx context.Context, conn *codepipeline.CodePipeline, arn string
 		nextToken = aws.StringValue(out.NextToken)
 	}
 
-	return nil, &resource.NotFoundError{
+	return nil, &retry.NotFoundError{
 		Message: fmt.Sprintf("No webhook with ARN %s found", arn),
 	}
 }

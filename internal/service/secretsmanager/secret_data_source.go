@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_secretsmanager_secret")
 func DataSourceSecret() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSecretRead,
@@ -61,6 +62,14 @@ func DataSourceSecret() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"automatically_after_days": {
 							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"duration": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"schedule_expression": {
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},

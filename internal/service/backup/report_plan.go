@@ -9,7 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,8 +19,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_backup_report_plan", name="Report Plan")
+// @Tags(identifierAttribute="arn")
 func ResourceReportPlan() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReportPlanCreate,
@@ -107,8 +111,8 @@ func ResourceReportPlan() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -118,14 +122,13 @@ func ResourceReportPlan() *schema.Resource {
 func resourceReportPlanCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &backup.CreateReportPlanInput{
-		IdempotencyToken:      aws.String(resource.UniqueId()),
+		IdempotencyToken:      aws.String(id.UniqueId()),
 		ReportDeliveryChannel: expandReportDeliveryChannel(d.Get("report_delivery_channel").([]interface{})),
 		ReportPlanName:        aws.String(name),
+		ReportPlanTags:        GetTagsIn(ctx),
 		ReportSetting:         expandReportSetting(d.Get("report_setting").([]interface{})),
 	}
 
@@ -133,11 +136,6 @@ func resourceReportPlanCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.ReportPlanDescription = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.ReportPlanTags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating Backup Report Plan: %s", input)
 	output, err := conn.CreateReportPlanWithContext(ctx, input)
 
 	if err != nil {
@@ -157,8 +155,6 @@ func resourceReportPlanCreate(ctx context.Context, d *schema.ResourceData, meta 
 func resourceReportPlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	reportPlan, err := FindReportPlanByName(ctx, conn, d.Id())
 
@@ -186,23 +182,6 @@ func resourceReportPlanRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting report_setting: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Report Plan (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -212,7 +191,7 @@ func resourceReportPlanUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &backup.UpdateReportPlanInput{
-			IdempotencyToken:      aws.String(resource.UniqueId()),
+			IdempotencyToken:      aws.String(id.UniqueId()),
 			ReportDeliveryChannel: expandReportDeliveryChannel(d.Get("report_delivery_channel").([]interface{})),
 			ReportPlanDescription: aws.String(d.Get("description").(string)),
 			ReportPlanName:        aws.String(d.Id()),
@@ -228,14 +207,6 @@ func resourceReportPlanUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 		if _, err := waitReportPlanUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Backup Report Plan (%s) update: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags for Backup Report Plan (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -360,7 +331,7 @@ func FindReportPlanByName(ctx context.Context, conn *backup.Backup, name string)
 	output, err := conn.DescribeReportPlanWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -377,7 +348,7 @@ func FindReportPlanByName(ctx context.Context, conn *backup.Backup, name string)
 	return output.ReportPlan, nil
 }
 
-func statusReportPlanDeployment(ctx context.Context, conn *backup.Backup, name string) resource.StateRefreshFunc {
+func statusReportPlanDeployment(ctx context.Context, conn *backup.Backup, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindReportPlanByName(ctx, conn, name)
 
@@ -394,7 +365,7 @@ func statusReportPlanDeployment(ctx context.Context, conn *backup.Backup, name s
 }
 
 func waitReportPlanCreated(ctx context.Context, conn *backup.Backup, name string, timeout time.Duration) (*backup.ReportPlan, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{reportPlanDeploymentStatusCreateInProgress},
 		Target:  []string{reportPlanDeploymentStatusCompleted},
 		Timeout: timeout,
@@ -411,7 +382,7 @@ func waitReportPlanCreated(ctx context.Context, conn *backup.Backup, name string
 }
 
 func waitReportPlanDeleted(ctx context.Context, conn *backup.Backup, name string, timeout time.Duration) (*backup.ReportPlan, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{reportPlanDeploymentStatusDeleteInProgress},
 		Target:  []string{},
 		Timeout: timeout,
@@ -428,7 +399,7 @@ func waitReportPlanDeleted(ctx context.Context, conn *backup.Backup, name string
 }
 
 func waitReportPlanUpdated(ctx context.Context, conn *backup.Backup, name string, timeout time.Duration) (*backup.ReportPlan, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{reportPlanDeploymentStatusUpdateInProgress},
 		Target:  []string{reportPlanDeploymentStatusCompleted},
 		Timeout: timeout,

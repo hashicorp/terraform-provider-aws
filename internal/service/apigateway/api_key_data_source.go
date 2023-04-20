@@ -12,6 +12,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_api_gateway_api_key")
 func DataSourceAPIKey() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAPIKeyRead,

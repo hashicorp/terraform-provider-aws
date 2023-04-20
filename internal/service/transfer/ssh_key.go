@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_transfer_ssh_key")
 func ResourceSSHKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSSHKeyCreate,

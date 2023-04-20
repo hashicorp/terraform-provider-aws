@@ -28,7 +28,7 @@ func TestAccTranscribeMedicalVocabulary_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
 			testAccMedicalVocabularyPreCheck(ctx, t)
 		},
@@ -69,7 +69,7 @@ func TestAccTranscribeMedicalVocabulary_updateS3URI(t *testing.T) {
 	file2 := "test2.txt"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
 			testAccMedicalVocabularyPreCheck(ctx, t)
 		},
@@ -109,7 +109,7 @@ func TestAccTranscribeMedicalVocabulary_updateTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
 			testAccMedicalVocabularyPreCheck(ctx, t)
 		},
@@ -158,7 +158,7 @@ func TestAccTranscribeMedicalVocabulary_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TranscribeEndpointID)
 			testAccMedicalVocabularyPreCheck(ctx, t)
 		},

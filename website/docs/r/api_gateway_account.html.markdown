@@ -57,7 +57,7 @@ data "aws_iam_policy_document" "cloudwatch" {
 resource "aws_iam_role_policy" "cloudwatch" {
   name   = "default"
   role   = aws_iam_role.cloudwatch.id
-  policy = data.aws_iam_policy_document.json
+  policy = data.aws_iam_policy_document.cloudwatch.json
 }
 ```
 

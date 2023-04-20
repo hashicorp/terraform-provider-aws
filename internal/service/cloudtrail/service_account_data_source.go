@@ -49,6 +49,7 @@ var ServiceAccountPerRegionMap = map[string]string{
 	endpoints.UsWest2RegionID:      "113285607260",
 }
 
+// @SDKDataSource("aws_cloudtrail_service_account")
 func DataSourceServiceAccount() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceAccountRead,

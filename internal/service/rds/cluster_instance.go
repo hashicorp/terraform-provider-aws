@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,8 +18,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_rds_cluster_instance", name="Cluster Instance")
+// @Tags(identifierAttribute="arn")
 func ResourceClusterInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterInstanceCreate,
@@ -209,8 +212,8 @@ func ResourceClusterInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"writer": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -224,8 +227,6 @@ func ResourceClusterInstance() *schema.Resource {
 func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	clusterID := d.Get("cluster_identifier").(string)
 	var identifier string
@@ -233,9 +234,9 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		identifier = v.(string)
 	} else {
 		if v, ok := d.GetOk("identifier_prefix"); ok {
-			identifier = resource.PrefixedUniqueId(v.(string))
+			identifier = id.PrefixedUniqueId(v.(string))
 		} else {
-			identifier = resource.PrefixedUniqueId("tf-")
+			identifier = id.PrefixedUniqueId("tf-")
 		}
 	}
 	input := &rds.CreateDBInstanceInput{
@@ -247,7 +248,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		Engine:                  aws.String(d.Get("engine").(string)),
 		PromotionTier:           aws.Int64(int64(d.Get("promotion_tier").(int))),
 		PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
-		Tags:                    Tags(tags.IgnoreAWS()),
+		Tags:                    GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("availability_zone"); ok {
@@ -300,7 +301,6 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 			return conn.CreateDBInstanceWithContext(ctx, input)
 		},
 		errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating RDS Cluster (%s) Instance (%s): %s", clusterID, identifier, err)
 	}
@@ -346,8 +346,6 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	db, err := findDBInstanceByIDSDKv1(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -366,7 +364,6 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	dbc, err := FindDBClusterByID(ctx, conn, dbClusterID)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster (%s): %s", dbClusterID, err)
 	}
@@ -416,23 +413,6 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("storage_encrypted", db.StorageEncrypted)
 
 	clusterSetResourceDataEngineVersionFromClusterInstance(d, db)
-
-	tags, err := ListTags(ctx, conn, aws.StringValue(db.DBInstanceArn))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for RDS Cluster Instance (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
 
 	return nil
 }
@@ -508,21 +488,12 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 				return conn.ModifyDBInstanceWithContext(ctx, input)
 			},
 			errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster Instance (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitDBClusterInstanceUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster Instance (%s) update: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster Instance (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -562,5 +533,9 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 func clusterSetResourceDataEngineVersionFromClusterInstance(d *schema.ResourceData, c *rds.DBInstance) {
 	oldVersion := d.Get("engine_version").(string)
 	newVersion := aws.StringValue(c.EngineVersion)
-	compareActualEngineVersion(d, oldVersion, newVersion)
+	var pendingVersion string
+	if c.PendingModifiedValues != nil && c.PendingModifiedValues.EngineVersion != nil {
+		pendingVersion = aws.StringValue(c.PendingModifiedValues.EngineVersion)
+	}
+	compareActualEngineVersion(d, oldVersion, newVersion, pendingVersion)
 }

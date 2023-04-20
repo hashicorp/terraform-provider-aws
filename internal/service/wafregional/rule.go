@@ -18,8 +18,11 @@ import (
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_wafregional_rule", name="Rule")
+// @Tags(identifierAttribute="arn")
 func ResourceRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleCreate,
@@ -63,8 +66,8 @@ func ResourceRule() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -78,23 +81,18 @@ func ResourceRule() *schema.Resource {
 func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 	region := meta.(*conns.AWSClient).Region
 
 	wr := NewRetryer(conn, region)
 	out, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-		params := &waf.CreateRuleInput{
+		input := &waf.CreateRuleInput{
 			ChangeToken: token,
 			MetricName:  aws.String(d.Get("metric_name").(string)),
 			Name:        aws.String(d.Get("name").(string)),
+			Tags:        GetTagsIn(ctx),
 		}
 
-		if len(tags) > 0 {
-			params.Tags = Tags(tags.IgnoreAWS())
-		}
-
-		return conn.CreateRuleWithContext(ctx, params)
+		return conn.CreateRuleWithContext(ctx, input)
 	})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating WAF Regional Rule (%s): %s", d.Get("name").(string), err)
@@ -116,8 +114,6 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	params := &waf.GetRuleInput{
 		RuleId: aws.String(d.Id()),
@@ -142,24 +138,6 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		Service:   "waf-regional",
 	}.String()
 	d.Set("arn", arn)
-
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for WAF Regional Rule (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	d.Set("predicate", flattenPredicates(resp.Rule.Predicates))
 	d.Set("name", resp.Rule.Name)
 	d.Set("metric_name", resp.Rule.MetricName)
@@ -169,7 +147,6 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
 
 	if d.HasChange("predicate") {
 		o, n := d.GetChange("predicate")
@@ -178,14 +155,6 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		err := updateRuleResource(ctx, d.Id(), oldP, newP, meta)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating WAF Rule: %s", err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 

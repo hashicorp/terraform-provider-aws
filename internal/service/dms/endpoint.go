@@ -22,8 +22,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_dms_endpoint", name="Endpoint")
+// @Tags(identifierAttribute="endpoint_arn")
 func ResourceEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointCreate,
@@ -417,6 +420,7 @@ func ResourceEndpoint() *schema.Resource {
 				},
 			},
 			"s3_settings": {
+				Description:      "This argument is deprecated and will be removed in a future version; use aws_dms_s3_endpoint instead",
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,
@@ -672,8 +676,8 @@ func ResourceEndpoint() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(dms.DmsSslModeValue_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"username": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -694,15 +698,13 @@ func ResourceEndpoint() *schema.Resource {
 func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	endpointID := d.Get("endpoint_id").(string)
 	input := &dms.CreateEndpointInput{
 		EndpointIdentifier: aws.String(endpointID),
 		EndpointType:       aws.String(d.Get("endpoint_type").(string)),
 		EngineName:         aws.String(d.Get("engine_name").(string)),
-		Tags:               Tags(tags.IgnoreAWS()),
+		Tags:               GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("certificate_arn"); ok {
@@ -947,8 +949,6 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	endpoint, err := FindEndpointByID(ctx, conn, d.Id())
 
@@ -966,23 +966,6 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading DMS Endpoint (%s): %s", d.Id(), err)
-	}
-
-	tags, err := ListTags(ctx, conn, d.Get("endpoint_arn").(string))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for DMS Endpoint (%s): %s", d.Get("endpoint_arn").(string), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	return diags
@@ -1327,15 +1310,6 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		arn := d.Get("endpoint_arn").(string)
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating DMS Endpoint (%s) tags: %s", arn, err)
-		}
-	}
-
 	return append(diags, resourceEndpointRead(ctx, d, meta)...)
 }
 
@@ -1595,7 +1569,6 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 		}
 	default:
 		d.Set("database_name", endpoint.DatabaseName)
-		d.Set("extra_connection_attributes", endpoint.ExtraConnectionAttributes)
 		d.Set("port", endpoint.Port)
 		d.Set("server_name", endpoint.ServerName)
 		d.Set("username", endpoint.Username)
@@ -2236,8 +2209,9 @@ func suppressExtraConnectionAttributesDiffs(_, old, new string, d *schema.Resour
 
 		if o != nil && config != nil {
 			diff := o.Difference(config)
+			diff2 := n.Difference(config)
 
-			return diff.Len() == 0 || diff.Equal(n)
+			return (diff.Len() == 0 && diff2.Len() == 0) || diff.Equal(n)
 		}
 	}
 	return false

@@ -10,13 +10,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_iam_server_certificate")
 func DataSourceServerCertificate() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServerCertificateRead,
@@ -34,7 +35,7 @@ func DataSourceServerCertificate() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validation.StringLenBetween(0, 128-resource.UniqueIDSuffixLength),
+				ValidateFunc:  validation.StringLenBetween(0, 128-id.UniqueIDSuffixLength),
 			},
 
 			"path_prefix": {

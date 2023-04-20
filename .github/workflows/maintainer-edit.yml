@@ -4,15 +4,17 @@ on:
     types:
       - opened
 jobs:
+  community_check:
+    uses: ./.github/workflows/community-check.yml
+    secrets: inherit
+
   PermissionsCheck:
-    env:
-      MAINTAINER_CAN_MODIFY: ${{ github.event.pull_request.maintainer_can_modify }}
-      IN_MAINTAINER_LIST: ${{ contains( secrets.MAINTAINER_LIST, github.actor) }}
+    needs: community_check
     runs-on: ubuntu-latest
     steps:
       - name: Comment if maintainers cannot edit
-        if: ${{ ( env.IN_MAINTAINER_LIST == 'false' ) && ( env.MAINTAINER_CAN_MODIFY == 'false' ) }}
-        uses: peter-evans/create-or-update-comment@v2
+        if: (!github.event.pull_request.maintainer_can_modify && needs.community_check.outputs.maintainer == 'false')
+        uses: peter-evans/create-or-update-comment@3383acd359705b10cb1eeef05c0e88c056ea4666
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body: |

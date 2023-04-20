@@ -14,12 +14,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_db_snapshot")
 func DataSourceSnapshot() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSnapshotRead,
 
 		Schema: map[string]*schema.Schema{
-			//selection criteria
+			// selection criteria
 			"db_instance_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -52,7 +53,7 @@ func DataSourceSnapshot() *schema.Resource {
 				Default:  false,
 			},
 
-			//Computed values returned
+			// Computed values returned
 			"allocated_storage": {
 				Type:     schema.TypeInt,
 				Computed: true,

@@ -23,7 +23,7 @@ func TestAccAppConfigExtensionAssociation_basic(t *testing.T) {
 	resourceName := "aws_appconfig_extension_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExtensionAssociationDestroy(ctx),
@@ -59,7 +59,7 @@ func TestAccAppConfigExtensionAssociation_Parameters(t *testing.T) {
 	pValue2 := "ParameterValue2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExtensionAssociationDestroy(ctx),
@@ -111,7 +111,7 @@ func TestAccAppConfigExtensionAssociation_disappears(t *testing.T) {
 	resourceName := "aws_appconfig_extension_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExtensionAssociationDestroy(ctx),

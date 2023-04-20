@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -87,7 +87,7 @@ func FindPolicyByARN(ctx context.Context, conn *iam.IAM, arn string) (*iam.Polic
 
 	output, err := conn.GetPolicyWithContext(ctx, input)
 	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -196,7 +196,7 @@ func FindRoleByName(ctx context.Context, conn *iam.IAM, name string) (*iam.Role,
 	output, err := conn.GetRoleWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -251,7 +251,7 @@ func FindServiceSpecificCredential(ctx context.Context, conn *iam.IAM, serviceNa
 	output, err := conn.ListServiceSpecificCredentialsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -291,7 +291,7 @@ func FindSigningCertificate(ctx context.Context, conn *iam.IAM, userName, certId
 	output, err := conn.ListSigningCertificatesWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -330,7 +330,7 @@ func FindSAMLProviderByARN(ctx context.Context, conn *iam.IAM, arn string) (*iam
 	output, err := conn.GetSAMLProviderWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -359,29 +359,31 @@ func FindAccessKey(ctx context.Context, conn *iam.IAM, username, id string) (*ia
 		}
 	}
 
-	return nil, &resource.NotFoundError{}
+	return nil, &retry.NotFoundError{}
 }
 
 func FindAccessKeys(ctx context.Context, conn *iam.IAM, username string) ([]*iam.AccessKeyMetadata, error) {
-	var accessKeys []*iam.AccessKeyMetadata
 	input := &iam.ListAccessKeysInput{
 		UserName: aws.String(username),
 	}
+	var output []*iam.AccessKeyMetadata
+
 	err := conn.ListAccessKeysPagesWithContext(ctx, input, func(page *iam.ListAccessKeysOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		accessKeys = append(accessKeys, page.AccessKeyMetadata...)
+		output = append(output, page.AccessKeyMetadata...)
 
 		return !lastPage
 	})
 
 	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
 	}
-	return accessKeys, err
+
+	return output, err
 }

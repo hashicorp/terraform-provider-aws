@@ -15,6 +15,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_route53_zone")
 func DataSourceZone() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceZoneRead,
@@ -239,7 +240,7 @@ func hostedZoneNameServers(ctx context.Context, conn *route53.Route53, id string
 	}
 
 	if output.HostedZone != nil && output.HostedZone.Config != nil && aws.BoolValue(output.HostedZone.Config.PrivateZone) {
-		nameServers, err := getNameServers(ctx, id, name, conn)
+		nameServers, err := findNameServers(ctx, conn, id, name)
 
 		if err != nil {
 			return nil, fmt.Errorf("listing Route 53 Hosted Zone (%s) NS records: %w", id, err)

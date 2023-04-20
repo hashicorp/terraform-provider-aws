@@ -11,15 +11,18 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_vpc_peering_connection", name="VPC Peering Connection")
+// @Tags(identifierAttribute="id")
 func ResourceVPCPeeringConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCPeeringConnectionCreate,
@@ -65,9 +68,9 @@ func ResourceVPCPeeringConnection() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"requester": vpcPeeringConnectionOptionsSchema,
-			"tags":      tftags.TagsSchema(),
-			"tags_all":  tftags.TagsSchemaComputed(),
+			"requester":       vpcPeeringConnectionOptionsSchema,
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -110,8 +113,6 @@ var vpcPeeringConnectionOptionsSchema = &schema.Schema{
 func resourceVPCPeeringConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if peeringConnectionOptionsAllowsClassicLink(d) {
 		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic no new VPC Peering Connections can be created with ClassicLink options enabled`)
@@ -119,7 +120,7 @@ func resourceVPCPeeringConnectionCreate(ctx context.Context, d *schema.ResourceD
 
 	input := &ec2.CreateVpcPeeringConnectionInput{
 		PeerVpcId:         aws.String(d.Get("peer_vpc_id").(string)),
-		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpcPeeringConnection),
+		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeVpcPeeringConnection),
 		VpcId:             aws.String(d.Get("vpc_id").(string)),
 	}
 
@@ -168,8 +169,6 @@ func resourceVPCPeeringConnectionCreate(ctx context.Context, d *schema.ResourceD
 func resourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	vpcPeeringConnection, err := FindVPCPeeringConnectionByID(ctx, conn, d.Id())
 
@@ -214,16 +213,7 @@ func resourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceDat
 		d.Set("requester", nil)
 	}
 
-	tags := KeyValueTags(ctx, vpcPeeringConnection.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, vpcPeeringConnection.Tags)
 
 	return diags
 }
@@ -249,14 +239,6 @@ func resourceVPCPeeringConnectionUpdate(ctx context.Context, d *schema.ResourceD
 	if d.HasChanges("accepter", "requester") {
 		if err := modifyVPCPeeringConnectionOptions(ctx, conn, d, vpcPeeringConnection, true); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 VPC Peering Connection (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -356,22 +338,22 @@ func modifyVPCPeeringConnectionOptions(ctx context.Context, conn *ec2.EC2, d *sc
 
 	// Retry reading back the modified options to deal with eventual consistency.
 	// Often this is to do with a delay transitioning from pending-acceptance to active.
-	err := resource.RetryContext(ctx, VPCPeeringConnectionOptionsPropagationTimeout, func() *resource.RetryError { // nosemgrep:ci.helper-schema-resource-Retry-without-TimeoutError-check
+	err := retry.RetryContext(ctx, VPCPeeringConnectionOptionsPropagationTimeout, func() *retry.RetryError { // nosemgrep:ci.helper-schema-retry-RetryContext-without-TimeoutError-check
 		vpcPeeringConnection, err := FindVPCPeeringConnectionByID(ctx, conn, d.Id())
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if v := vpcPeeringConnection.AccepterVpcInfo; v != nil && accepterPeeringConnectionOptions != nil {
 			if !vpcPeeringConnectionOptionsEqual(v.PeeringOptions, accepterPeeringConnectionOptions) {
-				return resource.RetryableError(errors.New("Accepter Options not stable"))
+				return retry.RetryableError(errors.New("Accepter Options not stable"))
 			}
 		}
 
 		if v := vpcPeeringConnection.RequesterVpcInfo; v != nil && requesterPeeringConnectionOptions != nil {
 			if !vpcPeeringConnectionOptionsEqual(v.PeeringOptions, requesterPeeringConnectionOptions) {
-				return resource.RetryableError(errors.New("Requester Options not stable"))
+				return retry.RetryableError(errors.New("Requester Options not stable"))
 			}
 		}
 

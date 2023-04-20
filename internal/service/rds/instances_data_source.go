@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_db_instances")
 func DataSourceInstances() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstancesRead,
@@ -65,7 +66,6 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 
 		return !lastPage
 	})
-
 	if err != nil {
 		return create.DiagError(names.RDS, create.ErrActionReading, DSNameInstances, "", err)
 	}

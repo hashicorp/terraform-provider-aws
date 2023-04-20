@@ -8,8 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/route53resolver/route53resolveriface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // GetTag fetches an individual route53resolver service tag for a resource.
@@ -17,7 +20,7 @@ import (
 // This function will optimise the handling over ListTags, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func GetTag(ctx context.Context, conn route53resolveriface.Route53ResolverAPI, identifier string, key string) (*string, error) {
+func GetTag(ctx context.Context, conn route53resolveriface.Route53ResolverAPI, identifier, key string) (*string, error) {
 	listTags, err := ListTags(ctx, conn, identifier)
 
 	if err != nil {
@@ -46,6 +49,22 @@ func ListTags(ctx context.Context, conn route53resolveriface.Route53ResolverAPI,
 	}
 
 	return KeyValueTags(ctx, output.Tags), nil
+}
+
+// ListTags lists route53resolver service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).Route53ResolverConn(), identifier)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(tags)
+	}
+
+	return nil
 }
 
 // []*SERVICE.Tag handling
@@ -77,17 +96,38 @@ func KeyValueTags(ctx context.Context, tags []*route53resolver.Tag) tftags.KeyVa
 	return tftags.New(ctx, m)
 }
 
+// GetTagsIn returns route53resolver service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*route53resolver.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets route53resolver service tags in Context.
+func SetTagsOut(ctx context.Context, tags []*route53resolver.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
+}
+
 // UpdateTags updates route53resolver service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn route53resolveriface.Route53ResolverAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(ctx context.Context, conn route53resolveriface.Route53ResolverAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.Route53Resolver)
+	if len(removedTags) > 0 {
 		input := &route53resolver.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:     aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -97,10 +137,12 @@ func UpdateTags(ctx context.Context, conn route53resolveriface.Route53ResolverAP
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.Route53Resolver)
+	if len(updatedTags) > 0 {
 		input := &route53resolver.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreAWS()),
+			Tags:        Tags(updatedTags),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)
@@ -111,4 +153,10 @@ func UpdateTags(ctx context.Context, conn route53resolveriface.Route53ResolverAP
 	}
 
 	return nil
+}
+
+// UpdateTags updates route53resolver service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).Route53ResolverConn(), identifier, oldTags, newTags)
 }

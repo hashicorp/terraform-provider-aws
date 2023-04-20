@@ -10,13 +10,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_dx_bgp_peer")
 func ResourceBGPPeer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBGPPeerCreate,
@@ -112,7 +113,7 @@ func resourceBGPPeerCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(fmt.Sprintf("%s-%s-%d", vifId, addrFamily, asn))
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			directconnect.BGPPeerStatePending,
 		},
@@ -184,7 +185,7 @@ func resourceBGPPeerDelete(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "deleting Direct Connect BGP Peer (%s): %s", d.Id(), err)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			directconnect.BGPPeerStateAvailable,
 			directconnect.BGPPeerStateDeleting,
@@ -207,7 +208,7 @@ func resourceBGPPeerDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func bgpPeerStateRefresh(ctx context.Context, conn *directconnect.DirectConnect, vifId, addrFamily string, asn int64) resource.StateRefreshFunc {
+func bgpPeerStateRefresh(ctx context.Context, conn *directconnect.DirectConnect, vifId, addrFamily string, asn int64) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		vif, err := virtualInterfaceRead(ctx, vifId, conn)
 		if err != nil {

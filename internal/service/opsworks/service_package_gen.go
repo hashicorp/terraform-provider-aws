@@ -5,28 +5,141 @@ package opsworks
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceApplication,
+			TypeName: "aws_opsworks_application",
+		},
+		{
+			Factory:  ResourceCustomLayer,
+			TypeName: "aws_opsworks_custom_layer",
+			Name:     "Custom Layer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceECSClusterLayer,
+			TypeName: "aws_opsworks_ecs_cluster_layer",
+			Name:     "ECS Cluster Layer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceGangliaLayer,
+			TypeName: "aws_opsworks_ganglia_layer",
+			Name:     "Ganglia Layer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceHAProxyLayer,
+			TypeName: "aws_opsworks_haproxy_layer",
+			Name:     "HAProxy Layer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceInstance,
+			TypeName: "aws_opsworks_instance",
+		},
+		{
+			Factory:  ResourceJavaAppLayer,
+			TypeName: "aws_opsworks_java_app_layer",
+			Name:     "Java App Layer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceMemcachedLayer,
+			TypeName: "aws_opsworks_memcached_layer",
+			Name:     "Memcached Layer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceMySQLLayer,
+			TypeName: "aws_opsworks_mysql_layer",
+			Name:     "MySQL Layer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceNodejsAppLayer,
+			TypeName: "aws_opsworks_nodejs_app_layer",
+			Name:     "NodeJS App Layer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourcePermission,
+			TypeName: "aws_opsworks_permission",
+		},
+		{
+			Factory:  ResourcePHPAppLayer,
+			TypeName: "aws_opsworks_php_app_layer",
+			Name:     "PHP App Layer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceRailsAppLayer,
+			TypeName: "aws_opsworks_rails_app_layer",
+			Name:     "Rails App Layer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceRDSDBInstance,
+			TypeName: "aws_opsworks_rds_db_instance",
+		},
+		{
+			Factory:  ResourceStack,
+			TypeName: "aws_opsworks_stack",
+			Name:     "Stack",
+			Tags:     &types.ServicePackageResourceTags{},
+		},
+		{
+			Factory:  ResourceStaticWebLayer,
+			TypeName: "aws_opsworks_static_web_layer",
+			Name:     "Static Web Layer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceUserProfile,
+			TypeName: "aws_opsworks_user_profile",
+		},
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

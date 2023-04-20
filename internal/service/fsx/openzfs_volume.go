@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,11 +19,14 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_fsx_openzfs_volume", name="OpenZFS Volume")
+// @Tags(identifierAttribute="arn")
 func ResourceOpenzfsVolume() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceOepnzfsVolumeCreate,
+		CreateWithoutTimeout: resourceOpenzfsVolumeCreate,
 		ReadWithoutTimeout:   resourceOpenzfsVolumeRead,
 		UpdateWithoutTimeout: resourceOpenzfsVolumeUpdate,
 		DeleteWithoutTimeout: resourceOpenzfsVolumeDelete,
@@ -173,8 +176,8 @@ func ResourceOpenzfsVolume() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"volume_type": {
 				Type:         schema.TypeString,
 				Default:      fsx.VolumeTypeOpenzfs,
@@ -187,19 +190,18 @@ func ResourceOpenzfsVolume() *schema.Resource {
 	}
 }
 
-func resourceOepnzfsVolumeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenzfsVolumeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &fsx.CreateVolumeInput{
-		ClientRequestToken: aws.String(resource.UniqueId()),
+		ClientRequestToken: aws.String(id.UniqueId()),
 		Name:               aws.String(d.Get("name").(string)),
 		VolumeType:         aws.String(d.Get("volume_type").(string)),
 		OpenZFSConfiguration: &fsx.CreateOpenZFSVolumeConfiguration{
 			ParentVolumeId: aws.String(d.Get("parent_volume_id").(string)),
 		},
+		Tags: GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("copy_tags_to_snapshots"); ok {
@@ -228,10 +230,6 @@ func resourceOepnzfsVolumeCreate(ctx context.Context, d *schema.ResourceData, me
 
 	if v, ok := d.GetOk("storage_capacity_reservation_gib"); ok {
 		input.OpenZFSConfiguration.StorageCapacityReservationGiB = aws.Int64(int64(v.(int)))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("user_and_group_quotas"); ok {
@@ -270,8 +268,6 @@ func resourceOepnzfsVolumeCreate(ctx context.Context, d *schema.ResourceData, me
 func resourceOpenzfsVolumeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	volume, err := FindVolumeByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -305,24 +301,6 @@ func resourceOpenzfsVolumeRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("storage_capacity_reservation_gib", openzfsConfig.StorageCapacityReservationGiB)
 	d.Set("volume_type", volume.VolumeType)
 
-	//Volume tags do not get returned with describe call so need to make a separate list tags call
-	tags, tagserr := ListTags(ctx, conn, *volume.ResourceARN)
-
-	if tagserr != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Tags for FSx OpenZFS Volume (%s): %s", d.Id(), err)
-	} else {
-		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	}
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	if err := d.Set("origin_snapshot", flattenOpenzfsVolumeOriginSnapshot(openzfsConfig.OriginSnapshot)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting nfs_exports: %s", err)
 	}
@@ -342,17 +320,9 @@ func resourceOpenzfsVolumeUpdate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn()
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating FSx OpenZFS Volume (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
-
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &fsx.UpdateVolumeInput{
-			ClientRequestToken:   aws.String(resource.UniqueId()),
+			ClientRequestToken:   aws.String(id.UniqueId()),
 			VolumeId:             aws.String(d.Id()),
 			OpenZFSConfiguration: &fsx.UpdateOpenZFSVolumeConfiguration{},
 		}

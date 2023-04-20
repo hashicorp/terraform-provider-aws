@@ -5,28 +5,112 @@ package appmesh
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceGatewayRoute,
+			TypeName: "aws_appmesh_gateway_route",
+		},
+		{
+			Factory:  DataSourceMesh,
+			TypeName: "aws_appmesh_mesh",
+		},
+		{
+			Factory:  DataSourceRoute,
+			TypeName: "aws_appmesh_route",
+		},
+		{
+			Factory:  DataSourceVirtualGateway,
+			TypeName: "aws_appmesh_virtual_gateway",
+		},
+		{
+			Factory:  DataSourceVirtualNode,
+			TypeName: "aws_appmesh_virtual_node",
+		},
+		{
+			Factory:  DataSourceVirtualRouter,
+			TypeName: "aws_appmesh_virtual_router",
+		},
+		{
+			Factory:  DataSourceVirtualService,
+			TypeName: "aws_appmesh_virtual_service",
+		},
+	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceGatewayRoute,
+			TypeName: "aws_appmesh_gateway_route",
+			Name:     "Gateway Route",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceMesh,
+			TypeName: "aws_appmesh_mesh",
+			Name:     "Service Mesh",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceRoute,
+			TypeName: "aws_appmesh_route",
+			Name:     "Route",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceVirtualGateway,
+			TypeName: "aws_appmesh_virtual_gateway",
+			Name:     "Virtual Gateway",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceVirtualNode,
+			TypeName: "aws_appmesh_virtual_node",
+			Name:     "Virtual Node",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceVirtualRouter,
+			TypeName: "aws_appmesh_virtual_router",
+			Name:     "Virtual Router",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceVirtualService,
+			TypeName: "aws_appmesh_virtual_service",
+			Name:     "Virtual Service",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_dynamodb_table_item")
 func ResourceTableItem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTableItemCreate,
@@ -44,9 +45,11 @@ func ResourceTableItem() *schema.Resource {
 				Optional: true,
 			},
 			"item": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validateTableItem,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validateTableItem,
+				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
+				DiffSuppressOnRefresh: true,
 			},
 		},
 	}
@@ -109,7 +112,7 @@ func resourceTableItemUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating DynamoDB Table Item (%s): %s", d.Id(), err)
 		}
-		newQueryKey := BuildTableItemqueryKey(attributes, hashKey, rangeKey)
+		newQueryKey := BuildTableItemQueryKey(attributes, hashKey, rangeKey)
 
 		updates := map[string]*dynamodb.AttributeValueUpdate{}
 		for key, value := range attributes {
@@ -151,7 +154,7 @@ func resourceTableItemUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 		// New record is created via UpdateItem in case we're changing hash key
 		// so we need to get rid of the old one
-		oldQueryKey := BuildTableItemqueryKey(oldAttributes, hashKey, rangeKey)
+		oldQueryKey := BuildTableItemQueryKey(oldAttributes, hashKey, rangeKey)
 		if !reflect.DeepEqual(oldQueryKey, newQueryKey) {
 			log.Printf("[DEBUG] Deleting old record: %#v", oldQueryKey)
 			_, err := conn.DeleteItemWithContext(ctx, &dynamodb.DeleteItemInput{
@@ -184,7 +187,7 @@ func resourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading DynamoDB Table Item (%s): %s", d.Id(), err)
 	}
 
-	key := BuildTableItemqueryKey(attributes, hashKey, rangeKey)
+	key := BuildTableItemQueryKey(attributes, hashKey, rangeKey)
 	result, err := FindTableItem(ctx, conn, tableName, key)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -221,7 +224,7 @@ func resourceTableItemDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	hashKey := d.Get("hash_key").(string)
 	rangeKey := d.Get("range_key").(string)
-	queryKey := BuildTableItemqueryKey(attributes, hashKey, rangeKey)
+	queryKey := BuildTableItemQueryKey(attributes, hashKey, rangeKey)
 
 	_, err = conn.DeleteItemWithContext(ctx, &dynamodb.DeleteItemInput{
 		Key:       queryKey,
@@ -247,7 +250,7 @@ func FindTableItem(ctx context.Context, conn *dynamodb.DynamoDB, tableName strin
 	out, err := conn.GetItemWithContext(ctx, in)
 
 	if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -309,7 +312,7 @@ func buildTableItemID(tableName string, hashKey string, rangeKey string, attrs m
 	return strings.Join(id, "|")
 }
 
-func BuildTableItemqueryKey(attrs map[string]*dynamodb.AttributeValue, hashKey string, rangeKey string) map[string]*dynamodb.AttributeValue {
+func BuildTableItemQueryKey(attrs map[string]*dynamodb.AttributeValue, hashKey string, rangeKey string) map[string]*dynamodb.AttributeValue {
 	queryKey := map[string]*dynamodb.AttributeValue{
 		hashKey: attrs[hashKey],
 	}

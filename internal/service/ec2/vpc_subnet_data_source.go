@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_subnet")
 func DataSourceSubnet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSubnetRead,
@@ -61,6 +62,10 @@ func DataSourceSubnet() *schema.Resource {
 			},
 			"enable_dns64": {
 				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"enable_lni_at_device_index": {
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"enable_resource_name_dns_aaaa_record_on_launch": {
@@ -195,6 +200,7 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("customer_owned_ipv4_pool", subnet.CustomerOwnedIpv4Pool)
 	d.Set("default_for_az", subnet.DefaultForAz)
 	d.Set("enable_dns64", subnet.EnableDns64)
+	d.Set("enable_lni_at_device_index", subnet.EnableLniAtDeviceIndex)
 	d.Set("ipv6_native", subnet.Ipv6Native)
 
 	// Make sure those values are set, if an IPv6 block exists it'll be set in the loop.

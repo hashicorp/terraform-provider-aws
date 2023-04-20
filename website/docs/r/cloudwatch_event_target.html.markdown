@@ -271,14 +271,16 @@ resource "aws_api_gateway_stage" "example" {
 
 ```terraform
 data "aws_iam_policy_document" "assume_role" {
-  effect = "Allow"
+  statement {
+    effect = "Allow"
 
-  principals {
-    type        = "Service"
-    identifiers = ["events.amazonaws.com"]
+    principals {
+      type        = "Service"
+      identifiers = ["events.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
   }
-
-  actions = ["sts:AssumeRole"]
 }
 
 resource "aws_iam_role" "event_bus_invoke_remote_event_bus" {
@@ -462,7 +464,8 @@ The following arguments are optional:
 * `batch_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Batch Job. Documented below. A maximum of 1 are allowed.
 * `dead_letter_config` - (Optional)  Parameters used when you are providing a dead letter config. Documented below. A maximum of 1 are allowed.
 * `ecs_target` - (Optional) Parameters used when you are using the rule to invoke Amazon ECS Task. Documented below. A maximum of 1 are allowed.
-* `event_bus_name` - (Optional) The event bus to associate with the rule. If you omit this, the `default` event bus is used.
+* `event_bus_name` - (Optional) The name or ARN of the event bus to associate with the rule.
+  If you omit this, the `default` event bus is used.
 * `http_target` - (Optional) Parameters used when you are using the rule to invoke an API Gateway REST endpoint. Documented below. A maximum of 1 is allowed.
 * `input` - (Optional) Valid JSON text passed to the target. Conflicts with `input_path` and `input_transformer`.
 * `input_path` - (Optional) The value of the [JSONPath](http://goessner.net/articles/JsonPath/) that is used for extracting part of the matched event when passing it to the target. Conflicts with `input` and `input_transformer`.
@@ -491,7 +494,7 @@ The following arguments are optional:
 ### dead_letter_config
 
 * `arn` - (Optional) - ARN of the SQS queue specified as the target for the dead-letter queue.
-  
+
 ### ecs_target
 
 * `task_definition_arn` - (Required) The ARN of the task definition to use if the event target is an Amazon ECS cluster.
@@ -501,6 +504,7 @@ The following arguments are optional:
 * `group` - (Optional) Specifies an ECS task group for the task. The maximum length is 255 characters.
 * `launch_type` - (Optional) Specifies the launch type on which your task is running. The launch type that you specify here must match one of the launch type (compatibilities) of the target task. Valid values include: `EC2`, `EXTERNAL`, or `FARGATE`.
 * `network_configuration` - (Optional) Use this if the ECS task uses the awsvpc network mode. This specifies the VPC subnets and security groups associated with the task, and whether a public IP address is to be used. Required if `launch_type` is `FARGATE` because the awsvpc mode is required for Fargate tasks.
+* `ordered_placement_strategy` - (Optional) An array of placement strategy objects to use for the task. You can specify a maximum of five strategy rules per task.
 * `placement_constraint` - (Optional) An array of placement constraint objects to use for the task. You can specify up to 10 constraints per task (including constraints in the task definition and those specified at runtime). See Below.
 * `platform_version` - (Optional) Specifies the platform version for the task. Specify only the numeric portion of the platform version, such as `1.1.0`. This is used only if LaunchType is FARGATE. For more information about valid platform versions, see [AWS Fargate Platform Versions](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html).
 * `propagate_tags` - (Optional) Specifies whether to propagate the tags from the task definition to the task. If no value is specified, the tags are not propagated. Tags can only be propagated to the task during task creation. The only valid value is: `TASK_DEFINITION`.
@@ -532,6 +536,11 @@ The following arguments are optional:
 * `assign_public_ip` - (Optional) Assign a public IP address to the ENI (Fargate launch type only). Valid values are `true` or `false`. Defaults to `false`.
 
 For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-networking.html)
+
+### ordered_placement_strategy
+
+* `type` - (Required) Type of placement strategy. The only valid values at this time are `binpack`, `random` and `spread`.
+* `field` - (Optional) The field to apply the placement strategy against. For the `spread` placement strategy, valid values are `instanceId` (or `host`, which has the same effect), or any platform or custom attribute that is applied to a container instance, such as `attribute:ecs.availability-zone`. For the `binpack` placement strategy, valid values are `cpu` and `memory`. For the `random` placement strategy, this field is not used. For more information, see [Amazon ECS task placement strategies](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-placement-strategies.html).
 
 ### placement_constraint
 

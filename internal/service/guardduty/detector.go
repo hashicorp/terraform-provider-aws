@@ -10,15 +10,18 @@ import (
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_guardduty_detector", name="Detector")
+// @Tags(identifierAttribute="arn")
 func ResourceDetector() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDetectorCreate,
@@ -135,8 +138,8 @@ func ResourceDetector() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -146,11 +149,10 @@ func ResourceDetector() *schema.Resource {
 func resourceDetectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := guardduty.CreateDetectorInput{
 		Enable: aws.Bool(d.Get("enable").(bool)),
+		Tags:   GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("finding_publishing_frequency"); ok {
@@ -159,10 +161,6 @@ func resourceDetectorCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if v, ok := d.GetOk("datasources"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.DataSources = expandDataSourceConfigurations(v.([]interface{})[0].(map[string]interface{}))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating GuardDuty Detector: %s", input)
@@ -178,8 +176,6 @@ func resourceDetectorCreate(ctx context.Context, d *schema.ResourceData, meta in
 func resourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := guardduty.GetDetectorInput{
 		DetectorId: aws.String(d.Id()),
@@ -218,16 +214,7 @@ func resourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("enable", aws.StringValue(gdo.Status) == guardduty.DetectorStatusEnabled)
 	d.Set("finding_publishing_frequency", gdo.FindingPublishingFrequency)
 
-	tags := KeyValueTags(ctx, gdo.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, gdo.Tags)
 
 	return diags
 }
@@ -254,14 +241,6 @@ func resourceDetectorUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating GuardDuty Detector (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
-
 	return append(diags, resourceDetectorRead(ctx, d, meta)...)
 }
 
@@ -273,15 +252,15 @@ func resourceDetectorDelete(ctx context.Context, d *schema.ResourceData, meta in
 		DetectorId: aws.String(d.Id()),
 	}
 
-	err := resource.RetryContext(ctx, membershipPropagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, membershipPropagationTimeout, func() *retry.RetryError {
 		_, err := conn.DeleteDetectorWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "cannot delete detector while it has invited or associated members") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil

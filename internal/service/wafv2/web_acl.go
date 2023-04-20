@@ -12,13 +12,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -27,6 +28,8 @@ const (
 	webACLDeleteTimeout = 5 * time.Minute
 )
 
+// @SDKResource("aws_wafv2_web_acl", name="Web ACL")
+// @Tags(identifierAttribute="arn")
 func ResourceWebACL() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWebACLCreate,
@@ -59,6 +62,7 @@ func ResourceWebACL() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"captcha_config":       outerCaptchaConfigSchema(),
 			"custom_response_body": customResponseBodySchema(),
 			"default_action": {
 				Type:     schema.TypeList,
@@ -108,6 +112,7 @@ func ResourceWebACL() *schema.Resource {
 								},
 							},
 						},
+						"captcha_config": outerCaptchaConfigSchema(),
 						"name": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -140,8 +145,8 @@ func ResourceWebACL() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
 			},
-			"tags":              tftags.TagsSchema(),
-			"tags_all":          tftags.TagsSchemaComputed(),
+			names.AttrTags:      tftags.TagsSchema(),
+			names.AttrTagsAll:   tftags.TagsSchemaComputed(),
 			"visibility_config": visibilityConfigSchema(),
 		},
 
@@ -151,15 +156,15 @@ func ResourceWebACL() *schema.Resource {
 
 func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &wafv2.CreateWebACLInput{
+		CaptchaConfig:    expandCaptchaConfig(d.Get("captcha_config").([]interface{})),
 		DefaultAction:    expandDefaultAction(d.Get("default_action").([]interface{})),
 		Name:             aws.String(name),
 		Rules:            expandWebACLRules(d.Get("rule").(*schema.Set).List()),
 		Scope:            aws.String(d.Get("scope").(string)),
+		Tags:             GetTagsIn(ctx),
 		VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
 	}
 
@@ -169,10 +174,6 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, webACLCreateTimeout, func() (interface{}, error) {
@@ -192,8 +193,6 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := FindWebACLByThreePartKey(ctx, conn, d.Id(), d.Get("name").(string), d.Get("scope").(string))
 
@@ -211,6 +210,9 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 	arn := aws.StringValue(webACL.ARN)
 	d.Set("arn", arn)
 	d.Set("capacity", webACL.Capacity)
+	if err := d.Set("captcha_config", flattenCaptchaConfig(webACL.CaptchaConfig)); err != nil {
+		return diag.Errorf("setting captcha_config: %s", err)
+	}
 	if err := d.Set("custom_response_body", flattenCustomResponseBodies(webACL.CustomResponseBodies)); err != nil {
 		return diag.Errorf("setting custom_response_body: %s", err)
 	}
@@ -228,23 +230,6 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("setting visibility_config: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return diag.Errorf("listing tags for WAFv2 WebACL (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
-
 	return nil
 }
 
@@ -253,6 +238,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &wafv2.UpdateWebACLInput{
+			CaptchaConfig:    expandCaptchaConfig(d.Get("captcha_config").([]interface{})),
 			DefaultAction:    expandDefaultAction(d.Get("default_action").([]interface{})),
 			Id:               aws.String(d.Id()),
 			LockToken:        aws.String(d.Get("lock_token").(string)),
@@ -280,15 +266,6 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		if err != nil {
 			return diag.Errorf("updating WAFv2 WebACL (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		arn := d.Get("arn").(string)
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return diag.Errorf("updating tags for WAFv2 WebACL (%s): %s", arn, err)
 		}
 	}
 
@@ -331,7 +308,7 @@ func FindWebACLByThreePartKey(ctx context.Context, conn *wafv2.WAFV2, id, name, 
 	output, err := conn.GetWebACLWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

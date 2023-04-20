@@ -9,15 +9,18 @@ import (
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_imagebuilder_image_pipeline", name="Image Pipeline")
+// @Tags(identifierAttribute="id")
 func ResourceImagePipeline() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImagePipelineCreate,
@@ -148,8 +151,8 @@ func ResourceImagePipeline() *schema.Resource {
 				Default:      imagebuilder.PipelineStatusEnabled,
 				ValidateFunc: validation.StringInSlice(imagebuilder.PipelineStatus_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -159,12 +162,11 @@ func ResourceImagePipeline() *schema.Resource {
 func resourceImagePipelineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &imagebuilder.CreateImagePipelineInput{
-		ClientToken:                  aws.String(resource.UniqueId()),
+		ClientToken:                  aws.String(id.UniqueId()),
 		EnhancedImageMetadataEnabled: aws.Bool(d.Get("enhanced_image_metadata_enabled").(bool)),
+		Tags:                         GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("container_recipe_arn"); ok {
@@ -203,10 +205,6 @@ func resourceImagePipelineCreate(ctx context.Context, d *schema.ResourceData, me
 		input.Status = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	output, err := conn.CreateImagePipelineWithContext(ctx, input)
 
 	if err != nil {
@@ -225,8 +223,6 @@ func resourceImagePipelineCreate(ctx context.Context, d *schema.ResourceData, me
 func resourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &imagebuilder.GetImagePipelineInput{
 		ImagePipelineArn: aws.String(d.Id()),
@@ -279,16 +275,7 @@ func resourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.Set("status", imagePipeline.Status)
 
-	tags := KeyValueTags(ctx, imagePipeline.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, imagePipeline.Tags)
 
 	return diags
 }
@@ -307,7 +294,7 @@ func resourceImagePipelineUpdate(ctx context.Context, d *schema.ResourceData, me
 		"status",
 	) {
 		input := &imagebuilder.UpdateImagePipelineInput{
-			ClientToken:                  aws.String(resource.UniqueId()),
+			ClientToken:                  aws.String(id.UniqueId()),
 			EnhancedImageMetadataEnabled: aws.Bool(d.Get("enhanced_image_metadata_enabled").(bool)),
 			ImagePipelineArn:             aws.String(d.Id()),
 		}
@@ -348,14 +335,6 @@ func resourceImagePipelineUpdate(ctx context.Context, d *schema.ResourceData, me
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Image Builder Image Pipeline (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags for Image Builder Image Pipeline (%s): %s", d.Id(), err)
 		}
 	}
 

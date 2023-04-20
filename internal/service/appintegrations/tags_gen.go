@@ -8,7 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appintegrationsservice"
 	"github.com/aws/aws-sdk-go/service/appintegrationsservice/appintegrationsserviceiface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // map[string]*string handling
@@ -23,17 +26,38 @@ func KeyValueTags(ctx context.Context, tags map[string]*string) tftags.KeyValueT
 	return tftags.New(ctx, tags)
 }
 
+// GetTagsIn returns appintegrations service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) map[string]*string {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets appintegrations service tags in Context.
+func SetTagsOut(ctx context.Context, tags map[string]*string) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
+}
+
 // UpdateTags updates appintegrations service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn appintegrationsserviceiface.AppIntegrationsServiceAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(ctx context.Context, conn appintegrationsserviceiface.AppIntegrationsServiceAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.AppIntegrations)
+	if len(removedTags) > 0 {
 		input := &appintegrationsservice.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:     aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -43,10 +67,12 @@ func UpdateTags(ctx context.Context, conn appintegrationsserviceiface.AppIntegra
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.AppIntegrations)
+	if len(updatedTags) > 0 {
 		input := &appintegrationsservice.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreAWS()),
+			Tags:        Tags(updatedTags),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)
@@ -57,4 +83,10 @@ func UpdateTags(ctx context.Context, conn appintegrationsserviceiface.AppIntegra
 	}
 
 	return nil
+}
+
+// UpdateTags updates appintegrations service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).AppIntegrationsConn(), identifier, oldTags, newTags)
 }

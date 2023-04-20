@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -26,6 +26,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_cognito_user_pool", name="User Pool")
+// @Tags
 func ResourceUserPool() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserPoolCreate,
@@ -48,8 +50,10 @@ func ResourceUserPool() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"recovery_mechanism": {
 							Type:     schema.TypeSet,
-							Required: true,
+							Optional: true,
+							Computed: true,
 							MinItems: 1,
+							MaxItems: 2,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
@@ -200,19 +204,19 @@ func ResourceUserPool() *schema.Resource {
 					},
 				},
 			},
-			"email_verification_subject": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ValidateFunc:  validUserPoolEmailVerificationSubject,
-				ConflictsWith: []string{"verification_message_template.0.email_subject"},
-			},
 			"email_verification_message": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ValidateFunc:  validUserPoolEmailVerificationMessage,
 				ConflictsWith: []string{"verification_message_template.0.email_message"},
+			},
+			"email_verification_subject": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ValidateFunc:  validUserPoolEmailVerificationSubject,
+				ConflictsWith: []string{"verification_message_template.0.email_subject"},
 			},
 			"estimated_number_of_users": {
 				Type:     schema.TypeInt,
@@ -233,12 +237,57 @@ func ResourceUserPool() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
+						"custom_email_sender": {
+							Type:         schema.TypeList,
+							Optional:     true,
+							MaxItems:     1,
+							RequiredWith: []string{"lambda_config.0.kms_key_id"},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"lambda_arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"lambda_version": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(cognitoidentityprovider.CustomEmailSenderLambdaVersionType_Values(), false),
+									},
+								},
+							},
+						},
 						"custom_message": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
+						"custom_sms_sender": {
+							Type:         schema.TypeList,
+							Optional:     true,
+							MaxItems:     1,
+							RequiredWith: []string{"lambda_config.0.kms_key_id"},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"lambda_arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"lambda_version": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(cognitoidentityprovider.CustomSMSSenderLambdaVersionType_Values(), false),
+									},
+								},
+							},
+						},
 						"define_auth_challenge": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"kms_key_id": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
@@ -277,53 +326,6 @@ func ResourceUserPool() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
-						},
-						"kms_key_id": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"custom_email_sender": {
-							Type:         schema.TypeList,
-							Optional:     true,
-							Computed:     true,
-							MaxItems:     1,
-							RequiredWith: []string{"lambda_config.0.kms_key_id"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"lambda_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"lambda_version": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(cognitoidentityprovider.CustomEmailSenderLambdaVersionType_Values(), false),
-									},
-								},
-							},
-						},
-						"custom_sms_sender": {
-							Type:         schema.TypeList,
-							Optional:     true,
-							Computed:     true,
-							MaxItems:     1,
-							RequiredWith: []string{"lambda_config.0.kms_key_id"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"lambda_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"lambda_version": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(cognitoidentityprovider.CustomSMSSenderLambdaVersionType_Values(), false),
-									},
-								},
-							},
 						},
 					},
 				},
@@ -415,11 +417,11 @@ func ResourceUserPool() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"min_value": {
+									"max_value": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"max_value": {
+									"min_value": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -436,11 +438,11 @@ func ResourceUserPool() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"min_length": {
+									"max_length": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"max_length": {
+									"min_length": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -501,8 +503,8 @@ func ResourceUserPool() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"user_attribute_update_settings": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -516,6 +518,20 @@ func ResourceUserPool() *schema.Resource {
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringInSlice(cognitoidentityprovider.VerifiedAttributeType_Values(), false),
 							},
+						},
+					},
+				},
+			},
+			"user_pool_add_ons": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"advanced_security_mode": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(cognitoidentityprovider.AdvancedSecurityModeType_Values(), false),
 						},
 					},
 				},
@@ -540,20 +556,6 @@ func ResourceUserPool() *schema.Resource {
 							Type:     schema.TypeBool,
 							Required: true,
 							ForceNew: true,
-						},
-					},
-				},
-			},
-			"user_pool_add_ons": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"advanced_security_mode": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(cognitoidentityprovider.AdvancedSecurityModeType_Values(), false),
 						},
 					},
 				},
@@ -616,11 +618,10 @@ func ResourceUserPool() *schema.Resource {
 func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-	params := &cognitoidentityprovider.CreateUserPoolInput{
-		PoolName: aws.String(d.Get("name").(string)),
+	input := &cognitoidentityprovider.CreateUserPoolInput{
+		PoolName:     aws.String(d.Get("name").(string)),
+		UserPoolTags: GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("admin_create_user_config"); ok {
@@ -628,26 +629,26 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 		config, ok := configs[0].(map[string]interface{})
 
 		if ok && config != nil {
-			params.AdminCreateUserConfig = expandUserPoolAdminCreateUserConfig(config)
+			input.AdminCreateUserConfig = expandUserPoolAdminCreateUserConfig(config)
 		}
 	}
 
 	if v, ok := d.GetOk("account_recovery_setting"); ok {
 		if config, ok := v.([]interface{})[0].(map[string]interface{}); ok {
-			params.AccountRecoverySetting = expandUserPoolAccountRecoverySettingConfig(config)
+			input.AccountRecoverySetting = expandUserPoolAccountRecoverySettingConfig(config)
 		}
 	}
 
 	if v, ok := d.GetOk("alias_attributes"); ok {
-		params.AliasAttributes = flex.ExpandStringSet(v.(*schema.Set))
+		input.AliasAttributes = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("auto_verified_attributes"); ok {
-		params.AutoVerifiedAttributes = flex.ExpandStringSet(v.(*schema.Set))
+		input.AutoVerifiedAttributes = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("email_configuration"); ok && len(v.([]interface{})) > 0 {
-		params.EmailConfiguration = expandUserPoolEmailConfig(v.([]interface{}))
+		input.EmailConfiguration = expandUserPoolEmailConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("admin_create_user_config"); ok {
@@ -655,12 +656,12 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 		config, ok := configs[0].(map[string]interface{})
 
 		if ok && config != nil {
-			params.AdminCreateUserConfig = expandUserPoolAdminCreateUserConfig(config)
+			input.AdminCreateUserConfig = expandUserPoolAdminCreateUserConfig(config)
 		}
 	}
 
 	if v, ok := d.GetOk("deletion_protection"); ok {
-		params.DeletionProtection = aws.String(v.(string))
+		input.DeletionProtection = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("device_configuration"); ok {
@@ -668,16 +669,16 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 		config, ok := configs[0].(map[string]interface{})
 
 		if ok && config != nil {
-			params.DeviceConfiguration = expandUserPoolDeviceConfiguration(config)
+			input.DeviceConfiguration = expandUserPoolDeviceConfiguration(config)
 		}
 	}
 
 	if v, ok := d.GetOk("email_verification_subject"); ok {
-		params.EmailVerificationSubject = aws.String(v.(string))
+		input.EmailVerificationSubject = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("email_verification_message"); ok {
-		params.EmailVerificationMessage = aws.String(v.(string))
+		input.EmailVerificationMessage = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("lambda_config"); ok {
@@ -685,7 +686,7 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 		config, ok := configs[0].(map[string]interface{})
 
 		if ok && config != nil {
-			params.LambdaConfig = expandUserPoolLambdaConfig(config)
+			input.LambdaConfig = expandUserPoolLambdaConfig(config)
 		}
 	}
 
@@ -696,28 +697,28 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 		if ok && config != nil {
 			policies := &cognitoidentityprovider.UserPoolPolicyType{}
 			policies.PasswordPolicy = expandUserPoolPasswordPolicy(config)
-			params.Policies = policies
+			input.Policies = policies
 		}
 	}
 
 	if v, ok := d.GetOk("schema"); ok {
-		params.Schema = expandUserPoolSchema(v.(*schema.Set).List())
+		input.Schema = expandUserPoolSchema(v.(*schema.Set).List())
 	}
 
 	// For backwards compatibility, include this outside of MFA configuration
 	// since its configuration is allowed by the API even without SMS MFA.
 	if v, ok := d.GetOk("sms_authentication_message"); ok {
-		params.SmsAuthenticationMessage = aws.String(v.(string))
+		input.SmsAuthenticationMessage = aws.String(v.(string))
 	}
 
 	// Include the SMS configuration outside of MFA configuration since it
 	// can be used for user verification.
 	if v, ok := d.GetOk("sms_configuration"); ok {
-		params.SmsConfiguration = expandSMSConfiguration(v.([]interface{}))
+		input.SmsConfiguration = expandSMSConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("username_attributes"); ok {
-		params.UsernameAttributes = flex.ExpandStringSet(v.(*schema.Set))
+		input.UsernameAttributes = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("user_attribute_update_settings"); ok {
@@ -725,7 +726,7 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 		config, ok := configs[0].(map[string]interface{})
 
 		if ok && config != nil {
-			params.UserAttributeUpdateSettings = expandUserPoolUserAttributeUpdateSettings(config)
+			input.UserAttributeUpdateSettings = expandUserPoolUserAttributeUpdateSettings(config)
 		}
 	}
 
@@ -734,7 +735,7 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 		config, ok := configs[0].(map[string]interface{})
 
 		if ok && config != nil {
-			params.UsernameConfiguration = expandUserPoolUsernameConfiguration(config)
+			input.UsernameConfiguration = expandUserPoolUsernameConfiguration(config)
 		}
 	}
 
@@ -748,7 +749,7 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 			if v, ok := config["advanced_security_mode"]; ok && v.(string) != "" {
 				userPoolAddons.AdvancedSecurityMode = aws.String(v.(string))
 			}
-			params.UserPoolAddOns = userPoolAddons
+			input.UserPoolAddOns = userPoolAddons
 		}
 	}
 
@@ -757,39 +758,35 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 		config, ok := configs[0].(map[string]interface{})
 
 		if ok && config != nil {
-			params.VerificationMessageTemplate = expandUserPoolVerificationMessageTemplate(config)
+			input.VerificationMessageTemplate = expandUserPoolVerificationMessageTemplate(config)
 		}
 	}
 
 	if v, ok := d.GetOk("sms_verification_message"); ok {
-		params.SmsVerificationMessage = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		params.UserPoolTags = Tags(tags.IgnoreAWS())
+		input.SmsVerificationMessage = aws.String(v.(string))
 	}
 
 	// IAM roles & policies can take some time to propagate and be attached
 	// to the User Pool
 	var resp *cognitoidentityprovider.CreateUserPoolOutput
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
-		resp, err = conn.CreateUserPoolWithContext(ctx, params)
+		resp, err = conn.CreateUserPoolWithContext(ctx, input)
 		if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
 			log.Printf("[DEBUG] Received %s, retrying CreateUserPool", err)
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleAccessPolicyException, "Role does not have permission to publish with SNS") {
 			log.Printf("[DEBUG] Received %s, retrying CreateUserPool", err)
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		resp, err = conn.CreateUserPoolWithContext(ctx, params)
+		resp, err = conn.CreateUserPoolWithContext(ctx, input)
 	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Cognito User Pool: %s", err)
@@ -815,19 +812,19 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		// IAM Roles and Policies can take some time to propagate
-		err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+		err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 			_, err := conn.SetUserPoolMfaConfigWithContext(ctx, input)
 
 			if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleAccessPolicyException, "Role does not have permission to publish with SNS") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 
 			return nil
@@ -848,8 +845,6 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	params := &cognitoidentityprovider.DescribeUserPoolInput{
 		UserPoolId: aws.String(d.Id()),
@@ -941,16 +936,8 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("creation_date", userPool.CreationDate.Format(time.RFC3339))
 	d.Set("last_modified_date", userPool.LastModifiedDate.Format(time.RFC3339))
 	d.Set("name", userPool.Name)
-	tags := KeyValueTags(ctx, userPool.UserPoolTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, userPool.UserPoolTags)
 
 	input := &cognitoidentityprovider.GetUserPoolMfaConfigInput{
 		UserPoolId: aws.String(d.Id()),
@@ -980,8 +967,6 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	// Multi-Factor Authentication updates
 	if d.HasChanges(
@@ -1011,19 +996,19 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		// IAM Roles and Policies can take some time to propagate
-		err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+		err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 			_, err := conn.SetUserPoolMfaConfigWithContext(ctx, input)
 
 			if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleAccessPolicyException, "Role does not have permission to publish with SNS") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 
 			return nil
@@ -1062,8 +1047,9 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		"account_recovery_setting",
 		"deletion_protection",
 	) {
-		params := &cognitoidentityprovider.UpdateUserPoolInput{
-			UserPoolId: aws.String(d.Id()),
+		input := &cognitoidentityprovider.UpdateUserPoolInput{
+			UserPoolId:   aws.String(d.Id()),
+			UserPoolTags: GetTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("admin_create_user_config"); ok {
@@ -1071,22 +1057,22 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			config, ok := configs[0].(map[string]interface{})
 
 			if ok && config != nil {
-				params.AdminCreateUserConfig = expandUserPoolAdminCreateUserConfig(config)
+				input.AdminCreateUserConfig = expandUserPoolAdminCreateUserConfig(config)
 			}
 		}
 
 		if v, ok := d.GetOk("auto_verified_attributes"); ok {
-			params.AutoVerifiedAttributes = flex.ExpandStringSet(v.(*schema.Set))
+			input.AutoVerifiedAttributes = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
 		if v, ok := d.GetOk("account_recovery_setting"); ok {
 			if config, ok := v.([]interface{})[0].(map[string]interface{}); ok {
-				params.AccountRecoverySetting = expandUserPoolAccountRecoverySettingConfig(config)
+				input.AccountRecoverySetting = expandUserPoolAccountRecoverySettingConfig(config)
 			}
 		}
 
 		if v, ok := d.GetOk("deletion_protection"); ok {
-			params.DeletionProtection = aws.String(v.(string))
+			input.DeletionProtection = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("device_configuration"); ok {
@@ -1094,20 +1080,20 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			config, ok := configs[0].(map[string]interface{})
 
 			if ok && config != nil {
-				params.DeviceConfiguration = expandUserPoolDeviceConfiguration(config)
+				input.DeviceConfiguration = expandUserPoolDeviceConfiguration(config)
 			}
 		}
 
 		if v, ok := d.GetOk("email_configuration"); ok && len(v.([]interface{})) > 0 {
-			params.EmailConfiguration = expandUserPoolEmailConfig(v.([]interface{}))
+			input.EmailConfiguration = expandUserPoolEmailConfig(v.([]interface{}))
 		}
 
 		if v, ok := d.GetOk("email_verification_subject"); ok {
-			params.EmailVerificationSubject = aws.String(v.(string))
+			input.EmailVerificationSubject = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("email_verification_message"); ok {
-			params.EmailVerificationMessage = aws.String(v.(string))
+			input.EmailVerificationMessage = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("lambda_config"); ok {
@@ -1115,12 +1101,12 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			config, ok := configs[0].(map[string]interface{})
 
 			if ok && config != nil {
-				params.LambdaConfig = expandUserPoolLambdaConfig(config)
+				input.LambdaConfig = expandUserPoolLambdaConfig(config)
 			}
 		}
 
 		if v, ok := d.GetOk("mfa_configuration"); ok {
-			params.MfaConfiguration = aws.String(v.(string))
+			input.MfaConfiguration = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("password_policy"); ok {
@@ -1130,16 +1116,16 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			if ok && config != nil {
 				policies := &cognitoidentityprovider.UserPoolPolicyType{}
 				policies.PasswordPolicy = expandUserPoolPasswordPolicy(config)
-				params.Policies = policies
+				input.Policies = policies
 			}
 		}
 
 		if v, ok := d.GetOk("sms_authentication_message"); ok {
-			params.SmsAuthenticationMessage = aws.String(v.(string))
+			input.SmsAuthenticationMessage = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("sms_configuration"); ok {
-			params.SmsConfiguration = expandSMSConfiguration(v.([]interface{}))
+			input.SmsConfiguration = expandSMSConfiguration(v.([]interface{}))
 		}
 
 		if v, ok := d.GetOk("user_attribute_update_settings"); ok {
@@ -1147,13 +1133,13 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			config, ok := configs[0].(map[string]interface{})
 
 			if ok && config != nil {
-				params.UserAttributeUpdateSettings = expandUserPoolUserAttributeUpdateSettings(config)
+				input.UserAttributeUpdateSettings = expandUserPoolUserAttributeUpdateSettings(config)
 			}
 		}
-		if d.HasChange("user_attribute_update_settings") && params.UserAttributeUpdateSettings == nil {
+		if d.HasChange("user_attribute_update_settings") && input.UserAttributeUpdateSettings == nil {
 			// An empty array must be sent to disable this setting if previously enabled. A nil
 			// UserAttibutesUpdateSetting param will result in no modifications.
-			params.UserAttributeUpdateSettings = &cognitoidentityprovider.UserAttributeUpdateSettingsType{
+			input.UserAttributeUpdateSettings = &cognitoidentityprovider.UserAttributeUpdateSettingsType{
 				AttributesRequireVerificationBeforeUpdate: []*string{},
 			}
 		}
@@ -1168,7 +1154,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				if v, ok := config["advanced_security_mode"]; ok && v.(string) != "" {
 					userPoolAddons.AdvancedSecurityMode = aws.String(v.(string))
 				}
-				params.UserPoolAddOns = userPoolAddons
+				input.UserPoolAddOns = userPoolAddons
 			}
 		}
 
@@ -1187,42 +1173,38 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 
 			if ok && config != nil {
-				params.VerificationMessageTemplate = expandUserPoolVerificationMessageTemplate(config)
+				input.VerificationMessageTemplate = expandUserPoolVerificationMessageTemplate(config)
 			}
 		}
 
 		if v, ok := d.GetOk("sms_verification_message"); ok {
-			params.SmsVerificationMessage = aws.String(v.(string))
-		}
-
-		if len(tags) > 0 {
-			params.UserPoolTags = Tags(tags.IgnoreAWS())
+			input.SmsVerificationMessage = aws.String(v.(string))
 		}
 
 		// IAM roles & policies can take some time to propagate and be attached
 		// to the User Pool.
-		err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
-			_, err := conn.UpdateUserPoolWithContext(ctx, params)
+		err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+			_, err := conn.UpdateUserPoolWithContext(ctx, input)
 			if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
 				log.Printf("[DEBUG] Received %s, retrying UpdateUserPool", err)
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleAccessPolicyException, "Role does not have permission to publish with SNS") {
 				log.Printf("[DEBUG] Received %s, retrying UpdateUserPool", err)
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidParameterException, "Please use TemporaryPasswordValidityDays in PasswordPolicy instead of UnusedAccountValidityDays") {
 				log.Printf("[DEBUG] Received %s, retrying UpdateUserPool without UnusedAccountValidityDays", err)
-				params.AdminCreateUserConfig.UnusedAccountValidityDays = nil
-				return resource.RetryableError(err)
+				input.AdminCreateUserConfig.UnusedAccountValidityDays = nil
+				return retry.RetryableError(err)
 			}
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			return nil
 		})
 		if tfresource.TimedOut(err) {
-			_, err = conn.UpdateUserPoolWithContext(ctx, params)
+			_, err = conn.UpdateUserPoolWithContext(ctx, input)
 		}
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Cognito User pool (%s): %s", d.Id(), err)

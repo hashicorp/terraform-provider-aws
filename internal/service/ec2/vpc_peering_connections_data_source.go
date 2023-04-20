@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_vpc_peering_connections")
 func DataSourceVPCPeeringConnections() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCPeeringConnectionsRead,

@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/mediapackage"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,8 +18,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_media_package_channel", name="Channel")
+// @Tags(identifierAttribute="arn")
 func ResourceChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceChannelCreate,
@@ -74,8 +77,8 @@ func ResourceChannel() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -85,16 +88,11 @@ func ResourceChannel() *schema.Resource {
 func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MediaPackageConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &mediapackage.CreateChannelInput{
 		Id:          aws.String(d.Get("channel_id").(string)),
 		Description: aws.String(d.Get("description").(string)),
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
+		Tags:        GetTagsIn(ctx),
 	}
 
 	resp, err := conn.CreateChannelWithContext(ctx, input)
@@ -110,8 +108,6 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MediaPackageConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &mediapackage.DescribeChannelInput{
 		Id: aws.String(d.Id()),
@@ -128,16 +124,7 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting hls_ingest: %s", err)
 	}
 
-	tags := KeyValueTags(ctx, resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, resp.Tags)
 
 	return diags
 }
@@ -154,15 +141,6 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	_, err := conn.UpdateChannelWithContext(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating MediaPackage Channel: %s", err)
-	}
-
-	arn := d.Get("arn").(string)
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating MediaPackage Channel (%s) tags: %s", arn, err)
-		}
 	}
 
 	return append(diags, resourceChannelRead(ctx, d, meta)...)
@@ -186,15 +164,15 @@ func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta int
 	dcinput := &mediapackage.DescribeChannelInput{
 		Id: aws.String(d.Id()),
 	}
-	err = resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
 		_, err := conn.DescribeChannelWithContext(ctx, dcinput)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, mediapackage.ErrCodeNotFoundException) {
 				return nil
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
-		return resource.RetryableError(fmt.Errorf("MediaPackage Channel (%s) still exists", d.Id()))
+		return retry.RetryableError(fmt.Errorf("MediaPackage Channel (%s) still exists", d.Id()))
 	})
 	if tfresource.TimedOut(err) {
 		_, err = conn.DescribeChannelWithContext(ctx, dcinput)

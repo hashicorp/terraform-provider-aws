@@ -5,28 +5,96 @@ package eks
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceAddon,
+			TypeName: "aws_eks_addon",
+		},
+		{
+			Factory:  DataSourceAddonVersion,
+			TypeName: "aws_eks_addon_version",
+		},
+		{
+			Factory:  DataSourceCluster,
+			TypeName: "aws_eks_cluster",
+		},
+		{
+			Factory:  DataSourceClusterAuth,
+			TypeName: "aws_eks_cluster_auth",
+		},
+		{
+			Factory:  DataSourceClusters,
+			TypeName: "aws_eks_clusters",
+		},
+		{
+			Factory:  DataSourceNodeGroup,
+			TypeName: "aws_eks_node_group",
+		},
+		{
+			Factory:  DataSourceNodeGroups,
+			TypeName: "aws_eks_node_groups",
+		},
+	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceAddon,
+			TypeName: "aws_eks_addon",
+			Name:     "Add-On",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceCluster,
+			TypeName: "aws_eks_cluster",
+			Name:     "Cluster",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceFargateProfile,
+			TypeName: "aws_eks_fargate_profile",
+			Name:     "Fargate Profile",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceIdentityProviderConfig,
+			TypeName: "aws_eks_identity_provider_config",
+			Name:     "Identity Provider Config",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceNodeGroup,
+			TypeName: "aws_eks_node_group",
+			Name:     "Node Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

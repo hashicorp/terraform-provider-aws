@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,8 +24,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_launch_template", name="Launch Template")
+// @Tags(identifierAttribute="id")
 func ResourceLaunchTemplate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLaunchTemplateCreate,
@@ -916,8 +919,8 @@ func ResourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"update_default_version": {
 				Type:          schema.TypeBool,
 				Optional:      true,
@@ -968,14 +971,12 @@ func ResourceLaunchTemplate() *schema.Resource {
 func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &ec2.CreateLaunchTemplateInput{
-		ClientToken:        aws.String(resource.UniqueId()),
+		ClientToken:        aws.String(id.UniqueId()),
 		LaunchTemplateName: aws.String(name),
-		TagSpecifications:  tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeLaunchTemplate),
+		TagSpecifications:  getTagSpecificationsIn(ctx, ec2.ResourceTypeLaunchTemplate),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -1003,8 +1004,6 @@ func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, m
 func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	lt, err := FindLaunchTemplateByID(ctx, conn, d.Id())
 
@@ -1043,16 +1042,7 @@ func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Launch Template (%s): %s", d.Id(), err)
 	}
 
-	tags := KeyValueTags(ctx, lt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, lt.Tags)
 
 	return diags
 }
@@ -1098,7 +1088,7 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	if d.HasChanges(updateKeys...) {
 		input := &ec2.CreateLaunchTemplateVersionInput{
-			ClientToken:      aws.String(resource.UniqueId()),
+			ClientToken:      aws.String(id.UniqueId()),
 			LaunchTemplateId: aws.String(d.Id()),
 		}
 
@@ -1136,14 +1126,6 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Launch Template (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 Launch Template (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -1332,7 +1314,7 @@ func expandLaunchTemplateBlockDeviceMappingRequest(tfMap map[string]interface{})
 
 	apiObject := &ec2.LaunchTemplateBlockDeviceMappingRequest{}
 
-	if v, ok := tfMap["ebs"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["ebs"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Ebs = expandLaunchTemplateEBSBlockDeviceRequest(v[0].(map[string]interface{}))
 	}
 
@@ -1430,7 +1412,7 @@ func expandLaunchTemplateCapacityReservationSpecificationRequest(tfMap map[strin
 		apiObject.CapacityReservationPreference = aws.String(v)
 	}
 
-	if v, ok := tfMap["capacity_reservation_target"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["capacity_reservation_target"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.CapacityReservationTarget = expandCapacityReservationTarget(v[0].(map[string]interface{}))
 	}
 
@@ -1564,7 +1546,7 @@ func expandLaunchTemplateInstanceMarketOptionsRequest(tfMap map[string]interface
 		apiObject.MarketType = aws.String(v)
 	}
 
-	if v, ok := tfMap["spot_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["spot_options"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.SpotOptions = expandLaunchTemplateSpotMarketOptionsRequest(v[0].(map[string]interface{}))
 	}
 
@@ -1578,7 +1560,7 @@ func expandInstanceRequirementsRequest(tfMap map[string]interface{}) *ec2.Instan
 
 	apiObject := &ec2.InstanceRequirementsRequest{}
 
-	if v, ok := tfMap["accelerator_count"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["accelerator_count"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.AcceleratorCount = expandAcceleratorCountRequest(v[0].(map[string]interface{}))
 	}
 
@@ -1590,7 +1572,7 @@ func expandInstanceRequirementsRequest(tfMap map[string]interface{}) *ec2.Instan
 		apiObject.AcceleratorNames = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap["accelerator_total_memory_mib"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["accelerator_total_memory_mib"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.AcceleratorTotalMemoryMiB = expandAcceleratorTotalMemoryMiBRequest(v[0].(map[string]interface{}))
 	}
 
@@ -1606,7 +1588,7 @@ func expandInstanceRequirementsRequest(tfMap map[string]interface{}) *ec2.Instan
 		apiObject.BareMetal = aws.String(v)
 	}
 
-	if v, ok := tfMap["baseline_ebs_bandwidth_mbps"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["baseline_ebs_bandwidth_mbps"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.BaselineEbsBandwidthMbps = expandBaselineEBSBandwidthMbpsRequest(v[0].(map[string]interface{}))
 	}
 
@@ -1634,19 +1616,19 @@ func expandInstanceRequirementsRequest(tfMap map[string]interface{}) *ec2.Instan
 		apiObject.LocalStorageTypes = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap["memory_gib_per_vcpu"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["memory_gib_per_vcpu"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.MemoryGiBPerVCpu = expandMemoryGiBPerVCPURequest(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["memory_mib"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["memory_mib"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.MemoryMiB = expandMemoryMiBRequest(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["network_bandwidth_gbps"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["network_bandwidth_gbps"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.NetworkBandwidthGbps = expandNetworkBandwidthGbpsRequest(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["network_interface_count"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["network_interface_count"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.NetworkInterfaceCount = expandNetworkInterfaceCountRequest(v[0].(map[string]interface{}))
 	}
 
@@ -1662,11 +1644,11 @@ func expandInstanceRequirementsRequest(tfMap map[string]interface{}) *ec2.Instan
 		apiObject.SpotMaxPricePercentageOverLowestPrice = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["total_local_storage_gb"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["total_local_storage_gb"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.TotalLocalStorageGB = expandTotalLocalStorageGBRequest(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["vcpu_count"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["vcpu_count"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.VCpuCount = expandVCPUCountRangeRequest(v[0].(map[string]interface{}))
 	}
 
@@ -1934,21 +1916,18 @@ func expandLaunchTemplateInstanceMetadataOptionsRequest(tfMap map[string]interfa
 
 	if v, ok := tfMap["http_endpoint"].(string); ok && v != "" {
 		apiObject.HttpEndpoint = aws.String(v)
+	}
 
-		if v == ec2.LaunchTemplateInstanceMetadataEndpointStateEnabled {
-			// These parameters are not allowed unless HttpEndpoint is enabled.
-			if v, ok := tfMap["http_tokens"].(string); ok && v != "" {
-				apiObject.HttpTokens = aws.String(v)
-			}
+	if v, ok := tfMap["http_tokens"].(string); ok && v != "" {
+		apiObject.HttpTokens = aws.String(v)
+	}
 
-			if v, ok := tfMap["http_put_response_hop_limit"].(int); ok && v != 0 {
-				apiObject.HttpPutResponseHopLimit = aws.Int64(int64(v))
-			}
+	if v, ok := tfMap["http_put_response_hop_limit"].(int); ok && v != 0 {
+		apiObject.HttpPutResponseHopLimit = aws.Int64(int64(v))
+	}
 
-			if v, ok := tfMap["instance_metadata_tags"].(string); ok && v != "" {
-				apiObject.InstanceMetadataTags = aws.String(v)
-			}
-		}
+	if v, ok := tfMap["instance_metadata_tags"].(string); ok && v != "" {
+		apiObject.InstanceMetadataTags = aws.String(v)
 	}
 
 	if v, ok := tfMap["http_protocol_ipv6"].(string); ok && v != "" {

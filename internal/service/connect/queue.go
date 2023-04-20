@@ -16,8 +16,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_connect_queue", name="Queue")
+// @Tags(identifierAttribute="arn")
 func ResourceQueue() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQueueCreate,
@@ -94,8 +97,9 @@ func ResourceQueue() *schema.Resource {
 				},
 			},
 			"quick_connect_ids_associated": {
-				Type:     schema.TypeSet,
-				Computed: true,
+				Deprecated: "Use the quick_connect_ids instead",
+				Type:       schema.TypeSet,
+				Computed:   true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -106,23 +110,21 @@ func ResourceQueue() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(connect.QueueStatus_Values(), false), // Valid Values: ENABLED | DISABLED
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
-
 	input := &connect.CreateQueueInput{
 		InstanceId: aws.String(instanceID),
 		Name:       aws.String(name),
+		Tags:       GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -145,10 +147,6 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.QuickConnectIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	log.Printf("[DEBUG] Creating Connect Queue %s", input)
 	output, err := conn.CreateQueueWithContext(ctx, input)
 
@@ -167,8 +165,6 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceID, queueID, err := QueueParseID(d.Id())
 
@@ -218,16 +214,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("quick_connect_ids", flex.FlattenStringSet(quickConnectIds))
 	d.Set("quick_connect_ids_associated", flex.FlattenStringSet(quickConnectIds))
 
-	tags := KeyValueTags(ctx, resp.Queue.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
-	}
+	SetTagsOut(ctx, resp.Queue.Tags)
 
 	return nil
 }
@@ -322,38 +309,40 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// updates to quick_connect_ids
 	if d.HasChange("quick_connect_ids") {
-		// first disassociate all existing quick connects
-		if v, ok := d.GetOk("quick_connect_ids_associated"); ok && v.(*schema.Set).Len() > 0 {
-			input := &connect.DisassociateQueueQuickConnectsInput{
-				InstanceId: aws.String(instanceID),
-				QueueId:    aws.String(queueID),
-			}
-			input.QuickConnectIds = flex.ExpandStringSet(v.(*schema.Set))
-			_, err = conn.DisassociateQueueQuickConnectsWithContext(ctx, input)
+		o, n := d.GetChange("quick_connect_ids")
+
+		if o == nil {
+			o = new(schema.Set)
+		}
+		if n == nil {
+			n = new(schema.Set)
+		}
+
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+		quickConnectIdsUpdateAdd := ns.Difference(os)
+		quickConnectIdsUpdateRemove := os.Difference(ns)
+
+		if len(quickConnectIdsUpdateAdd.List()) > 0 { // nosemgrep:ci.semgrep.migrate.aws-api-context
+			_, err = conn.AssociateQueueQuickConnectsWithContext(ctx, &connect.AssociateQueueQuickConnectsInput{
+				InstanceId:      aws.String(instanceID),
+				QueueId:         aws.String(queueID),
+				QuickConnectIds: flex.ExpandStringSet(quickConnectIdsUpdateAdd),
+			})
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("updating Queues Quick Connect IDs, specifically disassociating quick connects from queue (%s): %w", d.Id(), err))
+				return diag.Errorf("updating Queues Quick Connect IDs, specifically associating quick connects to queue (%s): %s", d.Id(), err)
 			}
 		}
 
-		// re-associate the quick connects
-		if v, ok := d.GetOk("quick_connect_ids"); ok && v.(*schema.Set).Len() > 0 {
-			input := &connect.AssociateQueueQuickConnectsInput{
-				InstanceId: aws.String(instanceID),
-				QueueId:    aws.String(queueID),
-			}
-			input.QuickConnectIds = flex.ExpandStringSet(v.(*schema.Set))
-			_, err = conn.AssociateQueueQuickConnectsWithContext(ctx, input)
+		if len(quickConnectIdsUpdateRemove.List()) > 0 { // nosemgrep:ci.semgrep.migrate.aws-api-context
+			_, err = conn.DisassociateQueueQuickConnectsWithContext(ctx, &connect.DisassociateQueueQuickConnectsInput{
+				InstanceId:      aws.String(instanceID),
+				QueueId:         aws.String(queueID),
+				QuickConnectIds: flex.ExpandStringSet(quickConnectIdsUpdateRemove),
+			})
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("updating Queues Quick Connect IDs, specifically associating quick connects to queue (%s): %w", d.Id(), err))
+				return diag.Errorf("updating Queues Quick Connect IDs, specifically disassociating quick connects from queue (%s): %s", d.Id(), err)
 			}
-		}
-	}
-
-	// updates to tags
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
 		}
 	}
 

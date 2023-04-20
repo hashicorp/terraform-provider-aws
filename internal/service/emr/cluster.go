@@ -17,7 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -28,9 +28,12 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"golang.org/x/exp/slices"
 )
 
+// @SDKResource("aws_emr_cluster", name="Cluster")
+// @Tags(identifierAttribute="id")
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
@@ -540,8 +543,8 @@ func ResourceCluster() *schema.Resource {
 				Default:      1,
 				ValidateFunc: validation.IntBetween(1, 256),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"termination_protection": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -739,12 +742,8 @@ func instanceFleetConfigSchema() *schema.Resource {
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-	log.Printf("[DEBUG] Creating EMR cluster")
 	applications := d.Get("applications").(*schema.Set).List()
-
 	keepJobFlowAliveWhenNoSteps := true
 	if v, ok := d.GetOkExists("keep_job_flow_alive_when_no_steps"); ok {
 		keepJobFlowAliveWhenNoSteps = v.(bool)
@@ -883,7 +882,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		ReleaseLabel:      aws.String(d.Get("release_label").(string)),
 		ServiceRole:       aws.String(d.Get("service_role").(string)),
 		VisibleToAllUsers: aws.Bool(d.Get("visible_to_all_users").(bool)),
-		Tags:              Tags(tags.IgnoreAWS()),
+		Tags:              GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("additional_info"); ok {
@@ -964,17 +963,17 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	var resp *emr.RunJobFlowOutput
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
 		resp, err = conn.RunJobFlowWithContext(ctx, params)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "ValidationException", "Invalid InstanceProfile:") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, "AccessDeniedException", "Failed to authorize instance profile") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -1017,8 +1016,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	cluster, err := FindClusterByID(ctx, conn, d.Id())
 
@@ -1073,16 +1070,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	tags := KeyValueTags(ctx, cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, cluster.Tags)
 
 	d.Set("name", cluster.Name)
 
@@ -1271,15 +1259,15 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 			// RemoveAutoScalingPolicy seems to have eventual consistency.
 			// Retry reading Instance Group configuration until the policy is removed.
-			err := resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+			err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
 				autoscalingPolicy, err := getCoreInstanceGroupAutoScalingPolicy(ctx, conn, d.Id())
 
 				if err != nil {
-					return resource.NonRetryableError(err)
+					return retry.NonRetryableError(err)
 				}
 
 				if autoscalingPolicy != nil {
-					return resource.RetryableError(errors.New("still exists"))
+					return retry.RetryableError(errors.New("still exists"))
 				}
 
 				return nil
@@ -1317,7 +1305,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return sdkdiag.AppendErrorf(diags, "modifying EMR Cluster (%s) Instance Group (%s): %s", d.Id(), instanceGroupID, err)
 		}
 
-		stateConf := &resource.StateChangeConf{
+		stateConf := &retry.StateChangeConf{
 			Pending: []string{
 				emr.InstanceGroupStateBootstrapping,
 				emr.InstanceGroupStateProvisioning,
@@ -1375,14 +1363,6 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 					break
 				}
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EMR Cluster (%s): setting tags: %s", d.Id(), err)
 		}
 	}
 

@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,8 +22,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_redshift_parameter_group", name="Parameter Group")
+// @Tags(identifierAttribute="arn")
 func ResourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterGroupCreate,
@@ -80,8 +83,8 @@ func ResourceParameterGroup() *schema.Resource {
 				},
 				Set: resourceParameterHash,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -91,15 +94,13 @@ func ResourceParameterGroup() *schema.Resource {
 func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &redshift.CreateClusterParameterGroupInput{
 		Description:          aws.String(d.Get("description").(string)),
 		ParameterGroupFamily: aws.String(d.Get("family").(string)),
 		ParameterGroupName:   aws.String(name),
-		Tags:                 Tags(tags.IgnoreAWS()),
+		Tags:                 GetTagsIn(ctx),
 	}
 
 	_, err := conn.CreateClusterParameterGroupWithContext(ctx, input)
@@ -129,8 +130,6 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	parameterGroup, err := FindParameterGroupByName(ctx, conn, d.Id())
 
@@ -156,16 +155,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("family", parameterGroup.ParameterGroupFamily)
 	d.Set("name", parameterGroup.ParameterGroupName)
 
-	tags := KeyValueTags(ctx, parameterGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, parameterGroup.Tags)
 
 	input := &redshift.DescribeClusterParametersInput{
 		ParameterGroupName: aws.String(d.Id()),
@@ -213,14 +203,6 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Redshift Parameter Group (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceParameterGroupRead(ctx, d, meta)...)
 }
 
@@ -252,7 +234,7 @@ func FindParameterGroupByName(ctx context.Context, conn *redshift.Redshift, name
 	output, err := conn.DescribeClusterParameterGroupsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeClusterParameterGroupNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -270,7 +252,7 @@ func FindParameterGroupByName(ctx context.Context, conn *redshift.Redshift, name
 
 	// Eventual consistency check.
 	if aws.StringValue(parameterGroup.ParameterGroupName) != name {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}

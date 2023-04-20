@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_ram_resource_share")
 func DataSourceResourceShare() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResourceShareRead,

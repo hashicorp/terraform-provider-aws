@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,14 +20,18 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_iam_user", name="User")
+// @Tags
 func ResourceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserCreate,
 		ReadWithoutTimeout:   resourceUserRead,
 		UpdateWithoutTimeout: resourceUserUpdate,
 		DeleteWithoutTimeout: resourceUserDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -37,17 +41,11 @@ func ResourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			/*
-				The UniqueID could be used as the Id(), but none of the API
-				calls allow specifying a user by the UniqueID: they require the
-				name. The only way to locate a user by UniqueID is to list them
-				all and that would make this provider unnecessarily complex
-				and inefficient. Still, there are other reasons one might want
-				the UniqueID, so we can make it available.
-			*/
-			"unique_id": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"force_destroy": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Delete user even if it has non-Terraform-managed IAM access keys, login profile or MFA devices",
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -67,14 +65,20 @@ func ResourceUser() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 2048),
 			},
-			"force_destroy": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "Delete user even if it has non-Terraform-managed IAM access keys, login profile or MFA devices",
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			/*
+				The UniqueID could be used as the Id(), but none of the API
+				calls allow specifying a user by the UniqueID: they require the
+				name. The only way to locate a user by UniqueID is to list them
+				all and that would make this provider unnecessarily complex
+				and inefficient. Still, there are other reasons one might want
+				the UniqueID, so we can make it available.
+			*/
+			"unique_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -84,44 +88,39 @@ func ResourceUser() *schema.Resource {
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+
 	name := d.Get("name").(string)
 	path := d.Get("path").(string)
-
-	request := &iam.CreateUserInput{
+	tags := GetTagsIn(ctx)
+	input := &iam.CreateUserInput{
 		Path:     aws.String(path),
+		Tags:     tags,
 		UserName: aws.String(name),
 	}
 
 	if v, ok := d.GetOk("permissions_boundary"); ok {
-		request.PermissionsBoundary = aws.String(v.(string))
+		input.PermissionsBoundary = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		request.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Println("[DEBUG] Create IAM User request:", request)
-	createResp, err := conn.CreateUserWithContext(ctx, request)
+	output, err := conn.CreateUserWithContext(ctx, input)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if request.Tags != nil && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+	if input.Tags != nil && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating IAM User (%s) with tags: %s. Trying create without tags.", name, err)
-		request.Tags = nil
+		input.Tags = nil
 
-		createResp, err = conn.CreateUserWithContext(ctx, request)
+		output, err = conn.CreateUserWithContext(ctx, input)
 	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IAM User (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(createResp.User.UserName))
+	d.SetId(aws.StringValue(output.User.UserName))
 
 	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
-	if request.Tags == nil && len(tags) > 0 && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID {
-		err := userUpdateTags(ctx, conn, d.Id(), nil, tags)
+	if input.Tags == nil && len(tags) > 0 && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID {
+		err := userUpdateTags(ctx, conn, d.Id(), nil, KeyValueTags(ctx, tags))
 
 		// If default tags only, log and continue. Otherwise, error.
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
@@ -140,8 +139,6 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	request := &iam.GetUserInput{
 		UserName: aws.String(d.Id()),
@@ -149,17 +146,17 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	var output *iam.GetUserOutput
 
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
 
 		output, err = conn.GetUserWithContext(ctx, request)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -191,16 +188,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	d.Set("unique_id", output.User.UserId)
 
-	tags := KeyValueTags(ctx, output.User.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, output.User.Tags)
 
 	return diags
 }
@@ -457,7 +445,7 @@ func DeleteUserLoginProfile(ctx context.Context, conn *iam.IAM, username string)
 	input := &iam.DeleteLoginProfileInput{
 		UserName: aws.String(username),
 	}
-	err = resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err = conn.DeleteLoginProfileWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
@@ -465,9 +453,9 @@ func DeleteUserLoginProfile(ctx context.Context, conn *iam.IAM, username string)
 			}
 			// EntityTemporarilyUnmodifiable: Login Profile for User XXX cannot be modified while login profile is being created.
 			if tfawserr.ErrCodeEquals(err, iam.ErrCodeEntityTemporarilyUnmodifiableException) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})

@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/apprunner"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,8 +18,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_apprunner_service", name="Service")
+// @Tags(identifierAttribute="arn")
 func ResourceService() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceCreate,
@@ -421,9 +424,8 @@ func ResourceService() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tftags.TagsSchema(),
-
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -432,15 +434,12 @@ func ResourceService() *schema.Resource {
 
 func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	serviceName := d.Get("service_name").(string)
-
 	input := &apprunner.CreateServiceInput{
 		ServiceName:         aws.String(serviceName),
 		SourceConfiguration: expandServiceSourceConfiguration(d.Get("source_configuration").([]interface{})),
-		Tags:                Tags(tags.IgnoreAWS()),
+		Tags:                GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("auto_scaling_configuration_arn"); ok {
@@ -469,16 +468,16 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	var output *apprunner.CreateServiceOutput
 
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
 		output, err = conn.CreateServiceWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, apprunner.ErrCodeInvalidRequestException, "Error in assuming instance role") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -507,8 +506,6 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &apprunner.DescribeServiceInput{
 		ServiceArn: aws.String(d.Id()),
@@ -577,23 +574,6 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(fmt.Errorf("error setting source_configuration: %w", err))
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing tags for App Runner Service (%s): %s", arn, err))
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
-	}
-
 	return nil
 }
 
@@ -639,14 +619,6 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if err := WaitServiceUpdated(ctx, conn, d.Id()); err != nil {
 			return diag.FromErr(fmt.Errorf("error waiting for App Runner Service (%s) to update: %w", d.Id(), err))
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating App Runner Service (%s) tags: %s", d.Get("arn").(string), err))
 		}
 	}
 
