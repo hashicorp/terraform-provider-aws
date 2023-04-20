@@ -338,6 +338,7 @@ Each `custom_response_body` block supports the following arguments:
 Each `rule` supports the following arguments:
 
 * `action` - (Required) The action that AWS WAF should take on a web request when it matches the rule's statement. Settings at the `aws_wafv2_web_acl` level can override the rule action setting. See [Action](#action) below for details.
+* `captcha_config` - (Optional) Specifies how AWS WAF should handle CAPTCHA evaluations. See [Captcha Configuration](#captcha-configuration) below for details.
 * `name` - (Required, Forces new resource) A friendly name of the rule.
 * `priority` - (Required) If you define more than one Rule in a WebACL, AWS WAF evaluates each request against the `rules` in order based on the value of `priority`. AWS WAF processes rules with lower priority first.
 * `rule_label` - (Optional) Labels to apply to web requests that match the rule match statement. See [Rule Label](#rule-label) below for details.
@@ -677,7 +678,6 @@ The `captcha_config` block supports the following arguments:
 The `immunity_time_property` block supports the following arguments:
 
 * `immunity_time` - (Optional) The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
-
 
 ## Attributes Reference
 
