@@ -71,7 +71,6 @@ func TestAccVPCLatticeListenerDataSource_tags(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func TestAccVPCLatticeListenerDataSource_forwardMultiTargetGroupHTTP(t *testing.T) {
@@ -108,7 +107,6 @@ func TestAccVPCLatticeListenerDataSource_forwardMultiTargetGroupHTTP(t *testing.
 			},
 		},
 	})
-
 }
 
 func testAccListenerDataSourceConfig_one_tag(rName, tag_key, tag_value string) string {
