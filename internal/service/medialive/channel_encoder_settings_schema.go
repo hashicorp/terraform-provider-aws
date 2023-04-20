@@ -1605,12 +1605,14 @@ func channelEncoderSettingsSchema() *schema.Schema {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"framerate_denominator": {
-														Type:     schema.TypeInt,
-														Required: true,
+														Type:         schema.TypeInt,
+														Required:     true,
+														ValidateFunc: validation.IntAtLeast(1),
 													},
 													"framerate_numerator": {
-														Type:     schema.TypeInt,
-														Required: true,
+														Type:         schema.TypeInt,
+														Required:     true,
+														ValidateFunc: validation.IntAtLeast(1),
 													},
 													"adaptive_quantization": {
 														Type:             schema.TypeString,
@@ -1822,8 +1824,9 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														ValidateDiagFunc: enum.Validate[types.H265SceneChangeDetect](),
 													},
 													"slices": {
-														Type:     schema.TypeInt,
-														Optional: true,
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ValidateFunc: validation.IntAtLeast(1),
 													},
 													"tier": {
 														Type:             schema.TypeString,
