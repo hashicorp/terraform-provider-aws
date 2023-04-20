@@ -1,7 +1,7 @@
 ```release-note:enhancement
-resource/aws_servicequotas_service_quota: Expose 'UsageMetric' data
+resource/aws_servicequotas_service_quota: Add `usage_metric` argument
 ```
 
 ```release-note:enhancement
-data-source/aws_servicequotas_service_quota: Expose 'UsageMetric' data
+data-source/aws_servicequotas_service_quota: Add `usage_metric` attribute
 ```
