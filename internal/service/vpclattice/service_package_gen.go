@@ -22,6 +22,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
+			Factory:  DataSourceListener,
+			TypeName: "aws_vpclattice_listener",
+			Name:     "Listener",
+		},
+		{
 			Factory:  DataSourceService,
 			TypeName: "aws_vpclattice_service",
 		},
