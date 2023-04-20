@@ -17,7 +17,8 @@ func TestAccInspector2_serial(t *testing.T) {
 			"lambda":                       testAccEnabler_lambda,
 			"updateResourceTypes":          testAccEnabler_updateResourceTypes,
 			"updateResourceTypes_disjoint": testAccEnabler_updateResourceTypes_disjoint,
-			"multiAccount_basic":           testAccEnabler_multiAccount_basic,
+			// "multiAccount_NonMember": testAccEnabler_multiAccount_NonMember,
+			"memberAccount_basic": testAccEnabler_memberAccount_basic,
 		},
 		"DelegatedAdminAccount": {
 			"basic":      testAccDelegatedAdminAccount_basic,

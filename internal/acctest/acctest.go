@@ -252,8 +252,8 @@ func PreCheck(ctx context.Context, t *testing.T) {
 	})
 }
 
-// providerAccountID returns the account ID of an AWS provider
-func providerAccountID(provo *schema.Provider) string {
+// ProviderAccountID returns the account ID of an AWS provider
+func ProviderAccountID(provo *schema.Provider) string {
 	if provo == nil {
 		log.Print("[DEBUG] Unable to read account ID from test provider: empty provider")
 		return ""
@@ -717,7 +717,7 @@ func PrimaryInstanceState(s *terraform.State, name string) (*terraform.InstanceS
 // AccountID returns the account ID of Provider
 // Must be used within a resource.TestCheckFunc
 func AccountID() string {
-	return providerAccountID(Provider)
+	return ProviderAccountID(Provider)
 }
 
 func Region() string {
