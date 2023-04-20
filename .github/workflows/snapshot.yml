@@ -9,7 +9,7 @@ jobs:
   goreleaser:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@24cb9080177205b6e8c946b17badbe402adc938f
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
       - uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9
         with:
           go-version-file: go.mod
@@ -36,7 +36,7 @@ jobs:
             ARTIFACT="${GITHUB_REF}";;
           esac
           echo "artifact=$ARTIFACT-$(date -u +'%Y-%m-%dT%H-%M')" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce
         with:
           name: ${{steps.naming.outputs.artifact}}
           path: dist/*.zip

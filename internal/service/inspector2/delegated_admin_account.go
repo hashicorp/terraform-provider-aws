@@ -11,7 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -60,7 +61,7 @@ func resourceDelegatedAdminAccountCreate(ctx context.Context, d *schema.Resource
 
 	in := &inspector2.EnableDelegatedAdminAccountInput{
 		DelegatedAdminAccountId: aws.String(d.Get("account_id").(string)),
-		ClientToken:             aws.String(resource.UniqueId()),
+		ClientToken:             aws.String(id.UniqueId()),
 	}
 
 	out, err := conn.EnableDelegatedAdminAccount(ctx, in)
@@ -88,7 +89,7 @@ func resourceDelegatedAdminAccountRead(ctx context.Context, d *schema.ResourceDa
 	st, ai, err := FindDelegatedAdminAccountStatusID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Inspector V2 Delegated Admin Account (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Inspector Delegated Admin Account (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -106,7 +107,7 @@ func resourceDelegatedAdminAccountRead(ctx context.Context, d *schema.ResourceDa
 func resourceDelegatedAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Inspector2Client()
 
-	log.Printf("[INFO] Deleting Inspector2 DelegatedAdminAccount %s", d.Id())
+	log.Printf("[INFO] Deleting Inspector DelegatedAdminAccount %s", d.Id())
 
 	_, err := conn.DisableDelegatedAdminAccount(ctx, &inspector2.DisableDelegatedAdminAccountInput{
 		DelegatedAdminAccountId: aws.String(d.Get("account_id").(string)),
@@ -159,7 +160,7 @@ func (DelegatedAccountStatus) Values() []DelegatedAccountStatus {
 }
 
 func WaitDelegatedAdminAccountEnabled(ctx context.Context, conn *inspector2.Client, accountID string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(DelegatedAccountStatusDisableInProgress, DelegatedAccountStatusEnableInProgress, DelegatedAccountStatusEnabling),
 		Target:  enum.Slice(types.RelationshipStatusEnabled),
 		Refresh: statusDelegatedAdminAccount(ctx, conn, accountID),
@@ -172,7 +173,7 @@ func WaitDelegatedAdminAccountEnabled(ctx context.Context, conn *inspector2.Clie
 }
 
 func WaitDelegatedAdminAccountDisabled(ctx context.Context, conn *inspector2.Client, accountID string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(DelegatedAccountStatusDisableInProgress, DelegatedAccountStatus(types.RelationshipStatusCreated), DelegatedAccountStatus(types.RelationshipStatusEnabled)),
 		Target:  []string{},
 		Refresh: statusDelegatedAdminAccount(ctx, conn, accountID),
@@ -184,7 +185,7 @@ func WaitDelegatedAdminAccountDisabled(ctx context.Context, conn *inspector2.Cli
 	return err
 }
 
-func statusDelegatedAdminAccount(ctx context.Context, conn *inspector2.Client, accountID string) resource.StateRefreshFunc {
+func statusDelegatedAdminAccount(ctx context.Context, conn *inspector2.Client, accountID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		s, _, err := FindDelegatedAdminAccountStatusID(ctx, conn, accountID)
 
@@ -222,7 +223,7 @@ func FindDelegatedAdminAccountStatusID(ctx context.Context, conn *inspector2.Cli
 		}
 	}
 
-	return "", "", &resource.NotFoundError{
+	return "", "", &retry.NotFoundError{
 		Message: fmt.Sprintf("delegated admin account not found for %s", accountID),
 	}
 }

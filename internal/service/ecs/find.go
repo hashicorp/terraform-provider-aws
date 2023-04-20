@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -34,7 +34,7 @@ func FindCapacityProviderByARN(ctx context.Context, conn *ecs.ECS, arn string) (
 	}
 
 	if output == nil || len(output.CapacityProviders) == 0 || output.CapacityProviders[0] == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
 		}
@@ -43,7 +43,7 @@ func FindCapacityProviderByARN(ctx context.Context, conn *ecs.ECS, arn string) (
 	capacityProvider := output.CapacityProviders[0]
 
 	if status := aws.StringValue(capacityProvider.Status); status == ecs.CapacityProviderStatusInactive {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
 		}
@@ -77,7 +77,7 @@ func FindClusterByNameOrARN(ctx context.Context, conn *ecs.ECS, nameOrARN string
 	}
 
 	if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -88,13 +88,18 @@ func FindClusterByNameOrARN(ctx context.Context, conn *ecs.ECS, nameOrARN string
 	}
 
 	if output == nil || len(output.Clusters) == 0 || output.Clusters[0] == nil {
-		return nil, &resource.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	if count := len(output.Clusters); count > 1 {
 		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	if status := aws.StringValue(output.Clusters[0].Status); status == clusterStatusInactive {
+		return nil, &retry.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
 	}
 
 	return output.Clusters[0], nil
@@ -135,19 +140,19 @@ func (e *expectActiveError) Error() string {
 
 func FindServiceByIDWaitForActive(ctx context.Context, conn *ecs.ECS, id, cluster string) (*ecs.Service, error) {
 	var service *ecs.Service
-	// Use the resource.Retry function instead of WaitForState() because we don't want the timeout error, if any
-	err := resource.RetryContext(ctx, serviceDescribeTimeout, func() *resource.RetryError {
+	// Use the retry.RetryContext function instead of WaitForState() because we don't want the timeout error, if any
+	err := retry.RetryContext(ctx, serviceDescribeTimeout, func() *retry.RetryError {
 		var err error
 		service, err = FindServiceByID(ctx, conn, id, cluster)
 		if tfresource.NotFound(err) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if status := aws.StringValue(service.Status); status != serviceStatusActive {
-			return resource.RetryableError(newExpectActiveError(status))
+			return retry.RetryableError(newExpectActiveError(status))
 		}
 
 		return nil
@@ -173,7 +178,7 @@ func FindService(ctx context.Context, conn *ecs.ECS, input *ecs.DescribeServices
 	// As of AWS SDK for Go v1.44.42, DescribeServices does not return the error code ecs.ErrCodeServiceNotFoundException
 	// Keep this here in case it ever does
 	if tfawserr.ErrCodeEquals(err, ecs.ErrCodeServiceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -185,7 +190,7 @@ func FindService(ctx context.Context, conn *ecs.ECS, input *ecs.DescribeServices
 	// When an ECS Service is not found by DescribeServices(), it will return a Failure struct with Reason = "MISSING"
 	for _, v := range output.Failures {
 		if aws.StringValue(v.Reason) == "MISSING" {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastRequest: input,
 			}
 		}

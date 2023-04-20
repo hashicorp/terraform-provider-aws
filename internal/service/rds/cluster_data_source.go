@@ -101,6 +101,26 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"master_user_secret": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"secret_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"secret_status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"master_username": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -150,7 +170,6 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	dbClusterID := d.Get("cluster_identifier").(string)
 	dbc, err := FindDBClusterByID(ctx, conn, dbClusterID)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster (%s): %s", dbClusterID, err)
 	}
@@ -191,6 +210,11 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	d.Set("iam_roles", iamRoleARNs)
 	d.Set("kms_key_id", dbc.KmsKeyId)
+	if dbc.MasterUserSecret != nil {
+		if err := d.Set("master_user_secret", []interface{}{flattenManagedMasterUserSecret(dbc.MasterUserSecret)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting master_user_secret: %s", err)
+		}
+	}
 	d.Set("master_username", dbc.MasterUsername)
 	d.Set("network_type", dbc.NetworkType)
 	d.Set("port", dbc.Port)
@@ -206,7 +230,6 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("vpc_security_group_ids", securityGroupIDs)
 
 	tags, err := ListTags(ctx, conn, clusterARN)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for RDS Cluster (%s): %s", d.Id(), err)
 	}

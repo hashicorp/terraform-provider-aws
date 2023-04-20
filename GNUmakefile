@@ -132,7 +132,6 @@ gen:
 	rm -f internal/sweep/sweep_test.go
 	rm -f names/caps.md
 	rm -f names/*_gen.go
-	rm -f website/allowed-subcategories.txt
 	rm -f website/docs/guides/custom-service-endpoints.html.md
 	rm -f .ci/.semgrep-caps-aws-ec2.yml
 	rm -f .ci/.semgrep-configs.yml
@@ -292,6 +291,10 @@ testacc-lint-fix:
 	| sort -u \
 	| xargs -I {} terrafmt fmt  --fmtcompat {}
 
+testacc-short: fmtcheck
+	@echo "Running acceptance tests with -short flag"
+	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -short -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
+
 tfsdk2fw:
 	cd tools/tfsdk2fw && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw
 
@@ -306,6 +309,8 @@ tools:
 	cd .ci/tools && $(GO_VER) install github.com/hashicorp/go-changelog/cmd/changelog-build
 	cd .ci/tools && $(GO_VER) install github.com/rhysd/actionlint/cmd/actionlint
 	cd .ci/tools && $(GO_VER) install mvdan.cc/gofumpt
+
+ts: testacc-short
 
 website-link-check:
 	@.ci/scripts/markdown-link-check.sh
@@ -368,8 +373,10 @@ yamllint:
 	testacc \
 	testacc-lint \
 	testacc-lint-fix \
+	testacc-short \
 	tfsdk2fw \
 	tools \
+	ts \
 	website-link-check \
 	website-link-check-ghrc \
 	website-lint \

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -163,7 +164,7 @@ func testAccCheckTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 			if rs.Type != "aws_ses_template" {
 				continue
 			}
-			err := resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+			err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
 				input := ses.GetTemplateInput{
 					TemplateName: aws.String(rs.Primary.ID),
 				}
@@ -173,10 +174,10 @@ func testAccCheckTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 					if tfawserr.ErrCodeEquals(err, ses.ErrCodeTemplateDoesNotExistException) {
 						return nil
 					}
-					return resource.NonRetryableError(err)
+					return retry.NonRetryableError(err)
 				}
 				if gto.Template != nil {
-					return resource.RetryableError(fmt.Errorf("Template exists: %v", gto.Template))
+					return retry.RetryableError(fmt.Errorf("Template exists: %v", gto.Template))
 				}
 
 				return nil

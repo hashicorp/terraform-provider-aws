@@ -164,7 +164,6 @@ func testAccCheckSnapshotCopyExists(ctx context.Context, n string, v *rds.DBSnap
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 		output, err := tfrds.FindDBSnapshotByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

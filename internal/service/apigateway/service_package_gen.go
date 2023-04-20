@@ -61,6 +61,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceAPIKey,
 			TypeName: "aws_api_gateway_api_key",
+			Name:     "API Key",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceAuthorizer,
@@ -73,6 +77,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceClientCertificate,
 			TypeName: "aws_api_gateway_client_certificate",
+			Name:     "Client Certificate",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceDeployment,
@@ -89,6 +97,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDomainName,
 			TypeName: "aws_api_gateway_domain_name",
+			Name:     "Domain Name",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceGatewayResponse,
@@ -129,6 +141,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceRestAPI,
 			TypeName: "aws_api_gateway_rest_api",
+			Name:     "REST API",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceRestAPIPolicy,
@@ -137,10 +153,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceStage,
 			TypeName: "aws_api_gateway_stage",
+			Name:     "Stage",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceUsagePlan,
 			TypeName: "aws_api_gateway_usage_plan",
+			Name:     "Usage Plan",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceUsagePlanKey,
@@ -149,6 +173,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceVPCLink,
 			TypeName: "aws_api_gateway_vpc_link",
+			Name:     "VPC Link",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }

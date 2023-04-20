@@ -9,7 +9,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
-// @FrameworkResource
+// @FrameworkResource(name="Security Group Egress Rule")
+// @Tags(identifierAttribute="id")
 func newResourceSecurityGroupEgressRule(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceSecurityGroupEgressRule{}
 	r.create = r.createSecurityGroupRule

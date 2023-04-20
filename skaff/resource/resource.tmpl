@@ -57,7 +57,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 {{- end }}
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -586,7 +586,7 @@ func wait{{ .Resource }}Created(ctx context.Context, conn *{{ .ServiceLower }}.C
 {{- else }}
 func wait{{ .Resource }}Created(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Service }}, id string, timeout time.Duration) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
 {{- end }}
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
 		Refresh:                   status{{ .Resource }}(ctx, conn, id),
@@ -613,7 +613,7 @@ func wait{{ .Resource }}Updated(ctx context.Context, conn *{{ .ServiceLower }}.C
 {{- else }}
 func wait{{ .Resource }}Updated(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Service }}, id string, timeout time.Duration) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
 {{- end }}
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusChangePending},
 		Target:                    []string{statusUpdated},
 		Refresh:                   status{{ .Resource }}(ctx, conn, id),
@@ -638,7 +638,7 @@ func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.C
 {{- else }}
 func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Service }}, id string, timeout time.Duration) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
 {{- end }}
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusDeleting, statusNormal},
 		Target:                    []string{},
 		Refresh:                   status{{ .Resource }}(ctx, conn, id),
@@ -662,9 +662,9 @@ func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.{
 // that it can be reused by a create, update, and delete waiter, if possible.
 {{- end }}
 {{ if .AWSGoSDKV2 }}
-func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string) resource.StateRefreshFunc {
+func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string) retry.StateRefreshFunc {
 {{- else }}
-func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Service }}, id string) resource.StateRefreshFunc {
+func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Service }}, id string) retry.StateRefreshFunc {
 {{- end }}
 	return func() (interface{}, string, error) {
 		out, err := find{{ .Resource }}ByID(ctx, conn, id)
@@ -700,7 +700,7 @@ func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.{{ .
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -711,7 +711,7 @@ func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.{{ .
 	{{- else }}
 	out, err := conn.Get{{ .Resource }}WithContext(ctx, in)
 	if tfawserr.ErrCodeEquals(err, {{ .ServiceLower }}.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}

@@ -32,6 +32,19 @@ func testAccDataLakeSettings_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "catalog_id", "data.aws_caller_identity.current", "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "admins.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "admins.0", "data.aws_iam_session_context.current", "issuer_arn"),
+					resource.TestCheckResourceAttr(resourceName, "create_database_default_permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "create_database_default_permissions.0.principal", "IAM_ALLOWED_PRINCIPALS"),
+					resource.TestCheckResourceAttr(resourceName, "create_database_default_permissions.0.permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "create_database_default_permissions.0.permissions.0", "ALL"),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permissions.0.principal", "IAM_ALLOWED_PRINCIPALS"),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permissions.0.permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permissions.0.permissions.0", "ALL"),
+					resource.TestCheckResourceAttr(resourceName, "allow_external_data_filtering", "true"),
+					resource.TestCheckResourceAttr(resourceName, "external_data_filtering_allow_list.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "external_data_filtering_allow_list.0", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttr(resourceName, "authorized_session_tag_value_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "authorized_session_tag_value_list.0", "engine1"),
 				),
 			},
 		},
@@ -161,8 +174,11 @@ resource "aws_lakeformation_data_lake_settings" "test" {
     permissions = ["ALL"]
   }
 
-  admins                  = [data.aws_iam_session_context.current.issuer_arn]
-  trusted_resource_owners = [data.aws_caller_identity.current.account_id]
+  admins                             = [data.aws_iam_session_context.current.issuer_arn]
+  trusted_resource_owners            = [data.aws_caller_identity.current.account_id]
+  allow_external_data_filtering      = true
+  external_data_filtering_allow_list = [data.aws_caller_identity.current.account_id]
+  authorized_session_tag_value_list  = ["engine1"]
 }
 `
 

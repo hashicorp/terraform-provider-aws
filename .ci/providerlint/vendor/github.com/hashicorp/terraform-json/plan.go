@@ -42,6 +42,10 @@ type Plan struct {
 	// this plan.
 	PlannedValues *StateValues `json:"planned_values,omitempty"`
 
+	// The change operations for resources and data sources within this plan
+	// resulting from resource drift.
+	ResourceDrift []*ResourceChange `json:"resource_drift,omitempty"`
+
 	// The change operations for resources and data sources within this
 	// plan.
 	ResourceChanges []*ResourceChange `json:"resource_changes,omitempty"`

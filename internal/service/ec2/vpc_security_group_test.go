@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -1109,7 +1110,7 @@ func TestAccVPCSecurityGroup_nameGenerated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", resource.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -1648,6 +1649,10 @@ func TestAccVPCSecurityGroup_forceRevokeRulesTrue(t *testing.T) {
 
 func TestAccVPCSecurityGroup_forceRevokeRulesFalse(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var primary ec2.SecurityGroup
 	var secondary ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2807,6 +2812,10 @@ func TestAccVPCSecurityGroup_rulesDropOnError(t *testing.T) {
 // a rule in another SG, it could not previously be deleted.
 func TestAccVPCSecurityGroup_emrDependencyViolation(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.allow_access"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

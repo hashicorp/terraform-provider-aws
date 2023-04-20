@@ -9,6 +9,52 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+func TestValidAmazonSideASN(t *testing.T) {
+	t.Parallel()
+
+	validAsns := []string{
+		"7224",
+		"9059",
+		"10124",
+		"17493",
+		"64512",
+		"64513",
+		"65533",
+		"65534",
+		"4200000000",
+		"4200000001",
+		"4294967293",
+		"4294967294",
+	}
+	for _, v := range validAsns {
+		_, errors := ValidAmazonSideASN(v, "amazon_side_asn")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid ASN: %q", v, errors)
+		}
+	}
+
+	invalidAsns := []string{
+		"1",
+		"ABCDEFG",
+		"",
+		"7225",
+		"9058",
+		"10125",
+		"17492",
+		"64511",
+		"65535",
+		"4199999999",
+		"4294967295",
+		"9999999999",
+	}
+	for _, v := range invalidAsns {
+		_, errors := ValidAmazonSideASN(v, "amazon_side_asn")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid ASN", v)
+		}
+	}
+}
+
 func TestValid4ByteASNString(t *testing.T) {
 	t.Parallel()
 
@@ -150,6 +196,7 @@ func TestValidARN(t *testing.T) {
 		"arn:aws-iso-b:s3:::bucket/object",                                                 // lintignore:AWSAT005          // SC2S S3 ARN
 		"arn:aws-us-gov:ec2:us-gov-west-1:123456789012:instance/i-12345678",                // lintignore:AWSAT003,AWSAT005 // GovCloud EC2 ARN
 		"arn:aws-us-gov:s3:::bucket/object",                                                // lintignore:AWSAT005          // GovCloud S3 ARN
+		"arn:aws:cloudwatch::cw0000000000:alarm:my-alarm",                                  // lintignore:AWSAT005          // Cloudwatch Alarm
 	}
 	for _, v := range validNames {
 		_, errors := ValidARN(v, "arn")
