@@ -41,7 +41,7 @@ func testAccEnabler_basic(t *testing.T) {
 			{
 				Config: testAccEnablerConfig_basic(resourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, resourceTypes),
+					testAccCheckEnablerExists(ctx, resourceName, resourceTypes),
 					testAccCheckEnablerID(resourceName, resourceTypes),
 					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.current", "account_id"),
@@ -73,7 +73,7 @@ func testAccEnabler_accountID(t *testing.T) {
 			{
 				Config: testAccEnablerConfig_basic(resourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, resourceTypes),
+					testAccCheckEnablerExists(ctx, resourceName, resourceTypes),
 					testAccCheckEnablerID(resourceName, resourceTypes),
 					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", "account_id"),
@@ -106,7 +106,7 @@ func testAccEnabler_disappears(t *testing.T) {
 			{
 				Config: testAccEnablerConfig_basic(resourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, resourceTypes),
+					testAccCheckEnablerExists(ctx, resourceName, resourceTypes),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfinspector2.ResourceEnabler(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -137,7 +137,7 @@ func testAccEnabler_updateResourceTypes(t *testing.T) {
 			{
 				Config: testAccEnablerConfig_basic(originalResourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, originalResourceTypes),
+					testAccCheckEnablerExists(ctx, resourceName, originalResourceTypes),
 					testAccCheckEnablerID(resourceName, originalResourceTypes),
 					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", "account_id"),
@@ -148,7 +148,7 @@ func testAccEnabler_updateResourceTypes(t *testing.T) {
 			{
 				Config: testAccEnablerConfig_basic(update1ResourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, update1ResourceTypes),
+					testAccCheckEnablerExists(ctx, resourceName, update1ResourceTypes),
 					testAccCheckEnablerID(resourceName, update1ResourceTypes),
 					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", "account_id"),
@@ -160,7 +160,7 @@ func testAccEnabler_updateResourceTypes(t *testing.T) {
 			{
 				Config: testAccEnablerConfig_basic(update2ResourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, update2ResourceTypes),
+					testAccCheckEnablerExists(ctx, resourceName, update2ResourceTypes),
 					testAccCheckEnablerID(resourceName, update2ResourceTypes),
 					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", "account_id"),
@@ -193,7 +193,7 @@ func testAccEnabler_updateResourceTypes_disjoint(t *testing.T) {
 			{
 				Config: testAccEnablerConfig_basic(originalResourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, originalResourceTypes),
+					testAccCheckEnablerExists(ctx, resourceName, originalResourceTypes),
 					testAccCheckEnablerID(resourceName, originalResourceTypes),
 					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", "account_id"),
@@ -204,7 +204,7 @@ func testAccEnabler_updateResourceTypes_disjoint(t *testing.T) {
 			{
 				Config: testAccEnablerConfig_basic(updatedResourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, updatedResourceTypes),
+					testAccCheckEnablerExists(ctx, resourceName, updatedResourceTypes),
 					testAccCheckEnablerID(resourceName, updatedResourceTypes),
 					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", "account_id"),
@@ -236,7 +236,7 @@ func testAccEnabler_lambda(t *testing.T) {
 			{
 				Config: testAccEnablerConfig_basic(resourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExists(ctx, resourceTypes),
+					testAccCheckEnablerExists(ctx, resourceName, resourceTypes),
 					testAccCheckEnablerID(resourceName, resourceTypes),
 					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.current", "account_id"),
@@ -271,7 +271,7 @@ func testAccEnabler_memberAccount_basic(t *testing.T) {
 			{
 				Config: testAccEnablerConfig_MemberAccount(resourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExistsProvider(ctx, resourceTypes, acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers)),
+					testAccCheckEnablerExists(ctx, resourceName, resourceTypes),
 					testAccCheckEnablerIDProvider(resourceName, resourceTypes, acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers)),
 					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.member", "account_id"),
@@ -307,7 +307,7 @@ func testAccEnabler_memberAccount_multiple(t *testing.T) {
 			{
 				Config: testAccEnablerConfig_MemberAccount_Multiple(t, resourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnablerExistsProvider(ctx, resourceTypes, acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers)),
+					testAccCheckEnablerExists(ctx, resourceName, resourceTypes),
 					testAccCheckEnablerIDProvider(resourceName, resourceTypes,
 						acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers),
 						acctest.NamedProviderFunc(acctest.ProviderNameThird, providers),
@@ -364,22 +364,28 @@ func testAccCheckEnablerDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckEnablerExists(ctx context.Context, t []types.ResourceScanType) resource.TestCheckFunc {
-	return testAccCheckEnablerExistsProvider(ctx, t, func() *schema.Provider { return acctest.Provider })
-}
-
-func testAccCheckEnablerExistsProvider(ctx context.Context, t []types.ResourceScanType, providerF func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckEnablerExists(ctx context.Context, name string, t []types.ResourceScanType) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		// This is using `acctest.Provider`, as the resource is created in the primary account,
-		// using the account ID of the secondary account
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameEnabler, name, errors.New("not found"))
+		}
+
+		if rs.Primary.ID == "" {
+			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameEnabler, name, errors.New("not set"))
+		}
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client()
 
-		accountID := acctest.ProviderAccountID(providerF())
-		accountIDs := []string{accountID}
+		accountIDs, _, err := tfinspector2.ParseEnablerID(rs.Primary.ID)
+		if err != nil {
+			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameEnabler, name, err)
+		}
+
 		id := tfinspector2.EnablerID(accountIDs, t)
 		st, err := tfinspector2.AccountStatuses(ctx, conn, accountIDs)
 		if err != nil {
-			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameEnabler, id, err)
+			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameEnabler, name, err)
 		}
 
 		for k, s := range st {
