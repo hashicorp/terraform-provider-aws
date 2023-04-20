@@ -3,7 +3,6 @@ package vpclattice
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
@@ -15,29 +14,14 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"strings"
 )
 
 // Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
 // @SDKDataSource("aws_vpclattice_listener", name="Listener")
-// @Tags(identifierAttribute="arn")
 func DataSourceListener() *schema.Resource {
 	return &schema.Resource{
-		// Data sources only have a read function.
 		ReadWithoutTimeout: dataSourceListenerRead,
-		// Id returned by GetListener does not contain required service name, use a custom import function
-		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				idParts := strings.Split(d.Id(), "/")
-				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-					return nil, fmt.Errorf("unexpected format of ID (%q), expected SERVICE-ID/LISTENER-ID", d.Id())
-				}
-				d.Set("service_identifier", idParts[0])
-				d.Set("listener_id", idParts[1])
 
-				return []*schema.ResourceData{d}, nil
-			},
-		},
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
