@@ -56,36 +56,28 @@ func DataSourceServiceQuota() *schema.Resource {
 			},
 			"usage_metric": {
 				Type:     schema.TypeList,
-				Optional: true,
 				Computed: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"metric_dimensions": {
 							Type:     schema.TypeList,
-							Optional: true,
 							Computed: true,
-							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"service": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
 									"class": {
 										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
-									"type": {
-										Type:     schema.TypeString,
-										Optional: true,
 										Computed: true,
 									},
 									"resource": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Computed: true,
+									},
+									"service": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"type": {
+										Type:     schema.TypeString,
 										Computed: true,
 									},
 								},
