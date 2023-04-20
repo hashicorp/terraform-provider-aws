@@ -72,7 +72,7 @@ func TestAccVPCLatticeListenerDataSource_tags(t *testing.T) {
 				Config: testAccListenerDataSourceConfig_one_tag(rName, tag_name, tag_value),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerExists(ctx, dataSourceName, &listener),
-					resource.TestCheckResourceAttr(dataSourceName, fmt.Sprintf("tags.%s", tag_name), tag_value),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.tag0", "value0"),
 					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "vpc-lattice", regexp.MustCompile(`service/svc-.*/listener/listener-.+`)),
 				),
 			},
