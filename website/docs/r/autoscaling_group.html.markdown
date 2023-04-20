@@ -258,6 +258,53 @@ resource "aws_autoscaling_group" "example" {
 }
 ```
 
+### Dynamic tagging
+
+```terraform
+variable "extra_tags" {
+  default = [
+    {
+      key                 = "Foo"
+      value               = "Bar"
+      propagate_at_launch = true
+    },
+    {
+      key                 = "Baz"
+      value               = "Bam"
+      propagate_at_launch = true
+    },
+  ]
+}
+
+resource "aws_autoscaling_group" "test" {
+  name                 = "foobar3-terraform-test"
+  max_size             = 5
+  min_size             = 2
+  launch_configuration = aws_launch_configuration.foobar.name
+  vpc_zone_identifier  = [aws_subnet.example1.id, aws_subnet.example2.id]
+
+  tag {
+    key                 = "explicit1"
+    value               = "value1"
+    propagate_at_launch = true
+  }
+  tag {
+    key                 = "explicit2"
+    value               = "value2"
+    propagate_at_launch = true
+  }
+
+  dynamic "tag" {
+    for_each = var.extra_tags
+    content {
+      key                 = tag.value.key
+      propagate_at_launch = tag.value.propagate_at_launch
+      value               = tag.value.value
+    }
+  }
+}
+```
+
 ### Automatically refresh all instances after the group is updated
 
 ```terraform
