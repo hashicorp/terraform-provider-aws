@@ -5,15 +5,15 @@ package provider
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 {{- range .Services }}
 	"github.com/hashicorp/terraform-provider-aws/internal/service/{{ .ProviderPackage }}"
 {{- end }}
 	"golang.org/x/exp/slices"
 )
 
-func servicePackages(context.Context) []intf.ServicePackage {
-	v := []intf.ServicePackage{
+func servicePackages(context.Context) []conns.ServicePackage {
+	v := []conns.ServicePackage{
 {{- range .Services }}
 		{{ .ProviderPackage }}.ServicePackage,
 {{- end }}

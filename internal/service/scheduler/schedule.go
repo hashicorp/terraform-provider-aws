@@ -15,7 +15,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -106,7 +107,7 @@ func resourceSchedule() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 				ValidateDiagFunc: validation.ToDiagFunc(validation.All(
-					validation.StringLenBetween(1, 64-resource.UniqueIDSuffixLength),
+					validation.StringLenBetween(1, 64-id.UniqueIDSuffixLength),
 					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z-_.]+$`), `The name must consist of alphanumerics, hyphens, and underscores.`),
 				)),
 			},
@@ -151,7 +152,7 @@ func resourceSchedule() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"arn": {
 										Type:             schema.TypeString,
-										Optional:         true,
+										Required:         true,
 										ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
 									},
 								},
@@ -472,7 +473,7 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.Get("target").([]interface{}); ok && len(v) > 0 {
-		in.Target = expandTarget(v[0].(map[string]interface{}))
+		in.Target = expandTarget(ctx, v[0].(map[string]interface{}))
 	}
 
 	out, err := retryWhenIAMNotPropagated(ctx, func() (*scheduler.CreateScheduleOutput, error) {
@@ -554,7 +555,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set("state", string(out.State))
 
-	if err := d.Set("target", []interface{}{flattenTarget(out.Target)}); err != nil {
+	if err := d.Set("target", []interface{}{flattenTarget(ctx, out.Target)}); err != nil {
 		return create.DiagError(names.Scheduler, create.ErrActionSetting, ResNameSchedule, d.Id(), err)
 	}
 
@@ -569,7 +570,7 @@ func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		GroupName:          aws.String(d.Get("group_name").(string)),
 		Name:               aws.String(d.Get("name").(string)),
 		ScheduleExpression: aws.String(d.Get("schedule_expression").(string)),
-		Target:             expandTarget(d.Get("target").([]interface{})[0].(map[string]interface{})),
+		Target:             expandTarget(ctx, d.Get("target").([]interface{})[0].(map[string]interface{})),
 	}
 
 	if v, ok := d.Get("description").(string); ok && v != "" {
@@ -648,7 +649,7 @@ func findScheduleByTwoPartKey(ctx context.Context, conn *scheduler.Client, group
 	out, err := conn.GetSchedule(ctx, in)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}

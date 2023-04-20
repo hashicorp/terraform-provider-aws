@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -72,7 +72,7 @@ func FindImageBuilderByName(ctx context.Context, conn *appstream.AppStream, name
 
 	// Eventual consistency check.
 	if aws.StringValue(output.Name) != name {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -98,7 +98,7 @@ func findImageBuilders(ctx context.Context, conn *appstream.AppStream, input *ap
 	})
 
 	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -156,7 +156,7 @@ func FindUserByUserNameAndAuthType(ctx context.Context, conn *appstream.AppStrea
 	})
 
 	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -166,7 +166,7 @@ func FindUserByUserNameAndAuthType(ctx context.Context, conn *appstream.AppStrea
 	}
 
 	if result == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
 		}
@@ -198,7 +198,7 @@ func FindFleetStackAssociation(ctx context.Context, conn *appstream.AppStream, f
 	})
 
 	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-		return &resource.NotFoundError{
+		return &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -208,7 +208,7 @@ func FindFleetStackAssociation(ctx context.Context, conn *appstream.AppStream, f
 	}
 
 	if !found {
-		return &resource.NotFoundError{
+		return &retry.NotFoundError{
 			Message:     fmt.Sprintf("No stack %q associated with fleet %q", stackName, fleetName),
 			LastRequest: input,
 		}

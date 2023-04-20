@@ -5,32 +5,156 @@ package glue
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceCatalogTable,
+			TypeName: "aws_glue_catalog_table",
+		},
+		{
+			Factory:  DataSourceConnection,
+			TypeName: "aws_glue_connection",
+		},
+		{
+			Factory:  DataSourceDataCatalogEncryptionSettings,
+			TypeName: "aws_glue_data_catalog_encryption_settings",
+		},
+		{
+			Factory:  DataSourceScript,
+			TypeName: "aws_glue_script",
+		},
+	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceCatalogDatabase,
+			TypeName: "aws_glue_catalog_database",
+		},
+		{
+			Factory:  ResourceCatalogTable,
+			TypeName: "aws_glue_catalog_table",
+		},
+		{
+			Factory:  ResourceClassifier,
+			TypeName: "aws_glue_classifier",
+		},
+		{
+			Factory:  ResourceConnection,
+			TypeName: "aws_glue_connection",
+			Name:     "Connection",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceCrawler,
+			TypeName: "aws_glue_crawler",
+			Name:     "Crawler",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceDataCatalogEncryptionSettings,
+			TypeName: "aws_glue_data_catalog_encryption_settings",
+		},
+		{
+			Factory:  ResourceDevEndpoint,
+			TypeName: "aws_glue_dev_endpoint",
+			Name:     "Dev Endpoint",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceJob,
+			TypeName: "aws_glue_job",
+			Name:     "Job",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceMLTransform,
+			TypeName: "aws_glue_ml_transform",
+			Name:     "ML Transform",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourcePartition,
+			TypeName: "aws_glue_partition",
+		},
+		{
+			Factory:  ResourcePartitionIndex,
+			TypeName: "aws_glue_partition_index",
+		},
+		{
+			Factory:  ResourceRegistry,
+			TypeName: "aws_glue_registry",
+			Name:     "Registry",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceResourcePolicy,
+			TypeName: "aws_glue_resource_policy",
+		},
+		{
+			Factory:  ResourceSchema,
+			TypeName: "aws_glue_schema",
+			Name:     "Schema",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceSecurityConfiguration,
+			TypeName: "aws_glue_security_configuration",
+		},
+		{
+			Factory:  ResourceTrigger,
+			TypeName: "aws_glue_trigger",
+			Name:     "Trigger",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceUserDefinedFunction,
+			TypeName: "aws_glue_user_defined_function",
+		},
+		{
+			Factory:  ResourceWorkflow,
+			TypeName: "aws_glue_workflow",
+			Name:     "Workflow",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "glue"
+	return names.Glue
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

@@ -11,13 +11,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_vpc_endpoint_subnet_association")
 func ResourceVPCEndpointSubnetAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointSubnetAssociationCreate,
@@ -69,7 +70,7 @@ func resourceVPCEndpointSubnetAssociationCreate(ctx context.Context, d *schema.R
 	conns.GlobalMutexKV.Lock(mk)
 	defer conns.GlobalMutexKV.Unlock(mk)
 
-	c := &resource.StateChangeConf{
+	c := &retry.StateChangeConf{
 		Delay:   1 * time.Minute,
 		Timeout: 3 * time.Minute,
 		Target:  []string{"ok"},

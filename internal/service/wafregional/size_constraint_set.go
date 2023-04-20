@@ -15,6 +15,7 @@ import (
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 )
 
+// @SDKResource("aws_wafregional_size_constraint_set")
 func ResourceSizeConstraintSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSizeConstraintSetCreate,

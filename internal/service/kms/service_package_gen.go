@@ -5,32 +5,112 @@ package kms
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceAlias,
+			TypeName: "aws_kms_alias",
+		},
+		{
+			Factory:  DataSourceCiphertext,
+			TypeName: "aws_kms_ciphertext",
+		},
+		{
+			Factory:  DataSourceCustomKeyStore,
+			TypeName: "aws_kms_custom_key_store",
+		},
+		{
+			Factory:  DataSourceKey,
+			TypeName: "aws_kms_key",
+		},
+		{
+			Factory:  DataSourcePublicKey,
+			TypeName: "aws_kms_public_key",
+		},
+		{
+			Factory:  DataSourceSecret,
+			TypeName: "aws_kms_secret",
+		},
+		{
+			Factory:  DataSourceSecrets,
+			TypeName: "aws_kms_secrets",
+		},
+	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceAlias,
+			TypeName: "aws_kms_alias",
+		},
+		{
+			Factory:  ResourceCiphertext,
+			TypeName: "aws_kms_ciphertext",
+		},
+		{
+			Factory:  ResourceCustomKeyStore,
+			TypeName: "aws_kms_custom_key_store",
+		},
+		{
+			Factory:  ResourceExternalKey,
+			TypeName: "aws_kms_external_key",
+			Name:     "External Key",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
+			Factory:  ResourceGrant,
+			TypeName: "aws_kms_grant",
+		},
+		{
+			Factory:  ResourceKey,
+			TypeName: "aws_kms_key",
+			Name:     "Key",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
+			Factory:  ResourceKeyPolicy,
+			TypeName: "aws_kms_key_policy",
+		},
+		{
+			Factory:  ResourceReplicaExternalKey,
+			TypeName: "aws_kms_replica_external_key",
+			Name:     "Replica External Key",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
+			Factory:  ResourceReplicaKey,
+			TypeName: "aws_kms_replica_key",
+			Name:     "Replica Key",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "kms"
+	return names.KMS
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

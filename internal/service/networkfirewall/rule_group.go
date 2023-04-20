@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,8 +19,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_networkfirewall_rule_group", name="Rule Group")
+// @Tags(identifierAttribute="id")
 func ResourceRuleGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleGroupCreate,
@@ -70,15 +73,6 @@ func ResourceRuleGroup() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"key": {
-													Type:     schema.TypeString,
-													Required: true,
-													ValidateFunc: validation.All(
-														validation.StringLenBetween(1, 32),
-														validation.StringMatch(regexp.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
-														validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_]+$`), "must contain only alphanumeric and underscore characters"),
-													),
-												},
 												"ip_set_reference": {
 													Type:     schema.TypeList,
 													Required: true,
@@ -91,6 +85,15 @@ func ResourceRuleGroup() *schema.Resource {
 															},
 														},
 													},
+												},
+												"key": {
+													Type:     schema.TypeString,
+													Required: true,
+													ValidateFunc: validation.All(
+														validation.StringLenBetween(1, 32),
+														validation.StringMatch(regexp.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+														validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_]+$`), "must contain only alphanumeric and underscore characters"),
+													),
 												},
 											},
 										},
@@ -427,8 +430,8 @@ func ResourceRuleGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -453,13 +456,12 @@ func ResourceRuleGroup() *schema.Resource {
 
 func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &networkfirewall.CreateRuleGroupInput{
 		Capacity:      aws.Int64(int64(d.Get("capacity").(int))),
 		RuleGroupName: aws.String(name),
+		Tags:          GetTagsIn(ctx),
 		Type:          aws.String(d.Get("type").(string)),
 	}
 
@@ -479,10 +481,6 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Rules = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	output, err := conn.CreateRuleGroupWithContext(ctx, input)
 
 	if err != nil {
@@ -496,8 +494,6 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := FindRuleGroupByARN(ctx, conn, d.Id())
 
@@ -527,16 +523,7 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("type", response.Type)
 	d.Set("update_token", output.UpdateToken)
 
-	tags := KeyValueTags(response.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, response.Tags)
 
 	return nil
 }
@@ -546,17 +533,14 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 	if d.HasChanges("description", "encryption_configuration", "rule_group", "rules", "type") {
 		input := &networkfirewall.UpdateRuleGroupInput{
-			RuleGroupArn: aws.String(d.Id()),
-			Type:         aws.String(d.Get("type").(string)),
-			UpdateToken:  aws.String(d.Get("update_token").(string)),
+			EncryptionConfiguration: expandEncryptionConfiguration(d.Get("encryption_configuration").([]interface{})),
+			RuleGroupArn:            aws.String(d.Id()),
+			Type:                    aws.String(d.Get("type").(string)),
+			UpdateToken:             aws.String(d.Get("update_token").(string)),
 		}
 
 		if v, ok := d.GetOk("description"); ok {
 			input.Description = aws.String(v.(string))
-		}
-
-		if d.HasChange("encryption_configuration") {
-			input.EncryptionConfiguration = expandEncryptionConfiguration(d.Get("encryption_configuration").([]interface{}))
 		}
 
 		// Network Firewall UpdateRuleGroup API method only allows one of Rules or RuleGroup
@@ -586,14 +570,6 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 		if err != nil {
 			return diag.Errorf("updating NetworkFirewall Rule Group (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("updating NetworkFirewall Rule Group (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -636,7 +612,7 @@ func FindRuleGroupByARN(ctx context.Context, conn *networkfirewall.NetworkFirewa
 	output, err := conn.DescribeRuleGroupWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -653,7 +629,7 @@ func FindRuleGroupByARN(ctx context.Context, conn *networkfirewall.NetworkFirewa
 	return output, nil
 }
 
-func statusRuleGroup(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) resource.StateRefreshFunc {
+func statusRuleGroup(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindRuleGroupByARN(ctx, conn, arn)
 
@@ -670,7 +646,7 @@ func statusRuleGroup(ctx context.Context, conn *networkfirewall.NetworkFirewall,
 }
 
 func waitRuleGroupDeleted(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string, timeout time.Duration) (*networkfirewall.RuleGroup, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkfirewall.ResourceStatusDeleting},
 		Target:  []string{},
 		Refresh: statusRuleGroup(ctx, conn, arn),

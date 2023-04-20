@@ -12,12 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -25,9 +24,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource(name="Index")
+// @Tags(identifierAttribute="id")
 func newResourceIndex(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceIndex{}
 	r.SetDefaultCreateTimeout(2 * time.Hour)
@@ -49,15 +50,10 @@ func (r *resourceIndex) Metadata(_ context.Context, request resource.MetadataReq
 func (r *resourceIndex) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"id":       framework.IDAttribute(),
-			"tags":     tftags.TagsAttribute(),
-			"tags_all": tftags.TagsAttributeComputedOnly(),
+			names.AttrARN:     framework.ARNAttributeComputedOnly(),
+			names.AttrID:      framework.IDAttribute(),
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"type": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -66,7 +62,7 @@ func (r *resourceIndex) Schema(ctx context.Context, request resource.SchemaReque
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -86,13 +82,9 @@ func (r *resourceIndex) Create(ctx context.Context, request resource.CreateReque
 
 	conn := r.Meta().ResourceExplorer2Client()
 
-	tags := r.ExpandTags(ctx, data.Tags)
 	input := &resourceexplorer2.CreateIndexInput{
-		ClientToken: aws.String(sdkresource.UniqueId()),
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
+		ClientToken: aws.String(id.UniqueId()),
+		Tags:        GetTagsIn(ctx),
 	}
 
 	output, err := conn.CreateIndex(ctx, input)
@@ -136,7 +128,6 @@ func (r *resourceIndex) Create(ctx context.Context, request resource.CreateReque
 
 	// Set values for unknowns.
 	data.ARN = types.StringValue(arn)
-	data.TagsAll = r.FlattenTagsAll(ctx, tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -170,9 +161,7 @@ func (r *resourceIndex) Read(ctx context.Context, request resource.ReadRequest, 
 	data.ARN = flex.StringToFramework(ctx, output.Arn)
 	data.Type = flex.StringValueToFramework(ctx, output.Type)
 
-	apiTags := KeyValueTags(output.Tags)
-	data.Tags = r.FlattenTags(ctx, apiTags)
-	data.TagsAll = r.FlattenTagsAll(ctx, apiTags)
+	SetTagsOut(ctx, output.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -192,9 +181,9 @@ func (r *resourceIndex) Update(ctx context.Context, request resource.UpdateReque
 		return
 	}
 
-	conn := r.Meta().ResourceExplorer2Client()
-
 	if !new.Type.Equal(old.Type) {
+		conn := r.Meta().ResourceExplorer2Client()
+
 		input := &resourceexplorer2.UpdateIndexTypeInput{
 			Arn:  flex.StringFromFramework(ctx, new.ID),
 			Type: awstypes.IndexType(new.Type.ValueString()),
@@ -211,14 +200,6 @@ func (r *resourceIndex) Update(ctx context.Context, request resource.UpdateReque
 		updateTimeout := r.UpdateTimeout(ctx, new.Timeouts)
 		if _, err := waitIndexUpdated(ctx, conn, updateTimeout); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("waiting for Resource Explorer Index (%s) update", new.ID.ValueString()), err.Error())
-
-			return
-		}
-	}
-
-	if !new.TagsAll.Equal(old.TagsAll) {
-		if err := UpdateTags(ctx, conn, new.ID.ValueString(), old.TagsAll, new.TagsAll); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating Resource Explorer Index (%s) tags", new.ID.ValueString()), err.Error())
 
 			return
 		}
@@ -282,7 +263,7 @@ func findIndex(ctx context.Context, conn *resourceexplorer2.Client) (*resourceex
 	output, err := conn.GetIndex(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkresource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -297,7 +278,7 @@ func findIndex(ctx context.Context, conn *resourceexplorer2.Client) (*resourceex
 	}
 
 	if state := output.State; state == awstypes.IndexStateDeleted {
-		return nil, &sdkresource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     string(state),
 			LastRequest: input,
 		}
@@ -306,7 +287,7 @@ func findIndex(ctx context.Context, conn *resourceexplorer2.Client) (*resourceex
 	return output, nil
 }
 
-func statusIndex(ctx context.Context, conn *resourceexplorer2.Client) sdkresource.StateRefreshFunc {
+func statusIndex(ctx context.Context, conn *resourceexplorer2.Client) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findIndex(ctx, conn)
 
@@ -323,7 +304,7 @@ func statusIndex(ctx context.Context, conn *resourceexplorer2.Client) sdkresourc
 }
 
 func waitIndexCreated(ctx context.Context, conn *resourceexplorer2.Client, timeout time.Duration) (*resourceexplorer2.GetIndexOutput, error) {
-	stateConf := &sdkresource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.IndexStateCreating),
 		Target:  enum.Slice(awstypes.IndexStateActive),
 		Refresh: statusIndex(ctx, conn),
@@ -340,7 +321,7 @@ func waitIndexCreated(ctx context.Context, conn *resourceexplorer2.Client, timeo
 }
 
 func waitIndexUpdated(ctx context.Context, conn *resourceexplorer2.Client, timeout time.Duration) (*resourceexplorer2.GetIndexOutput, error) { //nolint:unparam
-	stateConf := &sdkresource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.IndexStateUpdating),
 		Target:  enum.Slice(awstypes.IndexStateActive),
 		Refresh: statusIndex(ctx, conn),
@@ -357,7 +338,7 @@ func waitIndexUpdated(ctx context.Context, conn *resourceexplorer2.Client, timeo
 }
 
 func waitIndexDeleted(ctx context.Context, conn *resourceexplorer2.Client, timeout time.Duration) (*resourceexplorer2.GetIndexOutput, error) {
-	stateConf := &sdkresource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.IndexStateDeleting),
 		Target:  []string{},
 		Refresh: statusIndex(ctx, conn),

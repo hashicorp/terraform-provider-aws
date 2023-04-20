@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_waf_regex_match_set")
 func ResourceRegexMatchSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRegexMatchSetCreate,

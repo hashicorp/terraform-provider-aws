@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_appsync_api_cache")
 func ResourceAPICache() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAPICacheCreate,

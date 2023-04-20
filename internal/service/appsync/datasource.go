@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_appsync_datasource")
 func ResourceDataSource() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataSourceCreate,
@@ -244,6 +245,21 @@ func ResourceDataSource() *schema.Resource {
 				},
 				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "opensearchservice_config", "http_config", "lambda_config"},
 			},
+			"event_bridge_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"event_bus_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
+				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "http_config", "lambda_config", "relational_database_config"},
+			},
 			"service_role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -280,8 +296,8 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.ElasticsearchConfig = expandElasticsearchDataSourceConfig(v.([]interface{}), region)
 	}
 
-	if v, ok := d.GetOk("opensearchservice_config"); ok {
-		input.OpenSearchServiceConfig = expandOpenSearchServiceDataSourceConfig(v.([]interface{}), region)
+	if v, ok := d.GetOk("event_bridge_config"); ok {
+		input.EventBridgeConfig = expandEventBridgeDataSourceConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("http_config"); ok {
@@ -292,15 +308,20 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.LambdaConfig = expandLambdaDataSourceConfig(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("service_role_arn"); ok {
-		input.ServiceRoleArn = aws.String(v.(string))
+	if v, ok := d.GetOk("opensearchservice_config"); ok {
+		input.OpenSearchServiceConfig = expandOpenSearchServiceDataSourceConfig(v.([]interface{}), region)
 	}
 
 	if v, ok := d.GetOk("relational_database_config"); ok {
 		input.RelationalDatabaseConfig = expandRelationalDatabaseDataSourceConfig(v.([]interface{}), region)
 	}
 
+	if v, ok := d.GetOk("service_role_arn"); ok {
+		input.ServiceRoleArn = aws.String(v.(string))
+	}
+
 	_, err := conn.CreateDataSourceWithContext(ctx, input)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Appsync Datasource: %s", err)
 	}
@@ -363,6 +384,10 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	if err := d.Set("relational_database_config", flattenRelationalDatabaseDataSourceConfig(dataSource.RelationalDatabaseConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting relational_database_config: %s", err)
+	}
+
+	if err := d.Set("event_bridge_config", flattenEventBridgeDataSourceConfig(dataSource.EventBridgeConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting event_bridge_config: %s", err)
 	}
 
 	d.Set("name", dataSource.Name)
@@ -779,6 +804,32 @@ func flattenRelationalDatabaseDataSourceConfig(config *appsync.RelationalDatabas
 	result := map[string]interface{}{
 		"source_type":          aws.StringValue(config.RelationalDatabaseSourceType),
 		"http_endpoint_config": flattenRDSHTTPEndpointConfig(config.RdsHttpEndpointConfig),
+	}
+
+	return []map[string]interface{}{result}
+}
+
+func expandEventBridgeDataSourceConfig(l []interface{}) *appsync.EventBridgeDataSourceConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	configured := l[0].(map[string]interface{})
+
+	result := &appsync.EventBridgeDataSourceConfig{
+		EventBusArn: aws.String(configured["event_bus_arn"].(string)),
+	}
+
+	return result
+}
+
+func flattenEventBridgeDataSourceConfig(config *appsync.EventBridgeDataSourceConfig) []map[string]interface{} {
+	if config == nil {
+		return nil
+	}
+
+	result := map[string]interface{}{
+		"event_bus_arn": aws.StringValue(config.EventBusArn),
 	}
 
 	return []map[string]interface{}{result}

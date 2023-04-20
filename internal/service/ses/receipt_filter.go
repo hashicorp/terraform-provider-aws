@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_ses_receipt_filter")
 func ResourceReceiptFilter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReceiptFilterCreate,

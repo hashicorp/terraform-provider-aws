@@ -30,17 +30,18 @@ func testAccDomainAssociation_basic(t *testing.T) {
 	resourceName := "aws_amplify_domain_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainAssociationConfig_basic(rName, domainName, false),
+				Config: testAccDomainAssociationConfig_basic(rName, domainName, false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/.+/domains/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "enable_auto_sub_domain", "false"),
 					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sub_domain.*", map[string]string{
 						"branch_name": rName,
@@ -72,13 +73,13 @@ func testAccDomainAssociation_disappears(t *testing.T) {
 	resourceName := "aws_amplify_domain_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainAssociationConfig_basic(rName, domainName, false),
+				Config: testAccDomainAssociationConfig_basic(rName, domainName, false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfamplify.ResourceDomainAssociation(), resourceName),
@@ -102,17 +103,18 @@ func testAccDomainAssociation_update(t *testing.T) {
 	resourceName := "aws_amplify_domain_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainAssociationConfig_basic(rName, domainName, true),
+				Config: testAccDomainAssociationConfig_basic(rName, domainName, false, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/.+/domains/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "enable_auto_sub_domain", "false"),
 					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sub_domain.*", map[string]string{
 						"branch_name": rName,
@@ -128,11 +130,12 @@ func testAccDomainAssociation_update(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"wait_for_verification"},
 			},
 			{
-				Config: testAccDomainAssociationConfig_updated(rName, domainName, true),
+				Config: testAccDomainAssociationConfig_updated(rName, domainName, true, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/.+/domains/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "enable_auto_sub_domain", "true"),
 					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sub_domain.*", map[string]string{
 						"branch_name": rName,
@@ -212,7 +215,7 @@ func testAccCheckDomainAssociationDestroy(ctx context.Context) resource.TestChec
 	}
 }
 
-func testAccDomainAssociationConfig_basic(rName, domainName string, waitForVerification bool) string {
+func testAccDomainAssociationConfig_basic(rName, domainName string, enableAutoSubDomain bool, waitForVerification bool) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
   name = %[1]q
@@ -232,12 +235,13 @@ resource "aws_amplify_domain_association" "test" {
     prefix      = ""
   }
 
-  wait_for_verification = %[3]t
+  enable_auto_sub_domain = %[3]t
+  wait_for_verification  = %[4]t
 }
-`, rName, domainName, waitForVerification)
+`, rName, domainName, enableAutoSubDomain, waitForVerification)
 }
 
-func testAccDomainAssociationConfig_updated(rName, domainName string, waitForVerification bool) string {
+func testAccDomainAssociationConfig_updated(rName, domainName string, enableAutoSubDomain bool, waitForVerification bool) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
   name = %[1]q
@@ -267,7 +271,8 @@ resource "aws_amplify_domain_association" "test" {
     prefix      = "www"
   }
 
-  wait_for_verification = %[3]t
+  enable_auto_sub_domain = %[3]t
+  wait_for_verification  = %[4]t
 }
-`, rName, domainName, waitForVerification)
+`, rName, domainName, enableAutoSubDomain, waitForVerification)
 }

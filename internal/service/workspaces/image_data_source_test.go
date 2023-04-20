@@ -22,7 +22,7 @@ func testAccImageDataSource_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccImagePreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),

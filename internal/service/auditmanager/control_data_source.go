@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkv2resource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -158,7 +158,7 @@ func FindControlByName(ctx context.Context, conn *auditmanager.Client, name, con
 		}
 	}
 
-	return nil, &sdkv2resource.NotFoundError{
+	return nil, &retry.NotFoundError{
 		LastRequest: in,
 	}
 }
@@ -198,7 +198,7 @@ func (rd *dataSourceControlData) refreshFromOutput(ctx context.Context, meta *co
 	rd.Type = types.StringValue(string(out.Type))
 
 	ignoreTagsConfig := meta.IgnoreTagsConfig
-	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	rd.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.Map())
 
 	return diags

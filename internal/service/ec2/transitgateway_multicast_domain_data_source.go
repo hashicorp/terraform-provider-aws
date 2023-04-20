@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_ec2_transit_gateway_multicast_domain")
 func DataSourceTransitGatewayMulticastDomain() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayMulticastDomainRead,
@@ -147,7 +148,7 @@ func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.
 	d.Set("transit_gateway_id", transitGatewayMulticastDomain.TransitGatewayId)
 	d.Set("transit_gateway_multicast_domain_id", transitGatewayMulticastDomain.TransitGatewayMulticastDomainId)
 
-	if err := d.Set("tags", KeyValueTags(transitGatewayMulticastDomain.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, transitGatewayMulticastDomain.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("setting tags: %s", err)
 	}
 

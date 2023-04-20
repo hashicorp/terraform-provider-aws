@@ -5,48 +5,114 @@ package {{ .ProviderPackage }}
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+{{- if ne .ProviderPackage "meta" }}
+	"github.com/hashicorp/terraform-provider-aws/names"
+{{- end }}
 )
 
 type servicePackage struct {}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error) {
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource {
 {{- range .FrameworkDataSources }}
-		{{ . }},
+		{
+			Factory: {{ .FactoryName }},
+			{{- if ne .Name "" }}
+			Name:    "{{ .Name }}",
+			{{- end }}
+			{{- if .TransparentTagging }}
+			Tags: &types.ServicePackageResourceTags {
+				{{- if ne .TagsIdentifierAttribute "" }}
+				IdentifierAttribute: "{{ .TagsIdentifierAttribute }}",
+				{{- end }}
+				{{- if ne .TagsResourceType "" }}
+				ResourceType: "{{ .TagsResourceType }}",
+				{{- end }}
+			},
+			{{- end }}
+		},
 {{- end }}
 	}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error) {
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource {
 {{- range .FrameworkResources }}
-		{{ . }},
+		{
+			Factory: {{ .FactoryName }},
+			{{- if ne .Name "" }}
+			Name:    "{{ .Name }}",
+			{{- end }}
+			{{- if .TransparentTagging }}
+			Tags: &types.ServicePackageResourceTags {
+				{{- if ne .TagsIdentifierAttribute "" }}
+				IdentifierAttribute: "{{ .TagsIdentifierAttribute }}",
+				{{- end }}
+				{{- if ne .TagsResourceType "" }}
+				ResourceType: "{{ .TagsResourceType }}",
+				{{- end }}
+			},
+			{{- end }}
+		},
 {{- end }}
 	}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource {
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource {
 {{- range $key, $value := .SDKDataSources }}
-		"{{ $key }}": {{ $value }},
+		{
+			Factory:  {{ $value.FactoryName }},
+			TypeName: "{{ $key }}",
+			{{- if ne $value.Name "" }}
+			Name:     "{{ $value.Name }}",
+			{{- end }}
+			{{- if $value.TransparentTagging }}
+			Tags: &types.ServicePackageResourceTags {
+				{{- if ne $value.TagsIdentifierAttribute "" }}
+				IdentifierAttribute: "{{ $value.TagsIdentifierAttribute }}",
+				{{- end }}
+				{{- if ne .TagsResourceType "" }}
+				ResourceType: "{{ .TagsResourceType }}",
+				{{- end }}
+			},
+			{{- end }}
+		},
 {{- end }}
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource {
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource {
 {{- range $key, $value := .SDKResources }}
-		"{{ $key }}": {{ $value }},
+		{
+			Factory:  {{ $value.FactoryName }},
+			TypeName: "{{ $key }}",
+			{{- if ne $value.Name "" }}
+			Name:     "{{ $value.Name }}",
+			{{- end }}
+			{{- if $value.TransparentTagging }}
+			Tags: &types.ServicePackageResourceTags {
+				{{- if ne $value.TagsIdentifierAttribute "" }}
+				IdentifierAttribute: "{{ $value.TagsIdentifierAttribute }}",
+				{{- end }}
+				{{- if ne .TagsResourceType "" }}
+				ResourceType: "{{ .TagsResourceType }}",
+				{{- end }}
+			},
+			{{- end }}
+		},
 {{- end }}
 	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
+{{- if eq .ProviderPackage "meta" }}
 	return "{{ .ProviderPackage }}"
+{{- else }}
+	return names.{{ .ProviderNameUpper }}
+{{- end }}
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

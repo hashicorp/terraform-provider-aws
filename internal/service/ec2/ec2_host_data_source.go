@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_ec2_host")
 func DataSourceHost() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceHostRead,
@@ -126,7 +127,7 @@ func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("sockets", host.HostProperties.Sockets)
 	d.Set("total_vcpus", host.HostProperties.TotalVCpus)
 
-	if err := d.Set("tags", KeyValueTags(host.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, host.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

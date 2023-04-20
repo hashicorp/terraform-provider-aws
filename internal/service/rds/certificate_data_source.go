@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_rds_certificate")
 func DataSourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCertificateRead,
@@ -84,7 +85,6 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 		}
 		return !lastPage
 	})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS Certificates: %s", err)
 	}

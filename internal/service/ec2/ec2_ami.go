@@ -21,6 +21,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -30,6 +31,8 @@ const (
 	amiRetryMinTimeout = 3 * time.Second
 )
 
+// @SDKResource("aws_ami", name="AMI")
+// @Tags(identifierAttribute="id")
 func ResourceAMI() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAMICreate,
@@ -260,8 +263,8 @@ func ResourceAMI() *schema.Resource {
 				ForceNew: true,
 				Default:  SriovNetSupportSimple,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"tpm_support": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -288,8 +291,6 @@ func ResourceAMI() *schema.Resource {
 func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &ec2.RegisterImageInput{
@@ -363,10 +364,8 @@ func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.StringValue(output.ImageId))
 
-	if len(tags) > 0 {
-		if err := CreateTags(ctx, conn, d.Id(), tags); err != nil {
-			return sdkdiag.AppendErrorf(diags, "adding tags: %s", err)
-		}
+	if err := createTags(ctx, conn, d.Id(), GetTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting EC2 AMI (%s) tags: %s", d.Id(), err)
 	}
 
 	if _, err := WaitImageAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -385,8 +384,6 @@ func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindImageByID(ctx, conn, d.Id())
@@ -456,16 +453,7 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "setting ephemeral_block_device: %s", err)
 	}
 
-	tags := KeyValueTags(image.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, image.Tags)
 
 	return diags
 }
@@ -473,14 +461,6 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface
 func resourceAMIUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating AMI (%s) tags: %s", d.Id(), err)
-		}
-	}
 
 	if d.Get("description").(string) != "" {
 		_, err := conn.ModifyImageAttributeWithContext(ctx, &ec2.ModifyImageAttributeInput{

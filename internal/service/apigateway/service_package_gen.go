@@ -5,32 +5,184 @@ package apigateway
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return []func(context.Context) (datasource.DataSourceWithConfigure, error){}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceAPIKey,
+			TypeName: "aws_api_gateway_api_key",
+		},
+		{
+			Factory:  DataSourceDomainName,
+			TypeName: "aws_api_gateway_domain_name",
+		},
+		{
+			Factory:  DataSourceExport,
+			TypeName: "aws_api_gateway_export",
+		},
+		{
+			Factory:  DataSourceResource,
+			TypeName: "aws_api_gateway_resource",
+		},
+		{
+			Factory:  DataSourceRestAPI,
+			TypeName: "aws_api_gateway_rest_api",
+		},
+		{
+			Factory:  DataSourceSdk,
+			TypeName: "aws_api_gateway_sdk",
+		},
+		{
+			Factory:  DataSourceVPCLink,
+			TypeName: "aws_api_gateway_vpc_link",
+		},
+	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceAccount,
+			TypeName: "aws_api_gateway_account",
+		},
+		{
+			Factory:  ResourceAPIKey,
+			TypeName: "aws_api_gateway_api_key",
+			Name:     "API Key",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceAuthorizer,
+			TypeName: "aws_api_gateway_authorizer",
+		},
+		{
+			Factory:  ResourceBasePathMapping,
+			TypeName: "aws_api_gateway_base_path_mapping",
+		},
+		{
+			Factory:  ResourceClientCertificate,
+			TypeName: "aws_api_gateway_client_certificate",
+			Name:     "Client Certificate",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceDeployment,
+			TypeName: "aws_api_gateway_deployment",
+		},
+		{
+			Factory:  ResourceDocumentationPart,
+			TypeName: "aws_api_gateway_documentation_part",
+		},
+		{
+			Factory:  ResourceDocumentationVersion,
+			TypeName: "aws_api_gateway_documentation_version",
+		},
+		{
+			Factory:  ResourceDomainName,
+			TypeName: "aws_api_gateway_domain_name",
+			Name:     "Domain Name",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceGatewayResponse,
+			TypeName: "aws_api_gateway_gateway_response",
+		},
+		{
+			Factory:  ResourceIntegration,
+			TypeName: "aws_api_gateway_integration",
+		},
+		{
+			Factory:  ResourceIntegrationResponse,
+			TypeName: "aws_api_gateway_integration_response",
+		},
+		{
+			Factory:  ResourceMethod,
+			TypeName: "aws_api_gateway_method",
+		},
+		{
+			Factory:  ResourceMethodResponse,
+			TypeName: "aws_api_gateway_method_response",
+		},
+		{
+			Factory:  ResourceMethodSettings,
+			TypeName: "aws_api_gateway_method_settings",
+		},
+		{
+			Factory:  ResourceModel,
+			TypeName: "aws_api_gateway_model",
+		},
+		{
+			Factory:  ResourceRequestValidator,
+			TypeName: "aws_api_gateway_request_validator",
+		},
+		{
+			Factory:  ResourceResource,
+			TypeName: "aws_api_gateway_resource",
+		},
+		{
+			Factory:  ResourceRestAPI,
+			TypeName: "aws_api_gateway_rest_api",
+			Name:     "REST API",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceRestAPIPolicy,
+			TypeName: "aws_api_gateway_rest_api_policy",
+		},
+		{
+			Factory:  ResourceStage,
+			TypeName: "aws_api_gateway_stage",
+			Name:     "Stage",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceUsagePlan,
+			TypeName: "aws_api_gateway_usage_plan",
+			Name:     "Usage Plan",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceUsagePlanKey,
+			TypeName: "aws_api_gateway_usage_plan_key",
+		},
+		{
+			Factory:  ResourceVPCLink,
+			TypeName: "aws_api_gateway_vpc_link",
+			Name:     "VPC Link",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "apigateway"
+	return names.APIGateway
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}
