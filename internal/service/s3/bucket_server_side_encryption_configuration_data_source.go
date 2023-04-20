@@ -52,7 +52,8 @@ func dataSourceBucketServerSideEncryptionConfigurationRead(ctx context.Context, 
 	log.Printf("[INFO] Reading S3 Bucket (%s) server side encryption configuration", bucket)
 
 	// Wait 3 seconds before querying SDK to avoid API returning "AES256" as "sse_algorithm" if just set.
-	time.Sleep(3 * time.Second)
+	const delayBeforeGetBucketEncryptionMetadata = 3 * time.Second
+	time.Sleep(delayBeforeGetBucketEncryptionMetadata)
 
 	output, err := conn.GetBucketEncryptionWithContext(ctx, input)
 
