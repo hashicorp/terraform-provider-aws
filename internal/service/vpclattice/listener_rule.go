@@ -113,17 +113,10 @@ func ResourceListenerRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"listener_arn": {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				AtLeastOneOf: []string{"listener_arn", "listener_identifier"},
-			},
 			"listener_identifier": {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				AtLeastOneOf: []string{"listener_arn", "listener_identifier"},
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"match": {
 				Type:             schema.TypeList,
@@ -235,17 +228,10 @@ func ResourceListenerRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"service_arn": {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				AtLeastOneOf: []string{"service_arn", "service_identifier"},
-			},
 			"service_identifier": {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				AtLeastOneOf: []string{"service_arn", "service_identifier"},
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -266,39 +252,17 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 
 	name := d.Get("name").(string)
 	in := &vpclattice.CreateRuleInput{
-		ClientToken: aws.String(id.UniqueId()),
-		Name:        aws.String(name),
-		Action:      expandRuleAction(d.Get("action").([]interface{})[0].(map[string]interface{})),
-		Match:       expandRuleMatch(d.Get("match").([]interface{})[0].(map[string]interface{})),
-		Tags:        GetTagsIn(ctx),
+		Action:             expandRuleAction(d.Get("action").([]interface{})[0].(map[string]interface{})),
+		ClientToken:        aws.String(id.UniqueId()),
+		ListenerIdentifier: aws.String(d.Get("listener_identifier").(string)),
+		Match:              expandRuleMatch(d.Get("match").([]interface{})[0].(map[string]interface{})),
+		Name:               aws.String(name),
+		ServiceIdentifier:  aws.String(d.Get("service_identifier").(string)),
+		Tags:               GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("priority"); ok {
 		in.Priority = aws.Int32(int32(v.(int)))
-	}
-
-	if v, ok := d.GetOk("service_identifier"); ok {
-		in.ServiceIdentifier = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("service_arn"); ok {
-		in.ServiceIdentifier = aws.String(v.(string))
-	}
-
-	if in.ServiceIdentifier == nil {
-		return diag.FromErr(fmt.Errorf("must specify either service_arn or service_identifier"))
-	}
-
-	if v, ok := d.GetOk("listener_identifier"); ok {
-		in.ListenerIdentifier = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("listener_arn"); ok {
-		in.ListenerIdentifier = aws.String(v.(string))
-	}
-
-	if in.ListenerIdentifier == nil {
-		return diag.FromErr(fmt.Errorf("must specify either listener_arn or listener_identifier"))
 	}
 
 	out, err := conn.CreateRule(ctx, in)

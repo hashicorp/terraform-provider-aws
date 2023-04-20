@@ -253,7 +253,7 @@ func testAccListenerRuleConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener_rule" "test" {
   name                = %[1]q
-  listener_identifier = aws_vpclattice_listener.test.id
+  listener_identifier = aws_vpclattice_listener.test.listener_id
   service_identifier  = aws_vpclattice_service.test.id
   priority            = 20
   match {
@@ -296,7 +296,7 @@ func testAccListenerRuleConfig_fixedResponse(rName string) string {
 	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener_rule" "test" {
   name                = %[1]q
-  listener_identifier = aws_vpclattice_listener.test.id
+  listener_identifier = aws_vpclattice_listener.test.listener_id
   service_identifier  = aws_vpclattice_service.test.id
   priority            = 10
   match {
@@ -322,7 +322,7 @@ func testAccListenerRuleConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener_rule" "test" {
   name                = %[1]q
-  listener_identifier = aws_vpclattice_listener.test.id
+  listener_identifier = aws_vpclattice_listener.test.listener_id
   service_identifier  = aws_vpclattice_service.test.id
   priority            = 30
   match {
@@ -351,7 +351,7 @@ func testAccListenerRuleConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValu
 	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener_rule" "test" {
   name                = %[1]q
-  listener_identifier = aws_vpclattice_listener.test.id
+  listener_identifier = aws_vpclattice_listener.test.listener_id
   service_identifier  = aws_vpclattice_service.test.id
   priority            = 30
   match {
@@ -381,7 +381,7 @@ func testAccListenerRuleConfig_methodMatch(rName string) string {
 	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_listener_rule" "test" {
   name                = %[1]q
-  listener_identifier = aws_vpclattice_listener.test.id
+  listener_identifier = aws_vpclattice_listener.test.listener_id
   service_identifier  = aws_vpclattice_service.test.id
   priority            = 40
   match {
