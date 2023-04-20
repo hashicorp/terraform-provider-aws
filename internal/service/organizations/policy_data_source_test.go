@@ -33,7 +33,7 @@ func TestAccOrganizationPolicyDataSource_basic(t *testing.T) {
 const testAccOrganizationPolicyDataSourceConfig_basic = `
 data "aws_organizations_organization" "current" {}
 
-data "aws_organizations_policies" "test" {
+data "aws_organizations_policy" "test" {
 	policy_id= "p-FullAWSAccess"
 }
 `
