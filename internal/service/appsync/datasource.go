@@ -34,18 +34,9 @@ func ResourceDataSource() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[_A-Za-z][_0-9A-Za-z]*`), "must match [_A-Za-z][_0-9A-Za-z]*"),
-			},
-			"type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(appsync.DataSourceType_Values(), true),
-				StateFunc: func(v interface{}) string {
-					return strings.ToUpper(v.(string))
-				},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -57,23 +48,6 @@ func ResourceDataSource() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"region": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"table_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"use_caller_credentials": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"versioned": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
 						"delta_sync_config": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -95,6 +69,23 @@ func ResourceDataSource() *schema.Resource {
 								},
 							},
 						},
+						"region": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"table_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"use_caller_credentials": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"versioned": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
 					},
 				},
 				ConflictsWith: []string{"elasticsearch_config", "http_config", "lambda_config", "relational_database_config", "opensearchservice_config"},
@@ -105,37 +96,33 @@ func ResourceDataSource() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"endpoint": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 						"region": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
-						},
-						"endpoint": {
-							Type:     schema.TypeString,
-							Required: true,
 						},
 					},
 				},
 				ConflictsWith: []string{"dynamodb_config", "http_config", "lambda_config", "opensearchservice_config"},
 			},
-			"opensearchservice_config": {
+			"event_bridge_config": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"region": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"endpoint": {
-							Type:     schema.TypeString,
-							Required: true,
+						"event_bus_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
-				ConflictsWith: []string{"dynamodb_config", "http_config", "lambda_config", "elasticsearch_config"},
+				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "http_config", "lambda_config", "relational_database_config"},
 			},
 			"http_config": {
 				Type:     schema.TypeList,
@@ -143,10 +130,6 @@ func ResourceDataSource() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"endpoint": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
 						"authorization_config": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -179,6 +162,10 @@ func ResourceDataSource() *schema.Resource {
 								},
 							},
 						},
+						"endpoint": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 					},
 				},
 				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "opensearchservice_config", "lambda_config", "relational_database_config"},
@@ -198,28 +185,42 @@ func ResourceDataSource() *schema.Resource {
 				},
 				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "opensearchservice_config", "http_config", "relational_database_config"},
 			},
+			"opensearchservice_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"endpoint": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"region": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+				ConflictsWith: []string{"dynamodb_config", "http_config", "lambda_config", "elasticsearch_config"},
+			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[_A-Za-z][_0-9A-Za-z]*`), "must match [_A-Za-z][_0-9A-Za-z]*"),
+			},
 			"relational_database_config": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"source_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      appsync.RelationalDatabaseSourceTypeRdsHttpEndpoint,
-							ValidateFunc: validation.StringInSlice(appsync.RelationalDatabaseSourceType_Values(), true),
-						},
 						"http_endpoint_config": {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"db_cluster_identifier": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
 									"aws_secret_store_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
@@ -228,6 +229,10 @@ func ResourceDataSource() *schema.Resource {
 									"database_name": {
 										Type:     schema.TypeString,
 										Optional: true,
+									},
+									"db_cluster_identifier": {
+										Type:     schema.TypeString,
+										Required: true,
 									},
 									"region": {
 										Type:     schema.TypeString,
@@ -241,33 +246,28 @@ func ResourceDataSource() *schema.Resource {
 								},
 							},
 						},
-					},
-				},
-				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "opensearchservice_config", "http_config", "lambda_config"},
-			},
-			"event_bridge_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"event_bus_arn": {
+						"source_type": {
 							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
+							Optional:     true,
+							Default:      appsync.RelationalDatabaseSourceTypeRdsHttpEndpoint,
+							ValidateFunc: validation.StringInSlice(appsync.RelationalDatabaseSourceType_Values(), true),
 						},
 					},
 				},
-				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "http_config", "lambda_config", "relational_database_config"},
+				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "opensearchservice_config", "http_config", "lambda_config"},
 			},
 			"service_role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"type": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(appsync.DataSourceType_Values(), true),
+				StateFunc: func(v interface{}) string {
+					return strings.ToUpper(v.(string))
+				},
 			},
 		},
 	}

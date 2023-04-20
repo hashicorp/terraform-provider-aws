@@ -132,16 +132,6 @@ The following arguments are supported:
 * `signing_region` - (Optional) Signing Amazon Web Services Region for IAM authorization.
 * `signing_service_name`- (Optional) Signing service name for IAM authorization.
 
-#### http_endpoint_config
-
-The following arguments are supported:
-
-* `db_cluster_identifier` - (Required) Amazon RDS cluster identifier.
-* `aws_secret_store_arn` - (Required) AWS secret store ARN for database credentials.
-* `database_name` - (Optional) Logical database name.
-* `region` - (Optional) AWS Region for RDS HTTP endpoint. Defaults to current region.
-* `schema` - (Optional) Logical schema name.
-
 ### lambda_config
 
 The following arguments are supported:
@@ -161,6 +151,16 @@ The following arguments are supported:
 
 * `http_endpoint_config` - (Required) Amazon RDS HTTP endpoint configuration. See [HTTP Endpoint Config](#http_endpoint_config).
 * `source_type` - (Optional) Source type for the relational database. Valid values: `RDS_HTTP_ENDPOINT`.
+
+#### http_endpoint_config
+
+The following arguments are supported:
+
+* `db_cluster_identifier` - (Required) Amazon RDS cluster identifier.
+* `aws_secret_store_arn` - (Required) AWS secret store ARN for database credentials.
+* `database_name` - (Optional) Logical database name.
+* `region` - (Optional) AWS Region for RDS HTTP endpoint. Defaults to current region.
+* `schema` - (Optional) Logical schema name.
 
 ## Attributes Reference
 

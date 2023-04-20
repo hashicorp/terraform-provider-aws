@@ -30,18 +30,18 @@ func testAccDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_typeNone(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile(fmt.Sprintf("apis/.+/datasources/%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "opensearchservice_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "event_bridge_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "http_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "relational_database_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "event_bridge_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "opensearchservice_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "relational_database_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "type", "NONE"),
 				),
 			},
