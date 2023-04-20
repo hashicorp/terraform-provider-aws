@@ -64,6 +64,7 @@ func ResourceRuleGroup() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IntAtLeast(1),
 			},
+			"captcha_config":       outerCaptchaConfigSchema(),
 			"custom_response_body": customResponseBodySchema(),
 			"description": {
 				Type:         schema.TypeString,
@@ -96,11 +97,12 @@ func ResourceRuleGroup() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"allow":   allowConfigSchema(),
 									"block":   blockConfigSchema(),
-									"count":   countConfigSchema(),
 									"captcha": captchaConfigSchema(),
+									"count":   countConfigSchema(),
 								},
 							},
 						},
+						"captcha_config": outerCaptchaConfigSchema(),
 						"name": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -113,7 +115,6 @@ func ResourceRuleGroup() *schema.Resource {
 						"rule_label":        ruleLabelsSchema(),
 						"statement":         ruleGroupRootStatementSchema(ruleGroupRootStatementSchemaLevel),
 						"visibility_config": visibilityConfigSchema(),
-						"captcha_config":    outerCaptchaConfigSchema(),
 					},
 				},
 			},
@@ -126,7 +127,6 @@ func ResourceRuleGroup() *schema.Resource {
 			names.AttrTags:      tftags.TagsSchema(),
 			names.AttrTagsAll:   tftags.TagsSchemaComputed(),
 			"visibility_config": visibilityConfigSchema(),
-			"captcha_config":    outerCaptchaConfigSchema(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
