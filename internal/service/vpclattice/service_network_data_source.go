@@ -3,72 +3,62 @@ package vpclattice
 import (
 	"context"
 	"errors"
-	"fmt"
-	"log"
-	"reflect"
-	"regexp"
-	"strings"
-	"time"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_vpclattice_service_network")
 func DataSourceServiceNetwork() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout:   dataSourceServiceNetworkRead,
-		
+		ReadWithoutTimeout: dataSourceServiceNetworkRead,
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"auth_type": {
-				Type: 	  schema.TypeString,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"created_at": {
-				Type:	  schema.TypeString,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"id": {
-				Type:	  schema.TypeString,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"last_updated_at": {
-				Type:	  schema.TypeString,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"name": {
-				Type:	  schema.TypeString,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"number_of_associated_services": {
-				Type:	  schema.TypeInt,
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"number_of_associated_vpcs": {
-				Type:	  schema.TypeInt,
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"service_network_identifier": {
-				Type:	  schema.TypeString,
+				Type:     schema.TypeString,
 				Required: true,
-			}
-			"tags":         tftags.TagsSchemaComputed(), // TIP: Many, but not all, data sources have `tags` attributes.
+			},
+			"tags": tftags.TagsSchemaComputed(), // TIP: Many, but not all, data sources have `tags` attributes.
 		},
 	}
 }
@@ -79,24 +69,23 @@ const (
 
 func dataSourceServiceNetworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
-	
+
 	service_network_identifier := d.Get("service_network_identifier").(string)
 
 	out, err := findServiceNetworkById(ctx, conn, service_network_identifier)
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, DSNameServiceNetwork, name, err)
+		return create.DiagError(names.VPCLattice, create.ErrActionReading, DSNameServiceNetwork, service_network_identifier, err)
 	}
-		
+
 	d.SetId(aws.ToString(out.Id))
 	d.Set("arn", out.Arn)
 	d.Set("auth_type", out.AuthType)
 	d.Set("created_at", aws.ToTime(out.CreatedAt).String())
 	d.Set("id", out.Id)
 	d.Set("last_updated_at", aws.ToTime(out.LastUpdatedAt).String())
-	d.Set("name", out.name)
+	d.Set("name", out.Name)
 	d.Set("number_of_associated_services", out.NumberOfAssociatedServices)
 	d.Set("number_of_associated_vpcs", out.NumberOfAssociatedVPCs)
-
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	tags, err := ListTags(ctx, conn, aws.ToString(out.Arn))
