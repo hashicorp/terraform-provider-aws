@@ -23,6 +23,8 @@ ENHANCEMENTS:
 * data-source/aws_outposts_outpost: Add `lifecycle_status`, `site_arn`, `supported_hardware_type` and `tags` attributes ([#30754](https://github.com/hashicorp/terraform-provider-aws/issues/30754))
 * data-source/aws_subnet: Add `enable_lni_at_device_index` attribute ([#30798](https://github.com/hashicorp/terraform-provider-aws/issues/30798))
 * resource/aws_cloudfront_response_headers_policy: Add `remove_headers_config` argument ([#28940](https://github.com/hashicorp/terraform-provider-aws/issues/28940))
+* resource/aws_cloudwatch_event_target: Add `ecs_target.ordered_placement_strategy` argument ([#28384](https://github.com/hashicorp/terraform-provider-aws/issues/28384))
+* resource/aws_cloudwatch_metric_stream: Add `include_linked_accounts_metrics` argument ([#29281](https://github.com/hashicorp/terraform-provider-aws/issues/29281))
 * resource/aws_dms_replication_instance: Increase default timeout for `create` ([#29905](https://github.com/hashicorp/terraform-provider-aws/issues/29905))
 * resource/aws_eks_node_group: Add plan time validation to `node_group_name` and `node_group_name_prefix` arguments ([#29975](https://github.com/hashicorp/terraform-provider-aws/issues/29975))
 * resource/aws_elastic_beanstalk_application: Add plan time validation to `appversion_lifecycle.service_role` and `name` arguments ([#17727](https://github.com/hashicorp/terraform-provider-aws/issues/17727))
