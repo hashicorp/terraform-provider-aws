@@ -206,7 +206,7 @@ resource "aws_wafv2_rule_group" "example" {
       metric_name                = "rule-2"
       sampled_requests_enabled   = false
     }
-    
+
     captcha_config {
       immunity_time_property {
         immunity_time = 240
