@@ -3,7 +3,6 @@ package tags
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/url"
 	"reflect"
 	"regexp"
@@ -744,7 +743,6 @@ type schemaResourceData interface {
 	GetRawConfig() cty.Value
 	GetRawPlan() cty.Value
 	GetRawState() cty.Value
-	Get(string) interface{}
 }
 
 func (tags KeyValueTags) RemoveDuplicates(ctx context.Context, defaultConfig *DefaultConfig, d schemaResourceData) KeyValueTags {
@@ -774,16 +772,12 @@ func (tags KeyValueTags) RemoveDuplicates(ctx context.Context, defaultConfig *De
 		}
 	}
 
-	log.Printf("[DEBUG] config_tags: %v", configTags)
-	log.Printf("[DEBUG] tags_incoming: %v", result)
 	for k, v := range configTags {
 		if _, ok := result[k]; !ok {
-			log.Printf("[DEBUG] tags_diff: key(%s), value(%s)", k, v)
 			result[k] = v
 		}
 	}
 
-	log.Printf("[DEBUG] tags_outgoing: %v", result)
 	return New(ctx, result)
 }
 
