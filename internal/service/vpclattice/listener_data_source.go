@@ -91,10 +91,6 @@ func DataSourceListener() *schema.Resource {
 					},
 				},
 			},
-			//"id": {
-			//	Type:     schema.TypeString,
-			//	Computed: true,
-			//},
 			"last_updated_at": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -131,8 +127,7 @@ func DataSourceListener() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
