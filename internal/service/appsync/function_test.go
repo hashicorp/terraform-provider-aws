@@ -330,7 +330,7 @@ resource "aws_appsync_function" "test" {
 }
 
 func testAccFunctionConfig_sync(rName, region string) string {
-	return acctest.ConfigCompose(testAccDatasourceConfig_dynamoDBBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDatasourceConfig_baseDynamoDB(rName), fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
   name                = %[1]q
