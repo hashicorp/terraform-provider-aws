@@ -19,10 +19,10 @@ data "aws_organizations_organization" "current" {}
 
 data "aws_organizations_oorganizational_policies" "current" {
   target_id = data.aws_organizations_organization.current.roots[0].id
-  filter = "SERVICE_CONTROL_POLICY"
+  filter    = "SERVICE_CONTROL_POLICY"
 }
 data "aws_organizational_policies" "test" {
-  policy_id= data.aws_organizations_organizational_policies.current.policies[0].id
+  policy_id = data.aws_organizations_organizational_policies.current.policies[0].id
 }
 ```
 
