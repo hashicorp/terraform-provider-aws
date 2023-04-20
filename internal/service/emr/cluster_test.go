@@ -4078,8 +4078,10 @@ resource "aws_iam_role_policy_attachment" "emr_placementgroup" {
   role       = aws_iam_role.emr_service.id
   policy_arn = aws_iam_policy.emr_placementgroup.arn
 }
+
 resource "aws_iam_policy" "emr_placementgroup" {
   name = "%[1]s_placementgroup_profile"
+
   policy = <<EOT
 {
   "Version": "2012-10-17",
@@ -4117,6 +4119,7 @@ func testAccClusterConfig_PlacementGroup(rName string) string {
 		testAccClusterConfig_baseIAMAutoScalingRole(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
+
 resource "aws_emr_cluster" "test" {
   name          = %[1]q
   release_label = "emr-5.23.0"
@@ -4144,8 +4147,10 @@ resource "aws_emr_cluster" "test" {
   }
   keep_job_flow_alive_when_no_steps = true
   termination_protection            = false
+
   scale_down_behavior = "TERMINATE_AT_TASK_COMPLETION"
-  configurations = "test-fixtures/emr_configurations.json"
+  configurations      = "test-fixtures/emr_configurations.json"
+
   placement_group_config {
     instance_role      = "MASTER"
     placement_strategy = "SPREAD"
@@ -4172,6 +4177,7 @@ func testAccClusterConfig_PlacementGroupWithOptionalUnset(rName string) string {
 		testAccClusterConfig_baseIAMAutoScalingRole(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
+
 resource "aws_emr_cluster" "test" {
   name          = %[1]q
   release_label = "emr-5.23.0"
@@ -4199,8 +4205,10 @@ resource "aws_emr_cluster" "test" {
   }
   keep_job_flow_alive_when_no_steps = true
   termination_protection            = false
+
   scale_down_behavior = "TERMINATE_AT_TASK_COMPLETION"
-  configurations = "test-fixtures/emr_configurations.json"
+  configurations      = "test-fixtures/emr_configurations.json"
+
   placement_group_config {
     instance_role = "MASTER"
   }
