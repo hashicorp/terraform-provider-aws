@@ -19,7 +19,7 @@ func TestAccAppConfigConfigurationProfilesDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, appconfig.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),

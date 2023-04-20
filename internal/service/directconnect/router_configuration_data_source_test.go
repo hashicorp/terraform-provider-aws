@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccDirectConnectRouterConfigurationDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	key := "VIRTUAL_INTERFACE_ID"
 	virtualInterfaceId := os.Getenv(key)
 	if virtualInterfaceId == "" {
@@ -22,7 +23,7 @@ func TestAccDirectConnectRouterConfigurationDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, directconnect.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),

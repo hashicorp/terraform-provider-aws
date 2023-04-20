@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dax"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,9 +22,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_dax_cluster")
+// @SDKResource("aws_dax_cluster", name="Cluster")
+// @Tags(identifierAttribute="arn")
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
@@ -153,8 +155,8 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"port": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -200,8 +202,6 @@ func ResourceCluster() *schema.Resource {
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DAXConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	clusterName := d.Get("cluster_name").(string)
 	iamRoleArn := d.Get("iam_role_arn").(string)
@@ -209,67 +209,65 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	numNodes := int64(d.Get("replication_factor").(int))
 	subnetGroupName := d.Get("subnet_group_name").(string)
 	securityIdSet := d.Get("security_group_ids").(*schema.Set)
-
 	securityIds := flex.ExpandStringSet(securityIdSet)
-
-	req := &dax.CreateClusterInput{
+	input := &dax.CreateClusterInput{
 		ClusterName:       aws.String(clusterName),
 		IamRoleArn:        aws.String(iamRoleArn),
 		NodeType:          aws.String(nodeType),
 		ReplicationFactor: aws.Int64(numNodes),
 		SecurityGroupIds:  securityIds,
 		SubnetGroupName:   aws.String(subnetGroupName),
-		Tags:              Tags(tags.IgnoreAWS()),
+		Tags:              GetTagsIn(ctx),
 	}
 
 	// optionals can be defaulted by AWS
 	if v, ok := d.GetOk("description"); ok {
-		req.Description = aws.String(v.(string))
+		input.Description = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("cluster_endpoint_encryption_type"); ok {
-		req.ClusterEndpointEncryptionType = aws.String(v.(string))
+		input.ClusterEndpointEncryptionType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("parameter_group_name"); ok {
-		req.ParameterGroupName = aws.String(v.(string))
+		input.ParameterGroupName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("maintenance_window"); ok {
-		req.PreferredMaintenanceWindow = aws.String(v.(string))
+		input.PreferredMaintenanceWindow = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("notification_topic_arn"); ok {
-		req.NotificationTopicArn = aws.String(v.(string))
+		input.NotificationTopicArn = aws.String(v.(string))
 	}
 
 	preferredAZs := d.Get("availability_zones").(*schema.Set)
 	if preferredAZs.Len() > 0 {
-		req.AvailabilityZones = flex.ExpandStringSet(preferredAZs)
+		input.AvailabilityZones = flex.ExpandStringSet(preferredAZs)
 	}
 
 	if v, ok := d.GetOk("server_side_encryption"); ok && len(v.([]interface{})) > 0 {
 		options := v.([]interface{})
 		s := options[0].(map[string]interface{})
-		req.SSESpecification = expandEncryptAtRestOptions(s)
+		input.SSESpecification = expandEncryptAtRestOptions(s)
 	}
 
 	// IAM roles take some time to propagate
 	var resp *dax.CreateClusterOutput
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
-		resp, err = conn.CreateClusterWithContext(ctx, req)
+		resp, err = conn.CreateClusterWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, dax.ErrCodeInvalidParameterValueException, "No permission to assume role") {
 				log.Print("[DEBUG] Retrying create of DAX cluster")
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		resp, err = conn.CreateClusterWithContext(ctx, req)
+		resp, err = conn.CreateClusterWithContext(ctx, input)
 	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "Error creating DAX cluster: %s", err)
@@ -282,7 +280,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	d.SetId(strings.ToLower(*resp.Cluster.ClusterName))
 
 	pending := []string{"creating", "modifying"}
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    pending,
 		Target:     []string{"available"},
 		Refresh:    clusterStateRefreshFunc(ctx, conn, d.Id(), "available", pending),
@@ -303,8 +301,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DAXConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	req := &dax.DescribeClustersInput{
 		ClusterNames: []*string{aws.String(d.Id())},
@@ -365,37 +361,12 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting server_side_encryption: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, aws.StringValue(c.ClusterArn))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for DAX Cluster (%s): %s", aws.StringValue(c.ClusterArn), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DAXConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating DAX Cluster (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
 
 	req := &dax.UpdateClusterInput{
 		ClusterName: aws.String(d.Id()),
@@ -475,7 +446,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if awaitUpdate {
 		log.Printf("[DEBUG] Waiting for update: %s", d.Id())
 		pending := []string{"modifying"}
-		stateConf := &resource.StateChangeConf{
+		stateConf := &retry.StateChangeConf{
 			Pending:    pending,
 			Target:     []string{"available"},
 			Refresh:    clusterStateRefreshFunc(ctx, conn, d.Id(), "available", pending),
@@ -531,13 +502,13 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	req := &dax.DeleteClusterInput{
 		ClusterName: aws.String(d.Id()),
 	}
-	err := resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
 		_, err := conn.DeleteClusterWithContext(ctx, req)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, dax.ErrCodeInvalidClusterStateFault) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -549,7 +520,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	log.Printf("[DEBUG] Waiting for deletion: %v", d.Id())
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"creating", "available", "deleting", "incompatible-parameters", "incompatible-network"},
 		Target:     []string{},
 		Refresh:    clusterStateRefreshFunc(ctx, conn, d.Id(), "", []string{}),
@@ -566,7 +537,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func clusterStateRefreshFunc(ctx context.Context, conn *dax.DAX, clusterID, givenState string, pending []string) resource.StateRefreshFunc {
+func clusterStateRefreshFunc(ctx context.Context, conn *dax.DAX, clusterID, givenState string, pending []string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.DescribeClustersWithContext(ctx, &dax.DescribeClustersInput{
 			ClusterNames: []*string{aws.String(clusterID)},

@@ -23,7 +23,7 @@ func TestAccShieldProtectionHealthCheckAssociation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -53,7 +53,7 @@ func TestAccShieldProtectionHealthCheckAssociation_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
