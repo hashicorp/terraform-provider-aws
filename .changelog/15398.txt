@@ -1,0 +1,3 @@
+```release-note:new-datasource
+aws_organization_policy
+```
