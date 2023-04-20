@@ -123,7 +123,7 @@ resource "aws_vpclattice_listener" "test_tags" {
       target_groups {
         target_group_identifier = aws_vpclattice_target_group.test.id
         weight                  = 100
-        }
+      }
     }
   }
 
@@ -133,7 +133,7 @@ resource "aws_vpclattice_listener" "test_tags" {
 }
 
 data "aws_vpclattice_listener" "test_tags" {
-  service_identifier = aws_vpclattice_service.test.id
+  service_identifier  = aws_vpclattice_service.test.id
   listener_identifier = aws_vpclattice_listener.test_tags.arn
 }
 `, rName, tag_key, tag_value))
@@ -144,7 +144,7 @@ func testAccListenerDataSourceConfig_basic(rName string) string {
 resource "aws_vpclattice_service" "test" {
   name = %[1]q
 }
-	
+
 resource "aws_vpclattice_target_group" "test" {
   name = %[1]q
   type = "INSTANCE"
@@ -172,7 +172,7 @@ resource "aws_vpclattice_listener" "test" {
 }
 
 data "aws_vpclattice_listener" "test" {
-  service_identifier = aws_vpclattice_service.test.arn
+  service_identifier  = aws_vpclattice_service.test.arn
   listener_identifier = aws_vpclattice_listener.test.arn
 }
 `, rName))
@@ -210,7 +210,7 @@ resource "aws_vpclattice_listener" "test" {
 }
 
 data "aws_vpclattice_listener" "test_multi_target" {
-  service_identifier = aws_vpclattice_service.test.id
+  service_identifier  = aws_vpclattice_service.test.id
   listener_identifier = aws_vpclattice_listener.test.arn
 }
 `, rName, targetGroupName1))
