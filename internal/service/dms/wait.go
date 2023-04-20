@@ -10,8 +10,8 @@ import (
 
 const (
 	propagationTimeout            = 2 * time.Minute
-	replicationTaskRunningTimeout = 5 * time.Minute
-	moveTaskTimeout               = 10 * time.Minute
+	replicationTaskRunningTimeout = 7 * time.Minute
+	moveTaskTimeout               = 15 * time.Minute
 )
 
 func waitEndpointDeleted(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) error {
