@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tfinspector2 "github.com/hashicorp/terraform-provider-aws/internal/service/inspector2"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -264,7 +265,7 @@ func testAccEnabler_memberAccount_basic(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamed(ctx, t, providers),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -274,6 +275,46 @@ func testAccEnabler_memberAccount_basic(t *testing.T) {
 					testAccCheckEnablerIDProvider(resourceName, resourceTypes, acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers)),
 					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.member", "account_id"),
+					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "resource_types.*", string(types.ResourceScanTypeEcr)),
+				),
+			},
+		},
+	})
+}
+
+func testAccEnabler_memberAccount_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_inspector2_enabler.members"
+	resourceTypes := []types.ResourceScanType{types.ResourceScanTypeEcr}
+
+	providers := make(map[string]*schema.Provider)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+			acctest.PreCheckThirdAccount(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamed(ctx, t, providers, acctest.ProviderName, acctest.ProviderNameAlternate, acctest.ProviderNameThird),
+		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnablerConfig_MemberAccount_Multiple(t, resourceTypes),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEnablerExistsProvider(ctx, resourceTypes, acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers)),
+					testAccCheckEnablerIDProvider(resourceName, resourceTypes,
+						acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers),
+						acctest.NamedProviderFunc(acctest.ProviderNameThird, providers),
+					),
+					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.alternate", "account_id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.third", "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "resource_types.*", string(types.ResourceScanTypeEcr)),
 				),
@@ -357,10 +398,13 @@ func testAccCheckEnablerID(resourceName string, types []types.ResourceScanType) 
 	return testAccCheckEnablerIDProvider(resourceName, types, func() *schema.Provider { return acctest.Provider })
 }
 
-func testAccCheckEnablerIDProvider(resourceName string, types []types.ResourceScanType, providerF func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckEnablerIDProvider(resourceName string, types []types.ResourceScanType, providerF ...func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		accountID := acctest.ProviderAccountID(providerF())
-		id := tfinspector2.EnablerID([]string{accountID}, types)
+		// accountID := acctest.ProviderAccountID(providerF())
+		accountIDs := tfslices.ApplyToAll(providerF, func(f func() *schema.Provider) string {
+			return acctest.ProviderAccountID(f())
+		})
+		id := tfinspector2.EnablerID(accountIDs, types)
 		return resource.TestCheckResourceAttr(resourceName, "id", id)(s)
 	}
 }
@@ -376,7 +420,7 @@ resource "aws_inspector2_enabler" "test" {
 `, strings.Join(enum.Slice(types...), `", "`))
 }
 
-func testAccEnablerConfig_MultiAccount(types []types.ResourceScanType) string {
+func testAccEnablerConfig_MemberAccount(types []types.ResourceScanType) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateAccountProvider(),
 		fmt.Sprintf(`
@@ -390,11 +434,54 @@ resource "aws_inspector2_enabler" "member" {
   account_ids    = [data.aws_caller_identity.member.account_id]
   resource_types = ["%[1]s"]
 
-  depends_on = [aws_inspector2_member_association.test]
+  depends_on = [aws_inspector2_member_association.member]
 }
 
-resource "aws_inspector2_member_association" "test" {
+resource "aws_inspector2_member_association" "member" {
   account_id = data.aws_caller_identity.member.account_id
+
+  depends_on = [aws_inspector2_delegated_admin_account.test]
+}
+
+resource "aws_inspector2_delegated_admin_account" "test" {
+  account_id = data.aws_caller_identity.current.account_id
+}
+`, strings.Join(enum.Slice(types...), `", "`)),
+	)
+}
+
+func testAccEnablerConfig_MemberAccount_Multiple(t *testing.T, types []types.ResourceScanType) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleAccountProvider(t, 3),
+		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_caller_identity" "alternate" {
+  provider = "awsalternate"
+}
+
+data "aws_caller_identity" "third" {
+  provider = "awsthird"
+}
+
+locals {
+  member_account_ids = [
+    data.aws_caller_identity.alternate.account_id,
+    data.aws_caller_identity.third.account_id,
+  ]
+}
+
+resource "aws_inspector2_enabler" "members" {
+  account_ids    = local.member_account_ids
+  resource_types = ["%[1]s"]
+
+  depends_on = [aws_inspector2_member_association.members]
+}
+
+resource "aws_inspector2_member_association" "members" {
+  count = length(local.member_account_ids)
+
+  account_id = local.member_account_ids[count.index]
 
   depends_on = [aws_inspector2_delegated_admin_account.test]
 }

@@ -73,7 +73,7 @@ func ResourceEnabler() *schema.Resource {
 					client := meta.(*conns.AWSClient)
 
 					if slices.Contains(accountIDs, client.AccountID) {
-						return fmt.Errorf(`"account_ids" can contain either the administrator account or one or more member accounts. Contains the administrator account and %d other accounts`, l-1)
+						return fmt.Errorf(`"account_ids" can contain either the administrator account or one or more member accounts. Contains %v`, accountIDs)
 					}
 				}
 				return nil
