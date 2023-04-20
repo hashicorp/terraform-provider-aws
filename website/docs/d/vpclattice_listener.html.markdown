@@ -39,5 +39,5 @@ In addition to all arguments above, the following attributes are exported:
 * `port` - The listener port.
 * `protocol` - The listener protocol. Either `HTTPS` or `HTTP`.
 * `service_arn` - The ARN of the service.
-* `service_id` - The ID of the service. 
+* `service_id` - The ID of the service.
 * `tags` - List of tags associated with the listener.
