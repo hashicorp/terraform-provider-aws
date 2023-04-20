@@ -26,10 +26,6 @@ func SetTagsDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{
 
 	resourceTags := tftags.New(ctx, diff.Get("tags").(map[string]interface{}))
 
-	//if defaultTagsConfig.TagsEqual(resourceTags) {
-	//	return fmt.Errorf(`"tags" are identical to those in the "default_tags" configuration block of the provider: please de-duplicate and try again`)
-	//}
-
 	allTags := defaultTagsConfig.MergeTags(resourceTags).IgnoreConfig(ignoreTagsConfig)
 	// To ensure "tags_all" is correctly computed, we explicitly set the attribute diff
 	// when the merger of resource-level tags onto provider-level tags results in n > 0 tags,

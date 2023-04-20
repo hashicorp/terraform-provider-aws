@@ -754,15 +754,28 @@ func (tags KeyValueTags) RemoveDuplicates(ctx context.Context, defaultConfig *De
 	configTags := make(map[string]string)
 	if config := d.GetRawPlan(); !config.IsNull() && config.IsKnown() {
 		c := config.GetAttr("tags")
-		if !c.IsNull() {
+		if !c.IsNull() && c.IsKnown() {
 			for k, v := range c.AsValueMap() {
 				configTags[k] = v.AsString()
 			}
 		}
 	}
 
+	var configIsNull bool
 	if config := d.GetRawConfig(); !config.IsNull() && config.IsKnown() {
 		c := config.GetAttr("tags")
+		configIsNull = c.IsNull()
+		if !c.IsNull() && c.IsKnown() {
+			for k, v := range c.AsValueMap() {
+				if _, ok := configTags[k]; !ok {
+					configTags[k] = v.AsString()
+				}
+			}
+		}
+	}
+
+	if state := d.GetRawState(); !state.IsNull() && state.IsKnown() {
+		c := state.GetAttr("tags")
 		if !c.IsNull() {
 			for k, v := range c.AsValueMap() {
 				if _, ok := configTags[k]; !ok {
@@ -774,11 +787,20 @@ func (tags KeyValueTags) RemoveDuplicates(ctx context.Context, defaultConfig *De
 
 	for k, v := range configTags {
 		if _, ok := result[k]; !ok {
-			result[k] = v
+			if defaultConfig != nil {
+				if val, ok := defaultConfig.Tags[k]; ok && val.ValueString() == v {
+					result[k] = v
+				}
+			}
 		}
 	}
 
-	return New(ctx, result)
+	out := tags
+	if !configIsNull {
+		out = New(ctx, result)
+	}
+	
+	return out
 }
 
 // ToSnakeCase converts a string to snake case.
