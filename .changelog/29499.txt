@@ -1,5 +1,5 @@
 ```release-note:enhancement
-resource/aws_servicequotas_service_quota: Add `usage_metric` argument
+resource/aws_servicequotas_service_quota: Add `usage_metric` attribute
 ```
 
 ```release-note:enhancement
