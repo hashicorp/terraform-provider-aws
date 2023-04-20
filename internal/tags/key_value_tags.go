@@ -799,7 +799,7 @@ func (tags KeyValueTags) RemoveDuplicates(ctx context.Context, defaultConfig *De
 	if !configIsNull {
 		out = New(ctx, result)
 	}
-	
+
 	return out
 }
 
