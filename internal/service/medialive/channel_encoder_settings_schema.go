@@ -4706,11 +4706,11 @@ func expandsVideoDescriptionsCodecSettingsH265Settings(tfList []interface{}) *ty
 	m := tfList[0].(map[string]interface{})
 
 	var out types.H265Settings
-	if v, ok := m["framerate_denominator"].(int32); ok {
-		out.FramerateDenominator = v
+	if v, ok := m["framerate_denominator"].(int); ok {
+		out.FramerateDenominator = int32(v)
 	}
-	if v, ok := m["framerate_numerator"].(int32); ok {
-		out.FramerateNumerator = v
+	if v, ok := m["framerate_numerator"].(int); ok {
+		out.FramerateNumerator = int32(v)
 	}
 	if v, ok := m["adaptive_quantization"].(string); ok && v != "" {
 		out.AdaptiveQuantization = types.H265AdaptiveQuantization(v)
@@ -4721,11 +4721,11 @@ func expandsVideoDescriptionsCodecSettingsH265Settings(tfList []interface{}) *ty
 	if v, ok := m["alternative_transfer_function"].(string); ok && v != "" {
 		out.AlternativeTransferFunction = types.H265AlternativeTransferFunction(v)
 	}
-	if v, ok := m["bitrate"].(int32); ok {
-		out.Bitrate = v
+	if v, ok := m["bitrate"].(int); ok {
+		out.Bitrate = int32(v)
 	}
-	if v, ok := m["buf_size"].(int32); ok {
-		out.BufSize = v
+	if v, ok := m["buf_size"].(int); ok {
+		out.BufSize = int32(v)
 	}
 	if v, ok := m["color_metadata"].(string); ok && v != "" {
 		out.ColorMetadata = types.H265ColorMetadata(v)
@@ -4742,8 +4742,8 @@ func expandsVideoDescriptionsCodecSettingsH265Settings(tfList []interface{}) *ty
 	if v, ok := m["flicker_aq"].(string); ok && v != "" {
 		out.FlickerAq = types.H265FlickerAq(v)
 	}
-	if v, ok := m["gop_closed_cadence"].(int32); ok {
-		out.GopClosedCadence = v
+	if v, ok := m["gop_closed_cadence"].(int); ok {
+		out.GopClosedCadence = int32(v)
 	}
 	if v, ok := m["gop_size"].(float64); ok {
 		out.GopSize = v
@@ -4757,23 +4757,23 @@ func expandsVideoDescriptionsCodecSettingsH265Settings(tfList []interface{}) *ty
 	if v, ok := m["look_ahead_rate_control"].(string); ok && v != "" {
 		out.LookAheadRateControl = types.H265LookAheadRateControl(v)
 	}
-	if v, ok := m["max_bitrate"].(int32); ok {
-		out.MaxBitrate = v
+	if v, ok := m["max_bitrate"].(int); ok {
+		out.MaxBitrate = int32(v)
 	}
-	if v, ok := m["min_i_interval"].(int32); ok {
-		out.MinIInterval = v
+	if v, ok := m["min_i_interval"].(int); ok {
+		out.MinIInterval = int32(v)
 	}
-	if v, ok := m["par_denominator"].(int32); ok {
-		out.ParDenominator = v
+	if v, ok := m["par_denominator"].(int); ok {
+		out.ParDenominator = int32(v)
 	}
-	if v, ok := m["par_numerator"].(int32); ok {
-		out.ParNumerator = v
+	if v, ok := m["par_numerator"].(int); ok {
+		out.ParNumerator = int32(v)
 	}
 	if v, ok := m["profile"].(string); ok && v != "" {
 		out.Profile = types.H265Profile(v)
 	}
-	if v, ok := m["qvbr_quality_level"].(int32); ok {
-		out.QvbrQualityLevel = v
+	if v, ok := m["qvbr_quality_level"].(int); ok {
+		out.QvbrQualityLevel = int32(v)
 	}
 	if v, ok := m["rate_control_mode"].(string); ok && v != "" {
 		out.RateControlMode = types.H265RateControlMode(v)
@@ -4784,8 +4784,8 @@ func expandsVideoDescriptionsCodecSettingsH265Settings(tfList []interface{}) *ty
 	if v, ok := m["scene_change_detect"].(string); ok && v != "" {
 		out.SceneChangeDetect = types.H265SceneChangeDetect(v)
 	}
-	if v, ok := m["slices"].(int32); ok {
-		out.Slices = v
+	if v, ok := m["slices"].(int); ok {
+		out.Slices = int32(v)
 	}
 	if v, ok := m["tier"].(string); ok && v != "" {
 		out.Tier = types.H265Tier(v)
@@ -4835,11 +4835,11 @@ func expandH265Hdr10Settings(tfList []interface{}) *types.Hdr10Settings {
 	m := tfList[0].(map[string]interface{})
 
 	var out types.Hdr10Settings
-	if v, ok := m["max_cll"].(int32); ok {
-		out.MaxCll = v
+	if v, ok := m["max_cll"].(int); ok {
+		out.MaxCll = int32(v)
 	}
-	if v, ok := m["max_fall"].(int32); ok {
-		out.MaxFall = v
+	if v, ok := m["max_fall"].(int); ok {
+		out.MaxFall = int32(v)
 	}
 
 	return &out
@@ -5946,33 +5946,33 @@ func flattenCodecSettingsH265Settings(in *types.H265Settings) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"framerate_denominator":         in.FramerateDenominator,
-		"framerate_numerator":           in.FramerateNumerator,
+		"framerate_denominator":         int(in.FramerateDenominator),
+		"framerate_numerator":           int(in.FramerateNumerator),
 		"adaptive_quantization":         string(in.AdaptiveQuantization),
 		"afd_signaling":                 string(in.AfdSignaling),
 		"alternative_transfer_function": string(in.AlternativeTransferFunction),
-		"bitrate":                       in.Bitrate,
-		"buf_size":                      in.BufSize,
+		"bitrate":                       int(in.Bitrate),
+		"buf_size":                      int(in.BufSize),
 		"color_metadata":                string(in.ColorMetadata),
 		"color_space_settings":          flattenH265ColorSpaceSettings(in.ColorSpaceSettings),
 		"filter_settings":               flattenH265FilterSettings(in.FilterSettings),
 		"fixed_afd":                     string(in.FixedAfd),
 		"flicker_aq":                    string(in.FlickerAq),
-		"gop_closed_cadence":            in.GopClosedCadence,
-		"gop_size":                      in.GopSize,
+		"gop_closed_cadence":            int(in.GopClosedCadence),
+		"gop_size":                      int(in.GopSize),
 		"gop_size_units":                string(in.GopSizeUnits),
 		"level":                         string(in.Level),
 		"look_ahead_rate_control":       string(in.LookAheadRateControl),
-		"max_bitrate":                   in.MaxBitrate,
-		"min_i_interval":                in.MinIInterval,
-		"par_denominator":               in.ParDenominator,
-		"par_numerator":                 in.ParNumerator,
+		"max_bitrate":                   int(in.MaxBitrate),
+		"min_i_interval":                int(in.MinIInterval),
+		"par_denominator":               int(in.ParDenominator),
+		"par_numerator":                 int(in.ParNumerator),
 		"profile":                       string(in.Profile),
-		"qvbr_quality_level":            in.QvbrQualityLevel,
+		"qvbr_quality_level":            int(in.QvbrQualityLevel),
 		"rate_control_mode":             string(in.RateControlMode),
 		"scan_type":                     string(in.ScanType),
 		"scene_change_detect":           string(in.SceneChangeDetect),
-		"slices":                        in.Slices,
+		"slices":                        int(in.Slices),
 		"tier":                          string(in.Tier),
 		"timecode_burnin_settings":      flattenH265TimecodeBurninSettings(in.TimecodeBurninSettings),
 		"timecode_insertion":            string(in.TimecodeInsertion),
