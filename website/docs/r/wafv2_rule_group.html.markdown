@@ -354,6 +354,7 @@ The `action` block supports the following arguments:
 * `allow` - (Optional) Instructs AWS WAF to allow the web request. See [Allow](#action) below for details.
 * `block` - (Optional) Instructs AWS WAF to block the web request. See [Block](#block) below for details.
 * `captcha` - (Optional) Instructs AWS WAF to run a `CAPTCHA` check against the web request. See [Captcha](#captcha) below for details.
+* `challenge` - (Optional) Instructs AWS WAF to run a check against the request to verify that the request is coming from a legitimate client session. See [Challenge](#challenge) below for details.
 * `count` - (Optional) Instructs AWS WAF to count the web request and allow it. See [Count](#count) below for details.
 
 ### Allow
@@ -371,6 +372,12 @@ The `block` block supports the following arguments:
 ### Captcha
 
 The `captcha` block supports the following arguments:
+
+* `custom_request_handling` - (Optional) Defines custom handling for the web request. See [Custom Request Handling](#custom-request-handling) below for details.
+
+#### Challenge
+
+The `challenge` block supports the following arguments:
 
 * `custom_request_handling` - (Optional) Defines custom handling for the web request. See [Custom Request Handling](#custom-request-handling) below for details.
 
