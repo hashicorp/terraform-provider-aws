@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_lightsail_disk_attachment")
 func ResourceDiskAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDiskAttachmentCreate,
@@ -46,7 +47,7 @@ func ResourceDiskAttachment() *schema.Resource {
 }
 
 func resourceDiskAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	in := lightsail.AttachDiskInput{
 		DiskName:     aws.String(d.Get("disk_name").(string)),
@@ -57,18 +58,13 @@ func resourceDiskAttachmentCreate(ctx context.Context, d *schema.ResourceData, m
 	out, err := conn.AttachDiskWithContext(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeAttachDisk, ResDiskAttachment, d.Get("name").(string), err)
+		return create.DiagError(names.Lightsail, lightsail.OperationTypeAttachDisk, ResDiskAttachment, d.Get("disk_name").(string), err)
 	}
 
-	if len(out.Operations) == 0 {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeAttachDisk, ResDiskAttachment, d.Get("name").(string), errors.New("No operations found for Attach Disk request"))
-	}
+	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeAttachDisk, ResDiskAttachment, d.Get("disk_name").(string))
 
-	op := out.Operations[0]
-
-	err = waitOperation(conn, op.Id)
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeAttachDisk, ResDiskAttachment, d.Get("name").(string), errors.New("Error waiting for Attach Disk request operation"))
+	if diag != nil {
+		return diag
 	}
 
 	// Generate an ID
@@ -83,7 +79,7 @@ func resourceDiskAttachmentCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceDiskAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	out, err := FindDiskAttachmentById(ctx, conn, d.Id())
 
@@ -105,7 +101,7 @@ func resourceDiskAttachmentRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceDiskAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	id_parts := strings.SplitN(d.Id(), ",", -1)
 	dName := id_parts[0]
@@ -127,15 +123,10 @@ func resourceDiskAttachmentDelete(ctx context.Context, d *schema.ResourceData, m
 			return create.DiagError(names.Lightsail, lightsail.OperationTypeStopInstance, ResInstance, iName, err)
 		}
 
-		if len(stopOut.Operations) == 0 {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeStopInstance, ResInstance, iName, errors.New("No operations found for Stop Instance request"))
-		}
+		diag := expandOperations(ctx, conn, stopOut.Operations, lightsail.OperationTypeStopInstance, ResInstance, iName)
 
-		op := stopOut.Operations[0]
-
-		err = waitOperation(conn, op.Id)
-		if err != nil {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeStopInstance, ResInstance, iName, errors.New("Error waiting for Stop Instance operation"))
+		if diag != nil {
+			return diag
 		}
 	}
 
@@ -144,18 +135,13 @@ func resourceDiskAttachmentDelete(ctx context.Context, d *schema.ResourceData, m
 	})
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeDetachDisk, ResDiskAttachment, d.Get("name").(string), err)
+		return create.DiagError(names.Lightsail, lightsail.OperationTypeDetachDisk, ResDiskAttachment, d.Get("disk_name").(string), err)
 	}
 
-	if len(out.Operations) == 0 {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeDetachDisk, ResDiskAttachment, d.Get("name").(string), errors.New("No operations found for Detach Disk request"))
-	}
+	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeDetachDisk, ResDiskAttachment, d.Get("disk_name").(string))
 
-	op := out.Operations[0]
-
-	err = waitOperation(conn, op.Id)
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeDetachDisk, ResDiskAttachment, d.Get("name").(string), errors.New("Error waiting for Detach Disk request operation"))
+	if diag != nil {
+		return diag
 	}
 
 	iStateOut, err = waitInstanceStateWithContext(ctx, conn, &iName)
@@ -165,7 +151,7 @@ func resourceDiskAttachmentDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if aws.StringValue(iStateOut.State.Name) != "running" {
-		stopOut, err := conn.StartInstanceWithContext(ctx, &lightsail.StartInstanceInput{
+		startOut, err := conn.StartInstanceWithContext(ctx, &lightsail.StartInstanceInput{
 			InstanceName: aws.String(iName),
 		})
 
@@ -173,15 +159,10 @@ func resourceDiskAttachmentDelete(ctx context.Context, d *schema.ResourceData, m
 			return create.DiagError(names.Lightsail, lightsail.OperationTypeStartInstance, ResInstance, iName, err)
 		}
 
-		if len(stopOut.Operations) == 0 {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeStartInstance, ResInstance, iName, errors.New("No operations found for Start Instance request"))
-		}
+		diag := expandOperations(ctx, conn, startOut.Operations, lightsail.OperationTypeStartInstance, ResInstance, iName)
 
-		op := stopOut.Operations[0]
-
-		err = waitOperation(conn, op.Id)
-		if err != nil {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeStartInstance, ResInstance, iName, errors.New("Error waiting for Start Instance operation"))
+		if diag != nil {
+			return diag
 		}
 	}
 

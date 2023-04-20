@@ -1,6 +1,7 @@
 package fsx
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -9,24 +10,32 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
+	"golang.org/x/exp/slices"
 )
 
+// @SDKResource("aws_fsx_openzfs_file_system", name="OpenZFS File System")
+// @Tags(identifierAttribute="arn")
 func ResourceOpenzfsFileSystem() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceOepnzfsFileSystemCreate,
-		Read:   resourceOpenzfsFileSystemRead,
-		Update: resourceOpenzfsFileSystemUpdate,
-		Delete: resourceOpenzfsFileSystemDelete,
+		CreateWithoutTimeout: resourceOpenzfsFileSystemCreate,
+		ReadWithoutTimeout:   resourceOpenzfsFileSystemRead,
+		UpdateWithoutTimeout: resourceOpenzfsFileSystemUpdate,
+		DeleteWithoutTimeout: resourceOpenzfsFileSystemDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -84,10 +93,9 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"iops": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.IntBetween(0, 160000),
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
 						},
 						"mode": {
 							Type:         schema.TypeString,
@@ -241,12 +249,11 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 				MaxItems: 1,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"throughput_capacity": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntInSlice([]int{64, 128, 256, 512, 1024, 2048, 3072, 4096}),
+				Type:     schema.TypeInt,
+				Required: true,
 			},
 			"vpc_id": {
 				Type:     schema.TypeString,
@@ -263,17 +270,64 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.All(
+			verify.SetTagsDiff,
+			validateDiskConfigurationIOPS,
+			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+				var (
+					singleAZ1ThroughputCapacityValues = []int{64, 128, 256, 512, 1024, 2048, 3072, 4096}
+					singleAZ2ThroughputCapacityValues = []int{160, 320, 640, 1280, 2560, 3840, 5120, 7680, 10240}
+				)
+
+				switch deploymentType, throughputCapacity := d.Get("deployment_type").(string), d.Get("throughput_capacity").(int); deploymentType {
+				case fsx.OpenZFSDeploymentTypeSingleAz1:
+					if !slices.Contains(singleAZ1ThroughputCapacityValues, throughputCapacity) {
+						return fmt.Errorf("%d is not a valid value for `throughput_capacity` when `deployment_type` is %q. Valid values: %v", throughputCapacity, deploymentType, singleAZ1ThroughputCapacityValues)
+					}
+				case fsx.OpenZFSDeploymentTypeSingleAz2:
+					if !slices.Contains(singleAZ2ThroughputCapacityValues, throughputCapacity) {
+						return fmt.Errorf("%d is not a valid value for `throughput_capacity` when `deployment_type` is %q. Valid values: %v", throughputCapacity, deploymentType, singleAZ2ThroughputCapacityValues)
+					}
+					// default:
+					// Allow validation to pass for unknown/new types.
+				}
+
+				return nil
+			},
+		),
 	}
 }
 
-func resourceOepnzfsFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func validateDiskConfigurationIOPS(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	deploymentType := d.Get("deployment_type").(string)
+
+	if diskConfiguration, ok := d.GetOk("disk_iops_configuration"); ok {
+		if len(diskConfiguration.([]interface{})) > 0 {
+			m := diskConfiguration.([]interface{})[0].(map[string]interface{})
+
+			if v, ok := m["iops"].(int); ok {
+				if deploymentType == fsx.OpenZFSDeploymentTypeSingleAz1 {
+					if v < 0 || v > 160000 {
+						return fmt.Errorf("expected disk_iops_configuration.0.iops to be in the range (0 - 160000) when deployment_type (%s), got %d", fsx.OpenZFSDeploymentTypeSingleAz1, v)
+					}
+				} else if deploymentType == fsx.OpenZFSDeploymentTypeSingleAz2 {
+					if v < 0 || v > 350000 {
+						return fmt.Errorf("expected disk_iops_configuration.0.iops to be in the range (0 - 350000) when deployment_type (%s), got %d", fsx.OpenZFSDeploymentTypeSingleAz2, v)
+					}
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func resourceOpenzfsFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	input := &fsx.CreateFileSystemInput{
-		ClientRequestToken: aws.String(resource.UniqueId()),
+		ClientRequestToken: aws.String(id.UniqueId()),
 		FileSystemType:     aws.String(fsx.FileSystemTypeOpenzfs),
 		StorageCapacity:    aws.Int64(int64(d.Get("storage_capacity").(int))),
 		StorageType:        aws.String(d.Get("storage_type").(string)),
@@ -282,16 +336,18 @@ func resourceOepnzfsFileSystemCreate(d *schema.ResourceData, meta interface{}) e
 			DeploymentType:               aws.String(d.Get("deployment_type").(string)),
 			AutomaticBackupRetentionDays: aws.Int64(int64(d.Get("automatic_backup_retention_days").(int))),
 		},
+		Tags: GetTagsIn(ctx),
 	}
 
 	backupInput := &fsx.CreateFileSystemFromBackupInput{
-		ClientRequestToken: aws.String(resource.UniqueId()),
+		ClientRequestToken: aws.String(id.UniqueId()),
 		StorageType:        aws.String(d.Get("storage_type").(string)),
 		SubnetIds:          flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
 		OpenZFSConfiguration: &fsx.CreateFileSystemOpenZFSConfiguration{
 			DeploymentType:               aws.String(d.Get("deployment_type").(string)),
 			AutomaticBackupRetentionDays: aws.Int64(int64(d.Get("automatic_backup_retention_days").(int))),
 		},
+		Tags: GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("disk_iops_configuration"); ok {
@@ -319,11 +375,6 @@ func resourceOepnzfsFileSystemCreate(d *schema.ResourceData, meta interface{}) e
 		backupInput.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-		backupInput.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	if v, ok := d.GetOk("weekly_maintenance_start_time"); ok {
 		input.OpenZFSConfiguration.WeeklyMaintenanceStartTime = aws.String(v.(string))
 		backupInput.OpenZFSConfiguration.WeeklyMaintenanceStartTime = aws.String(v.(string))
@@ -348,79 +399,73 @@ func resourceOepnzfsFileSystemCreate(d *schema.ResourceData, meta interface{}) e
 		backupInput.BackupId = aws.String(v.(string))
 
 		log.Printf("[DEBUG] Creating FSx OpenZFS File System: %s", backupInput)
-		result, err := conn.CreateFileSystemFromBackup(backupInput)
+		result, err := conn.CreateFileSystemFromBackupWithContext(ctx, backupInput)
 
 		if err != nil {
-			return fmt.Errorf("error creating FSx OpenZFS File System from backup: %w", err)
+			return sdkdiag.AppendErrorf(diags, "creating FSx OpenZFS File System from backup: %s", err)
 		}
 
 		d.SetId(aws.StringValue(result.FileSystem.FileSystemId))
 	} else {
 		log.Printf("[DEBUG] Creating FSx OpenZFS File System: %s", input)
-		result, err := conn.CreateFileSystem(input)
+		result, err := conn.CreateFileSystemWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error creating FSx OpenZFS File System: %w", err)
+			return sdkdiag.AppendErrorf(diags, "creating FSx OpenZFS File System: %s", err)
 		}
 
 		d.SetId(aws.StringValue(result.FileSystem.FileSystemId))
 	}
 
-	if _, err := waitFileSystemCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for FSx OpenZFS File System (%s) create: %w", d.Id(), err)
+	if _, err := waitFileSystemCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for FSx OpenZFS File System (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceOpenzfsFileSystemRead(d, meta)
+	return append(diags, resourceOpenzfsFileSystemRead(ctx, d, meta)...)
 }
 
-func resourceOpenzfsFileSystemRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceOpenzfsFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxConn()
 
-	filesystem, err := FindFileSystemByID(conn, d.Id())
+	filesystem, err := FindFileSystemByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx OpenZFS File System (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading FSx OpenZFS File System (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading FSx OpenZFS File System (%s): %s", d.Id(), err)
 	}
 
 	openzfsConfig := filesystem.OpenZFSConfiguration
 
 	if filesystem.WindowsConfiguration != nil {
-		return fmt.Errorf("expected FSx OpenZFS File System, found FSx Windows File System: %s", d.Id())
+		return sdkdiag.AppendErrorf(diags, "expected FSx OpenZFS File System, found FSx Windows File System: %s", d.Id())
 	}
 
 	if filesystem.LustreConfiguration != nil {
-		return fmt.Errorf("expected FSx OpenZFS File System, found FSx Lustre File System: %s", d.Id())
+		return sdkdiag.AppendErrorf(diags, "expected FSx OpenZFS File System, found FSx Lustre File System: %s", d.Id())
 	}
 
 	if filesystem.OntapConfiguration != nil {
-		return fmt.Errorf("expected FSx OpeZFS File System, found FSx ONTAP File System: %s", d.Id())
+		return sdkdiag.AppendErrorf(diags, "expected FSx OpeZFS File System, found FSx ONTAP File System: %s", d.Id())
 	}
 
 	if openzfsConfig == nil {
-		return fmt.Errorf("error describing FSx OpenZFS File System (%s): empty Openzfs configuration", d.Id())
+		return sdkdiag.AppendErrorf(diags, "describing FSx OpenZFS File System (%s): empty Openzfs configuration", d.Id())
 	}
 
 	d.Set("arn", filesystem.ResourceARN)
 	d.Set("dns_name", filesystem.DNSName)
 	d.Set("deployment_type", openzfsConfig.DeploymentType)
-	if openzfsConfig.ThroughputCapacity != nil {
-		d.Set("throughput_capacity", openzfsConfig.ThroughputCapacity)
-	}
+	d.Set("throughput_capacity", openzfsConfig.ThroughputCapacity)
 	d.Set("storage_type", filesystem.StorageType)
-
-	if filesystem.KmsKeyId != nil {
-		d.Set("kms_key_id", filesystem.KmsKeyId)
-	}
+	d.Set("kms_key_id", filesystem.KmsKeyId)
 
 	if err := d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds)); err != nil {
-		return fmt.Errorf("error setting network_interface_ids: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting network_interface_ids: %s", err)
 	}
 
 	d.Set("owner_id", filesystem.OwnerId)
@@ -428,22 +473,13 @@ func resourceOpenzfsFileSystemRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("storage_capacity", filesystem.StorageCapacity)
 
 	if err := d.Set("subnet_ids", aws.StringValueSlice(filesystem.SubnetIds)); err != nil {
-		return fmt.Errorf("error setting subnet_ids: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting subnet_ids: %s", err)
 	}
 
-	tags := KeyValueTags(filesystem.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
+	SetTagsOut(ctx, filesystem.Tags)
 
 	if err := d.Set("disk_iops_configuration", flattenOpenzfsFileDiskIopsConfiguration(openzfsConfig.DiskIopsConfiguration)); err != nil {
-		return fmt.Errorf("error setting disk_iops_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting disk_iops_configuration: %s", err)
 	}
 
 	d.Set("vpc_id", filesystem.VpcId)
@@ -453,33 +489,26 @@ func resourceOpenzfsFileSystemRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("copy_tags_to_backups", openzfsConfig.CopyTagsToBackups)
 	d.Set("copy_tags_to_volumes", openzfsConfig.CopyTagsToVolumes)
 
-	rootVolume, err := FindVolumeByID(conn, *openzfsConfig.RootVolumeId)
+	rootVolume, err := FindVolumeByID(ctx, conn, *openzfsConfig.RootVolumeId)
 
 	if err != nil {
-		return fmt.Errorf("error reading FSx OpenZFS Root Volume Configuration (%s): %w", *openzfsConfig.RootVolumeId, err)
+		return sdkdiag.AppendErrorf(diags, "reading FSx OpenZFS Root Volume Configuration (%s): %s", *openzfsConfig.RootVolumeId, err)
 	}
 
 	if err := d.Set("root_volume_configuration", flattenOpenzfsRootVolumeConfiguration(rootVolume)); err != nil {
-		return fmt.Errorf("error setting root_volume_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting root_volume_configuration: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceOpenzfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating FSx OpenZFS File System (%s) tags: %w", d.Get("arn").(string), err)
-		}
-	}
+func resourceOpenzfsFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &fsx.UpdateFileSystemInput{
-			ClientRequestToken:   aws.String(resource.UniqueId()),
+			ClientRequestToken:   aws.String(id.UniqueId()),
 			FileSystemId:         aws.String(d.Id()),
 			OpenZFSConfiguration: &fsx.UpdateFileSystemOpenZFSConfiguration{},
 		}
@@ -516,65 +545,66 @@ func resourceOpenzfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) e
 			input.OpenZFSConfiguration.WeeklyMaintenanceStartTime = aws.String(d.Get("weekly_maintenance_start_time").(string))
 		}
 
-		_, err := conn.UpdateFileSystem(input)
+		_, err := conn.UpdateFileSystemWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating FSx OpenZFS File System (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating FSx OpenZFS File System (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitFileSystemUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for FSx OpenZFS File System (%s) update: %w", d.Id(), err)
+		if _, err := waitFileSystemUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for FSx OpenZFS File System (%s) update: %s", d.Id(), err)
 		}
 
-		if _, err := waitAdministrativeActionCompleted(conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for FSx OpenZFS File System (%s) update: %w", d.Id(), err)
+		if _, err := waitAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for FSx OpenZFS File System (%s) update: %s", d.Id(), err)
 		}
 
 		if d.HasChange("root_volume_configuration") {
 			input := &fsx.UpdateVolumeInput{
-				ClientRequestToken:   aws.String(resource.UniqueId()),
+				ClientRequestToken:   aws.String(id.UniqueId()),
 				VolumeId:             aws.String(d.Get("root_volume_id").(string)),
 				OpenZFSConfiguration: &fsx.UpdateOpenZFSVolumeConfiguration{},
 			}
 
 			input.OpenZFSConfiguration = expandOpenzfsUpdateRootVolumeConfiguration(d.Get("root_volume_configuration").([]interface{}))
 
-			_, err := conn.UpdateVolume(input)
+			_, err := conn.UpdateVolumeWithContext(ctx, input)
 
 			if err != nil {
-				return fmt.Errorf("error updating FSx OpenZFS Root Volume (%s): %w", d.Get("root_volume_id").(string), err)
+				return sdkdiag.AppendErrorf(diags, "updating FSx OpenZFS Root Volume (%s): %s", d.Get("root_volume_id").(string), err)
 			}
 
-			if _, err := waitVolumeUpdated(conn, d.Get("root_volume_id").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return fmt.Errorf("error waiting for FSx OpenZFS Root Volume (%s) update: %w", d.Get("root_volume_id").(string), err)
+			if _, err := waitVolumeUpdated(ctx, conn, d.Get("root_volume_id").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for FSx OpenZFS Root Volume (%s) update: %s", d.Get("root_volume_id").(string), err)
 			}
 		}
 	}
 
-	return resourceOpenzfsFileSystemRead(d, meta)
+	return append(diags, resourceOpenzfsFileSystemRead(ctx, d, meta)...)
 }
 
-func resourceOpenzfsFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+func resourceOpenzfsFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	log.Printf("[DEBUG] Deleting FSx OpenZFS File System: %s", d.Id())
-	_, err := conn.DeleteFileSystem(&fsx.DeleteFileSystemInput{
+	_, err := conn.DeleteFileSystemWithContext(ctx, &fsx.DeleteFileSystemInput{
 		FileSystemId: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileSystemNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting FSx OpenZFS File System (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting FSx OpenZFS File System (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitFileSystemDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for FSx OpenZFS File System (%s) delete: %w", d.Id(), err)
+	if _, err := waitFileSystemDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for FSx OpenZFS File System (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandOpenzfsFileDiskIopsConfiguration(cfg []interface{}) *fsx.DiskIopsConfiguration {

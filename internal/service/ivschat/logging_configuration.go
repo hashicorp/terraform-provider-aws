@@ -21,6 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ivschat_logging_configuration", name="Logging Configuration")
+// @Tags(identifierAttribute="id")
 func ResourceLoggingConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoggingConfigurationCreate,
@@ -130,8 +132,8 @@ func ResourceLoggingConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -143,21 +145,15 @@ const (
 )
 
 func resourceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient
+	conn := meta.(*conns.AWSClient).IVSChatClient()
 
 	in := &ivschat.CreateLoggingConfigurationInput{
 		DestinationConfiguration: expandDestinationConfiguration(d.Get("destination_configuration").([]interface{})),
+		Tags:                     GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("name"); ok {
 		in.Name = aws.String(v.(string))
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	out, err := conn.CreateLoggingConfiguration(ctx, in)
@@ -179,7 +175,7 @@ func resourceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient
+	conn := meta.(*conns.AWSClient).IVSChatClient()
 
 	out, err := findLoggingConfigurationByID(ctx, conn, d.Id())
 
@@ -202,28 +198,11 @@ func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("name", out.Name)
 	d.Set("state", out.State)
 
-	tags, err := ListTags(ctx, conn, d.Id())
-	if err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionReading, ResNameLoggingConfiguration, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionSetting, ResNameLoggingConfiguration, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionSetting, ResNameLoggingConfiguration, d.Id(), err)
-	}
-
 	return nil
 }
 
 func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient
+	conn := meta.(*conns.AWSClient).IVSChatClient()
 
 	update := false
 
@@ -239,14 +218,6 @@ func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceD
 	if d.HasChanges("destination_configuration") {
 		in.DestinationConfiguration = expandDestinationConfiguration(d.Get("destination_configuration").([]interface{}))
 		update = true
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return create.DiagError(names.IVS, create.ErrActionUpdating, ResNameLoggingConfiguration, d.Id(), err)
-		}
 	}
 
 	if !update {
@@ -267,7 +238,7 @@ func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceLoggingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient
+	conn := meta.(*conns.AWSClient).IVSChatClient()
 
 	log.Printf("[INFO] Deleting IVSChat LoggingConfiguration %s", d.Id())
 

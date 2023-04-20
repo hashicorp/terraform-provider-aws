@@ -1,6 +1,7 @@
 package redshiftserverless_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,19 +16,20 @@ import (
 )
 
 func TestAccRedshiftServerlessSnapshot_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshiftserverless.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSnapshotDestroy,
+		CheckDestroy:             testAccCheckSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotExists(resourceName),
+					testAccCheckSnapshotExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "namespace_name", "aws_redshiftserverless_namespace.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "retention_period", "-1"),
@@ -45,7 +47,7 @@ func TestAccRedshiftServerlessSnapshot_basic(t *testing.T) {
 			{
 				Config: testAccSnapshotConfig_retention(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotExists(resourceName),
+					testAccCheckSnapshotExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "namespace_name", "aws_redshiftserverless_namespace.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "retention_period", "10"),
@@ -57,20 +59,21 @@ func TestAccRedshiftServerlessSnapshot_basic(t *testing.T) {
 }
 
 func TestAccRedshiftServerlessSnapshot_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshiftserverless.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSnapshotDestroy,
+		CheckDestroy:             testAccCheckSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfredshiftserverless.ResourceSnapshot(), resourceName),
+					testAccCheckSnapshotExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshiftserverless.ResourceSnapshot(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -78,30 +81,32 @@ func TestAccRedshiftServerlessSnapshot_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSnapshotDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn
+func testAccCheckSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_redshiftserverless_snapshot" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_redshiftserverless_snapshot" {
+				continue
+			}
+			_, err := tfredshiftserverless.FindSnapshotByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Redshift Serverless Snapshot %s still exists", rs.Primary.ID)
 		}
-		_, err := tfredshiftserverless.FindSnapshotByName(conn, rs.Primary.ID)
 
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Redshift Serverless Snapshot %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckSnapshotExists(name string) resource.TestCheckFunc {
+func testAccCheckSnapshotExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -112,9 +117,9 @@ func testAccCheckSnapshotExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Redshift Serverless Snapshot is not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn()
 
-		_, err := tfredshiftserverless.FindSnapshotByName(conn, rs.Primary.ID)
+		_, err := tfredshiftserverless.FindSnapshotByName(ctx, conn, rs.Primary.ID)
 
 		return err
 	}

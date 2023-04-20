@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_appflow_connector_profile")
 func ResourceConnectorProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectorProfileCreate,
@@ -23,7 +24,7 @@ func ResourceConnectorProfile() *schema.Resource {
 		UpdateWithoutTimeout: resourceConnectorProfileUpdate,
 		DeleteWithoutTimeout: resourceConnectorProfileDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -33,6 +34,7 @@ func ResourceConnectorProfile() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 256),
 					validation.StringMatch(regexp.MustCompile(`[\w/!@#+=.-]+`), "must match [\\w/!@#+=.-]+"),
@@ -1093,6 +1095,19 @@ func ResourceConnectorProfile() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
 												},
+												"cluster_identifier": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"data_api_role_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"database_name": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
 												"database_url": {
 													Type:         schema.TypeString,
 													Optional:     true,
@@ -1162,7 +1177,7 @@ func ResourceConnectorProfile() *schema.Resource {
 													Optional: true,
 													ValidateFunc: validation.All(
 														validation.StringLenBetween(0, 2),
-														validation.StringMatch(regexp.MustCompile(` ^[a-zA-Z0-9_]*$`), "must contain only alphanumeric characters and the underscore (_) character"),
+														validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_]*$`), "must contain only alphanumeric characters and the underscore (_) character"),
 													),
 												},
 												"oauth_properties": {
@@ -1394,7 +1409,7 @@ func ResourceConnectorProfile() *schema.Resource {
 }
 
 func resourceConnectorProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn
+	conn := meta.(*conns.AWSClient).AppFlowConn()
 	name := d.Get("name").(string)
 
 	createConnectorProfileInput := appflow.CreateConnectorProfileInput{
@@ -1412,7 +1427,7 @@ func resourceConnectorProfileCreate(ctx context.Context, d *schema.ResourceData,
 		createConnectorProfileInput.KmsArn = aws.String(v)
 	}
 
-	out, err := conn.CreateConnectorProfile(&createConnectorProfileInput)
+	out, err := conn.CreateConnectorProfileWithContext(ctx, &createConnectorProfileInput)
 
 	if err != nil {
 		return diag.Errorf("creating AppFlow Connector Profile: %s", err)
@@ -1428,9 +1443,9 @@ func resourceConnectorProfileCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceConnectorProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn
+	conn := meta.(*conns.AWSClient).AppFlowConn()
 
-	connectorProfile, err := FindConnectorProfileByARN(context.Background(), conn, d.Id())
+	connectorProfile, err := FindConnectorProfileByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AppFlow Connector Profile (%s) not found, removing from state", d.Id())
@@ -1462,7 +1477,7 @@ func resourceConnectorProfileRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceConnectorProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn
+	conn := meta.(*conns.AWSClient).AppFlowConn()
 	name := d.Get("name").(string)
 
 	updateConnectorProfileInput := appflow.UpdateConnectorProfileInput{
@@ -1471,7 +1486,7 @@ func resourceConnectorProfileUpdate(ctx context.Context, d *schema.ResourceData,
 		ConnectorProfileName:   aws.String(name),
 	}
 
-	_, err := conn.UpdateConnectorProfile(&updateConnectorProfileInput)
+	_, err := conn.UpdateConnectorProfileWithContext(ctx, &updateConnectorProfileInput)
 
 	if err != nil {
 		return diag.Errorf("updating AppFlow Connector Profile (%s): %s", d.Id(), err)
@@ -1481,7 +1496,7 @@ func resourceConnectorProfileUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceConnectorProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn
+	conn := meta.(*conns.AWSClient).AppFlowConn()
 
 	out, _ := FindConnectorProfileByARN(ctx, conn, d.Id())
 
@@ -1594,7 +1609,7 @@ func expandCustomConnectorProfileCredentials(m map[string]interface{}) *appflow.
 		credentials.Custom = expandCustomAuthCredentials(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := m["oauth2_credentials"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["oauth2"].([]interface{}); ok && len(v) > 0 {
 		credentials.Oauth2 = expandOAuth2Credentials(v[0].(map[string]interface{}))
 	}
 
@@ -1911,6 +1926,10 @@ func expandConnectorProfileProperties(m map[string]interface{}) *appflow.Connect
 		cpc.Amplitude = v[0].(*appflow.AmplitudeConnectorProfileProperties)
 	}
 
+	if v, ok := m["custom_connector"].([]interface{}); ok && len(v) > 0 {
+		cpc.CustomConnector = expandCustomConnectorProfileProperties(v[0].(map[string]interface{}))
+	}
+
 	if v, ok := m["datadog"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		cpc.Datadog = expandDatadogConnectorProfileProperties(v[0].(map[string]interface{}))
 	}
@@ -2012,8 +2031,11 @@ func expandMarketoConnectorProfileProperties(m map[string]interface{}) *appflow.
 
 func expandRedshiftConnectorProfileProperties(m map[string]interface{}) *appflow.RedshiftConnectorProfileProperties {
 	properties := appflow.RedshiftConnectorProfileProperties{
-		BucketName: aws.String(m["bucket_name"].(string)),
-		RoleArn:    aws.String(m["role_arn"].(string)),
+		BucketName:        aws.String(m["bucket_name"].(string)),
+		ClusterIdentifier: aws.String(m["cluster_identifier"].(string)),
+		RoleArn:           aws.String(m["role_arn"].(string)),
+		DataApiRoleArn:    aws.String(m["data_api_role_arn"].(string)),
+		DatabaseName:      aws.String(m["database_name"].(string)),
 	}
 
 	if v, ok := m["bucket_prefix"].(string); ok && v != "" {
@@ -2044,6 +2066,20 @@ func expandSalesforceConnectorProfileProperties(m map[string]interface{}) *appfl
 
 	if v, ok := m["is_sandbox_environment"].(bool); ok {
 		properties.IsSandboxEnvironment = aws.Bool(v)
+	}
+
+	return &properties
+}
+
+func expandCustomConnectorProfileProperties(m map[string]interface{}) *appflow.CustomConnectorProfileProperties {
+	properties := appflow.CustomConnectorProfileProperties{}
+
+	if v, ok := m["oauth2_properties"].([]interface{}); ok && len(v) > 0 {
+		properties.OAuth2Properties = expandOAuth2Properties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := m["profile_properties"].(map[string]interface{}); ok && len(v) > 0 {
+		properties.ProfileProperties = flex.ExpandStringMap(v)
 	}
 
 	return &properties
@@ -2132,6 +2168,19 @@ func expandOAuthProperties(m map[string]interface{}) *appflow.OAuthProperties {
 	return &properties
 }
 
+func expandOAuth2Properties(m map[string]interface{}) *appflow.OAuth2Properties {
+	properties := appflow.OAuth2Properties{
+		OAuth2GrantType: aws.String(m["oauth2_grant_type"].(string)),
+		TokenUrl:        aws.String(m["token_url"].(string)),
+	}
+
+	if v, ok := m["token_url_custom_properties"].(map[string]interface{}); ok && len(v) > 0 {
+		properties.TokenUrlCustomProperties = flex.ExpandStringMap(v)
+	}
+
+	return &properties
+}
+
 func flattenConnectorProfileConfig(cpp *appflow.ConnectorProfileProperties, cpc []interface{}) []interface{} {
 	m := make(map[string]interface{})
 
@@ -2147,6 +2196,9 @@ func flattenConnectorProfileProperties(cpp *appflow.ConnectorProfileProperties) 
 
 	if cpp.Amplitude != nil {
 		result["amplitude"] = []interface{}{m}
+	}
+	if cpp.CustomConnector != nil {
+		result["custom_connector"] = flattenCustomConnectorProfileProperties(cpp.CustomConnector)
 	}
 	if cpp.Datadog != nil {
 		m["instance_url"] = aws.StringValue(cpp.Datadog.InstanceUrl)
@@ -2222,6 +2274,23 @@ func flattenRedshiftConnectorProfileProperties(properties *appflow.RedshiftConne
 	}
 
 	m["role_arn"] = aws.StringValue(properties.RoleArn)
+	m["cluster_identifier"] = aws.StringValue(properties.ClusterIdentifier)
+	m["data_api_role_arn"] = aws.StringValue(properties.DataApiRoleArn)
+	m["database_name"] = aws.StringValue(properties.DatabaseName)
+
+	return []interface{}{m}
+}
+
+func flattenCustomConnectorProfileProperties(properties *appflow.CustomConnectorProfileProperties) []interface{} {
+	m := make(map[string]interface{})
+
+	if properties.OAuth2Properties != nil {
+		m["oauth2_properties"] = flattenOAuth2Properties(properties.OAuth2Properties)
+	}
+
+	if properties.ProfileProperties != nil {
+		m["profile_properties"] = aws.StringValueMap(properties.ProfileProperties)
+	}
 
 	return []interface{}{m}
 }
@@ -2291,6 +2360,16 @@ func flattenOAuthProperties(properties *appflow.OAuthProperties) []interface{} {
 	m["auth_code_url"] = aws.StringValue(properties.AuthCodeUrl)
 	m["oauth_scopes"] = aws.StringValueSlice(properties.OAuthScopes)
 	m["token_url"] = aws.StringValue(properties.TokenUrl)
+
+	return []interface{}{m}
+}
+
+func flattenOAuth2Properties(properties *appflow.OAuth2Properties) []interface{} {
+	m := make(map[string]interface{})
+
+	m["oauth2_grant_type"] = aws.StringValue(properties.OAuth2GrantType)
+	m["token_url"] = aws.StringValue(properties.TokenUrl)
+	m["token_url_custom_properties"] = aws.StringValueMap(properties.TokenUrlCustomProperties)
 
 	return []interface{}{m}
 }

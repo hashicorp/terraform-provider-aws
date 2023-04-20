@@ -67,6 +67,7 @@ The following arguments are supported:
 * `validity` - (Required) Configures end of the validity period for the certificate. See [validity block](#validity-block) below.
 * `template_arn` - (Optional) Template to use when issuing a certificate.
   See [ACM PCA Documentation](https://docs.aws.amazon.com/privateca/latest/userguide/UsingTemplates.html) for more information.
+* `api_passthrough` - (Optional) Specifies X.509 certificate information to be included in the issued certificate. To use with API Passthrough templates
 
 ### validity block
 

@@ -2,7 +2,6 @@ package lightsail
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"regexp"
 	"time"
@@ -22,6 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_lightsail_certificate", name="Certificate")
+// @Tags(identifierAttribute="id")
 func ResourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,
@@ -30,7 +31,7 @@ func ResourceCertificate() *schema.Resource {
 		DeleteWithoutTimeout: resourceCertificateDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -101,8 +102,8 @@ func ResourceCertificate() *schema.Resource {
 				},
 				Set: schema.HashString,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -128,21 +129,16 @@ func ResourceCertificate() *schema.Resource {
 }
 
 func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	req := lightsail.CreateCertificateInput{
 		CertificateName: aws.String(d.Get("name").(string)),
 		DomainName:      aws.String(d.Get("domain_name").(string)),
+		Tags:            GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("subject_alternative_names"); ok {
 		req.SubjectAlternativeNames = aws.StringSlice(expandSubjectAlternativeNames(v))
-	}
-
-	if len(tags) > 0 {
-		req.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	resp, err := conn.CreateCertificateWithContext(ctx, &req)
@@ -151,26 +147,20 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateCertificate, ResCertificate, d.Get("name").(string), err)
 	}
 
-	if len(resp.Operations) == 0 {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateCertificate, ResCertificate, d.Get("name").(string), errors.New("No operations found for CreateCertificate request"))
+	id := d.Get("name").(string)
+	diag := expandOperations(ctx, conn, resp.Operations, lightsail.OperationTypeCreateCertificate, ResCertificate, id)
+
+	if diag != nil {
+		return diag
 	}
 
-	op := resp.Operations[0]
-
-	err = waitOperation(conn, op.Id)
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateCertificate, ResCertificate, d.Get("name").(string), errors.New("Error waiting for Create Certificate request operation"))
-	}
-
-	d.SetId(d.Get("name").(string))
+	d.SetId(id)
 
 	return resourceCertificateRead(ctx, d, meta)
 }
 
 func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	certificate, err := FindCertificateByName(ctx, conn, d.Id())
 
@@ -191,44 +181,18 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("name", certificate.Name)
 	d.Set("subject_alternative_names", aws.StringValueSlice(certificate.SubjectAlternativeNames))
 
-	tags := KeyValueTags(certificate.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResCertificate, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResCertificate, d.Id(), err)
-	}
+	SetTagsOut(ctx, certificate.Tags)
 
 	return nil
 }
 
 func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
-
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return create.DiagError(names.Lightsail, create.ErrActionUpdating, ResCertificate, d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return create.DiagError(names.Lightsail, create.ErrActionUpdating, ResCertificate, d.Id(), err)
-		}
-	}
-
+	// Tags only.
 	return resourceCertificateRead(ctx, d, meta)
 }
 
 func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	resp, err := conn.DeleteCertificateWithContext(ctx, &lightsail.DeleteCertificateInput{
 		CertificateName: aws.String(d.Id()),
@@ -242,12 +206,10 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 		return create.DiagError(names.CE, create.ErrActionDeleting, ResCertificate, d.Id(), err)
 	}
 
-	op := resp.Operations[0]
+	diag := expandOperations(ctx, conn, resp.Operations, lightsail.OperationTypeDeleteCertificate, ResCertificate, d.Id())
 
-	err = waitOperation(conn, op.Id)
-
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeDeleteCertificate, ResCertificate, d.Id(), err)
+	if diag != nil {
+		return diag
 	}
 
 	return nil

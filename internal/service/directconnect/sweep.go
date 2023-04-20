@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -48,23 +49,30 @@ func init() {
 		F:            sweepLags,
 		Dependencies: []string{"aws_dx_connection"},
 	})
+
+	resource.AddTestSweepers("aws_dx_macsec_key", &resource.Sweeper{
+		Name:         "aws_dx_macsec_key",
+		F:            sweepMacSecKeys,
+		Dependencies: []string{},
+	})
 }
 
 func sweepConnections(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).DirectConnectConn
+	conn := client.(*conns.AWSClient).DirectConnectConn()
 
+	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
 	input := &directconnect.DescribeConnectionsInput{}
 
 	// DescribeConnections has no pagination support
-	output, err := conn.DescribeConnections(input)
+	output, err := conn.DescribeConnectionsWithContext(ctx, input)
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Direct Connect Connection sweep for %s: %s", region, err)
@@ -94,30 +102,28 @@ func sweepConnections(region string) error {
 		d := r.Data(nil)
 		d.SetId(id)
 
-		err = r.Delete(d, client)
+		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+	}
 
-		if err != nil {
-			sweeperErr := fmt.Errorf("error deleting Direct Connect Connection (%s): %w", id, err)
-			log.Printf("[ERROR] %s", sweeperErr)
-			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-			continue
-		}
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Direct Connect Connection: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepGatewayAssociationProposals(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).DirectConnectConn
+	conn := client.(*conns.AWSClient).DirectConnectConn()
 	input := &directconnect.DescribeDirectConnectGatewayAssociationProposalsInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = describeGatewayAssociationProposalsPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationProposalsOutput, lastPage bool) bool {
+	err = describeGatewayAssociationProposalsPages(ctx, conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationProposalsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -154,7 +160,7 @@ func sweepGatewayAssociationProposals(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Direct Connect Gateway Association Proposals (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Direct Connect Gateway Association Proposals (%s): %w", region, err))
@@ -164,16 +170,17 @@ func sweepGatewayAssociationProposals(region string) error {
 }
 
 func sweepGatewayAssociations(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).DirectConnectConn
+	conn := client.(*conns.AWSClient).DirectConnectConn()
 	input := &directconnect.DescribeDirectConnectGatewaysInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = describeGatewaysPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewaysOutput, lastPage bool) bool {
+	err = describeGatewaysPages(ctx, conn, input, func(page *directconnect.DescribeDirectConnectGatewaysOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -185,7 +192,7 @@ func sweepGatewayAssociations(region string) error {
 				DirectConnectGatewayId: aws.String(directConnectGatewayID),
 			}
 
-			err := describeGatewayAssociationsPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationsOutput, lastPage bool) bool {
+			err := describeGatewayAssociationsPages(ctx, conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationsOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -236,9 +243,9 @@ func sweepGatewayAssociations(region string) error {
 	// these within the service itself so they can only be found
 	// via AssociatedGatewayId of the EC2 Transit Gateway since the
 	// DirectConnectGatewayId lives in the other account.
-	ec2conn := client.(*conns.AWSClient).EC2Conn
+	ec2conn := client.(*conns.AWSClient).EC2Conn()
 
-	err = ec2conn.DescribeTransitGatewaysPages(&ec2.DescribeTransitGatewaysInput{}, func(page *ec2.DescribeTransitGatewaysOutput, lastPage bool) bool {
+	err = ec2conn.DescribeTransitGatewaysPagesWithContext(ctx, &ec2.DescribeTransitGatewaysInput{}, func(page *ec2.DescribeTransitGatewaysOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -254,7 +261,7 @@ func sweepGatewayAssociations(region string) error {
 				AssociatedGatewayId: aws.String(transitGatewayID),
 			}
 
-			err := describeGatewayAssociationsPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationsOutput, lastPage bool) bool {
+			err := describeGatewayAssociationsPages(ctx, conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationsOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -290,7 +297,7 @@ func sweepGatewayAssociations(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EC2 Transit Gateways (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Direct Connect Gateway Associations (%s): %w", region, err))
@@ -300,16 +307,17 @@ func sweepGatewayAssociations(region string) error {
 }
 
 func sweepGateways(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).DirectConnectConn
+	conn := client.(*conns.AWSClient).DirectConnectConn()
 	input := &directconnect.DescribeDirectConnectGatewaysInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = describeGatewaysPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewaysOutput, lastPage bool) bool {
+	err = describeGatewaysPages(ctx, conn, input, func(page *directconnect.DescribeDirectConnectGatewaysOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -328,7 +336,7 @@ func sweepGateways(region string) error {
 
 			var associations bool
 
-			err := describeGatewayAssociationsPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationsOutput, lastPage bool) bool {
+			err := describeGatewayAssociationsPages(ctx, conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationsOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -374,7 +382,7 @@ func sweepGateways(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Direct Connect Gateways (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Direct Connect Gateways (%s): %w", region, err))
@@ -384,20 +392,21 @@ func sweepGateways(region string) error {
 }
 
 func sweepLags(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).DirectConnectConn
+	conn := client.(*conns.AWSClient).DirectConnectConn()
 
+	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
 	input := &directconnect.DescribeLagsInput{}
 
 	// DescribeLags has no pagination support
-	output, err := conn.DescribeLags(input)
+	output, err := conn.DescribeLagsWithContext(ctx, input)
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Direct Connect LAG sweep for %s: %s", region, err)
@@ -427,13 +436,69 @@ func sweepLags(region string) error {
 		d := r.Data(nil)
 		d.SetId(id)
 
-		err = r.Delete(d, client)
+		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+	}
 
-		if err != nil {
-			sweeperErr := fmt.Errorf("error deleting Direct Connect LAG (%s): %w", id, err)
-			log.Printf("[ERROR] %s", sweeperErr)
-			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Direct Connect LAG: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepMacSecKeys(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	dxConn := client.(*conns.AWSClient).DirectConnectConn()
+
+	// Clean up leaked Secrets Manager resources created by Direct Connect.
+	// Direct Connect does not remove the corresponding Secrets Manager
+	// key when deleting the MACsec key association. The only option to
+	// clean up the dangling resource is to use Secrets Manager to delete
+	// the MACsec key secret.
+	smConn := client.(*conns.AWSClient).SecretsManagerConn()
+	dxInput := &directconnect.DescribeConnectionsInput{}
+	var sweeperErrs *multierror.Error
+
+	output, err := dxConn.DescribeConnectionsWithContext(ctx, dxInput)
+
+	if err != nil {
+		sweeperErr := fmt.Errorf("error listing Direct Connect Connections for %s: %w", region, err)
+		log.Printf("[ERROR] %s", sweeperErr)
+		sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+		return sweeperErrs.ErrorOrNil()
+	}
+
+	if output == nil {
+		log.Printf("[WARN] Skipping Direct Connect MACsec Keys sweep for %s: empty response", region)
+		return sweeperErrs.ErrorOrNil()
+	}
+
+	for _, connection := range output.Connections {
+		if connection.MacSecKeys == nil {
 			continue
+		}
+
+		for _, key := range connection.MacSecKeys {
+			arn := aws.StringValue(key.SecretARN)
+
+			input := &secretsmanager.DeleteSecretInput{
+				SecretId: aws.String(arn),
+			}
+
+			log.Printf("[DEBUG] Deleting MACSec secret key: %s", *input.SecretId)
+			_, err := smConn.DeleteSecretWithContext(ctx, input)
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting MACsec Secret (%s): %w", arn, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
 		}
 	}
 

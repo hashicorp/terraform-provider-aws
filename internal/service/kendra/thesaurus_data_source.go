@@ -15,9 +15,10 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_kendra_thesaurus")
 func DataSourceThesaurus() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceThesaurusRead,
+		ReadWithoutTimeout: dataSourceThesaurusRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -104,7 +105,7 @@ func DataSourceThesaurus() *schema.Resource {
 }
 
 func dataSourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient
+	conn := meta.(*conns.AWSClient).KendraClient()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	thesaurusID := d.Get("thesaurus_id").(string)

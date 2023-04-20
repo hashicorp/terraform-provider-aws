@@ -3,15 +3,19 @@ package amplify_test
 import (
 	"testing"
 	"time"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 // Serialize to limit API rate-limit exceeded errors.
 func TestAccAmplify_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"App": {
 			"basic":                    testAccApp_basic,
 			"disappears":               testAccApp_disappears,
-			"Tags":                     testAccApp_Tags,
+			"tags":                     testAccApp_tags,
 			"AutoBranchCreationConfig": testAccApp_AutoBranchCreationConfig,
 			"BasicAuthCredentials":     testAccApp_BasicAuthCredentials,
 			"BuildSpec":                testAccApp_BuildSpec,
@@ -30,7 +34,7 @@ func TestAccAmplify_serial(t *testing.T) {
 		"Branch": {
 			"basic":                testAccBranch_basic,
 			"disappears":           testAccBranch_disappears,
-			"Tags":                 testAccBranch_Tags,
+			"tags":                 testAccBranch_tags,
 			"BasicAuthCredentials": testAccBranch_BasicAuthCredentials,
 			"EnvironmentVariables": testAccBranch_EnvironmentVariables,
 			"OptionalArguments":    testAccBranch_OptionalArguments,
@@ -47,17 +51,5 @@ func TestAccAmplify_serial(t *testing.T) {
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-					// Explicitly sleep between tests.
-					time.Sleep(5 * time.Second)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 5*time.Second)
 }

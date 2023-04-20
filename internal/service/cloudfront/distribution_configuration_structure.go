@@ -14,20 +14,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
-
-// route53ZoneID defines the route 53 zone ID for CloudFront. This
-// is used to set the zone_id attribute.
-const route53ZoneID = "Z2FDTNDATAQYW2"
-
-// cnRoute53ZoneID defines the route 53 zone ID for CloudFront in AWS CN.
-// This is used to set the zone_id attribute.
-// ref: https://docs.amazonaws.cn/en_us/aws/latest/userguide/route53.html
-const cnRoute53ZoneID = "Z3RFFRIM2A3IF5"
 
 // Assemble the *cloudfront.DistributionConfig variable. Calls out to various
 // expander functions to convert attributes and sub-attributes to the various
@@ -38,7 +29,7 @@ const cnRoute53ZoneID = "Z3RFFRIM2A3IF5"
 func expandDistributionConfig(d *schema.ResourceData) *cloudfront.DistributionConfig {
 	distributionConfig := &cloudfront.DistributionConfig{
 		CacheBehaviors:       expandCacheBehaviors(d.Get("ordered_cache_behavior").([]interface{})),
-		CallerReference:      aws.String(resource.UniqueId()),
+		CallerReference:      aws.String(id.UniqueId()),
 		Comment:              aws.String(d.Get("comment").(string)),
 		CustomErrorResponses: ExpandCustomErrorResponses(d.Get("custom_error_response").(*schema.Set)),
 		DefaultCacheBehavior: ExpandDefaultCacheBehavior(d.Get("default_cache_behavior").([]interface{})[0].(map[string]interface{})),
@@ -90,44 +81,35 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloud
 	d.Set("enabled", distributionConfig.Enabled)
 	d.Set("is_ipv6_enabled", distributionConfig.IsIPV6Enabled)
 	d.Set("price_class", distributionConfig.PriceClass)
-	d.Set("hosted_zone_id", route53ZoneID)
 
 	err = d.Set("default_cache_behavior", []interface{}{flattenDefaultCacheBehavior(distributionConfig.DefaultCacheBehavior)})
 	if err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 	err = d.Set("viewer_certificate", flattenViewerCertificate(distributionConfig.ViewerCertificate))
 	if err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
-	if distributionConfig.CallerReference != nil {
-		d.Set("caller_reference", distributionConfig.CallerReference)
-	}
+	d.Set("caller_reference", distributionConfig.CallerReference)
 	if distributionConfig.Comment != nil {
 		if aws.StringValue(distributionConfig.Comment) != "" {
 			d.Set("comment", distributionConfig.Comment)
 		}
 	}
-	if distributionConfig.DefaultRootObject != nil {
-		d.Set("default_root_object", distributionConfig.DefaultRootObject)
-	}
-	if distributionConfig.HttpVersion != nil {
-		d.Set("http_version", distributionConfig.HttpVersion)
-	}
-	if distributionConfig.WebACLId != nil {
-		d.Set("web_acl_id", distributionConfig.WebACLId)
-	}
+	d.Set("default_root_object", distributionConfig.DefaultRootObject)
+	d.Set("http_version", distributionConfig.HttpVersion)
+	d.Set("web_acl_id", distributionConfig.WebACLId)
 
 	if distributionConfig.CustomErrorResponses != nil {
 		err = d.Set("custom_error_response", FlattenCustomErrorResponses(distributionConfig.CustomErrorResponses))
 		if err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 	if distributionConfig.CacheBehaviors != nil {
 		if err := d.Set("ordered_cache_behavior", flattenCacheBehaviors(distributionConfig.CacheBehaviors)); err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
@@ -137,31 +119,31 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloud
 		err = d.Set("logging_config", []interface{}{})
 	}
 	if err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	if distributionConfig.Aliases != nil {
 		err = d.Set("aliases", FlattenAliases(distributionConfig.Aliases))
 		if err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 	if distributionConfig.Restrictions != nil {
 		err = d.Set("restrictions", flattenRestrictions(distributionConfig.Restrictions))
 		if err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 	if aws.Int64Value(distributionConfig.Origins.Quantity) > 0 {
 		err = d.Set("origin", FlattenOrigins(distributionConfig.Origins))
 		if err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 	if aws.Int64Value(distributionConfig.OriginGroups.Quantity) > 0 {
 		err = d.Set("origin_group", FlattenOriginGroups(distributionConfig.OriginGroups))
 		if err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 

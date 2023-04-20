@@ -22,6 +22,7 @@ import (
 )
 
 func TestAccLightsailCertificate_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var certificate lightsail.Certificate
 	resourceName := "aws_lightsail_certificate.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -29,18 +30,18 @@ func TestAccLightsailCertificate_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy,
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_basic(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(resourceName, &certificate),
+					testAccCheckCertificateExists(ctx, resourceName, &certificate),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "lightsail", regexp.MustCompile(`Certificate/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
@@ -57,6 +58,7 @@ func TestAccLightsailCertificate_basic(t *testing.T) {
 }
 
 func TestAccLightsailCertificate_subjectAlternativeNames(t *testing.T) {
+	ctx := acctest.Context(t)
 	var certificate lightsail.Certificate
 	resourceName := "aws_lightsail_certificate.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -65,18 +67,18 @@ func TestAccLightsailCertificate_subjectAlternativeNames(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy,
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_subjectAlternativeNames(rName, domainName, subjectAlternativeName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(resourceName, &certificate),
+					testAccCheckCertificateExists(ctx, resourceName, &certificate),
 					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", subjectAlternativeName),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", domainName),
@@ -87,6 +89,7 @@ func TestAccLightsailCertificate_subjectAlternativeNames(t *testing.T) {
 }
 
 func TestAccLightsailCertificate_DomainValidationOptions(t *testing.T) {
+	ctx := acctest.Context(t)
 	var certificate lightsail.Certificate
 	resourceName := "aws_lightsail_certificate.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -97,18 +100,18 @@ func TestAccLightsailCertificate_DomainValidationOptions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy,
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_subjectAlternativeNames(rName, domainName, subjectAlternativeName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(resourceName, &certificate),
+					testAccCheckCertificateExists(ctx, resourceName, &certificate),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
 						"domain_name":          domainName,
 						"resource_record_type": "CNAME",
@@ -124,6 +127,7 @@ func TestAccLightsailCertificate_DomainValidationOptions(t *testing.T) {
 }
 
 func TestAccLightsailCertificate_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var certificate lightsail.Certificate
 	resourceName := "aws_lightsail_certificate.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -131,18 +135,18 @@ func TestAccLightsailCertificate_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy,
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_tags1(rName, domainName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertificateExists(resourceName, &certificate),
+					testAccCheckCertificateExists(ctx, resourceName, &certificate),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -155,7 +159,7 @@ func TestAccLightsailCertificate_tags(t *testing.T) {
 			{
 				Config: testAccCertificateConfig_tags2(rName, domainName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertificateExists(resourceName, &certificate),
+					testAccCheckCertificateExists(ctx, resourceName, &certificate),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -164,7 +168,7 @@ func TestAccLightsailCertificate_tags(t *testing.T) {
 			{
 				Config: testAccCertificateConfig_tags1(rName, domainName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertificateExists(resourceName, &certificate),
+					testAccCheckCertificateExists(ctx, resourceName, &certificate),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -174,6 +178,7 @@ func TestAccLightsailCertificate_tags(t *testing.T) {
 }
 
 func TestAccLightsailCertificate_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var certificate lightsail.Certificate
 	resourceName := "aws_lightsail_certificate.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -181,8 +186,8 @@ func TestAccLightsailCertificate_disappears(t *testing.T) {
 
 	testDestroy := func(*terraform.State) error {
 		// reach out and DELETE the Certificate
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
-		_, err := conn.DeleteCertificate(&lightsail.DeleteCertificateInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
+		_, err := conn.DeleteCertificateWithContext(ctx, &lightsail.DeleteCertificateInput{
 			CertificateName: aws.String(rName),
 		})
 
@@ -198,18 +203,18 @@ func TestAccLightsailCertificate_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy,
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertificateExists(resourceName, &certificate),
+					testAccCheckCertificateExists(ctx, resourceName, &certificate),
 					testDestroy,
 				),
 				ExpectNonEmptyPlan: true,
@@ -218,31 +223,33 @@ func TestAccLightsailCertificate_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckCertificateDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_lightsail_certificate" {
-			continue
+func testAccCheckCertificateDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_lightsail_certificate" {
+				continue
+			}
+
+			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
+
+			_, err := tflightsail.FindCertificateByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return create.Error(names.Lightsail, create.ErrActionCheckingDestroyed, tflightsail.ResCertificate, rs.Primary.ID, errors.New("still exists"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
-
-		_, err := tflightsail.FindCertificateByName(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return create.Error(names.Lightsail, create.ErrActionCheckingDestroyed, tflightsail.ResCertificate, rs.Primary.ID, errors.New("still exists"))
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckCertificateExists(n string, certificate *lightsail.Certificate) resource.TestCheckFunc {
+func testAccCheckCertificateExists(ctx context.Context, n string, certificate *lightsail.Certificate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -253,9 +260,9 @@ func testAccCheckCertificateExists(n string, certificate *lightsail.Certificate)
 			return errors.New("No Certificate ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
-		respCertificate, err := tflightsail.FindCertificateByName(context.Background(), conn, rs.Primary.ID)
+		respCertificate, err := tflightsail.FindCertificateByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

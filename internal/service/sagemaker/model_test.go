@@ -1,12 +1,13 @@
 package sagemaker_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -16,19 +17,20 @@ import (
 )
 
 func TestAccSageMakerModel_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckModelDestroy,
+		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckModelExists(resourceName),
+					testAccCheckModelExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "primary_container.0.image", "data.aws_sagemaker_prebuilt_ecr_image.test", "registry_path"),
@@ -51,19 +53,20 @@ func TestAccSageMakerModel_basic(t *testing.T) {
 }
 
 func TestAccSageMakerModel_inferenceExecution(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckModelDestroy,
+		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelConfig_inferenceExecution(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckModelExists(resourceName),
+					testAccCheckModelExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "inference_execution_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inference_execution_config.0.mode", "Serial"),
 				),
@@ -78,19 +81,20 @@ func TestAccSageMakerModel_inferenceExecution(t *testing.T) {
 }
 
 func TestAccSageMakerModel_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckModelDestroy,
+		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckModelExists(resourceName),
+					testAccCheckModelExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -98,7 +102,7 @@ func TestAccSageMakerModel_tags(t *testing.T) {
 			{
 				Config: testAccModelConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckModelExists(resourceName),
+					testAccCheckModelExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -107,7 +111,7 @@ func TestAccSageMakerModel_tags(t *testing.T) {
 			{
 				Config: testAccModelConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckModelExists(resourceName),
+					testAccCheckModelExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -122,19 +126,20 @@ func TestAccSageMakerModel_tags(t *testing.T) {
 }
 
 func TestAccSageMakerModel_primaryContainerModelDataURL(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckModelDestroy,
+		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelConfig_primaryContainerDataURL(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckModelExists(resourceName),
+					testAccCheckModelExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "primary_container.0.model_data_url"),
 				),
 			},
@@ -148,19 +153,20 @@ func TestAccSageMakerModel_primaryContainerModelDataURL(t *testing.T) {
 }
 
 func TestAccSageMakerModel_primaryContainerHostname(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckModelDestroy,
+		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelConfig_primaryContainerHostname(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckModelExists(resourceName),
+					testAccCheckModelExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.container_hostname", "test"),
 				),
 			},
@@ -174,19 +180,20 @@ func TestAccSageMakerModel_primaryContainerHostname(t *testing.T) {
 }
 
 func TestAccSageMakerModel_primaryContainerImage(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckModelDestroy,
+		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelConfig_primaryContainerImage(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckModelExists(resourceName),
+					testAccCheckModelExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image_config.0.repository_access_mode", "Platform"),
 				),
@@ -201,19 +208,20 @@ func TestAccSageMakerModel_primaryContainerImage(t *testing.T) {
 }
 
 func TestAccSageMakerModel_primaryContainerEnvironment(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckModelDestroy,
+		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelConfig_primaryContainerEnvironment(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckModelExists(resourceName),
+					testAccCheckModelExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.test", "bar"),
 				),
@@ -228,19 +236,20 @@ func TestAccSageMakerModel_primaryContainerEnvironment(t *testing.T) {
 }
 
 func TestAccSageMakerModel_primaryContainerModeSingle(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckModelDestroy,
+		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelConfig_primaryContainerModeSingle(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckModelExists(resourceName),
+					testAccCheckModelExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.mode", "SingleModel"),
 				),
 			},
@@ -254,19 +263,20 @@ func TestAccSageMakerModel_primaryContainerModeSingle(t *testing.T) {
 }
 
 func TestAccSageMakerModel_containers(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckModelDestroy,
+		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelConfig_containers(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckModelExists(resourceName),
+					testAccCheckModelExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "2"),
 					resource.TestCheckResourceAttrPair(resourceName, "container.0.image", "data.aws_sagemaker_prebuilt_ecr_image.test", "registry_path"),
 					resource.TestCheckResourceAttrPair(resourceName, "container.1.image", "data.aws_sagemaker_prebuilt_ecr_image.test", "registry_path"),
@@ -282,19 +292,20 @@ func TestAccSageMakerModel_containers(t *testing.T) {
 }
 
 func TestAccSageMakerModel_vpc(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckModelDestroy,
+		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelConfig_vpcBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckModelExists(resourceName),
+					testAccCheckModelExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "2"),
@@ -310,19 +321,20 @@ func TestAccSageMakerModel_vpc(t *testing.T) {
 }
 
 func TestAccSageMakerModel_primaryContainerPrivateDockerRegistry(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckModelDestroy,
+		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelConfig_primaryContainerPrivateDockerRegistry(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckModelExists(resourceName),
+					testAccCheckModelExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image_config.0.repository_access_mode", "Vpc"),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image_config.0.repository_auth_config.0.repository_credentials_provider_arn", "arn:aws:lambda:us-east-2:123456789012:function:my-function:1"), //lintignore:AWSAT003,AWSAT005
@@ -338,19 +350,20 @@ func TestAccSageMakerModel_primaryContainerPrivateDockerRegistry(t *testing.T) {
 }
 
 func TestAccSageMakerModel_networkIsolation(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckModelDestroy,
+		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelConfig_networkIsolation(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckModelExists(resourceName),
+					testAccCheckModelExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enable_network_isolation", "true"),
 				),
 			},
@@ -364,20 +377,21 @@ func TestAccSageMakerModel_networkIsolation(t *testing.T) {
 }
 
 func TestAccSageMakerModel_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckModelDestroy,
+		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckModelExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceModel(), resourceName),
+					testAccCheckModelExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceModel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -385,38 +399,36 @@ func TestAccSageMakerModel_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckModelDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+func testAccCheckModelDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_sagemaker_model" {
-			continue
-		}
-
-		resp, err := conn.ListModels(&sagemaker.ListModelsInput{
-			NameContains: aws.String(rs.Primary.ID),
-		})
-		if err == nil {
-			if len(resp.Models) > 0 {
-				return fmt.Errorf("SageMaker models still exist")
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_sagemaker_model" {
+				continue
 			}
 
-			return nil
+			resp, err := conn.ListModelsWithContext(ctx, &sagemaker.ListModelsInput{
+				NameContains: aws.String(rs.Primary.ID),
+			})
+			if err == nil {
+				if len(resp.Models) > 0 {
+					return fmt.Errorf("SageMaker models still exist")
+				}
+
+				return nil
+			}
+
+			if !tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+				return err
+			}
 		}
 
-		sagemakerErr, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if sagemakerErr.Code() != "ResourceNotFound" {
-			return err
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckModelExists(n string) resource.TestCheckFunc {
+func testAccCheckModelExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -427,11 +439,11 @@ func testAccCheckModelExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No sagmaker model ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 		DescribeModelOpts := &sagemaker.DescribeModelInput{
 			ModelName: aws.String(rs.Primary.ID),
 		}
-		_, err := conn.DescribeModel(DescribeModelOpts)
+		_, err := conn.DescribeModelWithContext(ctx, DescribeModelOpts)
 
 		return err
 	}

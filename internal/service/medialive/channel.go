@@ -11,7 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/medialive/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,6 +25,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_medialive_channel", name="Channel")
+// @Tags(identifierAttribute="arn")
 func ResourceChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceChannelCreate,
@@ -693,8 +696,8 @@ func ResourceChannel() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -706,11 +709,12 @@ const (
 )
 
 func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveClient
+	conn := meta.(*conns.AWSClient).MediaLiveClient()
 
 	in := &medialive.CreateChannelInput{
 		Name:      aws.String(d.Get("name").(string)),
-		RequestId: aws.String(resource.UniqueId()),
+		RequestId: aws.String(id.UniqueId()),
+		Tags:      GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("cdi_input_specification"); ok && len(v.([]interface{})) > 0 {
@@ -741,13 +745,6 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 		in.Vpc = expandChannelVPC(v.([]interface{}))
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	out, err := conn.CreateChannel(ctx, in)
 	if err != nil {
 		return create.DiagError(names.MediaLive, create.ErrActionCreating, ResNameChannel, d.Get("name").(string), err)
@@ -773,7 +770,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveClient
+	conn := meta.(*conns.AWSClient).MediaLiveClient()
 
 	out, err := FindChannelByID(ctx, conn, d.Id())
 
@@ -816,28 +813,11 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
 
-	tags, err := ListTags(ctx, conn, aws.ToString(out.Arn))
-	if err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionReading, ResNameChannel, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
-	}
-
 	return nil
 }
 
 func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveClient
+	conn := meta.(*conns.AWSClient).MediaLiveClient()
 
 	if d.HasChangesExcept("tags", "tags_all", "start_channel") {
 		in := &medialive.UpdateChannelInput{
@@ -908,14 +888,6 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
-		}
-	}
-
 	if d.HasChange("start_channel") {
 		channel, err := FindChannelByID(ctx, conn, d.Id())
 
@@ -943,7 +915,7 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveClient
+	conn := meta.(*conns.AWSClient).MediaLiveClient()
 
 	log.Printf("[INFO] Deleting MediaLive Channel %s", d.Id())
 
@@ -1016,7 +988,7 @@ func stopChannel(ctx context.Context, conn *medialive.Client, timeout time.Durat
 }
 
 func waitChannelCreated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeChannelOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.ChannelStateCreating),
 		Target:                    enum.Slice(types.ChannelStateIdle),
 		Refresh:                   statusChannel(ctx, conn, id),
@@ -1034,7 +1006,7 @@ func waitChannelCreated(ctx context.Context, conn *medialive.Client, id string, 
 }
 
 func waitChannelUpdated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeChannelOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.ChannelStateUpdating),
 		Target:                    enum.Slice(types.ChannelStateIdle),
 		Refresh:                   statusChannel(ctx, conn, id),
@@ -1052,7 +1024,7 @@ func waitChannelUpdated(ctx context.Context, conn *medialive.Client, id string, 
 }
 
 func waitChannelDeleted(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeChannelOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ChannelStateDeleting),
 		Target:  []string{},
 		Refresh: statusChannel(ctx, conn, id),
@@ -1068,7 +1040,7 @@ func waitChannelDeleted(ctx context.Context, conn *medialive.Client, id string, 
 }
 
 func waitChannelStarted(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeChannelOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ChannelStateStarting),
 		Target:  enum.Slice(types.ChannelStateRunning),
 		Refresh: statusChannel(ctx, conn, id),
@@ -1084,7 +1056,7 @@ func waitChannelStarted(ctx context.Context, conn *medialive.Client, id string, 
 }
 
 func waitChannelStopped(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeChannelOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ChannelStateStopping),
 		Target:  enum.Slice(types.ChannelStateIdle),
 		Refresh: statusChannel(ctx, conn, id),
@@ -1099,7 +1071,7 @@ func waitChannelStopped(ctx context.Context, conn *medialive.Client, id string, 
 	return nil, err
 }
 
-func statusChannel(ctx context.Context, conn *medialive.Client, id string) resource.StateRefreshFunc {
+func statusChannel(ctx context.Context, conn *medialive.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := FindChannelByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -1122,7 +1094,7 @@ func FindChannelByID(ctx context.Context, conn *medialive.Client, id string) (*m
 	if err != nil {
 		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -1138,7 +1110,7 @@ func FindChannelByID(ctx context.Context, conn *medialive.Client, id string) (*m
 	// Channel can still be found with a state of DELETED.
 	// Set result as not found when the state is deleted.
 	if out.State == types.ChannelStateDeleted {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastResponse: string(types.ChannelStateDeleted),
 			LastRequest:  in,
 		}
@@ -1450,8 +1422,8 @@ func expandChannelDestinations(tfList []interface{}) []types.OutputDestination {
 		if v, ok := m["id"].(string); ok {
 			d.Id = aws.String(v)
 		}
-		if v, ok := m["media_package_settings"].([]interface{}); ok && len(v) > 0 {
-			d.MediaPackageSettings = expandChannelDestinationsMediaPackageSettings(v)
+		if v, ok := m["media_package_settings"].(*schema.Set); ok && v.Len() > 0 {
+			d.MediaPackageSettings = expandChannelDestinationsMediaPackageSettings(v.List())
 		}
 		if v, ok := m["multiplex_settings"].([]interface{}); ok && len(v) > 0 {
 			d.MultiplexSettings = expandChannelDestinationsMultiplexSettings(v)

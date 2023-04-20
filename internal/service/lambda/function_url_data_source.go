@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_lambda_function_url")
 func DataSourceFunctionURL() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFunctionURLRead,
@@ -72,6 +73,10 @@ func DataSourceFunctionURL() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"invoke_mode": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"last_modified_time": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -89,7 +94,7 @@ func DataSourceFunctionURL() *schema.Resource {
 }
 
 func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	name := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)
@@ -115,6 +120,7 @@ func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("function_arn", output.FunctionArn)
 	d.Set("function_name", name)
 	d.Set("function_url", functionURL)
+	d.Set("invoke_mode", output.InvokeMode)
 	d.Set("last_modified_time", output.LastModifiedTime)
 	d.Set("qualifier", qualifier)
 

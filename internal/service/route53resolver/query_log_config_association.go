@@ -10,12 +10,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_route53_resolver_query_log_config_association")
 func ResourceQueryLogConfigAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQueryLogConfigAssociationCreate,
@@ -23,7 +24,7 @@ func ResourceQueryLogConfigAssociation() *schema.Resource {
 		DeleteWithoutTimeout: resourceQueryLogConfigAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -42,7 +43,7 @@ func ResourceQueryLogConfigAssociation() *schema.Resource {
 }
 
 func resourceQueryLogConfigAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	input := &route53resolver.AssociateResolverQueryLogConfigInput{
 		ResolverQueryLogConfigId: aws.String(d.Get("resolver_query_log_config_id").(string)),
@@ -65,7 +66,7 @@ func resourceQueryLogConfigAssociationCreate(ctx context.Context, d *schema.Reso
 }
 
 func resourceQueryLogConfigAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	queryLogConfigAssociation, err := FindResolverQueryLogConfigAssociationByID(ctx, conn, d.Id())
 
@@ -86,7 +87,7 @@ func resourceQueryLogConfigAssociationRead(ctx context.Context, d *schema.Resour
 }
 
 func resourceQueryLogConfigAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Query Log Config Association: %s", d.Id())
 	_, err := conn.DisassociateResolverQueryLogConfigWithContext(ctx, &route53resolver.DisassociateResolverQueryLogConfigInput{
@@ -117,7 +118,7 @@ func FindResolverQueryLogConfigAssociationByID(ctx context.Context, conn *route5
 	output, err := conn.GetResolverQueryLogConfigAssociationWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -134,7 +135,7 @@ func FindResolverQueryLogConfigAssociationByID(ctx context.Context, conn *route5
 	return output.ResolverQueryLogConfigAssociation, nil
 }
 
-func statusQueryLogConfigAssociation(ctx context.Context, conn *route53resolver.Route53Resolver, id string) resource.StateRefreshFunc {
+func statusQueryLogConfigAssociation(ctx context.Context, conn *route53resolver.Route53Resolver, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindResolverQueryLogConfigAssociationByID(ctx, conn, id)
 
@@ -156,7 +157,7 @@ const (
 )
 
 func waitQueryLogConfigAssociationCreated(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.ResolverQueryLogConfigAssociation, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{route53resolver.ResolverQueryLogConfigAssociationStatusCreating},
 		Target:  []string{route53resolver.ResolverQueryLogConfigAssociationStatusActive},
 		Refresh: statusQueryLogConfigAssociation(ctx, conn, id),
@@ -177,7 +178,7 @@ func waitQueryLogConfigAssociationCreated(ctx context.Context, conn *route53reso
 }
 
 func waitQueryLogConfigAssociationDeleted(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.ResolverQueryLogConfigAssociation, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{route53resolver.ResolverQueryLogConfigAssociationStatusDeleting},
 		Target:  []string{},
 		Refresh: statusQueryLogConfigAssociation(ctx, conn, id),

@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_cloudwatch_event_target")
 func ResourceTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTargetCreate,
@@ -32,7 +33,7 @@ func ResourceTarget() *schema.Resource {
 		DeleteWithoutTimeout: resourceTargetDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceTargetImport,
+			StateContext: resourceTargetImport,
 		},
 
 		SchemaVersion: 1,
@@ -163,24 +164,6 @@ func ResourceTarget() *schema.Resource {
 								},
 							},
 						},
-						"placement_constraint": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 10,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"expression": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"type": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(eventbridge.PlacementConstraintType_Values(), false),
-									},
-								},
-							},
-						},
 						"ordered_placement_strategy": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -196,6 +179,24 @@ func ResourceTarget() *schema.Resource {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringInSlice(eventbridge.PlacementStrategyType_Values(), false),
+									},
+								},
+							},
+						},
+						"placement_constraint": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							MaxItems: 10,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"expression": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"type": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(eventbridge.PlacementConstraintType_Values(), false),
 									},
 								},
 							},
@@ -440,7 +441,7 @@ func ResourceTarget() *schema.Resource {
 }
 
 func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	rule := d.Get("rule").(string)
 
@@ -448,7 +449,7 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	if v, ok := d.GetOk("target_id"); ok {
 		targetID = v.(string)
 	} else {
-		targetID = resource.UniqueId()
+		targetID = id.UniqueId()
 		d.Set("target_id", targetID)
 	}
 	var busName string
@@ -457,7 +458,7 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	id := TargetCreateResourceID(busName, rule, targetID)
 
-	input := buildPutTargetInputStruct(d)
+	input := buildPutTargetInputStruct(ctx, d)
 
 	log.Printf("[DEBUG] Creating EventBridge Target: %s", input)
 	output, err := conn.PutTargetsWithContext(ctx, input)
@@ -476,7 +477,7 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	busName := d.Get("event_bus_name").(string)
 
@@ -520,7 +521,7 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if t.EcsParameters != nil {
-		if err := d.Set("ecs_target", flattenTargetECSParameters(t.EcsParameters)); err != nil {
+		if err := d.Set("ecs_target", flattenTargetECSParameters(ctx, t.EcsParameters)); err != nil {
 			return diag.Errorf("setting ecs_target: %s", err)
 		}
 	}
@@ -565,9 +566,9 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
-	input := buildPutTargetInputStruct(d)
+	input := buildPutTargetInputStruct(ctx, d)
 
 	log.Printf("[DEBUG] Updating EventBridge Target: %s", input)
 	output, err := conn.PutTargetsWithContext(ctx, input)
@@ -584,7 +585,7 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	input := &eventbridge.RemoveTargetsInput{
 		Ids:  []*string{aws.String(d.Get("target_id").(string))},
@@ -653,7 +654,7 @@ func removeTargetsError(apiObjects []*eventbridge.RemoveTargetsResultEntry) erro
 	return errors.ErrorOrNil()
 }
 
-func buildPutTargetInputStruct(d *schema.ResourceData) *eventbridge.PutTargetsInput {
+func buildPutTargetInputStruct(ctx context.Context, d *schema.ResourceData) *eventbridge.PutTargetsInput {
 	e := &eventbridge.Target{
 		Arn: aws.String(d.Get("arn").(string)),
 		Id:  aws.String(d.Get("target_id").(string)),
@@ -675,7 +676,7 @@ func buildPutTargetInputStruct(d *schema.ResourceData) *eventbridge.PutTargetsIn
 	}
 
 	if v, ok := d.GetOk("ecs_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		e.EcsParameters = expandTargetECSParameters(v.([]interface{}))
+		e.EcsParameters = expandTargetECSParameters(ctx, v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("redshift_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -767,11 +768,11 @@ func expandTargetRedshiftParameters(config []interface{}) *eventbridge.RedshiftD
 	return redshiftParameters
 }
 
-func expandTargetECSParameters(config []interface{}) *eventbridge.EcsParameters {
+func expandTargetECSParameters(ctx context.Context, config []interface{}) *eventbridge.EcsParameters {
 	ecsParameters := &eventbridge.EcsParameters{}
 	for _, c := range config {
 		param := c.(map[string]interface{})
-		tags := tftags.New(param["tags"].(map[string]interface{}))
+		tags := tftags.New(ctx, param["tags"].(map[string]interface{}))
 
 		if v, ok := param["capacity_provider_strategy"].(*schema.Set); ok && v.Len() > 0 {
 			ecsParameters.CapacityProviderStrategy = expandTargetCapacityProviderStrategy(v.List())
@@ -971,7 +972,7 @@ func flattenTargetRunParameters(runCommand *eventbridge.RunCommandParameters) []
 	return result
 }
 
-func flattenTargetECSParameters(ecsParameters *eventbridge.EcsParameters) []map[string]interface{} {
+func flattenTargetECSParameters(ctx context.Context, ecsParameters *eventbridge.EcsParameters) []map[string]interface{} {
 	config := make(map[string]interface{})
 	if ecsParameters.Group != nil {
 		config["group"] = aws.StringValue(ecsParameters.Group)
@@ -1002,7 +1003,7 @@ func flattenTargetECSParameters(ecsParameters *eventbridge.EcsParameters) []map[
 		config["capacity_provider_strategy"] = flattenTargetCapacityProviderStrategy(ecsParameters.CapacityProviderStrategy)
 	}
 
-	config["tags"] = KeyValueTags(ecsParameters.Tags).IgnoreAWS().Map()
+	config["tags"] = KeyValueTags(ctx, ecsParameters.Tags).IgnoreAWS().Map()
 	config["enable_execute_command"] = aws.BoolValue(ecsParameters.EnableExecuteCommand)
 	config["enable_ecs_managed_tags"] = aws.BoolValue(ecsParameters.EnableECSManagedTags)
 	config["task_count"] = aws.Int64Value(ecsParameters.TaskCount)
@@ -1274,7 +1275,7 @@ func flattenTargetCapacityProviderStrategy(cps []*eventbridge.CapacityProviderSt
 	return results
 }
 
-func resourceTargetImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceTargetImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	busName, ruleName, targetID, err := TargetParseImportID(d.Id())
 	if err != nil {
 		return []*schema.ResourceData{}, err

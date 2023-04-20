@@ -1,10 +1,11 @@
 package s3outposts
 
 import (
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/s3outposts"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -19,15 +20,15 @@ const (
 )
 
 // waitEndpointStatusCreated waits for Endpoint to return Available
-func waitEndpointStatusCreated(conn *s3outposts.S3Outposts, endpointArn string) (*s3outposts.Endpoint, error) {
-	stateConf := &resource.StateChangeConf{
+func waitEndpointStatusCreated(ctx context.Context, conn *s3outposts.S3Outposts, endpointArn string) (*s3outposts.Endpoint, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{endpointStatusPending, endpointStatusNotFound},
 		Target:  []string{endpointStatusAvailable},
-		Refresh: statusEndpoint(conn, endpointArn),
+		Refresh: statusEndpoint(ctx, conn, endpointArn),
 		Timeout: endpointStatusCreatedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*s3outposts.Endpoint); ok {
 		return v, err

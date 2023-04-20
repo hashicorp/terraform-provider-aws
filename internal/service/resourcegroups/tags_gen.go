@@ -8,17 +8,16 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
 	"github.com/aws/aws-sdk-go/service/resourcegroups/resourcegroupsiface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists resourcegroups service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn resourcegroupsiface.ResourceGroupsAPI, identifier string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier)
-}
-
-func ListTagsWithContext(ctx context.Context, conn resourcegroupsiface.ResourceGroupsAPI, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn resourcegroupsiface.ResourceGroupsAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &resourcegroups.GetTagsInput{
 		Arn: aws.String(identifier),
 	}
@@ -26,10 +25,26 @@ func ListTagsWithContext(ctx context.Context, conn resourcegroupsiface.ResourceG
 	output, err := conn.GetTagsWithContext(ctx, input)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.Tags), nil
+	return KeyValueTags(ctx, output.Tags), nil
+}
+
+// ListTags lists resourcegroups service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := ListTags(ctx, meta.(*conns.AWSClient).ResourceGroupsConn(), identifier)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(tags)
+	}
+
+	return nil
 }
 
 // map[string]*string handling
@@ -40,24 +55,42 @@ func Tags(tags tftags.KeyValueTags) map[string]*string {
 }
 
 // KeyValueTags creates KeyValueTags from resourcegroups service tags.
-func KeyValueTags(tags map[string]*string) tftags.KeyValueTags {
-	return tftags.New(tags)
+func KeyValueTags(ctx context.Context, tags map[string]*string) tftags.KeyValueTags {
+	return tftags.New(ctx, tags)
+}
+
+// GetTagsIn returns resourcegroups service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) map[string]*string {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets resourcegroups service tags in Context.
+func SetTagsOut(ctx context.Context, tags map[string]*string) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
 }
 
 // UpdateTags updates resourcegroups service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn resourcegroupsiface.ResourceGroupsAPI, identifier string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn resourcegroupsiface.ResourceGroupsAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+func UpdateTags(ctx context.Context, conn resourcegroupsiface.ResourceGroupsAPI, identifier string, oldTagsMap, newTagsMap any) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.ResourceGroups)
+	if len(removedTags) > 0 {
 		input := &resourcegroups.UntagInput{
 			Arn:  aws.String(identifier),
-			Keys: aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			Keys: aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.UntagWithContext(ctx, input)
@@ -67,10 +100,12 @@ func UpdateTagsWithContext(ctx context.Context, conn resourcegroupsiface.Resourc
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.ResourceGroups)
+	if len(updatedTags) > 0 {
 		input := &resourcegroups.TagInput{
 			Arn:  aws.String(identifier),
-			Tags: Tags(updatedTags.IgnoreAWS()),
+			Tags: Tags(updatedTags),
 		}
 
 		_, err := conn.TagWithContext(ctx, input)
@@ -81,4 +116,10 @@ func UpdateTagsWithContext(ctx context.Context, conn resourcegroupsiface.Resourc
 	}
 
 	return nil
+}
+
+// UpdateTags updates resourcegroups service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).ResourceGroupsConn(), identifier, oldTags, newTags)
 }

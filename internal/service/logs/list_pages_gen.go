@@ -7,13 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go/service/cloudwatchlogs/cloudwatchlogsiface"
 )
 
-func describeQueryDefinitionsPages(conn *cloudwatchlogs.CloudWatchLogs, input *cloudwatchlogs.DescribeQueryDefinitionsInput, fn func(*cloudwatchlogs.DescribeQueryDefinitionsOutput, bool) bool) error {
-	return describeQueryDefinitionsPagesWithContext(context.Background(), conn, input, fn)
-}
-
-func describeQueryDefinitionsPagesWithContext(ctx context.Context, conn *cloudwatchlogs.CloudWatchLogs, input *cloudwatchlogs.DescribeQueryDefinitionsInput, fn func(*cloudwatchlogs.DescribeQueryDefinitionsOutput, bool) bool) error {
+func describeQueryDefinitionsPages(ctx context.Context, conn cloudwatchlogsiface.CloudWatchLogsAPI, input *cloudwatchlogs.DescribeQueryDefinitionsInput, fn func(*cloudwatchlogs.DescribeQueryDefinitionsOutput, bool) bool) error {
 	for {
 		output, err := conn.DescribeQueryDefinitionsWithContext(ctx, input)
 		if err != nil {
@@ -29,11 +26,7 @@ func describeQueryDefinitionsPagesWithContext(ctx context.Context, conn *cloudwa
 	}
 	return nil
 }
-func describeResourcePoliciesPages(conn *cloudwatchlogs.CloudWatchLogs, input *cloudwatchlogs.DescribeResourcePoliciesInput, fn func(*cloudwatchlogs.DescribeResourcePoliciesOutput, bool) bool) error {
-	return describeResourcePoliciesPagesWithContext(context.Background(), conn, input, fn)
-}
-
-func describeResourcePoliciesPagesWithContext(ctx context.Context, conn *cloudwatchlogs.CloudWatchLogs, input *cloudwatchlogs.DescribeResourcePoliciesInput, fn func(*cloudwatchlogs.DescribeResourcePoliciesOutput, bool) bool) error {
+func describeResourcePoliciesPages(ctx context.Context, conn cloudwatchlogsiface.CloudWatchLogsAPI, input *cloudwatchlogs.DescribeResourcePoliciesInput, fn func(*cloudwatchlogs.DescribeResourcePoliciesOutput, bool) bool) error {
 	for {
 		output, err := conn.DescribeResourcePoliciesWithContext(ctx, input)
 		if err != nil {

@@ -17,39 +17,25 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccInspector2Enabler_serial(t *testing.T) {
-	testCases := map[string]func(t *testing.T){
-		"basic":      testAccEnabler_basic,
-		"accountID":  testAccEnabler_accountID,
-		"disappears": testAccEnabler_disappears,
-	}
-
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
-}
-
 func testAccEnabler_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_inspector2_enabler.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.Inspector2EndpointID, t)
-			testAccPreCheck(t)
-			acctest.PreCheckOrganizationManagementAccount(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnablerDestroy,
+		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnablerConfig_basic([]string{"ECR"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnablerExists([]string{"ECR"}),
+					testAccCheckEnablerExists(ctx, []string{"ECR"}),
 					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "1"),
@@ -61,23 +47,24 @@ func testAccEnabler_basic(t *testing.T) {
 }
 
 func testAccEnabler_accountID(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_inspector2_enabler.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.Inspector2EndpointID, t)
-			testAccPreCheck(t)
-			acctest.PreCheckOrganizationManagementAccount(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnablerDestroy,
+		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnablerConfig_basic([]string{"EC2", "ECR"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnablerExists([]string{"EC2", "ECR"}),
+					testAccCheckEnablerExists(ctx, []string{"EC2", "ECR"}),
 					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "2"),
@@ -90,24 +77,25 @@ func testAccEnabler_accountID(t *testing.T) {
 }
 
 func testAccEnabler_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_inspector2_enabler.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.Inspector2EndpointID, t)
-			testAccPreCheck(t)
-			acctest.PreCheckOrganizationManagementAccount(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnablerDestroy,
+		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnablerConfig_basic([]string{"ECR"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnablerExists([]string{"ECR"}),
-					acctest.CheckResourceDisappears(acctest.Provider, tfinspector2.ResourceEnabler(), resourceName),
+					testAccCheckEnablerExists(ctx, []string{"ECR"}),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfinspector2.ResourceEnabler(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -115,43 +103,45 @@ func testAccEnabler_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckEnablerDestroy(s *terraform.State) error {
-	id := ""
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_inspector2_enabler" {
-			continue
+func testAccCheckEnablerDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		id := ""
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_inspector2_enabler" {
+				continue
+			}
+
+			id = rs.Primary.ID
+			break
 		}
 
-		id = rs.Primary.ID
-		break
-	}
-
-	if id == "" {
-		return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameEnabler, id, errors.New("not in state"))
-	}
-
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client
-
-	st, err := tfinspector2.FindAccountStatuses(context.Background(), conn, id)
-	if err != nil {
-		return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameEnabler, id, err)
-	}
-
-	for _, s := range st {
-		if s.Status != string(types.StatusDisabled) {
-			return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameEnabler, id, fmt.Errorf("after destroy, expected DISABLED for account %s, got: %s", s.AccountID, s.Status))
+		if id == "" {
+			return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameEnabler, id, errors.New("not in state"))
 		}
-	}
 
-	return nil
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client()
+
+		st, err := tfinspector2.FindAccountStatuses(ctx, conn, id)
+		if err != nil {
+			return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameEnabler, id, err)
+		}
+
+		for _, s := range st {
+			if s.Status != string(types.StatusDisabled) {
+				return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameEnabler, id, fmt.Errorf("after destroy, expected DISABLED for account %s, got: %s", s.AccountID, s.Status))
+			}
+		}
+
+		return nil
+	}
 }
 
-func testAccCheckEnablerExists(t []string) resource.TestCheckFunc {
+func testAccCheckEnablerExists(ctx context.Context, t []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client()
 
 		id := tfinspector2.EnablerID([]string{acctest.Provider.Meta().(*conns.AWSClient).AccountID}, t)
-		st, err := tfinspector2.FindAccountStatuses(context.Background(), conn, id)
+		st, err := tfinspector2.FindAccountStatuses(ctx, conn, id)
 		if err != nil {
 			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameEnabler, id, err)
 		}

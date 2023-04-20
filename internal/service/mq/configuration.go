@@ -11,15 +11,18 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_mq_configuration", name="Configuration")
+// @Tags(identifierAttribute="arn")
 func ResourceConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationCreate,
@@ -28,7 +31,7 @@ func ResourceConfiguration() *schema.Resource {
 		DeleteWithoutTimeout: schema.NoopContext, // Delete is not available in the API
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -61,9 +64,10 @@ func ResourceConfiguration() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(mq.AuthenticationStrategy_Values(), true),
 			},
 			"data": {
-				Type:             schema.TypeString,
-				Required:         true,
-				DiffSuppressFunc: suppressXMLEquivalentConfig,
+				Type:                  schema.TypeString,
+				Required:              true,
+				DiffSuppressFunc:      suppressXMLEquivalentConfig,
+				DiffSuppressOnRefresh: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -89,30 +93,25 @@ func ResourceConfiguration() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MQConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).MQConn()
 
 	name := d.Get("name").(string)
 	input := &mq.CreateConfigurationRequest{
 		EngineType:    aws.String(d.Get("engine_type").(string)),
 		EngineVersion: aws.String(d.Get("engine_version").(string)),
 		Name:          aws.String(name),
+		Tags:          GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("authentication_strategy"); ok {
 		input.AuthenticationStrategy = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	output, err := conn.CreateConfigurationWithContext(ctx, input)
@@ -144,9 +143,7 @@ func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MQConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).MQConn()
 
 	configuration, err := FindConfigurationByID(ctx, conn, d.Id())
 
@@ -186,22 +183,13 @@ func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.Set("data", string(data))
 
-	tags := KeyValueTags(configuration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, configuration.Tags)
 
 	return nil
 }
 
 func resourceConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MQConn
+	conn := meta.(*conns.AWSClient).MQConn()
 
 	if d.HasChanges("data", "description") {
 		input := &mq.UpdateConfigurationRequest{
@@ -220,14 +208,6 @@ func resourceConfigurationUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating MQ Configuration (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
-
 	return resourceConfigurationRead(ctx, d, meta)
 }
 
@@ -239,7 +219,7 @@ func FindConfigurationByID(ctx context.Context, conn *mq.MQ, id string) (*mq.Des
 	output, err := conn.DescribeConfigurationWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, mq.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

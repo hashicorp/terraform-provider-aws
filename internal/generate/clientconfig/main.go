@@ -12,11 +12,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	filename      = `config_gen.go`
-	namesDataFile = "../../names/names_data.csv"
-)
-
 type ServiceDatum struct {
 	SDKVersion          string
 	GoV1Package         string
@@ -32,6 +27,10 @@ type TemplateData struct {
 }
 
 func main() {
+	const (
+		filename      = `config_gen.go`
+		namesDataFile = "../../names/names_data.csv"
+	)
 	g := common.NewGenerator()
 
 	g.Infof("Generating internal/conns/%s", filename)
@@ -39,7 +38,7 @@ func main() {
 	data, err := common.ReadAllCSVData(namesDataFile)
 
 	if err != nil {
-		g.Fatalf("error reading %s: %s", namesDataFile, err.Error())
+		g.Fatalf("error reading %s: %s", namesDataFile, err)
 	}
 
 	td := TemplateData{}
@@ -92,7 +91,11 @@ func main() {
 	d := g.NewGoFileDestination(filename)
 
 	if err := d.WriteTemplate("config", tmpl, td); err != nil {
-		g.Fatalf("error: %s", err.Error())
+		g.Fatalf("generating file (%s): %s", filename, err)
+	}
+
+	if err := d.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 }
 

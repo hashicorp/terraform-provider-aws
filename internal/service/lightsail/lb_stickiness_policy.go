@@ -2,7 +2,6 @@ package lightsail
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -18,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_lightsail_lb_stickiness_policy")
 func ResourceLoadBalancerStickinessPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerStickinessPolicyCreate,
@@ -53,11 +53,11 @@ func ResourceLoadBalancerStickinessPolicy() *schema.Resource {
 }
 
 func resourceLoadBalancerStickinessPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
-
+	conn := meta.(*conns.AWSClient).LightsailConn()
+	lbName := d.Get("lb_name").(string)
 	for _, v := range []string{"enabled", "cookie_duration"} {
 		in := lightsail.UpdateLoadBalancerAttributeInput{
-			LoadBalancerName: aws.String(d.Get("lb_name").(string)),
+			LoadBalancerName: aws.String(lbName),
 		}
 
 		if v == "enabled" {
@@ -73,28 +73,23 @@ func resourceLoadBalancerStickinessPolicyCreate(ctx context.Context, d *schema.R
 		out, err := conn.UpdateLoadBalancerAttributeWithContext(ctx, &in)
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, d.Get("lb_name").(string), err)
+			return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, lbName, err)
 		}
 
-		if len(out.Operations) == 0 {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, d.Get("lb_name").(string), errors.New("No operations found for Update Load Balancer Attribute request"))
-		}
+		diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, lbName)
 
-		op := out.Operations[0]
-		err = waitOperation(conn, op.Id)
-
-		if err != nil {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, d.Get("lb_name").(string), errors.New("Error waiting for Update Load Balancer Attribute request operation"))
+		if diag != nil {
+			return diag
 		}
 	}
 
-	d.SetId(d.Get("lb_name").(string))
+	d.SetId(lbName)
 
 	return resourceLoadBalancerStickinessPolicyRead(ctx, d, meta)
 }
 
 func resourceLoadBalancerStickinessPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	out, err := FindLoadBalancerStickinessPolicyById(ctx, conn, d.Id())
 
@@ -126,11 +121,11 @@ func resourceLoadBalancerStickinessPolicyRead(ctx context.Context, d *schema.Res
 }
 
 func resourceLoadBalancerStickinessPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
-
+	conn := meta.(*conns.AWSClient).LightsailConn()
+	lbName := d.Get("lb_name").(string)
 	if d.HasChange("enabled") {
 		in := lightsail.UpdateLoadBalancerAttributeInput{
-			LoadBalancerName: aws.String(d.Get("lb_name").(string)),
+			LoadBalancerName: aws.String(lbName),
 			AttributeName:    aws.String(lightsail.LoadBalancerAttributeNameSessionStickinessEnabled),
 			AttributeValue:   aws.String(fmt.Sprint(d.Get("enabled").(bool))),
 		}
@@ -138,24 +133,19 @@ func resourceLoadBalancerStickinessPolicyUpdate(ctx context.Context, d *schema.R
 		out, err := conn.UpdateLoadBalancerAttributeWithContext(ctx, &in)
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, d.Get("lb_name").(string), err)
+			return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, lbName, err)
 		}
 
-		if len(out.Operations) == 0 {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, d.Get("lb_name").(string), errors.New("No operations found for Update Load Balancer Attribute request"))
-		}
+		diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, lbName)
 
-		op := out.Operations[0]
-		err = waitOperation(conn, op.Id)
-
-		if err != nil {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, d.Get("lb_name").(string), errors.New("Error waiting for Update Load Balancer Attribute request operation"))
+		if diag != nil {
+			return diag
 		}
 	}
 
 	if d.HasChange("cookie_duration") {
 		in := lightsail.UpdateLoadBalancerAttributeInput{
-			LoadBalancerName: aws.String(d.Get("lb_name").(string)),
+			LoadBalancerName: aws.String(lbName),
 			AttributeName:    aws.String(lightsail.LoadBalancerAttributeNameSessionStickinessLbCookieDurationSeconds),
 			AttributeValue:   aws.String(fmt.Sprint(d.Get("cookie_duration").(int))),
 		}
@@ -163,18 +153,13 @@ func resourceLoadBalancerStickinessPolicyUpdate(ctx context.Context, d *schema.R
 		out, err := conn.UpdateLoadBalancerAttributeWithContext(ctx, &in)
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, d.Get("lb_name").(string), err)
+			return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, lbName, err)
 		}
 
-		if len(out.Operations) == 0 {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, d.Get("lb_name").(string), errors.New("No operations found for Update Load Balancer Attribute request"))
-		}
+		diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, lbName)
 
-		op := out.Operations[0]
-		err = waitOperation(conn, op.Id)
-
-		if err != nil {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, d.Get("lb_name").(string), errors.New("Error waiting for Update Load Balancer Attribute request operation"))
+		if diag != nil {
+			return diag
 		}
 	}
 
@@ -182,10 +167,10 @@ func resourceLoadBalancerStickinessPolicyUpdate(ctx context.Context, d *schema.R
 }
 
 func resourceLoadBalancerStickinessPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
-
+	conn := meta.(*conns.AWSClient).LightsailConn()
+	lbName := d.Get("lb_name").(string)
 	in := lightsail.UpdateLoadBalancerAttributeInput{
-		LoadBalancerName: aws.String(d.Get("lb_name").(string)),
+		LoadBalancerName: aws.String(lbName),
 		AttributeName:    aws.String(lightsail.LoadBalancerAttributeNameSessionStickinessEnabled),
 		AttributeValue:   aws.String("false"),
 	}
@@ -193,18 +178,13 @@ func resourceLoadBalancerStickinessPolicyDelete(ctx context.Context, d *schema.R
 	out, err := conn.UpdateLoadBalancerAttributeWithContext(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, d.Get("lb_name").(string), err)
+		return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, lbName, err)
 	}
 
-	if len(out.Operations) == 0 {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, d.Get("lb_name").(string), errors.New("No operations found for Update Load Balancer Attribute request"))
-	}
+	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, lbName)
 
-	op := out.Operations[0]
-	err = waitOperation(conn, op.Id)
-
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, d.Get("lb_name").(string), errors.New("Error waiting for Update Load Balancer Attribute request operation"))
+	if diag != nil {
+		return diag
 	}
 
 	return nil
