@@ -78,6 +78,18 @@ default: build
 build: fmtcheck
 	$(GO_VER) install
 
+cleango:
+	@echo "==> Cleaning Go..."
+	@echo "WARNING: This will kill gopls and clean Go caches"
+	@processes=`pgrep gopls` ; \
+	for proc in $$processes ; do \
+		echo "Killing gopls process $$proc" ; \
+		kill -9 $$proc ; \
+	done ; \
+	go clean -modcache -testcache -cache ; \
+
+clean: cleango build tools
+
 depscheck:
 	@echo "==> Checking source code with go mod tidy..."
 	@$(GO_VER) mod tidy
