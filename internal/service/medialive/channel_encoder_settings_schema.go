@@ -1605,10 +1605,12 @@ func channelEncoderSettingsSchema() *schema.Schema {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"framerate_denominator": {
-														Type: schema.TypeInt,
+														Type:     schema.TypeInt,
+														Required: true,
 													},
 													"framerate_numerator": {
-														Type: schema.TypeInt,
+														Type:     schema.TypeInt,
+														Required: true,
 													},
 													"adaptive_quantization": {
 														Type:             schema.TypeString,
@@ -1629,7 +1631,8 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														ValidateDiagFunc: enum.Validate[types.H265AlternativeTransferFunction](),
 													},
 													"bitrate": {
-														Type: schema.TypeInt,
+														Type:     schema.TypeInt,
+														Required: true,
 													},
 													"buf_size": {
 														Type:     schema.TypeInt,
@@ -1642,25 +1645,37 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														ValidateDiagFunc: enum.Validate[types.H265ColorMetadata](),
 													},
 													"color_space_settings": {
-														Type:     schema.TypeMap,
+														Type:     schema.TypeList,
 														Optional: true,
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
 																"color_space_settings": {
-																	Type:     schema.TypeMap,
+																	Type:     schema.TypeList,
 																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{}, // no exported elements in this list
+																	},
 																},
 																"color_space_passthrough_settings": {
-																	Type:     schema.TypeMap,
+																	Type:     schema.TypeList,
 																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{}, // no exported elements in this list
+																	},
 																},
 																"dolby_vision81_settings": {
-																	Type:     schema.TypeMap,
+																	Type:     schema.TypeList,
 																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{}, // no exported elements in this list
+																	},
 																},
 																"hdr10_settings": {
-																	Type:     schema.TypeMap,
+																	Type:     schema.TypeList,
 																	Optional: true,
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
@@ -1677,12 +1692,20 @@ func channelEncoderSettingsSchema() *schema.Schema {
 																	},
 																},
 																"rec601_settings": {
-																	Type:     schema.TypeMap,
+																	Type:     schema.TypeList,
 																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{}, // no exported elements in this list
+																	},
 																},
 																"rec709_settings": {
-																	Type:     schema.TypeMap,
+																	Type:     schema.TypeList,
 																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{}, // no exported elements in this list
+																	},
 																},
 															},
 														},
@@ -1809,8 +1832,9 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														ValidateDiagFunc: enum.Validate[types.H265Tier](),
 													},
 													"timecode_burnin_settings": {
-														Type:     schema.TypeMap,
+														Type:     schema.TypeList,
 														Optional: true,
+														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
 																"timecode_burnin_font_size": {
