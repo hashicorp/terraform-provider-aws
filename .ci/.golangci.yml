@@ -9,6 +9,3 @@ linters:
 
 run:
   timeout: 10m
-  go: 1.18
-  skip-dirs:
-    - .ci/providerlint/vendor

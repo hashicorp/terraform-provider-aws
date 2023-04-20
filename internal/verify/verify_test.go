@@ -5,6 +5,8 @@ import (
 )
 
 func TestCheckYAMLString(t *testing.T) {
+	t.Parallel()
+
 	var err error
 	var actual string
 

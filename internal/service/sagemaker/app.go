@@ -1,6 +1,7 @@
 package sagemaker
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -10,22 +11,27 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_sagemaker_app", name="App")
+// @Tags(identifierAttribute="arn")
 func ResourceApp() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAppCreate,
-		Read:   resourceAppRead,
-		Update: resourceAppUpdate,
-		Delete: resourceAppDelete,
+		CreateWithoutTimeout: resourceAppCreate,
+		ReadWithoutTimeout:   resourceAppRead,
+		UpdateWithoutTimeout: resourceAppUpdate,
+		DeleteWithoutTimeout: resourceAppDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -91,8 +97,8 @@ func ResourceApp() *schema.Resource {
 				Optional:     true,
 				ExactlyOneOf: []string{"space_name", "user_profile_name"},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"user_profile_name": {
 				Type:         schema.TypeString,
 				ForceNew:     true,
@@ -105,15 +111,15 @@ func ResourceApp() *schema.Resource {
 	}
 }
 
-func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &sagemaker.CreateAppInput{
 		AppName:  aws.String(d.Get("app_name").(string)),
 		AppType:  aws.String(d.Get("app_type").(string)),
 		DomainId: aws.String(d.Get("domain_id").(string)),
+		Tags:     GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("user_profile_name"); ok {
@@ -124,53 +130,48 @@ func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
 		input.SpaceName = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	if v, ok := d.GetOk("resource_spec"); ok {
 		input.ResourceSpec = expandDomainDefaultResourceSpec(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] SageMaker App create config: %#v", *input)
-	output, err := conn.CreateApp(input)
+	output, err := conn.CreateAppWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("creating SageMaker App: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker App: %s", err)
 	}
 
 	appArn := aws.StringValue(output.AppArn)
 	domainID, userProfileOrSpaceName, appType, appName, err := decodeAppID(appArn)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker App (%s): %s", appArn, err)
 	}
 
 	d.SetId(appArn)
 
-	if _, err := WaitAppInService(conn, domainID, userProfileOrSpaceName, appType, appName); err != nil {
-		return fmt.Errorf("waiting for SageMaker App (%s) to create: %w", d.Id(), err)
+	if _, err := WaitAppInService(ctx, conn, domainID, userProfileOrSpaceName, appType, appName); err != nil {
+		return sdkdiag.AppendErrorf(diags, "create SageMaker App (%s): waiting for completion: %s", d.Id(), err)
 	}
 
-	return resourceAppRead(d, meta)
+	return append(diags, resourceAppRead(ctx, d, meta)...)
 }
 
-func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	domainID, userProfileOrSpaceName, appType, appName, err := decodeAppID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker App (%s): %s", d.Id(), err)
 	}
 
-	app, err := FindAppByName(conn, domainID, userProfileOrSpaceName, appType, appName)
+	app, err := FindAppByName(ctx, conn, domainID, userProfileOrSpaceName, appType, appName)
 	if err != nil {
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find SageMaker App (%s); removing from state", d.Id())
-			return nil
+			return diags
 		}
-		return fmt.Errorf("reading SageMaker App (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker App (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(app.AppArn)
@@ -182,44 +183,22 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("space_name", app.SpaceName)
 
 	if err := d.Set("resource_spec", flattenDomainDefaultResourceSpec(app.ResourceSpec)); err != nil {
-		return fmt.Errorf("setting resource_spec for SageMaker App (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting resource_spec for SageMaker App (%s): %s", d.Id(), err)
 	}
 
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return fmt.Errorf("listing tags for SageMaker App (%s): %w", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceAppUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	// Tags only.
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating SageMaker App (%s) tags: %w", d.Id(), err)
-		}
-	}
-
-	return resourceAppRead(d, meta)
+	return append(diags, resourceAppRead(ctx, d, meta)...)
 }
 
-func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	appName := d.Get("app_name").(string)
@@ -243,24 +222,24 @@ func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
 		userProfileOrSpaceName = v.(string)
 	}
 
-	if _, err := conn.DeleteApp(input); err != nil {
+	if _, err := conn.DeleteAppWithContext(ctx, input); err != nil {
 		if tfawserr.ErrMessageContains(err, "ValidationException", "has already been deleted") ||
 			tfawserr.ErrMessageContains(err, "ValidationException", "previously failed and was automatically deleted") {
-			return nil
+			return diags
 		}
 
 		if !tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-			return fmt.Errorf("deleting SageMaker App (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "deleting SageMaker App (%s): %s", d.Id(), err)
 		}
 	}
 
-	if _, err := WaitAppDeleted(conn, domainID, userProfileOrSpaceName, appType, appName); err != nil {
+	if _, err := WaitAppDeleted(ctx, conn, domainID, userProfileOrSpaceName, appType, appName); err != nil {
 		if !tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-			return fmt.Errorf("waiting for SageMaker App (%s) to delete: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker App (%s) to delete: %s", d.Id(), err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func decodeAppID(id string) (string, string, string, string, error) {

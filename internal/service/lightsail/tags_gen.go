@@ -8,7 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/aws/aws-sdk-go/service/lightsail/lightsailiface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // []*SERVICE.Tag handling
@@ -30,30 +33,48 @@ func Tags(tags tftags.KeyValueTags) []*lightsail.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from lightsail service tags.
-func KeyValueTags(tags []*lightsail.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []*lightsail.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
 		m[aws.StringValue(tag.Key)] = tag.Value
 	}
 
-	return tftags.New(m)
+	return tftags.New(ctx, m)
+}
+
+// GetTagsIn returns lightsail service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*lightsail.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets lightsail service tags in Context.
+func SetTagsOut(ctx context.Context, tags []*lightsail.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
 }
 
 // UpdateTags updates lightsail service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn lightsailiface.LightsailAPI, identifier string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn lightsailiface.LightsailAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+func UpdateTags(ctx context.Context, conn lightsailiface.LightsailAPI, identifier string, oldTagsMap, newTagsMap any) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.Lightsail)
+	if len(removedTags) > 0 {
 		input := &lightsail.UntagResourceInput{
 			ResourceName: aws.String(identifier),
-			TagKeys:      aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:      aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -63,10 +84,12 @@ func UpdateTagsWithContext(ctx context.Context, conn lightsailiface.LightsailAPI
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.Lightsail)
+	if len(updatedTags) > 0 {
 		input := &lightsail.TagResourceInput{
 			ResourceName: aws.String(identifier),
-			Tags:         Tags(updatedTags.IgnoreAWS()),
+			Tags:         Tags(updatedTags),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)
@@ -77,4 +100,10 @@ func UpdateTagsWithContext(ctx context.Context, conn lightsailiface.LightsailAPI
 	}
 
 	return nil
+}
+
+// UpdateTags updates lightsail service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return UpdateTags(ctx, meta.(*conns.AWSClient).LightsailConn(), identifier, oldTags, newTags)
 }

@@ -7,6 +7,8 @@ import (
 )
 
 func TestValidCustomEventBusSourceName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value   string
 		IsValid bool
@@ -52,6 +54,8 @@ func TestValidCustomEventBusSourceName(t *testing.T) {
 }
 
 func TestValidCustomEventBusName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value   string
 		IsValid bool
@@ -97,6 +101,8 @@ func TestValidCustomEventBusName(t *testing.T) {
 }
 
 func TestValidBusNameOrARN(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"HelloWorl_d",
 		"hello-world",
@@ -107,7 +113,7 @@ func TestValidBusNameOrARN(t *testing.T) {
 	for _, v := range validNames {
 		_, errors := validBusNameOrARN(v, "name")
 		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid CW event rule name: %q", v, errors)
+			t.Fatalf("%q should be a valid CW event bus name: %q", v, errors)
 		}
 	}
 
@@ -118,12 +124,14 @@ func TestValidBusNameOrARN(t *testing.T) {
 	for _, v := range invalidNames {
 		_, errors := validBusNameOrARN(v, "name")
 		if len(errors) == 0 {
-			t.Fatalf("%q should be an invalid CW event rule name", v)
+			t.Fatalf("%q should be an invalid CW event bus name", v)
 		}
 	}
 }
 
 func TestValidRuleName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"HelloWorl_d",
 		"hello-world",

@@ -9,13 +9,15 @@ import (
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_globalaccelerator_listener")
 func ResourceListener() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerCreate,
@@ -24,7 +26,7 @@ func ResourceListener() *schema.Resource {
 		DeleteWithoutTimeout: resourceListenerDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -81,7 +83,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	input := &globalaccelerator.CreateListenerInput{
 		AcceleratorArn:   aws.String(acceleratorARN),
 		ClientAffinity:   aws.String(d.Get("client_affinity").(string)),
-		IdempotencyToken: aws.String(resource.UniqueId()),
+		IdempotencyToken: aws.String(id.UniqueId()),
 		PortRanges:       expandPortRanges(d.Get("port_range").(*schema.Set).List()),
 		Protocol:         aws.String(d.Get("protocol").(string)),
 	}
@@ -181,6 +183,35 @@ func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	return nil
+}
+
+func FindListenerByARN(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.Listener, error) {
+	input := &globalaccelerator.DescribeListenerInput{
+		ListenerArn: aws.String(arn),
+	}
+
+	return findListener(ctx, conn, input)
+}
+
+func findListener(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeListenerInput) (*globalaccelerator.Listener, error) {
+	output, err := conn.DescribeListenerWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeListenerNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Listener == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Listener, nil
 }
 
 func expandPortRange(tfMap map[string]interface{}) *globalaccelerator.PortRange {

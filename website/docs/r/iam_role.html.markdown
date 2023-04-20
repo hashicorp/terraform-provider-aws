@@ -47,7 +47,7 @@ resource "aws_iam_role" "test_role" {
 ### Example of Using Data Source for Assume Role Policy
 
 ```terraform
-data "aws_iam_policy_document" "instance-assume-role-policy" {
+data "aws_iam_policy_document" "instance_assume_role_policy" {
   statement {
     actions = ["sts:AssumeRole"]
 
@@ -61,7 +61,7 @@ data "aws_iam_policy_document" "instance-assume-role-policy" {
 resource "aws_iam_role" "instance" {
   name               = "instance_role"
   path               = "/system/"
-  assume_role_policy = data.aws_iam_policy_document.instance-assume-role-policy.json
+  assume_role_policy = data.aws_iam_policy_document.instance_assume_role_policy.json
 }
 ```
 
@@ -208,8 +208,14 @@ In addition to all arguments above, the following attributes are exported:
 * `create_date` - Creation date of the IAM role.
 * `id` - Name of the role.
 * `name` - Name of the role.
+* `role_last_used` - Contains information about the last time that an IAM role was used. See [`role_last_used`](#role_last_used) for details.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `unique_id` - Stable and unique string identifying the role.
+
+### role_last_used
+
+* `region` - The name of the AWS Region in which the role was last used.
+* `last_used_time` - The date and time, in RFC 3339 format, that the role was last used.
 
 ## Import
 
