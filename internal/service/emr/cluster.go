@@ -468,15 +468,17 @@ func ResourceCluster() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"instance_role": {
-							Type:     schema.TypeString,
-							ForceNew: true,
-							Required: true,
+							Type:         schema.TypeString,
+							ForceNew:     true,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(emr.InstanceRoleType_Values(), false),
 						},
 						"placement_strategy": {
-							Type:     schema.TypeString,
-							ForceNew: true,
-							Optional: true,
-							Computed: true,
+							Type:         schema.TypeString,
+							ForceNew:     true,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(emr.PlacementGroupStrategy_Values(), false),
 						},
 					},
 				},
@@ -1203,7 +1205,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err := d.Set("placement_group_config", flattenPlacementGroupConfigs(cluster.PlacementGroups)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "error setting EMR Placement Group Configs: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting placement_group_config: %s", err)
 	}
 
 	return diags
