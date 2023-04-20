@@ -125,6 +125,7 @@ The following arguments are supported:
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Default Action
+
 Default action blocks (for `default_action`) must include at least one of the following argument blocks:
 
 * `fixed-response` - (Optional) Configuration block for returning a fixed response. See Fixed Response blocks below.
@@ -133,16 +134,19 @@ Default action blocks (for `default_action`) must include at least one of the fo
 -> **NOTE:** You must specify exactly one of the following argument blocks: `fixed_response` or `forward`.
 
 ### Fixed Response
+
 Fixed response blocks (for `fixed-response`) must include the following argument:
 
 * `status_code` - (Required) Custom HTTP status code to return, e.g. a 404 response code. See [Listeners](https://docs.aws.amazon.com/vpc-lattice/latest/ug/listeners.html) in the AWS documentation for a list of supported codes.
 
 ### Forward
+
 Forward blocks (for `forward`) must include the following arguments:
 
 * `target_groups` - (Required) One or more target group blocks.
 
 ### Target Groups
+
 Target group blocks (for `target_group`) must include the following arguments:
 
 * `target_group_identifier` - (Required) ID or Amazon Resource Name (ARN) of the target group.

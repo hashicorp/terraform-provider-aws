@@ -153,6 +153,7 @@ resource "aws_wafv2_web_acl" "atp-example" {
 ```
 
 ### Rate Based
+
 Rate-limit US and NL-based clients to 10,000 requests for every 5 minutes.
 
 ```terraform
