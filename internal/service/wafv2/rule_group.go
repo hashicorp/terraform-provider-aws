@@ -96,11 +96,12 @@ func ResourceRuleGroup() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"allow":   allowConfigSchema(),
 									"block":   blockConfigSchema(),
-									"count":   countConfigSchema(),
 									"captcha": captchaConfigSchema(),
+									"count":   countConfigSchema(),
 								},
 							},
 						},
+						"captcha_config": outerCaptchaConfigSchema(),
 						"name": {
 							Type:         schema.TypeString,
 							Required:     true,

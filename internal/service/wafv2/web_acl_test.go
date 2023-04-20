@@ -49,6 +49,7 @@ func TestAccWAFV2WebACL_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", webACLName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "captcha_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "0"),
@@ -2035,11 +2036,15 @@ func TestAccWAFV2WebACL_Custom_requestHandling(t *testing.T) {
 						"action.0.captcha.0.custom_request_handling.0.insert_header.1.value": "test-value-2",
 						"action.0.count.#": "0",
 						"priority":         "1",
+						"captcha_config.#": "1",
+						"captcha_config.0.immunity_time_property.0.immunity_time": "240",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "captcha_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "captcha_config.0.immunity_time_property.0.immunity_time", "120"),
 				),
 			},
 			{
@@ -2951,12 +2956,24 @@ resource "aws_wafv2_web_acl" "test" {
       metric_name                = "friendly-rule-metric-name"
       sampled_requests_enabled   = false
     }
+
+    captcha_config {
+      immunity_time_property {
+        immunity_time = 240
+      }
+    }
   }
 
   visibility_config {
     cloudwatch_metrics_enabled = false
     metric_name                = "friendly-metric-name"
     sampled_requests_enabled   = false
+  }
+
+  captcha_config {
+    immunity_time_property {
+      immunity_time = 120
+    }
   }
 }
 `, name, firstHeader, secondHeader)
