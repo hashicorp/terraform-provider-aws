@@ -33,7 +33,7 @@ func TestAccOrganizationPolicyDataSource_basic(t *testing.T) {
 const testAccOrganizationPolicyDataSourceConfig_basic = `
 data "aws_organizations_organization" "current" {}
 
-data "aws_organizations_oorganizational_policies" "current" {
+data "aws_organizations_organizational_policies" "current" {
   target_id = data.aws_organizations_organization.current.roots[0].id
   filter = "SERVICE_CONTROL_POLICY"
 }
