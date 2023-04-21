@@ -142,6 +142,34 @@ func TestAccCECostCategory_complete(t *testing.T) {
 	})
 }
 
+func TestAccCECostCategory_notWithAnd(t *testing.T) {
+	ctx := acctest.Context(t)
+	var output costexplorer.CostCategory
+	resourceName := "aws_ce_cost_category.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCostCategoryDestroy(ctx),
+		ErrorCheck:               acctest.ErrorCheck(t, costexplorer.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCostCategoryConfig_operandNot(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCostCategoryExists(ctx, resourceName, &output),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccCECostCategory_splitCharge(t *testing.T) {
 	ctx := acctest.Context(t)
 	var output costexplorer.CostCategory
@@ -560,4 +588,35 @@ resource "aws_ce_cost_category" "test" {
   }
 }
 `, rName, date)
+}
+
+func testAccCostCategoryConfig_operandNot(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ce_cost_category" "test" {
+  name            = %[1]q
+  rule_version    = "CostCategoryExpression.v1"
+  rule {
+    value = "production"
+    rule {
+      and {
+        dimension {
+          key           = "LINKED_ACCOUNT_NAME"
+          values        = ["-prod"]
+          match_options = ["ENDS_WITH"]
+        }
+      }
+      and {
+        not {
+          dimension {
+            key           = "RECORD_TYPE"
+            values        = ["Tax"]
+            match_options = ["EQUALS"]
+          }
+        }
+	  }
+    }
+    type = "REGULAR"
+  }
+}
+`, rName)
 }
