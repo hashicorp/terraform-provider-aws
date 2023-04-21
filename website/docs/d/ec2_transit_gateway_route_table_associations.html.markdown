@@ -6,7 +6,7 @@ description: |-
    Provides information for multiple EC2 Transit Gateway Route Table Associations
 ---
 
-# Data Source: aws_ec2_transitgateway_route_table_associations
+# Data Source: aws_ec2_transit_gateway_route_table_associations
 
 Provides information for multiple EC2 Transit Gateway Route Table Associations, such as their identifiers.
 
