@@ -9,6 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -25,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwstringplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/stringplanmodifier"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -61,16 +64,22 @@ func (r *resourceTrust) Schema(ctx context.Context, req resource.SchemaRequest, 
 				PlanModifiers: []planmodifier.Set{
 					setplanmodifier.UseStateForUnknown(),
 				},
-				// TODO: validate
+				Validators: []validator.Set{
+					setvalidator.ValueStringsAre(
+						fwvalidators.IPv4Address(),
+					),
+				},
 			},
 			"created_date_time": schema.StringAttribute{
 				Computed: true,
 			},
 			"directory_id": schema.StringAttribute{
 				Required: true,
-				// TODO: validate regex(^d-[0-9a-f]{10}$)
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					directoryIDValidator,
 				},
 			},
 			"id": framework.IDAttribute(),
@@ -79,9 +88,12 @@ func (r *resourceTrust) Schema(ctx context.Context, req resource.SchemaRequest, 
 			},
 			"remote_domain_name": schema.StringAttribute{
 				Required: true,
-				// TODO: validate maxlen(1024), regex(^([a-zA-Z0-9]+[\\.-])+([a-zA-Z0-9])+[.]?$)
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthAtMost(1024),
+					fqdnValidator,
 				},
 			},
 			"selective_auth": schema.StringAttribute{
@@ -105,9 +117,12 @@ func (r *resourceTrust) Schema(ctx context.Context, req resource.SchemaRequest, 
 			},
 			"trust_password": schema.StringAttribute{
 				Required: true,
-				// TODO: validate maxlen(128), regex(^(\p{LD}|\p{Punct}| )+$)
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthAtMost(128),
+					trustPasswordValidator,
 				},
 			},
 			"trust_state": schema.StringAttribute{
