@@ -1842,12 +1842,6 @@ func channelEncoderSettingsSchema() *schema.Schema {
 																	Computed:         true,
 																	ValidateDiagFunc: enum.Validate[types.TimecodeBurninPosition](),
 																},
-																"timecode_insertion": {
-																	Type:             schema.TypeString,
-																	Optional:         true,
-																	Computed:         true,
-																	ValidateDiagFunc: enum.Validate[types.H265TimecodeInsertionBehavior](),
-																},
 																"prefix": {
 																	Type:     schema.TypeString,
 																	Optional: true,
@@ -1855,6 +1849,12 @@ func channelEncoderSettingsSchema() *schema.Schema {
 																},
 															},
 														},
+													},
+													"timecode_insertion": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[types.H265TimecodeInsertionBehavior](),
 													},
 												},
 											},
