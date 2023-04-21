@@ -29,6 +29,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  DataSourceFirewallPolicy,
 			TypeName: "aws_networkfirewall_firewall_policy",
 		},
+		{
+			Factory:  DataSourceFirewallResourcePolicy,
+			TypeName: "aws_networkfirewall_resource_policy",
+		},
 	}
 }
 

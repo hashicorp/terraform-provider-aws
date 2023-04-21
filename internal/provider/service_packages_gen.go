@@ -33,6 +33,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ce"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/chime"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/chimesdkmediapipelines"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/chimesdkvoice"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/cleanrooms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloud9"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudcontrol"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
@@ -67,6 +69,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dlm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/docdbelastic"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ds"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -235,6 +238,8 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		ce.ServicePackage,
 		chime.ServicePackage,
 		chimesdkmediapipelines.ServicePackage,
+		chimesdkvoice.ServicePackage,
+		cleanrooms.ServicePackage,
 		cloud9.ServicePackage,
 		cloudcontrol.ServicePackage,
 		cloudformation.ServicePackage,
@@ -269,6 +274,7 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		dlm.ServicePackage,
 		dms.ServicePackage,
 		docdb.ServicePackage,
+		docdbelastic.ServicePackage,
 		ds.ServicePackage,
 		dynamodb.ServicePackage,
 		ec2.ServicePackage,

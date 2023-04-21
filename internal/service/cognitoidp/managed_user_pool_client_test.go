@@ -435,6 +435,48 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnits(t *testing.T) {
 					"name_prefix",
 				},
 			},
+			{
+				Config: testAccManagedUserPoolClientConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, "token_validity_units.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccUserPoolClientImportStateIDFunc(ctx, resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"name_prefix",
+				},
+			},
+		},
+	})
+}
+
+func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnits_explicitDefaults(t *testing.T) {
+	ctx := acctest.Context(t)
+	var client cognitoidentityprovider.UserPoolClientType
+	rName := randomOpenSearchDomainName()
+	resourceName := "aws_cognito_managed_user_pool_client.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolClientDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccManagedUserPoolClientConfig_tokenValidityUnits_explicitDefaults(rName, "days"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, "token_validity_units.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.access_token", "hours"),
+					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.id_token", "hours"),
+					resource.TestCheckResourceAttr(resourceName, "token_validity_units.0.refresh_token", "days"),
+				),
+			},
 		},
 	})
 }
@@ -1256,6 +1298,27 @@ resource "aws_cognito_managed_user_pool_client" "test" {
 `, rName, unit, value))
 }
 
+func testAccManagedUserPoolClientConfig_tokenValidityUnits_explicitDefaults(rName, value string) string {
+	return acctest.ConfigCompose(
+		testAccManagedUserPoolClientBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_cognito_managed_user_pool_client" "test" {
+  name_prefix  = "AmazonOpenSearchService-%[1]s"
+  user_pool_id = aws_cognito_user_pool.test.id
+
+  depends_on = [
+    aws_opensearch_domain.test,
+  ]
+
+  token_validity_units {
+    access_token  = "hours"
+    id_token      = "hours"
+    refresh_token = "days"
+  }
+}
+`, rName, value))
+}
+
 func testAccManagedUserPoolClientConfig_tokenValidityUnitsTokenValidity(rName, units string) string {
 	return acctest.ConfigCompose(
 		testAccManagedUserPoolClientBaseConfig(rName),
@@ -1322,10 +1385,6 @@ resource "aws_pinpoint_app" "analytics" {
 
 resource "aws_iam_role" "analytics" {
   name = "%[1]s-analytics"
-
-  depends_on = [
-
-  ]
 
   assume_role_policy = <<EOF
 {

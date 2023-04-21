@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -86,10 +87,13 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.EncryptionKey = aws.String(v.(string))
 	}
 
-	domain, err := conn.CreateDomainWithContext(ctx, input)
+	v, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 2*time.Minute, func() (any, error) {
+		return conn.CreateDomainWithContext(ctx, input)
+	}, "ValidationException", "KMS key not found")
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CodeArtifact Domain: %s", err)
 	}
+	domain := v.(*codeartifact.CreateDomainOutput)
 
 	d.SetId(aws.StringValue(domain.Domain.Arn))
 

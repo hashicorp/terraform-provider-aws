@@ -209,7 +209,7 @@ func TestAccNetworkFirewallFirewall_encryptionConfiguration(t *testing.T) {
 		CheckDestroy:             testAccCheckFirewallDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFirewallConfig_encryptionConfiguration(rName),
+				Config: testAccFirewallConfig_encryptionConfiguration(rName, "description 1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
@@ -229,7 +229,15 @@ func TestAccNetworkFirewallFirewall_encryptionConfiguration(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccFirewallConfig_encryptionConfiguration(rName),
+				Config: testAccFirewallConfig_encryptionConfiguration(rName, "description 1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", "CUSTOMER_KMS"),
+				),
+			},
+			{
+				Config: testAccFirewallConfig_encryptionConfiguration(rName, "description 2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
@@ -624,7 +632,7 @@ resource "aws_networkfirewall_firewall" "test" {
 `, rName))
 }
 
-func testAccFirewallConfig_encryptionConfiguration(rName string) string {
+func testAccFirewallConfig_encryptionConfiguration(rName, description string) string {
 	return acctest.ConfigCompose(testAccFirewallConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {}
 
@@ -632,6 +640,7 @@ resource "aws_networkfirewall_firewall" "test" {
   name                = %[1]q
   firewall_policy_arn = aws_networkfirewall_firewall_policy.test.arn
   vpc_id              = aws_vpc.test.id
+  description         = %[2]q
 
   encryption_configuration {
     key_id = aws_kms_key.test.arn
@@ -642,7 +651,7 @@ resource "aws_networkfirewall_firewall" "test" {
     subnet_id = aws_subnet.test[0].id
   }
 }
-`, rName))
+`, rName, description))
 }
 
 func testAccFirewallConfig_dualstackSubnet(rName string) string {
