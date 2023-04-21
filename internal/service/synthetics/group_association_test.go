@@ -134,10 +134,10 @@ func testAccCheckGroupAssociationDestroy(ctx context.Context) resource.TestCheck
 }
 
 func testAccGroupAssociationConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccCanaryConfig_basic(rName), testAccGroupConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCanaryConfig_basic(rName), testAccGroupConfig_basic(rName), `
 resource "aws_synthetics_group_association" "test" {
   group_name = aws_synthetics_group.test.name
   canary_arn = aws_synthetics_canary.test.arn
 }
-`))
+`)
 }
