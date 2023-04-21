@@ -141,8 +141,8 @@ func tagsReadFunc(ctx context.Context, d schemaResourceData, sp conns.ServicePac
 	// Remove any provider configured ignore_tags and system tags from those returned from the service API.
 	toAdd := tagsInContext.TagsOut.UnwrapOrDefault().IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig)
 
-	// The resource's configured tags do not include any provider configured default_tags.
-	if err := d.Set(names.AttrTags, toAdd.RemoveDefaultConfig(tagsInContext.DefaultConfig).ResolveDuplicates(ctx, tagsInContext.DefaultConfig, d).Map()); err != nil {
+	// The resource's configured tags can now include duplicate tags that have been configured on the provider.
+	if err := d.Set(names.AttrTags, toAdd.ResolveDuplicates(ctx, tagsInContext.DefaultConfig, d).Map()); err != nil {
 		return ctx, sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTags, err)
 	}
 

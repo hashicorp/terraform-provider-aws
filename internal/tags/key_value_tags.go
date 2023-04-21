@@ -746,8 +746,11 @@ type schemaResourceData interface {
 }
 
 func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *DefaultConfig, d schemaResourceData) KeyValueTags {
+	// remove default config.
+	t := tags.RemoveDefaultConfig(defaultConfig)
+
 	result := make(map[string]string)
-	for k, v := range tags {
+	for k, v := range t {
 		result[k] = v.ValueString()
 	}
 
@@ -767,7 +770,7 @@ func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *D
 		// if the config is null just return the incoming tags
 		// no duplicates to calculate
 		if c.IsNull() {
-			return tags
+			return t
 		}
 
 		if !c.IsNull() && c.IsKnown() {
