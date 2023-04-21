@@ -414,6 +414,7 @@ yamllint:
 	importlint \
 	lint \
 	providerlint \
+	sane \
 	sanity \
 	semall \
 	semgrep \
