@@ -83,6 +83,10 @@ The following arguments are required:
 * `contact_id` - (Required) The Amazon Resource Name (ARN) of the contact or escalation plan.
 * `stage` - (Required) List of stages. A contact has an engagement plan with stages that contact specified contact channels. An escalation plan uses stages that contact specified contacts.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 Import SSM Contact Plan using the Contact ARN. For example:
