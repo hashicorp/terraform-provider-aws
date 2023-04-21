@@ -214,7 +214,7 @@ func resourceDevicePoolDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting DeviceFarm Device Pool (%s): %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting DeviceFarm Device Pool (%s): %s", d.Id(), err)
 	}
 
 	return diags
