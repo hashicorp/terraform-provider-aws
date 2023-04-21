@@ -18,7 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ssmcontacts_contact")
+// @SDKResource("aws_ssmcontacts_contact", name="Context")
+// @Tags(identifierAttribute="id")
 func ResourceContact() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContactCreate,
@@ -49,8 +50,8 @@ func ResourceContact() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -66,16 +67,10 @@ func resourceContactCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	input := &ssmcontacts.CreateContactInput{
 		Alias:       aws.String(d.Get("alias").(string)),
-		Type:        types.ContactType(d.Get("type").(string)),
-		Plan:        &types.Plan{Stages: []types.Stage{}},
 		DisplayName: aws.String(d.Get("display_name").(string)),
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
+		Plan:        &types.Plan{Stages: []types.Stage{}},
+		Tags:        GetTagsIn(ctx),
+		Type:        types.ContactType(d.Get("type").(string)),
 	}
 
 	output, err := client.CreateContact(ctx, input)
@@ -111,55 +106,22 @@ func resourceContactRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return create.DiagError(names.SSMContacts, create.ErrActionSetting, ResNameContact, d.Id(), err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id())
-	if err != nil {
-		return create.DiagError(names.SSMContacts, create.ErrActionReading, ResNameContact, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.SSMContacts, create.ErrActionSetting, ResNameContact, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.SSMContacts, create.ErrActionSetting, ResNameContact, d.Id(), err)
-	}
-
 	return nil
 }
 
 func resourceContactUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SSMContactsClient()
 
-	update := false
-
-	in := &ssmcontacts.UpdateContactInput{
-		ContactId: aws.String(d.Id()),
-	}
-
 	if d.HasChanges("display_name") {
-		in.DisplayName = aws.String(d.Get("display_name").(string))
-		update = true
-	}
+		in := &ssmcontacts.UpdateContactInput{
+			ContactId:   aws.String(d.Id()),
+			DisplayName: aws.String(d.Get("display_name").(string)),
+		}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+		_, err := conn.UpdateContact(ctx, in)
+		if err != nil {
 			return create.DiagError(names.SSMContacts, create.ErrActionUpdating, ResNameContact, d.Id(), err)
 		}
-	}
-
-	if !update {
-		return nil
-	}
-
-	log.Printf("[DEBUG] Updating SSMContacts Contact (%s): %#v", d.Id(), in)
-	_, err := conn.UpdateContact(ctx, in)
-	if err != nil {
-		return create.DiagError(names.SSMContacts, create.ErrActionUpdating, ResNameContact, d.Id(), err)
 	}
 
 	return resourceContactRead(ctx, d, meta)
