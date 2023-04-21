@@ -37,7 +37,7 @@ func ResourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"id": {
+			"group_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -103,8 +103,8 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		Resource:  fmt.Sprintf("group:%s", aws.StringValue(group.Name)),
 	}.String()
 	d.Set("arn", groupArn)
+	d.Set("group_id", group.Id)
 	d.Set("name", group.Name)
-	d.Set("id", group.Id)
 
 	SetTagsOut(ctx, group.Tags)
 
