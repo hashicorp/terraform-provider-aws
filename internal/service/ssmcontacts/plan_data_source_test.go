@@ -128,7 +128,7 @@ func testPlanDataSource_channelTargetInfo(t *testing.T) {
 func testAccPlanDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccPlanDataSourceConfig_base(rName),
-		fmt.Sprintf(`
+		`
 resource "aws_ssmcontacts_plan" "test" {
   contact_id = aws_ssmcontacts_contact.test_escalation_plan_one.arn
 
@@ -174,7 +174,7 @@ data "aws_ssmcontacts_plan" "test" {
 
   depends_on = [aws_ssmcontacts_plan.test]
 }
-`))
+`)
 }
 
 func testAccPlanDataSourceConfig_channelTargetInfo(rName string) string {
