@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func setContactResourceData(d *schema.ResourceData, getContactOutput *ssmcontacts.GetContactOutput) error {
+func setContactResourceData(d *schema.ResourceData, getContactOutput *ssmcontacts.GetContactOutput) error { //nolint:unparam
 	d.Set("arn", getContactOutput.ContactArn)
 	d.Set("alias", getContactOutput.Alias)
 	d.Set("type", getContactOutput.Type)
