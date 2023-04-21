@@ -1122,7 +1122,7 @@ resource "aws_vpc" "test" {
 
 const testAccVPCConfig_tags_computed = `
 resource "aws_eip" "test" {
-  vpc      = true
+  vpc = true
 }
 
 resource "aws_vpc" "test" {
