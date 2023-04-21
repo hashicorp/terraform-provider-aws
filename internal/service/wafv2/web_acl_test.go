@@ -42,22 +42,23 @@ func TestAccWAFV2WebACL_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLConfig_basic(webACLName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
-					resource.TestCheckResourceAttr(resourceName, "description", webACLName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
 					resource.TestCheckResourceAttr(resourceName, "captcha_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "description", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "token_domains.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
