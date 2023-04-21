@@ -5949,7 +5949,7 @@ func flattenCodecSettingsH265Settings(in *types.H265Settings) []interface{} {
 		"fixed_afd":                     string(in.FixedAfd),
 		"flicker_aq":                    string(in.FlickerAq),
 		"gop_closed_cadence":            int(in.GopClosedCadence),
-		"gop_size":                      int(in.GopSize),
+		"gop_size":                      in.GopSize,
 		"gop_size_units":                string(in.GopSizeUnits),
 		"level":                         string(in.Level),
 		"look_ahead_rate_control":       string(in.LookAheadRateControl),
