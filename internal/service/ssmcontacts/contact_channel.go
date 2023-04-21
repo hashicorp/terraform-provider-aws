@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ssmcontacts_contact_channel")
+// @SDKResource("aws_ssmcontacts_contact_channel", name="Contact Channel")
 func ResourceContactChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContactChannelCreate,

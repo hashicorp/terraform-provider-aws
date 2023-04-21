@@ -49,6 +49,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceContactChannel,
 			TypeName: "aws_ssmcontacts_contact_channel",
+			Name:     "Contact Channel",
 		},
 		{
 			Factory:  ResourcePlan,
