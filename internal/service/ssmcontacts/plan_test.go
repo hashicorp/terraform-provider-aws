@@ -25,8 +25,7 @@ func testPlan_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	contactResourceName := "aws_ssmcontacts_contact.test_contact_one"
 	planResourceName := "aws_ssmcontacts_plan.test"
@@ -34,17 +33,17 @@ func testPlan_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccContactPreCheck(t)
+			testAccContactPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_oneStage(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(contactResourceName),
-					testAccCheckPlanExists(planResourceName),
+					testAccCheckContactExists(ctx, contactResourceName),
+					testAccCheckPlanExists(ctx, planResourceName),
 					resource.TestCheckResourceAttr(planResourceName, "stage.#", "1"),
 					resource.TestCheckResourceAttr(planResourceName, "stage.0.duration_in_minutes", "1"),
 					acctest.CheckResourceAttrRegionalARN(
@@ -65,7 +64,7 @@ func testPlan_basic(t *testing.T) {
 				// because CheckDestroy will run after the replication set has been destroyed and destroying
 				// the replication set will destroy all other resources.
 				Config: testAccPlanConfig_none(rName),
-				Check:  testAccCheckPlanDestroy,
+				Check:  testAccCheckPlanDestroy(ctx),
 			},
 		},
 	})
@@ -76,8 +75,7 @@ func testPlan_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	contactResourceName := "aws_ssmcontacts_contact.test_contact_one"
 	planResourceName := "aws_ssmcontacts_plan.test"
@@ -85,17 +83,17 @@ func testPlan_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccContactPreCheck(t)
+			testAccContactPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_oneStage(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(contactResourceName),
-					testAccCheckPlanExists(planResourceName),
+					testAccCheckContactExists(ctx, contactResourceName),
+					testAccCheckPlanExists(ctx, planResourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssmcontacts.ResourcePlan(), planResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -109,8 +107,7 @@ func testPlan_updateContactId(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	contactOneResourceName := "aws_ssmcontacts_contact.test_contact_one"
 	contactTwoResourceName := "aws_ssmcontacts_contact.test_contact_two"
@@ -120,17 +117,17 @@ func testPlan_updateContactId(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccContactPreCheck(t)
+			testAccContactPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_contactID(rName, contactOneResourceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(contactOneResourceName),
-					testAccCheckPlanExists(planResourceName),
+					testAccCheckContactExists(ctx, contactOneResourceName),
+					testAccCheckPlanExists(ctx, planResourceName),
 					resource.TestCheckTypeSetElemAttrPair(planResourceName, "contact_id", contactOneResourceName, "arn"),
 				),
 			},
@@ -142,8 +139,8 @@ func testPlan_updateContactId(t *testing.T) {
 			{
 				Config: testAccPlanConfig_contactID(rName, contactTwoResourceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(contactTwoResourceName),
-					testAccCheckPlanExists(planResourceName),
+					testAccCheckContactExists(ctx, contactTwoResourceName),
+					testAccCheckPlanExists(ctx, planResourceName),
 					resource.TestCheckTypeSetElemAttrPair(planResourceName, "contact_id", contactTwoResourceName, "arn"),
 				),
 			},
@@ -161,8 +158,7 @@ func testPlan_updateStages(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	contactResourceName := "aws_ssmcontacts_contact.test_contact_one"
 	planResourceName := "aws_ssmcontacts_plan.test"
@@ -170,17 +166,17 @@ func testPlan_updateStages(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccContactPreCheck(t)
+			testAccContactPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_oneStage(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(contactResourceName),
-					testAccCheckPlanExists(planResourceName),
+					testAccCheckContactExists(ctx, contactResourceName),
+					testAccCheckPlanExists(ctx, planResourceName),
 					resource.TestCheckResourceAttr(planResourceName, "stage.#", "1"),
 					resource.TestCheckResourceAttr(planResourceName, "stage.0.duration_in_minutes", "1"),
 					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "0"),
@@ -194,8 +190,8 @@ func testPlan_updateStages(t *testing.T) {
 			{
 				Config: testAccPlanConfig_twoStages(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(contactResourceName),
-					testAccCheckPlanExists(planResourceName),
+					testAccCheckContactExists(ctx, contactResourceName),
+					testAccCheckPlanExists(ctx, planResourceName),
 					resource.TestCheckResourceAttr(planResourceName, "stage.#", "2"),
 					resource.TestCheckResourceAttr(planResourceName, "stage.0.duration_in_minutes", "1"),
 					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "0"),
@@ -211,8 +207,8 @@ func testPlan_updateStages(t *testing.T) {
 			{
 				Config: testAccPlanConfig_oneStage(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(contactResourceName),
-					testAccCheckPlanExists(planResourceName),
+					testAccCheckContactExists(ctx, contactResourceName),
+					testAccCheckPlanExists(ctx, planResourceName),
 					resource.TestCheckResourceAttr(planResourceName, "stage.#", "1"),
 					resource.TestCheckResourceAttr(planResourceName, "stage.0.duration_in_minutes", "1"),
 					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "0"),
@@ -232,8 +228,7 @@ func testPlan_updateDurationInMinutes(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	contactResourceName := "aws_ssmcontacts_contact.test_contact_one"
 	planResourceName := "aws_ssmcontacts_plan.test"
@@ -243,17 +238,17 @@ func testPlan_updateDurationInMinutes(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccContactPreCheck(t)
+			testAccContactPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_durationInMinutes(rName, oldDurationInMinutes),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(contactResourceName),
-					testAccCheckPlanExists(planResourceName),
+					testAccCheckContactExists(ctx, contactResourceName),
+					testAccCheckPlanExists(ctx, planResourceName),
 					resource.TestCheckResourceAttr(
 						planResourceName,
 						"stage.0.duration_in_minutes",
@@ -269,8 +264,8 @@ func testPlan_updateDurationInMinutes(t *testing.T) {
 			{
 				Config: testAccPlanConfig_durationInMinutes(rName, newDurationInMinutes),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(contactResourceName),
-					testAccCheckPlanExists(planResourceName),
+					testAccCheckContactExists(ctx, contactResourceName),
+					testAccCheckPlanExists(ctx, planResourceName),
 					resource.TestCheckResourceAttr(
 						planResourceName,
 						"stage.0.duration_in_minutes",
@@ -292,8 +287,7 @@ func testPlan_updateTargets(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	escalationPlanResourceName := "aws_ssmcontacts_contact.test_escalation_plan_one"
 	planResourceName := "aws_ssmcontacts_plan.test"
@@ -303,17 +297,17 @@ func testPlan_updateTargets(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccContactPreCheck(t)
+			testAccContactPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_oneTarget(rName, testContactOneResourceArn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(escalationPlanResourceName),
-					testAccCheckPlanExists(planResourceName),
+					testAccCheckContactExists(ctx, escalationPlanResourceName),
+					testAccCheckPlanExists(ctx, planResourceName),
 					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "1"),
 					resource.TestCheckResourceAttr(
 						planResourceName,
@@ -336,8 +330,8 @@ func testPlan_updateTargets(t *testing.T) {
 			{
 				Config: testAccPlanConfig_twoTargets(rName, testContactOneResourceArn, testContactTwoResourceArn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(escalationPlanResourceName),
-					testAccCheckPlanExists(planResourceName),
+					testAccCheckContactExists(ctx, escalationPlanResourceName),
+					testAccCheckPlanExists(ctx, planResourceName),
 					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "2"),
 					resource.TestCheckResourceAttr(
 						planResourceName,
@@ -371,8 +365,8 @@ func testPlan_updateTargets(t *testing.T) {
 			{
 				Config: testAccPlanConfig_oneTarget(rName, testContactOneResourceArn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(escalationPlanResourceName),
-					testAccCheckPlanExists(planResourceName),
+					testAccCheckContactExists(ctx, escalationPlanResourceName),
+					testAccCheckPlanExists(ctx, planResourceName),
 					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "1"),
 					resource.TestCheckResourceAttr(
 						planResourceName,
@@ -401,8 +395,7 @@ func testPlan_updateContactTargetInfo(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	escalationPlanResourceName := "aws_ssmcontacts_contact.test_escalation_plan_one"
 	planResourceName := "aws_ssmcontacts_plan.test"
@@ -412,17 +405,17 @@ func testPlan_updateContactTargetInfo(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccContactPreCheck(t)
+			testAccContactPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_contactTargetInfo(rName, false, testContactOneResourceArn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(escalationPlanResourceName),
-					testAccCheckPlanExists(planResourceName),
+					testAccCheckContactExists(ctx, escalationPlanResourceName),
+					testAccCheckPlanExists(ctx, planResourceName),
 					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "1"),
 					resource.TestCheckResourceAttr(
 						planResourceName,
@@ -445,8 +438,8 @@ func testPlan_updateContactTargetInfo(t *testing.T) {
 			{
 				Config: testAccPlanConfig_contactTargetInfo(rName, true, testContactTwoResourceArn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(escalationPlanResourceName),
-					testAccCheckPlanExists(planResourceName),
+					testAccCheckContactExists(ctx, escalationPlanResourceName),
+					testAccCheckPlanExists(ctx, planResourceName),
 					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "1"),
 					resource.TestCheckResourceAttr(
 						planResourceName,
@@ -475,8 +468,7 @@ func testPlan_updateChannelTargetInfo(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	escalationPlanResourceName := "aws_ssmcontacts_contact.test_escalation_plan_one"
 	planResourceName := "aws_ssmcontacts_plan.test"
@@ -489,11 +481,11 @@ func testPlan_updateChannelTargetInfo(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccContactPreCheck(t)
+			testAccContactPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_channelTargetInfo(
@@ -502,8 +494,8 @@ func testPlan_updateChannelTargetInfo(t *testing.T) {
 					oldRetryIntervalInMinutes,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(escalationPlanResourceName),
-					testAccCheckPlanExists(planResourceName),
+					testAccCheckContactExists(ctx, escalationPlanResourceName),
+					testAccCheckPlanExists(ctx, planResourceName),
 					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "1"),
 					resource.TestCheckResourceAttrPair(
 						planResourceName,
@@ -530,8 +522,8 @@ func testPlan_updateChannelTargetInfo(t *testing.T) {
 					newRetryIntervalInMinutes,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(escalationPlanResourceName),
-					testAccCheckPlanExists(planResourceName),
+					testAccCheckContactExists(ctx, escalationPlanResourceName),
+					testAccCheckPlanExists(ctx, planResourceName),
 					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "1"),
 					resource.TestCheckResourceAttrPair(
 						planResourceName,
@@ -555,7 +547,7 @@ func testPlan_updateChannelTargetInfo(t *testing.T) {
 	})
 }
 
-func testAccCheckPlanExists(name string) resource.TestCheckFunc {
+func testAccCheckPlanExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -567,7 +559,7 @@ func testAccCheckPlanExists(name string) resource.TestCheckFunc {
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMContactsClient()
-		ctx := context.Background()
+
 		output, err := conn.GetContact(ctx, &ssmcontacts.GetContactInput{
 			ContactId: aws.String(rs.Primary.ID),
 		})
@@ -580,42 +572,43 @@ func testAccCheckPlanExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckPlanDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMContactsClient()
-	ctx := context.Background()
+func testAccCheckPlanDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMContactsClient()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ssmcontacts_plan" {
-			continue
-		}
-
-		input := &ssmcontacts.GetContactInput{
-			ContactId: aws.String(rs.Primary.ID),
-		}
-		output, err := conn.GetContact(ctx, input)
-		if err != nil {
-			// Getting resources may return validation exception when the replication set has been destroyed
-			var ve *types.ValidationException
-			if errors.As(err, &ve) {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ssmcontacts_plan" {
 				continue
 			}
 
-			var nfe *types.ResourceNotFoundException
-			if errors.As(err, &nfe) {
-				continue
+			input := &ssmcontacts.GetContactInput{
+				ContactId: aws.String(rs.Primary.ID),
+			}
+			output, err := conn.GetContact(ctx, input)
+			if err != nil {
+				// Getting resources may return validation exception when the replication set has been destroyed
+				var ve *types.ValidationException
+				if errors.As(err, &ve) {
+					continue
+				}
+
+				var nfe *types.ResourceNotFoundException
+				if errors.As(err, &nfe) {
+					continue
+				}
+
+				return err
 			}
 
-			return err
+			if len(output.Plan.Stages) == 0 {
+				return nil
+			}
+
+			return create.Error(names.SSMContacts, create.ErrActionCheckingDestroyed, tfssmcontacts.ResNamePlan, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
-		if len(output.Plan.Stages) == 0 {
-			return nil
-		}
-
-		return create.Error(names.SSMContacts, create.ErrActionCheckingDestroyed, tfssmcontacts.ResNamePlan, rs.Primary.ID, errors.New("not destroyed"))
+		return nil
 	}
-
-	return nil
 }
 
 func testAccPlanConfig_contactID(rName, contactName string) string {

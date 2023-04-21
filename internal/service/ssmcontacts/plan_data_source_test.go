@@ -1,7 +1,6 @@
 package ssmcontacts_test
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
@@ -16,8 +15,7 @@ func testPlanDataSource_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	planDataSourceName := "data.aws_ssmcontacts_plan.test"
 	planResourceName := "aws_ssmcontacts_plan.test"
@@ -25,17 +23,14 @@ func testPlanDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccContactPreCheck(t)
+			testAccContactPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(planDataSourceName),
-					testAccCheckPlanExists(planResourceName),
 					resource.TestCheckResourceAttrPair(
 						planDataSourceName, "contact_id",
 						planResourceName, "contact_id",
@@ -87,8 +82,7 @@ func testPlanDataSource_channelTargetInfo(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	planDataSourceName := "data.aws_ssmcontacts_plan.test"
 	planResourceName := "aws_ssmcontacts_plan.test"
@@ -96,16 +90,14 @@ func testPlanDataSource_channelTargetInfo(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccContactPreCheck(t)
+			testAccContactPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanDataSourceConfig_channelTargetInfo(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(planDataSourceName),
 					resource.TestCheckResourceAttrPair(planDataSourceName, "stage.0.target.#", planResourceName, "stage.0.target.#"),
 					resource.TestCheckResourceAttrPair(
 						planDataSourceName,

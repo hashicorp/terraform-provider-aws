@@ -25,24 +25,23 @@ func testContact_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssmcontacts_contact.contact_one"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccContactPreCheck(t)
+			testAccContactPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContactDestroy,
+		CheckDestroy:             testAccCheckContactDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContactConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(resourceName),
+					testAccCheckContactExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "alias", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", "PERSONAL"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssm-contacts", regexp.MustCompile(`contact/+.`)),
@@ -58,7 +57,7 @@ func testContact_basic(t *testing.T) {
 				// because CheckDestroy will run after the replication set has been destroyed and destroying
 				// the replication set will destroy all other resources.
 				Config: testAccContactConfig_none(),
-				Check:  testAccCheckContactDestroy,
+				Check:  testAccCheckContactDestroy(ctx),
 			},
 		},
 	})
@@ -69,8 +68,7 @@ func testContact_updateAlias(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	oldAlias := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	newAlias := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -79,16 +77,16 @@ func testContact_updateAlias(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccContactPreCheck(t)
+			testAccContactPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContactDestroy,
+		CheckDestroy:             testAccCheckContactDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContactConfig_alias(oldAlias),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(resourceName),
+					testAccCheckContactExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "alias", oldAlias),
 				),
 			},
@@ -100,7 +98,7 @@ func testContact_updateAlias(t *testing.T) {
 			{
 				Config: testAccContactConfig_alias(newAlias),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(resourceName),
+					testAccCheckContactExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "alias", newAlias),
 				),
 			},
@@ -118,8 +116,7 @@ func testContact_updateType(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	personalType := "PERSONAL"
 	escalationType := "ESCALATION"
@@ -129,16 +126,16 @@ func testContact_updateType(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccContactPreCheck(t)
+			testAccContactPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContactDestroy,
+		CheckDestroy:             testAccCheckContactDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContactConfig_type(name, personalType),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(resourceName),
+					testAccCheckContactExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "type", personalType),
 				),
 			},
@@ -150,7 +147,7 @@ func testContact_updateType(t *testing.T) {
 			{
 				Config: testAccContactConfig_type(name, escalationType),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(resourceName),
+					testAccCheckContactExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "type", escalationType),
 				),
 			},
@@ -168,24 +165,23 @@ func testContact_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssmcontacts_contact.contact_one"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccContactPreCheck(t)
+			testAccContactPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContactDestroy,
+		CheckDestroy:             testAccCheckContactDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContactConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(resourceName),
+					testAccCheckContactExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssmcontacts.ResourceContact(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -199,8 +195,7 @@ func testContact_updateDisplayName(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	oldDisplayName := sdkacctest.RandString(26)
 	newDisplayName := sdkacctest.RandString(26)
@@ -209,16 +204,16 @@ func testContact_updateDisplayName(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccContactPreCheck(t)
+			testAccContactPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContactDestroy,
+		CheckDestroy:             testAccCheckContactDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContactConfig_displayName(rName, oldDisplayName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(resourceName),
+					testAccCheckContactExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "display_name", oldDisplayName),
 				),
 			},
@@ -230,7 +225,7 @@ func testContact_updateDisplayName(t *testing.T) {
 			{
 				Config: testAccContactConfig_displayName(rName, newDisplayName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(resourceName),
+					testAccCheckContactExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "display_name", newDisplayName),
 				),
 			},
@@ -248,8 +243,7 @@ func testContact_updateTags(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssmcontacts_contact.contact_one"
 
@@ -263,16 +257,16 @@ func testContact_updateTags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccContactPreCheck(t)
+			testAccContactPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContactDestroy,
+		CheckDestroy:             testAccCheckContactDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContactConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(resourceName),
+					testAccCheckContactExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -284,7 +278,7 @@ func testContact_updateTags(t *testing.T) {
 			{
 				Config: testAccContactConfig_oneTag(rName, rKey1, rVal1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(resourceName),
+					testAccCheckContactExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1),
 				),
@@ -297,7 +291,7 @@ func testContact_updateTags(t *testing.T) {
 			{
 				Config: testAccContactConfig_twoTags(rName, rKey1, rVal1, rKey2, rVal2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(resourceName),
+					testAccCheckContactExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey2, rVal2),
@@ -311,7 +305,7 @@ func testContact_updateTags(t *testing.T) {
 			{
 				Config: testAccContactConfig_twoTags(rName, rKey1, rVal1Updated, rKey2, rVal2Updated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(resourceName),
+					testAccCheckContactExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1Updated),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey2, rVal2Updated),
@@ -325,7 +319,7 @@ func testContact_updateTags(t *testing.T) {
 			{
 				Config: testAccContactConfig_oneTag(rName, rKey1, rVal1Updated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(resourceName),
+					testAccCheckContactExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1Updated),
 				),
@@ -338,7 +332,7 @@ func testContact_updateTags(t *testing.T) {
 			{
 				Config: testAccContactConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(resourceName),
+					testAccCheckContactExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -351,42 +345,43 @@ func testContact_updateTags(t *testing.T) {
 	})
 }
 
-func testAccCheckContactDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMContactsClient()
-	ctx := context.Background()
+func testAccCheckContactDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMContactsClient()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ssmcontacts_contact" {
-			continue
-		}
-
-		input := &ssmcontacts.GetContactInput{
-			ContactId: aws.String(rs.Primary.ID),
-		}
-		_, err := conn.GetContact(ctx, input)
-
-		if err != nil {
-			// Getting resources may return validation exception when the replication set has been destroyed
-			var ve *types.ValidationException
-			if errors.As(err, &ve) {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ssmcontacts_contact" {
 				continue
 			}
 
-			var nfe *types.ResourceNotFoundException
-			if errors.As(err, &nfe) {
-				continue
+			input := &ssmcontacts.GetContactInput{
+				ContactId: aws.String(rs.Primary.ID),
+			}
+			_, err := conn.GetContact(ctx, input)
+
+			if err != nil {
+				// Getting resources may return validation exception when the replication set has been destroyed
+				var ve *types.ValidationException
+				if errors.As(err, &ve) {
+					continue
+				}
+
+				var nfe *types.ResourceNotFoundException
+				if errors.As(err, &nfe) {
+					continue
+				}
+
+				return err
 			}
 
-			return err
+			return create.Error(names.SSMContacts, create.ErrActionCheckingDestroyed, tfssmcontacts.ResNameContact, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
-		return create.Error(names.SSMContacts, create.ErrActionCheckingDestroyed, tfssmcontacts.ResNameContact, rs.Primary.ID, errors.New("not destroyed"))
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckContactExists(name string) resource.TestCheckFunc {
+func testAccCheckContactExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -398,7 +393,6 @@ func testAccCheckContactExists(name string) resource.TestCheckFunc {
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMContactsClient()
-		ctx := context.Background()
 
 		_, err := conn.GetContact(ctx, &ssmcontacts.GetContactInput{
 			ContactId: aws.String(rs.Primary.ID),
@@ -412,9 +406,8 @@ func testAccCheckContactExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccContactPreCheck(t *testing.T) {
+func testAccContactPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMContactsClient()
-	ctx := context.Background()
 
 	input := &ssmcontacts.ListContactsInput{}
 	_, err := conn.ListContacts(ctx, input)

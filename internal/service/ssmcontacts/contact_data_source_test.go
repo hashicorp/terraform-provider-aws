@@ -1,7 +1,6 @@
 package ssmcontacts_test
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
@@ -16,8 +15,7 @@ func testContactDataSource_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssmcontacts_contact.contact_one"
 	dataSourceName := "data.aws_ssmcontacts_contact.contact_one"
@@ -25,17 +23,14 @@ func testContactDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccContactPreCheck(t)
+			testAccContactPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContactDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContactDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactExists(dataSourceName),
-					testAccCheckContactExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "alias", dataSourceName, "alias"),
 					resource.TestCheckResourceAttrPair(resourceName, "type", dataSourceName, "type"),

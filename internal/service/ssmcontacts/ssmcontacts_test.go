@@ -25,7 +25,7 @@ func TestAccSSMContacts_serial(t *testing.T) {
 		},
 		"Contact Channel Resource Tests": {
 			"basic":           testContactChannel_basic,
-			"contactId":       testContactChannel_contactId,
+			"contactId":       testContactChannel_contactID,
 			"deliveryAddress": testContactChannel_deliveryAddress,
 			"disappears":      testContactChannel_disappears,
 			"name":            testContactChannel_name,
