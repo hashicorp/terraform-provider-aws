@@ -130,43 +130,49 @@ func testAccPlanDataSourceConfig_basic(rName string) string {
 		testAccPlanDataSourceConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_ssmcontacts_plan" "test" {
-	contact_id = aws_ssmcontacts_contact.test_escalation_plan_one.arn
-	stage {
-		duration_in_minutes = 1
-		target {
-			contact_target_info {
-				is_essential = false
-				contact_id = aws_ssmcontacts_contact.test_contact_one.arn
-			}
-		}
-		target {
-			contact_target_info {
-				is_essential = true
-				contact_id = aws_ssmcontacts_contact.test_contact_two.arn
-			}
-		}
-	}
-	stage {
-		duration_in_minutes = 0
-		target {
-			contact_target_info {
-				is_essential = false
-				contact_id = aws_ssmcontacts_contact.test_contact_three.arn
-			}
-		}
-		target {
-			contact_target_info {
-				is_essential = true
-				contact_id = aws_ssmcontacts_contact.test_contact_four.arn
-			}
-		}
-	}
+  contact_id = aws_ssmcontacts_contact.test_escalation_plan_one.arn
+
+  stage {
+    duration_in_minutes = 1
+
+    target {
+      contact_target_info {
+        is_essential = false
+        contact_id   = aws_ssmcontacts_contact.test_contact_one.arn
+      }
+    }
+
+    target {
+      contact_target_info {
+        is_essential = true
+        contact_id   = aws_ssmcontacts_contact.test_contact_two.arn
+      }
+    }
+  }
+
+  stage {
+    duration_in_minutes = 0
+
+    target {
+      contact_target_info {
+        is_essential = false
+        contact_id   = aws_ssmcontacts_contact.test_contact_three.arn
+      }
+    }
+
+    target {
+      contact_target_info {
+        is_essential = true
+        contact_id   = aws_ssmcontacts_contact.test_contact_four.arn
+      }
+    }
+  }
 }
 
 data "aws_ssmcontacts_plan" "test" {
-	contact_id = aws_ssmcontacts_contact.test_escalation_plan_one.arn
+  contact_id = aws_ssmcontacts_contact.test_escalation_plan_one.arn
 
-	depends_on = [aws_ssmcontacts_plan.test]
+  depends_on = [aws_ssmcontacts_plan.test]
 }
 `))
 }
@@ -176,31 +182,35 @@ func testAccPlanDataSourceConfig_channelTargetInfo(rName string) string {
 		testAccPlanDataSourceConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_ssmcontacts_contact_channel" "test" {
-	contact_id = aws_ssmcontacts_contact.test_contact_one.arn
-	delivery_address {
-		simple_address = "email@example.com"
-	}
-	name = "Test Contact Channel for %[1]s"
-	type = "EMAIL"
+  contact_id = aws_ssmcontacts_contact.test_contact_one.arn
+
+  delivery_address {
+    simple_address = "email@example.com"
+  }
+
+  name = "Test Contact Channel for %[1]s"
+  type = "EMAIL"
 }
 
 resource "aws_ssmcontacts_plan" "test" {
-	contact_id = aws_ssmcontacts_contact.test_contact_one.arn
-	stage {
-		duration_in_minutes = 1
-		target {
-			channel_target_info {
-				contact_channel_id = aws_ssmcontacts_contact_channel.test.arn
-				retry_interval_in_minutes = 1
-			}
-		}
-	}
+  contact_id = aws_ssmcontacts_contact.test_contact_one.arn
+
+  stage {
+    duration_in_minutes = 1
+
+    target {
+      channel_target_info {
+        contact_channel_id        = aws_ssmcontacts_contact_channel.test.arn
+        retry_interval_in_minutes = 1
+      }
+    }
+  }
 }
 
 data "aws_ssmcontacts_plan" "test" {
-	contact_id = aws_ssmcontacts_contact.test_contact_one.arn
+  contact_id = aws_ssmcontacts_contact.test_contact_one.arn
 
-	depends_on = [aws_ssmcontacts_plan.test]
+  depends_on = [aws_ssmcontacts_plan.test]
 }
 `, rName))
 }
@@ -208,44 +218,44 @@ data "aws_ssmcontacts_plan" "test" {
 func testAccPlanDataSourceConfig_base(alias string) string {
 	return fmt.Sprintf(`
 resource "aws_ssmincidents_replication_set" "test" {
-	region {
-		name = %[1]q
-	}
+  region {
+    name = %[1]q
+  }
 }
 
 resource "aws_ssmcontacts_contact" "test_contact_one" {
-	alias                   = "test-contact-one-for-%[2]s"
-	type                    = "PERSONAL"
+  alias = "test-contact-one-for-%[2]s"
+  type  = "PERSONAL"
 
-	depends_on              = [aws_ssmincidents_replication_set.test]
+  depends_on = [aws_ssmincidents_replication_set.test]
 }
 
 resource "aws_ssmcontacts_contact" "test_contact_two" {
-	alias                   = "test-contact-two-for-%[2]s"
-	type                    = "PERSONAL"
+  alias = "test-contact-two-for-%[2]s"
+  type  = "PERSONAL"
 
-	depends_on              = [aws_ssmincidents_replication_set.test]
+  depends_on = [aws_ssmincidents_replication_set.test]
 }
 
 resource "aws_ssmcontacts_contact" "test_contact_three" {
-	alias                   = "test-contact-three-for-%[2]s"
-	type                    = "PERSONAL"
+  alias = "test-contact-three-for-%[2]s"
+  type  = "PERSONAL"
 
-	depends_on              = [aws_ssmincidents_replication_set.test]
+  depends_on = [aws_ssmincidents_replication_set.test]
 }
 
 resource "aws_ssmcontacts_contact" "test_contact_four" {
-	alias                   = "test-contact-four-for-%[2]s"
-	type                    = "PERSONAL"
+  alias = "test-contact-four-for-%[2]s"
+  type  = "PERSONAL"
 
-	depends_on              = [aws_ssmincidents_replication_set.test]
+  depends_on = [aws_ssmincidents_replication_set.test]
 }
 
 resource "aws_ssmcontacts_contact" "test_escalation_plan_one" {
-	alias                   = "test-escalation-plan-for-%[2]s"
-	type                    = "ESCALATION"
+  alias = "test-escalation-plan-for-%[2]s"
+  type  = "ESCALATION"
 
-	depends_on              = [aws_ssmincidents_replication_set.test]
+  depends_on = [aws_ssmincidents_replication_set.test]
 }
 `, acctest.Region(), alias)
 }

@@ -428,7 +428,7 @@ func testAccContactPreCheck(t *testing.T) {
 	}
 }
 
-func testAccContactConfigBase() string {
+func testAccContactConfig_base() string {
 	return fmt.Sprintf(`
 resource "aws_ssmincidents_replication_set" "test" {
   region {
@@ -440,92 +440,92 @@ resource "aws_ssmincidents_replication_set" "test" {
 
 func testAccContactConfig_basic(alias string) string {
 	return acctest.ConfigCompose(
-		testAccContactConfigBase(),
+		testAccContactConfig_base(),
 		fmt.Sprintf(`
 resource "aws_ssmcontacts_contact" "contact_one" {
-	alias                   = %[1]q
-	type                    = "PERSONAL"
+  alias = %[1]q
+  type  = "PERSONAL"
 
-	depends_on              = [aws_ssmincidents_replication_set.test]
+  depends_on = [aws_ssmincidents_replication_set.test]
 }
 `, alias))
 }
 
 func testAccContactConfig_none() string {
-	return testAccContactConfigBase()
+	return testAccContactConfig_base()
 }
 
 func testAccContactConfig_alias(alias string) string {
 	return acctest.ConfigCompose(
-		testAccContactConfigBase(),
+		testAccContactConfig_base(),
 		fmt.Sprintf(`
 resource "aws_ssmcontacts_contact" "contact_one" {
-	alias                   = %[1]q
-	type                    = "PERSONAL"
+  alias = %[1]q
+  type  = "PERSONAL"
 
-	depends_on              = [aws_ssmincidents_replication_set.test]
+  depends_on = [aws_ssmincidents_replication_set.test]
 }
 `, alias))
 }
 
 func testAccContactConfig_type(name, typeValue string) string {
 	return acctest.ConfigCompose(
-		testAccContactConfigBase(),
+		testAccContactConfig_base(),
 		fmt.Sprintf(`
 resource "aws_ssmcontacts_contact" "contact_one" {
-	alias                   = %[1]q
-	type                    = %[2]q
+  alias = %[1]q
+  type  = %[2]q
 
-	depends_on              = [aws_ssmincidents_replication_set.test]
+  depends_on = [aws_ssmincidents_replication_set.test]
 }
 `, name, typeValue))
 }
 
 func testAccContactConfig_displayName(alias, displayName string) string {
 	return acctest.ConfigCompose(
-		testAccContactConfigBase(),
+		testAccContactConfig_base(),
 		fmt.Sprintf(`
 resource "aws_ssmcontacts_contact" "contact_one" {
-	alias                   = %[1]q
-	display_name            = %[2]q
-	type                    = "PERSONAL"
+  alias        = %[1]q
+  display_name = %[2]q
+  type         = "PERSONAL"
 
-	depends_on              = [aws_ssmincidents_replication_set.test]
+  depends_on = [aws_ssmincidents_replication_set.test]
 }
 `, alias, displayName))
 }
 
 func testAccContactConfig_oneTag(alias, tagKey, tagVal string) string {
 	return acctest.ConfigCompose(
-		testAccContactConfigBase(),
+		testAccContactConfig_base(),
 		fmt.Sprintf(`
 resource "aws_ssmcontacts_contact" "contact_one" {
-	alias                   = %[1]q
-	type                    = "PERSONAL"
+  alias = %[1]q
+  type  = "PERSONAL"
 
-	tags = {
-		%[2]q = %[3]q
-	}
+  tags = {
+    %[2]q = %[3]q
+  }
 
-	depends_on              = [aws_ssmincidents_replication_set.test]
+  depends_on = [aws_ssmincidents_replication_set.test]
 }
 `, alias, tagKey, tagVal))
 }
 
 func testAccContactConfig_twoTags(alias, tagKey1, tagVal1, tagKey2, tagVal2 string) string {
 	return acctest.ConfigCompose(
-		testAccContactConfigBase(),
+		testAccContactConfig_base(),
 		fmt.Sprintf(`
 resource "aws_ssmcontacts_contact" "contact_one" {
-	alias                   = %[1]q
-	type                    = "PERSONAL"
+  alias = %[1]q
+  type  = "PERSONAL"
 
-	tags = {
-		%[2]q = %[3]q
-		%[4]q = %[5]q
-	}
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
 
-	depends_on              = [aws_ssmincidents_replication_set.test]
+  depends_on = [aws_ssmincidents_replication_set.test]
 }
 `, alias, tagKey1, tagVal1, tagKey2, tagVal2))
 }

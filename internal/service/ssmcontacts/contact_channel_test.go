@@ -393,7 +393,7 @@ func testAccContactChannelConfig_basic(rName string) string {
 }
 
 func testAccContactChannelConfig_none() string {
-	return testAccContactChannelConfigBase()
+	return testAccContactChannelConfig_base()
 }
 
 func testAccContactChannelConfig_defaultEmail(rName string) string {
@@ -410,56 +410,60 @@ func testAccContactChannelConfig_defaultVoice(rName string) string {
 
 func testAccContactChannelConfig(rName string, contactAliasDisambiguator string, channelType string, address string) string {
 	return acctest.ConfigCompose(
-		testAccContactChannelConfigBase(),
+		testAccContactChannelConfig_base(),
 		fmt.Sprintf(`
 resource "aws_ssmcontacts_contact" "test" {
-	alias = "test-contact-for-%[2]s"
-	type = "PERSONAL"
+  alias = "test-contact-for-%[1]s"
+  type  = "PERSONAL"
 
-	depends_on = [aws_ssmincidents_replication_set.test]
+  depends_on = [aws_ssmincidents_replication_set.test]
 }
 
 resource "aws_ssmcontacts_contact_channel" "test" {
-	contact_id = aws_ssmcontacts_contact.test.arn
-	delivery_address {
-		simple_address = "%[4]s"
-	}
-	name = "%[1]s"
-	type = "%[3]s"
+  contact_id = aws_ssmcontacts_contact.test.arn
+
+  delivery_address {
+    simple_address = %[4]q
+  }
+
+  name = %[1]q
+  type = %[3]q
 }
 `, rName, contactAliasDisambiguator, channelType, address))
 }
 
 func testAccContactChannelConfig_withTwoContacts(rName, contactArn string) string {
 	return acctest.ConfigCompose(
-		testAccContactChannelConfigBase(),
+		testAccContactChannelConfig_base(),
 		fmt.Sprintf(`
 resource "aws_ssmcontacts_contact" "test_contact_one" {
-	alias = "test-contact-one-for-%[1]s"
-	type = "PERSONAL"
+  alias = "test-contact-one-for-%[1]s"
+  type  = "PERSONAL"
 
-	depends_on = [aws_ssmincidents_replication_set.test]
+  depends_on = [aws_ssmincidents_replication_set.test]
 }
 
 resource "aws_ssmcontacts_contact" "test_contact_two" {
-	alias = "test-contact-two-for-%[1]s"
-	type = "PERSONAL"
+  alias = "test-contact-two-for-%[1]s"
+  type = "PERSONAL"
 
-	depends_on = [aws_ssmincidents_replication_set.test]
+  depends_on = [aws_ssmincidents_replication_set.test]
 }
 
 resource "aws_ssmcontacts_contact_channel" "test" {
-	contact_id = %[2]s
-	delivery_address {
-		simple_address = "test@example.com"
-	}
-	name = "%[1]s"
-	type = "EMAIL"
+  contact_id = %[2]s
+
+  delivery_address {
+    simple_address = "test@example.com"
+  }
+
+  name = %[1]q
+  type = "EMAIL"
 }
 `, rName, contactArn))
 }
 
-func testAccContactChannelConfigBase() string {
+func testAccContactChannelConfig_base() string {
 	return fmt.Sprintf(`
 resource "aws_ssmincidents_replication_set" "test" {
   region {

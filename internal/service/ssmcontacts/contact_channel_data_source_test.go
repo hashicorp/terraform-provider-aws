@@ -51,29 +51,31 @@ func testContactChannelDataSource_basic(t *testing.T) {
 func testAccContactChannelDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssmincidents_replication_set" "test" {
-	region {
-		name = %[1]q
-	}
+  region {
+    name = %[1]q
+  }
 }
 
 resource "aws_ssmcontacts_contact" "test" {
-	alias = "test-contact-for-%[2]s"
-	type = "PERSONAL"
+  alias = "test-contact-for-%[2]s"
+  type  = "PERSONAL"
 
-	depends_on = [aws_ssmincidents_replication_set.test]
+  depends_on = [aws_ssmincidents_replication_set.test]
 }
 
 resource "aws_ssmcontacts_contact_channel" "test" {
-	contact_id = aws_ssmcontacts_contact.test.arn
-	delivery_address {
-		simple_address = "default@example.com"
-	}
-	name = "%[2]s"
-	type = "EMAIL"
+  contact_id = aws_ssmcontacts_contact.test.arn
+
+  delivery_address {
+    simple_address = "default@example.com"
+  }
+
+  name = %[2]q
+  type = "EMAIL"
 }
 
 data "aws_ssmcontacts_contact_channel" "test" {
-	arn = aws_ssmcontacts_contact_channel.test.arn
+  arn = aws_ssmcontacts_contact_channel.test.arn
 }
 `, acctest.Region(), rName)
 }

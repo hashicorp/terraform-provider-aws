@@ -49,7 +49,7 @@ func testContactDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccContactDataSourceConfigBase() string {
+func testAccContactDataSourceConfig_base() string {
 	return fmt.Sprintf(`
 resource "aws_ssmincidents_replication_set" "test" {
   region {
@@ -61,23 +61,23 @@ resource "aws_ssmincidents_replication_set" "test" {
 
 func testAccContactDataSourceConfig_basic(alias string) string {
 	return acctest.ConfigCompose(
-		testAccContactDataSourceConfigBase(),
+		testAccContactDataSourceConfig_base(),
 		fmt.Sprintf(`
 resource "aws_ssmcontacts_contact" "contact_one" {
-	alias = %[1]q
-	display_name = %[1]q
-	type = "PERSONAL"
+  alias        = %[1]q
+  display_name = %[1]q
+  type         = "PERSONAL"
 
-	tags = {
-		key1 = "tag1"
-		key2 = "tag2"
-	}
+  tags = {
+    key1 = "tag1"
+    key2 = "tag2"
+  }
 
-	depends_on = [aws_ssmincidents_replication_set.test]
+  depends_on = [aws_ssmincidents_replication_set.test]
 }
 
 data "aws_ssmcontacts_contact" "contact_one" {
-	arn = aws_ssmcontacts_contact.contact_one.arn
+  arn = aws_ssmcontacts_contact.contact_one.arn
 }
 `, alias))
 }

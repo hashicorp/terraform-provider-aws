@@ -127,7 +127,7 @@ func testPlan_updateContactId(t *testing.T) {
 		CheckDestroy:             testAccCheckPlanDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPlanConfig_contactId(rName, contactOneResourceName),
+				Config: testAccPlanConfig_contactID(rName, contactOneResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(contactOneResourceName),
 					testAccCheckPlanExists(planResourceName),
@@ -140,7 +140,7 @@ func testPlan_updateContactId(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPlanConfig_contactId(rName, contactTwoResourceName),
+				Config: testAccPlanConfig_contactID(rName, contactTwoResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(contactTwoResourceName),
 					testAccCheckPlanExists(planResourceName),
@@ -618,15 +618,16 @@ func testAccCheckPlanDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccPlanConfig_contactId(rName, contactName string) string {
+func testAccPlanConfig_contactID(rName, contactName string) string {
 	return acctest.ConfigCompose(
 		testAccPlanConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_ssmcontacts_plan" "test" {
-	contact_id = %[1]s
-	stage {
-		duration_in_minutes = 1
-	}
+  contact_id = %[1]s
+
+  stage {
+    duration_in_minutes = 1
+  }
 }
 `, contactName+".arn"))
 }
@@ -638,30 +639,33 @@ func testAccPlanConfig_none(rName string) string {
 func testAccPlanConfig_oneStage(rName string) string {
 	return acctest.ConfigCompose(
 		testAccPlanConfig_base(rName),
-		fmt.Sprintf(`
+		`
 resource "aws_ssmcontacts_plan" "test" {
-	contact_id = aws_ssmcontacts_contact.test_contact_one.arn
-	stage {
-		duration_in_minutes = 1
-	}
+  contact_id = aws_ssmcontacts_contact.test_contact_one.arn
+
+  stage {
+    duration_in_minutes = 1
+  }
 }
-`))
+`)
 }
 
 func testAccPlanConfig_twoStages(rName string) string {
 	return acctest.ConfigCompose(
 		testAccPlanConfig_base(rName),
-		fmt.Sprintf(`
+		`
 resource "aws_ssmcontacts_plan" "test" {
-	contact_id = aws_ssmcontacts_contact.test_contact_one.arn
-	stage {
-		duration_in_minutes = 1
-	}
-	stage {
-		duration_in_minutes = 2
-	}
+  contact_id = aws_ssmcontacts_contact.test_contact_one.arn
+
+  stage {
+    duration_in_minutes = 1
+  }
+
+  stage {
+    duration_in_minutes = 2
+  }
 }
-`))
+`)
 }
 
 func testAccPlanConfig_durationInMinutes(rName string, durationInMinutes int) string {
@@ -669,10 +673,11 @@ func testAccPlanConfig_durationInMinutes(rName string, durationInMinutes int) st
 		testAccPlanConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_ssmcontacts_plan" "test" {
-	contact_id = aws_ssmcontacts_contact.test_contact_one.arn
-	stage {
-		duration_in_minutes = %[1]d
-	}
+  contact_id = aws_ssmcontacts_contact.test_contact_one.arn
+
+  stage {
+    duration_in_minutes = %[1]d
+  }
 }
 `, durationInMinutes))
 }
@@ -682,16 +687,18 @@ func testAccPlanConfig_oneTarget(rName, contactOneArn string) string {
 		testAccPlanConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_ssmcontacts_plan" "test" {
-	contact_id = aws_ssmcontacts_contact.test_escalation_plan_one.arn
-	stage {
-		duration_in_minutes = 0
-		target {
-			contact_target_info {
-				is_essential = false
-				contact_id = %[1]s
-			}
-		}
-	}
+  contact_id = aws_ssmcontacts_contact.test_escalation_plan_one.arn
+
+  stage {
+    duration_in_minutes = 0
+
+    target {
+      contact_target_info {
+        is_essential = false
+        contact_id = %[1]s
+      }
+    }
+  }
 }
 `, contactOneArn))
 }
@@ -701,22 +708,25 @@ func testAccPlanConfig_twoTargets(rName, contactOneArn, contactTwoArn string) st
 		testAccPlanConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_ssmcontacts_plan" "test" {
-	contact_id = aws_ssmcontacts_contact.test_escalation_plan_one.arn
-	stage {
-		duration_in_minutes = 0
-		target {
-			contact_target_info {
-				is_essential = false
-				contact_id = %[1]s
-			}
-		}
-		target {
-			contact_target_info {
-				is_essential = true
-				contact_id = %[2]s
-			}
-		}
-	}
+  contact_id = aws_ssmcontacts_contact.test_escalation_plan_one.arn
+
+  stage {
+    duration_in_minutes = 0
+
+    target {
+      contact_target_info {
+        is_essential = false
+        contact_id   = %[1]s
+      }
+    }
+
+    target {
+      contact_target_info {
+        is_essential = true
+        contact_id   = %[2]s
+      }
+    }
+  }
 }
 `, contactOneArn, contactTwoArn))
 }
@@ -726,16 +736,18 @@ func testAccPlanConfig_contactTargetInfo(rName string, isEssential bool, contact
 		testAccPlanConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_ssmcontacts_plan" "test" {
-	contact_id = aws_ssmcontacts_contact.test_escalation_plan_one.arn
-	stage {
-		duration_in_minutes = 0
-		target {
-			contact_target_info {
-				is_essential = %[1]t
-				contact_id = %[2]s
-			}
-		}
-	}
+  contact_id = aws_ssmcontacts_contact.test_escalation_plan_one.arn
+
+  stage {
+    duration_in_minutes = 0
+
+    target {
+      contact_target_info {
+        is_essential = %[1]t
+        contact_id   = %[2]s
+      }
+    }
+  }
 }
 `, isEssential, contactId))
 }
@@ -745,34 +757,40 @@ func testAccPlanConfig_channelTargetInfo(rName, contactChannelResourceName strin
 		testAccPlanConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_ssmcontacts_contact_channel" "test_channel_one" {
-	contact_id = aws_ssmcontacts_contact.test_contact_one.arn
-	delivery_address {
-		simple_address = "email1@example.com"
-	}
-	name = "Test Contact Channel 1"
-	type = "EMAIL"
+  contact_id = aws_ssmcontacts_contact.test_contact_one.arn
+
+  delivery_address {
+    simple_address = "email1@example.com"
+  }
+
+  name = "Test Contact Channel 1"
+  type = "EMAIL"
 }
 
 resource "aws_ssmcontacts_contact_channel" "test_channel_two" {
-	contact_id = aws_ssmcontacts_contact.test_contact_one.arn
-	delivery_address {
-		simple_address = "email2@example.com"
-	}
-	name = "Test Contact Channel 2"
-	type = "EMAIL"
+  contact_id = aws_ssmcontacts_contact.test_contact_one.arn
+
+  delivery_address {
+    simple_address = "email2@example.com"
+  }
+
+  name = "Test Contact Channel 2"
+  type = "EMAIL"
 }
 
 resource "aws_ssmcontacts_plan" "test" {
-	contact_id = aws_ssmcontacts_contact.test_contact_one.arn
-	stage {
-		duration_in_minutes = 1
-		target {
-			channel_target_info {
-				contact_channel_id = %[1]s.arn
-				retry_interval_in_minutes = %[2]d
-			}
-		}
-	}
+  contact_id = aws_ssmcontacts_contact.test_contact_one.arn
+
+  stage {
+    duration_in_minutes = 1
+
+    target {
+      channel_target_info {
+        contact_channel_id        = %[1]s.arn
+        retry_interval_in_minutes = %[2]d
+      }
+    }
+  }
 }
 `, contactChannelResourceName, retryIntervalInMinutes))
 }
@@ -780,30 +798,30 @@ resource "aws_ssmcontacts_plan" "test" {
 func testAccPlanConfig_base(alias string) string {
 	return fmt.Sprintf(`
 resource "aws_ssmincidents_replication_set" "test" {
-	region {
-		name = %[1]q
-	}
+  region {
+    name = %[1]q
+  }
 }
 
 resource "aws_ssmcontacts_contact" "test_contact_one" {
-	alias                   = "test-contact-one-for-%[2]s"
-	type                    = "PERSONAL"
+  alias = "test-contact-one-for-%[2]s"
+  type  = "PERSONAL"
 
-	depends_on = [aws_ssmincidents_replication_set.test]
+  depends_on = [aws_ssmincidents_replication_set.test]
 }
 
 resource "aws_ssmcontacts_contact" "test_contact_two" {
-	alias                   = "test-contact-two-for-%[2]s"
-	type                    = "PERSONAL"
+  alias = "test-contact-two-for-%[2]s"
+  type  = "PERSONAL"
 
-	depends_on = [aws_ssmincidents_replication_set.test]
+  depends_on = [aws_ssmincidents_replication_set.test]
 }
 
 resource "aws_ssmcontacts_contact" "test_escalation_plan_one" {
-	alias                   = "test-escalation-plan-for-%[2]s"
-	type                    = "ESCALATION"
+  alias = "test-escalation-plan-for-%[2]s"
+  type  = "ESCALATION"
 
-	depends_on = [aws_ssmincidents_replication_set.test]
+  depends_on = [aws_ssmincidents_replication_set.test]
 }
 `, acctest.Region(), alias)
 }
