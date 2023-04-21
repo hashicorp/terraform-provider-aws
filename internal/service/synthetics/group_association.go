@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_synthetics_group_association", name="GroupAssociation")
+// @SDKResource("aws_synthetics_group_association", name="Group Association")
 func ResourceGroupAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupAssociationCreate,
@@ -33,11 +33,6 @@ func ResourceGroupAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"group_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"group_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -45,6 +40,11 @@ func ResourceGroupAssociation() *schema.Resource {
 			"group_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"group_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -100,9 +100,9 @@ func resourceGroupAssociationRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.Set("canary_arn", canaryArn)
-	d.Set("group_name", group.Name)
 	d.Set("group_arn", group.Arn)
 	d.Set("group_id", group.Id)
+	d.Set("group_name", group.Name)
 
 	return diags
 }

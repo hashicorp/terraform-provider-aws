@@ -44,7 +44,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceGroupAssociation,
 			TypeName: "aws_synthetics_group_association",
-			Name:     "GroupAssociation",
+			Name:     "Group Association",
 		},
 	}
 }
