@@ -441,7 +441,7 @@ resource "aws_ssmcontacts_contact" "test_contact_one" {
 
 resource "aws_ssmcontacts_contact" "test_contact_two" {
   alias = "test-contact-two-for-%[1]s"
-  type = "PERSONAL"
+  type  = "PERSONAL"
 
   depends_on = [aws_ssmincidents_replication_set.test]
 }

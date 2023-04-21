@@ -688,7 +688,7 @@ resource "aws_ssmcontacts_plan" "test" {
     target {
       contact_target_info {
         is_essential = false
-        contact_id = %[1]s
+        contact_id   = %[1]s
       }
     }
   }
