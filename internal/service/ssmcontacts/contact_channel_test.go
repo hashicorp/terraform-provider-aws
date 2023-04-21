@@ -297,7 +297,7 @@ func testContactChannel_type(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccContactChannelConfig_defaultSms(rName),
+				Config: testAccContactChannelConfig_defaultSMS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(contactResourceName),
 					testAccCheckContactChannelExists(channelResourceName),
@@ -403,7 +403,7 @@ func testAccContactChannelConfig_defaultEmail(rName string) string {
 	return testAccContactChannelConfig(rName, rName, "EMAIL", acctest.DefaultEmailAddress)
 }
 
-func testAccContactChannelConfig_defaultSms(rName string) string {
+func testAccContactChannelConfig_defaultSMS(rName string) string {
 	return testAccContactChannelConfig(rName, rName, "SMS", "+12065550100")
 }
 
