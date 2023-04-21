@@ -138,6 +138,15 @@ func UpdateTags(ctx context.Context, conn ssmiface.SSMAPI, identifier, resourceT
 	return nil
 }
 
+// createTags creates ssm service tags for new resources.
+func createTags(ctx context.Context, conn ssmiface.SSMAPI, identifier, resourceType string, tags []*ssm.Tag) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return UpdateTags(ctx, conn, identifier, resourceType, nil, KeyValueTags(ctx, tags))
+}
+
 // UpdateTags updates ssm service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier, resourceType string, oldTags, newTags any) error {
