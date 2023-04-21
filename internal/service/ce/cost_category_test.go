@@ -593,10 +593,10 @@ resource "aws_ce_cost_category" "test" {
 func testAccCostCategoryConfig_operandNot(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_cost_category" "test" {
-  name            = %[1]q
-  rule_version    = "CostCategoryExpression.v1"
+  name         = %[1]q
+  rule_version = "CostCategoryExpression.v1"
   rule {
-    value = "production"
+    value = "notax"
     rule {
       and {
         dimension {
@@ -613,7 +613,7 @@ resource "aws_ce_cost_category" "test" {
             match_options = ["EQUALS"]
           }
         }
-	  }
+      }
     }
     type = "REGULAR"
   }
