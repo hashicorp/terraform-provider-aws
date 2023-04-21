@@ -745,7 +745,7 @@ type schemaResourceData interface {
 	GetRawState() cty.Value
 }
 
-func (tags KeyValueTags) RemoveDuplicates(ctx context.Context, defaultConfig *DefaultConfig, d schemaResourceData) KeyValueTags {
+func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *DefaultConfig, d schemaResourceData) KeyValueTags {
 	result := make(map[string]string)
 	for k, v := range tags {
 		result[k] = v.ValueString()
@@ -761,10 +761,15 @@ func (tags KeyValueTags) RemoveDuplicates(ctx context.Context, defaultConfig *De
 		}
 	}
 
-	var configIsNull bool
 	if config := d.GetRawConfig(); !config.IsNull() && config.IsKnown() {
 		c := config.GetAttr("tags")
-		configIsNull = c.IsNull()
+
+		// if the config is null just return the incoming tags
+		// no duplicates to calculate
+		if c.IsNull() {
+			return tags
+		}
+
 		if !c.IsNull() && c.IsKnown() {
 			for k, v := range c.AsValueMap() {
 				if _, ok := configTags[k]; !ok {
@@ -795,12 +800,7 @@ func (tags KeyValueTags) RemoveDuplicates(ctx context.Context, defaultConfig *De
 		}
 	}
 
-	out := tags
-	if !configIsNull {
-		out = New(ctx, result)
-	}
-
-	return out
+	return New(ctx, result)
 }
 
 // ToSnakeCase converts a string to snake case.
