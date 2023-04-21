@@ -1,7 +1,7 @@
 ---
 subcategory: "Transit Gateway"
 layout: "aws"
-page_title: "AWS: aws_ec2_transitgateway_route_table_associations"
+page_title: "AWS: aws_ec2_transit_gateway_route_table_associations"
 description: |-
    Provides information for multiple EC2 Transit Gateway Route Table Associations
 ---
