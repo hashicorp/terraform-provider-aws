@@ -5,6 +5,7 @@ FEATURES:
 
 * **New Data Source:** `aws_dms_endpoint` ([#30717](https://github.com/hashicorp/terraform-provider-aws/issues/30717))
 * **New Data Source:** `aws_fsx_windows_file_system` ([#28622](https://github.com/hashicorp/terraform-provider-aws/issues/28622))
+* **New Data Source:** `aws_iam_access_keys` ([#29278](https://github.com/hashicorp/terraform-provider-aws/issues/29278))
 * **New Data Source:** `aws_networkfirewall_resource_policy` ([#25474](https://github.com/hashicorp/terraform-provider-aws/issues/25474))
 * **New Data Source:** `aws_prometheus_workspaces` ([#28574](https://github.com/hashicorp/terraform-provider-aws/issues/28574))
 * **New Data Source:** `aws_redshiftserverless_workgroup` ([#29208](https://github.com/hashicorp/terraform-provider-aws/issues/29208))
