@@ -42,7 +42,7 @@ package something
 
 import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-// @SDKResource("aws_something_example")
+// @SDKResource("aws_something_example", name="Example)
 func ResourceExample() *schema.Resource {
 	return &schema.Resource{
 	    // some configuration
