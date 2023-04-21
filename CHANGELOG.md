@@ -1,5 +1,10 @@
 ## 4.65.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_synthetics_group` ([#30678](https://github.com/hashicorp/terraform-provider-aws/issues/30678))
+* **New Resource:** `aws_synthetics_group_association` ([#30678](https://github.com/hashicorp/terraform-provider-aws/issues/30678))
+
 ENHANCEMENTS:
 
 * resource/aws_db_subnet_group: Add `vpc_id` attribute ([#30775](https://github.com/hashicorp/terraform-provider-aws/issues/30775))
