@@ -185,7 +185,7 @@ resource "aws_ssmcontacts_contact_channel" "test" {
   contact_id = aws_ssmcontacts_contact.test_contact_one.arn
 
   delivery_address {
-    simple_address = "email@example.com"
+    simple_address = %[2]q
   }
 
   name = "Test Contact Channel for %[1]s"
@@ -212,7 +212,7 @@ data "aws_ssmcontacts_plan" "test" {
 
   depends_on = [aws_ssmcontacts_plan.test]
 }
-`, rName))
+`, rName, acctest.DefaultEmailAddress))
 }
 
 func testAccPlanDataSourceConfig_base(alias string) string {

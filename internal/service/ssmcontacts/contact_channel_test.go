@@ -46,7 +46,7 @@ func testContactChannel_basic(t *testing.T) {
 					testAccCheckContactExists(contactResourceName),
 					testAccCheckContactChannelExists(channelResourceName),
 					resource.TestCheckResourceAttr(channelResourceName, "activation_status", "NOT_ACTIVATED"),
-					resource.TestCheckResourceAttr(channelResourceName, "delivery_address.0.simple_address", "default@example.com"),
+					resource.TestCheckResourceAttr(channelResourceName, "delivery_address.0.simple_address", acctest.DefaultEmailAddress),
 					resource.TestCheckResourceAttr(channelResourceName, "name", rName),
 					resource.TestCheckResourceAttr(channelResourceName, "type", "EMAIL"),
 					resource.TestCheckResourceAttrPair(channelResourceName, "contact_id", contactResourceName, "arn"),
@@ -161,6 +161,9 @@ func testContactChannel_deliveryAddress(t *testing.T) {
 	ctx := context.Background()
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domain := acctest.RandomDomainName()
+	address1 := acctest.RandomEmailAddress(domain)
+	address2 := acctest.RandomEmailAddress(domain)
 	contactResourceName := "aws_ssmcontacts_contact.test"
 	channelResourceName := "aws_ssmcontacts_contact_channel.test"
 
@@ -174,12 +177,12 @@ func testContactChannel_deliveryAddress(t *testing.T) {
 		CheckDestroy:             testAccCheckContactChannelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContactChannelConfig(rName, rName, "EMAIL", "first@example.com"),
+				Config: testAccContactChannelConfig(rName, rName, "EMAIL", address1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(contactResourceName),
 					testAccCheckContactChannelExists(channelResourceName),
 					resource.TestCheckResourceAttr(channelResourceName, "activation_status", "NOT_ACTIVATED"),
-					resource.TestCheckResourceAttr(channelResourceName, "delivery_address.0.simple_address", "first@example.com"),
+					resource.TestCheckResourceAttr(channelResourceName, "delivery_address.0.simple_address", address1),
 					resource.TestCheckResourceAttr(channelResourceName, "type", "EMAIL"),
 				),
 			},
@@ -189,12 +192,12 @@ func testContactChannel_deliveryAddress(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccContactChannelConfig(rName, rName, "EMAIL", "second@example.com"),
+				Config: testAccContactChannelConfig(rName, rName, "EMAIL", address2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(contactResourceName),
 					testAccCheckContactChannelExists(channelResourceName),
 					resource.TestCheckResourceAttr(channelResourceName, "activation_status", "NOT_ACTIVATED"),
-					resource.TestCheckResourceAttr(channelResourceName, "delivery_address.0.simple_address", "second@example.com"),
+					resource.TestCheckResourceAttr(channelResourceName, "delivery_address.0.simple_address", address2),
 					resource.TestCheckResourceAttr(channelResourceName, "type", "EMAIL"),
 				),
 			},
@@ -229,7 +232,7 @@ func testContactChannel_name(t *testing.T) {
 		CheckDestroy:             testAccCheckContactChannelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContactChannelConfig(rName1, "update-name-test", "EMAIL", "test@example.com"),
+				Config: testAccContactChannelConfig(rName1, "update-name-test", "EMAIL", acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(contactResourceName),
 					testAccCheckContactChannelExists(channelResourceName),
@@ -242,7 +245,7 @@ func testContactChannel_name(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccContactChannelConfig(rName2, "update-name-test", "EMAIL", "test@example.com"),
+				Config: testAccContactChannelConfig(rName2, "update-name-test", "EMAIL", acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(contactResourceName),
 					testAccCheckContactChannelExists(channelResourceName),
@@ -284,7 +287,7 @@ func testContactChannel_type(t *testing.T) {
 					testAccCheckContactExists(contactResourceName),
 					testAccCheckContactChannelExists(channelResourceName),
 					resource.TestCheckResourceAttr(channelResourceName, "activation_status", "NOT_ACTIVATED"),
-					resource.TestCheckResourceAttr(channelResourceName, "delivery_address.0.simple_address", "default@example.com"),
+					resource.TestCheckResourceAttr(channelResourceName, "delivery_address.0.simple_address", acctest.DefaultEmailAddress),
 					resource.TestCheckResourceAttr(channelResourceName, "type", "EMAIL"),
 				),
 			},
@@ -397,7 +400,7 @@ func testAccContactChannelConfig_none() string {
 }
 
 func testAccContactChannelConfig_defaultEmail(rName string) string {
-	return testAccContactChannelConfig(rName, rName, "EMAIL", "default@example.com")
+	return testAccContactChannelConfig(rName, rName, "EMAIL", acctest.DefaultEmailAddress)
 }
 
 func testAccContactChannelConfig_defaultSms(rName string) string {
@@ -454,13 +457,13 @@ resource "aws_ssmcontacts_contact_channel" "test" {
   contact_id = %[2]s
 
   delivery_address {
-    simple_address = "test@example.com"
+    simple_address = %[3]q
   }
 
   name = %[1]q
   type = "EMAIL"
 }
-`, rName, contactArn))
+`, rName, contactArn, acctest.DefaultEmailAddress))
 }
 
 func testAccContactChannelConfig_base() string {

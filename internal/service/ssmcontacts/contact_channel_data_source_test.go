@@ -67,7 +67,7 @@ resource "aws_ssmcontacts_contact_channel" "test" {
   contact_id = aws_ssmcontacts_contact.test.arn
 
   delivery_address {
-    simple_address = "default@example.com"
+    simple_address = %[3]q
   }
 
   name = %[2]q
@@ -77,5 +77,5 @@ resource "aws_ssmcontacts_contact_channel" "test" {
 data "aws_ssmcontacts_contact_channel" "test" {
   arn = aws_ssmcontacts_contact_channel.test.arn
 }
-`, acctest.Region(), rName)
+`, acctest.Region(), rName, acctest.DefaultEmailAddress)
 }

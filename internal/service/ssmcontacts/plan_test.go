@@ -753,6 +753,8 @@ resource "aws_ssmcontacts_plan" "test" {
 }
 
 func testAccPlanConfig_channelTargetInfo(rName, contactChannelResourceName string, retryIntervalInMinutes int) string {
+	domain := acctest.RandomDomainName()
+
 	return acctest.ConfigCompose(
 		testAccPlanConfig_base(rName),
 		fmt.Sprintf(`
@@ -760,7 +762,7 @@ resource "aws_ssmcontacts_contact_channel" "test_channel_one" {
   contact_id = aws_ssmcontacts_contact.test_contact_one.arn
 
   delivery_address {
-    simple_address = "email1@example.com"
+    simple_address = %[3]q
   }
 
   name = "Test Contact Channel 1"
@@ -771,7 +773,7 @@ resource "aws_ssmcontacts_contact_channel" "test_channel_two" {
   contact_id = aws_ssmcontacts_contact.test_contact_one.arn
 
   delivery_address {
-    simple_address = "email2@example.com"
+    simple_address = %[4]q
   }
 
   name = "Test Contact Channel 2"
@@ -792,7 +794,7 @@ resource "aws_ssmcontacts_plan" "test" {
     }
   }
 }
-`, contactChannelResourceName, retryIntervalInMinutes))
+`, contactChannelResourceName, retryIntervalInMinutes, acctest.RandomEmailAddress(domain), acctest.RandomEmailAddress(domain)))
 }
 
 func testAccPlanConfig_base(alias string) string {
