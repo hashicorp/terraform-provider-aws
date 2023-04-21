@@ -280,9 +280,9 @@ func schemaCostCategoryRule() *schema.Resource {
 }
 
 func schemaCostCategoryRuleLevel(level int) *schema.Resource {
-	var elem interface{} = schemaCostCategoryRuleLevel(level + 1)
-	if level == costCategoryRuleMaxNesting {
-		elem = schemaCostCategoryRuleExpression()
+	var elem interface{} = schemaCostCategoryRuleExpression()
+	if level < costCategoryRuleMaxNesting {
+		elem = schemaCostCategoryRuleLevel(level + 1)
 	}
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
