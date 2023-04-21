@@ -159,6 +159,59 @@ func TestAccVPC_tags_computed(t *testing.T) {
 	})
 }
 
+func TestAccVPC_DefaultTags_zeroValue(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpc ec2.Vpc
+	resourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("key1", ""),
+					testAccVPCConfig_basic,
+				),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", ""),
+				),
+			},
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("key1", ""),
+					testAccVPCConfig_tags1("key2", ""),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", ""),
+				),
+			},
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
+					testAccVPCConfig_tags1("key2", ""),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", ""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVPC_DefaultTags_providerOnlyTestAccVPC_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	var vpc ec2.Vpc
