@@ -1647,8 +1647,9 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														ValidateDiagFunc: enum.Validate[types.H265ColorMetadata](),
 													},
 													"color_space_settings": {
-														Type:     schema.TypeSet,
+														Type:     schema.TypeList,
 														Optional: true,
+														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
 																"color_space_passthrough_settings": {
@@ -1670,15 +1671,20 @@ func channelEncoderSettingsSchema() *schema.Schema {
 																"hdr10_settings": {
 																	Type:     schema.TypeList,
 																	Optional: true,
+																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
 																			"max_cll": {
-																				Type:     schema.TypeInt,
-																				Optional: true,
+																				Type:         schema.TypeInt,
+																				Default:      0,
+																				Optional:     true,
+																				ValidateFunc: validation.IntAtLeast(0),
 																			},
 																			"max_fall": {
-																				Type:     schema.TypeInt,
-																				Optional: true,
+																				Type:         schema.TypeInt,
+																				Default:      0,
+																				Optional:     true,
+																				ValidateFunc: validation.IntAtLeast(0),
 																			},
 																		},
 																	},
