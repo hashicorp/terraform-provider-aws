@@ -1,4 +1,9 @@
 ## 4.65.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_db_subnet_group: Add `vpc_id` attribute ([#30775](https://github.com/hashicorp/terraform-provider-aws/issues/30775))
+
 ## 4.64.0 (April 20, 2023)
 
 FEATURES:
