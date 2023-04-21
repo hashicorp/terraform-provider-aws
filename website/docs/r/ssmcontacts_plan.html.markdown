@@ -58,18 +58,21 @@ resource "aws_ssmcontacts_contact" "contact_two" {
 
 resource "aws_ssmcontacts_plan" "test" {
   contact_id = aws_ssmcontacts_contact.escalation_plan.arn
+
   stage {
     duration_in_minutes = 0
+
     target {
       contact_target_info {
         is_essential = false
-        contact_id = aws_ssmcontacts_contact.contact_one.arn
+        contact_id   = aws_ssmcontacts_contact.contact_one.arn
       }
     }
+
     target {
       contact_target_info {
         is_essential = true
-        contact_id = aws_ssmcontacts_contact.contact_two.arn
+        contact_id   = aws_ssmcontacts_contact.contact_two.arn
       }
     }
   }

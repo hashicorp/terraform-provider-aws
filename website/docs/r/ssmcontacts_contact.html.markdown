@@ -16,8 +16,8 @@ Terraform resource for managing an AWS SSM Contact.
 
 ```terraform
 resource "aws_ssmcontacts_contact" "example" {
-  alias      = "alias"
-  type       = "PERSONAL"
+  alias = "alias"
+  type  = "PERSONAL"
 
   depends_on = [aws_ssmincidents_replication_set.example]
 }
@@ -30,11 +30,12 @@ resource "aws_ssmcontacts_contact" "example" {
   alias        = "alias"
   display_name = "displayName"
   type         = "ESCALATION"
-  tags         = {
+
+  tags = {
     key = "value"
   }
 
-  depends_on   = [aws_ssmincidents_replication_set.example]
+  depends_on = [aws_ssmincidents_replication_set.example]
 }
 ```
 

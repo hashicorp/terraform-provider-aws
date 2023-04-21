@@ -16,12 +16,14 @@ Terraform resource for managing an AWS SSM Contacts Contact Channel.
 
 ```terraform
 resource "aws_ssmcontacts_contact_channel" "example" {
-	contact_id = "arn:aws:ssm-contacts:us-west-2:123456789012:contact/contactalias"
-	delivery_address {
-		simple_address = "email@example.com"
-	}
-	name = "Example contact channel"
-	type = "EMAIL"
+  contact_id = "arn:aws:ssm-contacts:us-west-2:123456789012:contact/contactalias"
+
+  delivery_address {
+    simple_address = "email@example.com"
+  }
+
+  name = "Example contact channel"
+  type = "EMAIL"
 }
 ```
 
@@ -29,17 +31,19 @@ resource "aws_ssmcontacts_contact_channel" "example" {
 
 ```terraform
 resource "aws_ssmcontacts_contact" "example_contact" {
-	alias = "example_contact"
-	type = "PERSONAL"
+  alias = "example_contact"
+  type  = "PERSONAL"
 }
 
 resource "aws_ssmcontacts_contact_channel" "example" {
-	contact_id = aws_ssmcontacts_contact.example_contact.arn
-	delivery_address {
-		simple_address = "email@example.com"
-	}
-	name = "Example contact channel"
-	type = "EMAIL"
+  contact_id = aws_ssmcontacts_contact.example_contact.arn
+
+  delivery_address {
+    simple_address = "email@example.com"
+  }
+
+  name = "Example contact channel"
+  type = "EMAIL"
 }
 ```
 
