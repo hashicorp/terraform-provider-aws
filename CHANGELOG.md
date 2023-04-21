@@ -2,12 +2,19 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_ssmcontacts_contact` ([#30667](https://github.com/hashicorp/terraform-provider-aws/issues/30667))
+* **New Data Source:** `aws_ssmcontacts_contact_channel` ([#30667](https://github.com/hashicorp/terraform-provider-aws/issues/30667))
+* **New Data Source:** `aws_ssmcontacts_plan` ([#30667](https://github.com/hashicorp/terraform-provider-aws/issues/30667))
+* **New Resource:** `aws_ssmcontacts_contact` ([#30667](https://github.com/hashicorp/terraform-provider-aws/issues/30667))
+* **New Resource:** `aws_ssmcontacts_contact_channel` ([#30667](https://github.com/hashicorp/terraform-provider-aws/issues/30667))
+* **New Resource:** `aws_ssmcontacts_plan` ([#30667](https://github.com/hashicorp/terraform-provider-aws/issues/30667))
 * **New Resource:** `aws_synthetics_group` ([#30678](https://github.com/hashicorp/terraform-provider-aws/issues/30678))
 * **New Resource:** `aws_synthetics_group_association` ([#30678](https://github.com/hashicorp/terraform-provider-aws/issues/30678))
 
 ENHANCEMENTS:
 
 * resource/aws_db_subnet_group: Add `vpc_id` attribute ([#30775](https://github.com/hashicorp/terraform-provider-aws/issues/30775))
+* resource/aws_wafv2_web_acl: Add `token_domains` argument ([#30340](https://github.com/hashicorp/terraform-provider-aws/issues/30340))
 
 ## 4.64.0 (April 20, 2023)
 
