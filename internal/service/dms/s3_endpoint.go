@@ -24,7 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_dms_s3_endpoint")
+// @SDKResource("aws_dms_s3_endpoint", name="S3 Endpoint")
+// @Tags(identifierAttribute="endpoint_arn")
 func ResourceS3Endpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceS3EndpointCreate,
@@ -88,8 +89,8 @@ func ResourceS3Endpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 
 			/////// S3-Specific Settings
 			"add_column_name": {
@@ -319,14 +320,12 @@ const (
 func resourceS3EndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &dms.CreateEndpointInput{
 		EndpointIdentifier: aws.String(d.Get("endpoint_id").(string)),
 		EndpointType:       aws.String(d.Get("endpoint_type").(string)),
 		EngineName:         aws.String("s3"),
-		Tags:               Tags(tags.IgnoreAWS()),
+		Tags:               GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("certificate_arn"); ok {
@@ -389,8 +388,6 @@ func resourceS3EndpointCreate(ctx context.Context, d *schema.ResourceData, meta 
 func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	endpoint, err := FindEndpointByID(ctx, conn, d.Id())
 
@@ -474,22 +471,6 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.Set("external_table_definition", p)
 
-	tags, err := ListTags(ctx, conn, d.Get("endpoint_arn").(string))
-	if err != nil {
-		return create.DiagError(names.DMS, create.ErrActionReading, ResNameS3Endpoint, d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.DMS, create.ErrActionReading, ResNameS3Endpoint, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.DMS, create.ErrActionReading, ResNameS3Endpoint, d.Id(), err)
-	}
-
 	return diags
 }
 
@@ -548,15 +529,6 @@ func resourceS3EndpointUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if err != nil {
-			return create.DiagError(names.DMS, create.ErrActionUpdating, ResNameS3Endpoint, d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		arn := d.Get("endpoint_arn").(string)
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
 			return create.DiagError(names.DMS, create.ErrActionUpdating, ResNameS3Endpoint, d.Id(), err)
 		}
 	}

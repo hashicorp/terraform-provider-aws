@@ -30,13 +30,15 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
 	entityRecognizerTagKey = "tf-aws_comprehend_entity_recognizer"
 )
 
-// @SDKResource("aws_comprehend_entity_recognizer")
+// @SDKResource("aws_comprehend_entity_recognizer", name="Entity Recognizer")
+// @Tags(identifierAttribute="id")
 func ResourceEntityRecognizer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEntityRecognizerCreate,
@@ -205,8 +207,8 @@ func ResourceEntityRecognizer() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validModelName,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"version_name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -358,23 +360,6 @@ func resourceEntityRecognizerRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("setting vpc_config: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id())
-	if err != nil {
-		return diag.Errorf("listing tags for Comprehend Entity Recognizer (%s): %s", d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
-
 	return nil
 }
 
@@ -395,14 +380,6 @@ func resourceEntityRecognizerUpdate(ctx context.Context, d *schema.ResourceData,
 		diags := entityRecognizerPublishVersion(ctx, conn, d, versionName, create.ErrActionUpdating, d.Timeout(schema.TimeoutUpdate), awsClient)
 		if diags.HasError() {
 			return diags
-		}
-	} else if d.HasChange("tags_all") {
-		// For a tags-only change. If tag changes are combined with version publishing, the tags are set
-		// by the CreateEntityRecognizer call
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags for Comprehend Entity Recognizer (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -517,6 +494,7 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 		VersionName:        versionName,
 		VpcConfig:          expandVPCConfig(d.Get("vpc_config").([]interface{})),
 		ClientRequestToken: aws.String(id.UniqueId()),
+		Tags:               GetTagsIn(ctx),
 	}
 
 	if v, ok := d.Get("model_kms_key_id").(string); ok && v != "" {
@@ -525,13 +503,6 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 
 	if v, ok := d.Get("volume_kms_key_id").(string); ok && v != "" {
 		in.VolumeKmsKeyId = aws.String(v)
-	}
-
-	defaultTagsConfig := awsClient.DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	// Because the IAM credentials aren't evaluated until training time, we need to ensure we wait for the IAM propagation delay

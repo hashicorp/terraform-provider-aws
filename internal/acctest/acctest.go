@@ -2193,6 +2193,22 @@ func CheckResourceAttrGreaterThanValue(n, key, value string) resource.TestCheckF
 	}
 }
 
+func CheckResourceAttrGreaterThanOrEqualValue(n, key string, val int) resource.TestCheckFunc {
+	return resource.TestCheckResourceAttrWith(n, key, func(value string) error {
+		v, err := strconv.Atoi(value)
+
+		if err != nil {
+			return err
+		}
+
+		if v < val {
+			return fmt.Errorf("%s: Attribute %q is not greater than or equal to %d, got %d", n, key, val, v)
+		}
+
+		return nil
+	})
+}
+
 // RunSerialTests1Level runs test cases in parallel, optionally sleeping between each.
 func RunSerialTests1Level(t *testing.T, testCases map[string]func(t *testing.T), d time.Duration) {
 	t.Helper()

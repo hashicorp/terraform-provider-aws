@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists scheduler service tags.
@@ -101,10 +102,12 @@ func UpdateTags(ctx context.Context, conn *scheduler.Client, identifier string, 
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.Scheduler)
+	if len(removedTags) > 0 {
 		input := &scheduler.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     removedTags.IgnoreAWS().Keys(),
+			TagKeys:     removedTags.Keys(),
 		}
 
 		_, err := conn.UntagResource(ctx, input)
@@ -114,10 +117,12 @@ func UpdateTags(ctx context.Context, conn *scheduler.Client, identifier string, 
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.Scheduler)
+	if len(updatedTags) > 0 {
 		input := &scheduler.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreAWS()),
+			Tags:        Tags(updatedTags),
 		}
 
 		_, err := conn.TagResource(ctx, input)

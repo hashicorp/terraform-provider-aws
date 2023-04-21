@@ -114,7 +114,6 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	output, err := conn.CreateDBParameterGroupWithContext(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creatingDB Parameter Group (%s): %s", name, err)
 	}
@@ -260,7 +259,6 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 				}
 
 				_, err := conn.ModifyDBParameterGroupWithContext(ctx, input)
-
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "modifying DB Parameter Group (%s): %s", d.Id(), err)
 				}
@@ -302,7 +300,6 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 				}
 
 				_, err := conn.ResetDBParameterGroupWithContext(ctx, input)
-
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "resetting DB Parameter Group (%s): %s", d.Id(), err)
 				}

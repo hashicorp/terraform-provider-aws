@@ -18,9 +18,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_mq_configuration")
+// @SDKResource("aws_mq_configuration", name="Configuration")
+// @Tags(identifierAttribute="arn")
 func ResourceConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationCreate,
@@ -91,30 +93,25 @@ func ResourceConfiguration() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).MQConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &mq.CreateConfigurationRequest{
 		EngineType:    aws.String(d.Get("engine_type").(string)),
 		EngineVersion: aws.String(d.Get("engine_version").(string)),
 		Name:          aws.String(name),
+		Tags:          GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("authentication_strategy"); ok {
 		input.AuthenticationStrategy = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	output, err := conn.CreateConfigurationWithContext(ctx, input)
@@ -147,8 +144,6 @@ func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).MQConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	configuration, err := FindConfigurationByID(ctx, conn, d.Id())
 
@@ -188,16 +183,7 @@ func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.Set("data", string(data))
 
-	tags := KeyValueTags(ctx, configuration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, configuration.Tags)
 
 	return nil
 }
@@ -219,14 +205,6 @@ func resourceConfigurationUpdate(ctx context.Context, d *schema.ResourceData, me
 
 		if err != nil {
 			return diag.Errorf("updating MQ Configuration (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating MQ Configuration (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 

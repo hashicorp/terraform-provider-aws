@@ -111,7 +111,6 @@ func resourceProxyEndpointCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	_, err := conn.CreateDBProxyEndpointWithContext(ctx, &input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "Creating RDS DB Proxy Endpoint (%s/%s): %s", dbProxyName, dbProxyEndpointName, err)
 	}
@@ -205,7 +204,6 @@ func resourceProxyEndpointDelete(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[DEBUG] Delete DB Proxy Endpoint: %#v", params)
 	_, err := conn.DeleteDBProxyEndpointWithContext(ctx, &params)
-
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) || tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyEndpointNotFoundFault) {
 			return diags

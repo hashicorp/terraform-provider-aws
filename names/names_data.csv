@@ -42,6 +42,8 @@ chime-sdk-identity,chimesdkidentity,chimesdkidentity,chimesdkidentity,,chimesdki
 chime-sdk-mediapipelines,chimesdkmediapipelines,chimesdkmediapipelines,chimesdkmediapipelines,,chimesdkmediapipelines,,,ChimeSDKMediaPipelines,ChimeSDKMediaPipelines,,1,,,aws_chimesdkmediapipelines_,,chimesdkmediapipelines_,Chime SDK Media Pipelines,Amazon,,,,,
 chime-sdk-meetings,chimesdkmeetings,chimesdkmeetings,chimesdkmeetings,,chimesdkmeetings,,,ChimeSDKMeetings,ChimeSDKMeetings,,1,,,aws_chimesdkmeetings_,,chimesdkmeetings_,Chime SDK Meetings,Amazon,,,,,
 chime-sdk-messaging,chimesdkmessaging,chimesdkmessaging,chimesdkmessaging,,chimesdkmessaging,,,ChimeSDKMessaging,ChimeSDKMessaging,,1,,,aws_chimesdkmessaging_,,chimesdkmessaging_,Chime SDK Messaging,Amazon,,,,,
+chime-sdk-voice,chimesdkvoice,chimesdkvoice,chimesdkvoice,,chimesdkvoice,,,ChimeSDKVoice,ChimeSDKVoice,,1,,,aws_chimesdkvoice_,,chimesdkvoice_,Chime SDK Voice,Amazon,,,,,
+cleanrooms,cleanrooms,cleanrooms,cleanrooms,,cleanrooms,,,CleanRooms,CleanRooms,,,2,,aws_cleanrooms_,,cleanrooms_,Clean Rooms,AWS,,,,,
 ,,,,,,,,,,,,,,,,,CLI (Command Line Interface),AWS,x,,,,No SDK support
 configure,configure,,,,,,,,,,,,,,,,CLI Configure options,AWS,x,,,,CLI only
 ddb,ddb,,,,,,,,,,,,,,,,CLI High-level DynamoDB commands,AWS,x,,,,Part of DynamoDB
@@ -111,6 +113,7 @@ directconnect,directconnect,directconnect,directconnect,,directconnect,,,DirectC
 dlm,dlm,dlm,dlm,,dlm,,,DLM,DLM,,1,,,aws_dlm_,,dlm_,DLM (Data Lifecycle Manager),Amazon,,,,,
 dms,dms,databasemigrationservice,databasemigrationservice,,dms,,databasemigration;databasemigrationservice,DMS,DatabaseMigrationService,,1,,,aws_dms_,,dms_,DMS (Database Migration),AWS,,,,,
 docdb,docdb,docdb,docdb,,docdb,,,DocDB,DocDB,,1,,,aws_docdb_,,docdb_,DocDB (DocumentDB),Amazon,,,,,
+docdb-elastic,docdbelastic,docdbelastic,docdbelastic,,docdbelastic,,,DocDBElastic,DocDBElastic,,,2,,aws_docdbelastic_,,docdbelastic_,DocDB (DocumentDB) Elastic,Amazon,,,,,
 drs,drs,drs,drs,,drs,,,DRS,Drs,,1,,,aws_drs_,,drs_,DRS (Elastic Disaster Recovery),AWS,,,,,
 ds,ds,directoryservice,directoryservice,,ds,,directoryservice,DS,DirectoryService,,1,,aws_directory_service_,aws_ds_,,directory_service_,Directory Service,AWS,,,,,
 dynamodb,dynamodb,dynamodb,dynamodb,,dynamodb,,,DynamoDB,DynamoDB,,1,,,aws_dynamodb_,,dynamodb_,DynamoDB,Amazon,,,AWS_DYNAMODB_ENDPOINT,TF_AWS_DYNAMODB_ENDPOINT,
@@ -168,8 +171,8 @@ healthlake,healthlake,healthlake,healthlake,,healthlake,,,HealthLake,HealthLake,
 honeycode,honeycode,honeycode,honeycode,,honeycode,,,Honeycode,Honeycode,,1,,,aws_honeycode_,,honeycode_,Honeycode,Amazon,,,,,
 iam,iam,iam,iam,,iam,,,IAM,IAM,,1,,,aws_iam_,,iam_,IAM (Identity & Access Management),AWS,,,AWS_IAM_ENDPOINT,TF_AWS_IAM_ENDPOINT,
 accessanalyzer,accessanalyzer,accessanalyzer,accessanalyzer,,accessanalyzer,,,AccessAnalyzer,AccessAnalyzer,,1,,,aws_accessanalyzer_,,accessanalyzer_,IAM Access Analyzer,AWS,,,,,
-inspector,inspector,inspector,inspector,,inspector,,,Inspector,Inspector,,1,,,aws_inspector_,,inspector_,Inspector,Amazon,,,,,
-inspector2,inspector2,inspector2,inspector2,,inspector2,,inspectorv2,Inspector2,Inspector2,,,2,,aws_inspector2_,,inspector2_,Inspector V2,Amazon,,,,,
+inspector,inspector,inspector,inspector,,inspector,,,Inspector,Inspector,,1,,,aws_inspector_,,inspector_,Inspector Classic,Amazon,,,,,
+inspector2,inspector2,inspector2,inspector2,,inspector2,,inspectorv2,Inspector2,Inspector2,,,2,,aws_inspector2_,,inspector2_,Inspector,Amazon,,,,,
 iot1click-devices,iot1clickdevices,iot1clickdevicesservice,iot1clickdevicesservice,,iot1clickdevices,,iot1clickdevicesservice,IoT1ClickDevices,IoT1ClickDevicesService,,1,,,aws_iot1clickdevices_,,iot1clickdevices_,IoT 1-Click Devices,AWS,,,,,
 iot1click-projects,iot1clickprojects,iot1clickprojects,iot1clickprojects,,iot1clickprojects,,,IoT1ClickProjects,IoT1ClickProjects,,1,,,aws_iot1clickprojects_,,iot1clickprojects_,IoT 1-Click Projects,AWS,,,,,
 iotanalytics,iotanalytics,iotanalytics,iotanalytics,,iotanalytics,,,IoTAnalytics,IoTAnalytics,,1,,,aws_iotanalytics_,,iotanalytics_,IoT Analytics,AWS,,,,,

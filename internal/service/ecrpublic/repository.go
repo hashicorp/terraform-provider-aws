@@ -21,9 +21,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ecrpublic_repository")
+// @SDKResource("aws_ecrpublic_repository", name="Repository")
+// @Tags(identifierAttribute="arn")
 func ResourceRepository() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRepositoryCreate,
@@ -113,8 +115,8 @@ func ResourceRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -122,22 +124,15 @@ func ResourceRepository() *schema.Resource {
 func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRPublicConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := ecrpublic.CreateRepositoryInput{
 		RepositoryName: aws.String(d.Get("repository_name").(string)),
+		Tags:           GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("catalog_data"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.CatalogData = expandRepositoryCatalogData(v.([]interface{})[0].(map[string]interface{}))
 	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating ECR Public repository: %#v", input)
 
 	out, err := conn.CreateRepositoryWithContext(ctx, &input)
 	if err != nil {
@@ -160,8 +155,6 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRPublicConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading ECR Public repository %s", d.Id())
 	var out *ecrpublic.DescribeRepositoriesOutput
@@ -237,19 +230,6 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 		d.Set("catalog_data", nil)
 	}
 
-	tags, err := ListTags(ctx, conn, aws.StringValue(repository.RepositoryArn))
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -310,22 +290,11 @@ func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	arn := d.Get("arn").(string)
 	conn := meta.(*conns.AWSClient).ECRPublicConn()
 
 	if d.HasChange("catalog_data") {
 		if err := resourceRepositoryUpdateCatalogData(ctx, conn, d); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating ECR Public Repository (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := UpdateTags(ctx, conn, arn, o, n)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags for ECR Public Repository (%s): %s", d.Id(), err)
 		}
 	}
 

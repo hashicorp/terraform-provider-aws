@@ -1314,7 +1314,7 @@ func expandLaunchTemplateBlockDeviceMappingRequest(tfMap map[string]interface{})
 
 	apiObject := &ec2.LaunchTemplateBlockDeviceMappingRequest{}
 
-	if v, ok := tfMap["ebs"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["ebs"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Ebs = expandLaunchTemplateEBSBlockDeviceRequest(v[0].(map[string]interface{}))
 	}
 
@@ -1412,7 +1412,7 @@ func expandLaunchTemplateCapacityReservationSpecificationRequest(tfMap map[strin
 		apiObject.CapacityReservationPreference = aws.String(v)
 	}
 
-	if v, ok := tfMap["capacity_reservation_target"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["capacity_reservation_target"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.CapacityReservationTarget = expandCapacityReservationTarget(v[0].(map[string]interface{}))
 	}
 
@@ -1546,7 +1546,7 @@ func expandLaunchTemplateInstanceMarketOptionsRequest(tfMap map[string]interface
 		apiObject.MarketType = aws.String(v)
 	}
 
-	if v, ok := tfMap["spot_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["spot_options"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.SpotOptions = expandLaunchTemplateSpotMarketOptionsRequest(v[0].(map[string]interface{}))
 	}
 
@@ -1560,7 +1560,7 @@ func expandInstanceRequirementsRequest(tfMap map[string]interface{}) *ec2.Instan
 
 	apiObject := &ec2.InstanceRequirementsRequest{}
 
-	if v, ok := tfMap["accelerator_count"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["accelerator_count"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.AcceleratorCount = expandAcceleratorCountRequest(v[0].(map[string]interface{}))
 	}
 
@@ -1572,7 +1572,7 @@ func expandInstanceRequirementsRequest(tfMap map[string]interface{}) *ec2.Instan
 		apiObject.AcceleratorNames = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap["accelerator_total_memory_mib"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["accelerator_total_memory_mib"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.AcceleratorTotalMemoryMiB = expandAcceleratorTotalMemoryMiBRequest(v[0].(map[string]interface{}))
 	}
 
@@ -1588,7 +1588,7 @@ func expandInstanceRequirementsRequest(tfMap map[string]interface{}) *ec2.Instan
 		apiObject.BareMetal = aws.String(v)
 	}
 
-	if v, ok := tfMap["baseline_ebs_bandwidth_mbps"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["baseline_ebs_bandwidth_mbps"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.BaselineEbsBandwidthMbps = expandBaselineEBSBandwidthMbpsRequest(v[0].(map[string]interface{}))
 	}
 
@@ -1616,19 +1616,19 @@ func expandInstanceRequirementsRequest(tfMap map[string]interface{}) *ec2.Instan
 		apiObject.LocalStorageTypes = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap["memory_gib_per_vcpu"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["memory_gib_per_vcpu"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.MemoryGiBPerVCpu = expandMemoryGiBPerVCPURequest(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["memory_mib"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["memory_mib"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.MemoryMiB = expandMemoryMiBRequest(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["network_bandwidth_gbps"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["network_bandwidth_gbps"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.NetworkBandwidthGbps = expandNetworkBandwidthGbpsRequest(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["network_interface_count"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["network_interface_count"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.NetworkInterfaceCount = expandNetworkInterfaceCountRequest(v[0].(map[string]interface{}))
 	}
 
@@ -1644,11 +1644,11 @@ func expandInstanceRequirementsRequest(tfMap map[string]interface{}) *ec2.Instan
 		apiObject.SpotMaxPricePercentageOverLowestPrice = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["total_local_storage_gb"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["total_local_storage_gb"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.TotalLocalStorageGB = expandTotalLocalStorageGBRequest(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["vcpu_count"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["vcpu_count"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.VCpuCount = expandVCPUCountRangeRequest(v[0].(map[string]interface{}))
 	}
 

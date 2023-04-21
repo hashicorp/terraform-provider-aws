@@ -28,14 +28,26 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceAggregateAuthorization,
 			TypeName: "aws_config_aggregate_authorization",
+			Name:     "Aggregate Authorization",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceConfigRule,
 			TypeName: "aws_config_config_rule",
+			Name:     "Config Rule",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceConfigurationAggregator,
 			TypeName: "aws_config_configuration_aggregator",
+			Name:     "Configuration Aggregator",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceConfigurationRecorder,

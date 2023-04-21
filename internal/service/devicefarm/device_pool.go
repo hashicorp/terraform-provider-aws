@@ -18,9 +18,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_devicefarm_device_pool")
+// @SDKResource("aws_devicefarm_device_pool", name="Device Pool")
+// @Tags(identifierAttribute="arn")
 func ResourceDevicePool() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDevicePoolCreate,
@@ -81,8 +83,8 @@ func ResourceDevicePool() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
@@ -91,8 +93,6 @@ func ResourceDevicePool() *schema.Resource {
 func resourceDevicePoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &devicefarm.CreateDevicePoolInput{
@@ -119,7 +119,7 @@ func resourceDevicePoolCreate(ctx context.Context, d *schema.ResourceData, meta 
 	log.Printf("[DEBUG] Successsfully Created DeviceFarm DevicePool: %s", arn)
 	d.SetId(arn)
 
-	if len(tags) > 0 {
+	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
 		if err := UpdateTags(ctx, conn, arn, nil, tags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating DeviceFarm DevicePool (%s) tags: %s", arn, err)
 		}
@@ -131,8 +131,6 @@ func resourceDevicePoolCreate(ctx context.Context, d *schema.ResourceData, meta 
 func resourceDevicePoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	devicePool, err := FindDevicePoolByARN(ctx, conn, d.Id())
 
@@ -161,23 +159,6 @@ func resourceDevicePoolRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	if err := d.Set("rule", flattenDevicePoolRules(devicePool.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
-	}
-
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for DeviceFarm DevicePool (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	return diags
@@ -216,14 +197,6 @@ func resourceDevicePoolUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		_, err := conn.UpdateDevicePoolWithContext(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "Error Updating DeviceFarm DevicePool: %s", err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating DeviceFarm DevicePool (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 

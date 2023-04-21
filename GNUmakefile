@@ -78,6 +78,18 @@ default: build
 build: fmtcheck
 	$(GO_VER) install
 
+cleango:
+	@echo "==> Cleaning Go..."
+	@echo "WARNING: This will kill gopls and clean Go caches"
+	@processes=`pgrep gopls` ; \
+	for proc in $$processes ; do \
+		echo "Killing gopls process $$proc" ; \
+		kill -9 $$proc ; \
+	done ; \
+	go clean -modcache -testcache -cache ; \
+
+clean: cleango build tools
+
 depscheck:
 	@echo "==> Checking source code with go mod tidy..."
 	@$(GO_VER) mod tidy
@@ -132,7 +144,6 @@ gen:
 	rm -f internal/sweep/sweep_test.go
 	rm -f names/caps.md
 	rm -f names/*_gen.go
-	rm -f website/allowed-subcategories.txt
 	rm -f website/docs/guides/custom-service-endpoints.html.md
 	rm -f .ci/.semgrep-caps-aws-ec2.yml
 	rm -f .ci/.semgrep-configs.yml

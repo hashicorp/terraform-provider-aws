@@ -41,7 +41,7 @@ package something
 
 import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-// @SDKDataSource("aws_something_example")
+// @SDKDataSource("aws_something_example", name="Example")
 func DataSourceExample() *schema.Resource {
 	return &schema.Resource{
 	    // some configuration

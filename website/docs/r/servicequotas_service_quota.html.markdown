@@ -40,6 +40,15 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Service code and quota code, separated by a front slash (`/`)
 * `quota_name` - Name of the quota.
 * `service_name` - Name of the service.
+* `usage_metric` - Information about the measurement.
+    * `metric_dimensions` - The metric dimensions.
+        * `class`
+        * `resource`
+        * `service`
+        * `type`
+    * `metric_name` - The name of the metric.
+    * `metric_namespace` - The namespace of the metric.
+    * `metric_statistic_recommendation` - The metric statistic that AWS recommend you use when determining quota usage.
 
 ## Import
 
