@@ -77,7 +77,6 @@ func expandTargets(targets []interface{}) []types.Target {
 	targetList := make([]types.Target, 0)
 
 	for _, target := range targets {
-
 		if target == nil {
 			continue
 		}
