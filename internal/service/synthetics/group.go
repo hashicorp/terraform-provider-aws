@@ -2,11 +2,9 @@ package synthetics
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/synthetics"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -95,14 +93,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading Synthetics Group (%s): %s", d.Id(), err)
 	}
 
-	groupArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   synthetics.ServiceName,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("group:%s", aws.StringValue(group.Name)),
-	}.String()
-	d.Set("arn", groupArn)
+	d.Set("arn", group.Arn)
 	d.Set("group_id", group.Id)
 	d.Set("name", group.Name)
 
