@@ -12967,6 +12967,9 @@ var awsPartition = partition{
 					Region: "ap-southeast-3",
 				}: endpoint{},
 				endpointKey{
+					Region: "ap-southeast-4",
+				}: endpoint{},
+				endpointKey{
 					Region: "ca-central-1",
 				}: endpoint{},
 				endpointKey{
@@ -15629,6 +15632,14 @@ var awsPartition = partition{
 						Region: "eu-west-3",
 					},
 					Deprecated: boxedTrue,
+				},
+				endpointKey{
+					Region: "il-central-1-fips",
+				}: endpoint{
+					Hostname: "kms-fips.il-central-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "il-central-1",
+					},
 				},
 				endpointKey{
 					Region: "me-central-1",
