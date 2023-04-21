@@ -102,10 +102,12 @@ func UpdateTags(ctx context.Context, conn *ssmcontacts.Client, identifier string
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.SSMContacts)
+	if len(removedTags) > 0 {
 		input := &ssmcontacts.UntagResourceInput{
 			ResourceARN: aws.String(identifier),
-			TagKeys:     removedTags.IgnoreSystem(names.SSMContacts).Keys(),
+			TagKeys:     removedTags.Keys(),
 		}
 
 		_, err := conn.UntagResource(ctx, input)
@@ -115,10 +117,12 @@ func UpdateTags(ctx context.Context, conn *ssmcontacts.Client, identifier string
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.SSMContacts)
+	if len(updatedTags) > 0 {
 		input := &ssmcontacts.TagResourceInput{
 			ResourceARN: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreSystem(names.SSMContacts)),
+			Tags:        Tags(updatedTags),
 		}
 
 		_, err := conn.TagResource(ctx, input)
