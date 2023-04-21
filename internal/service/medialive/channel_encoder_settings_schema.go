@@ -1647,19 +1647,10 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														ValidateDiagFunc: enum.Validate[types.H265ColorMetadata](),
 													},
 													"color_space_settings": {
-														Type:     schema.TypeList,
+														Type:     schema.TypeSet,
 														Optional: true,
-														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"color_space_settings": {
-																	Type:     schema.TypeList,
-																	Optional: true,
-																	MaxItems: 1,
-																	Elem: &schema.Resource{
-																		Schema: map[string]*schema.Schema{}, // no exported elements in this list
-																	},
-																},
 																"color_space_passthrough_settings": {
 																	Type:     schema.TypeList,
 																	Optional: true,
@@ -1679,7 +1670,6 @@ func channelEncoderSettingsSchema() *schema.Schema {
 																"hdr10_settings": {
 																	Type:     schema.TypeList,
 																	Optional: true,
-																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
 																			"max_cll": {
@@ -4808,20 +4798,20 @@ func expandH265ColorSpaceSettings(tfList []interface{}) *types.H265ColorSpaceSet
 	m := tfList[0].(map[string]interface{})
 
 	var out types.H265ColorSpaceSettings
-	if _, ok := m["color_space_passthrough_settings"].([]interface{}); ok {
-		out.ColorSpacePassthroughSettings = &types.ColorSpacePassthroughSettings{}
+	if v, ok := m["color_space_passthrough_settings"].([]interface{}); ok && len(v) > 0 {
+		out.ColorSpacePassthroughSettings = &types.ColorSpacePassthroughSettings{} // no exported elements in this list
 	}
-	if _, ok := m["dolby_vision81_settings"].([]interface{}); ok {
-		out.DolbyVision81Settings = &types.DolbyVision81Settings{}
+	if v, ok := m["dolby_vision81_settings"].([]interface{}); ok && len(v) > 0 {
+		out.DolbyVision81Settings = &types.DolbyVision81Settings{} // no exported elements in this list
 	}
 	if v, ok := m["hdr10_settings"].([]interface{}); ok && len(v) > 0 {
 		out.Hdr10Settings = expandH265Hdr10Settings(v)
 	}
-	if _, ok := m["rec601_settings"].([]interface{}); ok {
-		out.Rec601Settings = &types.Rec601Settings{}
+	if v, ok := m["rec601_settings"].([]interface{}); ok && len(v) > 0 {
+		out.Rec601Settings = &types.Rec601Settings{} // no exported elements in this list
 	}
-	if _, ok := m["rec709_settings"].([]interface{}); ok {
-		out.Rec709Settings = &types.Rec709Settings{}
+	if v, ok := m["rec709_settings"].([]interface{}); ok && len(v) > 0 {
+		out.Rec709Settings = &types.Rec709Settings{} // no exported elements in this list
 	}
 
 	return &out
@@ -5985,13 +5975,23 @@ func flattenH265ColorSpaceSettings(in *types.H265ColorSpaceSettings) []interface
 		return nil
 	}
 
-	m := map[string]interface{}{
-		"color_space_passthrough_settings": in.ColorSpacePassthroughSettings,
-		"dolby_vision81_settings":          in.DolbyVision81Settings,
-		"hdr10_settings":                   flattenH265Hdr10Settings(in.Hdr10Settings),
-		"rec601_settings":                  in.Rec601Settings,
-		"rec709_settings":                  in.Rec709Settings,
+	m := map[string]interface{}{}
+	if in.ColorSpacePassthroughSettings != nil {
+		m["color_space_passthrough_settings"] = []interface{}{} // no exported fields
 	}
+	if in.DolbyVision81Settings != nil {
+		m["dolby_vision81_settings"] = []interface{}{} // no exported fields
+	}
+	if in.Hdr10Settings != nil {
+		m["hdr10_settings"] = flattenH265Hdr10Settings(in.Hdr10Settings)
+	}
+	if in.Rec601Settings != nil {
+		m["rec601_settings"] = []interface{}{} // no exported fields
+	}
+	if in.Rec709Settings != nil {
+		m["rec709_settings"] = []interface{}{} // no exported fields
+	}
+
 	return []interface{}{m}
 }
 
