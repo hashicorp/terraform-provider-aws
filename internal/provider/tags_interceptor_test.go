@@ -83,7 +83,7 @@ func TestTagsInterceptor(t *testing.T) {
 	}
 
 	bootstrapContext := func(ctx context.Context, meta any) context.Context {
-		ctx = conns.NewContext(ctx, "Test", "aws_test")
+		ctx = conns.NewResourceContext(ctx, "Test", "aws_test")
 		if v, ok := meta.(*conns.AWSClient); ok {
 			ctx = tftags.NewContext(ctx, v.DefaultTagsConfig, v.IgnoreTagsConfig)
 		}
