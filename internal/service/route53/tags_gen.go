@@ -99,14 +99,15 @@ func SetTagsOut(ctx context.Context, tags []*route53.Tag) {
 // UpdateTags updates route53 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-
 func UpdateTags(ctx context.Context, conn route53iface.Route53API, identifier, resourceType string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.Route53)
 	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.Route53)
 
-	// Ensure we do not send empty requests
+	// Ensure we do not send empty requests.
 	if len(removedTags) == 0 && len(updatedTags) == 0 {
 		return nil
 	}
@@ -117,7 +118,7 @@ func UpdateTags(ctx context.Context, conn route53iface.Route53API, identifier, r
 	}
 
 	if len(updatedTags) > 0 {
-		input.AddTags = Tags(updatedTags.IgnoreSystem(names.Route53))
+		input.AddTags = Tags(updatedTags)
 	}
 
 	if len(removedTags) > 0 {

@@ -358,7 +358,7 @@ func resourceRouteTableDelete(ctx context.Context, d *schema.ResourceData, meta 
 	for _, v := range routeTable.Associations {
 		v := aws.StringValue(v.RouteTableAssociationId)
 
-		if err := routeTableAssociationDelete(ctx, conn, v); err != nil {
+		if err := routeTableAssociationDelete(ctx, conn, v, d.Timeout(schema.TimeoutDelete)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "deleting Route Table (%s): %s", d.Id(), err)
 		}
 	}

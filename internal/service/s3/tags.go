@@ -12,10 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Custom S3 tag service update functions using the same format as generated code.
@@ -93,25 +91,9 @@ func ObjectListTags(ctx context.Context, conn s3iface.S3API, bucket, key string)
 		Key:    aws.String(key),
 	}
 
-	var output *s3.GetObjectTaggingOutput
-
-	err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
-		var err error
-		output, err = conn.GetObjectTaggingWithContext(ctx, input)
-
-		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchKey) {
-			return retry.RetryableError(fmt.Errorf("getting object tagging %s, retrying: %w", bucket, err))
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		output, err = conn.GetObjectTaggingWithContext(ctx, input)
-	}
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
+		return conn.GetObjectTaggingWithContext(ctx, input)
+	}, s3.ErrCodeNoSuchKey)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchTagSet, errCodeNoSuchTagSetError) {
 		return tftags.New(ctx, nil), nil
@@ -121,7 +103,7 @@ func ObjectListTags(ctx context.Context, conn s3iface.S3API, bucket, key string)
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.TagSet), nil
+	return KeyValueTags(ctx, outputRaw.(*s3.GetObjectTaggingOutput).TagSet), nil
 }
 
 // ObjectUpdateTags updates S3 object tags.
@@ -143,7 +125,7 @@ func ObjectUpdateTags(ctx context.Context, conn s3iface.S3API, bucket, key strin
 			Bucket: aws.String(bucket),
 			Key:    aws.String(key),
 			Tagging: &s3.Tagging{
-				TagSet: Tags(newTags.Merge(ignoredTags).IgnoreSystem(names.S3)),
+				TagSet: Tags(newTags.Merge(ignoredTags)),
 			},
 		}
 

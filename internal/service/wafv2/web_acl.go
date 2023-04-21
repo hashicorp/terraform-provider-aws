@@ -62,6 +62,7 @@ func ResourceWebACL() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"captcha_config":       outerCaptchaConfigSchema(),
 			"custom_response_body": customResponseBodySchema(),
 			"default_action": {
 				Type:     schema.TypeList,
@@ -111,6 +112,7 @@ func ResourceWebACL() *schema.Resource {
 								},
 							},
 						},
+						"captcha_config": outerCaptchaConfigSchema(),
 						"name": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -157,6 +159,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	name := d.Get("name").(string)
 	input := &wafv2.CreateWebACLInput{
+		CaptchaConfig:    expandCaptchaConfig(d.Get("captcha_config").([]interface{})),
 		DefaultAction:    expandDefaultAction(d.Get("default_action").([]interface{})),
 		Name:             aws.String(name),
 		Rules:            expandWebACLRules(d.Get("rule").(*schema.Set).List()),
@@ -207,6 +210,9 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 	arn := aws.StringValue(webACL.ARN)
 	d.Set("arn", arn)
 	d.Set("capacity", webACL.Capacity)
+	if err := d.Set("captcha_config", flattenCaptchaConfig(webACL.CaptchaConfig)); err != nil {
+		return diag.Errorf("setting captcha_config: %s", err)
+	}
 	if err := d.Set("custom_response_body", flattenCustomResponseBodies(webACL.CustomResponseBodies)); err != nil {
 		return diag.Errorf("setting custom_response_body: %s", err)
 	}
@@ -232,6 +238,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &wafv2.UpdateWebACLInput{
+			CaptchaConfig:    expandCaptchaConfig(d.Get("captcha_config").([]interface{})),
 			DefaultAction:    expandDefaultAction(d.Get("default_action").([]interface{})),
 			Id:               aws.String(d.Id()),
 			LockToken:        aws.String(d.Get("lock_token").(string)),

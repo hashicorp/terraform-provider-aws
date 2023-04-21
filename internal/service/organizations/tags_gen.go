@@ -98,15 +98,16 @@ func SetTagsOut(ctx context.Context, tags []*organizations.Tag) {
 // UpdateTags updates organizations service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-
 func UpdateTags(ctx context.Context, conn organizationsiface.OrganizationsAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.Organizations)
+	if len(removedTags) > 0 {
 		input := &organizations.UntagResourceInput{
 			ResourceId: aws.String(identifier),
-			TagKeys:    aws.StringSlice(removedTags.IgnoreSystem(names.Organizations).Keys()),
+			TagKeys:    aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -116,10 +117,12 @@ func UpdateTags(ctx context.Context, conn organizationsiface.OrganizationsAPI, i
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.Organizations)
+	if len(updatedTags) > 0 {
 		input := &organizations.TagResourceInput{
 			ResourceId: aws.String(identifier),
-			Tags:       Tags(updatedTags.IgnoreSystem(names.Organizations)),
+			Tags:       Tags(updatedTags),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)
