@@ -181,6 +181,7 @@ val services = mapOf(
     "sns" to ServiceSpec("SNS (Simple Notification)"),
     "sqs" to ServiceSpec("SQS (Simple Queue)"),
     "ssm" to ServiceSpec("SSM (Systems Manager)", vpcLock = true),
+    "ssmcontacts" to ServiceSpec("SSM Contacts"),
     "ssmincidents" to ServiceSpec("SSM Incident Manager Incidents"),
     "ssoadmin" to ServiceSpec("SSO Admin"),
     "storagegateway" to ServiceSpec("Storage Gateway", vpcLock = true),
