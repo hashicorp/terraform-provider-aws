@@ -509,13 +509,13 @@ func testAccTrustConfig_fqdn(rName, domain, domainOther string) string {
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_directory_service_trust" "test" {
-	directory_id = aws_directory_service_directory.test.id
+  directory_id = aws_directory_service_directory.test.id
 
-	remote_domain_name = "${aws_directory_service_directory.other.name}."
-	trust_direction    = "Two-Way"
-	trust_password     = "Some0therPassword"
+  remote_domain_name = "${aws_directory_service_directory.other.name}."
+  trust_direction    = "Two-Way"
+  trust_password     = "Some0therPassword"
 
-	conditional_forwarder_ip_addrs = aws_directory_service_directory.other.dns_ip_addresses
+  conditional_forwarder_ip_addrs = aws_directory_service_directory.other.dns_ip_addresses
 }
 
 resource "aws_directory_service_directory" "test" {
@@ -543,23 +543,23 @@ resource "aws_directory_service_directory" "other" {
 }
 
 resource "aws_security_group_rule" "test" {
-	security_group_id = aws_directory_service_directory.test.security_group_id
+  security_group_id = aws_directory_service_directory.test.security_group_id
 
-	type = "egress"
-	protocol = "all"
-	from_port = 0
-	to_port = 65535
-	source_security_group_id =aws_directory_service_directory.other.security_group_id
+  type                     = "egress"
+  protocol                 = "all"
+  from_port                = 0
+  to_port                  = 65535
+  source_security_group_id = aws_directory_service_directory.other.security_group_id
 }
 
 resource "aws_security_group_rule" "other" {
-	security_group_id = aws_directory_service_directory.other.security_group_id
+  security_group_id = aws_directory_service_directory.other.security_group_id
 
-	type = "egress"
-	protocol = "all"
-	from_port = 0
-	to_port = 65535
-	source_security_group_id =aws_directory_service_directory.test.security_group_id
+  type                     = "egress"
+  protocol                 = "all"
+  from_port                = 0
+  to_port                  = 65535
+  source_security_group_id = aws_directory_service_directory.test.security_group_id
 }
 `, domain, domainOther),
 	)
@@ -704,25 +704,25 @@ func testAccTrustConfig_bidirectionalSelectiveAuth(rName, domain, domainOther st
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_directory_service_trust" "test" {
-	directory_id = aws_directory_service_directory.test.id
+  directory_id = aws_directory_service_directory.test.id
 
-	remote_domain_name = aws_directory_service_directory.other.name
-	trust_direction    = "Two-Way"
-	trust_password     = "Some0therPassword"
+  remote_domain_name = aws_directory_service_directory.other.name
+  trust_direction    = "Two-Way"
+  trust_password     = "Some0therPassword"
 
-	conditional_forwarder_ip_addrs = aws_directory_service_directory.other.dns_ip_addresses
+  conditional_forwarder_ip_addrs = aws_directory_service_directory.other.dns_ip_addresses
 
-	selective_auth = %[3]q
+  selective_auth = %[3]q
 }
 
 resource "aws_directory_service_trust" "other" {
-	directory_id = aws_directory_service_directory.other.id
+  directory_id = aws_directory_service_directory.other.id
 
-	remote_domain_name = aws_directory_service_directory.test.name
-	trust_direction    = "Two-Way"
-	trust_password     = "Some0therPassword"
+  remote_domain_name = aws_directory_service_directory.test.name
+  trust_direction    = "Two-Way"
+  trust_password     = "Some0therPassword"
 
-	conditional_forwarder_ip_addrs = aws_directory_service_directory.test.dns_ip_addresses
+  conditional_forwarder_ip_addrs = aws_directory_service_directory.test.dns_ip_addresses
 }
 
 resource "aws_directory_service_directory" "test" {
@@ -750,23 +750,23 @@ resource "aws_directory_service_directory" "other" {
 }
 
 resource "aws_security_group_rule" "test" {
-	security_group_id = aws_directory_service_directory.test.security_group_id
+  security_group_id = aws_directory_service_directory.test.security_group_id
 
-	type = "egress"
-	protocol = "all"
-	from_port = 0
-	to_port = 65535
-	source_security_group_id =aws_directory_service_directory.other.security_group_id
+  type                     = "egress"
+  protocol                 = "all"
+  from_port                = 0
+  to_port                  = 65535
+  source_security_group_id = aws_directory_service_directory.other.security_group_id
 }
 
 resource "aws_security_group_rule" "other" {
-	security_group_id = aws_directory_service_directory.other.security_group_id
+  security_group_id = aws_directory_service_directory.other.security_group_id
 
-	type = "egress"
-	protocol = "all"
-	from_port = 0
-	to_port = 65535
-	source_security_group_id =aws_directory_service_directory.test.security_group_id
+  type                     = "egress"
+  protocol                 = "all"
+  from_port                = 0
+  to_port                  = 65535
+  source_security_group_id = aws_directory_service_directory.test.security_group_id
 }
 `, domain, domainOther, selectiveAuth),
 	)
@@ -777,15 +777,15 @@ func testAccTrustConfig_TrustType(rName, domain, domainOther string, trustType a
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_directory_service_trust" "test" {
-	directory_id = aws_directory_service_directory.test.id
+  directory_id = aws_directory_service_directory.test.id
 
-	remote_domain_name = aws_directory_service_directory.other.name
-	trust_direction    = "Two-Way"
-	trust_password     = "Some0therPassword"
+  remote_domain_name = aws_directory_service_directory.other.name
+  trust_direction    = "Two-Way"
+  trust_password     = "Some0therPassword"
 
-	conditional_forwarder_ip_addrs = aws_directory_service_directory.other.dns_ip_addresses
+  conditional_forwarder_ip_addrs = aws_directory_service_directory.other.dns_ip_addresses
 
-	trust_type = %[3]q
+  trust_type = %[3]q
 }
 
 resource "aws_directory_service_directory" "test" {
@@ -813,23 +813,23 @@ resource "aws_directory_service_directory" "other" {
 }
 
 resource "aws_security_group_rule" "test" {
-	security_group_id = aws_directory_service_directory.test.security_group_id
+  security_group_id = aws_directory_service_directory.test.security_group_id
 
-	type = "egress"
-	protocol = "all"
-	from_port = 0
-	to_port = 65535
-	source_security_group_id =aws_directory_service_directory.other.security_group_id
+  type                     = "egress"
+  protocol                 = "all"
+  from_port                = 0
+  to_port                  = 65535
+  source_security_group_id = aws_directory_service_directory.other.security_group_id
 }
 
 resource "aws_security_group_rule" "other" {
-	security_group_id = aws_directory_service_directory.other.security_group_id
+  security_group_id = aws_directory_service_directory.other.security_group_id
 
-	type = "egress"
-	protocol = "all"
-	from_port = 0
-	to_port = 65535
-	source_security_group_id =aws_directory_service_directory.test.security_group_id
+  type                     = "egress"
+  protocol                 = "all"
+  from_port                = 0
+  to_port                  = 65535
+  source_security_group_id = aws_directory_service_directory.test.security_group_id
 }
 `, domain, domainOther, trustType),
 	)
@@ -840,13 +840,13 @@ func testAccTrustConfig_ConditionalForwarderIPs(rName, domain, domainOther strin
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_directory_service_trust" "test" {
-	directory_id = aws_directory_service_directory.test.id
+  directory_id = aws_directory_service_directory.test.id
 
-	remote_domain_name = aws_directory_service_directory.other.name
-	trust_direction    = "Two-Way"
-	trust_password     = "Some0therPassword"
+  remote_domain_name = aws_directory_service_directory.other.name
+  trust_direction    = "Two-Way"
+  trust_password     = "Some0therPassword"
 
-	conditional_forwarder_ip_addrs = toset(slice(tolist(aws_directory_service_directory.other.dns_ip_addresses),0,1))
+  conditional_forwarder_ip_addrs = toset(slice(tolist(aws_directory_service_directory.other.dns_ip_addresses), 0, 1))
 }
 
 resource "aws_directory_service_directory" "test" {
@@ -874,23 +874,23 @@ resource "aws_directory_service_directory" "other" {
 }
 
 resource "aws_security_group_rule" "test" {
-	security_group_id = aws_directory_service_directory.test.security_group_id
+  security_group_id = aws_directory_service_directory.test.security_group_id
 
-	type = "egress"
-	protocol = "all"
-	from_port = 0
-	to_port = 65535
-	source_security_group_id =aws_directory_service_directory.other.security_group_id
+  type                     = "egress"
+  protocol                 = "all"
+  from_port                = 0
+  to_port                  = 65535
+  source_security_group_id = aws_directory_service_directory.other.security_group_id
 }
 
 resource "aws_security_group_rule" "other" {
-	security_group_id = aws_directory_service_directory.other.security_group_id
+  security_group_id = aws_directory_service_directory.other.security_group_id
 
-	type = "egress"
-	protocol = "all"
-	from_port = 0
-	to_port = 65535
-	source_security_group_id =aws_directory_service_directory.test.security_group_id
+  type                     = "egress"
+  protocol                 = "all"
+  from_port                = 0
+  to_port                  = 65535
+  source_security_group_id = aws_directory_service_directory.test.security_group_id
 }
 `, domain, domainOther),
 	)
