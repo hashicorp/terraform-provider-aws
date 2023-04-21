@@ -54,6 +54,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourcePlan,
 			TypeName: "aws_ssmcontacts_plan",
+			Name:     "Plan",
 		},
 	}
 }
