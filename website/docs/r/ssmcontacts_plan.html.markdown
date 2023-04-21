@@ -40,6 +40,7 @@ resource "aws_ssmcontacts_plan" "plan" {
 ```
 
 ### Usage With All Fields
+
 ```terraform
 resource "aws_ssmcontacts_contact" "escalation_plan" {
   alias = "escalation-plan-alias"
