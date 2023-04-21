@@ -31,7 +31,6 @@ The following arguments are required:
 In addition to all arguments above, the following attributes are exported:
 
 * `alias` - A unique and identifiable alias of the contact or escalation plan.
-* `type` - The type of contact engaged. A single contact is type PERSONAL and an escalation plan is type 
-  ESCALATION.
+* `type` - The type of contact engaged. A single contact is type `PERSONAL` and an escalation plan is type `ESCALATION`.
 * `display_name` - Full friendly name of the contact or escalation plan.
 * `tags` - Map of tags to assign to the resource.
