@@ -163,11 +163,7 @@ func testAccCheckMonitorExists(ctx context.Context, resourceName string) resourc
 
 		_, err := tfinternetmonitor.FindMonitor(ctx, conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

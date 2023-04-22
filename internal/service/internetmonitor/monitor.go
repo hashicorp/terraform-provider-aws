@@ -122,11 +122,11 @@ func resourceMonitorCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Tags:        GetTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("max_city_networks_to_monitor"); ok && v.(int) > 0 {
+	if v, ok := d.GetOk("max_city_networks_to_monitor"); ok {
 		input.MaxCityNetworksToMonitor = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("taffic_percentage_to_monitor"); ok && v.(int) > 0 {
+	if v, ok := d.GetOk("taffic_percentage_to_monitor"); ok {
 		input.TrafficPercentageToMonitor = aws.Int64(int64(v.(int)))
 	}
 
