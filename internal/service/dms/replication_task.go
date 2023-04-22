@@ -330,6 +330,7 @@ func replicationTaskRemoveReadOnlySettings(settings string) (*string, error) {
 
 	logging, ok := settingsData["Logging"].(map[string]interface{})
 	if ok {
+		delete(logging, "EnableLogContext")
 		delete(logging, "CloudWatchLogGroup")
 		delete(logging, "CloudWatchLogStream")
 	}
