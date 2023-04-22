@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/private/protocol"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -253,7 +254,7 @@ func resourceCoreNetworkRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	// getting the policy document uses a different API call
 	// policy document is also optional
-	coreNetworkPolicy, err := FindCoreNetworkPolicyByID(ctx, conn, d.Id())
+	coreNetworkPolicy, err := FindCoreNetworkPolicyByID(ctx, conn, d.Id(), -1)
 
 	if tfresource.NotFound(err) {
 		d.Set("policy_document", nil)
@@ -394,9 +395,13 @@ func FindCoreNetworkByID(ctx context.Context, conn *networkmanager.NetworkManage
 	return output.CoreNetwork, nil
 }
 
-func FindCoreNetworkPolicyByID(ctx context.Context, conn *networkmanager.NetworkManager, id string) (*networkmanager.CoreNetworkPolicy, error) {
+func FindCoreNetworkPolicyByID(ctx context.Context, conn *networkmanager.NetworkManager, id string, policyVersionId int64) (*networkmanager.CoreNetworkPolicy, error) {
 	input := &networkmanager.GetCoreNetworkPolicyInput{
 		CoreNetworkId: aws.String(id),
+	}
+
+	if policyVersionId != -1 {
+		input.PolicyVersionId = aws.Int64(policyVersionId)
 	}
 
 	output, err := conn.GetCoreNetworkPolicyWithContext(ctx, input)
@@ -585,28 +590,66 @@ func PutAndExecuteCoreNetworkPolicy(ctx context.Context, conn *networkmanager.Ne
 
 	policyVersionID := aws.Int64Value(output.CoreNetworkPolicy.PolicyVersionId)
 
-	// new policy documents goes from Pending generation to Ready to execute
-	_, err = tfresource.RetryWhen(ctx, 4*time.Minute,
-		func() (interface{}, error) {
-			return conn.ExecuteCoreNetworkChangeSetWithContext(ctx, &networkmanager.ExecuteCoreNetworkChangeSetInput{
-				CoreNetworkId:   aws.String(coreNetworkId),
-				PolicyVersionId: aws.Int64(policyVersionID),
-			})
-		},
-		func(err error) (bool, error) {
-			if tfawserr.ErrMessageContains(err, networkmanager.ErrCodeValidationException, "Incorrect input") {
-				return true, err
-			}
+	if _, err := waitCoreNetworkPolicyCreated(ctx, conn, coreNetworkId, policyVersionID, 4*time.Minute); err != nil {
+		return fmt.Errorf("waiting for Network Manager Core Network Policy from Core Network (%s) create: %s", coreNetworkId, err)
+	}
 
-			return false, err
-		},
-	)
-
+	_, err = conn.ExecuteCoreNetworkChangeSetWithContext(ctx, &networkmanager.ExecuteCoreNetworkChangeSetInput{
+		CoreNetworkId:   aws.String(coreNetworkId),
+		PolicyVersionId: aws.Int64(policyVersionID),
+	})
 	if err != nil {
 		return fmt.Errorf("executing Network Manager Core Network (%s) change set (%d): %s", coreNetworkId, policyVersionID, err)
 	}
 
 	return nil
+}
+
+func statusCoreNetworkPolicyState(ctx context.Context, conn *networkmanager.NetworkManager, coreNetworkId string, policyVersionId int64) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindCoreNetworkPolicyByID(ctx, conn, coreNetworkId, policyVersionId)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.ChangeSetState), nil
+	}
+}
+
+func waitCoreNetworkPolicyCreated(ctx context.Context, conn *networkmanager.NetworkManager, coreNetworkId string, policyVersionId int64, timeout time.Duration) (*networkmanager.CoreNetworkPolicy, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{networkmanager.ChangeSetStatePendingGeneration},
+		Target:  []string{networkmanager.ChangeSetStateReadyToExecute},
+		Timeout: timeout,
+		Refresh: statusCoreNetworkPolicyState(ctx, conn, coreNetworkId, policyVersionId),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*networkmanager.CoreNetworkPolicy); ok {
+		return output, err
+	}
+
+	if output, ok := outputRaw.(*networkmanager.CoreNetworkPolicy); ok {
+		if state, errors := aws.StringValue(output.ChangeSetState), output.PolicyErrors; state == networkmanager.ChangeSetStateFailedGeneration && len(errors) > 0 {
+			var errs *multierror.Error
+
+			for _, err := range errors {
+				errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.ErrorCode), aws.StringValue(err.Message)))
+			}
+
+			tfresource.SetLastError(err, errs.ErrorOrNil())
+		}
+
+		return output, err
+	}
+
+	return nil, err
 }
 
 // buildCoreNetworkBasePolicyDocument returns a base policy document

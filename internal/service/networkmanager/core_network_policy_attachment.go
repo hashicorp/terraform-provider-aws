@@ -88,7 +88,7 @@ func resourceCoreNetworkPolicyAttachmentRead(ctx context.Context, d *schema.Reso
 	d.Set("state", coreNetwork.State)
 
 	// getting the policy document uses a different API call
-	coreNetworkPolicy, err := FindCoreNetworkPolicyByID(ctx, conn, d.Id())
+	coreNetworkPolicy, err := FindCoreNetworkPolicyByID(ctx, conn, d.Id(), -1)
 
 	if tfresource.NotFound(err) {
 		d.Set("policy_document", nil)

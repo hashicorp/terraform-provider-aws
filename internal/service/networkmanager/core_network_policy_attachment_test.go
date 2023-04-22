@@ -169,7 +169,7 @@ func testAccCheckCoreNetworkPolicyAttachmentExists(ctx context.Context, n string
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
 
-		_, err := tfnetworkmanager.FindCoreNetworkPolicyByID(ctx, conn, rs.Primary.ID)
+		_, err := tfnetworkmanager.FindCoreNetworkPolicyByID(ctx, conn, rs.Primary.ID, -1)
 
 		return err
 	}
