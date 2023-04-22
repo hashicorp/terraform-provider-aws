@@ -54,6 +54,35 @@ func TestAccInternetMonitorMonitor_basic(t *testing.T) {
 	})
 }
 
+func TestAccInternetMonitorMonitor_log(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_internetmonitor_monitor.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, internetmonitor.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMonitorConfig_log(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMonitorExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "internet_measurements_log_delivery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "internet_measurements_log_delivery.0.s3_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "internet_measurements_log_delivery.0.s3_config.0.bucket_name", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccInternetMonitorMonitor_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -184,6 +213,55 @@ resource "aws_internetmonitor_monitor" "test" {
   status                       = %[2]q
 }
 `, rName, status)
+}
+
+func testAccMonitorConfig_log(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    actions   = ["s3:PutObject"]
+    effect    = "Allow"
+    resources = ["${aws_s3_bucket.test.arn}/*"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["delivery.logs.amazonaws.com"]
+    }
+  }
+
+  statement {
+    actions   = ["s3:GetBucketAcl"]
+    effect    = "Allow"
+    resources = [aws_s3_bucket.test.arn]
+
+    principals {
+      type        = "Service"
+      identifiers = ["delivery.logs.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  policy = data.aws_iam_policy_document.test.json
+}
+
+resource "aws_internetmonitor_monitor" "test" {
+  monitor_name                 = %[1]q
+  taffic_percentage_to_monitor = 1
+
+  internet_measurements_log_delivery {
+    s3_config {
+      bucket_name = aws_s3_bucket_policy.test.bucket
+    }
+  }
+}
+`, rName)
 }
 
 func testAccMonitorConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {

@@ -61,6 +61,7 @@ func ResourceMonitor() *schema.Resource {
 									"log_delivery_status": {
 										Type:         schema.TypeString,
 										Optional:     true,
+										Default:      internetmonitor.LogDeliveryStatusEnabled,
 										ValidateFunc: validation.StringInSlice(internetmonitor.LogDeliveryStatus_Values(), false),
 									},
 								},
@@ -324,6 +325,14 @@ func expandS3Config(vS3Config []interface{}) *internetmonitor.S3Config {
 		s3Config.BucketName = aws.String(v)
 	}
 
+	if v, ok := mS3Config["bucket_prefix"].(string); ok && v != "" {
+		s3Config.BucketPrefix = aws.String(v)
+	}
+
+	if v, ok := mS3Config["log_delivery_status"].(string); ok && v != "" {
+		s3Config.LogDeliveryStatus = aws.String(v)
+	}
+
 	return s3Config
 }
 
@@ -346,6 +355,14 @@ func flattenS3Config(s3Config *internetmonitor.S3Config) []interface{} {
 
 	mS3Config := map[string]interface{}{
 		"bucket_name": aws.StringValue(s3Config.BucketName),
+	}
+
+	if s3Config.BucketPrefix != nil {
+		mS3Config["bucket_prefix"] = aws.StringValue(s3Config.BucketPrefix)
+	}
+
+	if s3Config.LogDeliveryStatus != nil {
+		mS3Config["log_delivery_status"] = aws.StringValue(s3Config.LogDeliveryStatus)
 	}
 
 	return []interface{}{mS3Config}
