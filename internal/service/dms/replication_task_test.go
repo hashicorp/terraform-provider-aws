@@ -398,6 +398,31 @@ resource "aws_dms_replication_instance" "test" {
   preferred_maintenance_window = "sun:00:30-sun:02:30"
   publicly_accessible          = false
   replication_subnet_group_id  = aws_dms_replication_subnet_group.test.replication_subnet_group_id
+
+  depends_on = [
+    aws_iam_role_policy_attachment.allow_dms_to_manage_vpc_settings
+  ]
+}
+
+data "aws_iam_policy_document" "dms_assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      identifiers = ["dms.amazonaws.com"]
+      type        = "Service"
+    }
+  }
+}
+
+resource "aws_iam_role" "allow_dms_to_manage_vpc_settings" {
+  assume_role_policy = data.aws_iam_policy_document.dms_assume_role.json
+  name               = "dms-vpc-role"
+}
+
+resource "aws_iam_role_policy_attachment" "allow_dms_to_manage_vpc_settings" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonDMSVPCManagementRole"
+  role       = aws_iam_role.allow_dms_to_manage_vpc_settings.name
 }
 `, rName))
 }
@@ -629,6 +654,10 @@ resource "aws_dms_replication_instance" "test" {
   publicly_accessible          = false
   replication_subnet_group_id  = aws_dms_replication_subnet_group.test.replication_subnet_group_id
   vpc_security_group_ids       = [aws_security_group.test.id]
+
+  depends_on = [
+    aws_iam_role_policy_attachment.allow_dms_to_manage_vpc_settings
+  ]
 }
 
 resource "aws_dms_replication_task" "test" {
@@ -648,6 +677,27 @@ resource "aws_dms_replication_task" "test" {
   target_endpoint_arn = aws_dms_endpoint.target.endpoint_arn
 
   depends_on = [aws_rds_cluster_instance.test1, aws_rds_cluster_instance.test2]
+}
+
+data "aws_iam_policy_document" "dms_assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      identifiers = ["dms.amazonaws.com"]
+      type        = "Service"
+    }
+  }
+}
+
+resource "aws_iam_role" "allow_dms_to_manage_vpc_settings" {
+  assume_role_policy = data.aws_iam_policy_document.dms_assume_role.json
+  name               = "dms-vpc-role"
+}
+
+resource "aws_iam_role_policy_attachment" "allow_dms_to_manage_vpc_settings" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonDMSVPCManagementRole"
+  role       = aws_iam_role.allow_dms_to_manage_vpc_settings.name
 }
 `, rName, startTask, ruleName))
 }
@@ -814,6 +864,10 @@ resource "aws_dms_replication_instance" "test" {
   publicly_accessible          = false
   replication_subnet_group_id  = aws_dms_replication_subnet_group.test.replication_subnet_group_id
   vpc_security_group_ids       = [aws_security_group.test.id]
+
+  depends_on = [
+    aws_iam_role_policy_attachment.allow_dms_to_manage_vpc_settings
+  ]
 }
 
 resource "aws_dms_replication_task" "test" {
@@ -831,6 +885,27 @@ resource "aws_dms_replication_task" "test" {
   target_endpoint_arn = aws_dms_endpoint.target.endpoint_arn
 
   depends_on = [aws_rds_cluster_instance.test]
+}
+
+data "aws_iam_policy_document" "dms_assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      identifiers = ["dms.amazonaws.com"]
+      type        = "Service"
+    }
+  }
+}
+
+resource "aws_iam_role" "allow_dms_to_manage_vpc_settings" {
+  assume_role_policy = data.aws_iam_policy_document.dms_assume_role.json
+  name               = "dms-vpc-role"
+}
+
+resource "aws_iam_role_policy_attachment" "allow_dms_to_manage_vpc_settings" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonDMSVPCManagementRole"
+  role       = aws_iam_role.allow_dms_to_manage_vpc_settings.name
 }
 `, rName))
 }
