@@ -152,6 +152,44 @@ resource "aws_kinesis_firehose_delivery_stream" "extended_s3_stream" {
 }
 ```
 
+Multiple Dynamic Partitioning Keys (maximum of 50) can be added by comma separating the `parameter_value`.
+
+The following example adds the Dynamic Partitioning Keys: `store_id` and `customer_id` to the S3 prefix.
+
+```terraform
+resource "aws_kinesis_firehose_delivery_stream" "extended_s3_stream" {
+  name        = "terraform-kinesis-firehose-extended-s3-test-stream"
+  destination = "extended_s3"
+  extended_s3_configuration {
+    role_arn   = aws_iam_role.firehose_role.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+    buffer_size = 64
+    # https://docs.aws.amazon.com/firehose/latest/dev/dynamic-partitioning.html
+    dynamic_partitioning_configuration {
+      enabled = "true"
+    }
+    # Example prefix using partitionKeyFromQuery, applicable to JQ processor
+    prefix              = "data/store_id=!{partitionKeyFromQuery:store_id}/customer_id=!{partitionKeyFromQuery:customer_id}/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/"
+    error_output_prefix = "errors/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/!{firehose:error-output-type}/"
+    processing_configuration {
+      enabled = "true"
+      # JQ processor example
+      processors {
+        type = "MetadataExtraction"
+        parameters {
+          parameter_name  = "JsonParsingEngine"
+          parameter_value = "JQ-1.6"
+        }
+        parameters {
+          parameter_name  = "MetadataExtractionQuery"
+          parameter_value = "{store_id:.store_id,customer_id:.customer_id}"
+        }
+      }
+    }
+  }
+}
+```
+
 ### S3 Destination (deprecated)
 
 ```terraform
