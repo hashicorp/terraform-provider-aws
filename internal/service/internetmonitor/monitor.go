@@ -147,7 +147,7 @@ func resourceMonitorCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(monitorName)
 
-	_, err = waitMonitorCreated(ctx, conn, monitorName, internetmonitor.MonitorConfigStateActive)
+	err = waitMonitorCreated(ctx, conn, monitorName, internetmonitor.MonitorConfigStateActive)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Internet Monitor Monitor (%s) create: %s", d.Id(), err)
@@ -250,7 +250,7 @@ func resourceMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "updating Internet Monitor Monitor (%s): %s", d.Id(), err)
 	}
 
-	_, err = waitMonitorCreated(ctx, conn, d.Id(), d.Get("status").(string))
+	err = waitMonitorCreated(ctx, conn, d.Id(), d.Get("status").(string))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Internet Monitor Monitor (%s) create: %s", d.Id(), err)
@@ -275,7 +275,7 @@ func resourceMonitorDelete(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "updating Internet Monitor Monitor (%s) to inactive before deletion: %s", d.Id(), err)
 	}
 
-	_, err = waitMonitorCreated(ctx, conn, d.Id(), internetmonitor.MonitorConfigStateInactive)
+	err = waitMonitorCreated(ctx, conn, d.Id(), internetmonitor.MonitorConfigStateInactive)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Internet Monitor Monitor (%s) to be inactive before deletion: %s", d.Id(), err)
