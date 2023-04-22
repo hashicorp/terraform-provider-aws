@@ -17,9 +17,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_organizations_policy")
+// @SDKResource("aws_organizations_policy", name="Policy")
+// @Tags(identifierAttribute="id")
 func ResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,
@@ -54,8 +56,8 @@ func ResourcePolicy() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -71,17 +73,14 @@ func ResourcePolicy() *schema.Resource {
 
 func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OrganizationsConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
-
 	input := &organizations.CreatePolicyInput{
 		Content:     aws.String(d.Get("content").(string)),
 		Description: aws.String(d.Get("description").(string)),
 		Name:        aws.String(name),
 		Type:        aws.String(d.Get("type").(string)),
-		Tags:        Tags(tags.IgnoreAWS()),
+		Tags:        GetTagsIn(ctx),
 	}
 
 	log.Printf("[DEBUG] Creating Organizations Policy (%s): %v", name, input)
@@ -117,8 +116,6 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OrganizationsConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &organizations.DescribePolicyInput{
 		PolicyId: aws.String(d.Id()),
@@ -163,22 +160,6 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id())
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing tags for Organizations policy (%s): %w", d.Id(), err))
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
-	}
-
 	return nil
 }
 
@@ -205,13 +186,6 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	_, err := conn.UpdatePolicyWithContext(ctx, input)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error updating Organizations policy (%s): %w", d.Id(), err))
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating tags for Organizations policy (%s): %w", d.Id(), err))
-		}
 	}
 
 	return resourcePolicyRead(ctx, d, meta)

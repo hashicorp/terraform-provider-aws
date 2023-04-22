@@ -363,16 +363,17 @@ func FindAccessKey(ctx context.Context, conn *iam.IAM, username, id string) (*ia
 }
 
 func FindAccessKeys(ctx context.Context, conn *iam.IAM, username string) ([]*iam.AccessKeyMetadata, error) {
-	var accessKeys []*iam.AccessKeyMetadata
 	input := &iam.ListAccessKeysInput{
 		UserName: aws.String(username),
 	}
+	var output []*iam.AccessKeyMetadata
+
 	err := conn.ListAccessKeysPagesWithContext(ctx, input, func(page *iam.ListAccessKeysOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		accessKeys = append(accessKeys, page.AccessKeyMetadata...)
+		output = append(output, page.AccessKeyMetadata...)
 
 		return !lastPage
 	})
@@ -383,5 +384,6 @@ func FindAccessKeys(ctx context.Context, conn *iam.IAM, username string) ([]*iam
 			LastRequest: input,
 		}
 	}
-	return accessKeys, err
+
+	return output, err
 }

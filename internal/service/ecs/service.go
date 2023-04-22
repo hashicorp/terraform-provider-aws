@@ -27,9 +27,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ecs_service")
+// @SDKResource("aws_ecs_service", name="Service")
+// @Tags(identifierAttribute="id")
 func ResourceService() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceCreate,
@@ -442,8 +444,8 @@ func ResourceService() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"task_definition": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -474,8 +476,6 @@ func ResourceService() *schema.Resource {
 func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	deploymentController := expandDeploymentController(d.Get("deployment_controller").([]interface{}))
 	deploymentMinimumHealthyPercent := d.Get("deployment_minimum_healthy_percent").(int)
@@ -490,6 +490,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		NetworkConfiguration:     expandNetworkConfiguration(d.Get("network_configuration").([]interface{})),
 		SchedulingStrategy:       aws.String(schedulingStrategy),
 		ServiceName:              aws.String(d.Get("name").(string)),
+		Tags:                     GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("alarms"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -595,10 +596,6 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.TaskDefinition = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS()) // tags field doesn't exist in all partitions
-	}
-
 	output, err := serviceCreateWithRetry(ctx, conn, input)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
@@ -628,7 +625,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
-	if input.Tags == nil && len(tags) > 0 {
+	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); input.Tags == nil && len(tags) > 0 {
 		err := UpdateTags(ctx, conn, d.Id(), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
@@ -648,8 +645,6 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	cluster := d.Get("cluster").(string)
 
@@ -709,7 +704,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if strings.HasPrefix(d.Get("cluster").(string), "arn:"+meta.(*conns.AWSClient).Partition+":ecs:") {
 		d.Set("cluster", service.ClusterArn)
 	} else {
-		clusterARN := getNameFromARN(aws.StringValue(service.ClusterArn))
+		clusterARN := GetClusterNameFromARN(aws.StringValue(service.ClusterArn))
 		d.Set("cluster", clusterARN)
 	}
 
@@ -718,7 +713,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		if strings.HasPrefix(d.Get("iam_role").(string), "arn:"+meta.(*conns.AWSClient).Partition+":iam:") {
 			d.Set("iam_role", service.RoleArn)
 		} else {
-			roleARN := getNameFromARN(aws.StringValue(service.RoleArn))
+			roleARN := GetRoleNameFromARN(aws.StringValue(service.RoleArn))
 			d.Set("iam_role", roleARN)
 		}
 	}
@@ -776,16 +771,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting service_registries for (%s): %s", d.Id(), err)
 	}
 
-	tags := KeyValueTags(ctx, service.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, service.Tags)
 
 	return diags
 }
@@ -955,22 +941,6 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			if _, err := waitServiceActive(ctx, conn, d.Id(), cluster, d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for ECS service (%s) to become active after update: %s", d.Id(), err)
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := UpdateTags(ctx, conn, d.Id(), o, n)
-
-		// Some partitions (i.e., ISO) may not support tagging, giving error
-		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
-			log.Printf("[WARN] failed updating tags for ECS Service (%s): %s", d.Id(), err)
-			return append(diags, resourceServiceRead(ctx, d, meta)...)
-		}
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags for ECS Service (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -1575,9 +1545,33 @@ func buildFamilyAndRevisionFromARN(arn string) string {
 	return strings.Split(arn, "/")[1]
 }
 
-// Expects the following ARNs:
-// arn:aws:iam::0123456789:role/EcsService
-// arn:aws:ecs:us-west-2:0123456789:cluster/radek-cluster
-func getNameFromARN(arn string) string {
-	return strings.Split(arn, "/")[1]
+// GetRoleNameFromARN parses a role name from a fully qualified ARN
+//
+// When providing a role name with a path, it must be prefixed with the full path
+// including a leading `/`.
+// See: https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_CreateService.html#ECS-CreateService-request-role
+//
+// Expects an IAM role ARN:
+//
+//	arn:aws:iam::0123456789:role/EcsService
+//	arn:aws:iam::0123456789:role/group/my-role
+func GetRoleNameFromARN(arn string) string {
+	if parts := strings.Split(arn, "/"); len(parts) == 2 {
+		return parts[1]
+	} else if len(parts) > 2 {
+		return fmt.Sprintf("/%s", strings.Join(parts[1:], "/"))
+	}
+	return ""
+}
+
+// GetClusterNameFromARN parses a cluster name from a fully qualified ARN
+//
+// Expects an ECS cluster ARN:
+//
+//	arn:aws:ecs:us-west-2:0123456789:cluster/my-cluster
+func GetClusterNameFromARN(arn string) string {
+	if parts := strings.Split(arn, "/"); len(parts) == 2 {
+		return parts[1]
+	}
+	return ""
 }

@@ -19,8 +19,10 @@ import (
 
 type FrameworkSupplementalAttribute struct {
 	Path  string
-	Value string
+	Value any
 }
+
+type FrameworkSupplementalAttributes []FrameworkSupplementalAttribute
 
 type SweepFrameworkResource struct {
 	factory func(context.Context) (fwresource.ResourceWithConfigure, error)
@@ -32,6 +34,19 @@ type SweepFrameworkResource struct {
 	// This can be used in situations where the Delete method requires multiple attributes
 	// to destroy the underlying resource.
 	supplementalAttributes []FrameworkSupplementalAttribute
+}
+
+func NewFrameworkSupplementalAttributes() FrameworkSupplementalAttributes {
+	return FrameworkSupplementalAttributes{}
+}
+
+func (f *FrameworkSupplementalAttributes) Add(path string, value any) {
+	item := FrameworkSupplementalAttribute{
+		Path:  path,
+		Value: value,
+	}
+
+	*f = append(*f, item)
 }
 
 func NewSweepFrameworkResource(factory func(context.Context) (fwresource.ResourceWithConfigure, error), id string, meta interface{}, supplementalAttributes ...FrameworkSupplementalAttribute) *SweepFrameworkResource {

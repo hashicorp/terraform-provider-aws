@@ -101,7 +101,7 @@ func testAccTransitGatewayPolicyTable_disappears_TransitGateway(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayPolicyTable_Tags(t *testing.T) {
+func testAccTransitGatewayPolicyTable_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var transitGatewayPolicyTable1, transitGatewayPolicyTable2, transitGatewayPolicyTable3 ec2.TransitGatewayPolicyTable
 	resourceName := "aws_ec2_transit_gateway_policy_table.test"

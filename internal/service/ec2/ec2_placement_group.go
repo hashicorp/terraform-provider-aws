@@ -18,9 +18,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_placement_group")
+// @SDKResource("aws_placement_group", name="Placement Group")
+// @Tags(identifierAttribute="placement_group_id")
 func ResourcePlacementGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePlacementGroupCreate,
@@ -67,8 +69,8 @@ func ResourcePlacementGroup() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(ec2.PlacementStrategy_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: customdiff.All(
@@ -81,14 +83,12 @@ func ResourcePlacementGroup() *schema.Resource {
 func resourcePlacementGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &ec2.CreatePlacementGroupInput{
 		GroupName:         aws.String(name),
 		Strategy:          aws.String(d.Get("strategy").(string)),
-		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypePlacementGroup),
+		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypePlacementGroup),
 	}
 
 	if v, ok := d.GetOk("partition_count"); ok {
@@ -119,8 +119,6 @@ func resourcePlacementGroupCreate(ctx context.Context, d *schema.ResourceData, m
 func resourcePlacementGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	pg, err := FindPlacementGroupByName(ctx, conn, d.Id())
 
@@ -148,31 +146,15 @@ func resourcePlacementGroupRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("spread_level", pg.SpreadLevel)
 	d.Set("strategy", pg.Strategy)
 
-	tags := KeyValueTags(ctx, pg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, pg.Tags)
 
 	return diags
 }
 
 func resourcePlacementGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("placement_group_id").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 Placement Group (%s) tags: %s", d.Id(), err)
-		}
-	}
+	// Tags only.
 
 	return append(diags, resourcePlacementGroupRead(ctx, d, meta)...)
 }

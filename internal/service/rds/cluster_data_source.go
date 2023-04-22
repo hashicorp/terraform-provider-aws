@@ -170,7 +170,6 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	dbClusterID := d.Get("cluster_identifier").(string)
 	dbc, err := FindDBClusterByID(ctx, conn, dbClusterID)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster (%s): %s", dbClusterID, err)
 	}
@@ -231,7 +230,6 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("vpc_security_group_ids", securityGroupIDs)
 
 	tags, err := ListTags(ctx, conn, clusterARN)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for RDS Cluster (%s): %s", d.Id(), err)
 	}

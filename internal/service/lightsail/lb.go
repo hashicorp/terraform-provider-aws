@@ -18,7 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lightsail_lb")
+// @SDKResource("aws_lightsail_lb", name="LB")
+// @Tags(identifierAttribute="id")
 func ResourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerCreate,
@@ -86,8 +87,8 @@ func ResourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
@@ -95,21 +96,16 @@ func ResourceLoadBalancer() *schema.Resource {
 
 func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LightsailConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-	lbName := d.Get("name").(string)
 
+	lbName := d.Get("name").(string)
 	in := lightsail.CreateLoadBalancerInput{
 		InstancePort:     aws.Int64(int64(d.Get("instance_port").(int))),
 		LoadBalancerName: aws.String(lbName),
+		Tags:             GetTagsIn(ctx),
 	}
 
 	if d.Get("health_check_path").(string) != "/" {
 		in.HealthCheckPath = aws.String(d.Get("health_check_path").(string))
-	}
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	out, err := conn.CreateLoadBalancerWithContext(ctx, &in)
@@ -131,8 +127,6 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LightsailConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	lb, err := FindLoadBalancerByName(ctx, conn, d.Id())
 
@@ -157,16 +151,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("name", lb.Name)
 	d.Set("support_code", lb.SupportCode)
 
-	tags := KeyValueTags(ctx, lb.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResLoadBalancer, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResLoadBalancer, d.Id(), err)
-	}
+	SetTagsOut(ctx, lb.Tags)
 
 	return nil
 }
@@ -194,22 +179,6 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 
 		if diag != nil {
 			return diag
-		}
-	}
-
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return create.DiagError(names.Lightsail, create.ErrActionUpdating, ResLoadBalancer, d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return create.DiagError(names.Lightsail, create.ErrActionUpdating, ResLoadBalancer, d.Id(), err)
 		}
 	}
 

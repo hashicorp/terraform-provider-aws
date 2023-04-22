@@ -52,7 +52,7 @@ func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	key := d.Get("key").(string)
 	value := d.Get("value").(string)
 
-	if err := CreateTags(ctx, conn, identifier, map[string]string{key: value}); err != nil {
+	if err := createTags(ctx, conn, identifier, Tags(tftags.New(ctx, map[string]string{key: value}))); err != nil {
 		return diag.Errorf("creating %s resource (%s) tag (%s): %s", ec2.ServiceID, identifier, key, err)
 	}
 

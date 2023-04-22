@@ -17,9 +17,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_networkmanager_transit_gateway_route_table_attachment")
+// @SDKResource("aws_networkmanager_transit_gateway_route_table_attachment", name="Transit Gateway Route Table Attachment")
+// @Tags(identifierAttribute="arn")
 func ResourceTransitGatewayRouteTableAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayRouteTableAttachmentCreate,
@@ -84,8 +86,8 @@ func ResourceTransitGatewayRouteTableAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"transit_gateway_route_table_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -98,18 +100,13 @@ func ResourceTransitGatewayRouteTableAttachment() *schema.Resource {
 
 func resourceTransitGatewayRouteTableAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	peeringID := d.Get("peering_id").(string)
 	transitGatewayRouteTableARN := d.Get("transit_gateway_route_table_arn").(string)
 	input := &networkmanager.CreateTransitGatewayRouteTableAttachmentInput{
 		PeeringId:                   aws.String(peeringID),
+		Tags:                        GetTagsIn(ctx),
 		TransitGatewayRouteTableArn: aws.String(transitGatewayRouteTableARN),
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating Network Manager Transit Gateway Route Table Attachment: %s", input)
@@ -130,8 +127,6 @@ func resourceTransitGatewayRouteTableAttachmentCreate(ctx context.Context, d *sc
 
 func resourceTransitGatewayRouteTableAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	transitGatewayRouteTableAttachment, err := FindTransitGatewayRouteTableAttachmentByID(ctx, conn, d.Id())
 
@@ -165,31 +160,13 @@ func resourceTransitGatewayRouteTableAttachmentRead(ctx context.Context, d *sche
 	d.Set("state", a.State)
 	d.Set("transit_gateway_route_table_arn", transitGatewayRouteTableAttachment.TransitGatewayRouteTableArn)
 
-	tags := KeyValueTags(ctx, a.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("Setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, a.Tags)
 
 	return nil
 }
 
 func resourceTransitGatewayRouteTableAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating Network Manager Transit Gateway Route Table Attachment (%s) tags: %s", d.Id(), err)
-		}
-	}
-
+	// Tags only.
 	return resourceTransitGatewayRouteTableAttachmentRead(ctx, d, meta)
 }
 

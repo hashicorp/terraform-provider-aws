@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // []*SERVICE.Tag handling
@@ -64,15 +65,16 @@ func SetTagsOut(ctx context.Context, tags []*redshift.Tag) {
 // UpdateTags updates redshift service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-
 func UpdateTags(ctx context.Context, conn redshiftiface.RedshiftAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.Redshift)
+	if len(removedTags) > 0 {
 		input := &redshift.DeleteTagsInput{
 			ResourceName: aws.String(identifier),
-			TagKeys:      aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:      aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.DeleteTagsWithContext(ctx, input)
@@ -82,10 +84,12 @@ func UpdateTags(ctx context.Context, conn redshiftiface.RedshiftAPI, identifier 
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.Redshift)
+	if len(updatedTags) > 0 {
 		input := &redshift.CreateTagsInput{
 			ResourceName: aws.String(identifier),
-			Tags:         Tags(updatedTags.IgnoreAWS()),
+			Tags:         Tags(updatedTags),
 		}
 
 		_, err := conn.CreateTagsWithContext(ctx, input)

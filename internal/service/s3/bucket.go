@@ -1128,7 +1128,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	// Object lock not supported in all partitions (extra guard, also guards in read func)
-	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, ErrCodeObjectLockConfigurationNotFound) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented) && !tfawserr.ErrCodeContains(err, errCodeObjectLockConfigurationNotFound) {
 		if meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID || meta.(*conns.AWSClient).Partition == endpoints.AwsUsGovPartitionID {
 			return sdkdiag.AppendErrorf(diags, "getting S3 Bucket (%s) Object Lock configuration: %s", d.Id(), err)
 		}
@@ -1440,7 +1440,7 @@ func BucketRegionalDomainName(bucket string, region string) (string, error) {
 	if region == "" {
 		return fmt.Sprintf("%s.s3.amazonaws.com", bucket), nil //lintignore:AWSR001
 	}
-	endpoint, err := endpoints.DefaultResolver().EndpointFor(endpoints.S3ServiceID, region)
+	endpoint, err := endpoints.DefaultResolver().EndpointFor(s3.EndpointsID, region)
 	if err != nil {
 		return "", err
 	}

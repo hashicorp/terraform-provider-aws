@@ -17,9 +17,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_networkmanager_transit_gateway_peering")
+// @SDKResource("aws_networkmanager_transit_gateway_peering", name="Transit Gateway Peering")
+// @Tags(identifierAttribute="arn")
 func ResourceTransitGatewayPeering() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayPeeringCreate,
@@ -68,8 +70,8 @@ func ResourceTransitGatewayPeering() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"transit_gateway_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -86,18 +88,13 @@ func ResourceTransitGatewayPeering() *schema.Resource {
 
 func resourceTransitGatewayPeeringCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	coreNetworkID := d.Get("core_network_id").(string)
 	transitGatewayARN := d.Get("transit_gateway_arn").(string)
 	input := &networkmanager.CreateTransitGatewayPeeringInput{
 		CoreNetworkId:     aws.String(coreNetworkID),
+		Tags:              GetTagsIn(ctx),
 		TransitGatewayArn: aws.String(transitGatewayARN),
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating Network Manager Transit Gateway Peering: %s", input)
@@ -118,8 +115,6 @@ func resourceTransitGatewayPeeringCreate(ctx context.Context, d *schema.Resource
 
 func resourceTransitGatewayPeeringRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	transitGatewayPeering, err := FindTransitGatewayPeeringByID(ctx, conn, d.Id())
 
@@ -150,31 +145,13 @@ func resourceTransitGatewayPeeringRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("transit_gateway_arn", transitGatewayPeering.TransitGatewayArn)
 	d.Set("transit_gateway_peering_attachment_id", transitGatewayPeering.TransitGatewayPeeringAttachmentId)
 
-	tags := KeyValueTags(ctx, p.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("Setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, p.Tags)
 
 	return nil
 }
 
 func resourceTransitGatewayPeeringUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating Network Manager Transit Gateway Peering (%s) tags: %s", d.Id(), err)
-		}
-	}
-
+	// Tags only.
 	return resourceTransitGatewayPeeringRead(ctx, d, meta)
 }
 
