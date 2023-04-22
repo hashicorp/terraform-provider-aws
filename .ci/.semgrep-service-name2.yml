@@ -28,6 +28,64 @@ rules:
           patterns:
             - pattern-regex: "(?i)inspectorv2"
     severity: WARNING
+  - id: internetmonitor-in-func-name
+    languages:
+      - go
+    message: Do not use "InternetMonitor" in func name inside internetmonitor package
+    paths:
+      include:
+        - internal/service/internetmonitor
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)InternetMonitor"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: internetmonitor-in-test-name
+    languages:
+      - go
+    message: Include "InternetMonitor" in test name
+    paths:
+      include:
+        - internal/service/internetmonitor/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccInternetMonitor"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: internetmonitor-in-const-name
+    languages:
+      - go
+    message: Do not use "InternetMonitor" in const name inside internetmonitor package
+    paths:
+      include:
+        - internal/service/internetmonitor
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)InternetMonitor"
+    severity: WARNING
+  - id: internetmonitor-in-var-name
+    languages:
+      - go
+    message: Do not use "InternetMonitor" in var name inside internetmonitor package
+    paths:
+      include:
+        - internal/service/internetmonitor
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)InternetMonitor"
+    severity: WARNING
   - id: iot-in-func-name
     languages:
       - go
