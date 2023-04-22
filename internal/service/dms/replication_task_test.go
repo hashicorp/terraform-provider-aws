@@ -327,6 +327,7 @@ func testAccCheckReplicationTaskDestroy(ctx context.Context) resource.TestCheckF
 }
 
 func replicationTaskConfigBase(rName string) string {
+	// lintignore:AWSAT005
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -488,6 +489,7 @@ resource "aws_dms_replication_task" "test" {
 }
 
 func testAccReplicationTaskConfig_start(rName string, startTask bool, ruleName string) string {
+	// lintignore:AWSAT005
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -703,6 +705,7 @@ resource "aws_iam_role_policy_attachment" "allow_dms_to_manage_vpc_settings" {
 }
 
 func testAccReplicationTaskConfig_s3ToRDS(rName string) string {
+	// lintignore:AWSAT005
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		testAccS3EndpointConfig_base(rName),
