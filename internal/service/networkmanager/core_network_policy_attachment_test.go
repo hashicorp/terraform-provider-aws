@@ -144,7 +144,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_expectPolicyErrorInvalidAS
 		CheckDestroy:             testAccCheckCoreNetworkPolicyAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccCoreNetworkPolicyAttachmentConfig_expectPolicyError(),
+				Config:      testAccCoreNetworkPolicyAttachmentConfig_expectPolicyErrorInvalidASNRange(),
 				ExpectError: regexp.MustCompile("INVALID_ASN_RANGE"),
 			},
 		},
@@ -405,7 +405,7 @@ resource "aws_networkmanager_vpc_attachment" "alternate_region" {
 `, acctest.Region(), acctest.AlternateRegion()))
 }
 
-func testAccCoreNetworkPolicyAttachmentConfig_expectPolicyError() string {
+func testAccCoreNetworkPolicyAttachmentConfig_expectPolicyErrorInvalidASNRange() string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {}
 
