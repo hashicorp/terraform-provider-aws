@@ -15,7 +15,7 @@ const (
 	monitorCreatedTimeout = 5 * time.Minute
 )
 
-func waitMonitorCreated(ctx context.Context, conn *internetmonitor.InternetMonitor, name, status string) (*internetmonitor.GetMonitorOutput, error) {
+func waitMonitorCreated(ctx context.Context, conn *internetmonitor.InternetMonitor, name, status string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{internetmonitor.MonitorConfigStatePending},
 		Target:  []string{status},
@@ -31,8 +31,8 @@ func waitMonitorCreated(ctx context.Context, conn *internetmonitor.InternetMonit
 			tfresource.SetLastError(err, errors.New(aws.StringValue(output.ProcessingStatusInfo)))
 		}
 
-		return output, err
+		return err
 	}
 
-	return nil, err
+	return err
 }
