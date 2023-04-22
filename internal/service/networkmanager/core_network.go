@@ -29,6 +29,12 @@ import (
 const (
 	// CoreNetwork is in PENDING state before AVAILABLE. No value for PENDING at the moment.
 	coreNetworkStatePending = "PENDING"
+	// Minimum valid policy version id is 1
+	minimumValidPolicyVersionId = 1
+	// Using the following in the FindCoreNetworkPolicyByID function will default to get the latest policy version
+	latestPolicyVersionId = -1
+	// Wait time value for core network policy - the default update for the core network policy of 30 minutes is excessive
+	waitCoreNetworkPolicyCreatedTimeInMinutes = 4
 )
 
 // @SDKResource("aws_networkmanager_core_network", name="Core Network")
@@ -254,7 +260,8 @@ func resourceCoreNetworkRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	// getting the policy document uses a different API call
 	// policy document is also optional
-	coreNetworkPolicy, err := FindCoreNetworkPolicyByID(ctx, conn, d.Id(), -1)
+	// pass in latestPolicyVersionId to get the latest version id by default
+	coreNetworkPolicy, err := FindCoreNetworkPolicyByID(ctx, conn, d.Id(), latestPolicyVersionId)
 
 	if tfresource.NotFound(err) {
 		d.Set("policy_document", nil)
@@ -400,7 +407,7 @@ func FindCoreNetworkPolicyByID(ctx context.Context, conn *networkmanager.Network
 		CoreNetworkId: aws.String(id),
 	}
 
-	if policyVersionId != -1 {
+	if policyVersionId >= minimumValidPolicyVersionId {
 		input.PolicyVersionId = aws.Int64(policyVersionId)
 	}
 
@@ -590,7 +597,7 @@ func PutAndExecuteCoreNetworkPolicy(ctx context.Context, conn *networkmanager.Ne
 
 	policyVersionID := aws.Int64Value(output.CoreNetworkPolicy.PolicyVersionId)
 
-	if _, err := waitCoreNetworkPolicyCreated(ctx, conn, coreNetworkId, policyVersionID, 4*time.Minute); err != nil {
+	if _, err := waitCoreNetworkPolicyCreated(ctx, conn, coreNetworkId, policyVersionID, waitCoreNetworkPolicyCreatedTimeInMinutes*time.Minute); err != nil {
 		return fmt.Errorf("waiting for Network Manager Core Network Policy from Core Network (%s) create: %s", coreNetworkId, err)
 	}
 
