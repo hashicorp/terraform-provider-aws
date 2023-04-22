@@ -1012,32 +1012,6 @@ resource "aws_apprunner_service" "test" {
 `, rName))
 }
 
-func testAccServiceConfig_ImageRepository_instanceConfiguration2(rName string) string {
-	return acctest.ConfigCompose(
-		testAccIAMRole(rName),
-		fmt.Sprintf(`
-resource "aws_apprunner_service" "test" {
-  service_name = %[1]q
-
-  instance_configuration {
-    cpu               = "4 vCPU"
-    instance_role_arn = aws_iam_role.test.arn
-    memory            = "10 GB"
-  }
-
-  source_configuration {
-    auto_deployments_enabled = false
-    image_repository {
-      image_configuration {
-        port = "80"
-      }
-      image_identifier      = "public.ecr.aws/nginx/nginx:latest"
-      image_repository_type = "ECR_PUBLIC"
-    }
-  }
-}
-`, rName))
-}
 func testAccServiceConfig_ImageRepository_InstanceConfiguration_noInstanceRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apprunner_service" "test" {
