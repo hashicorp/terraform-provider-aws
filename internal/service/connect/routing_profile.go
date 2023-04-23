@@ -21,6 +21,7 @@ import (
 const (
 	AssociateRoutingProfileQueuesMaxItems    = 10
 	DisassociateRoutingProfileQueuesMaxItems = 10
+	CreateRoutingProfileQueuesMaxItems       = 10
 )
 
 // @SDKResource("aws_connect_routing_profile", name="Routing Profile")
@@ -173,7 +174,7 @@ func resourceRoutingProfileCreate(ctx context.Context, d *schema.ResourceData, m
 		Tags:                   GetTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("queue_configs"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk("queue_configs"); ok && v.(*schema.Set).Len() > 0 && v.(*schema.Set).Len() <= CreateRoutingProfileQueuesMaxItems {
 		input.QueueConfigs = expandRoutingProfileQueueConfigs(v.(*schema.Set).List())
 	}
 
@@ -186,6 +187,16 @@ func resourceRoutingProfileCreate(ctx context.Context, d *schema.ResourceData, m
 
 	if output == nil {
 		return diag.FromErr(fmt.Errorf("error creating Connect Routing Profile (%s): empty output", name))
+	}
+
+	// call the batched association API if the number of queues to associate with the routing profile is > CreateRoutingProfileQueuesMaxItems
+	if v, ok := d.GetOk("queue_configs"); ok && v.(*schema.Set).Len() > CreateRoutingProfileQueuesMaxItems {
+		queueConfigsUpdateRemove := make([]interface{}, 0)
+		err = updateQueueConfigs(ctx, conn, instanceID, aws.StringValue(output.RoutingProfileId), v.(*schema.Set).List(), queueConfigsUpdateRemove)
+
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.RoutingProfileId)))
@@ -333,44 +344,61 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 		queueConfigsUpdateAdd := ns.Difference(os).List()
 		queueConfigsUpdateRemove := os.Difference(ns).List()
 
-		// disassociate first since Queue and channel type combination cannot be duplicated
-		if len(queueConfigsUpdateRemove) > 0 {
-			for i := 0; i < len(queueConfigsUpdateRemove); i += DisassociateRoutingProfileQueuesMaxItems {
-				j := i + DisassociateRoutingProfileQueuesMaxItems
-				if j > len(queueConfigsUpdateRemove) {
-					j = len(queueConfigsUpdateRemove)
-				}
-				_, err = conn.DisassociateRoutingProfileQueuesWithContext(ctx, &connect.DisassociateRoutingProfileQueuesInput{
-					InstanceId:       aws.String(instanceID),
-					QueueReferences:  expandRoutingProfileQueueReferences(queueConfigsUpdateRemove[i:j]),
-					RoutingProfileId: aws.String(routingProfileID),
-				})
-				if err != nil {
-					return diag.Errorf("updating RoutingProfile Queue Configs, specifically disassociating queues from routing profile (%s): %s", d.Id(), err)
-				}
-			}
-		}
+		err = updateQueueConfigs(ctx, conn, instanceID, routingProfileID, queueConfigsUpdateAdd, queueConfigsUpdateRemove)
 
-		if len(queueConfigsUpdateAdd) > 0 {
-			for i := 0; i < len(queueConfigsUpdateAdd); i += AssociateRoutingProfileQueuesMaxItems {
-				j := i + AssociateRoutingProfileQueuesMaxItems
-				if j > len(queueConfigsUpdateAdd) {
-					j = len(queueConfigsUpdateAdd)
-				}
-				_, err = conn.AssociateRoutingProfileQueuesWithContext(ctx, &connect.AssociateRoutingProfileQueuesInput{
-					InstanceId:       aws.String(instanceID),
-					QueueConfigs:     expandRoutingProfileQueueConfigs(queueConfigsUpdateAdd[i:j]),
-					RoutingProfileId: aws.String(routingProfileID),
-				})
-				if err != nil {
-					return diag.Errorf("updating RoutingProfile Queue Configs, specifically associating queues to routing profile (%s): %s", d.Id(), err)
-				}
-			}
-
+		if err != nil {
+			return diag.FromErr(err)
 		}
 	}
 
 	return resourceRoutingProfileRead(ctx, d, meta)
+}
+
+func updateQueueConfigs(ctx context.Context, conn *connect.Connect, instanceID, routingProfileID string, queueConfigsUpdateAdd, queueConfigsUpdateRemove []interface{}) error {
+	// updates to queue configs
+	// There are 3 APIs for this
+	// AssociateRoutingProfileQueues - Associates a set of queues with a routing profile.
+	// DisassociateRoutingProfileQueues - Disassociates a set of queues from a routing profile.
+	// UpdateRoutingProfileQueues - Updates the properties associated with a set of queues for a routing profile.
+	// since the update only updates the existing queues that are associated, we will instead disassociate and associate
+	// the respective queues based on the diff detected
+
+	// disassociate first since Queue and channel type combination cannot be duplicated
+	if len(queueConfigsUpdateRemove) > 0 {
+		for i := 0; i < len(queueConfigsUpdateRemove); i += DisassociateRoutingProfileQueuesMaxItems {
+			j := i + DisassociateRoutingProfileQueuesMaxItems
+			if j > len(queueConfigsUpdateRemove) {
+				j = len(queueConfigsUpdateRemove)
+			}
+			_, err := conn.DisassociateRoutingProfileQueuesWithContext(ctx, &connect.DisassociateRoutingProfileQueuesInput{
+				InstanceId:       aws.String(instanceID),
+				QueueReferences:  expandRoutingProfileQueueReferences(queueConfigsUpdateRemove[i:j]),
+				RoutingProfileId: aws.String(routingProfileID),
+			})
+			if err != nil {
+				return fmt.Errorf("updating RoutingProfile Queue Configs, specifically disassociating queues from routing profile (%s): %s", routingProfileID, err)
+			}
+		}
+	}
+
+	if len(queueConfigsUpdateAdd) > 0 {
+		for i := 0; i < len(queueConfigsUpdateAdd); i += AssociateRoutingProfileQueuesMaxItems {
+			j := i + AssociateRoutingProfileQueuesMaxItems
+			if j > len(queueConfigsUpdateAdd) {
+				j = len(queueConfigsUpdateAdd)
+			}
+			_, err := conn.AssociateRoutingProfileQueuesWithContext(ctx, &connect.AssociateRoutingProfileQueuesInput{
+				InstanceId:       aws.String(instanceID),
+				QueueConfigs:     expandRoutingProfileQueueConfigs(queueConfigsUpdateAdd[i:j]),
+				RoutingProfileId: aws.String(routingProfileID),
+			})
+			if err != nil {
+				return fmt.Errorf("updating RoutingProfile Queue Configs, specifically associating queues to routing profile (%s): %s", routingProfileID, err)
+			}
+		}
+	}
+
+	return nil
 }
 
 // func resourceRoutingProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
