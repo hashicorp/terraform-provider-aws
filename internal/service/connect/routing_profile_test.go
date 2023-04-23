@@ -386,6 +386,132 @@ func testAccRoutingProfile_updateTags(t *testing.T) {
 	})
 }
 
+func testAccRoutingProfile_createQueueConfigsBatchedAssociateDisassociate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v connect.DescribeRoutingProfileOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_connect_routing_profile.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoutingProfileDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoutingProfileConfig_SixteenQueues(rName, rName2, rName3),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "queue_configs.#", "16"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "queue_configs.*", map[string]string{
+						"delay":    "1",
+						"priority": "1",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "queue_configs.*.queue_id", "aws_connect_queue.test.0", "queue_id"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "queue_configs.*", map[string]string{
+						"delay":    "2",
+						"priority": "2",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "queue_configs.*.queue_id", "aws_connect_queue.test.1", "queue_id"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "queue_configs.*", map[string]string{
+						"delay":    "3",
+						"priority": "3",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "queue_configs.*.queue_id", "aws_connect_queue.test.2", "queue_id"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "queue_configs.*", map[string]string{
+						"delay":    "4",
+						"priority": "4",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "queue_configs.*.queue_id", "aws_connect_queue.test.3", "queue_id"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "queue_configs.*", map[string]string{
+						"delay":    "5",
+						"priority": "5",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "queue_configs.*.queue_id", "aws_connect_queue.test.4", "queue_id"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "queue_configs.*", map[string]string{
+						"delay":    "6",
+						"priority": "6",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "queue_configs.*.queue_id", "aws_connect_queue.test.5", "queue_id"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "queue_configs.*", map[string]string{
+						"delay":    "7",
+						"priority": "7",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "queue_configs.*.queue_id", "aws_connect_queue.test.6", "queue_id"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "queue_configs.*", map[string]string{
+						"delay":    "8",
+						"priority": "8",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "queue_configs.*.queue_id", "aws_connect_queue.test.7", "queue_id"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "queue_configs.*", map[string]string{
+						"delay":    "9",
+						"priority": "9",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "queue_configs.*.queue_id", "aws_connect_queue.test.8", "queue_id"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "queue_configs.*", map[string]string{
+						"delay":    "10",
+						"priority": "10",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "queue_configs.*.queue_id", "aws_connect_queue.test.9", "queue_id"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "queue_configs.*", map[string]string{
+						"delay":    "11",
+						"priority": "11",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "queue_configs.*.queue_id", "aws_connect_queue.test.10", "queue_id"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "queue_configs.*", map[string]string{
+						"delay":    "12",
+						"priority": "12",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "queue_configs.*.queue_id", "aws_connect_queue.test.11", "queue_id"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "queue_configs.*", map[string]string{
+						"delay":    "13",
+						"priority": "13",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "queue_configs.*.queue_id", "aws_connect_queue.test.12", "queue_id"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "queue_configs.*", map[string]string{
+						"delay":    "14",
+						"priority": "14",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "queue_configs.*.queue_id", "aws_connect_queue.test.13", "queue_id"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "queue_configs.*", map[string]string{
+						"delay":    "15",
+						"priority": "15",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "queue_configs.*.queue_id", "aws_connect_queue.test.14", "queue_id"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "queue_configs.*", map[string]string{
+						"delay":    "16",
+						"priority": "16",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "queue_configs.*.queue_id", "aws_connect_queue.test.15", "queue_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRoutingProfileConfig_TwoQueues(rName, rName2, rName3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "queue_configs.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "queue_configs.*", map[string]string{
+						"delay":    "1",
+						"priority": "1",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "queue_configs.*.queue_id", "aws_connect_queue.test.0", "queue_id"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "queue_configs.*", map[string]string{
+						"delay":    "2",
+						"priority": "2",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "queue_configs.*.queue_id", "aws_connect_queue.test.1", "queue_id")),
+			},
+		},
+	})
+}
+
 func testAccRoutingProfile_updateQueueConfigsBatchedAssociateDisassociate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v connect.DescribeRoutingProfileOutput

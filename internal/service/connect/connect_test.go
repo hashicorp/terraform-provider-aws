@@ -102,6 +102,7 @@ func TestAccConnect_serial(t *testing.T) {
 			"concurrency":                  testAccRoutingProfile_updateConcurrency,
 			"defaultOutboundQueue":         testAccRoutingProfile_updateDefaultOutboundQueue,
 			"queues":                       testAccRoutingProfile_updateQueues,
+			"createQueueBatchAssociations": testAccRoutingProfile_createQueueConfigsBatchedAssociateDisassociate,
 			"updateQueueBatchAssociations": testAccRoutingProfile_updateQueueConfigsBatchedAssociateDisassociate,
 			"dataSource_id":                testAccRoutingProfileDataSource_routingProfileID,
 			"dataSource_name":              testAccRoutingProfileDataSource_name,
