@@ -190,12 +190,10 @@ func ResourceDomain() *schema.Resource {
 												"hours": {
 													Type:     schema.TypeInt,
 													Required: true,
-													Optional: true,
 												},
 												"minutes": {
 													Type:     schema.TypeInt,
 													Required: true,
-													Optional: true,
 												},
 											},
 										},
