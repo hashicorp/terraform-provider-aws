@@ -82,7 +82,7 @@ import (
 {{- end }}
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @SDKResource("{{ .ProviderResourceName }}")
+// @SDKResource("{{ .ProviderResourceName }}", name="{{ .HumanResourceName }}")
 // Tagging annotations are used for "transparent tagging".
 // Change the "identifierAttribute" value to the name of the attribute used in ListTags and UpdateTags calls (e.g. "arn").
 // @Tags(identifierAttribute="id")

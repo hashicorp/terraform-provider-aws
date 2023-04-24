@@ -95,6 +95,15 @@ func SetTagsOut(ctx context.Context, tags []*directoryservice.Tag) {
 	}
 }
 
+// createTags creates ds service tags for new resources.
+func createTags(ctx context.Context, conn directoryserviceiface.DirectoryServiceAPI, identifier string, tags []*directoryservice.Tag) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return UpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+}
+
 // UpdateTags updates ds service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -133,15 +142,6 @@ func UpdateTags(ctx context.Context, conn directoryserviceiface.DirectoryService
 	}
 
 	return nil
-}
-
-// createTags creates ds service tags for new resources.
-func createTags(ctx context.Context, conn directoryserviceiface.DirectoryServiceAPI, identifier string, tags []*directoryservice.Tag) error {
-	if len(tags) == 0 {
-		return nil
-	}
-
-	return UpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
 }
 
 // UpdateTags updates ds service tags.
