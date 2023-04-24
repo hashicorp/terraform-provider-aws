@@ -1,5 +1,6 @@
 ```release-note:note
 resource/aws_launch_template: With the retirement of EC2-Classic the`security_group_names` attribute has been deprecated and will be removed in a future version
+<<<<<<< HEAD
 ```
 
 ```release-note:note
@@ -20,4 +21,6 @@ data-source/aws_elasticache_cluster: With the retirement of EC2-Classic the`secu
 
 ```release-note:note
 data-source/aws_redshift_cluster: With the retirement of EC2-Classic the `cluster_security_groups` attribute has been deprecated and will be removed in a future version
+=======
+>>>>>>> parent of 21b60fb227 (d/aws_launch_template: Deprecate 'security_group_names'.)
 ```

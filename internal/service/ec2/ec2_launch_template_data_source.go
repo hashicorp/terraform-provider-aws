@@ -740,10 +740,9 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				Computed: true,
 			},
 			"security_group_names": {
-				Type:       schema.TypeSet,
-				Computed:   true,
-				Elem:       &schema.Schema{Type: schema.TypeString},
-				Deprecated: `With the retirement of EC2-Classic the security_group_names attribute has been deprecated and will be removed in a future version.`,
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"tag_specifications": {
 				Type:     schema.TypeList,
