@@ -14,10 +14,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkv2resource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -26,10 +27,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	_sp.registerFrameworkResourceFactory(newResourceFramework)
-}
-
+// @FrameworkResource(name="Framework")
+// @Tags(identifierAttribute="arn")
 func newResourceFramework(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceFramework{}, nil
 }
@@ -49,7 +48,7 @@ func (r *resourceFramework) Metadata(_ context.Context, request resource.Metadat
 func (r *resourceFramework) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttribute(),
+			"arn": framework.ARNAttributeComputedOnly(),
 			"compliance_type": schema.StringAttribute{
 				Optional: true,
 			},
@@ -58,13 +57,16 @@ func (r *resourceFramework) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"framework_type": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"id": framework.IDAttribute(),
 			"name": schema.StringAttribute{
 				Required: true,
 			},
-			"tags":     tftags.TagsAttribute(),
-			"tags_all": tftags.TagsAttributeComputedOnly(),
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"control_sets": schema.SetNestedBlock{
@@ -99,7 +101,7 @@ func (r *resourceFramework) Schema(ctx context.Context, req resource.SchemaReque
 }
 
 func (r *resourceFramework) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().AuditManagerClient
+	conn := r.Meta().AuditManagerClient()
 
 	var plan resourceFrameworkData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -122,6 +124,7 @@ func (r *resourceFramework) Create(ctx context.Context, req resource.CreateReque
 	in := auditmanager.CreateAssessmentFrameworkInput{
 		Name:        aws.String(plan.Name.ValueString()),
 		ControlSets: csInput,
+		Tags:        GetTagsIn(ctx),
 	}
 
 	if !plan.ComplianceType.IsNull() {
@@ -129,15 +132,6 @@ func (r *resourceFramework) Create(ctx context.Context, req resource.CreateReque
 	}
 	if !plan.Description.IsNull() {
 		in.Description = aws.String(plan.Description.ValueString())
-	}
-
-	defaultTagsConfig := r.Meta().DefaultTagsConfig
-	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(plan.Tags))
-	plan.TagsAll = flex.FlattenFrameworkStringValueMap(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	out, err := conn.CreateAssessmentFramework(ctx, &in)
@@ -157,12 +151,12 @@ func (r *resourceFramework) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	state := plan
-	resp.Diagnostics.Append(state.refreshFromOutput(ctx, r.Meta(), out.Framework)...)
+	resp.Diagnostics.Append(state.refreshFromOutput(ctx, out.Framework)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
 func (r *resourceFramework) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().AuditManagerClient
+	conn := r.Meta().AuditManagerClient()
 
 	var state resourceFrameworkData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -172,7 +166,7 @@ func (r *resourceFramework) Read(ctx context.Context, req resource.ReadRequest, 
 
 	out, err := FindFrameworkByID(ctx, conn, state.ID.ValueString())
 	if tfresource.NotFound(err) {
-		diag.NewWarningDiagnostic(
+		resp.Diagnostics.AddWarning(
 			"AWS Resource Not Found During Refresh",
 			fmt.Sprintf("Automatically removing from Terraform State instead of returning the error, which may trigger resource recreation. Original Error: %s", err.Error()),
 		)
@@ -187,12 +181,12 @@ func (r *resourceFramework) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	resp.Diagnostics.Append(state.refreshFromOutput(ctx, r.Meta(), out)...)
+	resp.Diagnostics.Append(state.refreshFromOutput(ctx, out)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourceFramework) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().AuditManagerClient
+	conn := r.Meta().AuditManagerClient()
 
 	var plan, state resourceFrameworkData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -245,26 +239,14 @@ func (r *resourceFramework) Update(ctx context.Context, req resource.UpdateReque
 			)
 			return
 		}
-		state.refreshFromOutput(ctx, r.Meta(), out.Framework)
+		state.refreshFromOutput(ctx, out.Framework)
 	}
 
-	if !plan.TagsAll.Equal(state.TagsAll) {
-		if err := UpdateTags(ctx, conn, plan.ARN.ValueString(), state.TagsAll, plan.TagsAll); err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.AuditManager, create.ErrActionUpdating, ResNameControl, plan.ID.String(), nil),
-				err.Error(),
-			)
-			return
-		}
-		state.Tags = plan.Tags
-		state.TagsAll = plan.TagsAll
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceFramework) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().AuditManagerClient
+	conn := r.Meta().AuditManagerClient()
 
 	var state resourceFrameworkData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -327,7 +309,7 @@ func FindFrameworkByID(ctx context.Context, conn *auditmanager.Client, id string
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &sdkv2resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -378,7 +360,7 @@ type frameworkControlSetsControlsData struct {
 }
 
 // refreshFromOutput writes state data from an AWS response object
-func (rd *resourceFrameworkData) refreshFromOutput(ctx context.Context, meta *conns.AWSClient, out *awstypes.Framework) diag.Diagnostics {
+func (rd *resourceFrameworkData) refreshFromOutput(ctx context.Context, out *awstypes.Framework) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if out == nil {
@@ -396,16 +378,7 @@ func (rd *resourceFrameworkData) refreshFromOutput(ctx context.Context, meta *co
 	rd.FrameworkType = flex.StringValueToFramework(ctx, out.Type)
 	rd.ARN = flex.StringToFramework(ctx, out.Arn)
 
-	defaultTagsConfig := meta.DefaultTagsConfig
-	ignoreTagsConfig := meta.IgnoreTagsConfig
-	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	// AWS APIs often return empty lists of tags when none have been configured.
-	if tags := tags.RemoveDefaultConfig(defaultTagsConfig).Map(); len(tags) == 0 {
-		rd.Tags = tftags.Null
-	} else {
-		rd.Tags = flex.FlattenFrameworkStringValueMap(ctx, tags)
-	}
-	rd.TagsAll = flex.FlattenFrameworkStringValueMap(ctx, tags.Map())
+	SetTagsOut(ctx, out.Tags)
 
 	return diags
 }

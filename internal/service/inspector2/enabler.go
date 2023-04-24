@@ -13,7 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -25,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_inspector2_enabler")
 func ResourceEnabler() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEnablerCreate,
@@ -66,12 +68,12 @@ const (
 )
 
 func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Inspector2Client
+	conn := meta.(*conns.AWSClient).Inspector2Client()
 
 	in := &inspector2.EnableInput{
 		AccountIds:    flex.ExpandStringValueSet(d.Get("account_ids").(*schema.Set)),
-		ResourceTypes: expandResourceScanTypes(flex.ExpandStringValueSet(d.Get("resource_types").(*schema.Set))),
-		ClientToken:   aws.String(resource.UniqueId()),
+		ResourceTypes: flex.ExpandStringyValueSet[types.ResourceScanType](d.Get("resource_types").(*schema.Set)),
+		ClientToken:   aws.String(id.UniqueId()),
 	}
 
 	id := EnablerID(in.AccountIds, flex.ExpandStringValueSet(d.Get("resource_types").(*schema.Set)))
@@ -95,7 +97,7 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Inspector2Client
+	conn := meta.(*conns.AWSClient).Inspector2Client()
 
 	s, err := FindAccountStatuses(ctx, conn, d.Id())
 	if err != nil {
@@ -124,11 +126,11 @@ func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceEnablerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Inspector2Client
+	conn := meta.(*conns.AWSClient).Inspector2Client()
 
 	in := &inspector2.DisableInput{
 		AccountIds:    flex.ExpandStringValueSet(d.Get("account_ids").(*schema.Set)),
-		ResourceTypes: expandResourceScanTypes(flex.ExpandStringValueSet(d.Get("resource_types").(*schema.Set))),
+		ResourceTypes: flex.ExpandStringyValueSet[types.ResourceScanType](d.Get("resource_types").(*schema.Set)),
 	}
 
 	_, err := conn.Disable(ctx, in)
@@ -149,7 +151,7 @@ const (
 )
 
 func waitEnabled(ctx context.Context, conn *inspector2.Client, id string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   append(enum.Slice(types.StatusEnabling, types.StatusDisabled), StatusDisabledEnabled, StatusInProgress),
 		Target:                    enum.Slice(types.StatusEnabled),
 		Refresh:                   statusEnable(ctx, conn, id),
@@ -164,7 +166,7 @@ func waitEnabled(ctx context.Context, conn *inspector2.Client, id string, timeou
 }
 
 func waitDisabled(ctx context.Context, conn *inspector2.Client, id string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: append(enum.Slice(types.StatusDisabling, types.StatusEnabled), StatusDisabledEnabled, StatusInProgress),
 		Target:  enum.Slice(types.StatusDisabled),
 		Refresh: statusEnable(ctx, conn, id),
@@ -176,7 +178,7 @@ func waitDisabled(ctx context.Context, conn *inspector2.Client, id string, timeo
 	return err
 }
 
-func statusEnable(ctx context.Context, conn *inspector2.Client, id string) resource.StateRefreshFunc {
+func statusEnable(ctx context.Context, conn *inspector2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		st, err := FindAccountStatuses(ctx, conn, id)
 
@@ -344,16 +346,6 @@ func compositeStatus(ec2, ecr bool, ec2Status, ecrStatus string) string {
 	}
 
 	return string(types.StatusSuspended)
-}
-
-func expandResourceScanTypes(s []string) []types.ResourceScanType {
-	vs := make([]types.ResourceScanType, 0, len(s))
-	for _, v := range s {
-		if v != "" {
-			vs = append(vs, types.ResourceScanType(v))
-		}
-	}
-	return vs
 }
 
 func EnablerID(accountIDs []string, types []string) string {

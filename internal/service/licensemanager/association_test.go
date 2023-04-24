@@ -16,19 +16,20 @@ import (
 )
 
 func TestAccLicenseManagerAssociation_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_licensemanager_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, licensemanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAssociationDestroy,
+		CheckDestroy:             testAccCheckAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAssociationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAssociationExists(resourceName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "license_configuration_arn", "aws_licensemanager_license_configuration.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_instance.test", "arn"),
 				),
@@ -43,20 +44,21 @@ func TestAccLicenseManagerAssociation_basic(t *testing.T) {
 }
 
 func TestAccLicenseManagerAssociation_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_licensemanager_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, licensemanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAssociationDestroy,
+		CheckDestroy:             testAccCheckAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAssociationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tflicensemanager.ResourceAssociation(), resourceName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAssociationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflicensemanager.ResourceAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -64,7 +66,7 @@ func TestAccLicenseManagerAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAssociationExists(n string) resource.TestCheckFunc {
+func testAccCheckAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -81,40 +83,42 @@ func testAccCheckAssociationExists(n string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn()
 
-		return tflicensemanager.FindAssociation(context.Background(), conn, resourceARN, licenseConfigurationARN)
+		return tflicensemanager.FindAssociation(ctx, conn, resourceARN, licenseConfigurationARN)
 	}
 }
 
-func testAccCheckAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn
+func testAccCheckAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_licensemanager_association" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_licensemanager_association" {
+				continue
+			}
+
+			resourceARN, licenseConfigurationARN, err := tflicensemanager.AssociationParseResourceID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			err = tflicensemanager.FindAssociation(ctx, conn, resourceARN, licenseConfigurationARN)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("License Manager Association %s still exists", rs.Primary.ID)
 		}
 
-		resourceARN, licenseConfigurationARN, err := tflicensemanager.AssociationParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		err = tflicensemanager.FindAssociation(context.Background(), conn, resourceARN, licenseConfigurationARN)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("License Manager Association %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccAssociationConfig_basic(rName string) string {

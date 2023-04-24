@@ -1,17 +1,20 @@
 package secretsmanager
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_secretsmanager_random_password")
 func DataSourceRandomPassword() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRandomPasswordRead,
+		ReadWithoutTimeout: dataSourceRandomPasswordRead,
 
 		Schema: map[string]*schema.Schema{
 			"exclude_characters": {
@@ -56,8 +59,9 @@ func DataSourceRandomPassword() *schema.Resource {
 	}
 }
 
-func dataSourceRandomPasswordRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+func dataSourceRandomPasswordRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 
 	var excludeCharacters string
 	if v, ok := d.GetOk("exclude_characters"); ok {
@@ -103,13 +107,13 @@ func dataSourceRandomPasswordRead(d *schema.ResourceData, meta interface{}) erro
 		RequireEachIncludedType: aws.Bool(requireEachIncludedType),
 	}
 
-	output, err := conn.GetRandomPassword(input)
+	output, err := conn.GetRandomPasswordWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error reading Secrets Manager Get Random Password: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Get Random Password: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.RandomPassword))
 	d.Set("random_password", output.RandomPassword)
 
-	return nil
+	return diags
 }

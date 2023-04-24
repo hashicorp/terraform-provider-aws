@@ -12,6 +12,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_route53_resolver_rule")
 func DataSourceRule() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRuleRead,
@@ -68,7 +69,7 @@ func DataSourceRule() *schema.Resource {
 }
 
 func dataSourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var err error
@@ -124,7 +125,7 @@ func dataSourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("share_status", shareStatus)
 	// https://github.com/hashicorp/terraform-provider-aws/issues/10211
 	if shareStatus != route53resolver.ShareStatusSharedWithMe {
-		tags, err := ListTagsWithContext(ctx, conn, arn)
+		tags, err := ListTags(ctx, conn, arn)
 
 		if err != nil {
 			return diag.Errorf("listing tags for Route53 Resolver Rule (%s): %s", arn, err)

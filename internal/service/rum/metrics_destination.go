@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatchrum"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_rum_metrics_destination")
 func ResourceMetricsDestination() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMetricsDestinationPut,
@@ -24,7 +25,7 @@ func ResourceMetricsDestination() *schema.Resource {
 		DeleteWithoutTimeout: resourceMetricsDestinationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -52,7 +53,7 @@ func ResourceMetricsDestination() *schema.Resource {
 }
 
 func resourceMetricsDestinationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RUMConn
+	conn := meta.(*conns.AWSClient).RUMConn()
 
 	name := d.Get("app_monitor_name").(string)
 	input := &cloudwatchrum.PutRumMetricsDestinationInput{
@@ -82,7 +83,7 @@ func resourceMetricsDestinationPut(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceMetricsDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RUMConn
+	conn := meta.(*conns.AWSClient).RUMConn()
 
 	dest, err := FindMetricsDestinationByName(ctx, conn, d.Id())
 
@@ -105,7 +106,7 @@ func resourceMetricsDestinationRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceMetricsDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RUMConn
+	conn := meta.(*conns.AWSClient).RUMConn()
 
 	input := &cloudwatchrum.DeleteRumMetricsDestinationInput{
 		AppMonitorName: aws.String(d.Id()),
@@ -151,7 +152,7 @@ func FindMetricsDestinationByName(ctx context.Context, conn *cloudwatchrum.Cloud
 	})
 
 	if tfawserr.ErrCodeEquals(err, cloudwatchrum.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

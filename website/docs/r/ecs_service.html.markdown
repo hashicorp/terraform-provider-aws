@@ -72,6 +72,23 @@ resource "aws_ecs_service" "bar" {
 }
 ```
 
+### CloudWatch Deployment Alarms
+
+```terraform
+resource "aws_ecs_service" "example" {
+  name    = "example"
+  cluster = aws_ecs_cluster.example.id
+
+  alarms {
+    enable   = true
+    rollback = true
+    alarm_names = [
+      aws_cloudwatch_metric_alarm.example.alarm_name
+    ]
+  }
+}
+```
+
 ### External Deployment Controller
 
 ```terraform
@@ -109,6 +126,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `alarms` - (Optional) Information about the CloudWatch alarms. [See below](#alarms).
 * `capacity_provider_strategy` - (Optional) Capacity provider strategies to use for the service. Can be one or more. These can be updated without destroying and recreating the service only if `force_new_deployment = true` and not changing from 0 `capacity_provider_strategy` blocks to greater than 0, or vice versa. See below.
 * `cluster` - (Optional) ARN of an ECS cluster.
 * `deployment_circuit_breaker` - (Optional) Configuration block for deployment circuit breaker. See below.
@@ -135,6 +153,14 @@ The following arguments are optional:
 * `task_definition` - (Optional) Family and revision (`family:revision`) or full ARN of the task definition that you want to run in your service. Required unless using the `EXTERNAL` deployment controller. If a revision is not specified, the latest `ACTIVE` revision is used.
 * `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger an in-place update (redeployment). Useful with `timestamp()`. See example above.
 * `wait_for_steady_state` - (Optional) If `true`, Terraform will wait for the service to reach a steady state (like [`aws ecs wait services-stable`](https://docs.aws.amazon.com/cli/latest/reference/ecs/wait/services-stable.html)) before continuing. Default `false`.
+
+### alarms
+
+The `alarms` configuration block supports the following:
+
+* `alarm_names` - (Required) One or more CloudWatch alarm names.
+* `enable` - (Required) Determines whether to use the CloudWatch alarm option in the service deployment process.
+* `rollback` - (Required) Determines whether to configure Amazon ECS to roll back the service if a service deployment fails. If rollback is used, when a service deployment fails, the service is rolled back to the last deployment that completed successfully.
 
 ### capacity_provider_strategy
 
@@ -219,7 +245,7 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 `log_configuration` supports the following:
 
-* `log_driver` - (Optional) The log driver to use for the container.
+* `log_driver` - (Required) The log driver to use for the container.
 * `options` - (Optional) The configuration options to send to the log driver.
 * `secret_option` - (Optional) The secrets to pass to the log configuration. See below.
 
@@ -227,8 +253,8 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 `secret_option` supports the following:
 
-* `name` - (Optional) The name of the secret.
-* `value_from` - (Optional) The secret to expose to the container. The supported values are either the full ARN of the AWS Secrets Manager secret or the full ARN of the parameter in the SSM Parameter Store.
+* `name` - (Required) The name of the secret.
+* `value_from` - (Required) The secret to expose to the container. The supported values are either the full ARN of the AWS Secrets Manager secret or the full ARN of the parameter in the SSM Parameter Store.
 
 ### service
 

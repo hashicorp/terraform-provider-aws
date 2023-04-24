@@ -9,13 +9,14 @@ import (
 )
 
 func testAccDataLakeSettingsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "data.aws_lakeformation_data_lake_settings.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataLakeSettingsDestroy,
+		CheckDestroy:             testAccCheckDataLakeSettingsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataLakeSettingsDataSourceConfig_basic,
@@ -23,6 +24,9 @@ func testAccDataLakeSettingsDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "catalog_id", "data.aws_caller_identity.current", "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "admins.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "admins.0", "data.aws_iam_session_context.current", "issuer_arn"),
+					resource.TestCheckResourceAttr(resourceName, "allow_external_data_filtering", "false"),
+					resource.TestCheckResourceAttr(resourceName, "external_data_filtering_allow_list.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "authorized_session_tag_value_list.#", "0"),
 				),
 			},
 		},

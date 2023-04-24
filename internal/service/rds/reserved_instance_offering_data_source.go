@@ -18,6 +18,7 @@ const (
 	ResNameReservedInstanceOffering = "Reserved Instance Offering"
 )
 
+// @SDKDataSource("aws_rds_reserved_instance_offering")
 func DataSourceReservedOffering() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReservedOfferingRead,
@@ -64,7 +65,7 @@ func DataSourceReservedOffering() *schema.Resource {
 }
 
 func dataSourceReservedOfferingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	input := &rds.DescribeReservedDBInstancesOfferingsInput{
 		DBInstanceClass:    aws.String(d.Get("db_instance_class").(string)),
@@ -75,7 +76,6 @@ func dataSourceReservedOfferingRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	resp, err := conn.DescribeReservedDBInstancesOfferingsWithContext(ctx, input)
-
 	if err != nil {
 		return create.DiagError(names.RDS, create.ErrActionReading, ResNameReservedInstanceOffering, "unknown", err)
 	}

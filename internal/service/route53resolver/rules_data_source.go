@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_route53_resolver_rules")
 func DataSourceRules() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRulesRead,
@@ -56,7 +57,7 @@ func DataSourceRules() *schema.Resource {
 }
 
 func dataSourceRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	input := &route53resolver.ListResolverRulesInput{}
 	var ruleIDs []*string

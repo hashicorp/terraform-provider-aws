@@ -11,7 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,8 +20,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_sfn_state_machine", name="State Machine")
+// @Tags(identifierAttribute="id")
 func ResourceStateMachine() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStateMachineCreate,
@@ -29,7 +33,7 @@ func ResourceStateMachine() *schema.Resource {
 		DeleteWithoutTimeout: resourceStateMachineDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -88,7 +92,7 @@ func ResourceStateMachine() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 80-resource.UniqueIDSuffixLength),
+					validation.StringLenBetween(1, 80-id.UniqueIDSuffixLength),
 					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-_]+$`), "the name should only contain 0-9, A-Z, a-z, - and _"),
 				),
 			},
@@ -101,8 +105,8 @@ func ResourceStateMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"tracing_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -132,16 +136,14 @@ func ResourceStateMachine() *schema.Resource {
 }
 
 func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SFNConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).SFNConn()
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &sfn.CreateStateMachineInput{
 		Definition: aws.String(d.Get("definition").(string)),
 		Name:       aws.String(name),
 		RoleArn:    aws.String(d.Get("role_arn").(string)),
-		Tags:       Tags(tags.IgnoreAWS()),
+		Tags:       GetTagsIn(ctx),
 		Type:       aws.String(d.Get("type").(string)),
 	}
 
@@ -157,7 +159,7 @@ func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, met
 	// Note: the instance may be in a deleting mode, hence the retry
 	// when creating the step function. This can happen when we are
 	// updating the resource (since there is no update API call).
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, stateMachineCreatedTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, stateMachineCreatedTimeout, func() (interface{}, error) {
 		return conn.CreateStateMachineWithContext(ctx, input)
 	}, sfn.ErrCodeStateMachineDeleting, "AccessDeniedException")
 
@@ -171,9 +173,7 @@ func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SFNConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SFNConn()
 
 	output, err := FindStateMachineByARN(ctx, conn, d.Id())
 
@@ -214,32 +214,11 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set("type", output.Type)
 
-	tags, err := ListTagsWithContext(ctx, conn, d.Id())
-
-	if tfawserr.ErrCodeEquals(err, "UnknownOperationException") {
-		return nil
-	}
-
-	if err != nil {
-		return diag.Errorf("listing tags for Step Functions State Machine (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
-
 	return nil
 }
 
 func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SFNConn
+	conn := meta.(*conns.AWSClient).SFNConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		// "You must include at least one of definition or roleArn or you will receive a MissingRequiredParameter error"
@@ -268,11 +247,11 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		// Handle eventual consistency after update.
-		err = resource.RetryContext(ctx, stateMachineUpdatedTimeout, func() *resource.RetryError { // nosemgrep:ci.helper-schema-resource-Retry-without-TimeoutError-check
+		err = retry.RetryContext(ctx, stateMachineUpdatedTimeout, func() *retry.RetryError { // nosemgrep:ci.helper-schema-retry-RetryContext-without-TimeoutError-check
 			output, err := FindStateMachineByARN(ctx, conn, d.Id())
 
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 
 			if d.HasChange("definition") && !verify.JSONBytesEqual([]byte(aws.StringValue(output.Definition)), []byte(d.Get("definition").(string))) ||
@@ -280,7 +259,7 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 				d.HasChange("tracing_configuration.0.enabled") && output.TracingConfiguration != nil && aws.BoolValue(output.TracingConfiguration.Enabled) != d.Get("tracing_configuration.0.enabled").(bool) ||
 				d.HasChange("logging_configuration.0.include_execution_data") && output.LoggingConfiguration != nil && aws.BoolValue(output.LoggingConfiguration.IncludeExecutionData) != d.Get("logging_configuration.0.include_execution_data").(bool) ||
 				d.HasChange("logging_configuration.0.level") && output.LoggingConfiguration != nil && aws.StringValue(output.LoggingConfiguration.Level) != d.Get("logging_configuration.0.level").(string) {
-				return resource.RetryableError(fmt.Errorf("Step Functions State Machine (%s) eventual consistency", d.Id()))
+				return retry.RetryableError(fmt.Errorf("Step Functions State Machine (%s) eventual consistency", d.Id()))
 			}
 
 			return nil
@@ -291,19 +270,11 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("updating Step Functions State Machine (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return resourceStateMachineRead(ctx, d, meta)
 }
 
 func resourceStateMachineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SFNConn
+	conn := meta.(*conns.AWSClient).SFNConn()
 
 	log.Printf("[DEBUG] Deleting Step Functions State Machine: %s", d.Id())
 	_, err := conn.DeleteStateMachineWithContext(ctx, &sfn.DeleteStateMachineInput{
@@ -329,7 +300,7 @@ func FindStateMachineByARN(ctx context.Context, conn *sfn.SFN, arn string) (*sfn
 	output, err := conn.DescribeStateMachineWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, sfn.ErrCodeStateMachineDoesNotExist) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -346,7 +317,7 @@ func FindStateMachineByARN(ctx context.Context, conn *sfn.SFN, arn string) (*sfn
 	return output, nil
 }
 
-func statusStateMachine(ctx context.Context, conn *sfn.SFN, stateMachineArn string) resource.StateRefreshFunc {
+func statusStateMachine(ctx context.Context, conn *sfn.SFN, stateMachineArn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindStateMachineByARN(ctx, conn, stateMachineArn)
 
@@ -369,7 +340,7 @@ const (
 )
 
 func waitStateMachineDeleted(ctx context.Context, conn *sfn.SFN, stateMachineArn string) (*sfn.DescribeStateMachineOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{sfn.StateMachineStatusActive, sfn.StateMachineStatusDeleting},
 		Target:  []string{},
 		Refresh: statusStateMachine(ctx, conn, stateMachineArn),

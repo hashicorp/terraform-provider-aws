@@ -25,6 +25,7 @@ The following arguments are supported:
 * `name` - (Required) Name of the WAF Web ACL.
 
 ## Attributes Reference
+
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of the WAF Web ACL.

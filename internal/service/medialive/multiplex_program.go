@@ -20,7 +20,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	resourceHelper "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -28,10 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	_sp.registerFrameworkResourceFactory(newResourceMultiplexProgram)
-}
-
+// @FrameworkResource
 func newResourceMultiplexProgram(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &multiplexProgram{}, nil
 }
@@ -186,7 +184,7 @@ func (m *multiplexProgram) Schema(ctx context.Context, req resource.SchemaReques
 }
 
 func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := m.Meta().MediaLiveClient
+	conn := m.Meta().MediaLiveClient()
 
 	var plan resourceMultiplexProgramData
 	diags := req.Plan.Get(ctx, &plan)
@@ -201,7 +199,7 @@ func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateReques
 	in := &medialive.CreateMultiplexProgramInput{
 		MultiplexId: aws.String(multiplexId),
 		ProgramName: aws.String(programName),
-		RequestId:   aws.String(resourceHelper.UniqueId()),
+		RequestId:   aws.String(id.UniqueId()),
 	}
 
 	mps := make([]multiplexProgramSettings, 1)
@@ -244,7 +242,7 @@ func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateReques
 }
 
 func (m *multiplexProgram) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := m.Meta().MediaLiveClient
+	conn := m.Meta().MediaLiveClient()
 
 	var state resourceMultiplexProgramData
 	diags := req.State.Get(ctx, &state)
@@ -266,7 +264,7 @@ func (m *multiplexProgram) Read(ctx context.Context, req resource.ReadRequest, r
 	out, err := FindMultiplexProgramByID(ctx, conn, multiplexId, programName)
 
 	if tfresource.NotFound(err) {
-		diag.NewWarningDiagnostic(
+		resp.Diagnostics.AddWarning(
 			"AWS Resource Not Found During Refresh",
 			fmt.Sprintf("Automatically removing from Terraform State instead of returning the error, which may trigger resource recreation. Original Error: %s", err.Error()),
 		)
@@ -309,7 +307,7 @@ func (m *multiplexProgram) Read(ctx context.Context, req resource.ReadRequest, r
 }
 
 func (m *multiplexProgram) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := m.Meta().MediaLiveClient
+	conn := m.Meta().MediaLiveClient()
 
 	var plan resourceMultiplexProgramData
 	diags := req.Plan.Get(ctx, &plan)
@@ -374,7 +372,7 @@ func (m *multiplexProgram) Update(ctx context.Context, req resource.UpdateReques
 }
 
 func (m *multiplexProgram) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := m.Meta().MediaLiveClient
+	conn := m.Meta().MediaLiveClient()
 
 	var state resourceMultiplexProgramData
 	diags := req.State.Get(ctx, &state)
@@ -459,7 +457,7 @@ func FindMultiplexProgramByID(ctx context.Context, conn *medialive.Client, multi
 	if err != nil {
 		var nfe *mltypes.NotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &resourceHelper.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}

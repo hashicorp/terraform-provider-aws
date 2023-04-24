@@ -110,7 +110,7 @@ The following arguments are optional:
 * `cdc_inserts_and_updates` - (Optional) Whether to write insert and update operations to .csv or .parquet output files. Default is `false`.
 * `cdc_inserts_only` - (Optional) Whether to write insert operations to .csv or .parquet output files. Default is `false`.
 * `cdc_max_batch_interval` - (Optional) Maximum length of the interval, defined in seconds, after which to output a file to Amazon S3. (AWS default is `60`.)
-* `cdc_min_file_size` - (Optional) Minimum file size, defined in kilobytes, to reach for a file output. (AWS default is 32 MB.)
+* `cdc_min_file_size` - (Optional) Minimum file size condition as defined in kilobytes to output a file to Amazon S3. (AWS default is 32000 KB.)
 * `certificate_arn` - (Optional, Default: empty string) ARN for the certificate.
 * `compression_type` - (Optional) Set to compress target files. Valid values are `GZIP` and `NONE`. Default is `NONE`. (Ignored for source endpoints.)
 * `csv_delimiter` - (Optional) Delimiter used to separate columns in the source files. Default is `,`.
@@ -123,12 +123,13 @@ The following arguments are optional:
 * `date_partition_enabled` - (Optional) Partition S3 bucket folders based on transaction commit dates. Default is `false`. (Ignored for source endpoints.)
 * `date_partition_sequence` - (Optional) Date format to use during folder partitioning. Use this parameter when `date_partition_enabled` is set to true. Valid values are `YYYYMMDD`, `YYYYMMDDHH`, `YYYYMM`, `MMYYYYDD`, and `DDMMYYYY`. (AWS default is `YYYYMMDD`.) (Ignored for source endpoints.)
 * `date_partition_timezone` - (Optional) Convert the current UTC time to a timezone. The conversion occurs when a date partition folder is created and a CDC filename is generated. The timezone format is Area/Location (_e.g._, `Europe/Paris`). Use this when `date_partition_enabled` is `true`. (Ignored for source endpoints.)
+* `detach_target_on_lob_lookup_failure_parquet` - (Optional) Undocumented argument for use as directed by AWS Support.
 * `dict_page_size_limit` - (Optional) Maximum size in bytes of an encoded dictionary page of a column. (AWS default is 1 MiB, _i.e._, `1048576`.)
 * `enable_statistics` - (Optional) Whether to enable statistics for Parquet pages and row groups. Default is `true`.
 * `encoding_type` - (Optional) Type of encoding to use. Value values are `rle_dictionary`, `plain`, and `plain_dictionary`. (AWS default is `rle_dictionary`.)
 * `encryption_mode` - (Optional) Server-side encryption mode that you want to encrypt your .csv or .parquet object files copied to S3. Valid values are `SSE_S3` and `SSE_KMS`. (AWS default is `SSE_S3`.) (Ignored for source endpoints -- only `SSE_S3` is valid.)
 * `expected_bucket_owner` - (Optional) Bucket owner to prevent sniping. Value is an AWS account ID.
-* `ignore_headers_row` - (Optional, Force New) When this value is set to `1`, DMS ignores the first row header in a .csv file. (AWS default is `0`.)
+* `ignore_header_rows` - (Optional, Force New) When this value is set to `1`, DMS ignores the first row header in a .csv file. (AWS default is `0`.)
 * `include_op_for_full_load` - (Optional) Whether to enable a full load to write INSERT operations to the .csv output files only to indicate how the rows were added to the source database. Default is `false`.
 * `kms_key_arn` - (Optional) ARN for the KMS key that will be used to encrypt the connection parameters. If you do not specify a value for `kms_key_arn`, then AWS DMS will use your default encryption key. AWS KMS creates the default encryption key for your AWS account. Your AWS account has a different default encryption key for each AWS region.
 * `max_file_size` - (Optional) Maximum size (in KB) of any .csv file to be created while migrating to an S3 target during full load. Valid values are from `1` to `1048576`. (AWS default is 1 GB, _i.e._, `1048576`.)

@@ -15,10 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func init() {
-	_sp.registerSDKResourceFactory("aws_cloudwatch_log_destination_policy", resourceDestinationPolicy)
-}
-
+// @SDKResource("aws_cloudwatch_log_destination_policy")
 func resourceDestinationPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDestinationPolicyPut,
@@ -27,7 +24,7 @@ func resourceDestinationPolicy() *schema.Resource {
 		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -55,7 +52,7 @@ func resourceDestinationPolicy() *schema.Resource {
 }
 
 func resourceDestinationPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn
+	conn := meta.(*conns.AWSClient).LogsConn()
 
 	name := d.Get("destination_name").(string)
 	input := &cloudwatchlogs.PutDestinationPolicyInput{
@@ -81,7 +78,7 @@ func resourceDestinationPolicyPut(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceDestinationPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn
+	conn := meta.(*conns.AWSClient).LogsConn()
 
 	destination, err := FindDestinationByName(ctx, conn, d.Id())
 

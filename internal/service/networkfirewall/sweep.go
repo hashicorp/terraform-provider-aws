@@ -46,15 +46,16 @@ func init() {
 }
 
 func sweepFirewallPolicies(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkFirewallConn
+	conn := client.(*conns.AWSClient).NetworkFirewallConn()
 	input := &networkfirewall.ListFirewallPoliciesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListFirewallPoliciesPages(input, func(page *networkfirewall.ListFirewallPoliciesOutput, lastPage bool) bool {
+	err = conn.ListFirewallPoliciesPagesWithContext(ctx, input, func(page *networkfirewall.ListFirewallPoliciesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -79,7 +80,7 @@ func sweepFirewallPolicies(region string) error {
 		return fmt.Errorf("error listing NetworkFirewall Firewall Policies (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping NetworkFirewall Firewall Policies (%s): %w", region, err)
@@ -89,15 +90,16 @@ func sweepFirewallPolicies(region string) error {
 }
 
 func sweepFirewalls(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkFirewallConn
+	conn := client.(*conns.AWSClient).NetworkFirewallConn()
 	input := &networkfirewall.ListFirewallsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListFirewallsPages(input, func(page *networkfirewall.ListFirewallsOutput, lastPage bool) bool {
+	err = conn.ListFirewallsPagesWithContext(ctx, input, func(page *networkfirewall.ListFirewallsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -122,7 +124,7 @@ func sweepFirewalls(region string) error {
 		return fmt.Errorf("error listing NetworkFirewall Firewalls (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping NetworkFirewall Firewalls (%s): %w", region, err)
@@ -132,15 +134,16 @@ func sweepFirewalls(region string) error {
 }
 
 func sweepLoggingConfigurations(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkFirewallConn
+	conn := client.(*conns.AWSClient).NetworkFirewallConn()
 	input := &networkfirewall.ListFirewallsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListFirewallsPages(input, func(page *networkfirewall.ListFirewallsOutput, lastPage bool) bool {
+	err = conn.ListFirewallsPagesWithContext(ctx, input, func(page *networkfirewall.ListFirewallsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -165,7 +168,7 @@ func sweepLoggingConfigurations(region string) error {
 		return fmt.Errorf("error listing NetworkFirewall Firewalls (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping NetworkFirewall Logging Configurations (%s): %w", region, err)
@@ -175,15 +178,16 @@ func sweepLoggingConfigurations(region string) error {
 }
 
 func sweepRuleGroups(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkFirewallConn
+	conn := client.(*conns.AWSClient).NetworkFirewallConn()
 	input := &networkfirewall.ListRuleGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListRuleGroupsPages(input, func(page *networkfirewall.ListRuleGroupsOutput, lastPage bool) bool {
+	err = conn.ListRuleGroupsPagesWithContext(ctx, input, func(page *networkfirewall.ListRuleGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -208,7 +212,7 @@ func sweepRuleGroups(region string) error {
 		return fmt.Errorf("error listing NetworkFirewall Rule Groups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping NetworkFirewall Rule Groups (%s): %w", region, err)

@@ -88,9 +88,6 @@ Nested `ebs_block_device` blocks have the following structure:
   If `snapshot_id` is set and `volume_size` is omitted then the volume will have the same size
   as the selected snapshot.
 * `volume_type` - (Optional) Type of EBS volume to create. Can be `standard`, `gp2`, `gp3`, `io1`, `io2`, `sc1` or `st1` (Default: `standard`).
-* `kms_key_id` - (Optional) Full ARN of the AWS Key Management Service (AWS KMS) CMK to use when encrypting the snapshots of
-an image during a copy operation. This parameter is only required if you want to use a non-default CMK;
-if this parameter is not specified, the default CMK for EBS is used
 * `outpost_arn` - (Optional) ARN of the Outpost on which the snapshot is stored.
 
 ~> **Note:** You can specify `encrypted` or `snapshot_id` but not both.

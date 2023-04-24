@@ -64,7 +64,7 @@ func (o *blueGreenOrchestrator) switchover(ctx context.Context, identifier strin
 	input := &rds_sdkv2.SwitchoverBlueGreenDeploymentInput{
 		BlueGreenDeploymentIdentifier: aws.String(identifier),
 	}
-	_, err := tfresource.RetryWhenContext(ctx, 10*time.Minute,
+	_, err := tfresource.RetryWhen(ctx, 10*time.Minute,
 		func() (interface{}, error) {
 			return o.conn.SwitchoverBlueGreenDeployment(ctx, input)
 		},
@@ -155,18 +155,4 @@ func (h *instanceHandler) modifyTarget(ctx context.Context, identifier string, d
 	}
 
 	return nil
-}
-
-type deadline time.Time
-
-func NewDeadline(duration time.Duration) deadline {
-	return deadline(time.Now().Add(duration))
-}
-
-func (d deadline) remaining() time.Duration {
-	if v := time.Until(time.Time(d)); v < 0 {
-		return 0
-	} else {
-		return v
-	}
 }

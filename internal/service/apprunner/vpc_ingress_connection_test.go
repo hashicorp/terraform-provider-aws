@@ -18,6 +18,7 @@ import (
 )
 
 func TestAccAppRunnerVPCIngressConnection_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_vpc_ingress_connection.test"
 	vpcResourceName := "aws_vpc.test"
@@ -25,15 +26,15 @@ func TestAccAppRunnerVPCIngressConnection_basic(t *testing.T) {
 	appRunnerServiceResourceName := "aws_apprunner_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCIngressConnectionDestroy,
+		CheckDestroy:             testAccCheckVPCIngressConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCIngressConnectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCIngressConnectionExists(resourceName),
+					testAccCheckVPCIngressConnectionExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`vpcingressconnection/%s/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "status", tfapprunner.VPCIngressConnectionStatusActive),
@@ -53,20 +54,21 @@ func TestAccAppRunnerVPCIngressConnection_basic(t *testing.T) {
 }
 
 func TestAccAppRunnerVPCIngressConnection_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_vpc_ingress_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCIngressConnectionDestroy,
+		CheckDestroy:             testAccCheckVPCIngressConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCIngressConnectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCIngressConnectionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapprunner.ResourceVPCIngressConnection(), resourceName),
+					testAccCheckVPCIngressConnectionExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapprunner.ResourceVPCIngressConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -75,19 +77,20 @@ func TestAccAppRunnerVPCIngressConnection_disappears(t *testing.T) {
 }
 
 func TestAccAppRunnerVPCIngressConnection_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_vpc_ingress_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCIngressConnectionDestroy,
+		CheckDestroy:             testAccCheckVPCIngressConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCIngressConnectionConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCIngressConnectionExists(resourceName),
+					testAccCheckVPCIngressConnectionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -100,7 +103,7 @@ func TestAccAppRunnerVPCIngressConnection_tags(t *testing.T) {
 			{
 				Config: testAccVPCIngressConnectionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCIngressConnectionExists(resourceName),
+					testAccCheckVPCIngressConnectionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -109,7 +112,7 @@ func TestAccAppRunnerVPCIngressConnection_tags(t *testing.T) {
 			{
 				Config: testAccVPCIngressConnectionConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCIngressConnectionExists(resourceName),
+					testAccCheckVPCIngressConnectionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -118,37 +121,39 @@ func TestAccAppRunnerVPCIngressConnection_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckVPCIngressConnectionDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_apprunner_vpc_ingress_connection" {
-			continue
+func testAccCheckVPCIngressConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_apprunner_vpc_ingress_connection" {
+				continue
+			}
+
+			conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
+
+			input := &apprunner.DescribeVpcIngressConnectionInput{
+				VpcIngressConnectionArn: aws.String(rs.Primary.ID),
+			}
+
+			output, err := conn.DescribeVpcIngressConnectionWithContext(ctx, input)
+
+			if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if output != nil && output.VpcIngressConnection != nil && aws.StringValue(output.VpcIngressConnection.Status) != apprunner.VpcIngressConnectionStatusDeleted {
+				return fmt.Errorf("App Runner VPC Ingress Connection (%s) still exists", rs.Primary.ID)
+			}
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
-
-		input := &apprunner.DescribeVpcIngressConnectionInput{
-			VpcIngressConnectionArn: aws.String(rs.Primary.ID),
-		}
-
-		output, err := conn.DescribeVpcIngressConnectionWithContext(context.Background(), input)
-
-		if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if output != nil && output.VpcIngressConnection != nil && aws.StringValue(output.VpcIngressConnection.Status) != apprunner.VpcIngressConnectionStatusDeleted {
-			return fmt.Errorf("App Runner VPC Ingress Connection (%s) still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckVPCIngressConnectionExists(n string) resource.TestCheckFunc {
+func testAccCheckVPCIngressConnectionExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -159,13 +164,13 @@ func testAccCheckVPCIngressConnectionExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No App Runner Service ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
 
 		input := &apprunner.DescribeVpcIngressConnectionInput{
 			VpcIngressConnectionArn: aws.String(rs.Primary.ID),
 		}
 
-		output, err := conn.DescribeVpcIngressConnectionWithContext(context.Background(), input)
+		output, err := conn.DescribeVpcIngressConnectionWithContext(ctx, input)
 
 		if err != nil {
 			return err

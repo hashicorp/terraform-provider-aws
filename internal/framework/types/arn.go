@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
 
@@ -25,6 +26,27 @@ var (
 
 func (t arnType) TerraformType(_ context.Context) tftypes.Type {
 	return tftypes.String
+}
+
+func (t arnType) ValueFromString(_ context.Context, st types.String) (basetypes.StringValuable, diag.Diagnostics) {
+	if st.IsNull() {
+		return ARNNull(), nil
+	}
+	if st.IsUnknown() {
+		return ARNUnknown(), nil
+	}
+
+	var diags diag.Diagnostics
+	v, err := arn.Parse(st.ValueString())
+	if err != nil {
+		diags.AddError(
+			"ARN ValueFromString Error",
+			fmt.Sprintf("String %s cannot be parsed as an ARN.", st),
+		)
+		return nil, diags
+	}
+
+	return ARNValue(v), diags
 }
 
 func (t arnType) ValueFromTerraform(_ context.Context, in tftypes.Value) (attr.Value, error) {
@@ -46,7 +68,7 @@ func (t arnType) ValueFromTerraform(_ context.Context, in tftypes.Value) (attr.V
 	v, err := arn.Parse(s)
 
 	if err != nil {
-		return nil, err
+		return ARNUnknown(), nil //nolint: nilerr // Must not return validation errors
 	}
 
 	return ARNValue(v), nil
@@ -119,27 +141,6 @@ func (t arnType) Description() string {
 	return `An Amazon Resource Name.`
 }
 
-func (t arnType) ValueFromString(ctx context.Context, st types.String) (types.StringValuable, diag.Diagnostics) {
-	if st.IsNull() {
-		return ARNNull(), nil
-	}
-	if st.IsUnknown() {
-		return ARNUnknown(), nil
-	}
-
-	var diags diag.Diagnostics
-	v, err := arn.Parse(st.String())
-	if err != nil {
-		diags.AddError(
-			"ARN ValueFromString Error",
-			fmt.Sprintf("String %s cannot be parsed as an ARN.", st),
-		)
-		return nil, diags
-	}
-
-	return ARNValue(v), diags
-}
-
 func ARNNull() ARN {
 	return ARN{
 		state: attr.ValueStateNull,
@@ -173,7 +174,18 @@ func (a ARN) Type(_ context.Context) attr.Type {
 }
 
 func (a ARN) ToStringValue(ctx context.Context) (types.String, diag.Diagnostics) {
-	return types.StringValue(a.value.String()), nil
+	switch a.state {
+	case attr.ValueStateKnown:
+		return types.StringValue(a.value.String()), nil
+	case attr.ValueStateNull:
+		return types.StringNull(), nil
+	case attr.ValueStateUnknown:
+		return types.StringUnknown(), nil
+	default:
+		return types.StringUnknown(), diag.Diagnostics{
+			diag.NewErrorDiagnostic(fmt.Sprintf("unhandled ARN state in ToStringValue: %s", a.state), ""),
+		}
+	}
 }
 
 func (a ARN) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {

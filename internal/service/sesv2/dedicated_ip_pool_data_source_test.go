@@ -12,22 +12,23 @@ import (
 )
 
 func TestAccSESV2DedicatedIPPoolDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_sesv2_dedicated_ip_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckDedicatedIPPool(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDedicatedIPPool(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDedicatedIPPoolDestroy,
+		CheckDestroy:             testAccCheckDedicatedIPPoolDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDedicatedIPPoolDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDedicatedIPPoolExists(dataSourceName),
+					testAccCheckDedicatedIPPoolExists(ctx, dataSourceName),
 					resource.TestCheckResourceAttr(dataSourceName, "pool_name", rName),
 					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "ses", regexp.MustCompile(`dedicated-ip-pool/.+`)),
 				),

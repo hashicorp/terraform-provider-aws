@@ -150,9 +150,9 @@ The `health_check_configuration` block supports the following arguments:
 
 The `instance_configuration` block supports the following arguments:
 
-* `cpu` - (Optional) Number of CPU units reserved for each instance of your App Runner service represented as a String. Defaults to `1024`. Valid values: `1024|2048|(1|2) vCPU`.
+* `cpu` - (Optional) Number of CPU units reserved for each instance of your App Runner service represented as a String. Defaults to `1024`. Valid values: `256|512|1024|2048|4096|(0.25|0.5|1|2|4) vCPU`.
 * `instance_role_arn` - (Optional) ARN of an IAM role that provides permissions to your App Runner service. These are permissions that your code needs when it calls any AWS APIs.
-* `memory` - (Optional) Amount of memory, in MB or GB, reserved for each instance of your App Runner service. Defaults to `2048`. Valid values: `2048|3072|4096|(2|3|4) GB`.
+* `memory` - (Optional) Amount of memory, in MB or GB, reserved for each instance of your App Runner service. Defaults to `2048`. Valid values: `512|1024|2048|3072|4096|6144|8192|10240|12288|(0.5|1|2|3|4|6|8|10|12) GB`.
 
 ### Source Configuration
 
@@ -198,8 +198,8 @@ The `egress_configuration` block supports the following argument:
 
 The `observability_configuration` block supports the following arguments:
 
-* `observability_configuration_arn` - (Required) ARN of the observability configuration that is associated with the service.
 * `observability_enabled` - (Required) When `true`, an observability configuration resource is associated with the service.
+* `observability_configuration_arn` - (Optional) ARN of the observability configuration that is associated with the service. Specified only when `observability_enabled` is `true`.
 
 ### Code Repository
 
@@ -236,6 +236,7 @@ The `code_configuration_values` blocks supports the following arguments:
 * `build_command` - (Optional) Command App Runner runs to build your application.
 * `port` - (Optional) Port that your application listens to in the container. Defaults to `"8080"`.
 * `runtime` - (Required) Runtime environment type for building and running an App Runner service. Represents a programming language runtime. Valid values: `PYTHON_3`, `NODEJS_12`, `NODEJS_14`, `NODEJS_16`, `CORRETTO_8`, `CORRETTO_11`, `GO_1`, `DOTNET_6`, `PHP_81`, `RUBY_31`.
+* `runtime_environment_secrets` - (Optional) Secrets and parameters available to your service as environment variables. A map of key/value pairs, where the key is the desired name of the Secret in the environment (i.e. it does not have to match the name of the secret in Secrets Manager or SSM Parameter Store), and the value is the ARN of the secret from AWS Secrets Manager or the ARN of the parameter in AWS SSM Parameter Store.
 * `runtime_environment_variables` - (Optional) Environment variables available to your running App Runner service. A map of key/value pairs. Keys with a prefix of `AWSAPPRUNNER` are reserved for system use and aren't valid.
 * `start_command` - (Optional) Command App Runner runs to start your application.
 
@@ -244,6 +245,7 @@ The `code_configuration_values` blocks supports the following arguments:
 The `image_configuration` block supports the following arguments:
 
 * `port` - (Optional) Port that your application listens to in the container. Defaults to `"8080"`.
+* `runtime_environment_secrets` - (Optional) Secrets and parameters available to your service as environment variables. A map of key/value pairs, where the key is the desired name of the Secret in the environment (i.e. it does not have to match the name of the secret in Secrets Manager or SSM Parameter Store), and the value is the ARN of the secret from AWS Secrets Manager or the ARN of the parameter in AWS SSM Parameter Store.
 * `runtime_environment_variables` - (Optional) Environment variables available to your running App Runner service. A map of key/value pairs. Keys with a prefix of `AWSAPPRUNNER` are reserved for system use and aren't valid.
 * `start_command` - (Optional) Command App Runner runs to start the application in the source image. If specified, this command overrides the Docker image’s default start command.
 

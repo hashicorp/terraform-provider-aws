@@ -12,15 +12,18 @@ import (
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_networkmanager_site_to_site_vpn_attachment", name="Site To Site VPN Attachment")
+// @Tags(identifierAttribute="arn")
 func ResourceSiteToSiteVPNAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSiteToSiteVPNAttachmentCreate,
@@ -29,7 +32,7 @@ func ResourceSiteToSiteVPNAttachment() *schema.Resource {
 		DeleteWithoutTimeout: resourceSiteToSiteVPNAttachmentDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -82,8 +85,8 @@ func ResourceSiteToSiteVPNAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpn_connection_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -95,19 +98,14 @@ func ResourceSiteToSiteVPNAttachment() *schema.Resource {
 }
 
 func resourceSiteToSiteVPNAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	coreNetworkID := d.Get("core_network_id").(string)
 	vpnConnectionARN := d.Get("vpn_connection_arn").(string)
 	input := &networkmanager.CreateSiteToSiteVpnAttachmentInput{
 		CoreNetworkId:    aws.String(coreNetworkID),
+		Tags:             GetTagsIn(ctx),
 		VpnConnectionArn: aws.String(vpnConnectionARN),
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	output, err := conn.CreateSiteToSiteVpnAttachmentWithContext(ctx, input)
@@ -126,9 +124,7 @@ func resourceSiteToSiteVPNAttachmentCreate(ctx context.Context, d *schema.Resour
 }
 
 func resourceSiteToSiteVPNAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	vpnAttachment, err := FindSiteToSiteVPNAttachmentByID(ctx, conn, d.Id())
 
@@ -161,35 +157,18 @@ func resourceSiteToSiteVPNAttachmentRead(ctx context.Context, d *schema.Resource
 	d.Set("state", a.State)
 	d.Set("vpn_connection_arn", a.ResourceArn)
 
-	tags := KeyValueTags(a.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, a.Tags)
 
 	return nil
 }
 
 func resourceSiteToSiteVPNAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("updating Network Manager Site To Site VPN Attachment (%s) tags: %s", d.Get("arn").(string), err))
-		}
-	}
-
+	// Tags only.
 	return resourceSiteToSiteVPNAttachmentRead(ctx, d, meta)
 }
 
 func resourceSiteToSiteVPNAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	// If ResourceAttachmentAccepter is used, then VPN Attachment state
 	// is never updated from StatePendingAttachmentAcceptance and the delete fails
@@ -235,7 +214,7 @@ func FindSiteToSiteVPNAttachmentByID(ctx context.Context, conn *networkmanager.N
 	output, err := conn.GetSiteToSiteVpnAttachmentWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -252,7 +231,7 @@ func FindSiteToSiteVPNAttachmentByID(ctx context.Context, conn *networkmanager.N
 	return output.SiteToSiteVpnAttachment, nil
 }
 
-func statusSiteToSiteVPNAttachmentState(ctx context.Context, conn *networkmanager.NetworkManager, id string) resource.StateRefreshFunc {
+func statusSiteToSiteVPNAttachmentState(ctx context.Context, conn *networkmanager.NetworkManager, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSiteToSiteVPNAttachmentByID(ctx, conn, id)
 
@@ -269,7 +248,7 @@ func statusSiteToSiteVPNAttachmentState(ctx context.Context, conn *networkmanage
 }
 
 func waitSiteToSiteVPNAttachmentCreated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.SiteToSiteVpnAttachment, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkmanager.AttachmentStateCreating, networkmanager.AttachmentStatePendingNetworkUpdate},
 		Target:  []string{networkmanager.AttachmentStateAvailable, networkmanager.AttachmentStatePendingAttachmentAcceptance},
 		Timeout: timeout,
@@ -286,7 +265,7 @@ func waitSiteToSiteVPNAttachmentCreated(ctx context.Context, conn *networkmanage
 }
 
 func waitSiteToSiteVPNAttachmentDeleted(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.SiteToSiteVpnAttachment, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        []string{networkmanager.AttachmentStateDeleting},
 		Target:         []string{},
 		Timeout:        timeout,
@@ -304,7 +283,7 @@ func waitSiteToSiteVPNAttachmentDeleted(ctx context.Context, conn *networkmanage
 }
 
 func waitSiteToSiteVPNAttachmentAvailable(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.SiteToSiteVpnAttachment, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkmanager.AttachmentStateCreating, networkmanager.AttachmentStatePendingAttachmentAcceptance, networkmanager.AttachmentStatePendingNetworkUpdate},
 		Target:  []string{networkmanager.AttachmentStateAvailable},
 		Timeout: timeout,

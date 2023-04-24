@@ -1,6 +1,7 @@
 package cognitoidentity
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -8,23 +9,27 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_cognito_identity_pool", name="Pool")
+// @Tags(identifierAttribute="arn")
 func ResourcePool() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePoolCreate,
-		Read:   resourcePoolRead,
-		Update: resourcePoolUpdate,
-		Delete: resourcePoolDelete,
+		CreateWithoutTimeout: resourcePoolCreate,
+		ReadWithoutTimeout:   resourcePoolRead,
+		UpdateWithoutTimeout: resourcePoolUpdate,
+		DeleteWithoutTimeout: resourcePoolDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -110,78 +115,70 @@ func ResourcePool() *schema.Resource {
 				},
 			},
 
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourcePoolCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-	log.Print("[DEBUG] Creating Cognito Identity Pool")
+func resourcePoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
 
-	params := &cognitoidentity.CreateIdentityPoolInput{
+	input := &cognitoidentity.CreateIdentityPoolInput{
 		IdentityPoolName:               aws.String(d.Get("identity_pool_name").(string)),
 		AllowUnauthenticatedIdentities: aws.Bool(d.Get("allow_unauthenticated_identities").(bool)),
 		AllowClassicFlow:               aws.Bool(d.Get("allow_classic_flow").(bool)),
+		IdentityPoolTags:               GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("developer_provider_name"); ok {
-		params.DeveloperProviderName = aws.String(v.(string))
+		input.DeveloperProviderName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("supported_login_providers"); ok {
-		params.SupportedLoginProviders = expandSupportedLoginProviders(v.(map[string]interface{}))
+		input.SupportedLoginProviders = expandSupportedLoginProviders(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("cognito_identity_providers"); ok {
-		params.CognitoIdentityProviders = expandIdentityProviders(v.(*schema.Set))
+		input.CognitoIdentityProviders = expandIdentityProviders(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("saml_provider_arns"); ok {
-		params.SamlProviderARNs = flex.ExpandStringList(v.([]interface{}))
+		input.SamlProviderARNs = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("openid_connect_provider_arns"); ok {
-		params.OpenIdConnectProviderARNs = flex.ExpandStringSet(v.(*schema.Set))
+		input.OpenIdConnectProviderARNs = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if len(tags) > 0 {
-		params.IdentityPoolTags = Tags(tags.IgnoreAWS())
-	}
-
-	entity, err := conn.CreateIdentityPool(params)
+	entity, err := conn.CreateIdentityPoolWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("Error creating Cognito Identity Pool: %s", err)
+		return sdkdiag.AppendErrorf(diags, "Error creating Cognito Identity Pool: %s", err)
 	}
 
 	d.SetId(aws.StringValue(entity.IdentityPoolId))
 
-	return resourcePoolRead(d, meta)
+	return append(diags, resourcePoolRead(ctx, d, meta)...)
 }
 
-func resourcePoolRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
 
-	log.Printf("[DEBUG] Reading Cognito Identity Pool: %s", d.Id())
-
-	ip, err := conn.DescribeIdentityPool(&cognitoidentity.DescribeIdentityPoolInput{
+	ip, err := conn.DescribeIdentityPoolWithContext(ctx, &cognitoidentity.DescribeIdentityPoolInput{
 		IdentityPoolId: aws.String(d.Id()),
 	})
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentity.ErrCodeResourceNotFoundException) {
 		create.LogNotFoundRemoveState(names.CognitoIdentity, create.ErrActionReading, ResNamePool, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.Error(names.CognitoIdentity, create.ErrActionReading, ResNamePool, d.Id(), err)
+		return create.DiagError(names.CognitoIdentity, create.ErrActionReading, ResNamePool, d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -196,38 +193,31 @@ func resourcePoolRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("allow_unauthenticated_identities", ip.AllowUnauthenticatedIdentities)
 	d.Set("allow_classic_flow", ip.AllowClassicFlow)
 	d.Set("developer_provider_name", ip.DeveloperProviderName)
-	tags := KeyValueTags(ip.IdentityPoolTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
+	SetTagsOut(ctx, ip.IdentityPoolTags)
 
 	if err := d.Set("cognito_identity_providers", flattenIdentityProviders(ip.CognitoIdentityProviders)); err != nil {
-		return fmt.Errorf("Error setting cognito_identity_providers error: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Error setting cognito_identity_providers error: %s", err)
 	}
 
 	if err := d.Set("openid_connect_provider_arns", flex.FlattenStringList(ip.OpenIdConnectProviderARNs)); err != nil {
-		return fmt.Errorf("Error setting openid_connect_provider_arns error: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Error setting openid_connect_provider_arns error: %s", err)
 	}
 
 	if err := d.Set("saml_provider_arns", flex.FlattenStringList(ip.SamlProviderARNs)); err != nil {
-		return fmt.Errorf("Error setting saml_provider_arns error: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Error setting saml_provider_arns error: %s", err)
 	}
 
 	if err := d.Set("supported_login_providers", aws.StringValueMap(ip.SupportedLoginProviders)); err != nil {
-		return fmt.Errorf("Error setting supported_login_providers error: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Error setting supported_login_providers error: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourcePoolUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn
+func resourcePoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
 	log.Print("[DEBUG] Updating Cognito Identity Pool")
 
 	if d.HasChangesExcept("tags_all", "tags") {
@@ -242,34 +232,26 @@ func resourcePoolUpdate(d *schema.ResourceData, meta interface{}) error {
 			SamlProviderARNs:               flex.ExpandStringList(d.Get("saml_provider_arns").([]interface{})),
 		}
 
-		_, err := conn.UpdateIdentityPool(params)
+		_, err := conn.UpdateIdentityPoolWithContext(ctx, params)
 		if err != nil {
-			return fmt.Errorf("error updating Cognito Identity Pool (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Cognito Identity Pool (%s): %s", d.Id(), err)
 		}
 	}
 
-	arn := d.Get("arn").(string)
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating Cognito Identity Pool (%s) tags: %w", arn, err)
-		}
-	}
-
-	return resourcePoolRead(d, meta)
+	return append(diags, resourcePoolRead(ctx, d, meta)...)
 }
 
-func resourcePoolDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn
+func resourcePoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIdentityConn()
 	log.Printf("[DEBUG] Deleting Cognito Identity Pool: %s", d.Id())
 
-	_, err := conn.DeleteIdentityPool(&cognitoidentity.DeleteIdentityPoolInput{
+	_, err := conn.DeleteIdentityPoolWithContext(ctx, &cognitoidentity.DeleteIdentityPoolInput{
 		IdentityPoolId: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return fmt.Errorf("Error deleting Cognito identity pool (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "Error deleting Cognito identity pool (%s): %s", d.Id(), err)
 	}
-	return nil
+	return diags
 }

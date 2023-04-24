@@ -33,11 +33,23 @@ resource "aws_appstream_stack" "example" {
     permission = "ENABLED"
   }
   user_settings {
+    action     = "DOMAIN_PASSWORD_SIGNIN"
+    permission = "ENABLED"
+  }
+  user_settings {
+    action     = "DOMAIN_SMART_CARD_SIGNIN"
+    permission = "DISABLED"
+  }
+  user_settings {
+    action     = "FILE_DOWNLOAD"
+    permission = "ENABLED"
+  }
+  user_settings {
     action     = "FILE_UPLOAD"
     permission = "ENABLED"
   }
   user_settings {
-    action     = "FILE_DOWNLOAD"
+    action     = "PRINTING_TO_LOCAL_DEVICE"
     permission = "ENABLED"
   }
 
@@ -71,7 +83,7 @@ The following arguments are optional:
 * `redirect_url` - (Optional) URL that users are redirected to after their streaming session ends.
 * `storage_connectors` - (Optional) Configuration block for the storage connectors to enable.
   See [`storage_connectors`](#storage_connectors) below.
-* `user_settings` - (Optional) Configuration block for the actions that are enabled or disabled for users during their streaming sessions. By default, these actions are enabled.
+* `user_settings` - (Optional) Configuration block for the actions that are enabled or disabled for users during their streaming sessions. If not provided, these settings are configured automatically by AWS. If provided, the terraform configuration should include a block for each configurable action.
   See [`user_settings`](#user_settings) below.
 * `streaming_experience_settings` - (Optional) The streaming protocol you want your stack to prefer. This can be UDP or TCP. Currently, UDP is only supported in the Windows native client.
   See [`streaming_experience_settings`](#streaming_experience_settings) below.

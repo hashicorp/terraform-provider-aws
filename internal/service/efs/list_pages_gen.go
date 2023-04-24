@@ -7,13 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/aws/aws-sdk-go/service/efs/efsiface"
 )
 
-func describeMountTargetsPages(conn *efs.EFS, input *efs.DescribeMountTargetsInput, fn func(*efs.DescribeMountTargetsOutput, bool) bool) error {
-	return describeMountTargetsPagesWithContext(context.Background(), conn, input, fn)
-}
-
-func describeMountTargetsPagesWithContext(ctx context.Context, conn *efs.EFS, input *efs.DescribeMountTargetsInput, fn func(*efs.DescribeMountTargetsOutput, bool) bool) error {
+func describeMountTargetsPages(ctx context.Context, conn efsiface.EFSAPI, input *efs.DescribeMountTargetsInput, fn func(*efs.DescribeMountTargetsOutput, bool) bool) error {
 	for {
 		output, err := conn.DescribeMountTargetsWithContext(ctx, input)
 		if err != nil {

@@ -2,7 +2,6 @@ package lightsail
 
 import (
 	"context"
-	"errors"
 	"regexp"
 	"time"
 
@@ -19,6 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_lightsail_lb", name="LB")
+// @Tags(identifierAttribute="id")
 func ResourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerCreate,
@@ -86,53 +87,46 @@ func ResourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
+	lbName := d.Get("name").(string)
 	in := lightsail.CreateLoadBalancerInput{
-		HealthCheckPath:  aws.String(d.Get("health_check_path").(string)),
 		InstancePort:     aws.Int64(int64(d.Get("instance_port").(int))),
-		LoadBalancerName: aws.String(d.Get("name").(string)),
+		LoadBalancerName: aws.String(lbName),
+		Tags:             GetTagsIn(ctx),
 	}
 
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
+	if d.Get("health_check_path").(string) != "/" {
+		in.HealthCheckPath = aws.String(d.Get("health_check_path").(string))
 	}
 
 	out, err := conn.CreateLoadBalancerWithContext(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateLoadBalancer, ResLoadBalancer, d.Get("name").(string), err)
+		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateLoadBalancer, ResLoadBalancer, lbName, err)
 	}
 
-	if len(out.Operations) == 0 {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateLoadBalancer, ResLoadBalancer, d.Get("name").(string), errors.New("No operations found for Create Load Balancer request"))
+	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeCreateLoadBalancer, ResLoadBalancer, lbName)
+
+	if diag != nil {
+		return diag
 	}
 
-	op := out.Operations[0]
-	d.SetId(d.Get("name").(string))
-
-	err = waitOperation(conn, op.Id)
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateLoadBalancer, ResLoadBalancer, d.Get("name").(string), errors.New("Error waiting for Create Load Balancer request operation"))
-	}
+	d.SetId(lbName)
 
 	return resourceLoadBalancerRead(ctx, d, meta)
 }
 
 func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	lb, err := FindLoadBalancerByName(ctx, conn, d.Id())
 
@@ -157,25 +151,17 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("name", lb.Name)
 	d.Set("support_code", lb.SupportCode)
 
-	tags := KeyValueTags(lb.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResLoadBalancer, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResLoadBalancer, d.Id(), err)
-	}
+	SetTagsOut(ctx, lb.Tags)
 
 	return nil
 }
 
 func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
+	lbName := d.Get("name").(string)
 
 	in := &lightsail.UpdateLoadBalancerAttributeInput{
-		LoadBalancerName: aws.String(d.Get("name").(string)),
+		LoadBalancerName: aws.String(lbName),
 	}
 
 	if d.HasChange("health_check_path") {
@@ -186,34 +172,13 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		out, err := conn.UpdateLoadBalancerAttributeWithContext(ctx, healthCheckIn)
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateLoadBalancer, ResLoadBalancer, d.Get("name").(string), err)
+			return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancer, lbName, err)
 		}
 
-		if len(out.Operations) == 0 {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateLoadBalancer, ResLoadBalancer, d.Get("name").(string), errors.New("No operations found for Create Load Balancer request"))
-		}
+		diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancer, lbName)
 
-		op := out.Operations[0]
-
-		err = waitOperation(conn, op.Id)
-		if err != nil {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateLoadBalancer, ResLoadBalancer, d.Get("name").(string), errors.New("Error waiting for Create Load Balancer request operation"))
-		}
-	}
-
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return create.DiagError(names.Lightsail, create.ErrActionUpdating, ResLoadBalancer, d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return create.DiagError(names.Lightsail, create.ErrActionUpdating, ResLoadBalancer, d.Id(), err)
+		if diag != nil {
+			return diag
 		}
 	}
 
@@ -221,25 +186,21 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
+	lbName := d.Get("name").(string)
 
 	out, err := conn.DeleteLoadBalancerWithContext(ctx, &lightsail.DeleteLoadBalancerInput{
 		LoadBalancerName: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateLoadBalancer, ResLoadBalancer, d.Get("name").(string), err)
+		return create.DiagError(names.Lightsail, lightsail.OperationTypeDeleteLoadBalancer, ResLoadBalancer, lbName, err)
 	}
 
-	if len(out.Operations) == 0 {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateLoadBalancer, ResLoadBalancer, d.Get("name").(string), errors.New("No operations found for Create Load Balancer request"))
-	}
+	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeDeleteLoadBalancer, ResLoadBalancer, lbName)
 
-	op := out.Operations[0]
-
-	err = waitOperation(conn, op.Id)
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateLoadBalancer, ResLoadBalancer, d.Get("name").(string), errors.New("Error waiting for Create Load Balancer request operation"))
+	if diag != nil {
+		return diag
 	}
 
 	return nil

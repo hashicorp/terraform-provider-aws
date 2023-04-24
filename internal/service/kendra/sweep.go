@@ -4,7 +4,6 @@
 package kendra
 
 import (
-	"context"
 	"fmt"
 	"log"
 
@@ -24,13 +23,13 @@ func init() {
 }
 
 func sweepIndex(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
 
-	ctx := context.Background()
-	conn := client.(*conns.AWSClient).KendraClient
+	conn := client.(*conns.AWSClient).KendraClient()
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &kendra.ListIndicesInput{}
 	var errs *multierror.Error
@@ -58,7 +57,7 @@ func sweepIndex(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Kendra Indices for %s: %w", region, err))
 	}
 

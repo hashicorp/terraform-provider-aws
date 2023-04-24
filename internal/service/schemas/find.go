@@ -6,19 +6,19 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/schemas"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindDiscovererByID(conn *schemas.Schemas, id string) (*schemas.DescribeDiscovererOutput, error) {
+func FindDiscovererByID(ctx context.Context, conn *schemas.Schemas, id string) (*schemas.DescribeDiscovererOutput, error) {
 	input := &schemas.DescribeDiscovererInput{
 		DiscovererId: aws.String(id),
 	}
 
-	output, err := conn.DescribeDiscoverer(input)
+	output, err := conn.DescribeDiscovererWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, schemas.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -35,15 +35,15 @@ func FindDiscovererByID(conn *schemas.Schemas, id string) (*schemas.DescribeDisc
 	return output, nil
 }
 
-func FindRegistryByName(conn *schemas.Schemas, name string) (*schemas.DescribeRegistryOutput, error) {
+func FindRegistryByName(ctx context.Context, conn *schemas.Schemas, name string) (*schemas.DescribeRegistryOutput, error) {
 	input := &schemas.DescribeRegistryInput{
 		RegistryName: aws.String(name),
 	}
 
-	output, err := conn.DescribeRegistry(input)
+	output, err := conn.DescribeRegistryWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, schemas.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -60,16 +60,16 @@ func FindRegistryByName(conn *schemas.Schemas, name string) (*schemas.DescribeRe
 	return output, nil
 }
 
-func FindSchemaByNameAndRegistryName(conn *schemas.Schemas, name, registryName string) (*schemas.DescribeSchemaOutput, error) {
+func FindSchemaByNameAndRegistryName(ctx context.Context, conn *schemas.Schemas, name, registryName string) (*schemas.DescribeSchemaOutput, error) {
 	input := &schemas.DescribeSchemaInput{
 		RegistryName: aws.String(registryName),
 		SchemaName:   aws.String(name),
 	}
 
-	output, err := conn.DescribeSchema(input)
+	output, err := conn.DescribeSchemaWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, schemas.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -94,7 +94,7 @@ func FindRegistryPolicyByName(ctx context.Context, conn *schemas.Schemas, name s
 	output, err := conn.GetResourcePolicyWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, schemas.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

@@ -59,7 +59,8 @@ resource "aws_networkfirewall_rule_group" "example" {
             source           = stateful_rule.value
           }
           rule_option {
-            keyword = "sid:1"
+            keyword  = "sid"
+            settings = ["1"]
           }
         }
       }
@@ -96,7 +97,8 @@ resource "aws_networkfirewall_rule_group" "example" {
           source_port      = 53
         }
         rule_option {
-          keyword = "sid:1"
+          keyword  = "sid"
+          settings = ["1"]
         }
       }
     }
@@ -416,7 +418,6 @@ The `rule_option` block supports the following arguments:
 
 * `keyword` - (Required) Keyword defined by open source detection systems like Snort or Suricata for stateful rule inspection.
 See [Snort General Rule Options](http://manual-snort-org.s3-website-us-east-1.amazonaws.com/node31.html) or [Suricata Rule Options](https://suricata.readthedocs.io/en/suricata-5.0.1/rules/intro.html#rule-options) for more details.
-
 * `settings` - (Optional) Set of strings for additional settings to use in stateful rule inspection.
 
 ### Custom Action
