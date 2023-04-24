@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -314,42 +313,42 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppStreamConn()
 
-	resp, err := conn.DescribeStacksWithContext(ctx, &appstream.DescribeStacksInput{Names: []*string{aws.String(d.Id())}})
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+	stack, err := FindStackByName(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Appstream Stack (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Appstream Stack (%s): %w", d.Id(), err))
+		return diag.Errorf("reading Appstream Stack (%s): %s", d.Id(), err)
 	}
-	for _, v := range resp.Stacks {
-		if err = d.Set("access_endpoints", flattenAccessEndpoints(v.AccessEndpoints)); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "access_endpoints", d.Id(), err))
-		}
-		if err = d.Set("application_settings", flattenApplicationSettings(v.ApplicationSettings)); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "application_settings", d.Id(), err))
-		}
-		d.Set("arn", v.Arn)
-		d.Set("created_time", aws.TimeValue(v.CreatedTime).Format(time.RFC3339))
-		d.Set("description", v.Description)
-		d.Set("display_name", v.DisplayName)
-		if err = d.Set("embed_host_domains", flex.FlattenStringList(v.EmbedHostDomains)); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "embed_host_domains", d.Id(), err))
-		}
-		d.Set("feedback_url", v.FeedbackURL)
-		d.Set("name", v.Name)
-		d.Set("redirect_url", v.RedirectURL)
-		if err = d.Set("storage_connectors", flattenStorageConnectors(v.StorageConnectors)); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "storage_connectors", d.Id(), err))
-		}
-		if err = d.Set("streaming_experience_settings", flattenStreaminExperienceSettings(v.StreamingExperienceSettings)); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "streaming_experience_settings", d.Id(), err))
-		}
-		if err = d.Set("user_settings", flattenUserSettings(v.UserSettings)); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "user_settings", d.Id(), err))
-		}
+
+	if err = d.Set("access_endpoints", flattenAccessEndpoints(stack.AccessEndpoints)); err != nil {
+		return diag.Errorf("setting access_endpoints: %s", err)
+	}
+	if err = d.Set("application_settings", flattenApplicationSettings(stack.ApplicationSettings)); err != nil {
+		return diag.Errorf("setting application_settings: %s", err)
+	}
+	d.Set("arn", stack.Arn)
+	d.Set("created_time", aws.TimeValue(stack.CreatedTime).Format(time.RFC3339))
+	d.Set("description", stack.Description)
+	d.Set("display_name", stack.DisplayName)
+	if err = d.Set("embed_host_domains", flex.FlattenStringList(stack.EmbedHostDomains)); err != nil {
+		return diag.Errorf("setting embed_host_domains: %s", err)
+	}
+	d.Set("feedback_url", stack.FeedbackURL)
+	d.Set("name", stack.Name)
+	d.Set("redirect_url", stack.RedirectURL)
+	if err = d.Set("storage_connectors", flattenStorageConnectors(stack.StorageConnectors)); err != nil {
+		return diag.Errorf("setting storage_connectors: %s", err)
+	}
+	if err = d.Set("streaming_experience_settings", flattenStreaminExperienceSettings(stack.StreamingExperienceSettings)); err != nil {
+		return diag.Errorf("setting streaming_experience_settings: %s", err)
+	}
+	if err = d.Set("user_settings", flattenUserSettings(stack.UserSettings)); err != nil {
+		return diag.Errorf("setting user_settings: %s", err)
 	}
 
 	return nil
@@ -421,86 +420,44 @@ func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("deleting Appstream Stack (%s): %s", d.Id(), err)
 	}
 
-	if _, err = waitStackStateDeleted(ctx, conn, d.Id()); err != nil {
-		if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-
-		return diag.FromErr(fmt.Errorf("error waiting for Appstream Stack (%s) to be deleted: %w", d.Id(), err))
-	}
+	_, err = tfresource.RetryUntilNotFound(ctx, stackOperationTimeout, func() (interface{}, error) {
+		return FindStackByName(ctx, conn, d.Id())
+	})
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Appstream Stack (%s): %w", d.Id(), err))
+		return diag.Errorf("waiting for Appstream Stack (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-// FindStackByName Retrieve a appstream stack by name
 func FindStackByName(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Stack, error) {
 	input := &appstream.DescribeStacksInput{
-		Names: []*string{aws.String(name)},
+		Names: aws.StringSlice([]string{name}),
 	}
 
-	var stack *appstream.Stack
-	resp, err := conn.DescribeStacksWithContext(ctx, input)
+	output, err := conn.DescribeStacksWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	if len(resp.Stacks) > 1 {
-		return nil, fmt.Errorf("got more than one stack with the name %s", name)
+	if output == nil || len(output.Stacks) == 0 || output.Stacks[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if len(resp.Stacks) == 1 {
-		stack = resp.Stacks[0]
+	if count := len(output.Stacks); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
-	return stack, nil
-}
-
-// statusStackState fetches the fleet and its state
-func statusStackState(ctx context.Context, conn *appstream.AppStream, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		stack, err := FindStackByName(ctx, conn, name)
-		if err != nil {
-			return nil, "Unknown", err
-		}
-
-		if stack == nil {
-			return stack, "NotFound", nil
-		}
-
-		return stack, "AVAILABLE", nil
-	}
-}
-
-// waitStackStateDeleted waits for a deleted stack
-func waitStackStateDeleted(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Stack, error) {
-	stateConf := &retry.StateChangeConf{
-		Target:  []string{"NotFound", "Unknown"},
-		Refresh: statusStackState(ctx, conn, name),
-		Timeout: stackOperationTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*appstream.Stack); ok {
-		if errors := output.StackErrors; len(errors) > 0 {
-			var errs *multierror.Error
-
-			for _, err := range errors {
-				errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.ErrorCode), aws.StringValue(err.ErrorMessage)))
-			}
-
-			tfresource.SetLastError(err, errs.ErrorOrNil())
-		}
-
-		return output, err
-	}
-
-	return nil, err
+	return output.Stacks[0], nil
 }
 
 func expandAccessEndpoint(tfMap map[string]interface{}) *appstream.AccessEndpoint {
