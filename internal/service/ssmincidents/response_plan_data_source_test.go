@@ -26,7 +26,7 @@ func testResponsePlanDataSource_basic(t *testing.T) {
 	displayName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	chatChannelTopic := "aws_sns_topic.channel_topic"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
