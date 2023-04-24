@@ -1637,7 +1637,7 @@ resource "aws_medialive_channel" "test" {
       }
 
       outputs {
-        output_name             =  %[1]q
+        output_name             = %[1]q
         video_description_name  = "test-video-name"
         audio_description_names = [%[1]q]
         output_settings {
