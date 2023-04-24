@@ -11,8 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +23,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	stackOperationTimeout = 4 * time.Minute
 )
 
 // @SDKResource("aws_appstream_stack", name="Stack")
@@ -428,6 +434,73 @@ func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	return nil
+}
+
+// FindStackByName Retrieve a appstream stack by name
+func FindStackByName(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Stack, error) {
+	input := &appstream.DescribeStacksInput{
+		Names: []*string{aws.String(name)},
+	}
+
+	var stack *appstream.Stack
+	resp, err := conn.DescribeStacksWithContext(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(resp.Stacks) > 1 {
+		return nil, fmt.Errorf("got more than one stack with the name %s", name)
+	}
+
+	if len(resp.Stacks) == 1 {
+		stack = resp.Stacks[0]
+	}
+
+	return stack, nil
+}
+
+// statusStackState fetches the fleet and its state
+func statusStackState(ctx context.Context, conn *appstream.AppStream, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		stack, err := FindStackByName(ctx, conn, name)
+		if err != nil {
+			return nil, "Unknown", err
+		}
+
+		if stack == nil {
+			return stack, "NotFound", nil
+		}
+
+		return stack, "AVAILABLE", nil
+	}
+}
+
+// waitStackStateDeleted waits for a deleted stack
+func waitStackStateDeleted(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Stack, error) {
+	stateConf := &retry.StateChangeConf{
+		Target:  []string{"NotFound", "Unknown"},
+		Refresh: statusStackState(ctx, conn, name),
+		Timeout: stackOperationTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*appstream.Stack); ok {
+		if errors := output.StackErrors; len(errors) > 0 {
+			var errs *multierror.Error
+
+			for _, err := range errors {
+				errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.ErrorCode), aws.StringValue(err.ErrorMessage)))
+			}
+
+			tfresource.SetLastError(err, errs.ErrorOrNil())
+		}
+
+		return output, err
+	}
+
+	return nil, err
 }
 
 func expandAccessEndpoint(tfMap map[string]interface{}) *appstream.AccessEndpoint {
