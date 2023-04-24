@@ -64,6 +64,12 @@ func ResourceSpotFleetRequest() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"context": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringIsNotWhiteSpace,
+			},
 			// Provided constants do not have the correct casing so going with hard-coded values.
 			"excess_capacity_termination_policy": {
 				Type:     schema.TypeString,
