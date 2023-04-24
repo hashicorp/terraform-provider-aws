@@ -31,7 +31,7 @@ The following arguments are optional:
 * `resources` - (Optional)The resources to include in a monitor, which you provide as a set of Amazon Resource Names (ARNs).
 * `status` - (Optional) The status for a monitor. The accepted values for Status with the UpdateMonitor API call are the following: `ACTIVE` and `INACTIVE`.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `taffic_percentage_to_monitor` - (Optional) The percentage of the internet-facing traffic for your application that you want to monitor with this monitor.
+* `traffic_percentage_to_monitor` - (Optional) The percentage of the internet-facing traffic for your application that you want to monitor with this monitor.
 
 ## Attributes Reference
 

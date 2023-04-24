@@ -74,7 +74,7 @@ func ResourceMonitor() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(1, 500000),
-				AtLeastOneOf: []string{"taffic_percentage_to_monitor", "max_city_networks_to_monitor"},
+				AtLeastOneOf: []string{"traffic_percentage_to_monitor", "max_city_networks_to_monitor"},
 			},
 			"monitor_name": {
 				Type:         schema.TypeString,
@@ -101,11 +101,11 @@ func ResourceMonitor() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"taffic_percentage_to_monitor": {
+			"traffic_percentage_to_monitor": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(1, 100),
-				AtLeastOneOf: []string{"taffic_percentage_to_monitor", "max_city_networks_to_monitor"},
+				AtLeastOneOf: []string{"traffic_percentage_to_monitor", "max_city_networks_to_monitor"},
 			},
 		},
 		CustomizeDiff: verify.SetTagsDiff,
@@ -127,7 +127,7 @@ func resourceMonitorCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.MaxCityNetworksToMonitor = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("taffic_percentage_to_monitor"); ok {
+	if v, ok := d.GetOk("traffic_percentage_to_monitor"); ok {
 		input.TrafficPercentageToMonitor = aws.Int64(int64(v.(int)))
 	}
 
@@ -148,9 +148,7 @@ func resourceMonitorCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(monitorName)
 
-	err = waitMonitorCreated(ctx, conn, monitorName, internetmonitor.MonitorConfigStateActive)
-
-	if err != nil {
+	if err := waitMonitorCreated(ctx, conn, monitorName, internetmonitor.MonitorConfigStateActive); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Internet Monitor Monitor (%s) create: %s", d.Id(), err)
 	}
 
@@ -195,7 +193,7 @@ func resourceMonitorRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("arn", monitor.MonitorArn)
 	d.Set("monitor_name", monitor.MonitorName)
 	d.Set("max_city_networks_to_monitor", monitor.MaxCityNetworksToMonitor)
-	d.Set("taffic_percentage_to_monitor", monitor.TrafficPercentageToMonitor)
+	d.Set("traffic_percentage_to_monitor", monitor.TrafficPercentageToMonitor)
 	d.Set("status", monitor.Status)
 	d.Set("resources", flex.FlattenStringSet(monitor.Resources))
 
@@ -217,8 +215,8 @@ func resourceMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		input.MaxCityNetworksToMonitor = aws.Int64(int64(d.Get("max_city_networks_to_monitor").(int)))
 	}
 
-	if d.HasChange("taffic_percentage_to_monitor") {
-		input.TrafficPercentageToMonitor = aws.Int64(int64(d.Get("taffic_percentage_to_monitor").(int)))
+	if d.HasChange("traffic_percentage_to_monitor") {
+		input.TrafficPercentageToMonitor = aws.Int64(int64(d.Get("traffic_percentage_to_monitor").(int)))
 	}
 
 	if d.HasChange("status") {

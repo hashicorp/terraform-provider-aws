@@ -33,7 +33,7 @@ func TestAccInternetMonitorMonitor_basic(t *testing.T) {
 					testAccCheckMonitorExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "internetmonitor", regexp.MustCompile(`monitor/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "monitor_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "taffic_percentage_to_monitor", "1"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_percentage_to_monitor", "1"),
 					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -200,7 +200,7 @@ func testAccMonitorConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_internetmonitor_monitor" "test" {
   monitor_name                 = %[1]q
-  taffic_percentage_to_monitor = 1
+  traffic_percentage_to_monitor = 1
 }
 `, rName)
 }
@@ -209,7 +209,7 @@ func testAccMonitorConfig_status(rName, status string) string {
 	return fmt.Sprintf(`
 resource "aws_internetmonitor_monitor" "test" {
   monitor_name                 = %[1]q
-  taffic_percentage_to_monitor = 1
+  traffic_percentage_to_monitor = 1
   status                       = %[2]q
 }
 `, rName, status)
@@ -253,7 +253,7 @@ resource "aws_s3_bucket_policy" "test" {
 
 resource "aws_internetmonitor_monitor" "test" {
   monitor_name                 = %[1]q
-  taffic_percentage_to_monitor = 1
+  traffic_percentage_to_monitor = 1
 
   internet_measurements_log_delivery {
     s3_config {
@@ -268,7 +268,7 @@ func testAccMonitorConfig_tags1(rName string, tagKey1 string, tagValue1 string) 
 	return fmt.Sprintf(`
 resource "aws_internetmonitor_monitor" "test" {
   monitor_name                 = %[1]q
-  taffic_percentage_to_monitor = 1
+  traffic_percentage_to_monitor = 1
 
   tags = {
     %[2]q = %[3]q
@@ -281,7 +281,7 @@ func testAccMonitorConfig_tags2(rName string, tagKey1 string, tagValue1 string, 
 	return fmt.Sprintf(`
 resource "aws_internetmonitor_monitor" "test" {
   monitor_name                 = %[1]q
-  taffic_percentage_to_monitor = 1
+  traffic_percentage_to_monitor = 1
 
   tags = {
     %[2]q = %[3]q
