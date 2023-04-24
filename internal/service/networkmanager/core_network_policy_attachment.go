@@ -89,7 +89,7 @@ func resourceCoreNetworkPolicyAttachmentRead(ctx context.Context, d *schema.Reso
 
 	// getting the policy document uses a different API call
 	// pass in latestPolicyVersionId to get the latest version id by default
-	coreNetworkPolicy, err := FindCoreNetworkPolicyByID(ctx, conn, d.Id(), latestPolicyVersionId)
+	coreNetworkPolicy, err := FindCoreNetworkPolicyByTwoPartKey(ctx, conn, d.Id(), latestPolicyVersionID)
 
 	if tfresource.NotFound(err) {
 		d.Set("policy_document", nil)

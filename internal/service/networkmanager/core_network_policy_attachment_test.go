@@ -171,7 +171,7 @@ func testAccCheckCoreNetworkPolicyAttachmentExists(ctx context.Context, n string
 
 		// pass in latestPolicyVersionId to get the latest version id by default
 		const latestPolicyVersionId = -1
-		_, err := tfnetworkmanager.FindCoreNetworkPolicyByID(ctx, conn, rs.Primary.ID, latestPolicyVersionId)
+		_, err := tfnetworkmanager.FindCoreNetworkPolicyByTwoPartKey(ctx, conn, rs.Primary.ID, latestPolicyVersionId)
 
 		return err
 	}

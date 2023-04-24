@@ -30,9 +30,9 @@ const (
 	// CoreNetwork is in PENDING state before AVAILABLE. No value for PENDING at the moment.
 	coreNetworkStatePending = "PENDING"
 	// Minimum valid policy version id is 1
-	minimumValidPolicyVersionId = 1
+	minimumValidPolicyVersionID = 1
 	// Using the following in the FindCoreNetworkPolicyByID function will default to get the latest policy version
-	latestPolicyVersionId = -1
+	latestPolicyVersionID = -1
 	// Wait time value for core network policy - the default update for the core network policy of 30 minutes is excessive
 	waitCoreNetworkPolicyCreatedTimeInMinutes = 4
 )
@@ -261,7 +261,7 @@ func resourceCoreNetworkRead(ctx context.Context, d *schema.ResourceData, meta i
 	// getting the policy document uses a different API call
 	// policy document is also optional
 	// pass in latestPolicyVersionId to get the latest version id by default
-	coreNetworkPolicy, err := FindCoreNetworkPolicyByID(ctx, conn, d.Id(), latestPolicyVersionId)
+	coreNetworkPolicy, err := FindCoreNetworkPolicyByTwoPartKey(ctx, conn, d.Id(), latestPolicyVersionID)
 
 	if tfresource.NotFound(err) {
 		d.Set("policy_document", nil)
@@ -402,13 +402,12 @@ func FindCoreNetworkByID(ctx context.Context, conn *networkmanager.NetworkManage
 	return output.CoreNetwork, nil
 }
 
-func FindCoreNetworkPolicyByID(ctx context.Context, conn *networkmanager.NetworkManager, id string, policyVersionId int64) (*networkmanager.CoreNetworkPolicy, error) {
+func FindCoreNetworkPolicyByTwoPartKey(ctx context.Context, conn *networkmanager.NetworkManager, coreNetworkID string, policyVersionID int64) (*networkmanager.CoreNetworkPolicy, error) {
 	input := &networkmanager.GetCoreNetworkPolicyInput{
-		CoreNetworkId: aws.String(id),
+		CoreNetworkId: aws.String(coreNetworkID),
 	}
-
-	if policyVersionId >= minimumValidPolicyVersionId {
-		input.PolicyVersionId = aws.Int64(policyVersionId)
+	if policyVersionID >= minimumValidPolicyVersionID {
+		input.PolicyVersionId = aws.Int64(policyVersionID)
 	}
 
 	output, err := conn.GetCoreNetworkPolicyWithContext(ctx, input)
@@ -614,7 +613,7 @@ func PutAndExecuteCoreNetworkPolicy(ctx context.Context, conn *networkmanager.Ne
 
 func statusCoreNetworkPolicyState(ctx context.Context, conn *networkmanager.NetworkManager, coreNetworkId string, policyVersionId int64) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindCoreNetworkPolicyByID(ctx, conn, coreNetworkId, policyVersionId)
+		output, err := FindCoreNetworkPolicyByTwoPartKey(ctx, conn, coreNetworkId, policyVersionId)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
