@@ -1,0 +1,3 @@
+```release-note:feature
+resource/aws_medialive_channel: Added H265 support.
+```
