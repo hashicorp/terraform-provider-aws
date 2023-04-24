@@ -135,10 +135,11 @@ imports (
   /* ... other imports ... */
   tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 ```
 
-Add the `tags` parameter and `tags_all` attribute to the schema.
+Add the `tags` parameter and `tags_all` attribute to the schema, using constants defined in the `names` package.
 The `tags` parameter contains the tags set directly on the resource.
 The `tags_all` attribute contains union of the tags set directly on the resource and default tags configured on the provider.
 
@@ -148,8 +149,8 @@ func ResourceCluster() *schema.Resource {
     /* ... other configuration ... */
 		Schema: map[string]*schema.Schema{
       /* ... other configuration ... */
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
     },
   }
 }
