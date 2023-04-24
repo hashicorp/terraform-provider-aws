@@ -1,3 +1,3 @@
 ```release-note:bug
-resource/aws_apprunner_service: Added missing CPU and memory configurations introduced by AppRunner
+resource/aws_apprunner_service: Allow additional `instance_configuration.cpu` and `instance_configuration.memory` values
 ```
