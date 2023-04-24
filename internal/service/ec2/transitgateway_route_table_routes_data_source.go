@@ -16,7 +16,7 @@ import (
 
 func DataSourceTransitGatewayRouteTableRoutes() *schema.Resource {
   return &schema.Resource{
-     ReadWithoutTimeout: dataSourceTransitGatewayRouteTableRoutes,
+     ReadWithoutTimeout: dataSourceTransitGatewayRouteTableRoutesRead,
      Timeouts: &schema.ResourceTimeout{
       Read: schema.DefaultTimeout(20 * time.Minute),
     },
@@ -55,7 +55,7 @@ func DataSourceTransitGatewayRouteTableRoutes() *schema.Resource {
             },
           },
         },
-      }
+      },
     },
   }
 }
@@ -75,25 +75,15 @@ func dataSourceTransitGatewayRouteTableRoutesRead(ctx context.Context, d *schema
   if len(input.Filters) == 0 {
     input.Filters = nil
   }
-  output, err := conn.SearchTransitGatewayRoutesWithContex(ctx, conn, input)
+  output, err := FindTransitGatewayRoutes(ctx, conn, input)
   if err != nil {
     return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Route Table Routes: %s", err)
   }
 
-  if output == nil || len(output.Routes) == 0 {
-    return nil, tfresource.NewEmptyResultError(input)
-  }
-
-  var routes []&ec2.TransitGatewayRoute
-  for _, route := range output.Routes {
-    if route == nil {
-      continue
-    } else {
-      routes.append(route)
-    }
-  }
+  // Retrieve all route instead of just one l4730 internal/service/ec2/find.go
+  
 
   d.SetId(meta.(*conns.AWSClient).Region)
-  d.Set("routes",routes)
+  d.Set("routes",output)
   return diags
 }
