@@ -52,6 +52,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceRegisterTargets,
+			TypeName: "aws_vpclattice_register_targets",
+			Name:     "Register Targets",
+		},
+		{
 			Factory:  ResourceService,
 			TypeName: "aws_vpclattice_service",
 			Name:     "Service",
