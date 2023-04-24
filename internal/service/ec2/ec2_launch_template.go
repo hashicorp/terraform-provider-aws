@@ -904,6 +904,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 				Optional:      true,
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				ConflictsWith: []string{"vpc_security_group_ids"},
+				Deprecated:    `With the retirement of EC2-Classic the security_group_names attribute has been deprecated and will be removed in a future version.`,
 			},
 			"tag_specifications": {
 				Type:     schema.TypeList,
