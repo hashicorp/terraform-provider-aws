@@ -1218,7 +1218,7 @@ func TestAccAPIGatewayRestAPI_FailOnWarnings(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 			// Verify invalid body fails update, when fail_on_warnings is true
 			{
