@@ -199,7 +199,7 @@ func testAccCheckMonitorExists(ctx context.Context, resourceName string) resourc
 func testAccMonitorConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_internetmonitor_monitor" "test" {
-  monitor_name                 = %[1]q
+  monitor_name                  = %[1]q
   traffic_percentage_to_monitor = 1
 }
 `, rName)
@@ -208,9 +208,9 @@ resource "aws_internetmonitor_monitor" "test" {
 func testAccMonitorConfig_status(rName, status string) string {
 	return fmt.Sprintf(`
 resource "aws_internetmonitor_monitor" "test" {
-  monitor_name                 = %[1]q
+  monitor_name                  = %[1]q
   traffic_percentage_to_monitor = 1
-  status                       = %[2]q
+  status                        = %[2]q
 }
 `, rName, status)
 }
@@ -252,7 +252,7 @@ resource "aws_s3_bucket_policy" "test" {
 }
 
 resource "aws_internetmonitor_monitor" "test" {
-  monitor_name                 = %[1]q
+  monitor_name                  = %[1]q
   traffic_percentage_to_monitor = 1
 
   internet_measurements_log_delivery {
@@ -267,7 +267,7 @@ resource "aws_internetmonitor_monitor" "test" {
 func testAccMonitorConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_internetmonitor_monitor" "test" {
-  monitor_name                 = %[1]q
+  monitor_name                  = %[1]q
   traffic_percentage_to_monitor = 1
 
   tags = {
@@ -280,7 +280,7 @@ resource "aws_internetmonitor_monitor" "test" {
 func testAccMonitorConfig_tags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_internetmonitor_monitor" "test" {
-  monitor_name                 = %[1]q
+  monitor_name                  = %[1]q
   traffic_percentage_to_monitor = 1
 
   tags = {
