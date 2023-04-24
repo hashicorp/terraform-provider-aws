@@ -15,10 +15,10 @@ const (
 	monitorCreatedTimeout = 5 * time.Minute
 )
 
-func waitMonitorCreated(ctx context.Context, conn *internetmonitor.InternetMonitor, name, status string) error {
+func waitMonitor(ctx context.Context, conn *internetmonitor.InternetMonitor, name, target string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{internetmonitor.MonitorConfigStatePending},
-		Target:  []string{status},
+		Target:  []string{target},
 		Refresh: statusMonitor(ctx, conn, name),
 		Timeout: monitorCreatedTimeout,
 		Delay:   10 * time.Second,

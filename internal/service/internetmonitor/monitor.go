@@ -148,7 +148,7 @@ func resourceMonitorCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(monitorName)
 
-	if err := waitMonitorCreated(ctx, conn, monitorName, internetmonitor.MonitorConfigStateActive); err != nil {
+	if err := waitMonitor(ctx, conn, monitorName, internetmonitor.MonitorConfigStateActive); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Internet Monitor Monitor (%s) create: %s", d.Id(), err)
 	}
 
@@ -206,53 +206,54 @@ func resourceMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).InternetMonitorConn()
 
-	input := &internetmonitor.UpdateMonitorInput{
-		ClientToken: aws.String(id.UniqueId()),
-		MonitorName: aws.String(d.Id()),
-	}
+	if d.HasChangesExcept("tags", "tags_all") {
 
-	if d.HasChange("max_city_networks_to_monitor") {
-		input.MaxCityNetworksToMonitor = aws.Int64(int64(d.Get("max_city_networks_to_monitor").(int)))
-	}
-
-	if d.HasChange("traffic_percentage_to_monitor") {
-		input.TrafficPercentageToMonitor = aws.Int64(int64(d.Get("traffic_percentage_to_monitor").(int)))
-	}
-
-	if d.HasChange("status") {
-		input.Status = aws.String(d.Get("status").(string))
-	}
-
-	if d.HasChange("internet_measurements_log_delivery") {
-		input.InternetMeasurementsLogDelivery = expandInternetMeasurementsLogDelivery(d.Get("internet_measurements_log_delivery").([]interface{}))
-	}
-
-	if d.HasChange("resources") {
-		o, n := d.GetChange("resources")
-		os, ns := o.(*schema.Set), n.(*schema.Set)
-		remove := flex.ExpandStringValueSet(os.Difference(ns))
-		add := flex.ExpandStringValueSet(ns.Difference(os))
-
-		if len(add) > 0 {
-			input.ResourcesToAdd = aws.StringSlice(add)
+		input := &internetmonitor.UpdateMonitorInput{
+			ClientToken: aws.String(id.UniqueId()),
+			MonitorName: aws.String(d.Id()),
 		}
 
-		if len(remove) > 0 {
-			input.ResourcesToRemove = aws.StringSlice(remove)
+		if d.HasChange("max_city_networks_to_monitor") {
+			input.MaxCityNetworksToMonitor = aws.Int64(int64(d.Get("max_city_networks_to_monitor").(int)))
 		}
-	}
 
-	log.Printf("[DEBUG] Updating Internet Monitor Monitor: %s", input)
-	_, err := conn.UpdateMonitorWithContext(ctx, input)
+		if d.HasChange("traffic_percentage_to_monitor") {
+			input.TrafficPercentageToMonitor = aws.Int64(int64(d.Get("traffic_percentage_to_monitor").(int)))
+		}
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Internet Monitor Monitor (%s): %s", d.Id(), err)
-	}
+		if d.HasChange("status") {
+			input.Status = aws.String(d.Get("status").(string))
+		}
 
-	err = waitMonitorCreated(ctx, conn, d.Id(), d.Get("status").(string))
+		if d.HasChange("internet_measurements_log_delivery") {
+			input.InternetMeasurementsLogDelivery = expandInternetMeasurementsLogDelivery(d.Get("internet_measurements_log_delivery").([]interface{}))
+		}
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Internet Monitor Monitor (%s) create: %s", d.Id(), err)
+		if d.HasChange("resources") {
+			o, n := d.GetChange("resources")
+			os, ns := o.(*schema.Set), n.(*schema.Set)
+			remove := flex.ExpandStringValueSet(os.Difference(ns))
+			add := flex.ExpandStringValueSet(ns.Difference(os))
+
+			if len(add) > 0 {
+				input.ResourcesToAdd = aws.StringSlice(add)
+			}
+
+			if len(remove) > 0 {
+				input.ResourcesToRemove = aws.StringSlice(remove)
+			}
+		}
+
+		log.Printf("[DEBUG] Updating Internet Monitor Monitor: %s", input)
+		_, err := conn.UpdateMonitorWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Internet Monitor Monitor (%s): %s", d.Id(), err)
+		}
+
+		if err := waitMonitor(ctx, conn, d.Id(), d.Get("status").(string)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Internet Monitor Monitor (%s) update: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceMonitorRead(ctx, d, meta)...)
@@ -274,9 +275,7 @@ func resourceMonitorDelete(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "updating Internet Monitor Monitor (%s) to inactive before deletion: %s", d.Id(), err)
 	}
 
-	err = waitMonitorCreated(ctx, conn, d.Id(), internetmonitor.MonitorConfigStateInactive)
-
-	if err != nil {
+	if err := waitMonitor(ctx, conn, d.Id(), internetmonitor.MonitorConfigStateInactive); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Internet Monitor Monitor (%s) to be inactive before deletion: %s", d.Id(), err)
 	}
 
