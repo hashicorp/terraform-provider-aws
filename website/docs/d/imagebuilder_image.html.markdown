@@ -48,5 +48,8 @@ In addition to all arguments above, the following attributes are exported:
         * `image` - Identifier of the AMI.
         * `name` - Name of the AMI.
         * `region` - Region of the AMI.
+    * `containers` - Set of objects with each container image created and stored in the output repository.
+        * `image_uris` - Set of URIs for created containers.
+        * `region` - Region of the container image.
 * `tags` - Key-value map of resource tags for the image.
 * `version` - Version of the image.

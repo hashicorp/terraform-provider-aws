@@ -288,6 +288,61 @@ func TestAccAppRunnerService_ImageRepository_instance_Update(t *testing.T) {
 		},
 	})
 }
+func TestAccAppRunnerService_ImageRepository_instance_Update1(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_apprunner_service.test"
+	roleResourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_ImageRepository_instanceConfiguration1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.cpu", "256"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_configuration.0.instance_role_arn", roleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.memory", "512"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccServiceConfig_ImageRepository_updateInstanceConfiguration1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.cpu", "4096"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_configuration.0.instance_role_arn", roleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.memory", "12288"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccServiceConfig_imageRepository(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.cpu", "4096"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.memory", "12288"),
+					resource.TestCheckResourceAttrSet(resourceName, "instance_configuration.0.instance_role_arn"), // The IAM Role is not unset
+				),
+			},
+		},
+	})
+}
 
 func TestAccAppRunnerService_ImageRepository_networkConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -930,6 +985,33 @@ resource "aws_apprunner_service" "test" {
 `, rName))
 }
 
+func testAccServiceConfig_ImageRepository_instanceConfiguration1(rName string) string {
+	return acctest.ConfigCompose(
+		testAccIAMRole(rName),
+		fmt.Sprintf(`
+resource "aws_apprunner_service" "test" {
+  service_name = %[1]q
+
+  instance_configuration {
+    cpu               = "0.25 vCPU"
+    instance_role_arn = aws_iam_role.test.arn
+    memory            = "0.5 GB"
+  }
+
+  source_configuration {
+    auto_deployments_enabled = false
+    image_repository {
+      image_configuration {
+        port = "80"
+      }
+      image_identifier      = "public.ecr.aws/nginx/nginx:latest"
+      image_repository_type = "ECR_PUBLIC"
+    }
+  }
+}
+`, rName))
+}
+
 func testAccServiceConfig_ImageRepository_InstanceConfiguration_noInstanceRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apprunner_service" "test" {
@@ -965,6 +1047,33 @@ resource "aws_apprunner_service" "test" {
     cpu               = "2 vCPU"
     instance_role_arn = aws_iam_role.test.arn
     memory            = "4 GB"
+  }
+
+  source_configuration {
+    auto_deployments_enabled = false
+    image_repository {
+      image_configuration {
+        port = "80"
+      }
+      image_identifier      = "public.ecr.aws/nginx/nginx:latest"
+      image_repository_type = "ECR_PUBLIC"
+    }
+  }
+}
+`, rName))
+}
+
+func testAccServiceConfig_ImageRepository_updateInstanceConfiguration1(rName string) string {
+	return acctest.ConfigCompose(
+		testAccIAMRole(rName),
+		fmt.Sprintf(`
+resource "aws_apprunner_service" "test" {
+  service_name = %[1]q
+
+  instance_configuration {
+    cpu               = "4 vCPU"
+    instance_role_arn = aws_iam_role.test.arn
+    memory            = "12 GB"
   }
 
   source_configuration {
