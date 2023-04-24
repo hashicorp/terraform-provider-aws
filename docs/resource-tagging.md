@@ -204,7 +204,7 @@ func ResourceAnalyzer() *schema.Resource {
 ```
 
 The `identifierAttribute` argument to the `@Tags` annotation identifies the attribute in the resource's schema whose value is used in tag listing and updating API calls. Common values are `"arn"` and "`id`".
-Once the anootation has been added to the resource's code, run `make servicepackages` to register the resource for transparent tagging. This will add an entry to the `service_package_gen.go` file located in the service package folder.
+Once the annotation has been added to the resource's code, run `make servicepackages` to register the resource for transparent tagging. This will add an entry to the `service_package_gen.go` file located in the service package folder.
 
 #### Resource Create Operation
 
