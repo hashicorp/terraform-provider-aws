@@ -151,9 +151,26 @@ func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	resp, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
-		return conn.GetBucketLoggingWithContext(ctx, input)
-	}, s3.ErrCodeNoSuchBucket)
+	var tmpResp interface{}
+	resp, err := tfresource.RetryWhen(ctx, 2*time.Minute,
+		func() (interface{}, error) {
+			resp, err := conn.GetBucketLoggingWithContext(ctx, input)
+			tmpResp = resp
+			return resp, err
+		},
+		func(err error) (bool, error) {
+			if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
+				return true, err
+			}
+
+			output, ok := tmpResp.(*s3.GetBucketLoggingOutput)
+			if !ok || output.LoggingEnabled == nil {
+				log.Printf("error reading S3 Bucket (%s) Logging: empty output", d.Id())
+				return true, err
+			}
+
+			return false, err
+		})
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
 		log.Printf("[WARN] S3 Bucket Logging (%s) not found, removing from state", d.Id())
