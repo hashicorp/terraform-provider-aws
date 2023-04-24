@@ -67,6 +67,14 @@ func expandAutoTuneOptions(tfMap map[string]interface{}) *opensearchservice.Auto
 	return options
 }
 
+func expandOffPeakWindowOptions(enabled bool, hours int64, minutes int64) *opensearchservice.OffPeakWindowOptions {
+	options := &opensearchservice.OffPeakWindowOptions{}
+	options.Enabled = &enabled
+	options.OffPeakWindow.WindowStartTime.Hours = aws.Int64(hours)
+	options.OffPeakWindow.WindowStartTime.Minutes = aws.Int64(minutes)
+	return options
+}
+
 func expandAutoTuneOptionsInput(tfMap map[string]interface{}) *opensearchservice.AutoTuneOptionsInput_ {
 	if tfMap == nil {
 		return nil

@@ -164,6 +164,48 @@ func ResourceDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"off_peak_window_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"off_peak_window": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"window_start_time": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"hours": {
+													Type:     schema.TypeInt,
+													Required: true,
+													Optional: true,
+												},
+												"minutes": {
+													Type:     schema.TypeInt,
+													Required: true,
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"auto_tune_options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -676,6 +718,20 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		inputCreateDomain.CognitoOptions = expandCognitoOptions(v.([]interface{}))
 	}
 
+	if len(d.Get("off_peak_window_options").([]interface{})) > 0 {
+		offPeakWindow := d.Get("off_peak_window_options").([]interface{})[0].(map[string]interface{})["off_peak_window"].([]interface{})[0].(map[string]interface{})
+		OffPeakWindowStartHour := int64(offPeakWindow["window_start_time"].([]interface{})[0].(map[string]interface{})["hours"].(int))
+		OffPeakWindowStartMinute := int64(offPeakWindow["window_start_time"].([]interface{})[0].(map[string]interface{})["minutes"].(int))
+		WindowStartTime := opensearchservice.WindowStartTime{
+			Hours:   &OffPeakWindowStartHour,
+			Minutes: &OffPeakWindowStartMinute,
+		}
+		inputCreateDomain.OffPeakWindowOptions.OffPeakWindow.SetWindowStartTime(&WindowStartTime)
+		if enabled := offPeakWindow["enabled"].(bool); enabled {
+			inputCreateDomain.OffPeakWindowOptions.Enabled = &enabled
+		}
+	}
+
 	// IAM Roles can take some time to propagate if set in AccessPolicies and created in the same terraform
 	var out *opensearchservice.CreateDomainOutput
 	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
@@ -891,6 +947,12 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		if d.HasChange("advanced_options") {
 			input.AdvancedOptions = flex.ExpandStringMap(d.Get("advanced_options").(map[string]interface{}))
+		}
+		if d.HasChange("off_peak_window_options") {
+			enabled := d.Get("off_peak_window_options.0.enabled").(bool)
+			hours := d.Get("off_peak_window_options.0.off_peak_window.0.window_start_time.0.hours").(int64)
+			minutes := d.Get("off_peak_window_options.0.off_peak_window.0.window_start_time.0.minutes").(int64)
+			input.OffPeakWindowOptions = expandOffPeakWindowOptions(enabled, hours, minutes)
 		}
 
 		if d.HasChange("advanced_security_options") {
