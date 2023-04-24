@@ -63,6 +63,7 @@ The following arguments are supported:
 * `secondary_gids` - (Optional) The secondary POSIX group IDs used for all EFS operations by this user.
 
 ## Attributes Reference
+
 In addition to all arguments above, the following attributes are exported:
 
 * `id`  - The ID of the resource

@@ -196,6 +196,7 @@ func TestValidARN(t *testing.T) {
 		"arn:aws-iso-b:s3:::bucket/object",                                                 // lintignore:AWSAT005          // SC2S S3 ARN
 		"arn:aws-us-gov:ec2:us-gov-west-1:123456789012:instance/i-12345678",                // lintignore:AWSAT003,AWSAT005 // GovCloud EC2 ARN
 		"arn:aws-us-gov:s3:::bucket/object",                                                // lintignore:AWSAT005          // GovCloud S3 ARN
+		"arn:aws:cloudwatch::cw0000000000:alarm:my-alarm",                                  // lintignore:AWSAT005          // Cloudwatch Alarm
 	}
 	for _, v := range validNames {
 		_, errors := ValidARN(v, "arn")

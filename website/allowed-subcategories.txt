@@ -151,7 +151,7 @@ IAM Access Analyzer
 IVS (Interactive Video)
 IVS (Interactive Video) Chat
 Inspector
-Inspector V2
+Inspector Classic
 IoT 1-Click Devices
 IoT 1-Click Projects
 IoT Analytics
@@ -270,7 +270,7 @@ SMS (Server Migration)
 SNS (Simple Notification)
 SQS (Simple Queue)
 SSM (Systems Manager)
-SSM Incident Manager Contacts
+SSM Contacts
 SSM Incident Manager Incidents
 SSO (Single Sign-On)
 SSO Admin

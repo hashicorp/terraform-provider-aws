@@ -25,6 +25,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  DataSourceCertificate,
 			TypeName: "aws_dms_certificate",
 		},
+		{
+			Factory:  DataSourceEndpoint,
+			TypeName: "aws_dms_endpoint",
+		},
+		{
+			Factory:  DataSourceReplicationSubnetGroup,
+			TypeName: "aws_dms_replication_subnet_group",
+		},
 	}
 }
 
