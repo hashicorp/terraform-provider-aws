@@ -885,6 +885,10 @@ func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData,
 		Type:                             aws.String(d.Get("fleet_type").(string)),
 	}
 
+	if v, ok := d.GetOk("context"); ok {
+		spotFleetConfig.Context = aws.String(v.(string))
+	}
+
 	if launchSpecificationOk {
 		launchSpecs, err := buildSpotFleetLaunchSpecifications(ctx, d, meta)
 		if err != nil {
@@ -1038,6 +1042,7 @@ func resourceSpotFleetRequestRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("allocation_strategy", config.AllocationStrategy)
 	d.Set("instance_pools_to_use_count", config.InstancePoolsToUseCount)
 	d.Set("client_token", config.ClientToken)
+	d.Set("context", config.Context)
 	d.Set("excess_capacity_termination_policy", config.ExcessCapacityTerminationPolicy)
 	d.Set("iam_fleet_role", config.IamFleetRole)
 	d.Set("spot_maintenance_strategies", flattenSpotMaintenanceStrategies(config.SpotMaintenanceStrategies))
