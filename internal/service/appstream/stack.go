@@ -352,45 +352,48 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppStreamConn()
 
-	input := &appstream.UpdateStackInput{
-		Name: aws.String(d.Id()),
-	}
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &appstream.UpdateStackInput{
+			Name: aws.String(d.Id()),
+		}
 
-	if d.HasChange("access_endpoints") {
-		input.AccessEndpoints = expandAccessEndpoints(d.Get("access_endpoints").(*schema.Set).List())
-	}
+		if d.HasChange("access_endpoints") {
+			input.AccessEndpoints = expandAccessEndpoints(d.Get("access_endpoints").(*schema.Set).List())
+		}
 
-	if d.HasChange("application_settings") {
-		input.ApplicationSettings = expandApplicationSettings(d.Get("application_settings").([]interface{}))
-	}
+		if d.HasChange("application_settings") {
+			input.ApplicationSettings = expandApplicationSettings(d.Get("application_settings").([]interface{}))
+		}
 
-	if d.HasChange("description") {
-		input.Description = aws.String(d.Get("description").(string))
-	}
+		if d.HasChange("description") {
+			input.Description = aws.String(d.Get("description").(string))
+		}
 
-	if d.HasChange("display_name") {
-		input.DisplayName = aws.String(d.Get("display_name").(string))
-	}
+		if d.HasChange("display_name") {
+			input.DisplayName = aws.String(d.Get("display_name").(string))
+		}
 
-	if d.HasChange("feedback_url") {
-		input.FeedbackURL = aws.String(d.Get("feedback_url").(string))
-	}
+		if d.HasChange("feedback_url") {
+			input.FeedbackURL = aws.String(d.Get("feedback_url").(string))
+		}
 
-	if d.HasChange("redirect_url") {
-		input.RedirectURL = aws.String(d.Get("redirect_url").(string))
-	}
+		if d.HasChange("redirect_url") {
+			input.RedirectURL = aws.String(d.Get("redirect_url").(string))
+		}
 
-	if d.HasChange("user_settings") {
-		input.UserSettings = expandUserSettings(d.Get("user_settings").(*schema.Set).List())
-	}
-	if d.HasChange("streaming_experience_settings") {
-		input.StreamingExperienceSettings = expandStreamingExperienceSettings(d.Get("streaming_experience_settings").([]interface{}))
-	}
+		if d.HasChange("streaming_experience_settings") {
+			input.StreamingExperienceSettings = expandStreamingExperienceSettings(d.Get("streaming_experience_settings").([]interface{}))
+		}
 
-	_, err := conn.UpdateStackWithContext(ctx, input)
+		if d.HasChange("user_settings") {
+			input.UserSettings = expandUserSettings(d.Get("user_settings").(*schema.Set).List())
+		}
 
-	if err != nil {
-		diag.FromErr(fmt.Errorf("error updating Appstream Stack (%s): %w", d.Id(), err))
+		_, err := conn.UpdateStackWithContext(ctx, input)
+
+		if err != nil {
+			diag.Errorf("updating Appstream Stack (%s): %s", d.Id(), err)
+		}
 	}
 
 	return resourceStackRead(ctx, d, meta)
@@ -409,7 +412,7 @@ func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting Appstream Stack (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting Appstream Stack (%s): %s", d.Id(), err)
 	}
 
 	if _, err = waitStackStateDeleted(ctx, conn, d.Id()); err != nil {
