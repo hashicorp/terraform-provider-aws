@@ -5,3 +5,7 @@ resource/aws_launch_template: With the retirement of EC2-Classic the`security_gr
 ```release-note:note
 data-source/aws_launch_template: With the retirement of EC2-Classic the`security_group_names` attribute has been deprecated and will be removed in a future version
 ```
+
+```release-note:note
+data-source/aws_launch_configuration: With the retirement of EC2-Classic the`vpc_classic_link_id` and `vpc_classic_link_security_groups` attributes have been deprecated and will be removed in a future version
+```
