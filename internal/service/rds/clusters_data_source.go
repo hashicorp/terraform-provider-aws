@@ -66,7 +66,6 @@ func dataSourceClustersRead(ctx context.Context, d *schema.ResourceData, meta in
 
 		return !lastPage
 	})
-
 	if err != nil {
 		return create.DiagError(names.RDS, create.ErrActionReading, DSNameClusters, "", err)
 	}

@@ -2217,6 +2217,64 @@ rules:
           patterns:
             - pattern-regex: "(?i)SSM"
     severity: WARNING
+  - id: ssmcontacts-in-func-name
+    languages:
+      - go
+    message: Do not use "SSMContacts" in func name inside ssmcontacts package
+    paths:
+      include:
+        - internal/service/ssmcontacts
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)SSMContacts"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: ssmcontacts-in-test-name
+    languages:
+      - go
+    message: Include "SSMContacts" in test name
+    paths:
+      include:
+        - internal/service/ssmcontacts/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccSSMContacts"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: ssmcontacts-in-const-name
+    languages:
+      - go
+    message: Do not use "SSMContacts" in const name inside ssmcontacts package
+    paths:
+      include:
+        - internal/service/ssmcontacts
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)SSMContacts"
+    severity: WARNING
+  - id: ssmcontacts-in-var-name
+    languages:
+      - go
+    message: Do not use "SSMContacts" in var name inside ssmcontacts package
+    paths:
+      include:
+        - internal/service/ssmcontacts
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)SSMContacts"
+    severity: WARNING
   - id: ssmincidents-in-func-name
     languages:
       - go

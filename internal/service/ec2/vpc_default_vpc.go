@@ -262,15 +262,14 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 		associationID = aws.StringValue(v.AssociationId)
 		oldIPv6CIDRBlock = aws.StringValue(v.Ipv6CidrBlock)
 		oldIPv6CIDRBlockNetworkBorderGroup = aws.StringValue(v.NetworkBorderGroup)
-		ipv6PoolID := aws.StringValue(v.Ipv6Pool)
-		if ipv6PoolID == AmazonIPv6PoolID {
+		if ipv6PoolID := aws.StringValue(v.Ipv6Pool); ipv6PoolID == amazonIPv6PoolID {
 			oldAssignGeneratedIPv6CIDRBlock = true
 		} else {
 			oldIPv6PoolID = ipv6PoolID
 		}
 	}
 
-	if newAssignGeneratedIPv6CIDRBlock, newIPv6CIDRBlockNetworkBorderGroup := d.Get("assign_generated_ipv6_cidr_block").(bool), d.Get("ipv6_cidr_block_network_border_group").(string); oldAssignGeneratedIPv6CIDRBlock != newAssignGeneratedIPv6CIDRBlock || oldIPv6CIDRBlockNetworkBorderGroup != newIPv6CIDRBlockNetworkBorderGroup {
+	if newAssignGeneratedIPv6CIDRBlock, newIPv6CIDRBlockNetworkBorderGroup := d.Get("assign_generated_ipv6_cidr_block").(bool), d.Get("ipv6_cidr_block_network_border_group").(string); oldAssignGeneratedIPv6CIDRBlock != newAssignGeneratedIPv6CIDRBlock || (newIPv6CIDRBlockNetworkBorderGroup != "" && oldIPv6CIDRBlockNetworkBorderGroup != newIPv6CIDRBlockNetworkBorderGroup) {
 		associationID, err := modifyVPCIPv6CIDRBlockAssociation(ctx, conn, d.Id(),
 			associationID,
 			newAssignGeneratedIPv6CIDRBlock,
@@ -286,7 +285,7 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("ipv6_association_id", associationID)
 	}
 
-	if newIPv6CIDRBlock, newIPv6PoolID := d.Get("ipv6_cidr_block").(string), d.Get("ipv6_ipam_pool_id").(string); oldIPv6CIDRBlock != newIPv6CIDRBlock || oldIPv6PoolID != newIPv6PoolID {
+	if newAssignGeneratedIPv6CIDRBlock, newIPv6CIDRBlock, newIPv6PoolID := d.Get("assign_generated_ipv6_cidr_block").(bool), d.Get("ipv6_cidr_block").(string), d.Get("ipv6_ipam_pool_id").(string); !newAssignGeneratedIPv6CIDRBlock && (oldIPv6CIDRBlock != newIPv6CIDRBlock || oldIPv6PoolID != newIPv6PoolID) {
 		associationID, err := modifyVPCIPv6CIDRBlockAssociation(ctx, conn, d.Id(),
 			associationID,
 			false,
@@ -305,7 +304,7 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 	// Configure tags.
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	newTags := KeyValueTags(ctx, GetTagsIn(ctx))
-	oldTags := KeyValueTags(ctx, vpc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	oldTags := KeyValueTags(ctx, vpc.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
 
 	if !oldTags.Equal(newTags) {
 		if err := UpdateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {

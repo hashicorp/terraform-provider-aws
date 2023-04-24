@@ -23,9 +23,11 @@ import (
 // serializing tests so that we do not hit the lightsail rate limit for distributions
 func TestAccLightsailDistribution_serial(t *testing.T) {
 	t.Parallel()
+
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"distribution": {
 			"basic":                   testAccDistribution_basic,

@@ -68,6 +68,10 @@ func ResourceSubnetGroup() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"vpc_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -90,7 +94,6 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	log.Printf("[DEBUG] Creating RDS DB Subnet Group: %s", input)
 	output, err := conn.CreateDBSubnetGroupWithContext(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating RDS DB Subnet Group (%s): %s", name, err)
 	}
@@ -127,6 +130,7 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set("subnet_ids", subnetIDs)
 	d.Set("supported_network_types", aws.StringValueSlice(v.SupportedNetworkTypes))
+	d.Set("vpc_id", v.VpcId)
 
 	return diags
 }
@@ -144,7 +148,6 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		log.Printf("[DEBUG] Modifying RDS DB Subnet Group: %s", input)
 		_, err := conn.ModifyDBSubnetGroupWithContext(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating RDS DB Subnet Group (%s): %s", d.Id(), err)
 		}

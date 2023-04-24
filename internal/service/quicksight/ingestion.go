@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource(name="Ingestion")
 func newResourceIngestion(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceIngestion{}, nil
 }

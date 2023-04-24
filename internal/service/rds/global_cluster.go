@@ -331,7 +331,6 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 			}
 
 			_, err := conn.RemoveFromGlobalClusterWithContext(ctx, input)
-
 			if err != nil {
 				if !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
 					return sdkdiag.AppendErrorf(diags, "removing RDS DB Cluster (%s) from Global Cluster (%s): %s", writerARN, d.Id(), err)
@@ -592,7 +591,6 @@ func globalClusterUpgradeMajorEngineVersion(ctx context.Context, meta interface{
 
 	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		_, err := conn.ModifyGlobalClusterWithContext(ctx, input)
-
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) {
 				return retry.NonRetryableError(err)
@@ -617,7 +615,6 @@ func globalClusterUpgradeMajorEngineVersion(ctx context.Context, meta interface{
 	}
 
 	globalCluster, err := DescribeGlobalCluster(ctx, conn, clusterID)
-
 	if err != nil {
 		return fmt.Errorf("while upgrading major version of RDS Global Cluster (%s): %w", clusterID, err)
 	}
@@ -630,7 +627,6 @@ func globalClusterUpgradeMajorEngineVersion(ctx context.Context, meta interface{
 		}
 
 		dbi, clusterRegion, err := ClusterIDRegionFromARN(arnID)
-
 		if err != nil {
 			return fmt.Errorf("while upgrading RDS Global Cluster Cluster minor engine version: %w", err)
 		}
@@ -655,7 +651,6 @@ func globalClusterUpgradeMajorEngineVersion(ctx context.Context, meta interface{
 
 func ClusterIDRegionFromARN(arnID string) (string, string, error) {
 	parsedARN, err := arn.Parse(arnID)
-
 	if err != nil {
 		return "", "", fmt.Errorf("could not parse ARN (%s): %w", arnID, err)
 	}
@@ -696,7 +691,6 @@ func globalClusterUpgradeMinorEngineVersion(ctx context.Context, meta interface{
 		arnID := clusterMember["db_cluster_arn"].(string)
 
 		dbi, clusterRegion, err := ClusterIDRegionFromARN(arnID)
-
 		if err != nil {
 			return fmt.Errorf("while upgrading RDS Global Cluster Cluster minor engine version: %w", err)
 		}
@@ -721,7 +715,6 @@ func globalClusterUpgradeMinorEngineVersion(ctx context.Context, meta interface{
 
 		err = retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 			_, err := useConn.ModifyDBClusterWithContext(ctx, modInput)
-
 			if err != nil {
 				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
 					return retry.RetryableError(err)
@@ -742,7 +735,6 @@ func globalClusterUpgradeMinorEngineVersion(ctx context.Context, meta interface{
 
 		if tfresource.TimedOut(err) {
 			_, err := useConn.ModifyDBClusterWithContext(ctx, modInput)
-
 			if err != nil {
 				return err
 			}

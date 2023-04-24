@@ -95,20 +95,16 @@ func resourceTestGridProjectCreate(ctx context.Context, d *schema.ResourceData, 
 		input.VpcConfig = expandTestGridProjectVPCConfig(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating DeviceFarm Test Grid Project: %s", name)
-	out, err := conn.CreateTestGridProjectWithContext(ctx, input)
+	output, err := conn.CreateTestGridProjectWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating DeviceFarm Test Grid Project: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating DeviceFarm Test Grid Project (%s): %s", name, err)
 	}
 
-	arn := aws.StringValue(out.TestGridProject.Arn)
-	log.Printf("[DEBUG] Successsfully Created DeviceFarm Test Grid Project: %s", arn)
-	d.SetId(arn)
+	d.SetId(aws.StringValue(output.TestGridProject.Arn))
 
-	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
-		if err := UpdateTags(ctx, conn, arn, nil, tags); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating DeviceFarm Test Grid Project (%s) tags: %s", arn, err)
-		}
+	if err := createTags(ctx, conn, d.Id(), GetTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting DeviceFarm Test Grid Project (%s) tags: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceTestGridProjectRead(ctx, d, meta)...)
@@ -158,10 +154,10 @@ func resourceTestGridProjectUpdate(ctx context.Context, d *schema.ResourceData, 
 			input.Description = aws.String(d.Get("description").(string))
 		}
 
-		log.Printf("[DEBUG] Updating DeviceFarm Test Grid Project: %s", d.Id())
 		_, err := conn.UpdateTestGridProjectWithContext(ctx, input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Error Updating DeviceFarm Test Grid Project: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating DeviceFarm Test Grid Project (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -172,17 +168,17 @@ func resourceTestGridProjectDelete(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 
-	input := &devicefarm.DeleteTestGridProjectInput{
+	log.Printf("[DEBUG] Deleting DeviceFarm Test Grid Project: %s", d.Id())
+	_, err := conn.DeleteTestGridProjectWithContext(ctx, &devicefarm.DeleteTestGridProjectInput{
 		ProjectArn: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
+		return diags
 	}
 
-	log.Printf("[DEBUG] Deleting DeviceFarm Test Grid Project: %s", d.Id())
-	_, err := conn.DeleteTestGridProjectWithContext(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "Error deleting DeviceFarm Test Grid Project: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting DeviceFarm Test Grid Project (%s): %s", d.Id(), err)
 	}
 
 	return diags
