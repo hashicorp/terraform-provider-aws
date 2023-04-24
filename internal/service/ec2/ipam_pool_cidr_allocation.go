@@ -124,6 +124,7 @@ func resourceIPAMPoolCIDRAllocationCreate(ctx context.Context, d *schema.Resourc
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IPAM Pool CIDR Allocation: %s", err)
 	}
+
 	d.SetId(IPAMPoolCIDRAllocationCreateResourceID(aws.StringValue(output.IpamPoolAllocation.IpamPoolAllocationId), ipamPoolID))
 
 	if _, err := WaitIPAMPoolCIDRAllocationCreated(ctx, conn, aws.StringValue(output.IpamPoolAllocation.IpamPoolAllocationId), ipamPoolID, d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -140,7 +141,7 @@ func resourceIPAMPoolCIDRAllocationRead(ctx context.Context, d *schema.ResourceD
 	allocationID, poolID, err := IPAMPoolCIDRAllocationParseResourceID(d.Id())
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing IPAM Pool CIDR Allocation (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	allocation, err := FindIPAMPoolAllocationByTwoPartKey(ctx, conn, allocationID, poolID)
@@ -172,7 +173,7 @@ func resourceIPAMPoolCIDRAllocationDelete(ctx context.Context, d *schema.Resourc
 	allocationID, poolID, err := IPAMPoolCIDRAllocationParseResourceID(d.Id())
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting IPAM Pool CIDR Allocation (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting IPAM Pool CIDR Allocation: %s", d.Id())

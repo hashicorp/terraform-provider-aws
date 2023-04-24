@@ -11,6 +11,7 @@ description: |-
 Provides details about a specific Amazon Connect Hours of Operation.
 
 ## Example Usage
+
 By `name`
 
 ```hcl

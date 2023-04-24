@@ -23,9 +23,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_kendra_faq")
+// @SDKResource("aws_kendra_faq", name="FAQ")
+// @Tags(identifierAttribute="arn")
 func ResourceFaq() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFaqCreate,
@@ -137,25 +139,23 @@ func ResourceFaq() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceFaqCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KendraClient()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
-
 	input := &kendra.CreateFaqInput{
 		ClientToken: aws.String(id.UniqueId()),
 		IndexId:     aws.String(d.Get("index_id").(string)),
 		Name:        aws.String(name),
 		RoleArn:     aws.String(d.Get("role_arn").(string)),
 		S3Path:      expandS3Path(d.Get("s3_path").([]interface{})),
+		Tags:        GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -169,12 +169,6 @@ func resourceFaqCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	if v, ok := d.GetOk("language_code"); ok {
 		input.LanguageCode = aws.String(v.(string))
 	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating Kendra Faq %#v", input)
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
@@ -215,8 +209,6 @@ func resourceFaqCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KendraClient()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id, indexId, err := FaqParseResourceID(d.Id())
 	if err != nil {
@@ -260,35 +252,11 @@ func resourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return diag.FromErr(err)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
-	if err != nil {
-		return diag.Errorf("listing tags for resource (%s): %s", arn, err)
-	}
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
-
 	return nil
 }
 
 func resourceFaqUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("updating Kendra Faq (%s) tags: %s", d.Id(), err))
-		}
-	}
-
+	// Tags only.
 	return resourceFaqRead(ctx, d, meta)
 }
 

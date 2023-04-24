@@ -22,9 +22,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_networkmanager_connect_peer")
+// @SDKResource("aws_networkmanager_connect_peer", name="Connect Peer")
+// @Tags(identifierAttribute="arn")
 func ResourceConnectPeer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectPeerCreate,
@@ -169,16 +171,14 @@ func ResourceConnectPeer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	connectAttachmentID := d.Get("connect_attachment_id").(string)
 	insideCIDRBlocks := flex.ExpandStringList(d.Get("inside_cidr_blocks").([]interface{}))
@@ -187,6 +187,7 @@ func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta
 		ConnectAttachmentId: aws.String(connectAttachmentID),
 		InsideCidrBlocks:    insideCIDRBlocks,
 		PeerAddress:         aws.String(peerAddress),
+		Tags:                GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("bgp_options"); ok && len(v.([]interface{})) > 0 {
@@ -195,10 +196,6 @@ func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	if v, ok := d.GetOk("core_network_address"); ok {
 		input.CoreNetworkAddress = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutCreate),
@@ -242,8 +239,6 @@ func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	connectPeer, err := FindConnectPeerByID(ctx, conn, d.Id())
 
@@ -281,30 +276,13 @@ func resourceConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("peer_address", connectPeer.Configuration.PeerAddress)
 	d.Set("state", connectPeer.State)
 
-	tags := KeyValueTags(ctx, connectPeer.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("settings tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, connectPeer.Tags)
 
 	return nil
 }
 
 func resourceConnectPeerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating Network Manager Connect Peer (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
-
+	// Tags only.
 	return resourceConnectPeerRead(ctx, d, meta)
 }
 

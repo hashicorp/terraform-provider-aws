@@ -18,9 +18,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_kms_key")
+// @SDKResource("aws_kms_key", name="Key")
+// @Tags(identifierAttribute="id")
 func ResourceKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceKeyCreate,
@@ -107,8 +109,8 @@ func ResourceKey() *schema.Resource {
 					return json
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -116,13 +118,12 @@ func ResourceKey() *schema.Resource {
 func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &kms.CreateKeyInput{
 		BypassPolicyLockoutSafetyCheck: aws.Bool(d.Get("bypass_policy_lockout_safety_check").(bool)),
 		CustomerMasterKeySpec:          aws.String(d.Get("customer_master_key_spec").(string)),
 		KeyUsage:                       aws.String(d.Get("key_usage").(string)),
+		Tags:                           GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -147,17 +148,11 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.CustomKeyStoreId = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	// AWS requires any principal in the policy to exist before the key is created.
 	// The KMS service's awareness of principals is limited by "eventual consistency".
 	// They acknowledge this here:
 	// http://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
-	log.Printf("[DEBUG] Creating KMS Key: %s", input)
-
-	outputRaw, err := WaitIAMPropagation(ctx, func() (interface{}, error) {
+	output, err := WaitIAMPropagation(ctx, func() (*kms.CreateKeyOutput, error) {
 		return conn.CreateKeyWithContext(ctx, input)
 	})
 
@@ -165,7 +160,7 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "creating KMS Key: %s", err)
 	}
 
-	d.SetId(aws.StringValue(outputRaw.(*kms.CreateKeyOutput).KeyMetadata.KeyId))
+	d.SetId(aws.StringValue(output.KeyMetadata.KeyId))
 
 	if enableKeyRotation := d.Get("enable_key_rotation").(bool); enableKeyRotation {
 		if err := updateKeyRotationEnabled(ctx, conn, d.Id(), enableKeyRotation); err != nil {
@@ -186,7 +181,7 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	}
 
-	if len(tags) > 0 {
+	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
 		if err := WaitTagsPropagated(ctx, conn, d.Id(), tags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for KMS Key (%s) tag propagation: %s", d.Id(), err)
 		}
@@ -198,8 +193,6 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	key, err := findKey(ctx, conn, d.Id(), d.IsNewResource())
 
@@ -234,16 +227,7 @@ func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 	d.Set("policy", policyToSet)
 
-	tags := key.tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, key.tags)
 
 	return diags
 }
@@ -285,13 +269,7 @@ func resourceKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating KMS Key (%s) tags: %s", d.Id(), err)
-		}
-
-		if err := WaitTagsPropagated(ctx, conn, d.Id(), tftags.New(ctx, n)); err != nil {
+		if err := WaitTagsPropagated(ctx, conn, d.Id(), tftags.New(ctx, d.Get("tags_all").(map[string]interface{}))); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for KMS Key (%s) tag propagation: %s", d.Id(), err)
 		}
 	}
@@ -337,7 +315,7 @@ type kmsKey struct {
 	metadata *kms.KeyMetadata
 	policy   string
 	rotation *bool
-	tags     tftags.KeyValueTags
+	tags     []*kms.Tag
 }
 
 func findKey(ctx context.Context, conn *kms.KMS, keyID string, isNewResource bool) (*kmsKey, error) {
@@ -372,7 +350,7 @@ func findKey(ctx context.Context, conn *kms.KMS, keyID string, isNewResource boo
 			}
 		}
 
-		key.tags, err = ListTags(ctx, conn, keyID)
+		tags, err := ListTags(ctx, conn, keyID)
 
 		if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
 			return nil, &retry.NotFoundError{LastError: err}
@@ -381,6 +359,8 @@ func findKey(ctx context.Context, conn *kms.KMS, keyID string, isNewResource boo
 		if err != nil {
 			return nil, fmt.Errorf("listing tags for KMS Key (%s): %w", keyID, err)
 		}
+
+		key.tags = Tags(tags)
 
 		return &key, nil
 	}, isNewResource)

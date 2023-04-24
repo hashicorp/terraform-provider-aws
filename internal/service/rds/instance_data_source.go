@@ -217,7 +217,6 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	v, err := findDBInstanceByIDSDKv1(ctx, conn, d.Get("db_instance_identifier").(string))
-
 	if err != nil {
 		return diag.FromErr(tfresource.SingularDataSourceFindError("RDS DB Instance", err))
 	}
@@ -299,7 +298,6 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	tags, err := ListTags(ctx, conn, d.Get("db_instance_arn").(string))
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for RDS DB Instance (%s): %s", d.Get("db_instance_arn").(string), err)
 	}

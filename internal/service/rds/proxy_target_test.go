@@ -127,7 +127,6 @@ func testAccCheckProxyTargetDestroy(ctx context.Context) resource.TestCheckFunc 
 			}
 
 			dbProxyName, targetGroupName, targetType, rdsResourceId, err := tfrds.ProxyTargetParseID(rs.Primary.ID)
-
 			if err != nil {
 				return err
 			}
@@ -173,13 +172,11 @@ func testAccCheckProxyTargetExists(ctx context.Context, n string, v *rds.DBProxy
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 		dbProxyName, targetGroupName, targetType, rdsResourceId, err := tfrds.ProxyTargetParseID(rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
 
 		dbProxyTarget, err := tfrds.FindDBProxyTarget(ctx, conn, dbProxyName, targetGroupName, targetType, rdsResourceId)
-
 		if err != nil {
 			return err
 		}

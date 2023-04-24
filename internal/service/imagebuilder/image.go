@@ -17,9 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_imagebuilder_image")
+// @SDKResource("aws_imagebuilder_image", name="Image")
+// @Tags(identifierAttribute="id")
 func ResourceImage() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImageCreate,
@@ -139,6 +141,23 @@ func ResourceImage() *schema.Resource {
 								},
 							},
 						},
+						"containers": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"image_uris": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"region": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -146,8 +165,8 @@ func ResourceImage() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"version": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -161,12 +180,11 @@ func ResourceImage() *schema.Resource {
 func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &imagebuilder.CreateImageInput{
 		ClientToken:                  aws.String(id.UniqueId()),
 		EnhancedImageMetadataEnabled: aws.Bool(d.Get("enhanced_image_metadata_enabled").(bool)),
+		Tags:                         GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("container_recipe_arn"); ok {
@@ -187,10 +205,6 @@ func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if v, ok := d.GetOk("infrastructure_configuration_arn"); ok {
 		input.InfrastructureConfigurationArn = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	output, err := conn.CreateImageWithContext(ctx, input)
@@ -215,8 +229,6 @@ func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &imagebuilder.GetImageInput{
 		ImageBuildVersionArn: aws.String(d.Id()),
@@ -277,16 +289,7 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("output_resources", nil)
 	}
 
-	tags := KeyValueTags(ctx, image.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, image.Tags)
 
 	d.Set("version", image.Version)
 
@@ -295,15 +298,8 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceImageUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags for Image Builder Image (%s): %s", d.Id(), err)
-		}
-	}
+	// Tags only.
 
 	return append(diags, resourceImageRead(ctx, d, meta)...)
 }
@@ -338,6 +334,10 @@ func flattenOutputResources(apiObject *imagebuilder.OutputResources) map[string]
 
 	if v := apiObject.Amis; v != nil {
 		tfMap["amis"] = flattenAMIs(v)
+	}
+
+	if v := apiObject.Containers; v != nil {
+		tfMap["containers"] = flattenContainers(v)
 	}
 
 	return tfMap
@@ -386,6 +386,42 @@ func flattenAMIs(apiObjects []*imagebuilder.Ami) []interface{} {
 		}
 
 		tfList = append(tfList, flattenAMI(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenContainer(apiObject *imagebuilder.Container) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ImageUris; v != nil {
+		tfMap["image_uris"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.Region; v != nil {
+		tfMap["region"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenContainers(apiObjects []*imagebuilder.Container) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenContainer(apiObject))
 	}
 
 	return tfList

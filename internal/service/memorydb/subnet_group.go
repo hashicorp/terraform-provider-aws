@@ -16,9 +16,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_memorydb_subnet_group")
+// @SDKResource("aws_memorydb_subnet_group", name="Subnet Group")
+// @Tags(identifierAttribute="arn")
 func ResourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSubnetGroupCreate,
@@ -64,8 +66,8 @@ func ResourceSubnetGroup() *schema.Resource {
 				MinItems: 1,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -76,15 +78,13 @@ func ResourceSubnetGroup() *schema.Resource {
 
 func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).MemoryDBConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &memorydb.CreateSubnetGroupInput{
 		Description:     aws.String(d.Get("description").(string)),
 		SubnetGroupName: aws.String(name),
 		SubnetIds:       flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-		Tags:            Tags(tags.IgnoreAWS()),
+		Tags:            GetTagsIn(ctx),
 	}
 
 	log.Printf("[DEBUG] Creating MemoryDB Subnet Group: %s", input)
@@ -117,21 +117,11 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("error updating MemoryDB Subnet Group (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return resourceSubnetGroupRead(ctx, d, meta)
 }
 
 func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).MemoryDBConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	group, err := FindSubnetGroupByName(ctx, conn, d.Id())
 
@@ -156,23 +146,6 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("name", group.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(group.Name)))
 	d.Set("vpc_id", group.VpcId)
-
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-
-	if err != nil {
-		return diag.Errorf("error listing tags for MemoryDB Subnet Group (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags for MemoryDB Subnet Group (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("error setting tags_all for MemoryDB Subnet Group (%s): %s", d.Id(), err)
-	}
 
 	return nil
 }

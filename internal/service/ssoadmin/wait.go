@@ -11,8 +11,8 @@ import (
 const (
 	accountAssignmentCreateTimeout      = 5 * time.Minute
 	accountAssignmentDeleteTimeout      = 5 * time.Minute
-	accountAssignmentDelay              = 5 * time.Second
-	accountAssignmentMinTimeout         = 3 * time.Second
+	accountAssignmentDelay              = 10 * time.Second
+	accountAssignmentMinTimeout         = 5 * time.Second
 	permissionSetProvisioningRetryDelay = 5 * time.Second
 	permissionSetProvisionTimeout       = 10 * time.Minute
 )

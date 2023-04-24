@@ -14,6 +14,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // GetTag fetches an individual autoscaling service tag for a resource.
@@ -272,9 +273,11 @@ func UpdateTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, ident
 	oldTags := KeyValueTags(ctx, oldTagsSet, identifier, resourceType)
 	newTags := KeyValueTags(ctx, newTagsSet, identifier, resourceType)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.AutoScaling)
+	if len(removedTags) > 0 {
 		input := &autoscaling.DeleteTagsInput{
-			Tags: Tags(removedTags.IgnoreAWS()),
+			Tags: Tags(removedTags),
 		}
 
 		_, err := conn.DeleteTagsWithContext(ctx, input)
@@ -284,9 +287,11 @@ func UpdateTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, ident
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.AutoScaling)
+	if len(updatedTags) > 0 {
 		input := &autoscaling.CreateOrUpdateTagsInput{
-			Tags: Tags(updatedTags.IgnoreAWS()),
+			Tags: Tags(updatedTags),
 		}
 
 		_, err := conn.CreateOrUpdateTagsWithContext(ctx, input)
