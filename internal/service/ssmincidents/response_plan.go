@@ -244,64 +244,47 @@ func resourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, meta 
 func resourceResponsePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*conns.AWSClient).SSMIncidentsClient()
 
-	hasNonTagUpdate := false
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &ssmincidents.UpdateResponsePlanInput{
+			Arn: aws.String(d.Id()),
+		}
 
-	input := &ssmincidents.UpdateResponsePlanInput{
-		Arn: aws.String(d.Id()),
-	}
+		if d.HasChanges("action") {
+			input.Actions = expandAction(d.Get("action").([]interface{}))
+		}
 
-	if d.HasChanges("action") {
-		input.Actions = expandAction(d.Get("action").([]interface{}))
+		if d.HasChanges("chat_channel") {
+			input.ChatChannel = expandChatChannel(d.Get("chat_channel").(*schema.Set))
+		}
 
-		hasNonTagUpdate = true
-	}
+		if d.HasChanges("display_name") {
+			input.DisplayName = aws.String(d.Get("display_name").(string))
+		}
 
-	if d.HasChanges("chat_channel") {
-		input.ChatChannel = expandChatChannel(d.Get("chat_channel").(*schema.Set))
+		if d.HasChanges("engagements") {
+			input.Engagements = flex.ExpandStringValueSet(d.Get("engagements").(*schema.Set))
+		}
 
-		hasNonTagUpdate = true
-	}
+		if d.HasChanges("incident_template") {
+			incidentTemplate := d.Get("incident_template")
+			template := expandIncidentTemplate(incidentTemplate.([]interface{}))
+			updateResponsePlanInputWithIncidentTemplate(input, template)
+		}
 
-	if d.HasChanges("display_name") {
-		input.DisplayName = aws.String(d.Get("display_name").(string))
+		if d.HasChanges("integration") {
+			input.Integrations = expandIntegration(d.Get("integration").([]interface{}))
+		}
 
-		hasNonTagUpdate = true
-	}
+		_, err := client.UpdateResponsePlan(ctx, input)
 
-	if d.HasChanges("engagements") {
-		input.Engagements = flex.ExpandStringValueSet(d.Get("engagements").(*schema.Set))
-
-		hasNonTagUpdate = true
-	}
-
-	if d.HasChanges("incident_template") {
-		incidentTemplate := d.Get("incident_template")
-		template := expandIncidentTemplate(incidentTemplate.([]interface{}))
-		updateResponsePlanInputWithIncidentTemplate(input, template)
-
-		hasNonTagUpdate = true
-	}
-
-	if d.HasChanges("integration") {
-		input.Integrations = expandIntegration(d.Get("integration").([]interface{}))
-
-		hasNonTagUpdate = true
-	}
-
-	// tags can have a change without tags_all having a change when value of tag is ""
-	if d.HasChanges("tags_all", "tags") {
-		log.Printf("[DEBUG] Updating SSMIncidents ResponsePlan tags")
-
-		if err := updateResourceTags(ctx, client, d); err != nil {
+		if err != nil {
 			return create.DiagError(names.SSMIncidents, create.ErrActionUpdating, ResNameResponsePlan, d.Id(), err)
 		}
 	}
 
-	if hasNonTagUpdate {
-		log.Printf("[DEBUG] Updating SSMIncidents ResponsePlan (%s): %#v", d.Id(), input)
-		_, err := client.UpdateResponsePlan(ctx, input)
-
-		if err != nil {
+	// tags can have a change without tags_all having a change when value of tag is ""
+	if d.HasChanges("tags_all", "tags") {
+		if err := updateResourceTags(ctx, client, d); err != nil {
 			return create.DiagError(names.SSMIncidents, create.ErrActionUpdating, ResNameResponsePlan, d.Id(), err)
 		}
 	}
