@@ -42,8 +42,8 @@ func TestAccVPCLatticeResourcePolicy_basic(t *testing.T) {
 				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, resourceName, &resourcepolicy),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"Action":"*"`)),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_vpclattice_service.test", "arn"),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"vpc-lattice:CreateServiceNetworkVpcAssociation","vpc-lattice:CreateServiceNetworkServiceAssociation","vpc-lattice:GetServiceNetwork"`)),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_vpclattice_service_network.test", "arn"),
 				),
 			},
 			{
@@ -142,15 +142,8 @@ func testAccCheckResourcePolicyExists(ctx context.Context, name string, resource
 
 func testAccResourcePolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
 data "aws_caller_identity" "current" {}
 
-resource "aws_vpclattice_service" "test" {
-		name               = %[1]q
-		auth_type          = "AWS_IAM"
-		custom_domain_name = "example.com"
-}
 
 resource "aws_vpclattice_service_network" "test" {
   name = %[1]q
@@ -158,9 +151,24 @@ resource "aws_vpclattice_service_network" "test" {
 
 resource "aws_vpclattice_resource_policy" "test" {
  	 	resource_arn		= aws_vpclattice_service_network.test.arn
-		policy 				= <<EOT
-{"Version": "2012-10-17","Statement": [{"Sid": "test-pol-principals-4","Effect": "Allow","Principal": {"AWS": "arn:aws:iam::867034315045:root"},"Action": ["vpc-lattice:CreateServiceNetworkVpcAssociation","vpc-lattice:CreateServiceNetworkServiceAssociation","vpc-lattice:GetServiceNetwork"],"Resource": "arn:aws:vpc-lattice:us-west-2:818997251555:servicenetwork/sn-04a4ab5237c89b893"}]}
-EOT
+        policy = jsonencode({
+  Version = "2012-10-17",
+  Statement = [
+    {
+      Sid = "test-pol-principals-6"
+      Effect = "Allow"
+      Principal = {
+        "AWS" = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+      }
+      Action = [
+        "vpc-lattice:CreateServiceNetworkVpcAssociation",
+        "vpc-lattice:CreateServiceNetworkServiceAssociation",
+        "vpc-lattice:GetServiceNetwork"
+      ]
+      Resource ="${aws_vpclattice_service_network.test.arn}"
+    }
+  ]
+})
 }
 `, rName)
 }

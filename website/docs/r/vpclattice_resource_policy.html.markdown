@@ -15,7 +15,32 @@ Terraform resource for managing an AWS VPC Lattice Resource Policy.
 ### Basic Usage
 
 ```terraform
+data "aws_caller_identity" "current" {}
+
+resource "aws_vpclattice_service_network" "example" {
+  name = "example-vpclattice-service-network"
+}
+
 resource "aws_vpclattice_resource_policy" "example" {
+  resource_arn  = aws_vpclattice_service_network.example.arn
+  policy        = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid    = "example-policy-statement"
+        Effect = "Allow"
+        Principal = {
+          "AWS" = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action = [
+          "vpc-lattice:CreateServiceNetworkVpcAssociation",
+          "vpc-lattice:CreateServiceNetworkServiceAssociation",
+          "vpc-lattice:GetServiceNetwork"
+        ]
+        Resource = "${aws_vpclattice_service_network.example.arn}"
+      }
+    ]
+  })
 }
 ```
 
@@ -23,18 +48,9 @@ resource "aws_vpclattice_resource_policy" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `resource_arn` - (Required) The ID or Amazon Resource Name (ARN) of the service network or service for which the policy is created.
+* `policy` - (Required) An IAM policy. The policy string in JSON must not contain newlines or blank lines.
 
-The following arguments are optional:
-
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-
-## Attributes Reference
-
-In addition to all arguments above, the following attributes are exported:
-
-* `arn` - ARN of the Resource Policy. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
 
 ## Timeouts
 
