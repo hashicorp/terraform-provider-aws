@@ -207,7 +207,6 @@ func resourceMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).InternetMonitorConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
-
 		input := &internetmonitor.UpdateMonitorInput{
 			ClientToken: aws.String(id.UniqueId()),
 			MonitorName: aws.String(d.Id()),
