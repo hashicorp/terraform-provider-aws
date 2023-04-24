@@ -1,7 +1,6 @@
 package appstream
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -14,11 +13,9 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -34,9 +31,11 @@ func ResourceStack() *schema.Resource {
 		ReadWithoutTimeout:   resourceStackRead,
 		UpdateWithoutTimeout: resourceStackUpdate,
 		DeleteWithoutTimeout: resourceStackDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"access_endpoints": {
 				Type:     schema.TypeSet,
@@ -58,7 +57,6 @@ func ResourceStack() *schema.Resource {
 						},
 					},
 				},
-				Set: accessEndpointsHash,
 			},
 			"application_settings": {
 				Type:     schema.TypeList,
@@ -155,7 +153,6 @@ func ResourceStack() *schema.Resource {
 						},
 					},
 				},
-				Set: storageConnectorsHash,
 			},
 			"streaming_experience_settings": {
 				Type:     schema.TypeList,
@@ -172,6 +169,8 @@ func ResourceStack() *schema.Resource {
 					},
 				},
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"user_settings": {
 				Type:             schema.TypeSet,
 				Optional:         true,
@@ -192,10 +191,7 @@ func ResourceStack() *schema.Resource {
 						},
 					},
 				},
-				Set: userSettingsHash,
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: customdiff.All(
@@ -250,8 +246,9 @@ func ResourceStack() *schema.Resource {
 func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppStreamConn()
 
+	name := d.Get("name").(string)
 	input := &appstream.CreateStackInput{
-		Name: aws.String(d.Get("name").(string)),
+		Name: aws.String(name),
 		Tags: GetTagsIn(ctx),
 	}
 
@@ -295,30 +292,15 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.UserSettings = expandUserSettings(v.(*schema.Set).List())
 	}
 
-	var err error
-	var output *appstream.CreateStackOutput
-	err = retry.RetryContext(ctx, stackOperationTimeout, func() *retry.RetryError {
-		output, err = conn.CreateStackWithContext(ctx, input)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-				return retry.RetryableError(err)
-			}
-
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateStackWithContext(ctx, input)
-	}
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, stackOperationTimeout, func() (interface{}, error) {
+		return conn.CreateStackWithContext(ctx, input)
+	}, appstream.ErrCodeResourceNotFoundException)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Appstream Stack (%s): %w", d.Id(), err))
+		return diag.Errorf("creating Appstream Stack (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.Stack.Name))
+	d.SetId(aws.StringValue(outputRaw.(*appstream.CreateStackOutput).Stack.Name))
 
 	return resourceStackRead(ctx, d, meta)
 }
@@ -747,29 +729,4 @@ func suppressAppsStreamStackUserSettings(k, old, new string, d *schema.ResourceD
 	}
 
 	return flagDiffUserSettings
-}
-
-func accessEndpointsHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(m["endpoint_type"].(string))
-	buf.WriteString(m["vpce_id"].(string))
-	return create.StringHashcode(buf.String())
-}
-
-func storageConnectorsHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(m["connector_type"].(string))
-	buf.WriteString(fmt.Sprintf("%+v", m["domains"].([]interface{})))
-	buf.WriteString(m["resource_identifier"].(string))
-	return create.StringHashcode(buf.String())
-}
-
-func userSettingsHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(m["action"].(string))
-	buf.WriteString(m["permission"].(string))
-	return create.StringHashcode(buf.String())
 }
