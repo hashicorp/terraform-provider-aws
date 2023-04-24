@@ -199,8 +199,8 @@ func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta i
 	// Tags and Overwrite set to true, we make an additional API call
 	// to Update the resource's tags if necessary
 	if len(tags) > 0 && input.Tags == nil {
-		if err := UpdateTags(ctx, conn, name, ssm.ResourceTypeForTaggingParameter, nil, KeyValueTags(ctx, tags)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SSM Parameter (%s) tags: %s", name, err)
+		if err := createTags(ctx, conn, name, ssm.ResourceTypeForTaggingParameter, tags); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting SSM Parameter (%s) tags: %s", name, err)
 		}
 	}
 

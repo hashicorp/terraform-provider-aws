@@ -51,6 +51,7 @@ The following arguments are optional:
 * `kms_key_details` - (Optional) An object describing the KMS key to asssociate. Block is documented below.
 
 ## repository
+
 This configuration block supports the following:
 
 ### bitbucket
@@ -75,6 +76,7 @@ This configuration block supports the following:
 * `name` - (Required) The name of the repository in the S3 bucket.
 
 ## kms_key_details
+
 This configuration block supports the following:
 
 * `encryption_option` - (Optional) The encryption option for a repository association. It is either owned by AWS Key Management Service (KMS) (`AWS_OWNED_CMK`) or customer managed (`CUSTOMER_MANAGED_CMK`).

@@ -46,6 +46,7 @@ func ResourceDefaultSubnet() *schema.Resource {
 		//   - availability_zone is Required/ForceNew
 		//   - availability_zone_id is Computed-only
 		//   - cidr_block is Computed-only
+		//   - enable_lni_at_device_index is Computed-only
 		//   - ipv6_cidr_block is Optional/Computed as it's automatically assigned if ipv6_native = true
 		//   - map_public_ip_on_launch has a Default of true
 		//   - outpost_arn is Computed-only
@@ -85,6 +86,10 @@ func ResourceDefaultSubnet() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+			},
+			"enable_lni_at_device_index": {
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 			"enable_resource_name_dns_aaaa_record_on_launch": {
 				Type:     schema.TypeBool,
@@ -234,7 +239,7 @@ func resourceDefaultSubnetCreate(ctx context.Context, d *schema.ResourceData, me
 	// Configure tags.
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	newTags := KeyValueTags(ctx, GetTagsIn(ctx))
-	oldTags := KeyValueTags(ctx, subnet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	oldTags := KeyValueTags(ctx, subnet.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
 
 	if !oldTags.Equal(newTags) {
 		if err := UpdateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {

@@ -95,18 +95,28 @@ func SetTagsOut(ctx context.Context, tags []*directoryservice.Tag) {
 	}
 }
 
+// createTags creates ds service tags for new resources.
+func createTags(ctx context.Context, conn directoryserviceiface.DirectoryServiceAPI, identifier string, tags []*directoryservice.Tag) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return UpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+}
+
 // UpdateTags updates ds service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-
 func UpdateTags(ctx context.Context, conn directoryserviceiface.DirectoryServiceAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.DS)
+	if len(removedTags) > 0 {
 		input := &directoryservice.RemoveTagsFromResourceInput{
 			ResourceId: aws.String(identifier),
-			TagKeys:    aws.StringSlice(removedTags.IgnoreSystem(names.DS).Keys()),
+			TagKeys:    aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.RemoveTagsFromResourceWithContext(ctx, input)
@@ -116,10 +126,12 @@ func UpdateTags(ctx context.Context, conn directoryserviceiface.DirectoryService
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.DS)
+	if len(updatedTags) > 0 {
 		input := &directoryservice.AddTagsToResourceInput{
 			ResourceId: aws.String(identifier),
-			Tags:       Tags(updatedTags.IgnoreSystem(names.DS)),
+			Tags:       Tags(updatedTags),
 		}
 
 		_, err := conn.AddTagsToResourceWithContext(ctx, input)
@@ -130,15 +142,6 @@ func UpdateTags(ctx context.Context, conn directoryserviceiface.DirectoryService
 	}
 
 	return nil
-}
-
-// createTags creates ds service tags for new resources.
-func createTags(ctx context.Context, conn directoryserviceiface.DirectoryServiceAPI, identifier string, tags []*directoryservice.Tag) error {
-	if len(tags) == 0 {
-		return nil
-	}
-
-	return UpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
 }
 
 // UpdateTags updates ds service tags.
