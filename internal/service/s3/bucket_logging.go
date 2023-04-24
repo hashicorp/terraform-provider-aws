@@ -165,8 +165,7 @@ func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta
 
 			output, ok := tmpResp.(*s3.GetBucketLoggingOutput)
 			if !ok || output.LoggingEnabled == nil {
-				log.Printf("error reading S3 Bucket (%s) Logging: empty output", d.Id())
-				return true, err
+				return true, fmt.Errorf("error reading S3 Bucket (%s) Logging: empty output", d.Id())
 			}
 
 			return false, err
