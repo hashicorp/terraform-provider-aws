@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_sesv2_dedicated_ip_assignment")
 func ResourceDedicatedIPAssignment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDedicatedIPAssignmentCreate,
@@ -57,7 +58,7 @@ const (
 )
 
 func resourceDedicatedIPAssignmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client
+	conn := meta.(*conns.AWSClient).SESV2Client()
 
 	in := &sesv2.PutDedicatedIpInPoolInput{
 		Ip:                  aws.String(d.Get("ip").(string)),
@@ -76,7 +77,7 @@ func resourceDedicatedIPAssignmentCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceDedicatedIPAssignmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client
+	conn := meta.(*conns.AWSClient).SESV2Client()
 
 	out, err := FindDedicatedIPAssignmentByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -95,7 +96,7 @@ func resourceDedicatedIPAssignmentRead(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceDedicatedIPAssignmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client
+	conn := meta.(*conns.AWSClient).SESV2Client()
 	ip, _ := splitID(d.Id())
 
 	log.Printf("[INFO] Deleting SESV2 DedicatedIPAssignment %s", d.Id())
@@ -139,7 +140,7 @@ func FindDedicatedIPAssignmentByID(ctx context.Context, conn *sesv2.Client, id s
 	if err != nil {
 		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -152,7 +153,7 @@ func FindDedicatedIPAssignmentByID(ctx context.Context, conn *sesv2.Client, id s
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 	if out.DedicatedIp.PoolName == nil || aws.ToString(out.DedicatedIp.PoolName) != destinationPoolName {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   ErrIncorrectPoolAssignment,
 			LastRequest: in,
 		}

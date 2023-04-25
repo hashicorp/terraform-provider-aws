@@ -14,30 +14,46 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_db_parameter_group", name="DB Parameter Group")
+// @Tags(identifierAttribute="arn")
 func ResourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
-		Create:               resourceParameterGroupCreate,
-		Read:                 resourceParameterGroupRead,
-		Update:               resourceParameterGroupUpdate,
+		CreateWithoutTimeout: resourceParameterGroupCreate,
+		ReadWithoutTimeout:   resourceParameterGroupRead,
+		UpdateWithoutTimeout: resourceParameterGroupUpdate,
 		DeleteWithoutTimeout: resourceParameterGroupDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Default:  "Managed by Terraform",
+			},
+			"family": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"name": {
 				Type:          schema.TypeString,
@@ -54,17 +70,6 @@ func ResourceParameterGroup() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validParamGroupNamePrefix,
-			},
-			"family": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  "Managed by Terraform",
 			},
 			"parameter": {
 				Type:     schema.TypeSet,
@@ -88,82 +93,66 @@ func ResourceParameterGroup() *schema.Resource {
 				},
 				Set: resourceParameterHash,
 			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 
-	var groupName string
-	if v, ok := d.GetOk("name"); ok {
-		groupName = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		groupName = resource.PrefixedUniqueId(v.(string))
-	} else {
-		groupName = resource.UniqueId()
-	}
-	d.Set("name", groupName)
-
-	createOpts := rds.CreateDBParameterGroupInput{
-		DBParameterGroupName:   aws.String(groupName),
+	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	input := &rds.CreateDBParameterGroupInput{
 		DBParameterGroupFamily: aws.String(d.Get("family").(string)),
+		DBParameterGroupName:   aws.String(name),
 		Description:            aws.String(d.Get("description").(string)),
-		Tags:                   Tags(tags.IgnoreAWS()),
+		Tags:                   GetTagsIn(ctx),
 	}
 
-	log.Printf("[DEBUG] Create DB Parameter Group: %#v", createOpts)
-	resp, err := conn.CreateDBParameterGroup(&createOpts)
+	output, err := conn.CreateDBParameterGroupWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("creating DB Parameter Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creatingDB Parameter Group (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.DBParameterGroup.DBParameterGroupName))
-	d.Set("arn", resp.DBParameterGroup.DBParameterGroupArn)
-	log.Printf("[INFO] DB Parameter Group ID: %s", d.Id())
+	d.SetId(aws.StringValue(output.DBParameterGroup.DBParameterGroupName))
 
-	return resourceParameterGroupUpdate(d, meta)
+	// Set for update
+	d.Set("arn", output.DBParameterGroup.DBParameterGroupArn)
+
+	return append(diags, resourceParameterGroupUpdate(ctx, d, meta)...)
 }
 
-func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 
-	describeOpts := rds.DescribeDBParameterGroupsInput{
+	dbParameterGroup, err := FindDBParameterGroupByName(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] RDS DB Parameter Group (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Parameter Group (%s): %s", d.Id(), err)
+	}
+
+	arn := aws.StringValue(dbParameterGroup.DBParameterGroupArn)
+	d.Set("arn", arn)
+	d.Set("description", dbParameterGroup.Description)
+	d.Set("family", dbParameterGroup.DBParameterGroupFamily)
+	d.Set("name", dbParameterGroup.DBParameterGroupName)
+
+	input := &rds.DescribeDBParametersInput{
 		DBParameterGroupName: aws.String(d.Id()),
 	}
-
-	describeResp, err := conn.DescribeDBParameterGroups(&describeOpts)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBParameterGroupNotFoundFault) {
-			log.Printf("[WARN] DB Parameter Group (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-
-	if len(describeResp.DBParameterGroups) != 1 ||
-		aws.StringValue(describeResp.DBParameterGroups[0].DBParameterGroupName) != d.Id() {
-		return fmt.Errorf("Unable to find Parameter Group: %#v", describeResp.DBParameterGroups)
-	}
-
-	d.Set("name", describeResp.DBParameterGroups[0].DBParameterGroupName)
-	d.Set("family", describeResp.DBParameterGroups[0].DBParameterGroupFamily)
-	d.Set("description", describeResp.DBParameterGroups[0].Description)
 
 	configParams := d.Get("parameter").(*schema.Set)
-	describeParametersOpts := rds.DescribeDBParametersInput{
-		DBParameterGroupName: aws.String(d.Id()),
-	}
 	if configParams.Len() < 1 {
 		// if we don't have any params in the ResourceData already, two possibilities
 		// first, we don't have a config available to us. Second, we do, but it has
@@ -174,17 +163,17 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 		// an empty list anyways, so we just make some unnecessary requests. But in
 		// the more common case (I assume) of an import, this will make fewer requests
 		// and "do the right thing".
-		describeParametersOpts.Source = aws.String("user")
+		input.Source = aws.String("user")
 	}
 
 	var parameters []*rds.Parameter
-	err = conn.DescribeDBParametersPages(&describeParametersOpts,
-		func(describeParametersResp *rds.DescribeDBParametersOutput, lastPage bool) bool {
-			parameters = append(parameters, describeParametersResp.Parameters...)
-			return !lastPage
-		})
+	err = conn.DescribeDBParametersPagesWithContext(ctx, input, func(page *rds.DescribeDBParametersOutput, lastPage bool) bool {
+		parameters = append(parameters, page.Parameters...)
+		return !lastPage
+	})
+
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Parameter Group (%s) parameters: %s", d.Id(), err)
 	}
 
 	var userParams []*rds.Parameter
@@ -227,38 +216,19 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
-	err = d.Set("parameter", flattenParameters(userParams))
-	if err != nil {
-		return fmt.Errorf("setting 'parameter' in state: %w", err)
+	if err := d.Set("parameter", flattenParameters(userParams)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
 	}
 
-	arn := aws.StringValue(describeResp.DBParameterGroups[0].DBParameterGroupArn)
-	d.Set("arn", arn)
-
-	tags, err := ListTags(conn, d.Get("arn").(string))
-
-	if err != nil {
-		return fmt.Errorf("listing tags for RDS DB Parameter Group (%s): %w", d.Get("arn").(string), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-const maxParamModifyChunk = 20
-
-func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	const (
+		maxParamModifyChunk = 20
+	)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
@@ -283,15 +253,14 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 				var paramsToModify []*rds.Parameter
 				paramsToModify, parameters = ResourceParameterModifyChunk(parameters, maxParamModifyChunk)
 
-				modifyOpts := rds.ModifyDBParameterGroupInput{
-					DBParameterGroupName: aws.String(d.Get("name").(string)),
+				input := &rds.ModifyDBParameterGroupInput{
+					DBParameterGroupName: aws.String(d.Id()),
 					Parameters:           paramsToModify,
 				}
 
-				log.Printf("[DEBUG] Modify DB Parameter Group: %s", modifyOpts)
-				_, err := conn.ModifyDBParameterGroup(&modifyOpts)
+				_, err := conn.ModifyDBParameterGroupWithContext(ctx, input)
 				if err != nil {
-					return fmt.Errorf("modifying DB Parameter Group: %s", err)
+					return sdkdiag.AppendErrorf(diags, "modifying DB Parameter Group (%s): %s", d.Id(), err)
 				}
 			}
 		}
@@ -324,57 +293,87 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 					paramsToReset, resetParameters = resetParameters[:maxParamModifyChunk], resetParameters[maxParamModifyChunk:]
 				}
 
-				parameterGroupName := d.Get("name").(string)
-				resetOpts := rds.ResetDBParameterGroupInput{
-					DBParameterGroupName: aws.String(parameterGroupName),
+				input := &rds.ResetDBParameterGroupInput{
+					DBParameterGroupName: aws.String(d.Id()),
 					Parameters:           paramsToReset,
 					ResetAllParameters:   aws.Bool(false),
 				}
 
-				log.Printf("[DEBUG] Reset DB Parameter Group: %s", resetOpts)
-				_, err := conn.ResetDBParameterGroup(&resetOpts)
+				_, err := conn.ResetDBParameterGroupWithContext(ctx, input)
 				if err != nil {
-					return fmt.Errorf("resetting DB Parameter Group: %s", err)
+					return sdkdiag.AppendErrorf(diags, "resetting DB Parameter Group (%s): %s", d.Id(), err)
 				}
 			}
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating RDS DB Parameter Group (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
-
-	return resourceParameterGroupRead(d, meta)
+	return append(diags, resourceParameterGroupRead(ctx, d, meta)...)
 }
 
 func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
 	conn := meta.(*conns.AWSClient).RDSClient()
-	deleteOpts := rds_sdkv2.DeleteDBParameterGroupInput{
+	input := &rds_sdkv2.DeleteDBParameterGroupInput{
 		DBParameterGroupName: aws.String(d.Id()),
 	}
-	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteDBParameterGroup(ctx, &deleteOpts)
+
+	log.Printf("[DEBUG] Deleting RDS DB Parameter Group: %s", d.Id())
+	err := retry.RetryContext(ctx, 3*time.Minute, func() *retry.RetryError {
+		_, err := conn.DeleteDBParameterGroup(ctx, input)
 		if errs.IsA[*types.DBParameterGroupNotFoundFault](err) {
 			return nil
 		} else if errs.IsA[*types.InvalidDBParameterGroupStateFault](err) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteDBParameterGroup(ctx, &deleteOpts)
+		_, err = conn.DeleteDBParameterGroup(ctx, input)
 	}
 	if err != nil {
-		return errs.AppendErrorf(diags, "deleting RDS DB Parameter Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting RDS DB Parameter Group (%s): %s", d.Id(), err)
 	}
 	return nil
+}
+
+func FindDBParameterGroupByName(ctx context.Context, conn *rds.RDS, name string) (*rds.DBParameterGroup, error) {
+	input := &rds.DescribeDBParameterGroupsInput{
+		DBParameterGroupName: aws.String(name),
+	}
+
+	output, err := conn.DescribeDBParameterGroupsWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBParameterGroupNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.DBParameterGroups) == 0 || output.DBParameterGroups[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.DBParameterGroups); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	dbParameterGroup := output.DBParameterGroups[0]
+
+	// Eventual consistency check.
+	if aws.StringValue(dbParameterGroup.DBParameterGroupName) != name {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return dbParameterGroup, nil
 }
 
 func resourceParameterHash(v interface{}) int {

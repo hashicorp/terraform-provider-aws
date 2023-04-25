@@ -5,11 +5,11 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 func waitScheduleGroupActive(ctx context.Context, conn *scheduler.Client, name string, timeout time.Duration) (*scheduler.GetScheduleGroupOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{scheduleGroupStatusActive},
 		Refresh:                   statusScheduleGroup(ctx, conn, name),
@@ -27,7 +27,7 @@ func waitScheduleGroupActive(ctx context.Context, conn *scheduler.Client, name s
 }
 
 func waitScheduleGroupDeleted(ctx context.Context, conn *scheduler.Client, name string, timeout time.Duration) (*scheduler.GetScheduleGroupOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{scheduleGroupStatusDeleting, scheduleGroupStatusActive},
 		Target:  []string{},
 		Refresh: statusScheduleGroup(ctx, conn, name),

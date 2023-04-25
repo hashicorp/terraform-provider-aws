@@ -9,18 +9,21 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -29,6 +32,8 @@ const (
 	clusterTimeoutDelete                           = 2 * time.Minute
 )
 
+// @SDKResource("aws_rds_cluster", name="Cluster")
+// @Tags(identifierAttribute="arn")
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
@@ -237,10 +242,42 @@ func ResourceCluster() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"manage_master_user_password": {
+				Type:          schema.TypeBool,
+				Optional:      true,
+				ConflictsWith: []string{"master_password"},
+			},
+			"master_user_secret": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"secret_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"secret_status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"master_user_secret_kms_key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: verify.ValidKMSKeyID,
+			},
 			"master_password": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Sensitive:     true,
+				ConflictsWith: []string{"manage_master_user_password"},
 			},
 			"master_username": {
 				Type:     schema.TypeString,
@@ -430,6 +467,13 @@ func ResourceCluster() *schema.Resource {
 			"snapshot_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ConflictsWith: []string{
+					// Clusters cannot be joined to an existing global cluster as part of
+					// the "restore from snapshot" operation. Trigger an error during plan
+					// to prevent an apply with unexpected results (ie. a regional
+					// cluster which is not joined to the provided global cluster).
+					"global_cluster_identifier",
+				},
 			},
 			"source_region": {
 				Type:     schema.TypeString,
@@ -447,8 +491,8 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -463,9 +507,7 @@ func ResourceCluster() *schema.Resource {
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	// Some API calls (e.g. RestoreDBClusterFromSnapshot do not support all
 	// parameters to correctly apply all settings in one pass. For missing
@@ -481,9 +523,9 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("cluster_identifier"); ok {
 		identifier = v.(string)
 	} else if v, ok := d.GetOk("cluster_identifier_prefix"); ok {
-		identifier = resource.PrefixedUniqueId(v.(string))
+		identifier = id.PrefixedUniqueId(v.(string))
 	} else {
-		identifier = resource.PrefixedUniqueId("tf-")
+		identifier = id.PrefixedUniqueId("tf-")
 	}
 
 	if v, ok := d.GetOk("snapshot_identifier"); ok {
@@ -494,7 +536,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			Engine:              aws.String(d.Get("engine").(string)),
 			EngineMode:          aws.String(d.Get("engine_mode").(string)),
 			SnapshotIdentifier:  aws.String(v.(string)),
-			Tags:                Tags(tags.IgnoreAWS()),
+			Tags:                GetTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
@@ -534,8 +576,18 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("manage_master_user_password"); ok {
+			modifyDbClusterInput.ManageMasterUserPassword = aws.Bool(v.(bool))
+			requiresModifyDbCluster = true
+		}
+
 		if v, ok := d.GetOk("master_password"); ok {
 			modifyDbClusterInput.MasterUserPassword = aws.String(v.(string))
+			requiresModifyDbCluster = true
+		}
+
+		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
+			modifyDbClusterInput.MasterUserSecretKmsKeyId = aws.String(v.(string))
 			requiresModifyDbCluster = true
 		}
 
@@ -575,21 +627,17 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		log.Printf("[DEBUG] Creating RDS Cluster: %s", input)
-		_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout,
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.RestoreDBClusterFromSnapshotWithContext(ctx, input)
 			},
 			errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
-
 		if err != nil {
-			return errs.AppendErrorf(diags, "creating RDS Cluster (restore from snapshot) (%s): %s", identifier, err)
+			return sdkdiag.AppendErrorf(diags, "creating RDS Cluster (restore from snapshot) (%s): %s", identifier, err)
 		}
 	} else if v, ok := d.GetOk("s3_import"); ok {
-		if _, ok := d.GetOk("master_password"); !ok {
-			diags = errs.AppendErrorf(diags, `"master_password": required field is not set`)
-		}
 		if _, ok := d.GetOk("master_username"); !ok {
-			diags = errs.AppendErrorf(diags, `"master_username": required field is not set`)
+			diags = sdkdiag.AppendErrorf(diags, `"master_username": required field is not set`)
 		}
 		if diags.HasError() {
 			return diags
@@ -602,13 +650,12 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:              aws.String(d.Get("engine").(string)),
 			MasterUsername:      aws.String(d.Get("master_username").(string)),
-			MasterUserPassword:  aws.String(d.Get("master_password").(string)),
 			S3BucketName:        aws.String(tfMap["bucket_name"].(string)),
 			S3IngestionRoleArn:  aws.String(tfMap["ingestion_role"].(string)),
 			S3Prefix:            aws.String(tfMap["bucket_prefix"].(string)),
 			SourceEngine:        aws.String(tfMap["source_engine"].(string)),
 			SourceEngineVersion: aws.String(tfMap["source_engine_version"].(string)),
-			Tags:                Tags(tags.IgnoreAWS()),
+			Tags:                GetTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
@@ -651,6 +698,18 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("manage_master_user_password"); ok {
+			input.ManageMasterUserPassword = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
+			input.MasterUserSecretKmsKeyId = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("master_password"); ok {
+			input.MasterUserPassword = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("network_type"); ok {
 			input.NetworkType = aws.String(v.(string))
 		}
@@ -675,7 +734,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		_, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.RestoreDBClusterFromS3WithContext(ctx, input)
 			},
@@ -697,9 +756,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 				return false, err
 			},
 		)
-
 		if err != nil {
-			return errs.AppendErrorf(diags, "creating RDS Cluster (restore from S3) (%s): %s", identifier, err)
+			return sdkdiag.AppendErrorf(diags, "creating RDS Cluster (restore from S3) (%s): %s", identifier, err)
 		}
 	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
@@ -707,7 +765,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			DBClusterIdentifier:       aws.String(identifier),
 			DeletionProtection:        aws.Bool(d.Get("deletion_protection").(bool)),
 			SourceDBClusterIdentifier: aws.String(tfMap["source_cluster_identifier"].(string)),
-			Tags:                      Tags(tags.IgnoreAWS()),
+			Tags:                      GetTagsIn(ctx),
 		}
 
 		if v, ok := tfMap["restore_to_time"].(string); ok && v != "" {
@@ -720,7 +778,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if input.RestoreToTime == nil && input.UseLatestRestorableTime == nil {
-			return errs.AppendErrorf(diags, `Either "restore_to_time" or "use_latest_restorable_time" must be set`)
+			return sdkdiag.AppendErrorf(diags, `Either "restore_to_time" or "use_latest_restorable_time" must be set`)
 		}
 
 		if v, ok := d.GetOk("backtrack_window"); ok {
@@ -752,8 +810,18 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("manage_master_user_password"); ok {
+			modifyDbClusterInput.ManageMasterUserPassword = aws.Bool(v.(bool))
+			requiresModifyDbCluster = true
+		}
+
 		if v, ok := d.GetOk("master_password"); ok {
 			modifyDbClusterInput.MasterUserPassword = aws.String(v.(string))
+			requiresModifyDbCluster = true
+		}
+
+		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
+			modifyDbClusterInput.MasterUserSecretKmsKeyId = aws.String(v.(string))
 			requiresModifyDbCluster = true
 		}
 
@@ -799,9 +867,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		log.Printf("[DEBUG] Creating RDS Cluster: %s", input)
 		_, err := conn.RestoreDBClusterToPointInTimeWithContext(ctx, input)
-
 		if err != nil {
-			return errs.AppendErrorf(diags, "creating RDS Cluster (restore to point-in-time) (%s): %s", identifier, err)
+			return sdkdiag.AppendErrorf(diags, "creating RDS Cluster (restore to point-in-time) (%s): %s", identifier, err)
 		}
 	} else {
 		input := &rds.CreateDBClusterInput{
@@ -810,7 +877,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:              aws.String(d.Get("engine").(string)),
 			EngineMode:          aws.String(d.Get("engine_mode").(string)),
-			Tags:                Tags(tags.IgnoreAWS()),
+			Tags:                GetTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOkExists("allocated_storage"); ok {
@@ -877,12 +944,20 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("manage_master_user_password"); ok {
+			input.ManageMasterUserPassword = aws.Bool(v.(bool))
+		}
+
 		// Note: Username and password credentials are required and valid
-		// unless the cluster is a read-replica. This also applies to clusters
-		// within a global cluster. Providing a password and/or username for
-		// a replica will result in an InvalidParameterValue error.
+		// unless the cluster password is managed by RDS, or it is a read-replica.
+		// This also applies to clusters within a global cluster.
+		// Providing a password and/or username for a replica
+		// will result in an InvalidParameterValue error.
 		if v, ok := d.GetOk("master_password"); ok {
 			input.MasterUserPassword = aws.String(v.(string))
+		}
+		if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
+			input.MasterUserSecretKmsKeyId = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("master_username"); ok {
@@ -933,27 +1008,26 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout,
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.CreateDBClusterWithContext(ctx, input)
 			},
 			errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
-
 		if err != nil {
-			return errs.AppendErrorf(diags, "creating RDS Cluster (%s): %s", identifier, err)
+			return sdkdiag.AppendErrorf(diags, "creating RDS Cluster (%s): %s", identifier, err)
 		}
 	}
 
 	d.SetId(identifier)
 
 	if _, err := waitDBClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return errs.AppendErrorf(diags, "waiting for RDS Cluster (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) create: %s", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("iam_roles"); ok && v.(*schema.Set).Len() > 0 {
 		for _, v := range v.(*schema.Set).List() {
 			if err := addIAMRoleToCluster(ctx, conn, d.Id(), v.(string)); err != nil {
-				return errs.AppendErrorf(diags, "adding IAM Role (%s) to RDS Cluster (%s): %s", v, d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "adding IAM Role (%s) to RDS Cluster (%s): %s", v, d.Id(), err)
 			}
 		}
 	}
@@ -963,11 +1037,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		_, err := conn.ModifyDBClusterWithContext(ctx, modifyDbClusterInput)
 		if err != nil {
-			return errs.AppendErrorf(diags, "updating RDS Cluster (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return errs.AppendErrorf(diags, "waiting for RDS Cluster (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -975,9 +1049,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
-	conn := meta.(*conns.AWSClient).RDSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	dbc, err := FindDBClusterByID(ctx, conn, d.Id())
 
@@ -988,7 +1060,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return errs.AppendErrorf(diags, "reading RDS Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster (%s): %s", d.Id(), err)
 	}
 
 	d.Set("allocated_storage", dbc.AllocatedStorage)
@@ -1009,7 +1081,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	// RDS accepts a DatabaseName but does not return it, causing a perpetual
 	// diff.
 	//	See https://github.com/hashicorp/terraform/issues/4671 for backstory
-	if dbc.DatabaseName != nil {
+	if dbc.DatabaseName != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set("database_name", dbc.DatabaseName)
 	}
 	d.Set("db_cluster_instance_class", dbc.DBClusterInstanceClass)
@@ -1031,6 +1103,25 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("iam_roles", iamRoleARNs)
 	d.Set("iops", dbc.Iops)
 	d.Set("kms_key_id", dbc.KmsKeyId)
+
+	// Note: the following attributes are not returned by the API
+	// when conducting a read after a create, so we rely on Terraform's
+	// implicit state passthrough, and they are treated as virtual attributes.
+	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#implicit-state-passthrough
+	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#virtual-attributes
+	//
+	// manage_master_user_password
+	// master_password
+	//
+	// Expose the MasterUserSecret structure as a computed attribute
+	// https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-cluster.html#:~:text=for%20future%20use.-,MasterUserSecret,-%2D%3E%20(structure)
+	if dbc.MasterUserSecret != nil {
+		if err := d.Set("master_user_secret", []interface{}{flattenManagedMasterUserSecret(dbc.MasterUserSecret)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting master_user_secret: %s", err)
+		}
+	} else {
+		d.Set("master_user_secret", nil)
+	}
 	d.Set("master_username", dbc.MasterUsername)
 	d.Set("network_type", dbc.NetworkType)
 	d.Set("port", dbc.Port)
@@ -1040,14 +1131,14 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("replication_source_identifier", dbc.ReplicationSourceIdentifier)
 	if dbc.ScalingConfigurationInfo != nil {
 		if err := d.Set("scaling_configuration", []interface{}{flattenScalingConfigurationInfo(dbc.ScalingConfigurationInfo)}); err != nil {
-			return errs.AppendErrorf(diags, "setting scaling_configuration: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting scaling_configuration: %s", err)
 		}
 	} else {
 		d.Set("scaling_configuration", nil)
 	}
 	if dbc.ServerlessV2ScalingConfiguration != nil {
 		if err := d.Set("serverlessv2_scaling_configuration", []interface{}{flattenServerlessV2ScalingConfigurationInfo(dbc.ServerlessV2ScalingConfiguration)}); err != nil {
-			return errs.AppendErrorf(diags, "setting serverlessv2_scaling_configuration: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting serverlessv2_scaling_configuration: %s", err)
 		}
 	} else {
 		d.Set("serverlessv2_scaling_configuration", nil)
@@ -1060,23 +1151,6 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("vpc_security_group_ids", securityGroupIDs)
 
-	tags, err := ListTagsWithContext(ctx, conn, clusterARN)
-
-	if err != nil {
-		return errs.AppendErrorf(diags, "listing tags for RDS Cluster (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return errs.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return errs.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	// Fetch and save Global Cluster if engine mode global
 	d.Set("global_cluster_identifier", "")
 
@@ -1085,11 +1159,11 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 		if err == nil {
 			d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
-		} else if tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Access Denied to API Version: APIGlobalDatabases") {
+		} else if tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Access Denied to API Version: APIGlobalDatabases") { //nolint:revive // Keep comments
 			// Ignore the following API error for regions/partitions that do not support RDS Global Clusters:
 			// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
 		} else {
-			return errs.AppendErrorf(diags, "reading RDS Global Cluster for RDS Cluster (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "reading RDS Global Cluster for RDS Cluster (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -1097,7 +1171,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	if d.HasChangesExcept(
 		"allow_major_version_upgrade",
@@ -1140,8 +1214,13 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.DBClusterParameterGroupName = aws.String(d.Get("db_cluster_parameter_group_name").(string))
 		}
 
-		if d.HasChange("db_instance_parameter_group_name") {
-			input.DBInstanceParameterGroupName = aws.String(d.Get("db_instance_parameter_group_name").(string))
+		// DB instance parameter group name is not currently returned from the
+		// DescribeDBClusters API. This means there is no drift detection, so when
+		// set, the configured attribute should always be sent on modify.
+		// Except, this causes an error on a minor version upgrade, so it is
+		// removed during update retry, if necessary.
+		if v, ok := d.GetOk("db_instance_parameter_group_name"); ok || d.HasChange("db_instance_parameter_group_name") {
+			input.DBInstanceParameterGroupName = aws.String(v.(string))
 		}
 
 		if d.HasChange("deletion_protection") {
@@ -1171,6 +1250,13 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EngineVersion = aws.String(d.Get("engine_version").(string))
 		}
 
+		// This can happen when updates are deferred (apply_immediately = false), and
+		// multiple applies occur before the maintenance window. In this case,
+		// continue sending the desired engine_version as part of the modify request.
+		if d.Get("engine_version").(string) != d.Get("engine_version_actual").(string) {
+			input.EngineVersion = aws.String(d.Get("engine_version").(string))
+		}
+
 		if d.HasChange("iam_database_authentication_enabled") {
 			input.EnableIAMDatabaseAuthentication = aws.Bool(d.Get("iam_database_authentication_enabled").(bool))
 		}
@@ -1179,8 +1265,18 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.Iops = aws.Int64(int64(d.Get("iops").(int)))
 		}
 
+		if d.HasChange("manage_master_user_password") {
+			input.ManageMasterUserPassword = aws.Bool(d.Get("manage_master_user_password").(bool))
+		}
 		if d.HasChange("master_password") {
-			input.MasterUserPassword = aws.String(d.Get("master_password").(string))
+			if v, ok := d.GetOk("master_password"); ok {
+				input.MasterUserPassword = aws.String(v.(string))
+			}
+		}
+		if d.HasChange("master_user_secret_kms_key_id") {
+			if v, ok := d.GetOk("master_user_secret_kms_key_id"); ok {
+				input.MasterUserSecretKmsKeyId = aws.String(v.(string))
+			}
 		}
 
 		if d.HasChange("network_type") {
@@ -1223,7 +1319,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 
-		_, err := tfresource.RetryWhenContext(ctx, 5*time.Minute,
+		_, err := tfresource.RetryWhen(ctx, 5*time.Minute,
 			func() (interface{}, error) {
 				return conn.ModifyDBClusterWithContext(ctx, input)
 			},
@@ -1236,16 +1332,20 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 					return true, err
 				}
 
+				if tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "db-instance-parameter-group-name can only be specified for a major") {
+					input.DBInstanceParameterGroupName = nil
+					return true, err
+				}
+
 				return false, err
 			},
 		)
-
 		if err != nil {
-			return errs.AppendErrorf(diags, "updating RDS Cluster (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return errs.AppendErrorf(diags, "waiting for RDS Cluster (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -1255,23 +1355,24 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		n := nRaw.(string)
 
 		if o == "" {
-			return errs.AppendErrorf(diags, "existing RDS Clusters cannot be added to an existing RDS Global Cluster")
+			return sdkdiag.AppendErrorf(diags, "existing RDS Clusters cannot be added to an existing RDS Global Cluster")
 		}
 
 		if n != "" {
-			return errs.AppendErrorf(diags, "existing RDS Clusters cannot be migrated between existing RDS Global Clusters")
+			return sdkdiag.AppendErrorf(diags, "existing RDS Clusters cannot be migrated between existing RDS Global Clusters")
 		}
 
+		clusterARN := d.Get("arn").(string)
 		input := &rds.RemoveFromGlobalClusterInput{
-			DbClusterIdentifier:     aws.String(d.Get("arn").(string)),
+			DbClusterIdentifier:     aws.String(clusterARN),
 			GlobalClusterIdentifier: aws.String(o),
 		}
 
-		log.Printf("[DEBUG] Removing RDS Cluster from RDS Global Cluster: %s", input)
+		log.Printf("[DEBUG] Removing RDS Cluster (%s) from RDS Global Cluster: %s", clusterARN, o)
 		_, err := conn.RemoveFromGlobalClusterWithContext(ctx, input)
 
 		if err != nil && !tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
-			return errs.AppendErrorf(diags, "removing RDS Cluster (%s) from RDS Global Cluster: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "removing RDS Cluster (%s) from RDS Global Cluster: %s", d.Id(), err)
 		}
 	}
 
@@ -1288,22 +1389,14 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		for _, v := range ns.Difference(os).List() {
 			if err := addIAMRoleToCluster(ctx, conn, d.Id(), v.(string)); err != nil {
-				return errs.AppendErrorf(diags, "adding IAM Role (%s) to RDS Cluster (%s): %s", v, d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "adding IAM Role (%s) to RDS Cluster (%s): %s", v, d.Id(), err)
 			}
 		}
 
 		for _, v := range os.Difference(ns).List() {
 			if err := removeIAMRoleFromCluster(ctx, conn, d.Id(), v.(string)); err != nil {
-				return errs.AppendErrorf(diags, "removing IAM Role (%s) from RDS Cluster (%s): %s", v, d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "removing IAM Role (%s) from RDS Cluster (%s): %s", v, d.Id(), err)
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return errs.AppendErrorf(diags, "updating RDS Cluster (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
@@ -1311,22 +1404,23 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	// Automatically remove from global cluster to bypass this error on deletion:
 	// InvalidDBClusterStateFault: This cluster is a part of a global cluster, please remove it from globalcluster first
 	if d.Get("global_cluster_identifier").(string) != "" {
+		clusterARN := d.Get("arn").(string)
 		globalClusterID := d.Get("global_cluster_identifier").(string)
 		input := &rds.RemoveFromGlobalClusterInput{
-			DbClusterIdentifier:     aws.String(d.Get("arn").(string)),
+			DbClusterIdentifier:     aws.String(clusterARN),
 			GlobalClusterIdentifier: aws.String(globalClusterID),
 		}
 
-		log.Printf("[DEBUG] Removing RDS Cluster from RDS Global Cluster: %s", input)
+		log.Printf("[DEBUG] Removing RDS Cluster (%s) from RDS Global Cluster: %s", clusterARN, globalClusterID)
 		_, err := conn.RemoveFromGlobalClusterWithContext(ctx, input)
 
 		if err != nil && !tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
-			return errs.AppendErrorf(diags, "removing RDS Cluster (%s) from RDS Global Cluster (%s): %s", d.Id(), globalClusterID, err)
+			return sdkdiag.AppendErrorf(diags, "removing RDS Cluster (%s) from RDS Global Cluster (%s): %s", d.Id(), globalClusterID, err)
 		}
 	}
 
@@ -1340,19 +1434,19 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 		if v, ok := d.GetOk("final_snapshot_identifier"); ok {
 			input.FinalDBSnapshotIdentifier = aws.String(v.(string))
 		} else {
-			return errs.AppendErrorf(diags, "RDS Cluster final_snapshot_identifier is required when skip_final_snapshot is false")
+			return sdkdiag.AppendErrorf(diags, "RDS Cluster final_snapshot_identifier is required when skip_final_snapshot is false")
 		}
 	}
 
 	log.Printf("[DEBUG] Deleting RDS Cluster: %s", d.Id())
-	_, err := tfresource.RetryWhenContext(ctx, clusterTimeoutDelete,
+	_, err := tfresource.RetryWhen(ctx, clusterTimeoutDelete,
 		func() (interface{}, error) {
 			return conn.DeleteDBClusterWithContext(ctx, input)
 		},
 		func(err error) (bool, error) {
 			if tfawserr.ErrMessageContains(err, "InvalidParameterCombination", "disable deletion pro") {
 				if v, ok := d.GetOk("deletion_protection"); (!ok || !v.(bool)) && d.Get("apply_immediately").(bool) {
-					_, err := tfresource.RetryWhenContext(ctx, d.Timeout(schema.TimeoutDelete),
+					_, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutDelete),
 						func() (interface{}, error) {
 							return conn.ModifyDBClusterWithContext(ctx, &rds.ModifyDBClusterInput{
 								ApplyImmediately:    aws.Bool(true),
@@ -1372,7 +1466,6 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 							return false, err
 						},
 					)
-
 					if err != nil {
 						return false, fmt.Errorf("modifying RDS Cluster (%s) DeletionProtection=false: %s", d.Id(), err)
 					}
@@ -1402,11 +1495,11 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err != nil {
-		return errs.AppendErrorf(diags, "deleting RDS Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting RDS Cluster (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitDBClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return errs.AppendErrorf(diags, "waiting for RDS Cluster (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
@@ -1427,7 +1520,6 @@ func addIAMRoleToCluster(ctx context.Context, conn *rds.RDS, clusterID, roleARN 
 	}
 
 	_, err := conn.AddRoleToDBClusterWithContext(ctx, input)
-
 	if err != nil {
 		return fmt.Errorf("adding IAM Role (%s) to RDS Cluster (%s): %s", roleARN, clusterID, err)
 	}
@@ -1442,7 +1534,6 @@ func removeIAMRoleFromCluster(ctx context.Context, conn *rds.RDS, clusterID, rol
 	}
 
 	_, err := conn.RemoveRoleFromDBClusterWithContext(ctx, input)
-
 	if err != nil {
 		return fmt.Errorf("removing IAM Role (%s) from RDS Cluster (%s): %s", roleARN, clusterID, err)
 	}
@@ -1453,7 +1544,11 @@ func removeIAMRoleFromCluster(ctx context.Context, conn *rds.RDS, clusterID, rol
 func clusterSetResourceDataEngineVersionFromCluster(d *schema.ResourceData, c *rds.DBCluster) {
 	oldVersion := d.Get("engine_version").(string)
 	newVersion := aws.StringValue(c.EngineVersion)
-	compareActualEngineVersion(d, oldVersion, newVersion)
+	var pendingVersion string
+	if c.PendingModifiedValues != nil && c.PendingModifiedValues.EngineVersion != nil {
+		pendingVersion = aws.StringValue(c.PendingModifiedValues.EngineVersion)
+	}
+	compareActualEngineVersion(d, oldVersion, newVersion, pendingVersion)
 }
 
 func FindDBClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBCluster, error) {
@@ -1464,21 +1559,35 @@ func FindDBClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBCl
 	output, err := conn.DescribeDBClustersWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	if output == nil || len(output.DBClusters) == 0 || output.DBClusters[0] == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
+	if count := len(output.DBClusters); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
 	dbCluster := output.DBClusters[0]
 
 	// Eventual consistency check.
-	if aws.StringValue(dbCluster.DBClusterIdentifier) != id {
-		return nil, &resource.NotFoundError{
+	if arn.IsARN(id) {
+		if aws.StringValue(dbCluster.DBClusterArn) != id {
+			return nil, &retry.NotFoundError{
+				LastRequest: input,
+			}
+		}
+	} else if aws.StringValue(dbCluster.DBClusterIdentifier) != id {
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -1487,7 +1596,7 @@ func FindDBClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBCl
 }
 
 func waitDBClusterCreated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBCluster, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			ClusterStatusBackingUp,
 			ClusterStatusCreating,
@@ -1514,7 +1623,7 @@ func waitDBClusterCreated(ctx context.Context, conn *rds.RDS, id string, timeout
 }
 
 func waitDBClusterUpdated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBCluster, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			ClusterStatusBackingUp,
 			ClusterStatusConfiguringIAMDatabaseAuth,
@@ -1540,7 +1649,7 @@ func waitDBClusterUpdated(ctx context.Context, conn *rds.RDS, id string, timeout
 }
 
 func waitDBClusterDeleted(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBCluster, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			ClusterStatusAvailable,
 			ClusterStatusBackingUp,
@@ -1563,7 +1672,7 @@ func waitDBClusterDeleted(ctx context.Context, conn *rds.RDS, id string, timeout
 	return nil, err
 }
 
-func statusDBCluster(ctx context.Context, conn *rds.RDS, id string) resource.StateRefreshFunc {
+func statusDBCluster(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDBClusterByID(ctx, conn, id)
 

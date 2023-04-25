@@ -15,8 +15,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ec2_transit_gateway_multicast_domain", name="Transit Gateway Multicast Domain")
+// @Tags(identifierAttribute="id")
 func ResourceTransitGatewayMulticastDomain() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayMulticastDomainCreate,
@@ -25,7 +28,7 @@ func ResourceTransitGatewayMulticastDomain() *schema.Resource {
 		DeleteWithoutTimeout: resourceTransitGatewayMulticastDomainDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -65,8 +68,8 @@ func ResourceTransitGatewayMulticastDomain() *schema.Resource {
 				Default:      ec2.StaticSourcesSupportValueDisable,
 				ValidateFunc: validation.StringInSlice(ec2.StaticSourcesSupportValue_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"transit_gateway_id": {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -77,9 +80,7 @@ func ResourceTransitGatewayMulticastDomain() *schema.Resource {
 }
 
 func resourceTransitGatewayMulticastDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.CreateTransitGatewayMulticastDomainInput{
 		Options: &ec2.CreateTransitGatewayMulticastDomainRequestOptions{
@@ -87,7 +88,7 @@ func resourceTransitGatewayMulticastDomainCreate(ctx context.Context, d *schema.
 			Igmpv2Support:                aws.String(d.Get("igmpv2_support").(string)),
 			StaticSourcesSupport:         aws.String(d.Get("static_sources_support").(string)),
 		},
-		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGatewayMulticastDomain),
+		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeTransitGatewayMulticastDomain),
 		TransitGatewayId:  aws.String(d.Get("transit_gateway_id").(string)),
 	}
 
@@ -100,7 +101,7 @@ func resourceTransitGatewayMulticastDomainCreate(ctx context.Context, d *schema.
 
 	d.SetId(aws.StringValue(output.TransitGatewayMulticastDomain.TransitGatewayMulticastDomainId))
 
-	if _, err := WaitTransitGatewayMulticastDomainCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := WaitTransitGatewayMulticastDomainCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("waiting for EC2 Transit Gateway Multicast Domain (%s) create: %s", d.Id(), err)
 	}
 
@@ -108,11 +109,9 @@ func resourceTransitGatewayMulticastDomainCreate(ctx context.Context, d *schema.
 }
 
 func resourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	multicastDomain, err := FindTransitGatewayMulticastDomainByID(conn, d.Id())
+	multicastDomain, err := FindTransitGatewayMulticastDomainByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Transit Gateway Multicast Domain %s not found, removing from state", d.Id())
@@ -131,38 +130,20 @@ func resourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.Re
 	d.Set("static_sources_support", multicastDomain.Options.StaticSourcesSupport)
 	d.Set("transit_gateway_id", multicastDomain.TransitGatewayId)
 
-	tags := KeyValueTags(multicastDomain.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, multicastDomain.Tags)
 
 	return nil
 }
 
 func resourceTransitGatewayMulticastDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("updating EC2 Transit Gateway Multicast Domain (%s) tags: %s", d.Id(), err)
-		}
-	}
-
+	// Tags only.
 	return resourceTransitGatewayMulticastDomainRead(ctx, d, meta)
 }
 
 func resourceTransitGatewayMulticastDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	groups, err := FindTransitGatewayMulticastGroups(conn, &ec2.SearchTransitGatewayMulticastGroupsInput{
+	groups, err := FindTransitGatewayMulticastGroups(ctx, conn, &ec2.SearchTransitGatewayMulticastGroupsInput{
 		TransitGatewayMulticastDomainId: aws.String(d.Id()),
 	})
 
@@ -196,7 +177,7 @@ func resourceTransitGatewayMulticastDomainDelete(ctx context.Context, d *schema.
 		return diags
 	}
 
-	associations, err := FindTransitGatewayMulticastDomainAssociations(conn, &ec2.GetTransitGatewayMulticastDomainAssociationsInput{
+	associations, err := FindTransitGatewayMulticastDomainAssociations(ctx, conn, &ec2.GetTransitGatewayMulticastDomainAssociationsInput{
 		TransitGatewayMulticastDomainId: aws.String(d.Id()),
 	})
 
@@ -233,7 +214,7 @@ func resourceTransitGatewayMulticastDomainDelete(ctx context.Context, d *schema.
 		return diag.Errorf("deleting EC2 Transit Gateway Multicast Domain (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitTransitGatewayMulticastDomainDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := WaitTransitGatewayMulticastDomainDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return diag.Errorf("waiting for EC2 Transit Gateway Multicast Domain (%s) delete: %s", d.Id(), err)
 	}
 

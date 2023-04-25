@@ -1,6 +1,7 @@
 package lambda_test
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"testing"
@@ -14,6 +15,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +24,7 @@ import (
 )
 
 func TestAccLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf lambda.EventSourceMappingConfiguration
 	resourceName := "aws_lambda_event_source_mapping.test"
 	functionResourceName := "aws_lambda_function.test"
@@ -30,15 +33,15 @@ func TestAccLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSourceMappingDestroy,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSourceMappingConfig_kinesisBatchSize(rName, "100"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, "arn"),
@@ -65,7 +68,7 @@ func TestAccLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
 			{
 				Config: testAccEventSourceMappingConfig_kinesisUpdateFunctionName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "200"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, "arn"),
@@ -78,6 +81,7 @@ func TestAccLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
 }
 
 func TestAccLambdaEventSourceMapping_SQS_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf lambda.EventSourceMappingConfiguration
 	resourceName := "aws_lambda_event_source_mapping.test"
 	functionResourceName := "aws_lambda_function.test"
@@ -86,15 +90,15 @@ func TestAccLambdaEventSourceMapping_SQS_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSourceMappingDestroy,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSourceMappingConfig_sqsBatchSize(rName, "10"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "10"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, "arn"),
@@ -102,6 +106,7 @@ func TestAccLambdaEventSourceMapping_SQS_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "function_arn", functionResourceName, "arn"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "0"),
 				),
 			},
 			// batch_size became optional.  Ensure that if the user supplies the default
@@ -120,7 +125,7 @@ func TestAccLambdaEventSourceMapping_SQS_basic(t *testing.T) {
 			{
 				Config: testAccEventSourceMappingConfig_sqsUpdateFunctionName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "5"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, "arn"),
@@ -134,6 +139,7 @@ func TestAccLambdaEventSourceMapping_SQS_basic(t *testing.T) {
 }
 
 func TestAccLambdaEventSourceMapping_DynamoDB_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf lambda.EventSourceMappingConfiguration
 	resourceName := "aws_lambda_event_source_mapping.test"
 	functionResourceName := "aws_lambda_function.test"
@@ -141,15 +147,15 @@ func TestAccLambdaEventSourceMapping_DynamoDB_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSourceMappingDestroy,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSourceMappingConfig_dynamoDBBatchSize(rName, "100"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, "stream_arn"),
@@ -178,20 +184,21 @@ func TestAccLambdaEventSourceMapping_DynamoDB_basic(t *testing.T) {
 }
 
 func TestAccLambdaEventSourceMapping_DynamoDB_functionResponseTypes(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf lambda.EventSourceMappingConfiguration
 	resourceName := "aws_lambda_event_source_mapping.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSourceMappingDestroy,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSourceMappingConfig_dynamoDBFunctionResponseTypes(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "function_response_types.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "function_response_types.*", "ReportBatchItemFailures"),
 				),
@@ -205,7 +212,7 @@ func TestAccLambdaEventSourceMapping_DynamoDB_functionResponseTypes(t *testing.T
 			{
 				Config: testAccEventSourceMappingConfig_dynamoDBNoFunctionResponseTypes(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "function_response_types.#", "0"),
 				),
 			},
@@ -214,19 +221,20 @@ func TestAccLambdaEventSourceMapping_DynamoDB_functionResponseTypes(t *testing.T
 }
 
 func TestAccLambdaEventSourceMapping_DynamoDB_streamAdded(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf lambda.EventSourceMappingConfiguration
 	resourceName := "aws_dynamodb_table.test"
 	mappingResourceName := "aws_lambda_event_source_mapping.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSourceMappingDestroy,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDynamoDBStreamConfig(rName, false),
+				Config: testAccEventSourceMappingConfig_dynamoDBStreamBase(rName, false),
 			},
 			{
 				ResourceName:            resourceName,
@@ -235,9 +243,9 @@ func TestAccLambdaEventSourceMapping_DynamoDB_streamAdded(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"last_modified"},
 			},
 			{
-				Config: testAccEventSourceMappingDynamoDBStreamEnabled(rName),
+				Config: testAccEventSourceMappingConfig_dynamoDBStreamEnabled(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(mappingResourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, mappingResourceName, &conf),
 				),
 			},
 		},
@@ -245,6 +253,7 @@ func TestAccLambdaEventSourceMapping_DynamoDB_streamAdded(t *testing.T) {
 }
 
 func TestAccLambdaEventSourceMapping_SQS_batchWindow(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf lambda.EventSourceMappingConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_event_source_mapping.test"
@@ -252,15 +261,15 @@ func TestAccLambdaEventSourceMapping_SQS_batchWindow(t *testing.T) {
 	batchWindowUpdate := int64(100)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSourceMappingDestroy,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSourceMappingConfig_sqsBatchWindow(rName, batchWindow),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "maximum_batching_window_in_seconds", strconv.Itoa(int(batchWindow))),
 				),
 			},
@@ -273,7 +282,7 @@ func TestAccLambdaEventSourceMapping_SQS_batchWindow(t *testing.T) {
 			{
 				Config: testAccEventSourceMappingConfig_sqsBatchWindow(rName, batchWindowUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "maximum_batching_window_in_seconds", strconv.Itoa(int(batchWindowUpdate))),
 				),
 			},
@@ -282,21 +291,22 @@ func TestAccLambdaEventSourceMapping_SQS_batchWindow(t *testing.T) {
 }
 
 func TestAccLambdaEventSourceMapping_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf lambda.EventSourceMappingConfiguration
 	resourceName := "aws_lambda_event_source_mapping.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSourceMappingDestroy,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSourceMappingConfig_sqsBatchSize(rName, "7"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tflambda.ResourceEventSourceMapping(), resourceName),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflambda.ResourceEventSourceMapping(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -305,21 +315,22 @@ func TestAccLambdaEventSourceMapping_disappears(t *testing.T) {
 }
 
 func TestAccLambdaEventSourceMapping_SQS_changesInEnabledAreDetected(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf lambda.EventSourceMappingConfiguration
 	resourceName := "aws_lambda_event_source_mapping.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSourceMappingDestroy,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSourceMappingConfig_sqsBatchSize(rName, "9"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
-					testAccCheckEventSourceMappingIsBeingDisabled(&conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
+					testAccCheckEventSourceMappingIsBeingDisabled(ctx, &conf),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -328,21 +339,22 @@ func TestAccLambdaEventSourceMapping_SQS_changesInEnabledAreDetected(t *testing.
 }
 
 func TestAccLambdaEventSourceMapping_Kinesis_startingPositionTimestamp(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf lambda.EventSourceMappingConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_event_source_mapping.test"
 	startingPositionTimestamp := time.Now().UTC().Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSourceMappingDestroy,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSourceMappingConfig_kinesisStartingPositionTimestamp(rName, startingPositionTimestamp),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "starting_position", "AT_TIMESTAMP"),
 					resource.TestCheckResourceAttr(resourceName, "starting_position_timestamp", startingPositionTimestamp),
 				),
@@ -358,6 +370,7 @@ func TestAccLambdaEventSourceMapping_Kinesis_startingPositionTimestamp(t *testin
 }
 
 func TestAccLambdaEventSourceMapping_Kinesis_batchWindow(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf lambda.EventSourceMappingConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_event_source_mapping.test"
@@ -365,15 +378,15 @@ func TestAccLambdaEventSourceMapping_Kinesis_batchWindow(t *testing.T) {
 	batchWindowUpdate := int64(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSourceMappingDestroy,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSourceMappingConfig_kinesisBatchWindow(rName, batchWindow),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "maximum_batching_window_in_seconds", strconv.Itoa(int(batchWindow))),
 				),
 			},
@@ -386,7 +399,7 @@ func TestAccLambdaEventSourceMapping_Kinesis_batchWindow(t *testing.T) {
 			{
 				Config: testAccEventSourceMappingConfig_kinesisBatchWindow(rName, batchWindowUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "maximum_batching_window_in_seconds", strconv.Itoa(int(batchWindowUpdate))),
 				),
 			},
@@ -395,6 +408,7 @@ func TestAccLambdaEventSourceMapping_Kinesis_batchWindow(t *testing.T) {
 }
 
 func TestAccLambdaEventSourceMapping_Kinesis_parallelizationFactor(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf lambda.EventSourceMappingConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_event_source_mapping.test"
@@ -402,15 +416,15 @@ func TestAccLambdaEventSourceMapping_Kinesis_parallelizationFactor(t *testing.T)
 	parallelizationFactorUpdate := int64(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSourceMappingDestroy,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSourceMappingConfig_kinesisParallelizationFactor(rName, parallelizationFactor),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "parallelization_factor", strconv.Itoa(int(parallelizationFactor))),
 				),
 			},
@@ -423,7 +437,7 @@ func TestAccLambdaEventSourceMapping_Kinesis_parallelizationFactor(t *testing.T)
 			{
 				Config: testAccEventSourceMappingConfig_kinesisParallelizationFactor(rName, parallelizationFactorUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "parallelization_factor", strconv.Itoa(int(parallelizationFactorUpdate))),
 				),
 			},
@@ -432,6 +446,7 @@ func TestAccLambdaEventSourceMapping_Kinesis_parallelizationFactor(t *testing.T)
 }
 
 func TestAccLambdaEventSourceMapping_Kinesis_tumblingWindowInSeconds(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf lambda.EventSourceMappingConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_event_source_mapping.test"
@@ -439,15 +454,15 @@ func TestAccLambdaEventSourceMapping_Kinesis_tumblingWindowInSeconds(t *testing.
 	tumblingWindowInSecondsUpdate := int64(300)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSourceMappingDestroy,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSourceMappingConfig_kinesisTumblingWindowInSeconds(rName, tumblingWindowInSeconds),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tumbling_window_in_seconds", strconv.Itoa(int(tumblingWindowInSeconds))),
 				),
 			},
@@ -460,7 +475,7 @@ func TestAccLambdaEventSourceMapping_Kinesis_tumblingWindowInSeconds(t *testing.
 			{
 				Config: testAccEventSourceMappingConfig_kinesisTumblingWindowInSeconds(rName, tumblingWindowInSecondsUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tumbling_window_in_seconds", strconv.Itoa(int(tumblingWindowInSecondsUpdate))),
 				),
 			},
@@ -469,6 +484,7 @@ func TestAccLambdaEventSourceMapping_Kinesis_tumblingWindowInSeconds(t *testing.
 }
 
 func TestAccLambdaEventSourceMapping_Kinesis_maximumRetryAttempts(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -480,15 +496,15 @@ func TestAccLambdaEventSourceMapping_Kinesis_maximumRetryAttempts(t *testing.T) 
 	maximumRetryAttemptsUpdate := int64(100)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSourceMappingDestroy,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSourceMappingConfig_kinesisMaximumRetryAttempts(rName, maximumRetryAttempts),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "maximum_retry_attempts", strconv.Itoa(int(maximumRetryAttempts))),
 				),
 			},
@@ -501,7 +517,7 @@ func TestAccLambdaEventSourceMapping_Kinesis_maximumRetryAttempts(t *testing.T) 
 			{
 				Config: testAccEventSourceMappingConfig_kinesisMaximumRetryAttempts(rName, maximumRetryAttemptsUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "maximum_retry_attempts", strconv.Itoa(int(maximumRetryAttemptsUpdate))),
 				),
 			},
@@ -510,6 +526,7 @@ func TestAccLambdaEventSourceMapping_Kinesis_maximumRetryAttempts(t *testing.T) 
 }
 
 func TestAccLambdaEventSourceMapping_Kinesis_maximumRetryAttemptsZero(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf lambda.EventSourceMappingConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_event_source_mapping.test"
@@ -517,15 +534,15 @@ func TestAccLambdaEventSourceMapping_Kinesis_maximumRetryAttemptsZero(t *testing
 	maximumRetryAttemptsUpdate := int64(100)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSourceMappingDestroy,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSourceMappingConfig_kinesisMaximumRetryAttempts(rName, maximumRetryAttempts),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "maximum_retry_attempts", strconv.Itoa(int(maximumRetryAttempts))),
 				),
 			},
@@ -538,14 +555,14 @@ func TestAccLambdaEventSourceMapping_Kinesis_maximumRetryAttemptsZero(t *testing
 			{
 				Config: testAccEventSourceMappingConfig_kinesisMaximumRetryAttempts(rName, maximumRetryAttemptsUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "maximum_retry_attempts", strconv.Itoa(int(maximumRetryAttemptsUpdate))),
 				),
 			},
 			{
 				Config: testAccEventSourceMappingConfig_kinesisMaximumRetryAttempts(rName, maximumRetryAttempts),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "maximum_retry_attempts", strconv.Itoa(int(maximumRetryAttempts))),
 				),
 			},
@@ -554,6 +571,7 @@ func TestAccLambdaEventSourceMapping_Kinesis_maximumRetryAttemptsZero(t *testing
 }
 
 func TestAccLambdaEventSourceMapping_Kinesis_maximumRetryAttemptsNegativeOne(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf lambda.EventSourceMappingConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_event_source_mapping.test"
@@ -561,15 +579,15 @@ func TestAccLambdaEventSourceMapping_Kinesis_maximumRetryAttemptsNegativeOne(t *
 	maximumRetryAttemptsUpdate := int64(100)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSourceMappingDestroy,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSourceMappingConfig_kinesisMaximumRetryAttempts(rName, maximumRetryAttempts),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "maximum_retry_attempts", strconv.Itoa(int(maximumRetryAttempts))),
 				),
 			},
@@ -582,14 +600,14 @@ func TestAccLambdaEventSourceMapping_Kinesis_maximumRetryAttemptsNegativeOne(t *
 			{
 				Config: testAccEventSourceMappingConfig_kinesisMaximumRetryAttempts(rName, maximumRetryAttemptsUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "maximum_retry_attempts", strconv.Itoa(int(maximumRetryAttemptsUpdate))),
 				),
 			},
 			{
 				Config: testAccEventSourceMappingConfig_kinesisMaximumRetryAttempts(rName, maximumRetryAttempts),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "maximum_retry_attempts", strconv.Itoa(int(maximumRetryAttempts))),
 				),
 			},
@@ -598,6 +616,7 @@ func TestAccLambdaEventSourceMapping_Kinesis_maximumRetryAttemptsNegativeOne(t *
 }
 
 func TestAccLambdaEventSourceMapping_Kinesis_maximumRecordAgeInSeconds(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf lambda.EventSourceMappingConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_event_source_mapping.test"
@@ -605,15 +624,15 @@ func TestAccLambdaEventSourceMapping_Kinesis_maximumRecordAgeInSeconds(t *testin
 	maximumRecordAgeInSecondsUpdate := int64(3600)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSourceMappingDestroy,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSourceMappingConfig_kinesisMaximumRecordAgeInSeconds(rName, maximumRecordAgeInSeconds),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "maximum_record_age_in_seconds", strconv.Itoa(int(maximumRecordAgeInSeconds))),
 				),
 			},
@@ -626,7 +645,7 @@ func TestAccLambdaEventSourceMapping_Kinesis_maximumRecordAgeInSeconds(t *testin
 			{
 				Config: testAccEventSourceMappingConfig_kinesisMaximumRecordAgeInSeconds(rName, maximumRecordAgeInSecondsUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "maximum_record_age_in_seconds", strconv.Itoa(int(maximumRecordAgeInSecondsUpdate))),
 				),
 			},
@@ -635,6 +654,7 @@ func TestAccLambdaEventSourceMapping_Kinesis_maximumRecordAgeInSeconds(t *testin
 }
 
 func TestAccLambdaEventSourceMapping_Kinesis_maximumRecordAgeInSecondsNegativeOne(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf lambda.EventSourceMappingConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_event_source_mapping.test"
@@ -642,15 +662,15 @@ func TestAccLambdaEventSourceMapping_Kinesis_maximumRecordAgeInSecondsNegativeOn
 	maximumRecordAgeInSecondsUpdate := int64(3600)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSourceMappingDestroy,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSourceMappingConfig_kinesisMaximumRecordAgeInSeconds(rName, maximumRecordAgeInSeconds),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "maximum_record_age_in_seconds", strconv.Itoa(int(maximumRecordAgeInSeconds))),
 				),
 			},
@@ -663,7 +683,7 @@ func TestAccLambdaEventSourceMapping_Kinesis_maximumRecordAgeInSecondsNegativeOn
 			{
 				Config: testAccEventSourceMappingConfig_kinesisMaximumRecordAgeInSeconds(rName, maximumRecordAgeInSecondsUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "maximum_record_age_in_seconds", strconv.Itoa(int(maximumRecordAgeInSecondsUpdate))),
 				),
 			},
@@ -672,6 +692,7 @@ func TestAccLambdaEventSourceMapping_Kinesis_maximumRecordAgeInSecondsNegativeOn
 }
 
 func TestAccLambdaEventSourceMapping_Kinesis_bisectBatch(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf lambda.EventSourceMappingConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_event_source_mapping.test"
@@ -679,15 +700,15 @@ func TestAccLambdaEventSourceMapping_Kinesis_bisectBatch(t *testing.T) {
 	bisectBatchUpdate := true
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSourceMappingDestroy,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSourceMappingConfig_kinesisBisectBatch(rName, bisectBatch),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "bisect_batch_on_function_error", strconv.FormatBool(bisectBatch)),
 				),
 			},
@@ -700,7 +721,7 @@ func TestAccLambdaEventSourceMapping_Kinesis_bisectBatch(t *testing.T) {
 			{
 				Config: testAccEventSourceMappingConfig_kinesisBisectBatch(rName, bisectBatchUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "bisect_batch_on_function_error", strconv.FormatBool(bisectBatchUpdate)),
 				),
 			},
@@ -709,21 +730,22 @@ func TestAccLambdaEventSourceMapping_Kinesis_bisectBatch(t *testing.T) {
 }
 
 func TestAccLambdaEventSourceMapping_Kinesis_destination(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf lambda.EventSourceMappingConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_event_source_mapping.test"
 	snsResourceName := "aws_sns_topic.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSourceMappingDestroy,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSourceMappingConfig_kinesisDestination(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_config.0.on_failure.0.destination_arn", snsResourceName, "arn"),
@@ -738,7 +760,7 @@ func TestAccLambdaEventSourceMapping_Kinesis_destination(t *testing.T) {
 			{
 				Config: testAccEventSourceMappingConfig_kinesisDestination(rName, rName+"-update"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_config.0.on_failure.0.destination_arn", snsResourceName, "arn"),
@@ -749,6 +771,7 @@ func TestAccLambdaEventSourceMapping_Kinesis_destination(t *testing.T) {
 }
 
 func TestAccLambdaEventSourceMapping_msk(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -759,15 +782,15 @@ func TestAccLambdaEventSourceMapping_msk(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckMSK(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckMSK(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID, "kafka"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSourceMappingDestroy,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSourceMappingConfig_msk(rName, "100"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &v),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, "arn"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
@@ -792,7 +815,7 @@ func TestAccLambdaEventSourceMapping_msk(t *testing.T) {
 			{
 				Config: testAccEventSourceMappingConfig_msk(rName, "9999"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &v),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "9999"),
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, "arn"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
@@ -806,6 +829,7 @@ func TestAccLambdaEventSourceMapping_msk(t *testing.T) {
 }
 
 func TestAccLambdaEventSourceMapping_mskWithEventSourceConfig(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -816,15 +840,15 @@ func TestAccLambdaEventSourceMapping_mskWithEventSourceConfig(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckMSK(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckMSK(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID, "kafka"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSourceMappingDestroy,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSourceMappingConfig_mskWithEventSourceConfig(rName, "100"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &v),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, "arn"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
@@ -845,20 +869,21 @@ func TestAccLambdaEventSourceMapping_mskWithEventSourceConfig(t *testing.T) {
 }
 
 func TestAccLambdaEventSourceMapping_selfManagedKafka(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v lambda.EventSourceMappingConfiguration
 	resourceName := "aws_lambda_event_source_mapping.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSourceMappingDestroy,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSourceMappingConfig_selfManagedKafka(rName, "100", "test1:9092,test2:9092"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &v),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.#", "1"),
@@ -889,20 +914,21 @@ func TestAccLambdaEventSourceMapping_selfManagedKafka(t *testing.T) {
 }
 
 func TestAccLambdaEventSourceMapping_selfManagedKafkaWithEventSourceConfig(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v lambda.EventSourceMappingConfiguration
 	resourceName := "aws_lambda_event_source_mapping.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSourceMappingDestroy,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSourceMappingConfig_selfManagedKafkaWithEventSourceConfig(rName, "100", "test1:9092,test2:9092"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &v),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.#", "1"),
@@ -926,6 +952,7 @@ func TestAccLambdaEventSourceMapping_selfManagedKafkaWithEventSourceConfig(t *te
 }
 
 func TestAccLambdaEventSourceMapping_activeMQ(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -936,19 +963,19 @@ func TestAccLambdaEventSourceMapping_activeMQ(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSecretsManager(t)
-			acctest.PreCheckPartitionHasService("mq", t)
-			testAccPreCheckMQ(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSecretsManager(ctx, t)
+			acctest.PreCheckPartitionHasService(t, "mq")
+			testAccPreCheckMQ(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID, "mq", "secretsmanager"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSourceMappingDestroy,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSourceMappingConfig_activeMQ(rName, "100"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &v),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "queues.#", "1"),
@@ -968,6 +995,7 @@ func TestAccLambdaEventSourceMapping_activeMQ(t *testing.T) {
 }
 
 func TestAccLambdaEventSourceMapping_rabbitMQ(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -978,19 +1006,19 @@ func TestAccLambdaEventSourceMapping_rabbitMQ(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSecretsManager(t)
-			acctest.PreCheckPartitionHasService("mq", t)
-			testAccPreCheckMQ(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSecretsManager(ctx, t)
+			acctest.PreCheckPartitionHasService(t, "mq")
+			testAccPreCheckMQ(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID, "mq", "secretsmanager"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSourceMappingDestroy,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSourceMappingConfig_rabbitMQ(rName, "100"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &v),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "queues.#", "1"),
@@ -1010,6 +1038,7 @@ func TestAccLambdaEventSourceMapping_rabbitMQ(t *testing.T) {
 }
 
 func TestAccLambdaEventSourceMapping_SQS_filterCriteria(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1021,15 +1050,15 @@ func TestAccLambdaEventSourceMapping_SQS_filterCriteria(t *testing.T) {
 	pattern2 := "{\"Location\": [\"New York\"], \"Day\": [\"Monday\"]}"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSourceMappingDestroy,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSourceMappingConfig_sqsFilterCriteria1(rName, pattern1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.filter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.filter.*", map[string]string{"pattern": pattern1}),
@@ -1044,7 +1073,7 @@ func TestAccLambdaEventSourceMapping_SQS_filterCriteria(t *testing.T) {
 			{
 				Config: testAccEventSourceMappingConfig_sqsFilterCriteria2(rName, pattern1, pattern2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.filter.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.filter.*", map[string]string{"pattern": pattern1}),
@@ -1060,7 +1089,7 @@ func TestAccLambdaEventSourceMapping_SQS_filterCriteria(t *testing.T) {
 			{
 				Config: testAccEventSourceMappingConfig_sqsFilterCriteria3(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "0"),
 				),
 			},
@@ -1073,7 +1102,7 @@ func TestAccLambdaEventSourceMapping_SQS_filterCriteria(t *testing.T) {
 			{
 				Config: testAccEventSourceMappingConfig_sqsFilterCriteria1(rName, pattern1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.filter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.filter.*", map[string]string{"pattern": pattern1}),
@@ -1083,25 +1112,167 @@ func TestAccLambdaEventSourceMapping_SQS_filterCriteria(t *testing.T) {
 	})
 }
 
-func testAccCheckEventSourceMappingIsBeingDisabled(conf *lambda.EventSourceMappingConfiguration) resource.TestCheckFunc {
+func TestAccLambdaEventSourceMapping_SQS_scalingConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf lambda.EventSourceMappingConfiguration
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lambda_event_source_mapping.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEventSourceMappingConfig_sqsScalingConfig1(rName, 10),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.maximum_concurrency", "10"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"last_modified"},
+			},
+			{
+				Config: testAccEventSourceMappingConfig_sqsScalingConfig1(rName, 15),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.maximum_concurrency", "15"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"last_modified"},
+			},
+			{
+				Config: testAccEventSourceMappingConfig_sqsScalingConfig2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"last_modified"},
+			},
+		},
+	})
+}
+
+func TestAccLambdaEventSourceMapping_documentDB(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v lambda.EventSourceMappingConfiguration
+	resourceName := "aws_lambda_event_source_mapping.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSecretsManager(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEventSourceMappingConfig_documentDB(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
+					resource.TestCheckResourceAttr(resourceName, "document_db_event_source_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "document_db_event_source_config.0.collection_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "document_db_event_source_config.0.database_name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "document_db_event_source_config.0.full_document", "Default"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.#", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"last_modified"},
+			},
+		},
+	})
+}
+
+func testAccPreCheckMQ(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn()
+
+	input := &mq.ListBrokersInput{}
+
+	_, err := conn.ListBrokersWithContext(ctx, input)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+func testAccPreCheckMSK(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
+
+	input := &kafka.ListClustersInput{}
+
+	_, err := conn.ListClustersWithContext(ctx, input)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+func testAccPreCheckSecretsManager(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn()
+
+	input := &secretsmanager.ListSecretsInput{}
+
+	_, err := conn.ListSecretsWithContext(ctx, input)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+func testAccCheckEventSourceMappingIsBeingDisabled(ctx context.Context, conf *lambda.EventSourceMappingConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 		// Disable enabled state
-		err := resource.Retry(10*time.Minute, func() *resource.RetryError {
+		err := retry.RetryContext(ctx, 10*time.Minute, func() *retry.RetryError {
 			params := &lambda.UpdateEventSourceMappingInput{
 				UUID:    conf.UUID,
 				Enabled: aws.Bool(false),
 			}
 
-			_, err := conn.UpdateEventSourceMapping(params)
+			_, err := conn.UpdateEventSourceMappingWithContext(ctx, params)
 
 			if err != nil {
 				if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceInUseException) {
-					return resource.RetryableError(fmt.Errorf(
+					return retry.RetryableError(fmt.Errorf(
 						"Waiting for Lambda Event Source Mapping to be ready to be updated: %v", conf.UUID))
 				}
 
-				return resource.NonRetryableError(
+				return retry.NonRetryableError(
 					fmt.Errorf("Error updating Lambda Event Source Mapping: %w", err))
 			}
 
@@ -1113,18 +1284,18 @@ func testAccCheckEventSourceMappingIsBeingDisabled(conf *lambda.EventSourceMappi
 		}
 
 		// wait for state to be propagated
-		return resource.Retry(10*time.Minute, func() *resource.RetryError {
+		return retry.RetryContext(ctx, 10*time.Minute, func() *retry.RetryError {
 			params := &lambda.GetEventSourceMappingInput{
 				UUID: conf.UUID,
 			}
-			newConf, err := conn.GetEventSourceMapping(params)
+			newConf, err := conn.GetEventSourceMappingWithContext(ctx, params)
 			if err != nil {
-				return resource.NonRetryableError(
+				return retry.NonRetryableError(
 					fmt.Errorf("Error getting Lambda Event Source Mapping: %s", err))
 			}
 
 			if *newConf.State != "Disabled" {
-				return resource.RetryableError(fmt.Errorf(
+				return retry.RetryableError(fmt.Errorf(
 					"Waiting to get Lambda Event Source Mapping to be fully enabled, it's currently %s: %v", *newConf.State, conf.UUID))
 			}
 
@@ -1133,31 +1304,33 @@ func testAccCheckEventSourceMappingIsBeingDisabled(conf *lambda.EventSourceMappi
 	}
 }
 
-func testAccCheckEventSourceMappingDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+func testAccCheckEventSourceMappingDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_lambda_event_source_mapping" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_lambda_event_source_mapping" {
+				continue
+			}
+
+			_, err := tflambda.FindEventSourceMappingConfigurationByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error reading Lambda Event Source Mapping (%s): %w", rs.Primary.ID, err)
+			}
+
+			return fmt.Errorf("Lambda Event Source Mapping %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tflambda.FindEventSourceMappingConfigurationByID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("error reading Lambda Event Source Mapping (%s): %w", rs.Primary.ID, err)
-		}
-
-		return fmt.Errorf("Lambda Event Source Mapping %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckEventSourceMappingExists(n string, v *lambda.EventSourceMappingConfiguration) resource.TestCheckFunc {
+func testAccCheckEventSourceMappingExists(ctx context.Context, n string, v *lambda.EventSourceMappingConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1168,9 +1341,9 @@ func testAccCheckEventSourceMappingExists(n string, v *lambda.EventSourceMapping
 			return fmt.Errorf("no Lambda Event Source Mapping ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
-		eventSourceMappingConfiguration, err := tflambda.FindEventSourceMappingConfigurationByID(conn, rs.Primary.ID)
+		eventSourceMappingConfiguration, err := tflambda.FindEventSourceMappingConfigurationByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -1357,7 +1530,7 @@ resource "aws_lambda_function" "test" {
 `, rName)
 }
 
-func testAccDynamoDBStreamConfig(rName string, streamEnabled bool) string {
+func testAccEventSourceMappingConfig_dynamoDBStreamBase(rName string, streamEnabled bool) string {
 	var streamStatus string
 	var streamViewType string
 	if streamEnabled {
@@ -1691,8 +1864,101 @@ resource "aws_secretsmanager_secret_version" "test" {
 `, rName)
 }
 
+func testAccEventSourceMappingConfig_documentDBBase(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "lambda.amazonaws.com"
+    },
+    "Effect": "Allow"
+  }]
+}
+EOF
+}
+
+resource "aws_iam_policy" "test" {
+  name = %[1]q
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+		"rds:DescribeDBClusters",
+		"rds:DescribeDBClusterParameters",
+		"rds:DescribeDBSubnetGroups",
+		"ec2:CreateNetworkInterface",
+		"ec2:DescribeNetworkInterfaces",
+		"ec2:DescribeVpcs",
+		"ec2:DeleteNetworkInterface",
+		"ec2:DescribeSubnets",
+		"ec2:DescribeSecurityGroups",
+		"kms:Decrypt",
+		"secretsmanager:GetSecretValue"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy_attachment" "test" {
+  name       = %[1]q
+  roles      = [aws_iam_role.test.name]
+  policy_arn = aws_iam_policy.test.arn
+}
+
+resource "aws_secretsmanager_secret" "test" {
+  name = %[1]q
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id     = aws_secretsmanager_secret.test.id
+  secret_string = jsonencode({ username = "tfacctest", password = "avoid-plaintext-passwords" })
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  handler       = "exports.example"
+  role          = aws_iam_role.test.arn
+  runtime       = "nodejs16.x"
+}
+
+resource "aws_docdb_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_docdb_cluster" "test" {
+  cluster_identifier = %[1]q
+
+  db_subnet_group_name            = aws_docdb_subnet_group.test.name
+  master_username                 = "tfacctest"
+  master_password                 = "avoid-plaintext-passwords"
+  db_cluster_parameter_group_name = "default.docdb4.0"
+  skip_final_snapshot             = true
+
+  enabled_cloudwatch_logs_exports = [
+    "audit",
+    "profiler",
+  ]
+}
+`, rName))
+}
+
 func testAccEventSourceMappingConfig_kinesisStartingPositionTimestamp(rName, startingPositionTimestamp string) string {
-	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kinesisBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kinesisBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size                  = 100
   enabled                     = true
@@ -1857,10 +2123,44 @@ resource "aws_lambda_event_source_mapping" "test" {
 
 func testAccEventSourceMappingConfig_sqsUpdateFunctionName(rName string) string {
 	return acctest.ConfigCompose(testAccEventSourceMappingConfig_sqsBase(rName), fmt.Sprintf(`
+resource "aws_iam_role" "test_update" {
+  name = "%[1]s-update"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "lambda.amazonaws.com"
+    },
+    "Effect": "Allow"
+  }]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test_update" {
+  role = aws_iam_role.test_update.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": ["sqs:*"],
+    "Resource": "*"
+  }]
+}
+EOF
+
+  depends_on = [aws_lambda_function.test_update]
+}
+
 resource "aws_lambda_function" "test_update" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%[1]s-update"
-  role          = aws_iam_role.test.arn
+  role          = aws_iam_role.test_update.arn
   handler       = "exports.example"
   runtime       = "nodejs16.x"
 }
@@ -2070,8 +2370,8 @@ resource "aws_lambda_event_source_mapping" "test" {
 `)
 }
 
-func testAccEventSourceMappingDynamoDBStreamEnabled(rName string) string {
-	return acctest.ConfigCompose(testAccDynamoDBStreamConfig(rName, true), `
+func testAccEventSourceMappingConfig_dynamoDBStreamEnabled(rName string) string {
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_dynamoDBStreamBase(rName, true), `
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size        = 150
   enabled           = true
@@ -2129,52 +2429,25 @@ resource "aws_lambda_event_source_mapping" "test" {
 `, batchSize))
 }
 
-func testAccPreCheckMQ(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn
+func testAccEventSourceMappingConfig_documentDB(rName string) string {
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_documentDBBase(rName), `
+resource "aws_lambda_event_source_mapping" "test" {
+  enabled          = true
+  event_source_arn = aws_docdb_cluster.test.arn
+  function_name    = aws_lambda_function.test.arn
 
-	input := &mq.ListBrokersInput{}
+  document_db_event_source_config {
+    database_name = "test"
+  }
 
-	_, err := conn.ListBrokers(input)
+  source_access_configuration {
+    type = "BASIC_AUTH"
+    uri  = aws_secretsmanager_secret_version.test.arn
+  }
 
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
+  depends_on = [aws_iam_policy_attachment.test]
 }
-
-func testAccPreCheckMSK(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
-
-	input := &kafka.ListClustersInput{}
-
-	_, err := conn.ListClusters(input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-func testAccPreCheckSecretsManager(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn
-
-	input := &secretsmanager.ListSecretsInput{}
-
-	_, err := conn.ListSecrets(input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
+`)
 }
 
 func testAccEventSourceMappingConfig_sqsFilterCriteria1(rName string, pattern1 string) string {
@@ -2212,6 +2485,28 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccEventSourceMappingConfig_sqsFilterCriteria3(rName string) string {
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_sqsBase(rName), `
+resource "aws_lambda_event_source_mapping" "test" {
+  event_source_arn = aws_sqs_queue.test.arn
+  function_name    = aws_lambda_function.test.arn
+}
+`)
+}
+
+func testAccEventSourceMappingConfig_sqsScalingConfig1(rName string, maximumConcurrency int) string {
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_sqsBase(rName), fmt.Sprintf(`
+resource "aws_lambda_event_source_mapping" "test" {
+  event_source_arn = aws_sqs_queue.test.arn
+  function_name    = aws_lambda_function.test.arn
+
+  scaling_config {
+    maximum_concurrency = %[1]d
+  }
+}
+`, maximumConcurrency))
+}
+
+func testAccEventSourceMappingConfig_sqsScalingConfig2(rName string) string {
 	return acctest.ConfigCompose(testAccEventSourceMappingConfig_sqsBase(rName), `
 resource "aws_lambda_event_source_mapping" "test" {
   event_source_arn = aws_sqs_queue.test.arn

@@ -15,19 +15,22 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceSchedule() *schema.Resource {
+// @SDKResource("aws_scheduler_schedule")
+func resourceSchedule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceScheduleCreate,
 		ReadWithoutTimeout:   resourceScheduleRead,
@@ -104,7 +107,7 @@ func ResourceSchedule() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 				ValidateDiagFunc: validation.ToDiagFunc(validation.All(
-					validation.StringLenBetween(1, 64-resource.UniqueIDSuffixLength),
+					validation.StringLenBetween(1, 64-id.UniqueIDSuffixLength),
 					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z-_.]+$`), `The name must consist of alphanumerics, hyphens, and underscores.`),
 				)),
 			},
@@ -149,7 +152,7 @@ func ResourceSchedule() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"arn": {
 										Type:             schema.TypeString,
-										Optional:         true,
+										Required:         true,
 										ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
 									},
 								},
@@ -426,7 +429,7 @@ const (
 )
 
 func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SchedulerClient
+	conn := meta.(*conns.AWSClient).SchedulerClient()
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 
@@ -470,7 +473,7 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.Get("target").([]interface{}); ok && len(v) > 0 {
-		in.Target = expandTarget(v[0].(map[string]interface{}))
+		in.Target = expandTarget(ctx, v[0].(map[string]interface{}))
 	}
 
 	out, err := retryWhenIAMNotPropagated(ctx, func() (*scheduler.CreateScheduleOutput, error) {
@@ -504,7 +507,7 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.scheduler-in-func-name
-	conn := meta.(*conns.AWSClient).SchedulerClient
+	conn := meta.(*conns.AWSClient).SchedulerClient()
 
 	groupName, scheduleName, err := ResourceScheduleParseID(d.Id())
 
@@ -512,7 +515,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return create.DiagError(names.Scheduler, create.ErrActionReading, ResNameSchedule, d.Id(), fmt.Errorf("invalid resource id: %w", err))
 	}
 
-	out, err := findScheduleByGroupAndName(ctx, conn, groupName, scheduleName)
+	out, err := findScheduleByTwoPartKey(ctx, conn, groupName, scheduleName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EventBridge Scheduler Schedule (%s) not found, removing from state", d.Id())
@@ -552,7 +555,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set("state", string(out.State))
 
-	if err := d.Set("target", []interface{}{flattenTarget(out.Target)}); err != nil {
+	if err := d.Set("target", []interface{}{flattenTarget(ctx, out.Target)}); err != nil {
 		return create.DiagError(names.Scheduler, create.ErrActionSetting, ResNameSchedule, d.Id(), err)
 	}
 
@@ -560,14 +563,14 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SchedulerClient
+	conn := meta.(*conns.AWSClient).SchedulerClient()
 
 	in := &scheduler.UpdateScheduleInput{
 		FlexibleTimeWindow: expandFlexibleTimeWindow(d.Get("flexible_time_window").([]interface{})[0].(map[string]interface{})),
 		GroupName:          aws.String(d.Get("group_name").(string)),
 		Name:               aws.String(d.Get("name").(string)),
 		ScheduleExpression: aws.String(d.Get("schedule_expression").(string)),
-		Target:             expandTarget(d.Get("target").([]interface{})[0].(map[string]interface{})),
+		Target:             expandTarget(ctx, d.Get("target").([]interface{})[0].(map[string]interface{})),
 	}
 
 	if v, ok := d.Get("description").(string); ok && v != "" {
@@ -610,7 +613,7 @@ func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceScheduleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SchedulerClient
+	conn := meta.(*conns.AWSClient).SchedulerClient()
 
 	groupName, scheduleName, err := ResourceScheduleParseID(d.Id())
 
@@ -635,6 +638,32 @@ func resourceScheduleDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	return nil
+}
+
+func findScheduleByTwoPartKey(ctx context.Context, conn *scheduler.Client, groupName, scheduleName string) (*scheduler.GetScheduleOutput, error) {
+	in := &scheduler.GetScheduleInput{
+		GroupName: aws.String(groupName),
+		Name:      aws.String(scheduleName),
+	}
+
+	out, err := conn.GetSchedule(ctx, in)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.Arn == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
 }
 
 // ResourceScheduleIDFromARN constructs a string of the form "group_name/schedule_name"

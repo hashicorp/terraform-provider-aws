@@ -18,6 +18,9 @@ import (
 //go:embed resource.tmpl
 var resourceTmpl string
 
+//go:embed resourcefw.tmpl
+var resourceFrameworkTmpl string
+
 //go:embed resourcetest.tmpl
 var resourceTestTmpl string
 
@@ -35,7 +38,9 @@ type TemplateData struct {
 	ServiceLower         string
 	AWSServiceName       string
 	AWSGoSDKV2           bool
+	PluginFramework      bool
 	HumanResourceName    string
+	ProviderResourceName string
 }
 
 func ToSnakeCase(upper string, snakeName string) string {
@@ -58,7 +63,11 @@ func HumanResName(upper string) string {
 	return strings.TrimPrefix(re2.ReplaceAllString(upper, ` $1`), " ")
 }
 
-func Create(resName, snakeName string, comments, force, v2 bool) error {
+func ProviderResourceName(servicePackage, snakeName string) string {
+	return fmt.Sprintf("aws_%s_%s", servicePackage, snakeName)
+}
+
+func Create(resName, snakeName string, comments, force, v2, pluginFramework bool) error {
 	wd, err := os.Getwd() // os.Getenv("GOPACKAGE") not available since this is not run with go generate
 	if err != nil {
 		return fmt.Errorf("error reading working directory: %s", err)
@@ -106,11 +115,17 @@ func Create(resName, snakeName string, comments, force, v2 bool) error {
 		ServiceLower:         strings.ToLower(s),
 		AWSServiceName:       sn,
 		AWSGoSDKV2:           v2,
+		PluginFramework:      pluginFramework,
 		HumanResourceName:    HumanResName(resName),
+		ProviderResourceName: ProviderResourceName(servicePackage, snakeName),
 	}
 
+	tmpl := resourceTmpl
+	if pluginFramework {
+		tmpl = resourceFrameworkTmpl
+	}
 	f := fmt.Sprintf("%s.go", snakeName)
-	if err = writeTemplate("newres", f, resourceTmpl, force, templateData); err != nil {
+	if err = writeTemplate("newres", f, tmpl, force, templateData); err != nil {
 		return fmt.Errorf("writing resource template: %w", err)
 	}
 

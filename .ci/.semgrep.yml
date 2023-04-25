@@ -10,6 +10,7 @@ rules:
       - metavariable-regex:
           metavariable: "$FUNCNAME"
           regex: "^TestAcc[^_]+_([a-zA-Z]+[dD]isappears|[^_]+_disappears)$"
+      - focus-metavariable: $FUNCNAME
     severity: WARNING
 
   - id: aws-sdk-go-multiple-service-imports
@@ -28,10 +29,10 @@ rules:
           import ("$X")
           import ("$Y")
       - metavariable-regex:
-          metavariable: '$X'
+          metavariable: "$X"
           regex: '^"github.com/aws/aws-sdk-go/service/[^/]+"$'
       - metavariable-regex:
-          metavariable: '$Y'
+          metavariable: "$Y"
           regex: '^"github.com/aws/aws-sdk-go/service/[^/]+"$'
       # wafregional uses a number of resources from waf
       - pattern-not: |
@@ -48,8 +49,8 @@ rules:
       exclude:
         - "internal/service/**/*_test.go"
     patterns:
-      - pattern: '$LHS = *$RHS'
-      - pattern-not: '*$LHS2 = *$RHS'
+      - pattern: "$LHS = *$RHS"
+      - pattern-not: "*$LHS2 = *$RHS"
     severity: WARNING
 
   - id: prefer-aws-go-sdk-pointer-conversion-conditional
@@ -62,18 +63,18 @@ rules:
         - "internal/service/**/*_test.go"
     patterns:
       - pattern-either:
-          - pattern: '$LHS == *$RHS'
-          - pattern: '$LHS != *$RHS'
-          - pattern: '$LHS > *$RHS'
-          - pattern: '$LHS < *$RHS'
-          - pattern: '$LHS >= *$RHS'
-          - pattern: '$LHS <= *$RHS'
-          - pattern: '*$LHS == $RHS'
-          - pattern: '*$LHS != $RHS'
-          - pattern: '*$LHS > $RHS'
-          - pattern: '*$LHS < $RHS'
-          - pattern: '*$LHS >= $RHS'
-          - pattern: '*$LHS <= $RHS'
+          - pattern: "$LHS == *$RHS"
+          - pattern: "$LHS != *$RHS"
+          - pattern: "$LHS > *$RHS"
+          - pattern: "$LHS < *$RHS"
+          - pattern: "$LHS >= *$RHS"
+          - pattern: "$LHS <= *$RHS"
+          - pattern: "*$LHS == $RHS"
+          - pattern: "*$LHS != $RHS"
+          - pattern: "*$LHS > $RHS"
+          - pattern: "*$LHS < $RHS"
+          - pattern: "*$LHS >= $RHS"
+          - pattern: "*$LHS <= $RHS"
     severity: WARNING
 
   - id: aws-go-sdk-pointer-conversion-ResourceData-SetId
@@ -83,7 +84,7 @@ rules:
     paths:
       include:
         - internal/
-    pattern: 'd.SetId(*$VALUE)'
+    pattern: "d.SetId(*$VALUE)"
     severity: WARNING
 
   - id: aws-go-sdk-pointer-conversion-immediate-dereference
@@ -95,11 +96,11 @@ rules:
         - internal/
     patterns:
       - pattern-either:
-          - pattern: '*aws.Bool($VALUE)'
-          - pattern: '*aws.Float64($VALUE)'
-          - pattern: '*aws.Int64($VALUE)'
-          - pattern: '*aws.String($VALUE)'
-          - pattern: '*aws.Time($VALUE)'
+          - pattern: "*aws.Bool($VALUE)"
+          - pattern: "*aws.Float64($VALUE)"
+          - pattern: "*aws.Int64($VALUE)"
+          - pattern: "*aws.String($VALUE)"
+          - pattern: "*aws.Time($VALUE)"
     severity: WARNING
 
   - id: data-source-with-resource-read
@@ -109,7 +110,7 @@ rules:
       include:
         - internal/service/**/*_data_source.go
     patterns:
-      - pattern-regex: '(resource.+Read|flatten.+Resource)'
+      - pattern-regex: "(resource.+Read|flatten.+Resource)"
       - pattern-inside: func $FUNCNAME(...) $RETURNTYPE { ... }
       - pattern-not-inside: |
           d.Set(..., []interface{}{ ... })
@@ -219,6 +220,40 @@ rules:
           - pattern: d.Set($ATTRIBUTE, aws.StringValue($APIOBJECT))
     severity: WARNING
 
+  - id: helper-schema-ResourceData-Set-extraneous-nil-check
+    languages: [go]
+    message: Nil value check before `d.Set()` is extraneous
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern-either:
+          - pattern: |
+              if $APIOBJECT != nil {
+                d.Set($ATTRIBUTE, $APIOBJECT)
+              }
+          - pattern: |
+              if $APIOBJECT != nil {
+                d.Set($ATTRIBUTE, $FUNC(*$APIOBJECT))
+              }
+          - pattern: |
+              if $APIOBJECT != nil {
+                if $ERROR := d.Set($ATTRIBUTE, $APIOBJECT); err != nil { $BODY }
+              }
+          - pattern: |
+              if $APIOBJECT != nil {
+                ...
+                $ERROR := d.Set($ATTRIBUTE, $APIOBJECT)
+                ...
+              }
+          - pattern: |
+              if $APIOBJECT != nil {
+                ...
+                $ERROR = d.Set($ATTRIBUTE, $FUNC(*$APIOBJECT))
+                ...
+              }
+    severity: WARNING
+
   # Not sure why this isn't working
   # - id: helper-schema-ResourceData-DataSource-Set-tags
   #   languages: [go]
@@ -236,7 +271,7 @@ rules:
 
   - id: helper-schema-ResourceData-Resource-Set-tags
     languages: [go]
-    message: (schema.ResourceData).Set() call with the tags key should be preceded by a call to IgnoreConfig or include IgnoreConfig in the value in the case of ASG
+    message: (schema.ResourceData).Set() call with the tags key should be preceded by a call to IgnoreConfig
     paths:
       include:
         - internal/service/**/*.go
@@ -253,11 +288,6 @@ rules:
               tags = $TAGS
               ...
               if err := d.Set("tags", $TAGSMAP); err != nil { ... }
-          - pattern: |
-              $ASGTAGS := keyvaluetags.AutoscalingKeyValueTags(...)
-              ...
-              if err := d.Set("tags", $TAGSMAP); err != nil { ... }
-      - pattern-not-regex: 'keyvaluetags.AutoscalingKeyValueTags\(.+\).IgnoreAws\(\).IgnoreConfig'
       - pattern-not: |
           tags = $KEYVALUETAGS.IgnoreAws().IgnoreConfig($CONFIG)
           ...
@@ -265,95 +295,13 @@ rules:
           tags = $KEYVALUETAGS.$IGNORESERVICE().IgnoreConfig($CONFIG)
           ...
       - pattern-not: |
-          tags := keyvaluetags.$VALUETAGS($RESOURCETAGS).IgnoreAws().IgnoreConfig($CONFIG)
-          ...
-      - pattern-not: |
-          tags = keyvaluetags.$VALUETAGS($RESOURCETAGS).IgnoreAws().IgnoreConfig($CONFIG)
-          ...
-      - pattern-not: |
-          tags = $VALUETAGS($RESOURCETAGS).IgnoreAWS().IgnoreConfig($CONFIG).Ignore($IGNORE)
+          tags = $KEYVALUETAGS.IgnoreAWS().IgnoreConfig($CONFIG).Ignore($IGNORE)
           ...
     severity: WARNING
 
-  - id: helper-schema-ResourceData-SetId-empty-without-IsNewResource-check
+  - id: helper-schema-retry-RetryContext-without-TimeoutError-check
     languages: [go]
-    message: Calling `d.SetId("")` should ensure `!d.IsNewResource()` is also checked. See https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/error-handling.md#disnewresource-checks
-    paths:
-      include:
-        - internal/service
-      exclude:
-        - internal/service/**/*_data_source.go
-        - internal/service/backup
-        - internal/service/batch
-        - internal/service/d[a-d]*
-        - internal/service/devicefarm
-        - internal/service/directconnect
-        - internal/service/dlm
-        - internal/service/dms
-        - internal/service/ds
-        - internal/service/dynamodb
-        - internal/service/ec2
-        - internal/service/ecs
-        - internal/service/efs
-        - internal/service/elasticache
-        - internal/service/elasticbeanstalk
-        - internal/service/elastictranscoder
-        - internal/service/elbv2
-        - internal/service/emr
-        - internal/service/g*
-        - internal/service/inspector
-        - internal/service/iot
-        - internal/service/kafka
-        - internal/service/kms
-        - internal/service/lambda
-        - internal/service/lexmodels
-        - internal/service/licensemanager
-        - internal/service/lightsail
-        - internal/service/logs
-        - internal/service/macie
-        - internal/service/macie2
-        - internal/service/mediastore
-        - internal/service/mq
-        - internal/service/neptune
-        - internal/service/opsworks
-        - internal/service/organizations
-        - internal/service/pinpoint
-        - internal/service/rds
-        - internal/service/resourcegroups
-        - internal/service/route53
-        - internal/service/route53resolver
-        - internal/service/s[a-df-rt]*
-        - internal/service/se[d-z]*
-        - internal/service/sec[a-t]*
-        - internal/service/securityhub
-        - internal/service/ssoadmin
-        - internal/service/swf
-        - internal/service/[t-v]*
-        - internal/service/waf
-        - internal/service/wafv2
-        - internal/service/workspaces
-        - internal/service/xray
-    patterns:
-      - pattern-either:
-          - pattern: |
-              d.SetId("")
-              ...
-              return nil
-      - pattern-not-inside: |
-          if ... {
-            if <... d.IsNewResource() ...> { ... }
-            ...
-            d.SetId("")
-            ...
-            return nil
-          }
-      - pattern-not-inside: |
-          if <... !d.IsNewResource() ...> { ... }
-    severity: WARNING
-
-  - id: helper-schema-resource-Retry-without-TimeoutError-check
-    languages: [go]
-    message: Check resource.Retry() errors with tfresource.TimedOut()
+    message: Check retry.RetryContext() errors with tfresource.TimedOut()
     paths:
       exclude:
         - "*_test.go"
@@ -362,79 +310,43 @@ rules:
         - internal/
     patterns:
       - pattern-either:
-          - patterns:
-              - pattern-either:
-                  - pattern: |
-                      $ERR := resource.Retry(...)
-                      ...
-                      return ...
-                  - pattern: |
-                      $ERR = resource.Retry(...)
-                      ...
-                      return ...
-              - pattern-not: |
-                  $ERR := resource.Retry(...)
-                  ...
-                  if isResourceTimeoutError($ERR) { ... }
-                  ...
-                  return ...
-              - pattern-not: |
-                  $ERR = resource.Retry(...)
-                  ...
-                  if isResourceTimeoutError($ERR) { ... }
-                  ...
-                  return ...
-              - pattern-not: |
-                  $ERR := resource.Retry(...)
-                  ...
-                  if tfresource.TimedOut($ERR) { ... }
-                  ...
-                  return ...
-              - pattern-not: |
-                  $ERR = resource.Retry(...)
-                  ...
-                  if tfresource.TimedOut($ERR) { ... }
-                  ...
-                  return ...
-          - patterns:
-              - pattern-either:
-                  - pattern: |
-                      $ERR := resource.RetryContext(...)
-                      ...
-                      return ...
-                  - pattern: |
-                      $ERR = resource.RetryContext(...)
-                      ...
-                      return ...
-              - pattern-not: |
-                  $ERR := resource.RetryContext(...)
-                  ...
-                  if isResourceTimeoutError($ERR) { ... }
-                  ...
-                  return ...
-              - pattern-not: |
-                  $ERR = resource.RetryContext(...)
-                  ...
-                  if isResourceTimeoutError($ERR) { ... }
-                  ...
-                  return ...
-              - pattern-not: |
-                  $ERR := resource.RetryContext(...)
-                  ...
-                  if tfresource.TimedOut($ERR) { ... }
-                  ...
-                  return ...
-              - pattern-not: |
-                  $ERR = resource.RetryContext(...)
-                  ...
-                  if tfresource.TimedOut($ERR) { ... }
-                  ...
-                  return ...
+          - pattern: |
+              $ERR := retry.RetryContext(...)
+              ...
+              return ...
+          - pattern: |
+              $ERR = retry.RetryContext(...)
+              ...
+              return ...
+      - pattern-not: |
+          $ERR := retry.RetryContext(...)
+          ...
+          if isResourceTimeoutError($ERR) { ... }
+          ...
+          return ...
+      - pattern-not: |
+          $ERR = retry.RetryContext(...)
+          ...
+          if isResourceTimeoutError($ERR) { ... }
+          ...
+          return ...
+      - pattern-not: |
+          $ERR := retry.RetryContext(...)
+          ...
+          if tfresource.TimedOut($ERR) { ... }
+          ...
+          return ...
+      - pattern-not: |
+          $ERR = retry.RetryContext(...)
+          ...
+          if tfresource.TimedOut($ERR) { ... }
+          ...
+          return ...
     severity: WARNING
 
   - id: helper-schema-TimeoutError-check-doesnt-return-output
     languages: [go]
-    message: If the resource.Retry(), resource.RetryContext(), or tfresource.RetryContext() function returns a value, ensure the isResourceTimeoutError() check does as well
+    message: If the retry.RetryContext() or tfresource.Retry() function returns a value, ensure the isResourceTimeoutError() check does as well
     paths:
       exclude:
         - "*_test.go"
@@ -448,7 +360,7 @@ rules:
                     _, $ERR = $CONN.$FUNC(...)
                   }
               - pattern-not-inside: |
-                  $ERR = resource.Retry(..., func() *resource.RetryError {
+                  $ERR = retry.RetryContext(..., func() *retry.RetryError {
                     ...
                     _, $ERR2 = $CONN.$FUNC(...)
                     ...
@@ -456,15 +368,7 @@ rules:
                   ...
                   if isResourceTimeoutError($ERR) { ... }
               - pattern-not-inside: |
-                  $ERR = resource.RetryContext(..., func() *resource.RetryError {
-                    ...
-                    _, $ERR2 = $CONN.$FUNC(...)
-                    ...
-                  })
-                  ...
-                  if isResourceTimeoutError($ERR) { ... }
-              - pattern-not-inside: |
-                  $ERR = tfresource.RetryContext(..., func() *resource.RetryError {
+                  $ERR = tfresource.Retry(..., func() *retry.RetryError {
                     ...
                     _, $ERR2 = $CONN.$FUNC(...)
                     ...
@@ -477,7 +381,7 @@ rules:
                     _, $ERR = $CONN.$FUNC(...)
                   }
               - pattern-not-inside: |
-                  $ERR = resource.Retry(..., func() *resource.RetryError {
+                  $ERR = retry.RetryContext(..., func() *retry.RetryError {
                     ...
                     _, $ERR2 = $CONN.$FUNC(...)
                     ...
@@ -485,15 +389,7 @@ rules:
                   ...
                   if tfresource.TimedOut($ERR) { ... }
               - pattern-not-inside: |
-                  $ERR = resource.RetryContext(..., func() *resource.RetryError {
-                    ...
-                    _, $ERR2 = $CONN.$FUNC(...)
-                    ...
-                  })
-                  ...
-                  if tfresource.TimedOut($ERR) { ... }
-              - pattern-not-inside: |
-                  $ERR = tfresource.RetryContext(..., func() *resource.RetryError {
+                  $ERR = tfresource.Retry(..., func() *retry.RetryError {
                     ...
                     _, $ERR2 = $CONN.$FUNC(...)
                     ...
@@ -504,7 +400,7 @@ rules:
 
   - id: is-not-found-error
     languages: [go]
-    message: Check for resource.NotFoundError errors with tfresource.NotFound()
+    message: Check for retry.NotFoundError errors with tfresource.NotFound()
     paths:
       include:
         - internal/
@@ -512,18 +408,18 @@ rules:
       - pattern-either:
           - patterns:
               - pattern: |
-                  var $CAST *resource.NotFoundError
+                  var $CAST *retry.NotFoundError
                   ...
                   errors.As($ERR, &$CAST)
               - pattern-not-inside: |
-                  var $CAST *resource.NotFoundError
+                  var $CAST *retry.NotFoundError
                   ...
                   errors.As($ERR, &$CAST)
                   ...
                   $CAST.$FIELD
           - patterns:
               - pattern: |
-                  $X, $Y := $ERR.(*resource.NotFoundError)
+                  $X, $Y := $ERR.(*retry.NotFoundError)
     severity: WARNING
 
   - id: time-equality
@@ -572,8 +468,8 @@ rules:
             ...
           })
       - metavariable-regex:
-          metavariable: '$Z'
-          regex: '.*Pages$'
+          metavariable: "$Z"
+          regex: ".*Pages$"
     severity: WARNING
 
   - id: calling-fmt.Print-and-variants
@@ -619,7 +515,7 @@ rules:
     patterns:
       - patterns:
           - pattern-regex: '(([-a-zA-Z0-9]{2,}\.)|(%[sdftq]))+(com|net|org)\b'
-      - pattern-inside: '($X : string)'
+      - pattern-inside: "($X : string)"
       - pattern-not-regex: 'amazonaws\.com'
       - pattern-not-regex: 'awsapps\.com'
       - pattern-not-regex: '@(([-a-zA-Z0-9]{2,}\.)|(%[sdftq]))+(com|net|org)\b' # exclude domain names in email addresses
@@ -637,8 +533,8 @@ rules:
       - pattern-not-regex: 'awsglobalaccelerator\.com'
       - pattern-not-regex: 'cloudfront\.net'
       - pattern-not-regex: 'http://json-schema\.org/draft-0\d/schema'
-      - pattern-not-regex: 'http://activemq.apache.org/schema/core'
-      - pattern-not-regex: 'mcr.microsoft.com'
+      - pattern-not-regex: "http://activemq.apache.org/schema/core"
+      - pattern-not-regex: "mcr.microsoft.com"
     severity: WARNING
 
   - id: email-address
@@ -652,7 +548,7 @@ rules:
     patterns:
       - pattern-regex: '[-_A-Za-z0-9.+]+@([-A-Za-z0-9]+\.)(com|net|org)'
       - pattern-not-regex: 'no-reply@hashicorp\.com'
-      - pattern-inside: '($X : string)'
+      - pattern-inside: "($X : string)"
     severity: WARNING
 
   - id: ssh-key
@@ -666,8 +562,8 @@ rules:
     patterns:
       # This isn't technically the correct regex, but for some reason adding a '+' causes the regex to
       # miss some SSH keys. AFAICT, this is good enough.
-      - pattern-regex: 'ssh-rsa [A-Za-z0-9/]+'
-      - pattern-inside: '($X : string)'
+      - pattern-regex: "ssh-rsa [A-Za-z0-9/]+"
+      - pattern-inside: "($X : string)"
     severity: WARNING
 
   - id: non-tags-change-detection
@@ -798,21 +694,6 @@ rules:
     pattern: int(*$VALUE)
     severity: WARNING
 
-  - id: aws-go-sdk-error-code-helper
-    languages: [go]
-    message: 'Use `tfawserr` helpers for checking AWS Go SDK errors (e.g. `tfawserr.ErrMessageContains(err, CODE, MESSAGE)`)'
-    paths:
-      include:
-        - internal/
-    patterns:
-      - pattern-either:
-          - pattern: if $AWSERR, $OK := $ORIGINALERR.(awserr.Error); $OK && $AWSERR.Code() == $CODE { $BODY }
-          - pattern: |
-              if $AWSERR, $OK := $ORIGINALERR.(awserr.Error); $OK {
-                if $AWSERR.Code() == $CODE { $BODY }
-              }
-    severity: WARNING
-
   - id: fmt-Errorf-awserr-Error-Code
     languages: [go]
     message: Prefer `err` with `%w` format verb instead of `err.Code()` or `err.Message()`
@@ -835,12 +716,29 @@ rules:
       - pattern: "[]string{..., string($X), ...}"
     severity: WARNING
 
-  - id: avoid-context-TODO-in-tests
+  - id: avoid-context-CRUD-handlers
     languages: [go]
-    message: Prefer using context.Background() instead of context.TODO()
+    message: Prefer using WithoutTimeout CRUD handlers instead of Context variants
     paths:
       include:
-        - "internal/**/*_test.go"
+        - internal/service
     patterns:
-      - pattern: context.TODO
+      - pattern-regex: "(Create|Read|Update|Delete)Context:"
+    severity: ERROR
+
+  - id: bare-error-returns
+    languages: [go]
+    message: API errors should be wrapped with the CRUD info
+    paths:
+      include:
+        - internal/service
+    patterns:
+      - pattern: return $ERR
+      - pattern-inside: |
+          func $FUNC($D *schema.ResourceData, ...) error {
+            ...
+          }
+      - metavariable-regex:
+          metavariable: $ERR
+          regex: "[Ee]rr(?!ors\\.)"
     severity: ERROR

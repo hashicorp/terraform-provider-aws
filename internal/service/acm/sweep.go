@@ -41,14 +41,15 @@ func init() {
 }
 
 func sweepCertificates(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ACMConn
+	conn := client.(*conns.AWSClient).ACMConn()
 	var sweeperErrs *multierror.Error
 
-	err = conn.ListCertificatesPages(&acm.ListCertificatesInput{}, func(page *acm.ListCertificatesOutput, lastPage bool) bool {
+	err = conn.ListCertificatesPagesWithContext(ctx, &acm.ListCertificatesInput{}, func(page *acm.ListCertificatesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -56,7 +57,7 @@ func sweepCertificates(region string) error {
 		for _, certificate := range page.CertificateSummaryList {
 			arn := aws.StringValue(certificate.CertificateArn)
 
-			output, err := conn.DescribeCertificate(&acm.DescribeCertificateInput{
+			output, err := conn.DescribeCertificateWithContext(ctx, &acm.DescribeCertificateInput{
 				CertificateArn: aws.String(arn),
 			})
 			if err != nil {
@@ -83,7 +84,7 @@ func sweepCertificates(region string) error {
 			}
 
 			log.Printf("[INFO] Deleting ACM certificate: %s", arn)
-			_, err = conn.DeleteCertificate(&acm.DeleteCertificateInput{
+			_, err = conn.DeleteCertificateWithContext(ctx, &acm.DeleteCertificateInput{
 				CertificateArn: aws.String(arn),
 			})
 			if err != nil {

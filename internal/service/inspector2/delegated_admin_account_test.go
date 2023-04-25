@@ -18,38 +18,25 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccInspector2DelegatedAdminAccount_serial(t *testing.T) {
-	testCases := map[string]func(t *testing.T){
-		"basic":      testAccDelegatedAdminAccount_basic,
-		"disappears": testAccDelegatedAdminAccount_disappears,
-	}
-
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
-}
-
 func testAccDelegatedAdminAccount_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_inspector2_delegated_admin_account.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.Inspector2EndpointID, t)
-			testAccPreCheck(t)
-			acctest.PreCheckOrganizationManagementAccount(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDelegatedAdminAccountDestroy,
+		CheckDestroy:             testAccCheckDelegatedAdminAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDelegatedAdminAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDelegatedAdminAccountExists(resourceName),
+					testAccCheckDelegatedAdminAccountExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", "data.aws_caller_identity.current", "account_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "relationship_status"),
 				),
@@ -83,24 +70,25 @@ func testAccDelegatedAdminAccount_basic(t *testing.T) {
 }
 
 func testAccDelegatedAdminAccount_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_inspector2_delegated_admin_account.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.Inspector2EndpointID, t)
-			testAccPreCheck(t)
-			acctest.PreCheckOrganizationManagementAccount(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDelegatedAdminAccountDestroy,
+		CheckDestroy:             testAccCheckDelegatedAdminAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDelegatedAdminAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDelegatedAdminAccountExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfinspector2.ResourceDelegatedAdminAccount(), resourceName),
+					testAccCheckDelegatedAdminAccountExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfinspector2.ResourceDelegatedAdminAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -108,32 +96,33 @@ func testAccDelegatedAdminAccount_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDelegatedAdminAccountDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client
-	ctx := context.Background()
+func testAccCheckDelegatedAdminAccountDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_inspector2_delegated_admin_account" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_inspector2_delegated_admin_account" {
+				continue
+			}
+
+			st, _, err := tfinspector2.FindDelegatedAdminAccountStatusID(ctx, conn, rs.Primary.ID)
+
+			if st == "" && errs.Contains(err, "admin account not found") {
+				return nil
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameDelegatedAdminAccount, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
-		st, _, err := tfinspector2.FindDelegatedAdminAccountStatusID(ctx, conn, rs.Primary.ID)
-
-		if st == "" && errs.Contains(err, "admin account not found") {
-			return nil
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameDelegatedAdminAccount, rs.Primary.ID, errors.New("not destroyed"))
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckDelegatedAdminAccountExists(name string) resource.TestCheckFunc {
+func testAccCheckDelegatedAdminAccountExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -144,8 +133,8 @@ func testAccCheckDelegatedAdminAccountExists(name string) resource.TestCheckFunc
 			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameDelegatedAdminAccount, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client
-		ctx := context.Background()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client()
+
 		_, _, err := tfinspector2.FindDelegatedAdminAccountStatusID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -156,13 +145,12 @@ func testAccCheckDelegatedAdminAccountExists(name string) resource.TestCheckFunc
 	}
 }
 
-func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client
-	ctx := context.Background()
+func testAccPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client()
 
 	_, err := conn.ListDelegatedAdminAccounts(ctx, &inspector2.ListDelegatedAdminAccountsInput{})
 
-	if acctest.PreCheckSkipError(err) {
+	if errs.IsA[*types.AccessDeniedException](err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 

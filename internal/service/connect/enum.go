@@ -1,6 +1,8 @@
 package connect
 
-import "github.com/aws/aws-sdk-go/service/connect"
+import (
+	"github.com/aws/aws-sdk-go/service/connect"
+)
 
 const (
 	ListInstancesMaxResults = 10

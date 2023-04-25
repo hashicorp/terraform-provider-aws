@@ -1,13 +1,14 @@
 package elasticbeanstalk_test
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -16,18 +17,19 @@ import (
 )
 
 func TestAccElasticBeanstalkApplicationVersion_BeanstalkApp_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var appVersion elasticbeanstalk.ApplicationVersionDescription
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationVersionDestroy,
+		CheckDestroy:             testAccCheckApplicationVersionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationVersionConfig_basic(sdkacctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationVersionExists("aws_elastic_beanstalk_application_version.default", &appVersion),
+					testAccCheckApplicationVersionExists(ctx, "aws_elastic_beanstalk_application_version.default", &appVersion),
 				),
 			},
 		},
@@ -35,20 +37,21 @@ func TestAccElasticBeanstalkApplicationVersion_BeanstalkApp_basic(t *testing.T) 
 }
 
 func TestAccElasticBeanstalkApplicationVersion_BeanstalkApp_duplicateLabels(t *testing.T) {
+	ctx := acctest.Context(t)
 	var firstAppVersion elasticbeanstalk.ApplicationVersionDescription
 	var secondAppVersion elasticbeanstalk.ApplicationVersionDescription
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationVersionDestroy,
+		CheckDestroy:             testAccCheckApplicationVersionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationVersionConfig_duplicateLabel(sdkacctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationVersionExists("aws_elastic_beanstalk_application_version.first", &firstAppVersion),
-					testAccCheckApplicationVersionExists("aws_elastic_beanstalk_application_version.second", &secondAppVersion),
+					testAccCheckApplicationVersionExists(ctx, "aws_elastic_beanstalk_application_version.first", &firstAppVersion),
+					testAccCheckApplicationVersionExists(ctx, "aws_elastic_beanstalk_application_version.second", &secondAppVersion),
 				),
 			},
 		},
@@ -56,19 +59,20 @@ func TestAccElasticBeanstalkApplicationVersion_BeanstalkApp_duplicateLabels(t *t
 }
 
 func TestAccElasticBeanstalkApplicationVersion_BeanstalkApp_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var appVersion elasticbeanstalk.ApplicationVersionDescription
 	resourceName := "aws_elastic_beanstalk_application_version.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationVersionDestroy,
+		CheckDestroy:             testAccCheckApplicationVersionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationVersionConfig_tags(sdkacctest.RandInt(), "test1", "test2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationVersionExists(resourceName, &appVersion),
+					testAccCheckApplicationVersionExists(ctx, resourceName, &appVersion),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.firstTag", "test1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.secondTag", "test2"),
@@ -77,7 +81,7 @@ func TestAccElasticBeanstalkApplicationVersion_BeanstalkApp_tags(t *testing.T) {
 			{
 				Config: testAccApplicationVersionConfig_tags(sdkacctest.RandInt(), "updateTest1", "updateTest2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationVersionExists(resourceName, &appVersion),
+					testAccCheckApplicationVersionExists(ctx, resourceName, &appVersion),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.firstTag", "updateTest1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.secondTag", "updateTest2"),
@@ -86,7 +90,7 @@ func TestAccElasticBeanstalkApplicationVersion_BeanstalkApp_tags(t *testing.T) {
 			{
 				Config: testAccApplicationVersionConfig_addTags(sdkacctest.RandInt(), "updateTest1", "updateTest2", "addTest3"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationVersionExists(resourceName, &appVersion),
+					testAccCheckApplicationVersionExists(ctx, resourceName, &appVersion),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.firstTag", "updateTest1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.secondTag", "updateTest2"),
@@ -96,7 +100,7 @@ func TestAccElasticBeanstalkApplicationVersion_BeanstalkApp_tags(t *testing.T) {
 			{
 				Config: testAccApplicationVersionConfig_tags(sdkacctest.RandInt(), "updateTest1", "updateTest2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationVersionExists(resourceName, &appVersion),
+					testAccCheckApplicationVersionExists(ctx, resourceName, &appVersion),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.firstTag", "updateTest1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.secondTag", "updateTest2"),
@@ -106,39 +110,37 @@ func TestAccElasticBeanstalkApplicationVersion_BeanstalkApp_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckApplicationVersionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn
+func testAccCheckApplicationVersionDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_elastic_beanstalk_application_version" {
-			continue
-		}
-
-		describeApplicationVersionOpts := &elasticbeanstalk.DescribeApplicationVersionsInput{
-			ApplicationName: aws.String(rs.Primary.Attributes["application"]),
-			VersionLabels:   []*string{aws.String(rs.Primary.ID)},
-		}
-		resp, err := conn.DescribeApplicationVersions(describeApplicationVersionOpts)
-		if err == nil {
-			if len(resp.ApplicationVersions) > 0 {
-				return fmt.Errorf("Elastic Beanstalk Application Verson still exists.")
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_elastic_beanstalk_application_version" {
+				continue
 			}
 
-			return nil
-		}
-		ec2err, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if ec2err.Code() != "InvalidParameterValue" {
-			return err
-		}
-	}
+			describeApplicationVersionOpts := &elasticbeanstalk.DescribeApplicationVersionsInput{
+				ApplicationName: aws.String(rs.Primary.Attributes["application"]),
+				VersionLabels:   []*string{aws.String(rs.Primary.ID)},
+			}
+			resp, err := conn.DescribeApplicationVersionsWithContext(ctx, describeApplicationVersionOpts)
+			if err == nil {
+				if len(resp.ApplicationVersions) > 0 {
+					return fmt.Errorf("Elastic Beanstalk Application Verson still exists.")
+				}
 
-	return nil
+				return nil
+			}
+			if !tfawserr.ErrCodeEquals(err, "InvalidParameterValue") {
+				return err
+			}
+		}
+
+		return nil
+	}
 }
 
-func testAccCheckApplicationVersionExists(n string, app *elasticbeanstalk.ApplicationVersionDescription) resource.TestCheckFunc {
+func testAccCheckApplicationVersionExists(ctx context.Context, n string, app *elasticbeanstalk.ApplicationVersionDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -149,7 +151,7 @@ func testAccCheckApplicationVersionExists(n string, app *elasticbeanstalk.Applic
 			return fmt.Errorf("Elastic Beanstalk Application Version is not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn()
 		describeApplicationVersionOpts := &elasticbeanstalk.DescribeApplicationVersionsInput{
 			ApplicationName: aws.String(rs.Primary.Attributes["application"]),
 			VersionLabels:   []*string{aws.String(rs.Primary.ID)},
@@ -157,7 +159,7 @@ func testAccCheckApplicationVersionExists(n string, app *elasticbeanstalk.Applic
 
 		log.Printf("[DEBUG] Elastic Beanstalk Application Version TEST describe opts: %s", describeApplicationVersionOpts)
 
-		resp, err := conn.DescribeApplicationVersions(describeApplicationVersionOpts)
+		resp, err := conn.DescribeApplicationVersionsWithContext(ctx, describeApplicationVersionOpts)
 		if err != nil {
 			return err
 		}

@@ -1,13 +1,18 @@
 package tags
 
 import (
+	"context"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestKeyValueTagsDefaultConfigGetTags(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
 	testCases := []struct {
 		name          string
 		defaultConfig *DefaultConfig
@@ -26,12 +31,12 @@ func TestKeyValueTagsDefaultConfigGetTags(t *testing.T) {
 		{
 			name: "with Tags config",
 			defaultConfig: &DefaultConfig{
-				Tags: New(map[string]string{
+				Tags: New(ctx, map[string]string{
 					"key1": "value1",
 					"key2": "value2",
 				}),
 			},
-			want: New(map[string]string{
+			want: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 			}),
@@ -39,7 +44,10 @@ func TestKeyValueTagsDefaultConfigGetTags(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.defaultConfig.GetTags()
 			testKeyValueTagsVerifyMap(t, got.Map(), testCase.want.Map())
 		})
@@ -47,6 +55,9 @@ func TestKeyValueTagsDefaultConfigGetTags(t *testing.T) {
 }
 
 func TestKeyValueTagsDefaultConfigMergeTags(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
 	testCases := []struct {
 		name          string
 		tags          KeyValueTags
@@ -55,7 +66,7 @@ func TestKeyValueTagsDefaultConfigMergeTags(t *testing.T) {
 	}{
 		{
 			name: "empty config",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
@@ -69,7 +80,7 @@ func TestKeyValueTagsDefaultConfigMergeTags(t *testing.T) {
 		},
 		{
 			name: "no config",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
@@ -83,9 +94,9 @@ func TestKeyValueTagsDefaultConfigMergeTags(t *testing.T) {
 		},
 		{
 			name: "no tags",
-			tags: New(map[string]string{}),
+			tags: New(ctx, map[string]string{}),
 			defaultConfig: &DefaultConfig{
-				Tags: New(map[string]string{
+				Tags: New(ctx, map[string]string{
 					"key1": "value1",
 					"key2": "value2",
 					"key3": "value3",
@@ -99,13 +110,13 @@ func TestKeyValueTagsDefaultConfigMergeTags(t *testing.T) {
 		},
 		{
 			name: "keys all matching",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
 			defaultConfig: &DefaultConfig{
-				Tags: New(map[string]string{
+				Tags: New(ctx, map[string]string{
 					"key1": "value1",
 					"key2": "value2",
 					"key3": "value3",
@@ -119,13 +130,13 @@ func TestKeyValueTagsDefaultConfigMergeTags(t *testing.T) {
 		},
 		{
 			name: "keys some matching",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
 			defaultConfig: &DefaultConfig{
-				Tags: New(map[string]string{
+				Tags: New(ctx, map[string]string{
 					"key1": "value1",
 				}),
 			},
@@ -137,13 +148,13 @@ func TestKeyValueTagsDefaultConfigMergeTags(t *testing.T) {
 		},
 		{
 			name: "keys some overridden",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value2",
 				"key2": "value2",
 				"key3": "value3",
 			}),
 			defaultConfig: &DefaultConfig{
-				Tags: New(map[string]string{
+				Tags: New(ctx, map[string]string{
 					"key1": "value1",
 				}),
 			},
@@ -155,13 +166,13 @@ func TestKeyValueTagsDefaultConfigMergeTags(t *testing.T) {
 		},
 		{
 			name: "keys none matching",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
 			defaultConfig: &DefaultConfig{
-				Tags: New(map[string]string{
+				Tags: New(ctx, map[string]string{
 					"key4": "value4",
 					"key5": "value5",
 					"key6": "value6",
@@ -179,7 +190,10 @@ func TestKeyValueTagsDefaultConfigMergeTags(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.defaultConfig.MergeTags(testCase.tags)
 			testKeyValueTagsVerifyMap(t, got.Map(), testCase.want)
 		})
@@ -187,6 +201,9 @@ func TestKeyValueTagsDefaultConfigMergeTags(t *testing.T) {
 }
 
 func TestKeyValueTagsDefaultConfigTagsEqual(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
 	testCases := []struct {
 		name          string
 		tags          KeyValueTags
@@ -195,7 +212,7 @@ func TestKeyValueTagsDefaultConfigTagsEqual(t *testing.T) {
 	}{
 		{
 			name: "empty config",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
@@ -205,7 +222,7 @@ func TestKeyValueTagsDefaultConfigTagsEqual(t *testing.T) {
 		},
 		{
 			name: "no config",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
@@ -215,9 +232,9 @@ func TestKeyValueTagsDefaultConfigTagsEqual(t *testing.T) {
 		},
 		{
 			name: "empty tags",
-			tags: New(map[string]string{}),
+			tags: New(ctx, map[string]string{}),
 			defaultConfig: &DefaultConfig{
-				Tags: New(map[string]string{
+				Tags: New(ctx, map[string]string{
 					"key1": "value1",
 					"key2": "value2",
 					"key3": "value3",
@@ -229,7 +246,7 @@ func TestKeyValueTagsDefaultConfigTagsEqual(t *testing.T) {
 			name: "no tags",
 			tags: nil,
 			defaultConfig: &DefaultConfig{
-				Tags: New(map[string]string{
+				Tags: New(ctx, map[string]string{
 					"key1": "value1",
 					"key2": "value2",
 					"key3": "value3",
@@ -251,13 +268,13 @@ func TestKeyValueTagsDefaultConfigTagsEqual(t *testing.T) {
 		},
 		{
 			name: "keys and values all matching",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
 			defaultConfig: &DefaultConfig{
-				Tags: New(map[string]string{
+				Tags: New(ctx, map[string]string{
 					"key1": "value1",
 					"key2": "value2",
 					"key3": "value3",
@@ -267,13 +284,13 @@ func TestKeyValueTagsDefaultConfigTagsEqual(t *testing.T) {
 		},
 		{
 			name: "only keys matching",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
 			defaultConfig: &DefaultConfig{
-				Tags: New(map[string]string{
+				Tags: New(ctx, map[string]string{
 					"key1": "value0",
 					"key2": "value1",
 					"key3": "value2",
@@ -284,7 +301,10 @@ func TestKeyValueTagsDefaultConfigTagsEqual(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.defaultConfig.TagsEqual(testCase.tags)
 
 			if got != testCase.want {
@@ -295,6 +315,9 @@ func TestKeyValueTagsDefaultConfigTagsEqual(t *testing.T) {
 }
 
 func TestKeyValueTagsIgnoreAWS(t *testing.T) { // nosemgrep:ci.aws-in-func-name
+	t.Parallel()
+
+	ctx := context.Background()
 	testCases := []struct {
 		name string
 		tags KeyValueTags
@@ -302,12 +325,12 @@ func TestKeyValueTagsIgnoreAWS(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	}{
 		{
 			name: "empty",
-			tags: New(map[string]string{}),
+			tags: New(ctx, map[string]string{}),
 			want: map[string]string{},
 		},
 		{
 			name: "all",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"aws:cloudformation:key1": "value1",
 				"aws:cloudformation:key2": "value2",
 				"aws:cloudformation:key3": "value3",
@@ -316,7 +339,7 @@ func TestKeyValueTagsIgnoreAWS(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 		},
 		{
 			name: "mixed",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"aws:cloudformation:key1": "value1",
 				"key2":                    "value2",
 				"key3":                    "value3",
@@ -328,7 +351,7 @@ func TestKeyValueTagsIgnoreAWS(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 		},
 		{
 			name: "none",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
@@ -342,7 +365,10 @@ func TestKeyValueTagsIgnoreAWS(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.tags.IgnoreAWS()
 
 			testKeyValueTagsVerifyMap(t, got.Map(), testCase.want)
@@ -351,6 +377,9 @@ func TestKeyValueTagsIgnoreAWS(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 }
 
 func TestKeyValueTagsIgnoreConfig(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
 	testCases := []struct {
 		name         string
 		tags         KeyValueTags
@@ -359,7 +388,7 @@ func TestKeyValueTagsIgnoreConfig(t *testing.T) {
 	}{
 		{
 			name: "empty config",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
@@ -373,7 +402,7 @@ func TestKeyValueTagsIgnoreConfig(t *testing.T) {
 		},
 		{
 			name: "no config",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
@@ -387,9 +416,9 @@ func TestKeyValueTagsIgnoreConfig(t *testing.T) {
 		},
 		{
 			name: "no tags",
-			tags: New(map[string]string{}),
+			tags: New(ctx, map[string]string{}),
 			ignoreConfig: &IgnoreConfig{
-				KeyPrefixes: New([]string{
+				KeyPrefixes: New(ctx, []string{
 					"key1",
 					"key2",
 					"key3",
@@ -399,13 +428,13 @@ func TestKeyValueTagsIgnoreConfig(t *testing.T) {
 		},
 		{
 			name: "keys all matching",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
 			ignoreConfig: &IgnoreConfig{
-				Keys: New(map[string]string{
+				Keys: New(ctx, map[string]string{
 					"key1": "value1",
 					"key2": "value2",
 					"key3": "value3",
@@ -415,13 +444,13 @@ func TestKeyValueTagsIgnoreConfig(t *testing.T) {
 		},
 		{
 			name: "keys some matching",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
 			ignoreConfig: &IgnoreConfig{
-				Keys: New(map[string]string{
+				Keys: New(ctx, map[string]string{
 					"key1": "value1",
 				}),
 			},
@@ -432,13 +461,13 @@ func TestKeyValueTagsIgnoreConfig(t *testing.T) {
 		},
 		{
 			name: "keys none matching",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
 			ignoreConfig: &IgnoreConfig{
-				Keys: New(map[string]string{
+				Keys: New(ctx, map[string]string{
 					"key4": "value4",
 					"key5": "value5",
 					"key6": "value6",
@@ -452,16 +481,16 @@ func TestKeyValueTagsIgnoreConfig(t *testing.T) {
 		},
 		{
 			name: "keys and key prefixes",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
 			ignoreConfig: &IgnoreConfig{
-				Keys: New([]string{
+				Keys: New(ctx, []string{
 					"key1",
 				}),
-				KeyPrefixes: New([]string{
+				KeyPrefixes: New(ctx, []string{
 					"key2",
 				}),
 			},
@@ -471,13 +500,13 @@ func TestKeyValueTagsIgnoreConfig(t *testing.T) {
 		},
 		{
 			name: "key prefixes all exact",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
 			ignoreConfig: &IgnoreConfig{
-				KeyPrefixes: New([]string{
+				KeyPrefixes: New(ctx, []string{
 					"key1",
 					"key2",
 					"key3",
@@ -487,13 +516,13 @@ func TestKeyValueTagsIgnoreConfig(t *testing.T) {
 		},
 		{
 			name: "key prefixes all prefixed",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
 			ignoreConfig: &IgnoreConfig{
-				KeyPrefixes: New([]string{
+				KeyPrefixes: New(ctx, []string{
 					"key",
 				}),
 			},
@@ -501,13 +530,13 @@ func TestKeyValueTagsIgnoreConfig(t *testing.T) {
 		},
 		{
 			name: "key prefixes some prefixed",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
 			ignoreConfig: &IgnoreConfig{
-				KeyPrefixes: New([]string{
+				KeyPrefixes: New(ctx, []string{
 					"key1",
 				}),
 			},
@@ -518,13 +547,13 @@ func TestKeyValueTagsIgnoreConfig(t *testing.T) {
 		},
 		{
 			name: "key prefixes none prefixed",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
 			ignoreConfig: &IgnoreConfig{
-				KeyPrefixes: New([]string{
+				KeyPrefixes: New(ctx, []string{
 					"key4",
 					"key5",
 					"key6",
@@ -539,7 +568,10 @@ func TestKeyValueTagsIgnoreConfig(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.tags.IgnoreConfig(testCase.ignoreConfig)
 
 			testKeyValueTagsVerifyMap(t, got.Map(), testCase.want)
@@ -548,6 +580,9 @@ func TestKeyValueTagsIgnoreConfig(t *testing.T) {
 }
 
 func TestKeyValueTagsIgnoreElasticbeanstalk(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
 	testCases := []struct {
 		name string
 		tags KeyValueTags
@@ -555,12 +590,12 @@ func TestKeyValueTagsIgnoreElasticbeanstalk(t *testing.T) {
 	}{
 		{
 			name: "empty",
-			tags: New(map[string]string{}),
+			tags: New(ctx, map[string]string{}),
 			want: map[string]string{},
 		},
 		{
 			name: "all",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"aws:cloudformation:key1": "value1",
 				"elasticbeanstalk:key2":   "value2",
 				"Name":                    "value3",
@@ -569,7 +604,7 @@ func TestKeyValueTagsIgnoreElasticbeanstalk(t *testing.T) {
 		},
 		{
 			name: "mixed",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"aws:cloudformation:key1": "value1",
 				"key2":                    "value2",
 				"elasticbeanstalk:key3":   "value3",
@@ -583,7 +618,7 @@ func TestKeyValueTagsIgnoreElasticbeanstalk(t *testing.T) {
 		},
 		{
 			name: "none",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
@@ -597,7 +632,10 @@ func TestKeyValueTagsIgnoreElasticbeanstalk(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.tags.IgnoreElasticbeanstalk()
 
 			testKeyValueTagsVerifyMap(t, got.Map(), testCase.want)
@@ -606,6 +644,9 @@ func TestKeyValueTagsIgnoreElasticbeanstalk(t *testing.T) {
 }
 
 func TestKeyValueTagsIgnorePrefixes(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
 	testCases := []struct {
 		name              string
 		tags              KeyValueTags
@@ -614,8 +655,8 @@ func TestKeyValueTagsIgnorePrefixes(t *testing.T) {
 	}{
 		{
 			name: "empty",
-			tags: New(map[string]string{}),
-			ignoreTagPrefixes: New([]string{
+			tags: New(ctx, map[string]string{}),
+			ignoreTagPrefixes: New(ctx, []string{
 				"key1",
 				"key2",
 				"key3",
@@ -624,12 +665,12 @@ func TestKeyValueTagsIgnorePrefixes(t *testing.T) {
 		},
 		{
 			name: "all_exact",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
-			ignoreTagPrefixes: New([]string{
+			ignoreTagPrefixes: New(ctx, []string{
 				"key1",
 				"key2",
 				"key3",
@@ -638,24 +679,24 @@ func TestKeyValueTagsIgnorePrefixes(t *testing.T) {
 		},
 		{
 			name: "all_prefix",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
-			ignoreTagPrefixes: New([]string{
+			ignoreTagPrefixes: New(ctx, []string{
 				"key",
 			}),
 			want: map[string]string{},
 		},
 		{
 			name: "mixed",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
-			ignoreTagPrefixes: New([]string{
+			ignoreTagPrefixes: New(ctx, []string{
 				"key1",
 			}),
 			want: map[string]string{
@@ -665,12 +706,12 @@ func TestKeyValueTagsIgnorePrefixes(t *testing.T) {
 		},
 		{
 			name: "none",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
-			ignoreTagPrefixes: New([]string{
+			ignoreTagPrefixes: New(ctx, []string{
 				"key4",
 				"key5",
 				"key6",
@@ -684,7 +725,10 @@ func TestKeyValueTagsIgnorePrefixes(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.tags.IgnorePrefixes(testCase.ignoreTagPrefixes)
 
 			testKeyValueTagsVerifyMap(t, got.Map(), testCase.want)
@@ -692,41 +736,50 @@ func TestKeyValueTagsIgnorePrefixes(t *testing.T) {
 	}
 }
 
-func TestKeyValueTagsIgnoreRDS(t *testing.T) {
+func TestKeyValueTagsIgnoreSystem(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
 	testCases := []struct {
-		name string
-		tags KeyValueTags
-		want map[string]string
+		name        string
+		serviceName string
+		tags        KeyValueTags
+		want        map[string]string
 	}{
 		{
-			name: "empty",
-			tags: New(map[string]string{}),
-			want: map[string]string{},
+			name:        "empty",
+			serviceName: names.EC2,
+			tags:        New(ctx, map[string]string{}),
+			want:        map[string]string{},
 		},
 		{
-			name: "all",
-			tags: New(map[string]string{
+			name:        "all",
+			serviceName: names.ElasticBeanstalk,
+			tags: New(ctx, map[string]string{
 				"aws:cloudformation:key1": "value1",
-				"rds:key2":                "value2",
+				"elasticbeanstalk:key2":   "value2",
 			}),
 			want: map[string]string{},
 		},
 		{
-			name: "mixed",
-			tags: New(map[string]string{
+			name:        "mixed",
+			serviceName: names.S3,
+			tags: New(ctx, map[string]string{
 				"aws:cloudformation:key1": "value1",
 				"key2":                    "value2",
-				"rds:key3":                "value3",
+				"elasticbeanstalk:key3":   "value3",
 				"key4":                    "value4",
 			}),
 			want: map[string]string{
-				"key2": "value2",
-				"key4": "value4",
+				"key2":                  "value2",
+				"elasticbeanstalk:key3": "value3",
+				"key4":                  "value4",
 			},
 		},
 		{
-			name: "none",
-			tags: New(map[string]string{
+			name:        "none",
+			serviceName: names.RDS,
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
@@ -740,8 +793,11 @@ func TestKeyValueTagsIgnoreRDS(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
-			got := testCase.tags.IgnoreRDS()
+			t.Parallel()
+
+			got := testCase.tags.IgnoreSystem(testCase.serviceName)
 
 			testKeyValueTagsVerifyMap(t, got.Map(), testCase.want)
 		})
@@ -749,6 +805,9 @@ func TestKeyValueTagsIgnoreRDS(t *testing.T) {
 }
 
 func TestKeyValueTagsIgnore(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
 	testCases := []struct {
 		name       string
 		tags       KeyValueTags
@@ -757,8 +816,8 @@ func TestKeyValueTagsIgnore(t *testing.T) {
 	}{
 		{
 			name: "empty",
-			tags: New(map[string]string{}),
-			ignoreTags: New(map[string]string{
+			tags: New(ctx, map[string]string{}),
+			ignoreTags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
@@ -767,12 +826,12 @@ func TestKeyValueTagsIgnore(t *testing.T) {
 		},
 		{
 			name: "all",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
-			ignoreTags: New(map[string]string{
+			ignoreTags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
@@ -781,12 +840,12 @@ func TestKeyValueTagsIgnore(t *testing.T) {
 		},
 		{
 			name: "mixed",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
-			ignoreTags: New(map[string]string{
+			ignoreTags: New(ctx, map[string]string{
 				"key1": "value1",
 			}),
 			want: map[string]string{
@@ -796,12 +855,12 @@ func TestKeyValueTagsIgnore(t *testing.T) {
 		},
 		{
 			name: "none",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
-			ignoreTags: New(map[string]string{
+			ignoreTags: New(ctx, map[string]string{
 				"key4": "value4",
 				"key5": "value5",
 				"key6": "value6",
@@ -815,7 +874,10 @@ func TestKeyValueTagsIgnore(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.tags.Ignore(testCase.ignoreTags)
 
 			testKeyValueTagsVerifyMap(t, got.Map(), testCase.want)
@@ -824,6 +886,9 @@ func TestKeyValueTagsIgnore(t *testing.T) {
 }
 
 func TestKeyValueTagsKeyAdditionalBoolValue(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
 	testCases := []struct {
 		name  string
 		tags  KeyValueTags
@@ -833,28 +898,28 @@ func TestKeyValueTagsKeyAdditionalBoolValue(t *testing.T) {
 	}{
 		{
 			name:  "empty",
-			tags:  New(map[string]*string{}),
+			tags:  New(ctx, map[string]*string{}),
 			key:   "key1",
 			field: "field1",
 			want:  nil,
 		},
 		{
 			name:  "non-existent key",
-			tags:  New(map[string]*string{"key1": testStringPtr("value1")}),
+			tags:  New(ctx, map[string]*string{"key1": testStringPtr("value1")}),
 			key:   "key2",
 			field: "field2",
 			want:  nil,
 		},
 		{
 			name:  "non-existent TagData",
-			tags:  New(map[string]*string{"key1": testStringPtr("value1")}),
+			tags:  New(ctx, map[string]*string{"key1": testStringPtr("value1")}),
 			key:   "key1",
 			field: "field1",
 			want:  nil,
 		},
 		{
 			name: "non-existent field",
-			tags: New(map[string]*TagData{
+			tags: New(ctx, map[string]*TagData{
 				"key1": {
 					AdditionalBoolFields: map[string]*bool{"field1": testBoolPtr(true)},
 					Value:                testStringPtr("value1"),
@@ -866,7 +931,7 @@ func TestKeyValueTagsKeyAdditionalBoolValue(t *testing.T) {
 		},
 		{
 			name: "matching value",
-			tags: New(map[string]*TagData{
+			tags: New(ctx, map[string]*TagData{
 				"key1": {
 					AdditionalBoolFields: map[string]*bool{"field1": testBoolPtr(true)},
 					Value:                testStringPtr("value1"),
@@ -878,7 +943,7 @@ func TestKeyValueTagsKeyAdditionalBoolValue(t *testing.T) {
 		},
 		{
 			name: "matching nil",
-			tags: New(map[string]*TagData{
+			tags: New(ctx, map[string]*TagData{
 				"key1": {
 					AdditionalBoolFields: map[string]*bool{"field1": nil},
 					Value:                testStringPtr("value1"),
@@ -894,6 +959,8 @@ func TestKeyValueTagsKeyAdditionalBoolValue(t *testing.T) {
 		testCase := testCase
 
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.tags.KeyAdditionalBoolValue(testCase.key, testCase.field)
 
 			if testCase.want == nil && got != nil {
@@ -912,6 +979,9 @@ func TestKeyValueTagsKeyAdditionalBoolValue(t *testing.T) {
 }
 
 func TestKeyValueTagsKeyAdditionalStringValue(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
 	testCases := []struct {
 		name  string
 		tags  KeyValueTags
@@ -921,28 +991,28 @@ func TestKeyValueTagsKeyAdditionalStringValue(t *testing.T) {
 	}{
 		{
 			name:  "empty",
-			tags:  New(map[string]*string{}),
+			tags:  New(ctx, map[string]*string{}),
 			key:   "key1",
 			field: "field1",
 			want:  nil,
 		},
 		{
 			name:  "non-existent key",
-			tags:  New(map[string]*string{"key1": testStringPtr("value1")}),
+			tags:  New(ctx, map[string]*string{"key1": testStringPtr("value1")}),
 			key:   "key2",
 			field: "field2",
 			want:  nil,
 		},
 		{
 			name:  "non-existent TagData",
-			tags:  New(map[string]*string{"key1": testStringPtr("value1")}),
+			tags:  New(ctx, map[string]*string{"key1": testStringPtr("value1")}),
 			key:   "key1",
 			field: "field1",
 			want:  nil,
 		},
 		{
 			name: "non-existent field",
-			tags: New(map[string]*TagData{
+			tags: New(ctx, map[string]*TagData{
 				"key1": {
 					AdditionalStringFields: map[string]*string{"field1": testStringPtr("field1value")},
 					Value:                  testStringPtr("value1"),
@@ -954,7 +1024,7 @@ func TestKeyValueTagsKeyAdditionalStringValue(t *testing.T) {
 		},
 		{
 			name: "matching value",
-			tags: New(map[string]*TagData{
+			tags: New(ctx, map[string]*TagData{
 				"key1": {
 					AdditionalStringFields: map[string]*string{"field1": testStringPtr("field1value")},
 					Value:                  testStringPtr("value1"),
@@ -966,7 +1036,7 @@ func TestKeyValueTagsKeyAdditionalStringValue(t *testing.T) {
 		},
 		{
 			name: "matching nil",
-			tags: New(map[string]*TagData{
+			tags: New(ctx, map[string]*TagData{
 				"key1": {
 					AdditionalStringFields: map[string]*string{"field1": nil},
 					Value:                  testStringPtr("value1"),
@@ -982,6 +1052,8 @@ func TestKeyValueTagsKeyAdditionalStringValue(t *testing.T) {
 		testCase := testCase
 
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.tags.KeyAdditionalStringValue(testCase.key, testCase.field)
 
 			if testCase.want == nil && got != nil {
@@ -1000,6 +1072,9 @@ func TestKeyValueTagsKeyAdditionalStringValue(t *testing.T) {
 }
 
 func TestKeyValueTagsKeyExists(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
 	testCases := []struct {
 		name string
 		tags KeyValueTags
@@ -1008,32 +1083,35 @@ func TestKeyValueTagsKeyExists(t *testing.T) {
 	}{
 		{
 			name: "empty",
-			tags: New(map[string]*string{}),
+			tags: New(ctx, map[string]*string{}),
 			key:  "key1",
 			want: false,
 		},
 		{
 			name: "non-existent",
-			tags: New(map[string]*string{"key1": testStringPtr("value1")}),
+			tags: New(ctx, map[string]*string{"key1": testStringPtr("value1")}),
 			key:  "key2",
 			want: false,
 		},
 		{
 			name: "matching with string value",
-			tags: New(map[string]*string{"key1": testStringPtr("value1")}),
+			tags: New(ctx, map[string]*string{"key1": testStringPtr("value1")}),
 			key:  "key1",
 			want: true,
 		},
 		{
 			name: "matching with nil value",
-			tags: New(map[string]*string{"key1": nil}),
+			tags: New(ctx, map[string]*string{"key1": nil}),
 			key:  "key1",
 			want: true,
 		},
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.tags.KeyExists(testCase.key)
 
 			if got != testCase.want {
@@ -1044,6 +1122,9 @@ func TestKeyValueTagsKeyExists(t *testing.T) {
 }
 
 func TestKeyValueTagsKeyTagData(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
 	testCases := []struct {
 		name string
 		tags KeyValueTags
@@ -1052,19 +1133,19 @@ func TestKeyValueTagsKeyTagData(t *testing.T) {
 	}{
 		{
 			name: "empty",
-			tags: New(map[string]*string{}),
+			tags: New(ctx, map[string]*string{}),
 			key:  "key1",
 			want: nil,
 		},
 		{
 			name: "non-existent",
-			tags: New(map[string]*string{"key1": testStringPtr("value1")}),
+			tags: New(ctx, map[string]*string{"key1": testStringPtr("value1")}),
 			key:  "key2",
 			want: nil,
 		},
 		{
 			name: "matching with additional boolean fields",
-			tags: New(map[string]*TagData{
+			tags: New(ctx, map[string]*TagData{
 				"key1": {
 					AdditionalBoolFields: map[string]*bool{"boolfield": testBoolPtr(true)},
 					Value:                testStringPtr("value1"),
@@ -1078,7 +1159,7 @@ func TestKeyValueTagsKeyTagData(t *testing.T) {
 		},
 		{
 			name: "matching with string value",
-			tags: New(map[string]*string{"key1": testStringPtr("value1")}),
+			tags: New(ctx, map[string]*string{"key1": testStringPtr("value1")}),
 			key:  "key1",
 			want: &TagData{
 				Value: testStringPtr("value1"),
@@ -1086,7 +1167,7 @@ func TestKeyValueTagsKeyTagData(t *testing.T) {
 		},
 		{
 			name: "matching with nil value",
-			tags: New(map[string]*string{"key1": nil}),
+			tags: New(ctx, map[string]*string{"key1": nil}),
 			key:  "key1",
 			want: nil,
 		},
@@ -1096,6 +1177,8 @@ func TestKeyValueTagsKeyTagData(t *testing.T) {
 		testCase := testCase
 
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.tags.KeyTagData(testCase.key)
 
 			if testCase.want == nil && got != nil {
@@ -1114,6 +1197,9 @@ func TestKeyValueTagsKeyTagData(t *testing.T) {
 }
 
 func TestKeyValueTagsKeyValues(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
 	testCases := []struct {
 		name string
 		tags KeyValueTags
@@ -1122,32 +1208,35 @@ func TestKeyValueTagsKeyValues(t *testing.T) {
 	}{
 		{
 			name: "empty",
-			tags: New(map[string]*string{}),
+			tags: New(ctx, map[string]*string{}),
 			key:  "key1",
 			want: nil,
 		},
 		{
 			name: "non-existent",
-			tags: New(map[string]*string{"key1": testStringPtr("value1")}),
+			tags: New(ctx, map[string]*string{"key1": testStringPtr("value1")}),
 			key:  "key2",
 			want: nil,
 		},
 		{
 			name: "matching with string value",
-			tags: New(map[string]*string{"key1": testStringPtr("value1")}),
+			tags: New(ctx, map[string]*string{"key1": testStringPtr("value1")}),
 			key:  "key1",
 			want: testStringPtr("value1"),
 		},
 		{
 			name: "matching with nil value",
-			tags: New(map[string]*string{"key1": nil}),
+			tags: New(ctx, map[string]*string{"key1": nil}),
 			key:  "key1",
 			want: nil,
 		},
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.tags.KeyValue(testCase.key)
 
 			if testCase.want == nil && got != nil {
@@ -1166,6 +1255,9 @@ func TestKeyValueTagsKeyValues(t *testing.T) {
 }
 
 func TestKeyValueTagsKeys(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
 	testCases := []struct {
 		name string
 		tags KeyValueTags
@@ -1173,32 +1265,32 @@ func TestKeyValueTagsKeys(t *testing.T) {
 	}{
 		{
 			name: "empty_map_string_interface",
-			tags: New(map[string]interface{}{}),
+			tags: New(ctx, map[string]interface{}{}),
 			want: []string{},
 		},
 		{
 			name: "empty_map_string_stringPointer",
-			tags: New(map[string]*string{}),
+			tags: New(ctx, map[string]*string{}),
 			want: []string{},
 		},
 		{
 			name: "empty_map_string_string",
-			tags: New(map[string]string{}),
+			tags: New(ctx, map[string]string{}),
 			want: []string{},
 		},
 		{
 			name: "empty_slice_interface",
-			tags: New(map[string]interface{}{}),
+			tags: New(ctx, map[string]interface{}{}),
 			want: []string{},
 		},
 		{
 			name: "empty_slice_string",
-			tags: New(map[string]string{}),
+			tags: New(ctx, map[string]string{}),
 			want: []string{},
 		},
 		{
 			name: "non_empty_map_string_interface",
-			tags: New(map[string]interface{}{
+			tags: New(ctx, map[string]interface{}{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
@@ -1211,7 +1303,7 @@ func TestKeyValueTagsKeys(t *testing.T) {
 		},
 		{
 			name: "non_empty_map_string_string",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
@@ -1224,7 +1316,7 @@ func TestKeyValueTagsKeys(t *testing.T) {
 		},
 		{
 			name: "non_empty_map_string_stringPointer",
-			tags: New(map[string]*string{
+			tags: New(ctx, map[string]*string{
 				"key1": testStringPtr("value1"),
 				"key2": testStringPtr("value2"),
 				"key3": testStringPtr("value3"),
@@ -1237,7 +1329,7 @@ func TestKeyValueTagsKeys(t *testing.T) {
 		},
 		{
 			name: "non_empty_slice_interface",
-			tags: New([]interface{}{
+			tags: New(ctx, []interface{}{
 				"key1",
 				"key2",
 				"key3",
@@ -1250,7 +1342,7 @@ func TestKeyValueTagsKeys(t *testing.T) {
 		},
 		{
 			name: "non_empty_slice_string",
-			tags: New([]string{
+			tags: New(ctx, []string{
 				"key1",
 				"key2",
 				"key3",
@@ -1264,7 +1356,10 @@ func TestKeyValueTagsKeys(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.tags.Keys()
 
 			testKeyValueTagsVerifyKeys(t, got, testCase.want)
@@ -1273,6 +1368,9 @@ func TestKeyValueTagsKeys(t *testing.T) {
 }
 
 func TestKeyValueTagsMap(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
 	testCases := []struct {
 		name string
 		tags KeyValueTags
@@ -1280,22 +1378,22 @@ func TestKeyValueTagsMap(t *testing.T) {
 	}{
 		{
 			name: "empty_map_string_interface",
-			tags: New(map[string]interface{}{}),
+			tags: New(ctx, map[string]interface{}{}),
 			want: map[string]string{},
 		},
 		{
 			name: "empty_map_string_string",
-			tags: New(map[string]string{}),
+			tags: New(ctx, map[string]string{}),
 			want: map[string]string{},
 		},
 		{
 			name: "empty_map_string_stringPointer",
-			tags: New(map[string]*string{}),
+			tags: New(ctx, map[string]*string{}),
 			want: map[string]string{},
 		},
 		{
 			name: "non_empty_map_string_interface",
-			tags: New(map[string]interface{}{
+			tags: New(ctx, map[string]interface{}{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
@@ -1308,7 +1406,7 @@ func TestKeyValueTagsMap(t *testing.T) {
 		},
 		{
 			name: "non_empty_map_string_string",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
@@ -1321,7 +1419,7 @@ func TestKeyValueTagsMap(t *testing.T) {
 		},
 		{
 			name: "non_empty_map_string_stringPointer",
-			tags: New(map[string]*string{
+			tags: New(ctx, map[string]*string{
 				"key1": testStringPtr("value1"),
 				"key2": testStringPtr("value2"),
 				"key3": testStringPtr("value3"),
@@ -1334,7 +1432,7 @@ func TestKeyValueTagsMap(t *testing.T) {
 		},
 		{
 			name: "nil_value",
-			tags: New(map[string]*string{
+			tags: New(ctx, map[string]*string{
 				"key1": nil,
 			}),
 			want: map[string]string{
@@ -1344,7 +1442,10 @@ func TestKeyValueTagsMap(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.tags.Map()
 
 			testKeyValueTagsVerifyMap(t, got, testCase.want)
@@ -1353,6 +1454,9 @@ func TestKeyValueTagsMap(t *testing.T) {
 }
 
 func TestKeyValueTagsMerge(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
 	testCases := []struct {
 		name      string
 		tags      KeyValueTags
@@ -1361,18 +1465,18 @@ func TestKeyValueTagsMerge(t *testing.T) {
 	}{
 		{
 			name:      "empty",
-			tags:      New(map[string]string{}),
-			mergeTags: New(map[string]string{}),
+			tags:      New(ctx, map[string]string{}),
+			mergeTags: New(ctx, map[string]string{}),
 			want:      map[string]string{},
 		},
 		{
 			name: "add_all",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
-			mergeTags: New(map[string]string{
+			mergeTags: New(ctx, map[string]string{
 				"key4": "value4",
 				"key5": "value5",
 				"key6": "value6",
@@ -1388,12 +1492,12 @@ func TestKeyValueTagsMerge(t *testing.T) {
 		},
 		{
 			name: "mixed",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
-			mergeTags: New(map[string]string{
+			mergeTags: New(ctx, map[string]string{
 				"key1": "value1updated",
 				"key4": "value4",
 			}),
@@ -1406,12 +1510,12 @@ func TestKeyValueTagsMerge(t *testing.T) {
 		},
 		{
 			name: "update_all",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
-			mergeTags: New(map[string]string{
+			mergeTags: New(ctx, map[string]string{
 				"key1": "value1updated",
 				"key2": "value2updated",
 				"key3": "value3updated",
@@ -1425,7 +1529,10 @@ func TestKeyValueTagsMerge(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.tags.Merge(testCase.mergeTags)
 
 			testKeyValueTagsVerifyMap(t, got.Map(), testCase.want)
@@ -1434,6 +1541,9 @@ func TestKeyValueTagsMerge(t *testing.T) {
 }
 
 func TestKeyValueTagsOnly(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
 	testCases := []struct {
 		name     string
 		tags     KeyValueTags
@@ -1442,8 +1552,8 @@ func TestKeyValueTagsOnly(t *testing.T) {
 	}{
 		{
 			name: "empty",
-			tags: New(map[string]string{}),
-			onlyTags: New(map[string]string{
+			tags: New(ctx, map[string]string{}),
+			onlyTags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
@@ -1452,12 +1562,12 @@ func TestKeyValueTagsOnly(t *testing.T) {
 		},
 		{
 			name: "all",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
-			onlyTags: New(map[string]string{
+			onlyTags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
@@ -1470,12 +1580,12 @@ func TestKeyValueTagsOnly(t *testing.T) {
 		},
 		{
 			name: "mixed",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
-			onlyTags: New(map[string]string{
+			onlyTags: New(ctx, map[string]string{
 				"key1": "value1",
 			}),
 			want: map[string]string{
@@ -1484,12 +1594,12 @@ func TestKeyValueTagsOnly(t *testing.T) {
 		},
 		{
 			name: "none",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
-			onlyTags: New(map[string]string{
+			onlyTags: New(ctx, map[string]string{
 				"key4": "value4",
 				"key5": "value5",
 				"key6": "value6",
@@ -1499,7 +1609,10 @@ func TestKeyValueTagsOnly(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.tags.Only(testCase.onlyTags)
 
 			testKeyValueTagsVerifyMap(t, got.Map(), testCase.want)
@@ -1508,6 +1621,9 @@ func TestKeyValueTagsOnly(t *testing.T) {
 }
 
 func TestKeyValueTagsRemoved(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
 	testCases := []struct {
 		name    string
 		oldTags KeyValueTags
@@ -1516,18 +1632,18 @@ func TestKeyValueTagsRemoved(t *testing.T) {
 	}{
 		{
 			name:    "empty",
-			oldTags: New(map[string]string{}),
-			newTags: New(map[string]string{}),
+			oldTags: New(ctx, map[string]string{}),
+			newTags: New(ctx, map[string]string{}),
 			want:    map[string]string{},
 		},
 		{
 			name: "all_new",
-			oldTags: New(map[string]string{
+			oldTags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
-			newTags: New(map[string]string{
+			newTags: New(ctx, map[string]string{
 				"key4": "value4",
 				"key5": "value5",
 				"key6": "value6",
@@ -1540,12 +1656,12 @@ func TestKeyValueTagsRemoved(t *testing.T) {
 		},
 		{
 			name: "mixed",
-			oldTags: New(map[string]string{
+			oldTags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
-			newTags: New(map[string]string{
+			newTags: New(ctx, map[string]string{
 				"key1": "value1",
 			}),
 			want: map[string]string{
@@ -1555,12 +1671,12 @@ func TestKeyValueTagsRemoved(t *testing.T) {
 		},
 		{
 			name: "no_changes",
-			oldTags: New(map[string]string{
+			oldTags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
-			newTags: New(map[string]string{
+			newTags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
@@ -1570,7 +1686,10 @@ func TestKeyValueTagsRemoved(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.oldTags.Removed(testCase.newTags)
 
 			testKeyValueTagsVerifyMap(t, got.Map(), testCase.want)
@@ -1579,6 +1698,9 @@ func TestKeyValueTagsRemoved(t *testing.T) {
 }
 
 func TestKeyValueTagsUpdated(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
 	testCases := []struct {
 		name    string
 		oldTags KeyValueTags
@@ -1587,18 +1709,18 @@ func TestKeyValueTagsUpdated(t *testing.T) {
 	}{
 		{
 			name:    "empty",
-			oldTags: New(map[string]string{}),
-			newTags: New(map[string]string{}),
+			oldTags: New(ctx, map[string]string{}),
+			newTags: New(ctx, map[string]string{}),
 			want:    map[string]string{},
 		},
 		{
 			name: "all_new",
-			oldTags: New(map[string]string{
+			oldTags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
-			newTags: New(map[string]string{
+			newTags: New(ctx, map[string]string{
 				"key4": "value4",
 				"key5": "value5",
 				"key6": "value6",
@@ -1611,12 +1733,12 @@ func TestKeyValueTagsUpdated(t *testing.T) {
 		},
 		{
 			name: "mixed",
-			oldTags: New(map[string]string{
+			oldTags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
-			newTags: New(map[string]string{
+			newTags: New(ctx, map[string]string{
 				"key1": "value1updated",
 				"key4": "value4",
 			}),
@@ -1627,12 +1749,12 @@ func TestKeyValueTagsUpdated(t *testing.T) {
 		},
 		{
 			name: "no_changes",
-			oldTags: New(map[string]string{
+			oldTags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
-			newTags: New(map[string]string{
+			newTags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
@@ -1642,7 +1764,10 @@ func TestKeyValueTagsUpdated(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.oldTags.Updated(testCase.newTags)
 
 			testKeyValueTagsVerifyMap(t, got.Map(), testCase.want)
@@ -1651,6 +1776,9 @@ func TestKeyValueTagsUpdated(t *testing.T) {
 }
 
 func TestKeyValueTagsChunks(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
 	testCases := []struct {
 		name string
 		tags KeyValueTags
@@ -1659,13 +1787,13 @@ func TestKeyValueTagsChunks(t *testing.T) {
 	}{
 		{
 			name: "empty",
-			tags: New(map[string]string{}),
+			tags: New(ctx, map[string]string{}),
 			size: 10,
 			want: []int{},
 		},
 		{
 			name: "chunk_1",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
@@ -1676,7 +1804,7 @@ func TestKeyValueTagsChunks(t *testing.T) {
 		},
 		{
 			name: "chunk_2",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
@@ -1687,7 +1815,7 @@ func TestKeyValueTagsChunks(t *testing.T) {
 		},
 		{
 			name: "chunk_3",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
@@ -1698,7 +1826,7 @@ func TestKeyValueTagsChunks(t *testing.T) {
 		},
 		{
 			name: "chunk_4",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
@@ -1709,7 +1837,7 @@ func TestKeyValueTagsChunks(t *testing.T) {
 		},
 		{
 			name: "chunk_5",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
@@ -1721,7 +1849,11 @@ func TestKeyValueTagsChunks(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
+
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.tags.Chunks(testCase.size)
 
 			if len(got) != len(testCase.want) {
@@ -1738,6 +1870,9 @@ func TestKeyValueTagsChunks(t *testing.T) {
 }
 
 func TestKeyValueTagsContainsAll(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
 	testCases := []struct {
 		name   string
 		source KeyValueTags
@@ -1746,43 +1881,43 @@ func TestKeyValueTagsContainsAll(t *testing.T) {
 	}{
 		{
 			name:   "empty",
-			source: New(map[string]string{}),
-			target: New(map[string]string{}),
+			source: New(ctx, map[string]string{}),
+			target: New(ctx, map[string]string{}),
 			want:   true,
 		},
 		{
 			name:   "source_empty",
-			source: New(map[string]string{}),
-			target: New(map[string]string{
+			source: New(ctx, map[string]string{}),
+			target: New(ctx, map[string]string{
 				"key1": "value1",
 			}),
 			want: false,
 		},
 		{
 			name: "target_empty",
-			source: New(map[string]string{
+			source: New(ctx, map[string]string{
 				"key1": "value1",
 			}),
-			target: New(map[string]string{}),
+			target: New(ctx, map[string]string{}),
 			want:   true,
 		},
 		{
 			name: "nil value matches",
-			source: New(map[string]*string{
+			source: New(ctx, map[string]*string{
 				"key1": nil,
 			}),
-			target: New(map[string]*string{
+			target: New(ctx, map[string]*string{
 				"key1": nil,
 			}),
 			want: true,
 		},
 		{
 			name: "exact_match",
-			source: New(map[string]string{
+			source: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 			}),
-			target: New(map[string]string{
+			target: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 			}),
@@ -1790,12 +1925,12 @@ func TestKeyValueTagsContainsAll(t *testing.T) {
 		},
 		{
 			name: "source_contains_all",
-			source: New(map[string]string{
+			source: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
-			target: New(map[string]string{
+			target: New(ctx, map[string]string{
 				"key1": "value1",
 				"key3": "value3",
 			}),
@@ -1803,12 +1938,12 @@ func TestKeyValueTagsContainsAll(t *testing.T) {
 		},
 		{
 			name: "source_does_not_contain_all",
-			source: New(map[string]string{
+			source: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
-			target: New(map[string]string{
+			target: New(ctx, map[string]string{
 				"key1": "value1",
 				"key4": "value4",
 			}),
@@ -1817,7 +1952,10 @@ func TestKeyValueTagsContainsAll(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.source.ContainsAll(testCase.target)
 
 			if got != testCase.want {
@@ -1828,6 +1966,9 @@ func TestKeyValueTagsContainsAll(t *testing.T) {
 }
 
 func TestKeyValueTagsEqual(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
 	testCases := []struct {
 		name   string
 		source KeyValueTags
@@ -1842,29 +1983,29 @@ func TestKeyValueTagsEqual(t *testing.T) {
 		},
 		{
 			name:   "empty",
-			source: New(map[string]string{}),
-			target: New(map[string]string{}),
+			source: New(ctx, map[string]string{}),
+			target: New(ctx, map[string]string{}),
 			want:   true,
 		},
 		{
 			name:   "source_nil",
 			source: nil,
-			target: New(map[string]string{
+			target: New(ctx, map[string]string{
 				"key1": "value1",
 			}),
 			want: false,
 		},
 		{
 			name:   "source_empty",
-			source: New(map[string]string{}),
-			target: New(map[string]string{
+			source: New(ctx, map[string]string{}),
+			target: New(ctx, map[string]string{
 				"key1": "value1",
 			}),
 			want: false,
 		},
 		{
 			name: "target_nil",
-			source: New(map[string]string{
+			source: New(ctx, map[string]string{
 				"key1": "value1",
 			}),
 			target: nil,
@@ -1872,29 +2013,29 @@ func TestKeyValueTagsEqual(t *testing.T) {
 		},
 		{
 			name: "target_empty",
-			source: New(map[string]string{
+			source: New(ctx, map[string]string{
 				"key1": "value1",
 			}),
-			target: New(map[string]string{}),
+			target: New(ctx, map[string]string{}),
 			want:   false,
 		},
 		{
 			name: "nil value matches",
-			source: New(map[string]*string{
+			source: New(ctx, map[string]*string{
 				"key1": nil,
 			}),
-			target: New(map[string]*string{
+			target: New(ctx, map[string]*string{
 				"key1": nil,
 			}),
 			want: true,
 		},
 		{
 			name: "exact_match",
-			source: New(map[string]string{
+			source: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 			}),
-			target: New(map[string]string{
+			target: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 			}),
@@ -1902,12 +2043,12 @@ func TestKeyValueTagsEqual(t *testing.T) {
 		},
 		{
 			name: "source_contains_all",
-			source: New(map[string]string{
+			source: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
-			target: New(map[string]string{
+			target: New(ctx, map[string]string{
 				"key1": "value1",
 				"key3": "value3",
 			}),
@@ -1915,12 +2056,12 @@ func TestKeyValueTagsEqual(t *testing.T) {
 		},
 		{
 			name: "source_does_not_contain_all",
-			source: New(map[string]string{
+			source: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
-			target: New(map[string]string{
+			target: New(ctx, map[string]string{
 				"key1": "value1",
 				"key4": "value4",
 			}),
@@ -1928,12 +2069,12 @@ func TestKeyValueTagsEqual(t *testing.T) {
 		},
 		{
 			name: "target_value_neq",
-			source: New(map[string]string{
+			source: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
-			target: New(map[string]string{
+			target: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value4",
@@ -1943,7 +2084,10 @@ func TestKeyValueTagsEqual(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.source.Equal(testCase.target)
 
 			if got != testCase.want {
@@ -1954,6 +2098,9 @@ func TestKeyValueTagsEqual(t *testing.T) {
 }
 
 func TestKeyValueTagsHash(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
 	testCases := []struct {
 		name string
 		tags KeyValueTags
@@ -1961,19 +2108,19 @@ func TestKeyValueTagsHash(t *testing.T) {
 	}{
 		{
 			name: "empty",
-			tags: New(map[string]string{}),
+			tags: New(ctx, map[string]string{}),
 			zero: true,
 		},
 		{
 			name: "nil value",
-			tags: New(map[string]*string{
+			tags: New(ctx, map[string]*string{
 				"key1": nil,
 			}),
 			zero: false,
 		},
 		{
 			name: "not_empty",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
@@ -1984,7 +2131,11 @@ func TestKeyValueTagsHash(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
+
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.tags.Hash()
 
 			if (got == 0 && !testCase.zero) || (got != 0 && testCase.zero) {
@@ -1995,6 +2146,9 @@ func TestKeyValueTagsHash(t *testing.T) {
 }
 
 func TestKeyValueTagsRemoveDefaultConfig(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
 	testCases := []struct {
 		name          string
 		tags          KeyValueTags
@@ -2003,7 +2157,7 @@ func TestKeyValueTagsRemoveDefaultConfig(t *testing.T) {
 	}{
 		{
 			name: "empty config",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
@@ -2017,7 +2171,7 @@ func TestKeyValueTagsRemoveDefaultConfig(t *testing.T) {
 		},
 		{
 			name: "no config",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
@@ -2031,9 +2185,9 @@ func TestKeyValueTagsRemoveDefaultConfig(t *testing.T) {
 		},
 		{
 			name: "no tags",
-			tags: New(map[string]string{}),
+			tags: New(ctx, map[string]string{}),
 			defaultConfig: &DefaultConfig{
-				Tags: New(map[string]string{
+				Tags: New(ctx, map[string]string{
 					"key1": "value1",
 					"key2": "value2",
 					"key3": "value3",
@@ -2043,13 +2197,13 @@ func TestKeyValueTagsRemoveDefaultConfig(t *testing.T) {
 		},
 		{
 			name: "keys all matching",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
 			defaultConfig: &DefaultConfig{
-				Tags: New(map[string]string{
+				Tags: New(ctx, map[string]string{
 					"key1": "value1",
 					"key2": "value2",
 					"key3": "value3",
@@ -2059,13 +2213,13 @@ func TestKeyValueTagsRemoveDefaultConfig(t *testing.T) {
 		},
 		{
 			name: "keys some matching",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
 			defaultConfig: &DefaultConfig{
-				Tags: New(map[string]string{
+				Tags: New(ctx, map[string]string{
 					"key1": "value1",
 				}),
 			},
@@ -2076,13 +2230,13 @@ func TestKeyValueTagsRemoveDefaultConfig(t *testing.T) {
 		},
 		{
 			name: "keys some overridden",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value2",
 				"key2": "value2",
 				"key3": "value3",
 			}),
 			defaultConfig: &DefaultConfig{
-				Tags: New(map[string]string{
+				Tags: New(ctx, map[string]string{
 					"key1": "value1",
 				}),
 			},
@@ -2094,13 +2248,13 @@ func TestKeyValueTagsRemoveDefaultConfig(t *testing.T) {
 		},
 		{
 			name: "keys none matching",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
 			}),
 			defaultConfig: &DefaultConfig{
-				Tags: New(map[string]string{
+				Tags: New(ctx, map[string]string{
 					"key4": "value4",
 					"key5": "value5",
 					"key6": "value6",
@@ -2115,7 +2269,10 @@ func TestKeyValueTagsRemoveDefaultConfig(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.tags.RemoveDefaultConfig(testCase.defaultConfig)
 
 			testKeyValueTagsVerifyMap(t, got.Map(), testCase.want)
@@ -2124,6 +2281,9 @@ func TestKeyValueTagsRemoveDefaultConfig(t *testing.T) {
 }
 
 func TestKeyValueTagsURLEncode(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
 	testCases := []struct {
 		name string
 		tags KeyValueTags
@@ -2131,26 +2291,26 @@ func TestKeyValueTagsURLEncode(t *testing.T) {
 	}{
 		{
 			name: "empty",
-			tags: New(map[string]string{}),
+			tags: New(ctx, map[string]string{}),
 			want: "",
 		},
 		{
 			name: "nil value",
-			tags: New(map[string]*string{
+			tags: New(ctx, map[string]*string{
 				"key1": nil,
 			}),
 			want: "",
 		},
 		{
 			name: "single",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 			}),
 			want: "key1=value1",
 		},
 		{
 			name: "multiple",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
@@ -2159,7 +2319,7 @@ func TestKeyValueTagsURLEncode(t *testing.T) {
 		},
 		{
 			name: "multiple_with_encoded",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1":  "value 1",
 				"key@2": "value+:2",
 				"key3":  "value3",
@@ -2169,7 +2329,10 @@ func TestKeyValueTagsURLEncode(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.tags.URLEncode()
 
 			if got != testCase.want {
@@ -2180,6 +2343,9 @@ func TestKeyValueTagsURLEncode(t *testing.T) {
 }
 
 func TestKeyValueTagsURLQueryString(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
 	testCases := []struct {
 		name string
 		tags KeyValueTags
@@ -2187,26 +2353,26 @@ func TestKeyValueTagsURLQueryString(t *testing.T) {
 	}{
 		{
 			name: "empty",
-			tags: New(map[string]string{}),
+			tags: New(ctx, map[string]string{}),
 			want: "",
 		},
 		{
 			name: "nil value",
-			tags: New(map[string]*string{
+			tags: New(ctx, map[string]*string{
 				"key1": nil,
 			}),
 			want: "",
 		},
 		{
 			name: "single",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 			}),
 			want: "key1=value1",
 		},
 		{
 			name: "multiple",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
@@ -2215,7 +2381,7 @@ func TestKeyValueTagsURLQueryString(t *testing.T) {
 		},
 		{
 			name: "multiple_with_encoded",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1":  "value 1",
 				"key@2": "value+:2",
 				"key3":  "value3",
@@ -2225,7 +2391,10 @@ func TestKeyValueTagsURLQueryString(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.tags.URLQueryString()
 
 			if got != testCase.want {
@@ -2236,6 +2405,9 @@ func TestKeyValueTagsURLQueryString(t *testing.T) {
 }
 
 func TestNew(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
 	testCases := []struct {
 		name   string
 		source interface{}
@@ -2376,8 +2548,12 @@ func TestNew(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
+
 		t.Run(testCase.name, func(t *testing.T) {
-			got := New(testCase.source)
+			t.Parallel()
+
+			got := New(ctx, testCase.source)
 
 			testKeyValueTagsVerifyMap(t, got.Map(), testCase.want)
 
@@ -2385,7 +2561,7 @@ func TestNew(t *testing.T) {
 			// Unfortunately must be done for each separate type
 			switch src := testCase.source.(type) {
 			case KeyValueTags:
-				src.Merge(New(map[string]string{"mergekey": "mergevalue"}))
+				src.Merge(New(ctx, map[string]string{"mergekey": "mergevalue"}))
 
 				_, ok := got.Map()["mergekey"]
 
@@ -2406,6 +2582,8 @@ func TestNew(t *testing.T) {
 }
 
 func TestTagDataEqual(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name     string
 		tagData1 *TagData
@@ -2532,6 +2710,8 @@ func TestTagDataEqual(t *testing.T) {
 		testCase := testCase
 
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.tagData1.Equal(testCase.tagData2)
 
 			if testCase.want != got {
@@ -2542,6 +2722,8 @@ func TestTagDataEqual(t *testing.T) {
 }
 
 func TestTagDataString(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name    string
 		tagData *TagData
@@ -2581,6 +2763,8 @@ func TestTagDataString(t *testing.T) {
 		testCase := testCase
 
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.tagData.String()
 
 			if testCase.want != got {
@@ -2591,6 +2775,8 @@ func TestTagDataString(t *testing.T) {
 }
 
 func TestToSnakeCase(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		Input    string
 		Expected string
@@ -2621,6 +2807,8 @@ func TestToSnakeCase(t *testing.T) {
 		testCase := testCase
 
 		t.Run(testCase.Input, func(t *testing.T) {
+			t.Parallel()
+
 			got := ToSnakeCase(testCase.Input)
 
 			if got != testCase.Expected {
@@ -2631,6 +2819,9 @@ func TestToSnakeCase(t *testing.T) {
 }
 
 func TestKeyValueTagsString(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
 	testCases := []struct {
 		name string
 		tags KeyValueTags
@@ -2638,26 +2829,26 @@ func TestKeyValueTagsString(t *testing.T) {
 	}{
 		{
 			name: "empty",
-			tags: New(map[string]string{}),
+			tags: New(ctx, map[string]string{}),
 			want: "map[]",
 		},
 		{
 			name: "no value",
-			tags: New(map[string]*string{
+			tags: New(ctx, map[string]*string{
 				"key1": nil,
 			}),
 			want: "map[key1:]",
 		},
 		{
 			name: "single",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 			}),
 			want: "map[key1:TagData{Value: value1}]",
 		},
 		{
 			name: "multiple",
-			tags: New(map[string]string{
+			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key3": "value3",
 				"key2": "value2",
@@ -2669,7 +2860,10 @@ func TestKeyValueTagsString(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.tags.String()
 
 			if got != testCase.want {

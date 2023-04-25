@@ -10,15 +10,18 @@ import (
 	"github.com/aws/aws-sdk-go/service/qldb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_qldb_stream", name="Stream")
+// @Tags(identifierAttribute="arn")
 func ResourceStream() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStreamCreate,
@@ -87,8 +90,8 @@ func ResourceStream() *schema.Resource {
 					validation.StringLenBetween(1, 32),
 				),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -96,9 +99,7 @@ func ResourceStream() *schema.Resource {
 }
 
 func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QLDBConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).QLDBConn()
 
 	ledgerName := d.Get("ledger_name").(string)
 	name := d.Get("stream_name").(string)
@@ -106,7 +107,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		LedgerName: aws.String(ledgerName),
 		RoleArn:    aws.String(d.Get("role_arn").(string)),
 		StreamName: aws.String(name),
-		Tags:       Tags(tags.IgnoreAWS()),
+		Tags:       GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("exclusive_end_time"); ok {
@@ -140,9 +141,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QLDBConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).QLDBConn()
 
 	ledgerName := d.Get("ledger_name").(string)
 	stream, err := FindStream(ctx, conn, ledgerName, d.Id())
@@ -179,42 +178,16 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("role_arn", stream.RoleArn)
 	d.Set("stream_name", stream.StreamName)
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
-
-	if err != nil {
-		return diag.Errorf("listing tags for QLDB Stream (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
-
 	return nil
 }
 
 func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QLDBConn
-
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating tags: %s", err)
-		}
-	}
-
+	// Tags only.
 	return resourceStreamRead(ctx, d, meta)
 }
 
 func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QLDBConn
+	conn := meta.(*conns.AWSClient).QLDBConn()
 
 	ledgerName := d.Get("ledger_name").(string)
 	input := &qldb.CancelJournalKinesisStreamInput{
@@ -223,7 +196,7 @@ func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[INFO] Deleting QLDB Stream: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 5*time.Minute,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute,
 		func() (interface{}, error) {
 			return conn.CancelJournalKinesisStreamWithContext(ctx, input)
 		}, qldb.ErrCodeResourceInUseException)
@@ -258,7 +231,7 @@ func FindStream(ctx context.Context, conn *qldb.QLDB, ledgerName, streamID strin
 	// See https://docs.aws.amazon.com/qldb/latest/developerguide/streams.create.html#streams.create.states.
 	switch status := aws.StringValue(output.Status); status {
 	case qldb.StreamStatusCompleted, qldb.StreamStatusCanceled, qldb.StreamStatusFailed:
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
 		}
@@ -271,7 +244,7 @@ func findJournalKinesisStream(ctx context.Context, conn *qldb.QLDB, input *qldb.
 	output, err := conn.DescribeJournalKinesisStreamWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, qldb.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -288,7 +261,7 @@ func findJournalKinesisStream(ctx context.Context, conn *qldb.QLDB, input *qldb.
 	return output.Stream, nil
 }
 
-func statusStreamCreated(ctx context.Context, conn *qldb.QLDB, ledgerName, streamID string) resource.StateRefreshFunc {
+func statusStreamCreated(ctx context.Context, conn *qldb.QLDB, ledgerName, streamID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		// Don't call FindStream as it maps useful statuses to NotFoundError.
 		output, err := findJournalKinesisStream(ctx, conn, &qldb.DescribeJournalKinesisStreamInput{
@@ -309,7 +282,7 @@ func statusStreamCreated(ctx context.Context, conn *qldb.QLDB, ledgerName, strea
 }
 
 func waitStreamCreated(ctx context.Context, conn *qldb.QLDB, ledgerName, streamID string) (*qldb.JournalKinesisStreamDescription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{qldb.StreamStatusImpaired},
 		Target:     []string{qldb.StreamStatusActive},
 		Refresh:    statusStreamCreated(ctx, conn, ledgerName, streamID),
@@ -328,7 +301,7 @@ func waitStreamCreated(ctx context.Context, conn *qldb.QLDB, ledgerName, streamI
 	return nil, err
 }
 
-func statusStreamDeleted(ctx context.Context, conn *qldb.QLDB, ledgerName, streamID string) resource.StateRefreshFunc {
+func statusStreamDeleted(ctx context.Context, conn *qldb.QLDB, ledgerName, streamID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindStream(ctx, conn, ledgerName, streamID)
 
@@ -345,7 +318,7 @@ func statusStreamDeleted(ctx context.Context, conn *qldb.QLDB, ledgerName, strea
 }
 
 func waitStreamDeleted(ctx context.Context, conn *qldb.QLDB, ledgerName, streamID string) (*qldb.JournalKinesisStreamDescription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{qldb.StreamStatusActive, qldb.StreamStatusImpaired},
 		Target:     []string{},
 		Refresh:    statusStreamDeleted(ctx, conn, ledgerName, streamID),

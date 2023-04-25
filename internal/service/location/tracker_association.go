@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/locationservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,11 +22,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_location_tracker_association")
 func ResourceTrackerAssociation() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceTrackerAssociationCreate,
-		ReadContext:   resourceTrackerAssociationRead,
-		DeleteContext: resourceTrackerAssociationDelete,
+		CreateWithoutTimeout: resourceTrackerAssociationCreate,
+		ReadWithoutTimeout:   resourceTrackerAssociationRead,
+		DeleteWithoutTimeout: resourceTrackerAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -59,7 +60,7 @@ const (
 )
 
 func resourceTrackerAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	consumerArn := d.Get("consumer_arn").(string)
 	trackerName := d.Get("tracker_name").(string)
@@ -84,7 +85,7 @@ func resourceTrackerAssociationCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceTrackerAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	trackerAssociationId, err := TrackerAssociationParseID(d.Id())
 	if err != nil {
@@ -110,7 +111,7 @@ func resourceTrackerAssociationRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceTrackerAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	log.Printf("[INFO] Deleting Location TrackerAssociation %s", d.Id())
 
@@ -163,7 +164,7 @@ func FindTrackerAssociationByTrackerNameAndConsumerARN(ctx context.Context, conn
 	}
 
 	if !found {
-		return &resource.NotFoundError{}
+		return &retry.NotFoundError{}
 	}
 
 	return nil

@@ -8,6 +8,8 @@ import (
 )
 
 func TestValidLogGroupName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"ValidLogGroupName",
 		"ValidLogGroup.Name",
@@ -43,6 +45,8 @@ func TestValidLogGroupName(t *testing.T) {
 }
 
 func TestValidLogGroupNamePrefix(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"ValidLogGroupName",
 		"ValidLogGroup.Name",
@@ -78,6 +82,8 @@ func TestValidLogGroupNamePrefix(t *testing.T) {
 }
 
 func TestValidLogMetricFilterName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"YadaHereAndThere",
 		"Valid-5Metric_Name",
@@ -108,6 +114,8 @@ func TestValidLogMetricFilterName(t *testing.T) {
 }
 
 func TestValidLogMetricTransformationName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"YadaHereAndThere",
 		"Valid-5Metric_Name",
@@ -140,6 +148,8 @@ func TestValidLogMetricTransformationName(t *testing.T) {
 }
 
 func TestValidStreamName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"test-log-stream",
 		"my_sample_log_stream",

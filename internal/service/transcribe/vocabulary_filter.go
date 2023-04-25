@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/transcribe/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,6 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_transcribe_vocabulary_filter", name="Vocabulary Filter")
+// @Tags(identifierAttribute="arn")
 func ResourceVocabularyFilter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVocabularyFilterCreate,
@@ -57,8 +59,8 @@ func ResourceVocabularyFilter() *schema.Resource {
 				ExactlyOneOf: []string{"words", "vocabulary_filter_file_uri"},
 				Elem:         &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vocabulary_filter_file_uri": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -90,11 +92,12 @@ const (
 )
 
 func resourceVocabularyFilterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeClient
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	in := &transcribe.CreateVocabularyFilterInput{
 		VocabularyFilterName: aws.String(d.Get("vocabulary_filter_name").(string)),
 		LanguageCode:         types.LanguageCode(d.Get("language_code").(string)),
+		Tags:                 GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("vocabulary_filter_file_uri"); ok {
@@ -103,13 +106,6 @@ func resourceVocabularyFilterCreate(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk("words"); ok {
 		in.Words = flex.ExpandStringValueList(v.([]interface{}))
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	out, err := conn.CreateVocabularyFilter(ctx, in)
@@ -127,7 +123,7 @@ func resourceVocabularyFilterCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceVocabularyFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeClient
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	out, err := FindVocabularyFilterByName(ctx, conn, d.Id())
 
@@ -160,28 +156,11 @@ func resourceVocabularyFilterRead(ctx context.Context, d *schema.ResourceData, m
 	}
 	d.Set("download_uri", downloadUri)
 
-	tags, err := ListTags(ctx, conn, arn)
-	if err != nil {
-		return create.DiagError(names.Transcribe, create.ErrActionReading, ResNameVocabularyFilter, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.Transcribe, create.ErrActionSetting, ResNameVocabularyFilter, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.Transcribe, create.ErrActionSetting, ResNameVocabularyFilter, d.Id(), err)
-	}
-
 	return nil
 }
 
 func resourceVocabularyFilterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeClient
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		in := &transcribe.UpdateVocabularyFilterInput{
@@ -203,19 +182,11 @@ func resourceVocabularyFilterUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("error updating Transcribe VocabularyFilter (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return resourceVocabularyFilterRead(ctx, d, meta)
 }
 
 func resourceVocabularyFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeClient
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	log.Printf("[INFO] Deleting Transcribe VocabularyFilter %s", d.Id())
 
@@ -243,7 +214,7 @@ func FindVocabularyFilterByName(ctx context.Context, conn *transcribe.Client, id
 	if err != nil {
 		var bre *types.BadRequestException
 		if errors.As(err, &bre) {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}

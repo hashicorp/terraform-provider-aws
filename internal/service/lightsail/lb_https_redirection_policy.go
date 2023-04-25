@@ -2,7 +2,6 @@ package lightsail
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"regexp"
 
@@ -17,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_lightsail_lb_https_redirection_policy")
 func ResourceLoadBalancerHTTPSRedirectionPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerHTTPSRedirectionPolicyCreate,
@@ -48,10 +48,10 @@ func ResourceLoadBalancerHTTPSRedirectionPolicy() *schema.Resource {
 }
 
 func resourceLoadBalancerHTTPSRedirectionPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
-
+	conn := meta.(*conns.AWSClient).LightsailConn()
+	lbName := d.Get("lb_name").(string)
 	in := lightsail.UpdateLoadBalancerAttributeInput{
-		LoadBalancerName: aws.String(d.Get("lb_name").(string)),
+		LoadBalancerName: aws.String(lbName),
 		AttributeName:    aws.String(lightsail.LoadBalancerAttributeNameHttpsRedirectionEnabled),
 		AttributeValue:   aws.String(fmt.Sprint(d.Get("enabled").(bool))),
 	}
@@ -59,27 +59,22 @@ func resourceLoadBalancerHTTPSRedirectionPolicyCreate(ctx context.Context, d *sc
 	out, err := conn.UpdateLoadBalancerAttributeWithContext(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerHTTPSRedirectionPolicy, d.Get("lb_name").(string), err)
+		return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerHTTPSRedirectionPolicy, lbName, err)
 	}
 
-	if len(out.Operations) == 0 {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerHTTPSRedirectionPolicy, d.Get("lb_name").(string), errors.New("No operations found for Update Load Balancer Attribute request"))
+	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerHTTPSRedirectionPolicy, lbName)
+
+	if diag != nil {
+		return diag
 	}
 
-	op := out.Operations[0]
-	err = waitOperation(conn, op.Id)
-
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerHTTPSRedirectionPolicy, d.Get("lb_name").(string), errors.New("Error waiting for Update Load Balancer Attribute request operation"))
-	}
-
-	d.SetId(d.Get("lb_name").(string))
+	d.SetId(lbName)
 
 	return resourceLoadBalancerHTTPSRedirectionPolicyRead(ctx, d, meta)
 }
 
 func resourceLoadBalancerHTTPSRedirectionPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	out, err := FindLoadBalancerHTTPSRedirectionPolicyById(ctx, conn, d.Id())
 
@@ -100,11 +95,11 @@ func resourceLoadBalancerHTTPSRedirectionPolicyRead(ctx context.Context, d *sche
 }
 
 func resourceLoadBalancerHTTPSRedirectionPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
-
+	conn := meta.(*conns.AWSClient).LightsailConn()
+	lbName := d.Get("lb_name").(string)
 	if d.HasChange("enabled") {
 		in := lightsail.UpdateLoadBalancerAttributeInput{
-			LoadBalancerName: aws.String(d.Get("lb_name").(string)),
+			LoadBalancerName: aws.String(lbName),
 			AttributeName:    aws.String(lightsail.LoadBalancerAttributeNameHttpsRedirectionEnabled),
 			AttributeValue:   aws.String(fmt.Sprint(d.Get("enabled").(bool))),
 		}
@@ -112,18 +107,13 @@ func resourceLoadBalancerHTTPSRedirectionPolicyUpdate(ctx context.Context, d *sc
 		out, err := conn.UpdateLoadBalancerAttributeWithContext(ctx, &in)
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerHTTPSRedirectionPolicy, d.Get("lb_name").(string), err)
+			return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerHTTPSRedirectionPolicy, lbName, err)
 		}
 
-		if len(out.Operations) == 0 {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerHTTPSRedirectionPolicy, d.Get("lb_name").(string), errors.New("No operations found for Update Load Balancer Attribute request"))
-		}
+		diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerHTTPSRedirectionPolicy, lbName)
 
-		op := out.Operations[0]
-		err = waitOperation(conn, op.Id)
-
-		if err != nil {
-			return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerHTTPSRedirectionPolicy, d.Get("lb_name").(string), errors.New("Error waiting for Update Load Balancer Attribute request operation"))
+		if diag != nil {
+			return diag
 		}
 	}
 
@@ -131,10 +121,10 @@ func resourceLoadBalancerHTTPSRedirectionPolicyUpdate(ctx context.Context, d *sc
 }
 
 func resourceLoadBalancerHTTPSRedirectionPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
-
+	conn := meta.(*conns.AWSClient).LightsailConn()
+	lbName := d.Get("lb_name").(string)
 	in := lightsail.UpdateLoadBalancerAttributeInput{
-		LoadBalancerName: aws.String(d.Get("lb_name").(string)),
+		LoadBalancerName: aws.String(lbName),
 		AttributeName:    aws.String(lightsail.LoadBalancerAttributeNameHttpsRedirectionEnabled),
 		AttributeValue:   aws.String("false"),
 	}
@@ -142,18 +132,13 @@ func resourceLoadBalancerHTTPSRedirectionPolicyDelete(ctx context.Context, d *sc
 	out, err := conn.UpdateLoadBalancerAttributeWithContext(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerHTTPSRedirectionPolicy, d.Get("lb_name").(string), err)
+		return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerHTTPSRedirectionPolicy, lbName, err)
 	}
 
-	if len(out.Operations) == 0 {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerHTTPSRedirectionPolicy, d.Get("lb_name").(string), errors.New("No operations found for Update Load Balancer Attribute request"))
-	}
+	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerHTTPSRedirectionPolicy, lbName)
 
-	op := out.Operations[0]
-	err = waitOperation(conn, op.Id)
-
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerHTTPSRedirectionPolicy, d.Get("lb_name").(string), errors.New("Error waiting for Update Load Balancer Attribute request operation"))
+	if diag != nil {
+		return diag
 	}
 
 	return nil

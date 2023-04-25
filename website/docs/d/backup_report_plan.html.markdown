@@ -38,6 +38,7 @@ In addition to the arguments above, the following attributes are exported:
 * `tags` - Metadata that you can assign to help organize the report plans you create.
 
 ### Report Delivery Channel Attributes
+
 For **report_delivery_channel** the following attributes are supported:
 
 * `formats` - List of the format of your reports: CSV, JSON, or both.
@@ -45,6 +46,7 @@ For **report_delivery_channel** the following attributes are supported:
 * `s3_key_prefix` - Prefix for where Backup Audit Manager delivers your reports to Amazon S3. The prefix is this part of the following path: s3://your-bucket-name/prefix/Backup/us-west-2/year/month/day/report-name.
 
 ### Report Setting Attributes
+
 For **report_setting** the following attributes are supported:
 
 * `accounts` - (Optional) Specifies the list of accounts a report covers.

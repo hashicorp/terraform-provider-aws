@@ -19,6 +19,7 @@ import (
 )
 
 func TestAccMediaLiveInputSecurityGroup_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -29,18 +30,18 @@ func TestAccMediaLiveInputSecurityGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
-			testAccInputSecurityGroupsPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
+			testAccInputSecurityGroupsPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInputSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInputSecurityGroupConfig_basic(rName, "10.0.0.8/32"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(resourceName, &inputSecurityGroup),
+					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "whitelist_rules.*", map[string]string{
 						"cidr": "10.0.0.8/32",
@@ -57,6 +58,7 @@ func TestAccMediaLiveInputSecurityGroup_basic(t *testing.T) {
 }
 
 func TestAccMediaLiveInputSecurityGroup_updateCIDR(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -67,18 +69,18 @@ func TestAccMediaLiveInputSecurityGroup_updateCIDR(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
-			testAccInputSecurityGroupsPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
+			testAccInputSecurityGroupsPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInputSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInputSecurityGroupConfig_basic(rName, "10.0.0.8/32"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(resourceName, &inputSecurityGroup),
+					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "whitelist_rules.*", map[string]string{
 						"cidr": "10.0.0.8/32",
@@ -88,7 +90,7 @@ func TestAccMediaLiveInputSecurityGroup_updateCIDR(t *testing.T) {
 			{
 				Config: testAccInputSecurityGroupConfig_basic(rName, "10.2.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(resourceName, &inputSecurityGroup),
+					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "whitelist_rules.*", map[string]string{
 						"cidr": "10.2.0.0/16",
@@ -100,6 +102,7 @@ func TestAccMediaLiveInputSecurityGroup_updateCIDR(t *testing.T) {
 }
 
 func TestAccMediaLiveInputSecurityGroup_updateTags(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -109,18 +112,18 @@ func TestAccMediaLiveInputSecurityGroup_updateTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
-			testAccInputSecurityGroupsPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
+			testAccInputSecurityGroupsPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInputSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInputSecurityGroupConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(resourceName, &inputSecurityGroup),
+					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -128,7 +131,7 @@ func TestAccMediaLiveInputSecurityGroup_updateTags(t *testing.T) {
 			{
 				Config: testAccInputSecurityGroupConfig_tags2("key1", "value1", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(resourceName, &inputSecurityGroup),
+					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -137,7 +140,7 @@ func TestAccMediaLiveInputSecurityGroup_updateTags(t *testing.T) {
 			{
 				Config: testAccInputSecurityGroupConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(resourceName, &inputSecurityGroup),
+					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -147,6 +150,7 @@ func TestAccMediaLiveInputSecurityGroup_updateTags(t *testing.T) {
 }
 
 func TestAccMediaLiveInputSecurityGroup_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -157,19 +161,19 @@ func TestAccMediaLiveInputSecurityGroup_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
-			testAccInputSecurityGroupsPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
+			testAccInputSecurityGroupsPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInputSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInputSecurityGroupConfig_basic(rName, "10.0.0.8/32"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInputSecurityGroupExists(resourceName, &inputSecurityGroup),
-					acctest.CheckResourceDisappears(acctest.Provider, tfmedialive.ResourceInputSecurityGroup(), resourceName),
+					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmedialive.ResourceInputSecurityGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -177,30 +181,31 @@ func TestAccMediaLiveInputSecurityGroup_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckInputSecurityGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient
-	ctx := context.Background()
+func testAccCheckInputSecurityGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_medialive_input_security_group" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_medialive_input_security_group" {
+				continue
+			}
+
+			_, err := tfmedialive.FindInputSecurityGroupByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return create.Error(names.MediaLive, create.ErrActionCheckingDestroyed, tfmedialive.ResNameInputSecurityGroup, rs.Primary.ID, err)
+			}
 		}
 
-		_, err := tfmedialive.FindInputSecurityGroupByID(ctx, conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return create.Error(names.MediaLive, create.ErrActionCheckingDestroyed, tfmedialive.ResNameInputSecurityGroup, rs.Primary.ID, err)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckInputSecurityGroupExists(name string, inputSecurityGroup *medialive.DescribeInputSecurityGroupOutput) resource.TestCheckFunc {
+func testAccCheckInputSecurityGroupExists(ctx context.Context, name string, inputSecurityGroup *medialive.DescribeInputSecurityGroupOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -211,8 +216,8 @@ func testAccCheckInputSecurityGroupExists(name string, inputSecurityGroup *media
 			return create.Error(names.MediaLive, create.ErrActionCheckingExistence, tfmedialive.ResNameInputSecurityGroup, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient
-		ctx := context.Background()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient()
+
 		resp, err := tfmedialive.FindInputSecurityGroupByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -225,9 +230,8 @@ func testAccCheckInputSecurityGroupExists(name string, inputSecurityGroup *media
 	}
 }
 
-func testAccInputSecurityGroupsPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient
-	ctx := context.Background()
+func testAccInputSecurityGroupsPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient()
 
 	input := &medialive.ListInputSecurityGroupsInput{}
 	_, err := conn.ListInputSecurityGroups(ctx, input)

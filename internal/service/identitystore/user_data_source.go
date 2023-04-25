@@ -17,9 +17,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_identitystore_user")
 func DataSourceUser() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceUserRead,
+		ReadWithoutTimeout: dataSourceUserRead,
 
 		Schema: map[string]*schema.Schema{
 			"addresses": {
@@ -280,60 +281,120 @@ const (
 )
 
 func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IdentityStoreClient
+	conn := meta.(*conns.AWSClient).IdentityStoreClient()
 
-	identityStoreId := d.Get("identity_store_id").(string)
+	identityStoreID := d.Get("identity_store_id").(string)
 
-	var getUserIdInput *identitystore.GetUserIdInput
-
-	if v, ok := d.GetOk("alternate_identifier"); ok && len(v.([]interface{})) > 0 {
-		getUserIdInput = &identitystore.GetUserIdInput{
-			AlternateIdentifier: expandAlternateIdentifier(v.([]interface{})[0].(map[string]interface{})),
-			IdentityStoreId:     aws.String(identityStoreId),
+	if v, ok := d.GetOk("filter"); ok && len(v.([]interface{})) > 0 {
+		// Use ListUsers for backwards compat.
+		input := &identitystore.ListUsersInput{
+			Filters:         expandFilters(d.Get("filter").([]interface{})),
+			IdentityStoreId: aws.String(identityStoreID),
 		}
-	} else if v, ok := d.GetOk("filter"); ok && len(v.([]interface{})) > 0 {
-		getUserIdInput = &identitystore.GetUserIdInput{
-			AlternateIdentifier: &types.AlternateIdentifierMemberUniqueAttribute{
-				Value: *expandUniqueAttribute(v.([]interface{})[0].(map[string]interface{})),
-			},
-			IdentityStoreId: aws.String(identityStoreId),
+		paginator := identitystore.NewListUsersPaginator(conn, input)
+		var results []types.User
+
+		for paginator.HasMorePages() {
+			page, err := paginator.NextPage(ctx)
+
+			if err != nil {
+				return create.DiagError(names.IdentityStore, create.ErrActionReading, DSNameUser, identityStoreID, err)
+			}
+
+			for _, user := range page.Users {
+				if v, ok := d.GetOk("user_id"); ok && v.(string) != aws.ToString(user.UserId) {
+					continue
+				}
+
+				results = append(results, user)
+			}
 		}
+
+		if len(results) == 0 {
+			return diag.Errorf("no Identity Store User found matching criteria\n%v; try different search", input.Filters)
+		}
+
+		if len(results) > 1 {
+			return diag.Errorf("multiple Identity Store Users found matching criteria\n%v; try different search", input.Filters)
+		}
+
+		user := results[0]
+
+		d.SetId(aws.ToString(user.UserId))
+		d.Set("display_name", user.DisplayName)
+		d.Set("identity_store_id", user.IdentityStoreId)
+		d.Set("locale", user.Locale)
+		d.Set("nickname", user.NickName)
+		d.Set("preferred_language", user.PreferredLanguage)
+		d.Set("profile_url", user.ProfileUrl)
+		d.Set("timezone", user.Timezone)
+		d.Set("title", user.Title)
+		d.Set("user_id", user.UserId)
+		d.Set("user_name", user.UserName)
+		d.Set("user_type", user.UserType)
+
+		if err := d.Set("addresses", flattenAddresses(user.Addresses)); err != nil {
+			return create.DiagError(names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
+		}
+
+		if err := d.Set("emails", flattenEmails(user.Emails)); err != nil {
+			return create.DiagError(names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
+		}
+
+		if err := d.Set("external_ids", flattenExternalIds(user.ExternalIds)); err != nil {
+			return create.DiagError(names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
+		}
+
+		if err := d.Set("name", []interface{}{flattenName(user.Name)}); err != nil {
+			return create.DiagError(names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
+		}
+
+		if err := d.Set("phone_numbers", flattenPhoneNumbers(user.PhoneNumbers)); err != nil {
+			return create.DiagError(names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
+		}
+
+		return nil
 	}
 
-	var userId string
+	var userID string
 
-	if getUserIdInput != nil {
-		output, err := conn.GetUserId(ctx, getUserIdInput)
+	if v, ok := d.GetOk("alternate_identifier"); ok && len(v.([]interface{})) > 0 {
+		input := &identitystore.GetUserIdInput{
+			AlternateIdentifier: expandAlternateIdentifier(v.([]interface{})[0].(map[string]interface{})),
+			IdentityStoreId:     aws.String(identityStoreID),
+		}
+
+		output, err := conn.GetUserId(ctx, input)
 
 		if err != nil {
 			var e *types.ResourceNotFoundException
 			if errors.As(err, &e) {
 				return diag.Errorf("no Identity Store User found matching criteria; try different search")
 			} else {
-				return create.DiagError(names.IdentityStore, create.ErrActionReading, DSNameUser, identityStoreId, err)
+				return create.DiagError(names.IdentityStore, create.ErrActionReading, DSNameUser, identityStoreID, err)
 			}
 		}
 
-		userId = aws.ToString(output.UserId)
+		userID = aws.ToString(output.UserId)
 	}
 
 	if v, ok := d.GetOk("user_id"); ok && v.(string) != "" {
-		if userId != "" && userId != v.(string) {
+		if userID != "" && userID != v.(string) {
 			// We were given a filter, and it found a user different to this one.
 			return diag.Errorf("no Identity Store User found matching criteria; try different search")
 		}
 
-		userId = v.(string)
+		userID = v.(string)
 	}
 
-	user, err := findUserByID(ctx, conn, identityStoreId, userId)
+	user, err := FindUserByTwoPartKey(ctx, conn, identityStoreID, userID)
 
 	if err != nil {
 		if tfresource.NotFound(err) {
 			return diag.Errorf("no Identity Store User found matching criteria; try different search")
 		}
 
-		return create.DiagError(names.IdentityStore, create.ErrActionReading, DSNameUser, identityStoreId, err)
+		return create.DiagError(names.IdentityStore, create.ErrActionReading, DSNameUser, identityStoreID, err)
 	}
 
 	d.SetId(aws.ToString(user.UserId))

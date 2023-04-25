@@ -20,24 +20,25 @@ import (
 )
 
 func TestAccLightsailDisk_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var disk lightsail.Disk
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_disk.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDiskDestroy,
+		CheckDestroy:             testAccCheckDiskDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDiskConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDiskExists(resourceName, &disk),
+					testAccCheckDiskExists(ctx, resourceName, &disk),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "lightsail", regexp.MustCompile(`Disk/.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
@@ -56,24 +57,25 @@ func TestAccLightsailDisk_basic(t *testing.T) {
 }
 
 func TestAccLightsailDisk_Tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var disk1, disk2, disk3 lightsail.Disk
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_disk.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDiskDestroy,
+		CheckDestroy:             testAccCheckDiskDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDiskConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDiskExists(resourceName, &disk1),
+					testAccCheckDiskExists(ctx, resourceName, &disk1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -86,7 +88,7 @@ func TestAccLightsailDisk_Tags(t *testing.T) {
 			{
 				Config: testAccDiskConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDiskExists(resourceName, &disk2),
+					testAccCheckDiskExists(ctx, resourceName, &disk2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -95,7 +97,7 @@ func TestAccLightsailDisk_Tags(t *testing.T) {
 			{
 				Config: testAccDiskConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDiskExists(resourceName, &disk3),
+					testAccCheckDiskExists(ctx, resourceName, &disk3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -104,7 +106,7 @@ func TestAccLightsailDisk_Tags(t *testing.T) {
 	})
 }
 
-func testAccCheckDiskExists(n string, disk *lightsail.Disk) resource.TestCheckFunc {
+func testAccCheckDiskExists(ctx context.Context, n string, disk *lightsail.Disk) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -115,9 +117,9 @@ func testAccCheckDiskExists(n string, disk *lightsail.Disk) resource.TestCheckFu
 			return errors.New("No LightsailDisk ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
-		resp, err := tflightsail.FindDiskById(context.Background(), conn, rs.Primary.ID)
+		resp, err := tflightsail.FindDiskById(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -134,25 +136,26 @@ func testAccCheckDiskExists(n string, disk *lightsail.Disk) resource.TestCheckFu
 }
 
 func TestAccLightsailDisk_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var disk lightsail.Disk
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_disk.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDiskDestroy,
+		CheckDestroy:             testAccCheckDiskDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDiskConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDiskExists(resourceName, &disk),
-					acctest.CheckResourceDisappears(acctest.Provider, tflightsail.ResourceDisk(), resourceName),
+					testAccCheckDiskExists(ctx, resourceName, &disk),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceDisk(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -160,28 +163,30 @@ func TestAccLightsailDisk_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDiskDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_lightsail_disk" {
-			continue
+func testAccCheckDiskDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_lightsail_disk" {
+				continue
+			}
+
+			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
+
+			_, err := tflightsail.FindDiskById(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return create.Error(names.Lightsail, create.ErrActionCheckingDestroyed, tflightsail.ResDisk, rs.Primary.ID, errors.New("still exists"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
-
-		_, err := tflightsail.FindDiskById(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return create.Error(names.Lightsail, create.ErrActionCheckingDestroyed, tflightsail.ResDisk, rs.Primary.ID, errors.New("still exists"))
+		return nil
 	}
-
-	return nil
 }
 
 func testAccDiskConfigBase() string {

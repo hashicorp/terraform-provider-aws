@@ -206,6 +206,12 @@ resource "aws_wafv2_rule_group" "example" {
       metric_name                = "rule-2"
       sampled_requests_enabled   = false
     }
+
+    captcha_config {
+      immunity_time_property {
+        immunity_time = 240
+      }
+    }
   }
 
   rule {
@@ -293,6 +299,12 @@ resource "aws_wafv2_rule_group" "example" {
     sampled_requests_enabled   = false
   }
 
+  captcha_config {
+    immunity_time_property {
+      immunity_time = 120
+    }
+  }
+
   tags = {
     Name = "example-and-statement"
     Code = "123456"
@@ -326,6 +338,7 @@ Each `custom_response_body` block supports the following arguments:
 Each `rule` supports the following arguments:
 
 * `action` - (Required) The action that AWS WAF should take on a web request when it matches the rule's statement. Settings at the `aws_wafv2_web_acl` level can override the rule action setting. See [Action](#action) below for details.
+* `captcha_config` - (Optional) Specifies how AWS WAF should handle CAPTCHA evaluations. See [Captcha Configuration](#captcha-configuration) below for details.
 * `name` - (Required, Forces new resource) A friendly name of the rule.
 * `priority` - (Required) If you define more than one Rule in a WebACL, AWS WAF evaluates each request against the `rules` in order based on the value of `priority`. AWS WAF processes rules with lower priority first.
 * `rule_label` - (Optional) Labels to apply to web requests that match the rule match statement. See [Rule Label](#rule-label) below for details.
@@ -340,6 +353,8 @@ The `action` block supports the following arguments:
 
 * `allow` - (Optional) Instructs AWS WAF to allow the web request. See [Allow](#action) below for details.
 * `block` - (Optional) Instructs AWS WAF to block the web request. See [Block](#block) below for details.
+* `captcha` - (Optional) Instructs AWS WAF to run a `CAPTCHA` check against the web request. See [Captcha](#captcha) below for details.
+* `challenge` - (Optional) Instructs AWS WAF to run a check against the request to verify that the request is coming from a legitimate client session. See [Challenge](#challenge) below for details.
 * `count` - (Optional) Instructs AWS WAF to count the web request and allow it. See [Count](#count) below for details.
 
 ### Allow
@@ -353,6 +368,18 @@ The `allow` block supports the following arguments:
 The `block` block supports the following arguments:
 
 * `custom_response` - (Optional) Defines a custom response for the web request. See [Custom Response](#custom-response) below for details.
+
+### Captcha
+
+The `captcha` block supports the following arguments:
+
+* `custom_request_handling` - (Optional) Defines custom handling for the web request. See [Custom Request Handling](#custom-request-handling) below for details.
+
+#### Challenge
+
+The `challenge` block supports the following arguments:
+
+* `custom_request_handling` - (Optional) Defines custom handling for the web request. See [Custom Request Handling](#custom-request-handling) below for details.
 
 ### Count
 
@@ -646,6 +673,18 @@ The `visibility_config` block supports the following arguments:
 * `cloudwatch_metrics_enabled` - (Required) A boolean indicating whether the associated resource sends metrics to CloudWatch. For the list of available metrics, see [AWS WAF Metrics](https://docs.aws.amazon.com/waf/latest/developerguide/monitoring-cloudwatch.html#waf-metrics).
 * `metric_name` - (Required, Forces new resource) A friendly name of the CloudWatch metric. The name can contain only alphanumeric characters (A-Z, a-z, 0-9) hyphen(-) and underscore (_), with length from one to 128 characters. It can't contain whitespace or metric names reserved for AWS WAF, for example `All` and `Default_Action`.
 * `sampled_requests_enabled` - (Required) A boolean indicating whether AWS WAF should store a sampling of the web requests that match the rules. You can view the sampled requests through the AWS WAF console.
+
+### Captcha Configuration
+
+The `captcha_config` block supports the following arguments:
+
+* `immunity_time_property` - (Optional) Defines custom immunity time. See [Immunity Time Property](#immunity-time-property) below for details.
+
+### Immunity Time Property
+
+The `immunity_time_property` block supports the following arguments:
+
+* `immunity_time` - (Optional) The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
 
 ## Attributes Reference
 

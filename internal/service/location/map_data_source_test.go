@@ -11,15 +11,16 @@ import (
 )
 
 func TestAccLocationMapDataSource_mapName(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_location_map.test"
 	resourceName := "aws_location_map.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMapDestroy,
+		CheckDestroy:             testAccCheckMapDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMapDataSourceConfig_name(rName),

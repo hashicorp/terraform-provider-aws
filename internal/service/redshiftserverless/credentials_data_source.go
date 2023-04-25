@@ -1,19 +1,22 @@
 package redshiftserverless
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_redshiftserverless_credentials")
 func DataSourceCredentials() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCredentialsRead,
+		ReadWithoutTimeout: dataSourceCredentialsRead,
 
 		Schema: map[string]*schema.Schema{
 			"workgroup_name": {
@@ -47,8 +50,9 @@ func DataSourceCredentials() *schema.Resource {
 	}
 }
 
-func dataSourceCredentialsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+func dataSourceCredentialsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	workgroupName := d.Get("workgroup_name").(string)
 	input := &redshiftserverless.GetCredentialsInput{
@@ -60,10 +64,10 @@ func dataSourceCredentialsRead(d *schema.ResourceData, meta interface{}) error {
 		input.DbName = aws.String(v.(string))
 	}
 
-	creds, err := conn.GetCredentials(input)
+	creds, err := conn.GetCredentialsWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("reading Redshift Serverless Credentials for Workgroup (%s): %w", workgroupName, err)
+		return sdkdiag.AppendErrorf(diags, "reading Redshift Serverless Credentials for Workgroup (%s): %s", workgroupName, err)
 	}
 
 	d.SetId(workgroupName)
@@ -72,5 +76,5 @@ func dataSourceCredentialsRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("db_user", creds.DbUser)
 	d.Set("expiration", aws.TimeValue(creds.Expiration).Format(time.RFC3339))
 
-	return nil
+	return diags
 }

@@ -16,25 +16,25 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccNeptuneGlobalCluster_basic(t *testing.T) {
-	var globalCluster1 neptune.GlobalCluster
-
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ctx := acctest.Context(t)
+	var v neptune.GlobalCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGlobalClusterDestroy,
+		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalClusterExists(resourceName, &globalCluster1),
-					//This is a rds arn
+					testAccCheckGlobalClusterExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "rds", fmt.Sprintf("global-cluster:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine"),
@@ -54,22 +54,21 @@ func TestAccNeptuneGlobalCluster_basic(t *testing.T) {
 }
 
 func TestAccNeptuneGlobalCluster_completeBasic(t *testing.T) {
-	var globalCluster1 neptune.GlobalCluster
-
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ctx := acctest.Context(t)
+	var v neptune.GlobalCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGlobalClusterDestroy,
+		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalClusterConfig_completeBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalClusterExists(resourceName, &globalCluster1),
-					//This is a rds arn
+					testAccCheckGlobalClusterExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "rds", fmt.Sprintf("global-cluster:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine"),
@@ -89,21 +88,22 @@ func TestAccNeptuneGlobalCluster_completeBasic(t *testing.T) {
 }
 
 func TestAccNeptuneGlobalCluster_disappears(t *testing.T) {
-	var globalCluster1 neptune.GlobalCluster
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ctx := acctest.Context(t)
+	var v neptune.GlobalCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGlobalClusterDestroy,
+		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalClusterExists(resourceName, &globalCluster1),
-					testAccCheckGlobalClusterDisappears(&globalCluster1),
+					testAccCheckGlobalClusterExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfneptune.ResourceGlobalCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -112,20 +112,21 @@ func TestAccNeptuneGlobalCluster_disappears(t *testing.T) {
 }
 
 func TestAccNeptuneGlobalCluster_DeletionProtection(t *testing.T) {
+	ctx := acctest.Context(t)
 	var globalCluster1, globalCluster2 neptune.GlobalCluster
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGlobalClusterDestroy,
+		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalClusterConfig_deletionProtection(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalClusterExists(resourceName, &globalCluster1),
+					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
 				),
 			},
@@ -137,7 +138,7 @@ func TestAccNeptuneGlobalCluster_DeletionProtection(t *testing.T) {
 			{
 				Config: testAccGlobalClusterConfig_deletionProtection(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalClusterExists(resourceName, &globalCluster2),
+					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster2),
 					testAccCheckGlobalClusterNotRecreated(&globalCluster1, &globalCluster2),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 				),
@@ -147,20 +148,21 @@ func TestAccNeptuneGlobalCluster_DeletionProtection(t *testing.T) {
 }
 
 func TestAccNeptuneGlobalCluster_Engine(t *testing.T) {
-	var globalCluster1 neptune.GlobalCluster
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ctx := acctest.Context(t)
+	var v neptune.GlobalCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGlobalClusterDestroy,
+		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalClusterConfig_engine(rName, "neptune"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalClusterExists(resourceName, &globalCluster1),
+					testAccCheckGlobalClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "engine", "neptune"),
 				),
 			},
@@ -174,20 +176,23 @@ func TestAccNeptuneGlobalCluster_Engine(t *testing.T) {
 }
 
 func TestAccNeptuneGlobalCluster_EngineVersion(t *testing.T) {
-	var globalCluster1 neptune.GlobalCluster
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ctx := acctest.Context(t)
+	var v neptune.GlobalCluster
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGlobalClusterDestroy,
+		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalClusterConfig_engineVersion(rName, "neptune", "1.2.0.0"),
+				Config: testAccGlobalClusterConfig_engineVersion(rName1, rName2, rName3, "1.2.0.0"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalClusterExists(resourceName, &globalCluster1),
+					testAccCheckGlobalClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.2.0.0"),
 				),
 			},
@@ -196,26 +201,34 @@ func TestAccNeptuneGlobalCluster_EngineVersion(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccGlobalClusterConfig_engineVersion(rName1, rName2, rName3, "1.2.0.1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlobalClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.2.0.1"),
+				),
+			},
 		},
 	})
 }
 
 func TestAccNeptuneGlobalCluster_SourceDBClusterIdentifier_basic(t *testing.T) {
-	var globalCluster1 neptune.GlobalCluster
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ctx := acctest.Context(t)
+	var v neptune.GlobalCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	clusterResourceName := "aws_neptune_cluster.test"
 	resourceName := "aws_neptune_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGlobalClusterDestroy,
+		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalClusterConfig_sourceDBIdentifier(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalClusterExists(resourceName, &globalCluster1),
+					testAccCheckGlobalClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "source_db_cluster_identifier", clusterResourceName, "arn"),
 				),
 			},
@@ -230,21 +243,22 @@ func TestAccNeptuneGlobalCluster_SourceDBClusterIdentifier_basic(t *testing.T) {
 }
 
 func TestAccNeptuneGlobalCluster_SourceDBClusterIdentifier_storageEncrypted(t *testing.T) {
-	var globalCluster1 neptune.GlobalCluster
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ctx := acctest.Context(t)
+	var v neptune.GlobalCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	clusterResourceName := "aws_neptune_cluster.test"
 	resourceName := "aws_neptune_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGlobalClusterDestroy,
+		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalClusterConfig_sourceDBIdentifierStorageEncrypted(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalClusterExists(resourceName, &globalCluster1),
+					testAccCheckGlobalClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "source_db_cluster_identifier", clusterResourceName, "arn"),
 				),
 			},
@@ -259,20 +273,21 @@ func TestAccNeptuneGlobalCluster_SourceDBClusterIdentifier_storageEncrypted(t *t
 }
 
 func TestAccNeptuneGlobalCluster_StorageEncrypted(t *testing.T) {
+	ctx := acctest.Context(t)
 	var globalCluster1, globalCluster2 neptune.GlobalCluster
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGlobalClusterDestroy,
+		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalClusterConfig_storageEncrypted(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalClusterExists(resourceName, &globalCluster1),
+					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "true"),
 				),
 			},
@@ -284,7 +299,7 @@ func TestAccNeptuneGlobalCluster_StorageEncrypted(t *testing.T) {
 			{
 				Config: testAccGlobalClusterConfig_storageEncrypted(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalClusterExists(resourceName, &globalCluster2),
+					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster2),
 					testAccCheckGlobalClusterRecreated(&globalCluster1, &globalCluster2),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
 				),
@@ -293,88 +308,61 @@ func TestAccNeptuneGlobalCluster_StorageEncrypted(t *testing.T) {
 	})
 }
 
-func testAccCheckGlobalClusterExists(resourceName string, globalCluster *neptune.GlobalCluster) resource.TestCheckFunc {
+func testAccCheckGlobalClusterExists(ctx context.Context, n string, v *neptune.GlobalCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("not found: %s", resourceName)
+			return fmt.Errorf("not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no Neptune Global Cluster ID is set")
+			return fmt.Errorf("No Neptune Global Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
-		cluster, err := tfneptune.FindGlobalClusterById(context.Background(), conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
+
+		output, err := tfneptune.FindGlobalClusterByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if cluster == nil {
-			return fmt.Errorf("neptune Global Cluster not found")
-		}
-
-		if aws.StringValue(cluster.Status) != "available" {
-			return fmt.Errorf("neptune Global Cluster (%s) exists in non-available (%s) state", rs.Primary.ID, aws.StringValue(cluster.Status))
-		}
-
-		*globalCluster = *cluster
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCheckGlobalClusterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_neptune_global_cluster" {
-			continue
-		}
-
-		globalCluster, err := tfneptune.FindGlobalClusterById(context.Background(), conn, rs.Primary.ID)
-
-		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeGlobalClusterNotFoundFault) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if globalCluster == nil {
-			continue
-		}
-
-		return fmt.Errorf("neptune Global Cluster (%s) still exists in non-deleted (%s) state", rs.Primary.ID, aws.StringValue(globalCluster.Status))
-	}
-
-	return nil
-}
-
-func testAccCheckGlobalClusterDisappears(globalCluster *neptune.GlobalCluster) resource.TestCheckFunc {
+func testAccCheckGlobalClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
 
-		input := &neptune.DeleteGlobalClusterInput{
-			GlobalClusterIdentifier: globalCluster.GlobalClusterIdentifier,
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_neptune_global_cluster" {
+				continue
+			}
+
+			_, err := tfneptune.FindGlobalClusterByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Neptune Global Cluster %s still exists", rs.Primary.ID)
 		}
 
-		_, err := conn.DeleteGlobalCluster(input)
-
-		if err != nil {
-			return err
-		}
-
-		return tfneptune.WaitForGlobalClusterDeletion(context.Background(), conn, aws.StringValue(globalCluster.GlobalClusterIdentifier), tfneptune.GlobalClusterDeleteTimeout)
+		return nil
 	}
 }
 
 func testAccCheckGlobalClusterNotRecreated(i, j *neptune.GlobalCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.GlobalClusterArn) != aws.StringValue(j.GlobalClusterArn) {
-			return fmt.Errorf("neptune Global Cluster was recreated. got: %s, expected: %s", aws.StringValue(i.GlobalClusterArn), aws.StringValue(j.GlobalClusterArn))
+			return fmt.Errorf("Neptune Global Cluster was recreated. got: %s, expected: %s", aws.StringValue(i.GlobalClusterArn), aws.StringValue(j.GlobalClusterArn))
 		}
 
 		return nil
@@ -384,19 +372,19 @@ func testAccCheckGlobalClusterNotRecreated(i, j *neptune.GlobalCluster) resource
 func testAccCheckGlobalClusterRecreated(i, j *neptune.GlobalCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.GlobalClusterResourceId) == aws.StringValue(j.GlobalClusterResourceId) {
-			return errors.New("neptune Global Cluster was not recreated")
+			return errors.New("Neptune Global Cluster was not recreated")
 		}
 
 		return nil
 	}
 }
 
-func testAccPreCheckGlobalCluster(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
+func testAccPreCheckGlobalCluster(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
 
 	input := &neptune.DescribeGlobalClustersInput{}
 
-	_, err := conn.DescribeGlobalClusters(input)
+	_, err := conn.DescribeGlobalClustersWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Access Denied to API Version: APIGlobalDatabases") {
 		// Current Region/Partition does not support Neptune Global Clusters
@@ -413,7 +401,7 @@ func testAccGlobalClusterConfig_basic(rName string) string {
 resource "aws_neptune_global_cluster" "test" {
   engine                    = "neptune"
   engine_version            = "1.2.0.0"
-  global_cluster_identifier = %q
+  global_cluster_identifier = %[1]q
 }
 `, rName)
 }
@@ -422,9 +410,9 @@ func testAccGlobalClusterConfig_deletionProtection(rName string, deletionProtect
 	return fmt.Sprintf(`
 resource "aws_neptune_global_cluster" "test" {
   engine                    = "neptune"
-  deletion_protection       = %t
+  deletion_protection       = %[1]t
   engine_version            = "1.2.0.0"
-  global_cluster_identifier = %q
+  global_cluster_identifier = %[2]q
 }
 `, deletionProtection, rName)
 }
@@ -432,21 +420,48 @@ resource "aws_neptune_global_cluster" "test" {
 func testAccGlobalClusterConfig_engine(rName, engine string) string {
 	return fmt.Sprintf(`
 resource "aws_neptune_global_cluster" "test" {
-  engine                    = %q
+  engine                    = %[1]q
   engine_version            = "1.2.0.0"
-  global_cluster_identifier = %q
+  global_cluster_identifier = %[2]q
 }
 `, engine, rName)
 }
 
-func testAccGlobalClusterConfig_engineVersion(rName, engine, engineVersion string) string {
+func testAccGlobalClusterConfig_engineVersion(rName1, rName2, rName3, engineVersion string) string {
 	return fmt.Sprintf(`
 resource "aws_neptune_global_cluster" "test" {
-  engine                    = %q
-  engine_version            = %q
-  global_cluster_identifier = %q
+  engine                    = "neptune"
+  engine_version            = %[4]q
+  global_cluster_identifier = %[1]q
 }
-`, engine, engineVersion, rName)
+
+resource "aws_neptune_cluster" "test" {
+  cluster_identifier                   = %[2]q
+  skip_final_snapshot                  = true
+  global_cluster_identifier            = aws_neptune_global_cluster.test.id
+  engine                               = aws_neptune_global_cluster.test.engine
+  engine_version                       = aws_neptune_global_cluster.test.engine_version
+  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  apply_immediately                    = true
+}
+
+data "aws_neptune_orderable_db_instance" "test" {
+  engine         = "neptune"
+  engine_version = aws_neptune_cluster.test.engine_version
+  license_model  = "amazon-license"
+
+  preferred_instance_classes = ["db.r5.large", "db.r5.xlarge"]
+}
+
+resource "aws_neptune_cluster_instance" "test" {
+  identifier                   = %[3]q
+  cluster_identifier           = aws_neptune_cluster.test.id
+  apply_immediately            = true
+  instance_class               = data.aws_neptune_orderable_db_instance.test.instance_class
+  neptune_parameter_group_name = aws_neptune_cluster.test.neptune_cluster_parameter_group_name
+  promotion_tier               = "3"
+}
+`, rName1, rName2, rName3, engineVersion)
 }
 
 func testAccGlobalClusterConfig_completeBasic(rName string) string {
@@ -454,7 +469,7 @@ func testAccGlobalClusterConfig_completeBasic(rName string) string {
 resource "aws_neptune_global_cluster" "test" {
   engine                    = "neptune"
   engine_version            = "1.2.0.0"
-  global_cluster_identifier = %q
+  global_cluster_identifier = %[1]q
 }
 
 resource "aws_neptune_cluster" "test" {
@@ -517,10 +532,10 @@ resource "aws_neptune_global_cluster" "test" {
 func testAccGlobalClusterConfig_storageEncrypted(rName string, storageEncrypted bool) string {
 	return fmt.Sprintf(`
 resource "aws_neptune_global_cluster" "test" {
-  global_cluster_identifier = %q
+  global_cluster_identifier = %[1]q
   engine                    = "neptune"
   engine_version            = "1.2.0.0"
-  storage_encrypted         = %t
+  storage_encrypted         = %[2]t
 }
 `, rName, storageEncrypted)
 }

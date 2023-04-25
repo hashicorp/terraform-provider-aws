@@ -1,19 +1,22 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_vpc_ipam_pools")
 func DataSourceIPAMPools() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceIPAMPoolsRead,
+		ReadWithoutTimeout: dataSourceIPAMPoolsRead,
 
 		Schema: map[string]*schema.Schema{
 			"filter": DataSourceFiltersSchema(),
@@ -99,8 +102,9 @@ func DataSourceIPAMPools() *schema.Resource {
 	}
 }
 
-func dataSourceIPAMPoolsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceIPAMPoolsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeIpamPoolsInput{}
@@ -113,34 +117,34 @@ func dataSourceIPAMPoolsRead(d *schema.ResourceData, meta interface{}) error {
 		input.Filters = nil
 	}
 
-	pools, err := FindIPAMPools(conn, input)
+	pools, err := FindIPAMPools(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("reading IPAM Pools: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading IPAM Pools: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ipam_pools", flattenIPAMPools(pools, ignoreTagsConfig))
+	d.Set("ipam_pools", flattenIPAMPools(ctx, pools, ignoreTagsConfig))
 
-	return nil
+	return diags
 }
 
-func flattenIPAMPools(c []*ec2.IpamPool, ignoreTagsConfig *tftags.IgnoreConfig) []interface{} {
+func flattenIPAMPools(ctx context.Context, c []*ec2.IpamPool, ignoreTagsConfig *tftags.IgnoreConfig) []interface{} {
 	pools := []interface{}{}
 	for _, pool := range c {
-		pools = append(pools, flattenIPAMPool(pool, ignoreTagsConfig))
+		pools = append(pools, flattenIPAMPool(ctx, pool, ignoreTagsConfig))
 	}
 	return pools
 }
 
-func flattenIPAMPool(p *ec2.IpamPool, ignoreTagsConfig *tftags.IgnoreConfig) map[string]interface{} {
+func flattenIPAMPool(ctx context.Context, p *ec2.IpamPool, ignoreTagsConfig *tftags.IgnoreConfig) map[string]interface{} {
 	pool := make(map[string]interface{})
 
 	pool["address_family"] = aws.StringValue(p.AddressFamily)
 	pool["allocation_default_netmask_length"] = aws.Int64Value(p.AllocationDefaultNetmaskLength)
 	pool["allocation_max_netmask_length"] = aws.Int64Value(p.AllocationMaxNetmaskLength)
 	pool["allocation_min_netmask_length"] = aws.Int64Value(p.AllocationMinNetmaskLength)
-	pool["allocation_resource_tags"] = KeyValueTags(tagsFromIPAMAllocationTags(p.AllocationResourceTags)).Map()
+	pool["allocation_resource_tags"] = KeyValueTags(ctx, tagsFromIPAMAllocationTags(p.AllocationResourceTags)).Map()
 	pool["arn"] = aws.StringValue(p.IpamPoolArn)
 	pool["auto_import"] = aws.BoolValue(p.AutoImport)
 	pool["aws_service"] = aws.StringValue(p.AwsService)
@@ -154,7 +158,7 @@ func flattenIPAMPool(p *ec2.IpamPool, ignoreTagsConfig *tftags.IgnoreConfig) map
 	pool["state"] = aws.StringValue(p.State)
 
 	if v := p.Tags; v != nil {
-		pool["tags"] = KeyValueTags(v).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
+		pool["tags"] = KeyValueTags(ctx, v).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
 	}
 
 	return pool

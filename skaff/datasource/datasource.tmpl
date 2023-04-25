@@ -80,6 +80,9 @@ import (
 // 4. Create, read, update, delete functions (in that order)
 // 5. Other functions (flatteners, expanders, waiters, finders, etc.)
 {{- end }}
+
+// Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
+// @SDKDataSource("{{ .ProviderResourceName }}", name="{{ .HumanDataSourceName }}")
 func DataSource{{ .DataSource }}() *schema.Resource {
 	return &schema.Resource{
 		{{- if .IncludeComments }}
@@ -165,7 +168,7 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := meta.(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client{{ else }}Conn{{ end }}
+	conn := meta.(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(){{ else }}Conn(){{ end }}
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Get information about a resource from AWS using an API Get,
 	// List, or Describe-type function, or, better yet, using a finder. Data

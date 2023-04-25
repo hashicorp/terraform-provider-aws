@@ -1,21 +1,25 @@
 package elasticache
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_elasticache_cluster")
 func DataSourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceClusterRead,
+		ReadWithoutTimeout: dataSourceClusterRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -148,9 +152,10 @@ func DataSourceCluster() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"security_group_names": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:       schema.TypeSet,
+				Computed:   true,
+				Elem:       &schema.Schema{Type: schema.TypeString},
+				Deprecated: `With the retirement of EC2-Classic the security_group_names attribute has been deprecated and will be removed in a future version.`,
 			},
 			"snapshot_retention_limit": {
 				Type:     schema.TypeInt,
@@ -169,17 +174,18 @@ func DataSourceCluster() *schema.Resource {
 	}
 }
 
-func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterID := d.Get("cluster_id").(string)
-	cluster, err := FindCacheClusterWithNodeInfoByID(conn, clusterID)
+	cluster, err := FindCacheClusterWithNodeInfoByID(ctx, conn, clusterID)
 	if tfresource.NotFound(err) {
-		return fmt.Errorf("Your query returned no results. Please change your search criteria and try again")
+		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again")
 	}
 	if err != nil {
-		return fmt.Errorf("error reading ElastiCache Cache Cluster (%s): %w", clusterID, err)
+		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Cache Cluster (%s): %s", clusterID, err)
 	}
 
 	d.SetId(aws.StringValue(cluster.CacheClusterId))
@@ -200,9 +206,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("parameter_group_name", cluster.CacheParameterGroup.CacheParameterGroupName)
 	}
 
-	if cluster.ReplicationGroupId != nil {
-		d.Set("replication_group_id", cluster.ReplicationGroupId)
-	}
+	d.Set("replication_group_id", cluster.ReplicationGroupId)
 
 	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(cluster.LogDeliveryConfigurations))
 	d.Set("maintenance_window", cluster.PreferredMaintenanceWindow)
@@ -223,15 +227,15 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := setCacheNodeData(d, cluster); err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Cache Cluster (%s): %s", clusterID, err)
 	}
 
 	d.Set("arn", cluster.ARN)
 
-	tags, err := ListTags(conn, aws.StringValue(cluster.ARN))
+	tags, err := ListTags(ctx, conn, aws.StringValue(cluster.ARN))
 
 	if err != nil && !verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		return fmt.Errorf("error listing tags for ElastiCache Cluster (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for ElastiCache Cluster (%s): %s", d.Id(), err)
 	}
 
 	if err != nil {
@@ -240,9 +244,9 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	if tags != nil {
 		if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-			return fmt.Errorf("error setting tags: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 		}
 	}
 
-	return nil
+	return diags
 }

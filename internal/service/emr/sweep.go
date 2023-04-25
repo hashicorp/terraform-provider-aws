@@ -28,72 +28,76 @@ func init() {
 }
 
 func sweepClusters(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EMRConn
-
+	conn := client.(*conns.AWSClient).EMRConn()
 	input := &emr.ListClustersInput{
-		ClusterStates: []*string{
-			aws.String(emr.ClusterStateBootstrapping),
-			aws.String(emr.ClusterStateRunning),
-			aws.String(emr.ClusterStateStarting),
-			aws.String(emr.ClusterStateWaiting),
-		},
+		ClusterStates: aws.StringSlice([]string{emr.ClusterStateBootstrapping, emr.ClusterStateRunning, emr.ClusterStateStarting, emr.ClusterStateWaiting}),
 	}
-	err = conn.ListClustersPages(input, func(page *emr.ListClustersOutput, lastPage bool) bool {
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.ListClustersPagesWithContext(ctx, input, func(page *emr.ListClustersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, cluster := range page.Clusters {
-			describeClusterInput := &emr.DescribeClusterInput{
-				ClusterId: cluster.Id,
-			}
-			terminateJobFlowsInput := &emr.TerminateJobFlowsInput{
-				JobFlowIds: []*string{cluster.Id},
-			}
-			id := aws.StringValue(cluster.Id)
+		for _, v := range page.Clusters {
+			id := aws.StringValue(v.Id)
 
-			log.Printf("[INFO] Deleting EMR Cluster: %s", id)
-			_, err = conn.TerminateJobFlows(terminateJobFlowsInput)
+			_, err := conn.SetTerminationProtectionWithContext(ctx, &emr.SetTerminationProtectionInput{
+				JobFlowIds:           aws.StringSlice([]string{id}),
+				TerminationProtected: aws.Bool(false),
+			})
 
 			if err != nil {
-				log.Printf("[ERROR] Error terminating EMR Cluster (%s): %s", id, err)
+				log.Printf("[ERROR] unsetting EMR Cluster (%s) termination protection: %s", id, err)
 			}
 
-			if err := conn.WaitUntilClusterTerminated(describeClusterInput); err != nil {
-				log.Printf("[ERROR] Error waiting for EMR Cluster (%s) termination: %s", id, err)
-			}
+			r := ResourceCluster()
+			d := r.Data(nil)
+			d.SetId(id)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EMR Clusters sweep for %s: %s", region, err)
+		return nil
+	}
+
 	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping EMR Cluster sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("error retrieving EMR Clusters: %w", err)
+		return fmt.Errorf("error listing EMR Clusters (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EMR Clusters (%s): %w", region, err)
 	}
 
 	return nil
 }
 
 func sweepStudios(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).EMRConn
+	conn := client.(*conns.AWSClient).EMRConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 	input := &emr.ListStudiosInput{}
 
-	err = conn.ListStudiosPages(input, func(page *emr.ListStudiosOutput, lastPage bool) bool {
+	err = conn.ListStudiosPagesWithContext(ctx, input, func(page *emr.ListStudiosOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -117,7 +121,7 @@ func sweepStudios(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EMR Studios for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping EMR Studios for %s: %w", region, err))
 	}
 

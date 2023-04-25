@@ -1,6 +1,7 @@
 package grafana_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -16,6 +17,7 @@ import (
 )
 
 func testAccRoleAssociation_usersAdmin(t *testing.T) {
+	ctx := acctest.Context(t)
 	key := "GRAFANA_SSO_USER_ID"
 	userID := os.Getenv(key)
 	if userID == "" {
@@ -30,18 +32,18 @@ func testAccRoleAssociation_usersAdmin(t *testing.T) {
 	resource.Test(t,
 		resource.TestCase{
 			PreCheck: func() {
-				acctest.PreCheck(t)
-				acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t)
-				acctest.PreCheckSSOAdminInstances(t)
+				acctest.PreCheck(ctx, t)
+				acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID)
+				acctest.PreCheckSSOAdminInstances(ctx, t)
 			},
 			ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
-			CheckDestroy:             testAccCheckRoleAssociationDestroy,
+			CheckDestroy:             testAccCheckRoleAssociationDestroy(ctx),
 			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 			Steps: []resource.TestStep{
 				{
 					Config: testAccRoleAssociationConfig_workspaceUsers(rName, role, userID),
 					Check: resource.ComposeAggregateTestCheckFunc(
-						testAccCheckRoleAssociationExists(resourceName),
+						testAccCheckRoleAssociationExists(ctx, resourceName),
 						resource.TestCheckResourceAttr(resourceName, "role", role),
 						resource.TestCheckResourceAttr(resourceName, "user_ids.#", "1"),
 						resource.TestCheckTypeSetElemAttr(resourceName, "user_ids.*", userID),
@@ -53,6 +55,7 @@ func testAccRoleAssociation_usersAdmin(t *testing.T) {
 }
 
 func testAccRoleAssociation_usersEditor(t *testing.T) {
+	ctx := acctest.Context(t)
 	key := "GRAFANA_SSO_USER_ID"
 	userID := os.Getenv(key)
 	if userID == "" {
@@ -67,18 +70,18 @@ func testAccRoleAssociation_usersEditor(t *testing.T) {
 	resource.Test(t,
 		resource.TestCase{
 			PreCheck: func() {
-				acctest.PreCheck(t)
-				acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t)
-				acctest.PreCheckSSOAdminInstances(t)
+				acctest.PreCheck(ctx, t)
+				acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID)
+				acctest.PreCheckSSOAdminInstances(ctx, t)
 			},
 			ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
-			CheckDestroy:             testAccCheckRoleAssociationDestroy,
+			CheckDestroy:             testAccCheckRoleAssociationDestroy(ctx),
 			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 			Steps: []resource.TestStep{
 				{
 					Config: testAccRoleAssociationConfig_workspaceUsers(rName, role, userID),
 					Check: resource.ComposeAggregateTestCheckFunc(
-						testAccCheckRoleAssociationExists(resourceName),
+						testAccCheckRoleAssociationExists(ctx, resourceName),
 						resource.TestCheckResourceAttr(resourceName, "role", role),
 						resource.TestCheckResourceAttr(resourceName, "user_ids.#", "1"),
 						resource.TestCheckTypeSetElemAttr(resourceName, "user_ids.*", userID),
@@ -90,6 +93,7 @@ func testAccRoleAssociation_usersEditor(t *testing.T) {
 }
 
 func testAccRoleAssociation_groupsAdmin(t *testing.T) {
+	ctx := acctest.Context(t)
 	key := "GRAFANA_SSO_GROUP_ID"
 	groupID := os.Getenv(key)
 	if groupID == "" {
@@ -104,18 +108,18 @@ func testAccRoleAssociation_groupsAdmin(t *testing.T) {
 	resource.Test(t,
 		resource.TestCase{
 			PreCheck: func() {
-				acctest.PreCheck(t)
-				acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t)
-				acctest.PreCheckSSOAdminInstances(t)
+				acctest.PreCheck(ctx, t)
+				acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID)
+				acctest.PreCheckSSOAdminInstances(ctx, t)
 			},
 			ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
-			CheckDestroy:             testAccCheckRoleAssociationDestroy,
+			CheckDestroy:             testAccCheckRoleAssociationDestroy(ctx),
 			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 			Steps: []resource.TestStep{
 				{
 					Config: testAccRoleAssociationConfig_workspaceGroups(rName, role, groupID),
 					Check: resource.ComposeAggregateTestCheckFunc(
-						testAccCheckRoleAssociationExists(resourceName),
+						testAccCheckRoleAssociationExists(ctx, resourceName),
 						resource.TestCheckResourceAttr(resourceName, "group_ids.#", "1"),
 						resource.TestCheckTypeSetElemAttr(resourceName, "group_ids.*", groupID),
 						resource.TestCheckResourceAttr(resourceName, "role", role),
@@ -127,6 +131,7 @@ func testAccRoleAssociation_groupsAdmin(t *testing.T) {
 }
 
 func testAccRoleAssociation_groupsEditor(t *testing.T) {
+	ctx := acctest.Context(t)
 	key := "GRAFANA_SSO_GROUP_ID"
 	groupID := os.Getenv(key)
 	if groupID == "" {
@@ -141,18 +146,18 @@ func testAccRoleAssociation_groupsEditor(t *testing.T) {
 	resource.Test(t,
 		resource.TestCase{
 			PreCheck: func() {
-				acctest.PreCheck(t)
-				acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t)
-				acctest.PreCheckSSOAdminInstances(t)
+				acctest.PreCheck(ctx, t)
+				acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID)
+				acctest.PreCheckSSOAdminInstances(ctx, t)
 			},
 			ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
-			CheckDestroy:             testAccCheckRoleAssociationDestroy,
+			CheckDestroy:             testAccCheckRoleAssociationDestroy(ctx),
 			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 			Steps: []resource.TestStep{
 				{
 					Config: testAccRoleAssociationConfig_workspaceGroups(rName, role, groupID),
 					Check: resource.ComposeAggregateTestCheckFunc(
-						testAccCheckRoleAssociationExists(resourceName),
+						testAccCheckRoleAssociationExists(ctx, resourceName),
 						resource.TestCheckResourceAttr(resourceName, "group_ids.#", "1"),
 						resource.TestCheckTypeSetElemAttr(resourceName, "group_ids.*", groupID),
 						resource.TestCheckResourceAttr(resourceName, "role", role),
@@ -164,6 +169,7 @@ func testAccRoleAssociation_groupsEditor(t *testing.T) {
 }
 
 func testAccRoleAssociation_usersAndGroupsAdmin(t *testing.T) {
+	ctx := acctest.Context(t)
 	key := "GRAFANA_SSO_USER_ID"
 	userID := os.Getenv(key)
 	if userID == "" {
@@ -183,18 +189,18 @@ func testAccRoleAssociation_usersAndGroupsAdmin(t *testing.T) {
 	resource.Test(t,
 		resource.TestCase{
 			PreCheck: func() {
-				acctest.PreCheck(t)
-				acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t)
-				acctest.PreCheckSSOAdminInstances(t)
+				acctest.PreCheck(ctx, t)
+				acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID)
+				acctest.PreCheckSSOAdminInstances(ctx, t)
 			},
 			ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
-			CheckDestroy:             testAccCheckRoleAssociationDestroy,
+			CheckDestroy:             testAccCheckRoleAssociationDestroy(ctx),
 			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 			Steps: []resource.TestStep{
 				{
 					Config: testAccRoleAssociationConfig_workspaceUsersAndGroups(rName, role, userID, groupID),
 					Check: resource.ComposeAggregateTestCheckFunc(
-						testAccCheckRoleAssociationExists(resourceName),
+						testAccCheckRoleAssociationExists(ctx, resourceName),
 						resource.TestCheckResourceAttr(resourceName, "group_ids.#", "1"),
 						resource.TestCheckTypeSetElemAttr(resourceName, "group_ids.*", groupID),
 						resource.TestCheckResourceAttr(resourceName, "role", role),
@@ -208,6 +214,7 @@ func testAccRoleAssociation_usersAndGroupsAdmin(t *testing.T) {
 }
 
 func testAccRoleAssociation_usersAndGroupsEditor(t *testing.T) {
+	ctx := acctest.Context(t)
 	key := "GRAFANA_SSO_USER_ID"
 	userID := os.Getenv(key)
 	if userID == "" {
@@ -227,18 +234,18 @@ func testAccRoleAssociation_usersAndGroupsEditor(t *testing.T) {
 	resource.Test(t,
 		resource.TestCase{
 			PreCheck: func() {
-				acctest.PreCheck(t)
-				acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t)
-				acctest.PreCheckSSOAdminInstances(t)
+				acctest.PreCheck(ctx, t)
+				acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID)
+				acctest.PreCheckSSOAdminInstances(ctx, t)
 			},
 			ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
-			CheckDestroy:             testAccCheckRoleAssociationDestroy,
+			CheckDestroy:             testAccCheckRoleAssociationDestroy(ctx),
 			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 			Steps: []resource.TestStep{
 				{
 					Config: testAccRoleAssociationConfig_workspaceUsersAndGroups(rName, role, userID, groupID),
 					Check: resource.ComposeAggregateTestCheckFunc(
-						testAccCheckRoleAssociationExists(resourceName),
+						testAccCheckRoleAssociationExists(ctx, resourceName),
 						resource.TestCheckResourceAttr(resourceName, "group_ids.#", "1"),
 						resource.TestCheckTypeSetElemAttr(resourceName, "group_ids.*", groupID),
 						resource.TestCheckResourceAttr(resourceName, "role", role),
@@ -282,40 +289,42 @@ resource "aws_grafana_role_association" "test" {
 `, role, userID, groupID))
 }
 
-func testAccCheckRoleAssociationExists(n string) resource.TestCheckFunc {
+func testAccCheckRoleAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn()
 
-		_, err := tfgrafana.FindRoleAssociationsByRoleAndWorkspaceID(conn, rs.Primary.Attributes["role"], rs.Primary.Attributes["workspace_id"])
+		_, err := tfgrafana.FindRoleAssociationsByRoleAndWorkspaceID(ctx, conn, rs.Primary.Attributes["role"], rs.Primary.Attributes["workspace_id"])
 
 		return err
 	}
 }
 
-func testAccCheckRoleAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn
+func testAccCheckRoleAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_grafana_role_association" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_grafana_role_association" {
+				continue
+			}
+
+			_, err := tfgrafana.FindRoleAssociationsByRoleAndWorkspaceID(ctx, conn, rs.Primary.Attributes["role"], rs.Primary.Attributes["workspace_id"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Grafana Workspace Role Association %s still exists", rs.Primary.ID)
 		}
-
-		_, err := tfgrafana.FindRoleAssociationsByRoleAndWorkspaceID(conn, rs.Primary.Attributes["role"], rs.Primary.Attributes["workspace_id"])
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Grafana Workspace Role Association %s still exists", rs.Primary.ID)
+		return nil
 	}
-	return nil
 }

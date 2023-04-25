@@ -2,28 +2,30 @@ package glue
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_glue_classifier")
 func ResourceClassifier() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceClassifierCreate,
-		Read:   resourceClassifierRead,
-		Update: resourceClassifierUpdate,
-		Delete: resourceClassifierDelete,
+		CreateWithoutTimeout: resourceClassifierCreate,
+		ReadWithoutTimeout:   resourceClassifierRead,
+		UpdateWithoutTimeout: resourceClassifierUpdate,
+		DeleteWithoutTimeout: resourceClassifierDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		CustomizeDiff: customdiff.Sequence(
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
@@ -185,8 +187,9 @@ func ResourceClassifier() *schema.Resource {
 	}
 }
 
-func resourceClassifierCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceClassifierCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 	name := d.Get("name").(string)
 
 	input := &glue.CreateClassifierInput{}
@@ -212,53 +215,55 @@ func resourceClassifierCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating Glue Classifier: %s", input)
-	_, err := conn.CreateClassifier(input)
+	_, err := conn.CreateClassifierWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating Glue Classifier (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Glue Classifier (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
-	return resourceClassifierRead(d, meta)
+	return append(diags, resourceClassifierRead(ctx, d, meta)...)
 }
 
-func resourceClassifierRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceClassifierRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 
-	classifier, err := FindClassifierByName(conn, d.Id())
+	classifier, err := FindClassifierByName(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Glue Classifier (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Glue Classifier (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Glue Classifier (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("csv_classifier", flattenCSVClassifier(classifier.CsvClassifier)); err != nil {
-		return fmt.Errorf("error setting csv_classifier: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting csv_classifier: %s", err)
 	}
 
 	if err := d.Set("grok_classifier", flattenGrokClassifier(classifier.GrokClassifier)); err != nil {
-		return fmt.Errorf("error setting grok_classifier: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting grok_classifier: %s", err)
 	}
 
 	if err := d.Set("json_classifier", flattenJSONClassifier(classifier.JsonClassifier)); err != nil {
-		return fmt.Errorf("error setting json_classifier: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting json_classifier: %s", err)
 	}
 
 	d.Set("name", d.Id())
 
 	if err := d.Set("xml_classifier", flattenXmlClassifier(classifier.XMLClassifier)); err != nil {
-		return fmt.Errorf("error setting xml_classifier: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting xml_classifier: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceClassifierUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceClassifierUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	input := &glue.UpdateClassifierInput{}
 
@@ -283,32 +288,33 @@ func resourceClassifierUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Updating Glue Classifier: %s", input)
-	_, err := conn.UpdateClassifier(input)
+	_, err := conn.UpdateClassifierWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error updating Glue Classifier (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Glue Classifier (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceClassifierDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceClassifierDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	log.Printf("[DEBUG] Deleting Glue Classifier: %s", d.Id())
-	err := DeleteClassifier(conn, d.Id())
+	err := DeleteClassifier(ctx, conn, d.Id())
 	if err != nil {
-		return fmt.Errorf("error deleting Glue Classifier (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Glue Classifier (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func DeleteClassifier(conn *glue.Glue, name string) error {
+func DeleteClassifier(ctx context.Context, conn *glue.Glue, name string) error {
 	input := &glue.DeleteClassifierInput{
 		Name: aws.String(name),
 	}
 
-	_, err := conn.DeleteClassifier(input)
+	_, err := conn.DeleteClassifierWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return nil

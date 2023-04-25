@@ -14,14 +14,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_connect_phone_number", name="Phone Number")
+// @Tags(identifierAttribute="arn")
 func ResourcePhoneNumber() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourcePhoneNumberCreate,
-		ReadContext:   resourcePhoneNumberRead,
-		UpdateContext: resourcePhoneNumberUpdate,
-		DeleteContext: resourcePhoneNumberDelete,
+		CreateWithoutTimeout: resourcePhoneNumberCreate,
+		ReadWithoutTimeout:   resourcePhoneNumberRead,
+		UpdateWithoutTimeout: resourcePhoneNumberUpdate,
+		DeleteWithoutTimeout: resourcePhoneNumberDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -85,20 +88,17 @@ func ResourcePhoneNumber() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(connect.PhoneNumberType_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	targetArn := d.Get("target_arn").(string)
 	phoneNumberType := d.Get("type").(string)
-
 	input := &connect.SearchAvailablePhoneNumbersInput{
 		MaxResults:             aws.Int64(1),
 		PhoneNumberCountryCode: aws.String(d.Get("country_code").(string)),
@@ -129,17 +129,14 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	input2 := &connect.ClaimPhoneNumberInput{
-		ClientToken: aws.String(uuid), // can't use aws.String(resource.UniqueId()), because not a valid uuid
+		ClientToken: aws.String(uuid), // can't use aws.String(id.UniqueId()), because it's not a valid uuid
 		PhoneNumber: phoneNumber,
+		Tags:        GetTagsIn(ctx),
 		TargetArn:   aws.String(targetArn),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input2.PhoneNumberDescription = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input2.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Claiming Connect Phone Number %s", input2)
@@ -164,9 +161,7 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourcePhoneNumberRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	phoneNumberId := d.Id()
 
@@ -201,22 +196,13 @@ func resourcePhoneNumberRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("setting status: %s", err)
 	}
 
-	tags := KeyValueTags(phoneNumberSummary.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, resp.ClaimedPhoneNumberSummary.Tags)
 
 	return nil
 }
 
 func resourcePhoneNumberUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	phoneNumberId := d.Id()
 
@@ -237,13 +223,6 @@ func resourcePhoneNumberUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating tags: %s", err)
-		}
-	}
-
 	if _, err := waitPhoneNumberUpdated(ctx, conn, d.Timeout(schema.TimeoutCreate), d.Id()); err != nil {
 		return diag.Errorf("waiting for Phone Number (%s) update: %s", d.Id(), err)
 	}
@@ -252,7 +231,7 @@ func resourcePhoneNumberUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourcePhoneNumberDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	phoneNumberId := d.Id()
 
