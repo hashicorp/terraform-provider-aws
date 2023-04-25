@@ -2,6 +2,7 @@ package ds
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -66,6 +67,7 @@ func (r *resourceTrust) Schema(ctx context.Context, req resource.SchemaRequest, 
 					setplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.Set{
+					setvalidator.SizeBetween(1, 4),
 					setvalidator.ValueStringsAre(
 						fwvalidators.IPv4Address(),
 					),
@@ -502,12 +504,22 @@ func waitTrustCreated(ctx context.Context, conn directoryservice.DescribeTrustsA
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
+	// Wrap any error returned with waiting message
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("waiting for completion: %w", err)
+		}
+	}()
+
 	if output, ok := outputRaw.(*awstypes.Trust); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.TrustStateReason)))
+
 		return output, err
 	}
 
 	return nil, err
 }
+
 func waitTrustUpdated(ctx context.Context, conn directoryservice.DescribeTrustsAPIClient, directoryID, trustID string, timeout time.Duration) (*awstypes.Trust, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
@@ -525,7 +537,16 @@ func waitTrustUpdated(ctx context.Context, conn directoryservice.DescribeTrustsA
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
+	// Wrap any error returned with waiting message
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("waiting for completion: %w", err)
+		}
+	}()
+
 	if output, ok := outputRaw.(*awstypes.Trust); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.TrustStateReason)))
+
 		return output, err
 	}
 
@@ -546,7 +567,16 @@ func waitTrustDeleted(ctx context.Context, conn directoryservice.DescribeTrustsA
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
+	// Wrap any error returned with waiting message
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("waiting for completion: %w", err)
+		}
+	}()
+
 	if output, ok := outputRaw.(*awstypes.Trust); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.TrustStateReason)))
+
 		return output, err
 	}
 

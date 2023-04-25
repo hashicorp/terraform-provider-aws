@@ -106,7 +106,7 @@ func TestAccDSTrust_Domain_TrailingPeriod(t *testing.T) {
 	})
 }
 
-func TestAccDSTrust_bidirectionalBasic(t *testing.T) {
+func TestAccDSTrust_twoWayBasic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 awstypes.Trust
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -125,7 +125,51 @@ func TestAccDSTrust_bidirectionalBasic(t *testing.T) {
 		CheckDestroy:             testAccCheckTrustDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrustConfig_bidirectionalBasic(rName, domainName, domainNameOther),
+				Config: testAccTrustConfig_twoWayBasic(rName, domainName, domainNameOther),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTrustExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "trust_state", string(awstypes.TrustStateVerified)),
+					resource.TestCheckNoResourceAttr(resourceName, "trust_state_reason"),
+
+					testAccCheckTrustExists(ctx, resourceOtherName, &v2),
+					resource.TestCheckResourceAttr(resourceOtherName, "trust_state", string(awstypes.TrustStateVerified)),
+					resource.TestCheckNoResourceAttr(resourceOtherName, "trust_state_reason"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccTrustStateIdFunc(resourceName),
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"delete_associated_conditional_forwarder",
+					"trust_password",
+				},
+			},
+		},
+	})
+}
+
+func TestAccDSTrust_oneWay(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 awstypes.Trust
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_directory_service_trust.test"
+	resourceOtherName := "aws_directory_service_trust.other"
+	domainName := acctest.RandomDomainName()
+	domainNameOther := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckDirectoryService(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrustDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTrustConfig_oneWay(rName, domainName, domainNameOther),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "trust_state", string(awstypes.TrustStateVerified)),
@@ -207,7 +251,7 @@ func TestAccDSTrust_SelectiveAuth(t *testing.T) {
 	})
 }
 
-func TestAccDSTrust_bidirectionalSelectiveAuth(t *testing.T) {
+func TestAccDSTrust_twoWaySelectiveAuth(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Trust
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -225,7 +269,7 @@ func TestAccDSTrust_bidirectionalSelectiveAuth(t *testing.T) {
 		CheckDestroy:             testAccCheckTrustDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrustConfig_bidirectionalSelectiveAuth(rName, domainName, domainNameOther, awstypes.SelectiveAuthEnabled),
+				Config: testAccTrustConfig_twoWaySelectiveAuth(rName, domainName, domainNameOther, awstypes.SelectiveAuthEnabled),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "selective_auth", string(awstypes.SelectiveAuthEnabled)),
@@ -243,7 +287,7 @@ func TestAccDSTrust_bidirectionalSelectiveAuth(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccTrustConfig_bidirectionalSelectiveAuth(rName, domainName, domainNameOther, awstypes.SelectiveAuthDisabled),
+				Config: testAccTrustConfig_twoWaySelectiveAuth(rName, domainName, domainNameOther, awstypes.SelectiveAuthDisabled),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "selective_auth", string(awstypes.SelectiveAuthDisabled)),
@@ -616,7 +660,7 @@ resource "aws_security_group_rule" "other" {
 	)
 }
 
-func testAccTrustConfig_bidirectionalBasic(rName, domain, domainOther string) string {
+func testAccTrustConfig_twoWayBasic(rName, domain, domainOther string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
@@ -635,6 +679,77 @@ resource "aws_directory_service_trust" "other" {
 
   remote_domain_name = aws_directory_service_directory.test.name
   trust_direction    = "Two-Way"
+  trust_password     = "Some0therPassword"
+
+  conditional_forwarder_ip_addrs = aws_directory_service_directory.test.dns_ip_addresses
+}
+
+resource "aws_directory_service_directory" "test" {
+  name     = %[1]q
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+  edition  = "Standard"
+
+  vpc_settings {
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = aws_subnet.test[*].id
+  }
+}
+
+resource "aws_directory_service_directory" "other" {
+  name     = %[2]q
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+  edition  = "Standard"
+
+  vpc_settings {
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = aws_subnet.test[*].id
+  }
+}
+
+resource "aws_security_group_rule" "test" {
+  security_group_id = aws_directory_service_directory.test.security_group_id
+
+  type                     = "egress"
+  protocol                 = "all"
+  from_port                = 0
+  to_port                  = 65535
+  source_security_group_id = aws_directory_service_directory.other.security_group_id
+}
+
+resource "aws_security_group_rule" "other" {
+  security_group_id = aws_directory_service_directory.other.security_group_id
+
+  type                     = "egress"
+  protocol                 = "all"
+  from_port                = 0
+  to_port                  = 65535
+  source_security_group_id = aws_directory_service_directory.test.security_group_id
+}
+`, domain, domainOther),
+	)
+}
+
+func testAccTrustConfig_oneWay(rName, domain, domainOther string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_directory_service_trust" "test" {
+  directory_id = aws_directory_service_directory.test.id
+
+  remote_domain_name = aws_directory_service_directory.other.name
+  trust_direction    = "One-Way: Outgoing"
+  trust_password     = "Some0therPassword"
+
+  conditional_forwarder_ip_addrs = aws_directory_service_directory.other.dns_ip_addresses
+}
+
+resource "aws_directory_service_trust" "other" {
+  directory_id = aws_directory_service_directory.other.id
+
+  remote_domain_name = aws_directory_service_directory.test.name
+  trust_direction    = "One-Way: Incoming"
   trust_password     = "Some0therPassword"
 
   conditional_forwarder_ip_addrs = aws_directory_service_directory.test.dns_ip_addresses
@@ -750,7 +865,7 @@ resource "aws_security_group_rule" "other" {
 	)
 }
 
-func testAccTrustConfig_bidirectionalSelectiveAuth(rName, domain, domainOther string, selectiveAuth awstypes.SelectiveAuth) string {
+func testAccTrustConfig_twoWaySelectiveAuth(rName, domain, domainOther string, selectiveAuth awstypes.SelectiveAuth) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
