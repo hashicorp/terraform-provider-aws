@@ -79,7 +79,6 @@ github.com/aws/aws-sdk-go-v2/service/inspector2 v1.11.10 h1:pFgeg6FNUf0BWfNjvXaC
 github.com/aws/aws-sdk-go-v2/service/inspector2 v1.11.10/go.mod h1:DVqRsK8FPNPZmd6XIITp+vakn0DwcfqO/Luo9fdMUZk=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.22/go.mod h1:xt0Au8yPIwYXf/GYPy/vl4K3CgwhfQMYbrH7DlUUIws=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.25/go.mod h1:/95IA+0lMnzW6XzqYJRpjjsAbKEORVeO0anQqjd2CNU=
-github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.26/go.mod h1:Bd4C/4PkVGubtNe5iMXu5BNnaBi/9t/UsFspPt4ram8=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.27 h1:0iKliEXAcCa2qVtRs7Ot5hItA2MsufrphbRFlz1Owxo=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.27/go.mod h1:EOwBD4J4S5qYszS5/3DpkejfuK+Z5/1uzICfPaZLtqw=
 github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.14.1 h1:lRWp3bNu5wy0X3a8GS42JvZFlv++AKsMdzEnoiVJrkg=
@@ -100,8 +99,8 @@ github.com/aws/aws-sdk-go-v2/service/pipes v1.2.4 h1:/HP6GVr+JgmLsphpLW5yC7ywQoE
 github.com/aws/aws-sdk-go-v2/service/pipes v1.2.4/go.mod h1:3CITdcwCd26QQjoJoE/XIX3efxFFuxXFMgzjsZXcsQM=
 github.com/aws/aws-sdk-go-v2/service/rbin v1.8.10 h1:XDNalvDzQ5Iz+B4ZyvqjGVYHMSKckNhiHjaSoGye5Tg=
 github.com/aws/aws-sdk-go-v2/service/rbin v1.8.10/go.mod h1:kdlIXWL9Akk4tj/u9GMnO17ImBEvrhQmb0OnJ7LokQY=
-github.com/aws/aws-sdk-go-v2/service/rds v1.43.1 h1:lux0aBWvTxbqKcnGmxr5+NMZbErqLK/47eF7ohPl7VI=
-github.com/aws/aws-sdk-go-v2/service/rds v1.43.1/go.mod h1:MsNKuqHhTJrmI6A0TBdhSYiQ7SYkKncIWRIp9KfzRfs=
+github.com/aws/aws-sdk-go-v2/service/rds v1.43.2 h1:LIKqdGTb8Yhmr69GDuxTS8LHaWk0C0RqpCWSYjFf2K8=
+github.com/aws/aws-sdk-go-v2/service/rds v1.43.2/go.mod h1:rS6T0DrjdZ5LDr8ZC/J9iZdD1oSbie5reWWzqv5zLOw=
 github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.10 h1:/CaDvhYhNFs/0TJ1fvsJnNu7I8sLxU6H82JvadLTy/Y=
 github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.10/go.mod h1:5m4K77ac+vc+tBIetpxbJ3D/Lc+tHnS9aGmyVpalCTA=
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.1.9 h1:DwR3b2gxCkbriJjEt+/iXWFgUVcFNXHoHuOgEloOod0=
