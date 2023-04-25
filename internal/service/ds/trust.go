@@ -330,12 +330,21 @@ func (r *resourceTrust) Delete(ctx context.Context, req resource.DeleteRequest, 
 func (r *resourceTrust) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, "/")
 	if len(parts) != 2 {
-		resp.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf("Wrong format for import ID (%s), use: 'directory-id/trust-id'", req.ID))
+		resp.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf("Wrong format for import ID (%s), use: 'directory-id/remote-directory-domain'", req.ID))
 		return
 	}
 	directoryID := parts[0]
-	trustID := parts[1]
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), trustID)...)
+	domain := parts[1]
+
+	trust, err := findTrustByDomain(ctx, r.Meta().DSClient(), directoryID, domain)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Importing Resource",
+			err.Error(),
+		)
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), aws.ToString(trust.TrustId))...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("directory_id"), directoryID)...)
 }
 
@@ -437,7 +446,33 @@ func FindTrustByID(ctx context.Context, conn directoryservice.DescribeTrustsAPIC
 	if err != nil {
 		return nil, err
 	}
+	return trust, nil
+}
 
+func findTrustByDomain(ctx context.Context, conn directoryservice.DescribeTrustsAPIClient, directoryID, domain string) (*awstypes.Trust, error) {
+	input := &directoryservice.DescribeTrustsInput{
+		DirectoryId: aws.String(directoryID),
+	}
+
+	var results []awstypes.Trust
+	paginator := directoryservice.NewDescribeTrustsPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, trust := range page.Trusts {
+			if aws.ToString(trust.RemoteDomainName) == domain {
+				results = append(results, trust)
+			}
+		}
+	}
+
+	trust, err := tfresource.AssertSingleValueResult(results)
+	if err != nil {
+		return nil, err
+	}
 	return trust, nil
 }
 

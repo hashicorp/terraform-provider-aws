@@ -490,7 +490,7 @@ func testAccTrustStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["directory_id"], rs.Primary.ID), nil
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["directory_id"], rs.Primary.Attributes["remote_domain_name"]), nil
 	}
 }
 
