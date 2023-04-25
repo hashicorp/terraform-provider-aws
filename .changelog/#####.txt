@@ -5,3 +5,7 @@ provider: With the retirement of EC2-Classic the`aws_db_security_group` resource
 ```release-note:breaking-change
 provider: With the retirement of EC2-Classic the`aws_elasticache_security_group` resource has been removed
 ```
+
+```release-note:breaking-change
+provider: With the retirement of EC2-Classic the`aws_redshift_security_group` resource has been removed
+```
