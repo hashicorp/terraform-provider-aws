@@ -81,8 +81,8 @@ github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.22/go.mod h1:xt
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.25/go.mod h1:/95IA+0lMnzW6XzqYJRpjjsAbKEORVeO0anQqjd2CNU=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.27 h1:0iKliEXAcCa2qVtRs7Ot5hItA2MsufrphbRFlz1Owxo=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.27/go.mod h1:EOwBD4J4S5qYszS5/3DpkejfuK+Z5/1uzICfPaZLtqw=
-github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.14.1 h1:lRWp3bNu5wy0X3a8GS42JvZFlv++AKsMdzEnoiVJrkg=
-github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.14.1/go.mod h1:VXBHSxdN46bsJrkniN68psSwbyBKsazQfU2yX/iSDso=
+github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.14.2 h1:NbWkRxEEIRSCqxhsHQuMiTH7yo+JZW1gp8v3elSVMTQ=
+github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.14.2/go.mod h1:4tfW5l4IAB32VWCDEBxCRtR9T4BWy4I4kr1spr8NgZM=
 github.com/aws/aws-sdk-go-v2/service/ivschat v1.4.4 h1:5ouYpDGzFukg2bnYCZhzDXhuZzOItPAC7XQ9yQ2AZ8s=
 github.com/aws/aws-sdk-go-v2/service/ivschat v1.4.4/go.mod h1:hUIzI/1VZP15FYdPE7tBFI/gk9iD1LlEOFMSJTrJZN8=
 github.com/aws/aws-sdk-go-v2/service/kendra v1.39.3 h1:UzP9pZzuld0OmUrX2/yZtPqKf0gqclUn9d03rm3xZ+8=
@@ -107,8 +107,8 @@ github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.1.10 h1:SBotfHvpw8KOGXL5E6
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.1.10/go.mod h1:BeRwkhH4kXGCbloxpE5tApOhFa8O8Mn12m5onxV3mEY=
 github.com/aws/aws-sdk-go-v2/service/route53domains v1.14.9 h1:GXvVZfCE47uT2F4vppNNByiJZDj0B77Eoyl8fKkxJA8=
 github.com/aws/aws-sdk-go-v2/service/route53domains v1.14.9/go.mod h1:ZCAB0DgknPFchQTI0rWjWlLe6U/2eDBqPMzVAjkZuzQ=
-github.com/aws/aws-sdk-go-v2/service/s3control v1.31.3 h1:bpxSAiUYsUcNYqpQ2dPN3AHfM1Ty3r6zysvu2vseAhE=
-github.com/aws/aws-sdk-go-v2/service/s3control v1.31.3/go.mod h1:YZEdaahg7QZaXoYn5V0VZxANncP/XGkgIRSle7zJ3/I=
+github.com/aws/aws-sdk-go-v2/service/s3control v1.31.4 h1:AhmbaMSdZJcRWuzNQ3gpTKsLsbegqoQ4NMhf3oNYLyA=
+github.com/aws/aws-sdk-go-v2/service/s3control v1.31.4/go.mod h1:+J0Qiu0bVEAUOZWMa1fhnviElPPkyCNDJ7jy55YlXrw=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.9 h1:G3iJisbxIMLydS1j3WzUCdQJigf8SeQN4z3yXqNdbZs=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.9/go.mod h1:Dr3vFH6or6CgiwwYHvPhnUMbRDDjlHkHJEIk96s80BU=
 github.com/aws/aws-sdk-go-v2/service/securitylake v1.3.4 h1:SRpg4olNt+5u35sDkHS9ledAbh1xygKUSww0KbRs9iE=
