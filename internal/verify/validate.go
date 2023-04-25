@@ -164,9 +164,7 @@ func ValidIAMPolicyJSON(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) < 1 {
 		errors = append(errors, fmt.Errorf("%q is an empty string, which is not a valid JSON value", k))
-		return
-	}
-	if first := value[:1]; first != "{" {
+	} else if first := value[:1]; first != "{" {
 		switch value[:1] {
 		case " ", "\t", "\r", "\n":
 			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: leading space characters are not allowed", k))
@@ -192,15 +190,14 @@ func ValidIAMPolicyJSON(v interface{}, k string) (ws []string, errors []error) {
 			// Generic error for if we didn't find something more specific to say.
 			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: not a JSON object", k))
 		}
-		return
-	}
-	if _, err := structure.NormalizeJsonString(v); err != nil {
+	} else if _, err := structure.NormalizeJsonString(v); err != nil {
 		errStr := err.Error()
 		if err, ok := err.(*json.SyntaxError); ok {
 			errStr = fmt.Sprintf("%s, at byte offset %d", errStr, err.Offset)
 		}
 		errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: %s", k, errStr))
 	}
+
 	return
 }
 
