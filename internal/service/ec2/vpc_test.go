@@ -896,7 +896,14 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlockWithNetworkBorderGroup(t *testing.T)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckLocalZoneAvailable(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
+			// https://docs.aws.amazon.com/vpc/latest/userguide/Extend_VPCs.html#local-zone:
+			// "You can request the IPv6 Amazon-provided IP addresses and associate them with the network border group
+			//  for a new or existing VPCs only for us-west-2-lax-1a and use-west-2-lax-1b. All other Local Zones don't support IPv6."
+			testAccPreCheckLocalZoneAvailable(ctx, t, "us-west-2-lax-1")
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCDestroy(ctx),
@@ -1202,6 +1209,11 @@ data "aws_availability_zones" "available" {
   filter {
     name   = "opt-in-status"
     values = ["opted-in"]
+  }
+
+  filter {
+    name   = "group-name"
+    values = ["us-west-2-lax-1"]
   }
 }
 
