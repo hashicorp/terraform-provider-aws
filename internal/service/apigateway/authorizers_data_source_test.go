@@ -21,7 +21,7 @@ func TestAccAPIGatewayAuthorizersDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAuthorizerDataSourceConfig_basic(rName),
+				Config: testAccAuthorizersDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "2"),
 				),
