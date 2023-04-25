@@ -12,11 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -43,10 +41,7 @@ func ResourceCoreNetwork() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			resourceCoreNetworkCustomizeDiff,
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: verify.SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
@@ -77,10 +72,9 @@ func ResourceCoreNetwork() *schema.Resource {
 				ConflictsWith: []string{"base_policy_region"},
 			},
 			"create_base_policy": {
-				Type:          schema.TypeBool,
-				Optional:      true,
-				Default:       false,
-				ConflictsWith: []string{"policy_document"},
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"created_at": {
 				Type:     schema.TypeString,
@@ -117,23 +111,6 @@ func ResourceCoreNetwork() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 50),
-			},
-			"policy_document": {
-				Deprecated: "Use the aws_networkmanager_core_network_policy_attachment resource instead. " +
-					"This attribute will be removed in the next major version of the provider.",
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 10000000),
-					validation.StringIsJSON,
-				),
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-				ConflictsWith: []string{"create_base_policy"},
 			},
 			"segments": {
 				Type:     schema.TypeList,
@@ -181,14 +158,9 @@ func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("policy_document"); ok {
-		input.PolicyDocument = aws.String(v.(string))
-	}
-
 	// check if the user wants to create a base policy document
 	// this creates the core network with a starting policy document set to LIVE
 	// this is required for the first terraform apply if there attachments to the core network
-	// and the core network is created without the policy_document argument set
 	if _, ok := d.GetOk("create_base_policy"); ok {
 		// if user supplies a region or multiple regions use it in the base policy, otherwise use current region
 		regions := []interface{}{meta.(*conns.AWSClient).Region}
@@ -251,24 +223,6 @@ func resourceCoreNetworkRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set("state", coreNetwork.State)
 
-	// getting the policy document uses a different API call
-	// policy document is also optional
-	coreNetworkPolicy, err := FindCoreNetworkPolicyByID(ctx, conn, d.Id())
-
-	if tfresource.NotFound(err) {
-		d.Set("policy_document", nil)
-	} else if err != nil {
-		return diag.Errorf("reading Network Manager Core Network (%s) policy: %s", d.Id(), err)
-	} else {
-		encodedPolicyDocument, err := protocol.EncodeJSONValue(coreNetworkPolicy.PolicyDocument, protocol.NoEscape)
-
-		if err != nil {
-			return diag.Errorf("encoding Network Manager Core Network (%s) policy document: %s", d.Id(), err)
-		}
-
-		d.Set("policy_document", encodedPolicyDocument)
-	}
-
 	SetTagsOut(ctx, coreNetwork.Tags)
 
 	return nil
@@ -285,18 +239,6 @@ func resourceCoreNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if err != nil {
 			return diag.Errorf("updating Network Manager Core Network (%s): %s", d.Id(), err)
-		}
-
-		if _, err := waitCoreNetworkUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for Network Manager Core Network (%s) update: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("policy_document") {
-		err := PutAndExecuteCoreNetworkPolicy(ctx, conn, d.Id(), d.Get("policy_document").(string))
-
-		if err != nil {
-			return diag.FromErr(err)
 		}
 
 		if _, err := waitCoreNetworkUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -353,17 +295,6 @@ func resourceCoreNetworkDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	if _, err := waitCoreNetworkDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return diag.Errorf("waiting for Network Manager Core Network (%s) delete: %s", d.Id(), err)
-	}
-
-	return nil
-}
-
-func resourceCoreNetworkCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
-	if d.HasChange("policy_document") {
-		if o, n := d.GetChange("policy_document"); !verify.JSONStringsEqual(o.(string), n.(string)) {
-			d.SetNewComputed("edges")
-			d.SetNewComputed("segments")
-		}
 	}
 
 	return nil
