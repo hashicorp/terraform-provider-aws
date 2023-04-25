@@ -434,7 +434,10 @@ func TestValidIAMPolicyJSONString(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
+		test := test
 		t.Run(test.Value, func(t *testing.T) {
+			t.Parallel()
+
 			_, errs := ValidIAMPolicyJSON(test.Value, "json")
 
 			if test.WantError != "" {
