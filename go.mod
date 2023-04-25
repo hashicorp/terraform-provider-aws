@@ -26,7 +26,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/oam v1.1.9
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.2.3
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.2.4
-	github.com/aws/aws-sdk-go-v2/service/rbin v1.8.9
+	github.com/aws/aws-sdk-go-v2/service/rbin v1.8.10
 	github.com/aws/aws-sdk-go-v2/service/rds v1.43.1
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.10
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.1.9
