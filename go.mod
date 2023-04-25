@@ -12,7 +12,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.10
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.20.10
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.24.1
-	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.22.2
+	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.22.3
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.1.8
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.93.2
 	github.com/aws/aws-sdk-go-v2/service/fis v1.14.8
