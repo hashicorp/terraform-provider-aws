@@ -342,7 +342,16 @@ func resourceBucketReplicationConfigurationCreate(d *schema.ResourceData, meta i
 
 	d.SetId(bucket)
 
-	return resourceBucketReplicationConfigurationRead(d, meta)
+	return resource.Retry(replicationRetryDelay, func() *resource.RetryError {
+		err := resourceBucketReplicationConfigurationRead(d, meta)
+		if tfawserr.ErrCodeEquals(err, "ReplicationConfigurationNotFoundError") {
+			return resource.RetryableError(err)
+		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
 }
 
 func resourceBucketReplicationConfigurationRead(d *schema.ResourceData, meta interface{}) error {
