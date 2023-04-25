@@ -33,3 +33,7 @@ resource/aws_redshift_cluster: With the retirement of EC2-Classic the `cluster_s
 ```release-note:breaking-change
 data-source/aws_redshift_cluster: With the retirement of EC2-Classic the `cluster_security_groups` attribute has been removed
 ```
+
+```release-note:breaking-change
+resource/aws_launch_configuration: With the retirement of EC2-Classic the `vpc_classic_link_id` and `vpc_classic_link_security_groups` attributes hav been removed
+```
