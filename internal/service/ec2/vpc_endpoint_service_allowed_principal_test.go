@@ -41,6 +41,33 @@ func TestAccVPCEndpointServiceAllowedPrincipal_basic(t *testing.T) {
 	})
 }
 
+func TestAccVPCEndpointServiceAllowedPrincipal_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix("tfacctest")
+
+	resourceName := "aws_vpc_endpoint_service_allowed_principal.test"
+	serviceResourceName := "aws_vpc_endpoint_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointServiceAllowedPrincipalDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEndpointServiceAllowedPrincipalConfig_Multiple(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointServiceAllowedPrincipalExists(ctx, resourceName),
+					resource.TestMatchResourceAttr(resourceName, "id", regexp.MustCompile(`^vpce-svc-perm-\w{17}$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_endpoint_service_id", "aws_vpc_endpoint_service.test", "id"),
+					resource.TestCheckResourceAttr(serviceResourceName, "allowed_principals.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "principal_arn", "data.aws_iam_session_context.current", "issuer_arn"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVPCEndpointServiceAllowedPrincipal_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("tfacctest")
@@ -196,6 +223,35 @@ data "aws_iam_session_context" "current" {
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required        = false
   network_load_balancer_arns = aws_lb.test[*].arn
+}
+
+resource "aws_vpc_endpoint_service_allowed_principal" "test" {
+  vpc_endpoint_service_id = aws_vpc_endpoint_service.test.id
+
+  principal_arn = data.aws_iam_session_context.current.issuer_arn
+}
+`)
+}
+
+func testAccVPCEndpointServiceAllowedPrincipalConfig_Multiple(rName string) string {
+	return acctest.ConfigCompose(
+		testAccVPCEndpointServiceConfig_networkLoadBalancerBase(rName, 1), `
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
+resource "aws_vpc_endpoint_service" "test" {
+  acceptance_required        = false
+  network_load_balancer_arns = aws_lb.test[*].arn
+  allowed_principals = ["arn:aws:iam::123456789012:root"]
+
+  lifecycle {
+	ignore_changes = [
+		allowed_principals
+	]
+  }
 }
 
 resource "aws_vpc_endpoint_service_allowed_principal" "test" {
