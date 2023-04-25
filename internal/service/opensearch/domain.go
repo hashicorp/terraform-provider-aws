@@ -957,9 +957,9 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 		if d.HasChange("off_peak_window_options") {
 			enabled := d.Get("off_peak_window_options.0.enabled").(bool)
-			hours := d.Get("off_peak_window_options.0.off_peak_window.0.window_start_time.0.hours").(int64)
-			minutes := d.Get("off_peak_window_options.0.off_peak_window.0.window_start_time.0.minutes").(int64)
-			input.OffPeakWindowOptions = expandOffPeakWindowOptions(enabled, hours, minutes)
+			hours := d.Get("off_peak_window_options.0.off_peak_window.0.window_start_time.0.hours").(int)
+			minutes := d.Get("off_peak_window_options.0.off_peak_window.0.window_start_time.0.minutes").(int)
+			input.OffPeakWindowOptions = expandOffPeakWindowOptions(enabled, int64(hours), int64(minutes))
 		}
 
 		if d.HasChange("advanced_security_options") {
