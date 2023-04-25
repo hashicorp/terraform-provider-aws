@@ -52,6 +52,7 @@ CloudTrail
 CloudWatch
 CloudWatch Application Insights
 CloudWatch Evidently
+CloudWatch Internet Monitor
 CloudWatch Logs
 CloudWatch Observability Access Manager
 CloudWatch RUM

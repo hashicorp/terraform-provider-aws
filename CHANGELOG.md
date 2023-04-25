@@ -1,21 +1,39 @@
 ## 4.65.0 (Unreleased)
 
+NOTES:
+
+* data-source/aws_db_instance: With the retirement of EC2-Classic the`db_security_groups` attribute has been deprecated and will be removed in a future version ([#30919](https://github.com/hashicorp/terraform-provider-aws/issues/30919))
+* data-source/aws_elasticache_cluster: With the retirement of EC2-Classic the`security_group_names` attribute has been deprecated and will be removed in a future version ([#30919](https://github.com/hashicorp/terraform-provider-aws/issues/30919))
+* data-source/aws_launch_configuration: With the retirement of EC2-Classic the`vpc_classic_link_id` and `vpc_classic_link_security_groups` attributes have been deprecated and will be removed in a future version ([#30919](https://github.com/hashicorp/terraform-provider-aws/issues/30919))
+* data-source/aws_redshift_cluster: With the retirement of EC2-Classic the `cluster_security_groups` attribute has been deprecated and will be removed in a future version ([#30919](https://github.com/hashicorp/terraform-provider-aws/issues/30919))
+
 FEATURES:
 
 * **New Data Source:** `aws_dms_replication_subnet_group` ([#30832](https://github.com/hashicorp/terraform-provider-aws/issues/30832))
 * **New Data Source:** `aws_ssmcontacts_contact` ([#30667](https://github.com/hashicorp/terraform-provider-aws/issues/30667))
 * **New Data Source:** `aws_ssmcontacts_contact_channel` ([#30667](https://github.com/hashicorp/terraform-provider-aws/issues/30667))
 * **New Data Source:** `aws_ssmcontacts_plan` ([#30667](https://github.com/hashicorp/terraform-provider-aws/issues/30667))
+* **New Data Source:** `aws_ssmincidents_response_plan` ([#30665](https://github.com/hashicorp/terraform-provider-aws/issues/30665))
+* **New Resource:** `aws_quicksight_folder_membership` ([#30871](https://github.com/hashicorp/terraform-provider-aws/issues/30871))
 * **New Resource:** `aws_ssmcontacts_contact` ([#30667](https://github.com/hashicorp/terraform-provider-aws/issues/30667))
 * **New Resource:** `aws_ssmcontacts_contact_channel` ([#30667](https://github.com/hashicorp/terraform-provider-aws/issues/30667))
 * **New Resource:** `aws_ssmcontacts_plan` ([#30667](https://github.com/hashicorp/terraform-provider-aws/issues/30667))
+* **New Resource:** `aws_ssmincidents_response_plan` ([#30665](https://github.com/hashicorp/terraform-provider-aws/issues/30665))
 * **New Resource:** `aws_synthetics_group` ([#30678](https://github.com/hashicorp/terraform-provider-aws/issues/30678))
 * **New Resource:** `aws_synthetics_group_association` ([#30678](https://github.com/hashicorp/terraform-provider-aws/issues/30678))
 
 ENHANCEMENTS:
 
+* data-source/aws_ami_ids: Add `include_deprecated` argument ([#30294](https://github.com/hashicorp/terraform-provider-aws/issues/30294))
+* data-source/aws_imagebuilder_image: Add `containers` attribute to the `output_resources` block ([#30899](https://github.com/hashicorp/terraform-provider-aws/issues/30899))
 * resource/aws_db_subnet_group: Add `vpc_id` attribute ([#30775](https://github.com/hashicorp/terraform-provider-aws/issues/30775))
+* resource/aws_imagebuilder_image: Add `containers` attribute to the `output_resources` block ([#30899](https://github.com/hashicorp/terraform-provider-aws/issues/30899))
+* resource/aws_networkmanager_core_network: Wait for the network policy to be in the `READY_TO_EXECUTE` state before executing any changes ([#30879](https://github.com/hashicorp/terraform-provider-aws/issues/30879))
 * resource/aws_wafv2_web_acl: Add `token_domains` argument ([#30340](https://github.com/hashicorp/terraform-provider-aws/issues/30340))
+
+BUG FIXES:
+
+* resource/aws_apprunner_service: Allow additional `instance_configuration.cpu` and `instance_configuration.memory` values ([#30889](https://github.com/hashicorp/terraform-provider-aws/issues/30889))
 
 ## 4.64.0 (April 20, 2023)
 
