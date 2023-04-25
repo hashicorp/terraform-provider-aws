@@ -57,7 +57,6 @@ func (r *resourceRefreshSchedule) Schema(ctx context.Context, req resource.Schem
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"arn": framework.ARNAttributeComputedOnly(),
-			"id":  framework.IDAttribute(),
 			"aws_account_id": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -72,6 +71,7 @@ func (r *resourceRefreshSchedule) Schema(ctx context.Context, req resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"id": framework.IDAttribute(),
 			"schedule_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -122,7 +122,6 @@ func (r *resourceRefreshSchedule) Schema(ctx context.Context, req resource.Schem
 											timeOfTheDayValidator(),
 										},
 									},
-
 									"timezone": schema.StringAttribute{
 										Optional: true,
 										Computed: true,
@@ -168,24 +167,24 @@ func (r *resourceRefreshSchedule) Schema(ctx context.Context, req resource.Schem
 
 type resourceRefreshScheduleData struct {
 	ARN          types.String `tfsdk:"arn"`
-	ID           types.String `tfsdk:"id"`
 	AWSAccountID types.String `tfsdk:"aws_account_id"`
 	DataSetID    types.String `tfsdk:"data_set_id"`
+	ID           types.String `tfsdk:"id"`
 	ScheduleID   types.String `tfsdk:"schedule_id"`
 	Schedule     types.List   `tfsdk:"schedule"`
 }
 
 type scheduleData struct {
 	RefreshType        types.String `tfsdk:"refresh_type"`
-	StartAfterDateTime types.String `tfsdk:"start_after_date_time"`
 	ScheduleFrequency  types.List   `tfsdk:"schedule_frequency"`
+	StartAfterDateTime types.String `tfsdk:"start_after_date_time"`
 }
 
 type refreshFrequencyData struct {
 	Interval     types.String `tfsdk:"interval"`
+	RefreshOnDay types.List   `tfsdk:"refresh_on_day"`
 	TimeOfTheDay types.String `tfsdk:"time_of_the_day"`
 	Timezone     types.String `tfsdk:"timezone"`
-	RefreshOnDay types.List   `tfsdk:"refresh_on_day"`
 }
 
 type refreshOnDayData struct {
@@ -199,23 +198,23 @@ var (
 		"day_of_week":  types.StringType,
 	}
 	refreshFrequencyAttrTypes = map[string]attr.Type{
-		"interval":        types.StringType,
-		"time_of_the_day": types.StringType,
-		"timezone":        types.StringType,
+		"interval": types.StringType,
 		"refresh_on_day": types.ListType{
 			ElemType: types.ObjectType{
 				AttrTypes: refreshOnDayAttrTypes,
 			},
 		},
+		"time_of_the_day": types.StringType,
+		"timezone":        types.StringType,
 	}
 	scheduleAttrTypes = map[string]attr.Type{
-		"refresh_type":          types.StringType,
-		"start_after_date_time": types.StringType,
+		"refresh_type": types.StringType,
 		"schedule_frequency": types.ListType{
 			ElemType: types.ObjectType{
 				AttrTypes: refreshFrequencyAttrTypes,
 			},
 		},
+		"start_after_date_time": types.StringType,
 	}
 )
 
