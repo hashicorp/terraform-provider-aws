@@ -328,13 +328,13 @@ func modifyVPCPeeringConnectionOptions(ctx context.Context, conn *ec2.EC2, d *sc
 			return retry.NonRetryableError(err)
 		}
 
-		if v := vpcPeeringConnection.AccepterVpcInfo; v != nil && accepterPeeringConnectionOptions != nil {
+		if v := vpcPeeringConnection.AccepterVpcInfo; v != nil && v.PeeringOptions != nil && accepterPeeringConnectionOptions != nil {
 			if !vpcPeeringConnectionOptionsEqual(v.PeeringOptions, accepterPeeringConnectionOptions) {
 				return retry.RetryableError(errors.New("Accepter Options not stable"))
 			}
 		}
 
-		if v := vpcPeeringConnection.RequesterVpcInfo; v != nil && requesterPeeringConnectionOptions != nil {
+		if v := vpcPeeringConnection.RequesterVpcInfo; v != nil && v.PeeringOptions != nil && requesterPeeringConnectionOptions != nil {
 			if !vpcPeeringConnectionOptionsEqual(v.PeeringOptions, requesterPeeringConnectionOptions) {
 				return retry.RetryableError(errors.New("Requester Options not stable"))
 			}
@@ -351,9 +351,7 @@ func modifyVPCPeeringConnectionOptions(ctx context.Context, conn *ec2.EC2, d *sc
 }
 
 func vpcPeeringConnectionOptionsEqual(o1 *ec2.VpcPeeringConnectionOptionsDescription, o2 *ec2.PeeringConnectionOptionsRequest) bool {
-	return aws.BoolValue(o1.AllowDnsResolutionFromRemoteVpc) == aws.BoolValue(o2.AllowDnsResolutionFromRemoteVpc) &&
-		aws.BoolValue(o1.AllowEgressFromLocalClassicLinkToRemoteVpc) == aws.BoolValue(o2.AllowEgressFromLocalClassicLinkToRemoteVpc) &&
-		aws.BoolValue(o1.AllowEgressFromLocalVpcToRemoteClassicLink) == aws.BoolValue(o2.AllowEgressFromLocalVpcToRemoteClassicLink)
+	return aws.BoolValue(o1.AllowDnsResolutionFromRemoteVpc) == aws.BoolValue(o2.AllowDnsResolutionFromRemoteVpc)
 }
 
 func expandPeeringConnectionOptionsRequest(tfMap map[string]interface{}) *ec2.PeeringConnectionOptionsRequest {
