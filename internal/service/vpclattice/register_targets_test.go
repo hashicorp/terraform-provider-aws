@@ -53,7 +53,7 @@ func TestAccVPCLatticeTargets_basic(t *testing.T) {
 func testAccTargets_basic() string {
 	return `
 resource "aws_vpclattice_register_targets" "test" {
-  target_group_identifier = "tg-0fcd8d514d231b311"
+  target_group_identifier = "tg-00153386728e69d10"
 
   targets {
     id   = "i-081f98c4ef2ff21e3"
