@@ -717,16 +717,25 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if len(d.Get("off_peak_window_options").([]interface{})) > 0 {
-		offPeakWindow := d.Get("off_peak_window_options").([]interface{})[0].(map[string]interface{})["off_peak_window"].([]interface{})[0].(map[string]interface{})
-		OffPeakWindowStartHour := int64(offPeakWindow["window_start_time"].([]interface{})[0].(map[string]interface{})["hours"].(int))
-		OffPeakWindowStartMinute := int64(offPeakWindow["window_start_time"].([]interface{})[0].(map[string]interface{})["minutes"].(int))
-		WindowStartTime := opensearchservice.WindowStartTime{
-			Hours:   &OffPeakWindowStartHour,
-			Minutes: &OffPeakWindowStartMinute,
-		}
-		inputCreateDomain.OffPeakWindowOptions.OffPeakWindow.SetWindowStartTime(&WindowStartTime)
-		if enabled := offPeakWindow["enabled"].(bool); enabled {
-			inputCreateDomain.OffPeakWindowOptions.Enabled = &enabled
+		if v, ok := d.GetOk("off_peak_window_options"); ok {
+			offPeakWindowOptionsEnabled := v.([]interface{})[0].(map[string]interface{})["enabled"].(bool)
+			if offPeakWindowOptionsEnabled {
+				offPeakWindowStartTime := v.([]interface{})[0].(map[string]interface{})["off_peak_window"].([]interface{})[0].(map[string]interface{})["window_start_time"].([]interface{})[0].(map[string]interface{})
+				offPeakWindowHours := offPeakWindowStartTime["hours"].(int)
+				offPeakWindowHoursInt64 := int64(offPeakWindowHours)
+				offPeakWindowMinutes := offPeakWindowStartTime["minutes"].(int)
+				offPeakWindowMinutesInt64 := int64(offPeakWindowMinutes)
+				WindowStartTime := opensearchservice.WindowStartTime{
+					Hours:   &offPeakWindowHoursInt64,
+					Minutes: &offPeakWindowMinutesInt64,
+				}
+				inputCreateDomain.OffPeakWindowOptions = &opensearchservice.OffPeakWindowOptions{
+					Enabled: aws.Bool(true),
+					OffPeakWindow: &opensearchservice.OffPeakWindow{
+						WindowStartTime: &WindowStartTime,
+					},
+				}
+			}
 		}
 	}
 
