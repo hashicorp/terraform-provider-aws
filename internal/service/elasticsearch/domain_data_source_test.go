@@ -152,7 +152,6 @@ POLICY
   }
 
   cluster_config {
-    instance_type            = "t3.small.elasticsearch"
     instance_count           = 2
     dedicated_master_enabled = false
 
@@ -276,7 +275,6 @@ POLICY
   }
 
   cluster_config {
-    instance_type            = "t2.small.elasticsearch"
     instance_count           = 2
     dedicated_master_enabled = false
 

@@ -91,7 +91,7 @@ func resourceDestinationCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	// Although PutDestinationInput has a Tags field, specifying tags there results in
 	// "InvalidParameterException: Could not deliver test message to specified destination. Check if the destination is valid."
-	if err := UpdateTags(ctx, conn, aws.StringValue(destination.Arn), nil, KeyValueTags(ctx, GetTagsIn(ctx))); err != nil {
+	if err := createTags(ctx, conn, aws.StringValue(destination.Arn), GetTagsIn(ctx)); err != nil {
 		return diag.Errorf("setting CloudWatch Logs Destination (%s) tags: %s", d.Id(), err)
 	}
 

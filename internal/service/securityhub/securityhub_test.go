@@ -15,6 +15,7 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			"disappears":                  testAccAccount_disappears,
 			"EnableDefaultStandardsFalse": testAccAccount_enableDefaultStandardsFalse,
 			"MigrateV0":                   testAccAccount_migrateV0,
+			"full":                        testAccAccount_full,
 		},
 		"Member": {
 			"basic":  testAccMember_basic,

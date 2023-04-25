@@ -105,6 +105,10 @@ service/chimesdkmeetings:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chimesdkmeetings_'
 service/chimesdkmessaging:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chimesdkmessaging_'
+service/chimesdkvoice:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chimesdkvoice_'
+service/cleanrooms:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cleanrooms_'
 service/cloud9:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloud9_'
 service/cloudcontrol:
@@ -197,6 +201,8 @@ service/dms:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_dms_'
 service/docdb:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_docdb_'
+service/docdbelastic:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_docdbelastic_'
 service/drs:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_drs_'
 service/ds:
@@ -301,6 +307,8 @@ service/inspector:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_inspector_'
 service/inspector2:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_inspector2_'
+service/internetmonitor:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_internetmonitor_'
 service/iot:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_iot_'
 service/iot1clickdevices:

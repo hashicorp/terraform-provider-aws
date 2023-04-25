@@ -109,6 +109,8 @@ provider "aws" {
   <li><code>chimesdkmediapipelines</code></li>
   <li><code>chimesdkmeetings</code></li>
   <li><code>chimesdkmessaging</code></li>
+  <li><code>chimesdkvoice</code></li>
+  <li><code>cleanrooms</code></li>
   <li><code>cloud9</code></li>
   <li><code>cloudcontrol</code> (or <code>cloudcontrolapi</code>)</li>
   <li><code>clouddirectory</code></li>
@@ -155,6 +157,7 @@ provider "aws" {
   <li><code>dlm</code></li>
   <li><code>dms</code> (or <code>databasemigration</code> or <code>databasemigrationservice</code>)</li>
   <li><code>docdb</code></li>
+  <li><code>docdbelastic</code></li>
   <li><code>drs</code></li>
   <li><code>ds</code> (or <code>directoryservice</code>)</li>
   <li><code>dynamodb</code></li>
@@ -205,6 +208,7 @@ provider "aws" {
   <li><code>imagebuilder</code></li>
   <li><code>inspector</code></li>
   <li><code>inspector2</code> (or <code>inspectorv2</code>)</li>
+  <li><code>internetmonitor</code></li>
   <li><code>iot</code></li>
   <li><code>iot1clickdevices</code> (or <code>iot1clickdevicesservice</code>)</li>
   <li><code>iot1clickprojects</code></li>

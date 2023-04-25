@@ -2,7 +2,6 @@ package ec2
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -23,7 +22,7 @@ func ResourceVPCPeeringConnectionAccepter() *schema.Resource {
 		CreateWithoutTimeout: resourceVPCPeeringAccepterCreate,
 		ReadWithoutTimeout:   resourceVPCPeeringConnectionRead,
 		UpdateWithoutTimeout: resourceVPCPeeringConnectionUpdate,
-		DeleteWithoutTimeout: resourceVPCPeeringAccepterDelete,
+		DeleteWithoutTimeout: schema.NoopContext,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(1 * time.Minute),
@@ -114,18 +113,9 @@ func resourceVPCPeeringAccepterCreate(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
-		if err := CreateTags(ctx, conn, d.Id(), tags.Map()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating EC2 VPC Peering Connection (%s) tags: %s", d.Id(), err)
-		}
+	if err := createTags(ctx, conn, d.Id(), GetTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting EC2 VPC Peering Connection (%s) tags: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceVPCPeeringConnectionRead(ctx, d, meta)...)
-}
-
-func resourceVPCPeeringAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	log.Printf("[WARN]  EC2 VPC Peering Connection (%s) not deleted, removing from state", d.Id())
-
-	return diags
 }

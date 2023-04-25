@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpclattice_service_network_service_association")
+// @SDKResource("aws_vpclattice_service_network_service_association", name="Service Network Service Association")
 // @Tags(identifierAttribute="arn")
 func ResourceServiceNetworkServiceAssociation() *schema.Resource {
 	return &schema.Resource{
@@ -84,8 +84,8 @@ func ResourceServiceNetworkServiceAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,

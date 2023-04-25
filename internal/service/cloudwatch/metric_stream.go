@@ -85,6 +85,10 @@ func ResourceMetricStream() *schema.Resource {
 					},
 				},
 			},
+			"include_linked_accounts_metrics": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"last_update_date": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -179,11 +183,12 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &cloudwatch.PutMetricStreamInput{
-		FirehoseArn:  aws.String(d.Get("firehose_arn").(string)),
-		Name:         aws.String(name),
-		OutputFormat: aws.String(d.Get("output_format").(string)),
-		RoleArn:      aws.String(d.Get("role_arn").(string)),
-		Tags:         GetTagsIn(ctx),
+		FirehoseArn:                  aws.String(d.Get("firehose_arn").(string)),
+		IncludeLinkedAccountsMetrics: aws.Bool(d.Get("include_linked_accounts_metrics").(bool)),
+		Name:                         aws.String(name),
+		OutputFormat:                 aws.String(d.Get("output_format").(string)),
+		RoleArn:                      aws.String(d.Get("role_arn").(string)),
+		Tags:                         GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("exclude_filter"); ok && v.(*schema.Set).Len() > 0 {
@@ -254,6 +259,7 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("arn", output.Arn)
 	d.Set("creation_date", output.CreationDate.Format(time.RFC3339))
 	d.Set("firehose_arn", output.FirehoseArn)
+	d.Set("include_linked_accounts_metrics", output.IncludeLinkedAccountsMetrics)
 	d.Set("last_update_date", output.CreationDate.Format(time.RFC3339))
 	d.Set("name", output.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(output.Name)))
@@ -287,10 +293,11 @@ func resourceMetricStreamUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &cloudwatch.PutMetricStreamInput{
-			FirehoseArn:  aws.String(d.Get("firehose_arn").(string)),
-			Name:         aws.String(d.Id()),
-			OutputFormat: aws.String(d.Get("output_format").(string)),
-			RoleArn:      aws.String(d.Get("role_arn").(string)),
+			FirehoseArn:                  aws.String(d.Get("firehose_arn").(string)),
+			IncludeLinkedAccountsMetrics: aws.Bool(d.Get("include_linked_accounts_metrics").(bool)),
+			Name:                         aws.String(d.Id()),
+			OutputFormat:                 aws.String(d.Get("output_format").(string)),
+			RoleArn:                      aws.String(d.Get("role_arn").(string)),
 		}
 
 		if v, ok := d.GetOk("exclude_filter"); ok && v.(*schema.Set).Len() > 0 {

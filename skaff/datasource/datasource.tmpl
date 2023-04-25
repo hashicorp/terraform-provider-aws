@@ -82,7 +82,7 @@ import (
 {{- end }}
 
 // Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
-// @SDKDataSource("{{ .ProviderResourceName }}")
+// @SDKDataSource("{{ .ProviderResourceName }}", name="{{ .HumanDataSourceName }}")
 func DataSource{{ .DataSource }}() *schema.Resource {
 	return &schema.Resource{
 		{{- if .IncludeComments }}

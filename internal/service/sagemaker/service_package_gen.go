@@ -55,6 +55,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceDataQualityJobDefinition,
+			TypeName: "aws_sagemaker_data_quality_job_definition",
+			Name:     "Data Quality Job Definition",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceDevice,
 			TypeName: "aws_sagemaker_device",
 		},
@@ -145,6 +153,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceModelPackageGroupPolicy,
 			TypeName: "aws_sagemaker_model_package_group_policy",
+		},
+		{
+			Factory:  ResourceMonitoringSchedule,
+			TypeName: "aws_sagemaker_monitoring_schedule",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceNotebookInstance,

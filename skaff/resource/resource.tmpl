@@ -82,7 +82,7 @@ import (
 {{- end }}
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @SDKResource("{{ .ProviderResourceName }}")
+// @SDKResource("{{ .ProviderResourceName }}", name="{{ .HumanResourceName }}")
 func Resource{{ .Resource }}() *schema.Resource {
 	return &schema.Resource{
 		{{- if .IncludeComments }}
