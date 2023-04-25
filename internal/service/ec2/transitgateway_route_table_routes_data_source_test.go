@@ -1,58 +1,57 @@
 package ec2_test
 
 import (
-  "fmt"
-  "testing"
+	"fmt"
+	"testing"
 
-  "github.com/aws/aws-sdk-go/service/ec2"
-  sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-  "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-  "github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/aws/aws-sdk-go/service/ec2"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccTransitGatewayRouteTableRoutesDataSource_basic(t *testing.T) {
-  ctx := acctest.Context(t)
-  rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-  dataSourceName := "data.aws_ec2_transit_gateway_route_table_routes.test"
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_ec2_transit_gateway_route_table_routes.test"
 
-  resource.Test(t, resource.TestCase{
-    PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
-    ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-    ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    Steps: []resource.TestStep{
-      {
-        Config: testAccTransitGatewayRouteTableRoutesDataSourceConfig_basic(rName),
-        Check: resource.ComposeTestCheckFunc(
-          acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "routes.#", "0"),
-        ),
-      },
-    },
-  })
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayRouteTableRoutesDataSourceConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "routes.#", "0"),
+				),
+			},
+		},
+	})
 }
 
 func testAccTransitGatewayRouteTableRoutesDataSource_filter(t *testing.T) {
-  ctx := acctest.Context(t)
-  rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-  dataSourceName := "data.aws_ec2_transit_gateway_route_table_routes.test"
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_ec2_transit_gateway_route_table_routes.test"
 
-  resource.Test(t, resource.TestCase{
-    PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
-    ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-    ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    Steps: []resource.TestStep{
-      {
-        Config: testAccTransitGatewayRouteTableRoutesDataSourceConfig_basic(rName),
-        Check: resource.ComposeTestCheckFunc(
-          acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "routes.#", "1"),
-        ),
-      },
-    },
-  })
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayRouteTableRoutesDataSourceConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "routes.#", "1"),
+				),
+			},
+		},
+	})
 }
 
-
 func testAcctestAccTransitGatewayRouteTableRoutesDataSourceConfig_basic(rName string) string {
-  return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   tags = {
     Name = %[1]q
@@ -99,7 +98,7 @@ data "aws_ec2_transit_gateway_route_table_routes" "test" {
 }
 
 func testAcctestAccTransitGatewayRouteTableRoutesDataSourceConfig_basic(rName string) string {
-  return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   tags = {
     Name = %[1]q
@@ -140,7 +139,7 @@ data "aws_ec2_transit_gateway_route_table_routes" "test" {
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.test.id
 
   filter {
-    name = "type"
+    name   = "type"
     values = ["propagated"]
   }
 
@@ -149,6 +148,3 @@ data "aws_ec2_transit_gateway_route_table_routes" "test" {
 
   `, rName))
 }
-
-
-

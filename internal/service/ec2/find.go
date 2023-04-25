@@ -4611,7 +4611,6 @@ func FindTransitGatewayPrefixListReferenceByTwoPartKey(ctx context.Context, conn
 	return output, nil
 }
 
-
 func FindTransitGatewayStaticRoute(ctx context.Context, conn *ec2.EC2, transitGatewayRouteTableID, destination string) (*ec2.TransitGatewayRoute, error) {
 	input := &ec2.SearchTransitGatewayRoutesInput{
 		Filters: BuildAttributeFilterList(map[string]string{
@@ -4619,8 +4618,8 @@ func FindTransitGatewayStaticRoute(ctx context.Context, conn *ec2.EC2, transitGa
 		}),
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
 	}
-  
-  output, _ := FindTransitGatewayRoutes(ctx,conn,input)
+
+	output, _ := FindTransitGatewayRoutes(ctx, conn, input)
 
 	for _, route := range output {
 		if route == nil {
@@ -4642,12 +4641,10 @@ func FindTransitGatewayStaticRoute(ctx context.Context, conn *ec2.EC2, transitGa
 	}
 
 	return nil, &retry.NotFoundError{}
-  
-  
+
 }
 
 func FindTransitGatewayRoutes(ctx context.Context, conn *ec2.EC2, input *ec2.SearchTransitGatewayRoutesInput) ([]*ec2.TransitGatewayRoute, error) {
-
 	output, err := conn.SearchTransitGatewayRoutesWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
@@ -4664,8 +4661,8 @@ func FindTransitGatewayRoutes(ctx context.Context, conn *ec2.EC2, input *ec2.Sea
 	if output == nil || len(output.Routes) == 0 {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
-  
-  return output.Routes, err
+
+	return output.Routes, err
 
 }
 
