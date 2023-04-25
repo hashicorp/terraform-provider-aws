@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230201104953-d1d05f4e2bfb
 	github.com/aws/aws-sdk-go v1.44.248
-	github.com/aws/aws-sdk-go-v2 v1.17.8
+	github.com/aws/aws-sdk-go-v2 v1.18.0
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.2
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.24.5
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.1.2
@@ -36,7 +36,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.3.4
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.17.4
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.36.2
-	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.15.2
+	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.15.3
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.21.2
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.26.4
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.0.3
@@ -86,8 +86,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.10 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.18.12 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.12 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.32 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.26 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.33 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.27 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.29 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.19.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.26 // indirect
