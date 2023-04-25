@@ -25,7 +25,7 @@ func TestAccBackupReportPlanDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccReportPlanDataSourceConfig_nonExistent,
-				ExpectError: regexp.MustCompile(`error reading Backup Report Plan`),
+				ExpectError: regexp.MustCompile(`reading Backup Report Plan`),
 			},
 			{
 				Config: testAccReportPlanDataSourceConfig_basic(rName, rName2),
