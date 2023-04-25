@@ -26,6 +26,7 @@ ENHANCEMENTS:
 
 * data-source/aws_ami_ids: Add `include_deprecated` argument ([#30294](https://github.com/hashicorp/terraform-provider-aws/issues/30294))
 * data-source/aws_imagebuilder_image: Add `containers` attribute to the `output_resources` block ([#30899](https://github.com/hashicorp/terraform-provider-aws/issues/30899))
+* resource/aws_appstream_stack: Add `streaming_experience_settings` attribute ([#28512](https://github.com/hashicorp/terraform-provider-aws/issues/28512))
 * resource/aws_db_subnet_group: Add `vpc_id` attribute ([#30775](https://github.com/hashicorp/terraform-provider-aws/issues/30775))
 * resource/aws_imagebuilder_image: Add `containers` attribute to the `output_resources` block ([#30899](https://github.com/hashicorp/terraform-provider-aws/issues/30899))
 * resource/aws_networkmanager_core_network: Wait for the network policy to be in the `READY_TO_EXECUTE` state before executing any changes ([#30879](https://github.com/hashicorp/terraform-provider-aws/issues/30879))
