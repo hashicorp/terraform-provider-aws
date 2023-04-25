@@ -1,10 +1,8 @@
 package apigateway_test
 
 import (
-	"strconv"
+	"fmt"
 	"testing"
-
-	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -12,10 +10,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAPIGatewayAuthorizersDataSource(t *testing.T) {
+func TestAccAPIGatewayAuthorizersDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "data.aws_api_gateway_authorizers.test"
+	dataSourceName := "data.aws_api_gateway_authorizers.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -23,23 +21,30 @@ func TestAccAPIGatewayAuthorizersDataSource(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAuthorizerDataSource(rName),
+				Config: testAccAuthorizerDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "items.0.identity_source", "method.request.header.Authorization"),
-					resource.TestCheckResourceAttr(resourceName, "items.0.name", rName),
-					resource.TestCheckResourceAttr(resourceName, "items.0.type", "TOKEN"),
-					resource.TestCheckResourceAttr(resourceName, "items.0.authorizer_result_ttl_in_seconds", strconv.Itoa(tfapigateway.DefaultAuthorizerTTL)),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "2"),
 				),
 			},
 		},
 	})
 }
 
-func testAccAuthorizerDataSource(rName string) string {
-	return testAccAuthorizerConfig_lambda(rName) + `
+func testAccAuthorizersDataSourceConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccAuthorizerConfig_base(rName), fmt.Sprintf(`
+resource "aws_api_gateway_authorizer" "test" {
+  count = 2
+
+  name                   = "%[1]s-${count.index}"
+  rest_api_id            = aws_api_gateway_rest_api.test.id
+  authorizer_uri         = aws_lambda_function.test.invoke_arn
+  authorizer_credentials = aws_iam_role.test.arn
+}
+
 data "aws_api_gateway_authorizers" "test" {
   rest_api_id = aws_api_gateway_rest_api.test.id
-  depends_on  = [aws_api_gateway_authorizer.test]
+
+  depends_on = [aws_api_gateway_authorizer.test[0], aws_api_gateway_authorizer.test[1]]
 }
-`
+`, rName))
 }

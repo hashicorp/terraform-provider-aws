@@ -1,85 +1,67 @@
 package apigateway
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 // @SDKDataSource("aws_api_gateway_authorizers")
 func DataSourceAuthorizers() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAuthorizersRead,
+		ReadWithoutTimeout: dataSourceAuthorizersRead,
+
 		Schema: map[string]*schema.Schema{
+			"ids": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"rest_api_id": {
 				Type:     schema.TypeString,
 				Required: true,
-			},
-			"items": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"auth_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"authorizer_uri": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"identity_source": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"authorizer_result_ttl_in_seconds": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-					},
-				},
 			},
 		},
 	}
 }
 
-func dataSourceAuthorizersRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAuthorizersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
-	restApiId := d.Get("rest_api_id").(string)
+	apiID := d.Get("rest_api_id").(string)
+	input := &apigateway.GetAuthorizersInput{
+		RestApiId: aws.String(apiID),
+	}
+	var ids []*string
 
-	authorizers, err := conn.GetAuthorizers(&apigateway.GetAuthorizersInput{
-		RestApiId: aws.String(restApiId),
+	err := getAuthorizersPages(ctx, conn, input, func(page *apigateway.GetAuthorizersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Items {
+			if v == nil {
+				continue
+			}
+
+			ids = append(ids, v.Id)
+		}
+
+		return !lastPage
 	})
+
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway Authorizers (%s): %s", apiID, err)
 	}
-	items := make([]map[string]interface{}, 0, len(authorizers.Items))
-	for _, item := range authorizers.Items {
-		s := make(map[string]interface{})
-		s["name"] = item.Name
-		s["name"] = item.Name
-		s["type"] = item.Type
-		s["auth_type"] = item.AuthType
-		s["authorizer_uri"] = item.AuthorizerUri
-		s["identity_source"] = item.IdentitySource
-		s["authorizer_result_ttl_in_seconds"] = item.AuthorizerResultTtlInSeconds
-		items = append(items, s)
-	}
-	if err := d.Set("items", items); err != nil {
-		return fmt.Errorf("unable to set authorizer items: %s", err)
-	}
-	d.SetId(fmt.Sprintf("%s:authorizer", restApiId))
-	return nil
+
+	d.SetId(apiID)
+	d.Set("ids", aws.StringValueSlice(ids))
+
+	return diags
 }
