@@ -65,8 +65,8 @@ github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.22.3 h1:en+3QBMfCbuCiR2
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.22.3/go.mod h1:5kTfX+bDwent5HUSiSwMtYSDw57gZ7hkQSv+x2jJmtg=
 github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.1.9 h1:i0EcejgfQnu1FlP80hVSkRK1BN6GrAQBTTDFWb/aT2o=
 github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.1.9/go.mod h1:PjV/8ElvXTf1jbcjaGvUphvb8Sz4/lTP87GFhQrZGbk=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.93.2 h1:c6a19AjfhEXKlEX63cnlWtSQ4nzENihHZOG0I3wH6BE=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.93.2/go.mod h1:VX22JN3HQXDtQ3uS4h4TtM+K11vydq58tpHTlsm8TL8=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.94.0 h1:68B8gf2Ug80VoLXSQl6mJdmJllTvGupCWpsu+5HW11c=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.94.0/go.mod h1:L3ZT0N/vBsw77mOAawXmRnREpEjcHd2v5Hzf7AkIH8M=
 github.com/aws/aws-sdk-go-v2/service/fis v1.14.8 h1:P02MaOm7ef9TlAB5n1AgPdYVZ7L7m7c96BuTe14qbgM=
 github.com/aws/aws-sdk-go-v2/service/fis v1.14.8/go.mod h1:Tp+l2ZqEDZa2uCFhtODFxOzYqkfxNRR9aO6qUQYWzPA=
 github.com/aws/aws-sdk-go-v2/service/healthlake v1.15.9 h1:CTsk9Cp4/zaMNG8mbNY6P3ZIKaX1beTT7Kfzqgcl95E=
@@ -79,8 +79,9 @@ github.com/aws/aws-sdk-go-v2/service/inspector2 v1.11.9 h1:mWGVSioaJAQ2H5SRDDHz+
 github.com/aws/aws-sdk-go-v2/service/inspector2 v1.11.9/go.mod h1:0Xa5gBGleUrIZhR8dW6IGphBBXDJKTP0b3cmCpaT5cw=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.22/go.mod h1:xt0Au8yPIwYXf/GYPy/vl4K3CgwhfQMYbrH7DlUUIws=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.25/go.mod h1:/95IA+0lMnzW6XzqYJRpjjsAbKEORVeO0anQqjd2CNU=
-github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.26 h1:uUt4XctZLhl9wBE1L8lobU3bVN8SNUP7T+olb0bWBO4=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.26/go.mod h1:Bd4C/4PkVGubtNe5iMXu5BNnaBi/9t/UsFspPt4ram8=
+github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.27 h1:0iKliEXAcCa2qVtRs7Ot5hItA2MsufrphbRFlz1Owxo=
+github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.27/go.mod h1:EOwBD4J4S5qYszS5/3DpkejfuK+Z5/1uzICfPaZLtqw=
 github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.14.1 h1:lRWp3bNu5wy0X3a8GS42JvZFlv++AKsMdzEnoiVJrkg=
 github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.14.1/go.mod h1:VXBHSxdN46bsJrkniN68psSwbyBKsazQfU2yX/iSDso=
 github.com/aws/aws-sdk-go-v2/service/ivschat v1.4.3 h1:DY1qC008VfywPWKuAaz2EmlI/sC2wkua3jHLU8toc68=
