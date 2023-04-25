@@ -40,7 +40,11 @@ This filtering is done locally on what AWS returns, and could have a performance
 impact if the result is large. Combine this with other
 options to narrow down the list AWS returns.
 
-* `sort_ascending`  - (Defaults to `false`) Used to sort AMIs by creation time.
+* `sort_ascending` - (Optional) Used to sort AMIs by creation time.
+If no value is specified, the default value is `false`.
+
+* `include_deprecated` - (Optional) If true, all deprecated AMIs are included in the response.
+If false, no deprecated AMIs are included in the response. If no value is specified, the default value is `false`.
 
 ## Attributes Reference
 
@@ -50,6 +54,6 @@ options to narrow down the list AWS returns.
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)

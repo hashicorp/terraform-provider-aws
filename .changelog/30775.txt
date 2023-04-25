@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_db_subnet_group: Add `vpc_id` attribute
+```

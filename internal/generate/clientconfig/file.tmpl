@@ -2,16 +2,55 @@
 package conns
 
 import (
+{{ range .Services }}
+	{{- if eq .SDKVersion "1" }}
+	"github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
+	{{- else if eq .SDKVersion "2" }}
+	"github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
+	{{- else if eq .SDKVersion "1,2" }}
+	"github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
+	{{ .GoV2PackageOverride }} "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
+	{{- end }}
+{{- end }}
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
-{{- range .Services }}
-	"github.com/aws/aws-sdk-go{{ if eq .SDKVersion "2" }}-v2{{ end }}/service/{{ .GoPackage }}"
-{{- end }}
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func (c *Config) clientConns(client *AWSClient, sess *session.Session) {
-	{{- range .Services }}
-	client.{{ .ProviderNameUpper }}Conn = {{ .GoPackage }}.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.{{ .ProviderNameUpper }}])}))
+// sdkv1Conns initializes AWS SDK for Go v1 clients.
+func (c *Config) sdkv1Conns(client *AWSClient, sess *session.Session) {
+{{- range .Services }}
+	{{- if eq .SDKVersion "1" }}
+	client.{{ .ProviderPackage }}Conn = {{ .GoV1Package }}.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.{{ .ProviderNameUpper }}])}))
 	{{- end }}
+{{- end }}
+}
+
+// sdkv2Conns initializes AWS SDK for Go v2 clients.
+func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
+{{- range .Services }}
+	{{- if eq .SDKVersion "2" }}
+	client.{{ .ProviderPackage }}Client = {{ .GoV2Package }}.NewFromConfig(cfg, func(o *{{ .GoV2Package }}.Options) {
+		if endpoint := c.Endpoints[names.{{ .ProviderNameUpper }}]; endpoint != "" {
+			o.EndpointResolver = {{ .GoV2Package }}.EndpointResolverFromURL(endpoint)
+		}
+	})
+	{{- end }}
+{{- end }}
+}
+
+// sdkv2LazyConns initializes AWS SDK for Go v2 lazy-load clients.
+func (c *Config) sdkv2LazyConns(client *AWSClient, cfg aws_sdkv2.Config) {
+{{- range .Services }}
+	{{- if eq .SDKVersion "1,2" }}
+	client.{{ .ProviderPackage }}Client.init(&cfg, func() *{{ .GoV2PackageOverride }}.{{ .ClientTypeName }} {
+		return {{ .GoV2PackageOverride }}.NewFromConfig(cfg, func(o *{{ .GoV2PackageOverride }}.Options) {
+			if endpoint := c.Endpoints[names.{{ .ProviderNameUpper }}]; endpoint != "" {
+				o.EndpointResolver = {{ .GoV2PackageOverride }}.EndpointResolverFromURL(endpoint)
+			}
+		})
+	})
+	{{- end }}
+{{- end }}
 }

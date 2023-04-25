@@ -45,13 +45,11 @@ resource "aws_docdb_cluster" "primary" {
 }
 
 resource "aws_docdb_cluster_instance" "primary" {
-  provider             = aws.primary
-  engine               = aws_docdb_global_cluster.example.engine
-  engine_version       = aws_docdb_global_cluster.example.engine_version
-  identifier           = "test-primary-cluster-instance"
-  cluster_identifier   = aws_docdb_cluster.primary.id
-  instance_class       = "db.r5.large"
-  db_subnet_group_name = "default"
+  provider           = aws.primary
+  engine             = aws_docdb_global_cluster.example.engine
+  identifier         = "test-primary-cluster-instance"
+  cluster_identifier = aws_docdb_cluster.primary.id
+  instance_class     = "db.r5.large"
 }
 
 resource "aws_docdb_cluster" "secondary" {
@@ -64,13 +62,11 @@ resource "aws_docdb_cluster" "secondary" {
 }
 
 resource "aws_docdb_cluster_instance" "secondary" {
-  provider             = aws.secondary
-  engine               = aws_docdb_global_cluster.example.engine
-  engine_version       = aws_docdb_global_cluster.example.engine_version
-  identifier           = "test-secondary-cluster-instance"
-  cluster_identifier   = aws_docdb_cluster.secondary.id
-  instance_class       = "db.r5.large"
-  db_subnet_group_name = "default"
+  provider           = aws.secondary
+  engine             = aws_docdb_global_cluster.example.engine
+  identifier         = "test-secondary-cluster-instance"
+  cluster_identifier = aws_docdb_cluster.secondary.id
+  instance_class     = "db.r5.large"
 
   depends_on = [
     aws_docdb_cluster_instance.primary
@@ -126,7 +122,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `5m`)
 * `update` - (Default `5m`)

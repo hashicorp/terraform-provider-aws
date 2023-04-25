@@ -2,7 +2,6 @@ package lightsail
 
 import (
 	"context"
-	"errors"
 	"log"
 	"regexp"
 	"strings"
@@ -18,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_lightsail_lb_certificate_attachment")
 func ResourceLoadBalancerCertificateAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerCertificateAttachmentCreate,
@@ -49,35 +49,29 @@ func ResourceLoadBalancerCertificateAttachment() *schema.Resource {
 }
 
 func resourceLoadBalancerCertificateAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
-
+	conn := meta.(*conns.AWSClient).LightsailConn()
+	certName := d.Get("certificate_name").(string)
 	req := lightsail.AttachLoadBalancerTlsCertificateInput{
 		LoadBalancerName: aws.String(d.Get("lb_name").(string)),
-		CertificateName:  aws.String(d.Get("certificate_name").(string)),
+		CertificateName:  aws.String(certName),
 	}
 
 	out, err := conn.AttachLoadBalancerTlsCertificateWithContext(ctx, &req)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeAttachLoadBalancerTlsCertificate, ResLoadBalancerCertificateAttachment, d.Get("certificate_name").(string), err)
+		return create.DiagError(names.Lightsail, lightsail.OperationTypeAttachLoadBalancerTlsCertificate, ResLoadBalancerCertificateAttachment, certName, err)
 	}
 
-	if len(out.Operations) == 0 {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeAttachLoadBalancerTlsCertificate, ResLoadBalancerCertificateAttachment, d.Get("certificate_name").(string), errors.New("No operations found for Attach Load Balancer Certificate to Load Balancer request"))
-	}
+	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeAttachLoadBalancerTlsCertificate, ResLoadBalancerCertificateAttachment, certName)
 
-	op := out.Operations[0]
-
-	err = waitOperation(conn, op.Id)
-
-	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeAttachLoadBalancerTlsCertificate, ResLoadBalancerCertificateAttachment, d.Get("certificate_name").(string), errors.New("Error waiting for Attach Load Balancer Certificate to Load Balancer request operation"))
+	if diag != nil {
+		return diag
 	}
 
 	// Generate an ID
 	vars := []string{
 		d.Get("lb_name").(string),
-		d.Get("certificate_name").(string),
+		certName,
 	}
 
 	d.SetId(strings.Join(vars, ","))
@@ -86,7 +80,7 @@ func resourceLoadBalancerCertificateAttachmentCreate(ctx context.Context, d *sch
 }
 
 func resourceLoadBalancerCertificateAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	out, err := FindLoadBalancerCertificateAttachmentById(ctx, conn, d.Id())
 

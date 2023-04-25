@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_dynamodb_kinesis_streaming_destination")
 func ResourceKinesisStreamingDestination() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceKinesisStreamingDestinationCreate,
@@ -42,7 +43,7 @@ func ResourceKinesisStreamingDestination() *schema.Resource {
 }
 
 func resourceKinesisStreamingDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DynamoDBConn
+	conn := meta.(*conns.AWSClient).DynamoDBConn()
 
 	streamArn := d.Get("stream_arn").(string)
 	tableName := d.Get("table_name").(string)
@@ -72,7 +73,7 @@ func resourceKinesisStreamingDestinationCreate(ctx context.Context, d *schema.Re
 }
 
 func resourceKinesisStreamingDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DynamoDBConn
+	conn := meta.(*conns.AWSClient).DynamoDBConn()
 
 	tableName, streamArn, err := KinesisStreamingDestinationParseID(d.Id())
 
@@ -108,7 +109,7 @@ func resourceKinesisStreamingDestinationRead(ctx context.Context, d *schema.Reso
 }
 
 func resourceKinesisStreamingDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DynamoDBConn
+	conn := meta.(*conns.AWSClient).DynamoDBConn()
 
 	tableName, streamArn, err := KinesisStreamingDestinationParseID(d.Id())
 

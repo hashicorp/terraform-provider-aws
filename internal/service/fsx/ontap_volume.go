@@ -1,30 +1,35 @@
 package fsx
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_fsx_ontap_volume", name="ONTAP Volume")
+// @Tags(identifierAttribute="arn")
 func ResourceOntapVolume() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceOntapVolumeCreate,
-		Read:   resourceOntapVolumeRead,
-		Update: resourceOntapVolumeUpdate,
-		Delete: resourceOntapVolumeDelete,
+		CreateWithoutTimeout: resourceOntapVolumeCreate,
+		ReadWithoutTimeout:   resourceOntapVolumeRead,
+		UpdateWithoutTimeout: resourceOntapVolumeUpdate,
+		DeleteWithoutTimeout: resourceOntapVolumeDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -102,8 +107,8 @@ func ResourceOntapVolume() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"uuid": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -119,10 +124,9 @@ func ResourceOntapVolume() *schema.Resource {
 	}
 }
 
-func resourceOntapVolumeCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceOntapVolumeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	input := &fsx.CreateVolumeInput{
 		Name:       aws.String(d.Get("name").(string)),
@@ -133,6 +137,7 @@ func resourceOntapVolumeCreate(d *schema.ResourceData, meta interface{}) error {
 			StorageEfficiencyEnabled: aws.Bool(d.Get("storage_efficiency_enabled").(bool)),
 			StorageVirtualMachineId:  aws.String(d.Get("storage_virtual_machine_id").(string)),
 		},
+		Tags: GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("security_style"); ok {
@@ -143,46 +148,40 @@ func resourceOntapVolumeCreate(d *schema.ResourceData, meta interface{}) error {
 		input.OntapConfiguration.TieringPolicy = expandOntapVolumeTieringPolicy(v.([]interface{}))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating FSx ONTAP Volume: %s", input)
-	result, err := conn.CreateVolume(input)
+	result, err := conn.CreateVolumeWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating FSx Volume: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating FSx Volume: %s", err)
 	}
 
 	d.SetId(aws.StringValue(result.Volume.VolumeId))
 
-	if _, err := waitVolumeCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for FSx Volume(%s) create: %w", d.Id(), err)
+	if _, err := waitVolumeCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for FSx Volume(%s) create: %s", d.Id(), err)
 	}
 
-	return resourceOntapVolumeRead(d, meta)
+	return append(diags, resourceOntapVolumeRead(ctx, d, meta)...)
 }
 
-func resourceOntapVolumeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceOntapVolumeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxConn()
 
-	volume, err := FindVolumeByID(conn, d.Id())
+	volume, err := FindVolumeByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx ONTAP Volume (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading FSx ONTAP Volume (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading FSx ONTAP Volume (%s): %s", d.Id(), err)
 	}
 
 	ontapConfig := volume.OntapConfiguration
 	if ontapConfig == nil {
-		return fmt.Errorf("error describing FSx ONTAP Volume (%s): empty ONTAP configuration", d.Id())
+		return sdkdiag.AppendErrorf(diags, "describing FSx ONTAP Volume (%s): empty ONTAP configuration", d.Id())
 	}
 
 	d.Set("arn", volume.ResourceARN)
@@ -198,44 +197,19 @@ func resourceOntapVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("volume_type", volume.VolumeType)
 
 	if err := d.Set("tiering_policy", flattenOntapVolumeTieringPolicy(ontapConfig.TieringPolicy)); err != nil {
-		return fmt.Errorf("error setting tiering_policy: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tiering_policy: %s", err)
 	}
 
-	//Volume tags do not get returned with describe call so need to make a separate list tags call
-	tags, tagserr := ListTags(conn, *volume.ResourceARN)
-
-	if tagserr != nil {
-		return fmt.Errorf("error reading Tags for FSx ONTAP Volume (%s): %w", d.Id(), err)
-	} else {
-		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	}
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceOntapVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating FSx ONTAP Volume (%s) tags: %w", d.Get("arn").(string), err)
-		}
-	}
+func resourceOntapVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &fsx.UpdateVolumeInput{
-			ClientRequestToken: aws.String(resource.UniqueId()),
+			ClientRequestToken: aws.String(id.UniqueId()),
 			VolumeId:           aws.String(d.Id()),
 			OntapConfiguration: &fsx.UpdateOntapVolumeConfiguration{},
 		}
@@ -260,41 +234,42 @@ func resourceOntapVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.OntapConfiguration.TieringPolicy = expandOntapVolumeTieringPolicy(d.Get("tiering_policy").([]interface{}))
 		}
 
-		_, err := conn.UpdateVolume(input)
+		_, err := conn.UpdateVolumeWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating FSx ONTAP Volume (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating FSx ONTAP Volume (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitVolumeUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for FSx ONTAP Volume (%s) update: %w", d.Id(), err)
+		if _, err := waitVolumeUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for FSx ONTAP Volume (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceOntapVolumeRead(d, meta)
+	return append(diags, resourceOntapVolumeRead(ctx, d, meta)...)
 }
 
-func resourceOntapVolumeDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+func resourceOntapVolumeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	log.Printf("[DEBUG] Deleting FSx ONTAP Volume: %s", d.Id())
-	_, err := conn.DeleteVolume(&fsx.DeleteVolumeInput{
+	_, err := conn.DeleteVolumeWithContext(ctx, &fsx.DeleteVolumeInput{
 		VolumeId: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeVolumeNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting FSx ONTAP Volume (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting FSx ONTAP Volume (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitVolumeDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for FSx ONTAP Volume (%s) delete: %w", d.Id(), err)
+	if _, err := waitVolumeDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for FSx ONTAP Volume (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandOntapVolumeTieringPolicy(cfg []interface{}) *fsx.TieringPolicy {

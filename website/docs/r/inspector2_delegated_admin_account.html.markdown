@@ -1,14 +1,14 @@
 ---
-subcategory: "Inspector V2"
+subcategory: "Inspector"
 layout: "aws"
 page_title: "AWS: aws_inspector2_delegated_admin_account"
 description: |-
-  Terraform resource for managing an AWS Inspector V2 Delegated Admin Account.
+  Terraform resource for managing an Amazon Inspector Delegated Admin Account.
 ---
 
 # Resource: aws_inspector2_delegated_admin_account
 
-Terraform resource for managing an AWS Inspector V2 Delegated Admin Account.
+Terraform resource for managing an Amazon Inspector Delegated Admin Account.
 
 ## Example Usage
 
@@ -36,14 +36,14 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `15m`)
 * `delete` - (Default `15m`)
 
 ## Import
 
-Inspector V2 Delegated Admin Account can be imported using the `account_id`, e.g.,
+Inspector Delegated Admin Account can be imported using the `account_id`, e.g.,
 
 ```
 $ terraform import aws_inspector2_delegated_admin_account.example 012345678901

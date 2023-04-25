@@ -1,12 +1,13 @@
 package opensearch
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -16,17 +17,17 @@ const (
 )
 
 // UpgradeSucceeded waits for an Upgrade to return Success
-func waitUpgradeSucceeded(conn *opensearchservice.OpenSearchService, name string, timeout time.Duration) (*opensearchservice.GetUpgradeStatusOutput, error) {
-	stateConf := &resource.StateChangeConf{
+func waitUpgradeSucceeded(ctx context.Context, conn *opensearchservice.OpenSearchService, name string, timeout time.Duration) (*opensearchservice.GetUpgradeStatusOutput, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{opensearchservice.UpgradeStatusInProgress},
 		Target:     []string{opensearchservice.UpgradeStatusSucceeded},
-		Refresh:    statusUpgradeStatus(conn, name),
+		Refresh:    statusUpgradeStatus(ctx, conn, name),
 		Timeout:    timeout,
 		MinTimeout: domainUpgradeSuccessMinTimeout,
 		Delay:      domainUpgradeSuccessDelay,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*opensearchservice.GetUpgradeStatusOutput); ok {
 		return output, err
@@ -35,24 +36,24 @@ func waitUpgradeSucceeded(conn *opensearchservice.OpenSearchService, name string
 	return nil, err
 }
 
-func WaitForDomainCreation(conn *opensearchservice.OpenSearchService, domainName string, timeout time.Duration) error {
+func WaitForDomainCreation(ctx context.Context, conn *opensearchservice.OpenSearchService, domainName string, timeout time.Duration) error {
 	var out *opensearchservice.DomainStatus
-	err := resource.Retry(timeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		var err error
-		out, err = FindDomainByName(conn, domainName)
+		out, err = FindDomainByName(ctx, conn, domainName)
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if !aws.BoolValue(out.Processing) && (out.Endpoint != nil || out.Endpoints != nil) {
 			return nil
 		}
 
-		return resource.RetryableError(
+		return retry.RetryableError(
 			fmt.Errorf("%q: Timeout while waiting for the domain to be created", domainName))
 	})
 	if tfresource.TimedOut(err) {
-		out, err = FindDomainByName(conn, domainName)
+		out, err = FindDomainByName(ctx, conn, domainName)
 		if err != nil {
 			return fmt.Errorf("Error describing OpenSearch domain: %w", err)
 		}
@@ -66,24 +67,24 @@ func WaitForDomainCreation(conn *opensearchservice.OpenSearchService, domainName
 	return nil
 }
 
-func waitForDomainUpdate(conn *opensearchservice.OpenSearchService, domainName string, timeout time.Duration) error {
+func waitForDomainUpdate(ctx context.Context, conn *opensearchservice.OpenSearchService, domainName string, timeout time.Duration) error {
 	var out *opensearchservice.DomainStatus
-	err := resource.Retry(timeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		var err error
-		out, err = FindDomainByName(conn, domainName)
+		out, err = FindDomainByName(ctx, conn, domainName)
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if !aws.BoolValue(out.Processing) {
 			return nil
 		}
 
-		return resource.RetryableError(
+		return retry.RetryableError(
 			fmt.Errorf("%q: Timeout while waiting for changes to be processed", domainName))
 	})
 	if tfresource.TimedOut(err) {
-		out, err = FindDomainByName(conn, domainName)
+		out, err = FindDomainByName(ctx, conn, domainName)
 		if err != nil {
 			return fmt.Errorf("Error describing OpenSearch domain: %w", err)
 		}
@@ -97,28 +98,28 @@ func waitForDomainUpdate(conn *opensearchservice.OpenSearchService, domainName s
 	return nil
 }
 
-func waitForDomainDelete(conn *opensearchservice.OpenSearchService, domainName string, timeout time.Duration) error {
+func waitForDomainDelete(ctx context.Context, conn *opensearchservice.OpenSearchService, domainName string, timeout time.Duration) error {
 	var out *opensearchservice.DomainStatus
-	err := resource.Retry(timeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		var err error
-		out, err = FindDomainByName(conn, domainName)
+		out, err = FindDomainByName(ctx, conn, domainName)
 
 		if err != nil {
 			if tfresource.NotFound(err) {
 				return nil
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if out != nil && !aws.BoolValue(out.Processing) {
 			return nil
 		}
 
-		return resource.RetryableError(fmt.Errorf("timeout while waiting for the OpenSearch domain %q to be deleted", domainName))
+		return retry.RetryableError(fmt.Errorf("timeout while waiting for the OpenSearch domain %q to be deleted", domainName))
 	})
 
 	if tfresource.TimedOut(err) {
-		out, err = FindDomainByName(conn, domainName)
+		out, err = FindDomainByName(ctx, conn, domainName)
 		if err != nil {
 			if tfresource.NotFound(err) {
 				return nil
@@ -137,16 +138,16 @@ func waitForDomainDelete(conn *opensearchservice.OpenSearchService, domainName s
 	// opensearch maintains information about the domain in multiple (at least 2) places that need
 	// to clear before it is really deleted - otherwise, requesting information about domain immediately
 	// after delete will return info about just deleted domain
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{ConfigStatusUnknown, ConfigStatusExists},
 		Target:                    []string{ConfigStatusNotFound},
-		Refresh:                   domainConfigStatus(conn, domainName),
+		Refresh:                   domainConfigStatus(ctx, conn, domainName),
 		Timeout:                   timeout,
 		MinTimeout:                10 * time.Second,
 		ContinuousTargetOccurence: 3,
 	}
 
-	_, err = stateConf.WaitForState()
+	_, err = stateConf.WaitForStateContext(ctx)
 
 	return err
 }

@@ -114,13 +114,15 @@ tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidParameterException)
 
 The Terraform Plugin SDK includes some error types which are used in certain operations and typically preferred over implementing new types:
 
-* [`resource.NotFoundError`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#NotFoundError)
-* [`resource.TimeoutError`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#TimeoutError): Returned from [`resource.Retry()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#Retry), [`resource.RetryContext()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#RetryContext), [`(resource.StateChangeConf).WaitForState()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#StateChangeConf.WaitForState), and [`(resource.StateChangeConf).WaitForStateContext()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#StateChangeConf.WaitForStateContext)
+* [`retry.NotFoundError`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry#NotFoundError)
+* [`retry.TimeoutError`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry#TimeoutError):
+  Returned from [`retry.RetryContext()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry#RetryContext) and
+  [`(retry.StateChangeConf).WaitForStateContext()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry#StateChangeConf.WaitForStateContext)
 
 The Terraform AWS Provider codebase implements some additional helpers for working with these in the `github.com/hashicorp/terraform-provider-aws/internal/tfresource` package:
 
-- `tfresource.NotFound(err)`: Returns true if the error is a `resource.NotFoundError`.
-- `tfresource.TimedOut(err)`: Returns true if the error is a `resource.TimeoutError` and contains no `LastError`. This typically signifies that the retry logic was never signaled for a retry, which can happen when AWS API operations are automatically retrying before returning.
+- `tfresource.NotFound(err)`: Returns true if the error is a `retry.NotFoundError`.
+- `tfresource.TimedOut(err)`: Returns true if the error is a `retry.TimeoutError` and contains no `LastError`. This typically signifies that the retry logic was never signaled for a retry, which can happen when AWS API operations are automatically retrying before returning.
 
 ## Resource Lifecycle Guidelines
 
@@ -128,7 +130,7 @@ Terraform CLI and the Terraform Plugin SDK have certain expectations and automat
 
 ### Resource Creation
 
-Invoked in the resource via the `schema.Resource` type `Create`/`CreateContext` function.
+Invoked in the resource via the `schema.Resource` type `Create`/`CreateWithoutTimeout` function.
 
 #### d.IsNewResource() Checks
 
@@ -145,7 +147,7 @@ This is a bug in the provider, which should be reported in the provider's own
 issue tracker.
 ```
 
-A typical pattern in resource implementations in the `Create`/`CreateContext` function is to `return` the `Read`/`ReadContext` function at the end to fill in the Terraform State for all attributes. Another typical pattern in resource implementations in the `Read`/`ReadContext` function is to remove the resource from the Terraform State if the remote system returns an error or status that indicates the remote resource no longer exists by explicitly calling `d.SetId("")` and returning no error. If the remote system is not strongly read-after-write consistent (eventually consistent), this means the resource creation can return no error and also return no resource state.
+A typical pattern in resource implementations in the `Create`/`CreateWithoutTimeout` function is to `return` the `Read`/`ReadWithoutTimeout` function at the end to fill in the Terraform State for all attributes. Another typical pattern in resource implementations in the `Read`/`ReadWithoutTimeout` function is to remove the resource from the Terraform State if the remote system returns an error or status that indicates the remote resource no longer exists by explicitly calling `d.SetId("")` and returning no error. If the remote system is not strongly read-after-write consistent (eventually consistent), this means the resource creation can return no error and also return no resource state.
 
 To prevent this type of Terraform CLI error, the resource implementation should also check against `d.IsNewResource()` before removing from the Terraform State and returning no error. If that check is `true`, then remote operation error (or one synthesized from the non-existent status) should be returned instead. While adding this check will not fix the resource implementation to handle the eventually consistent nature of the remote system, the error being returned will be less opaque for operators and code maintainers to troubleshoot.
 
@@ -207,7 +209,7 @@ if _, err := VpcAvailable(conn, d.Id()); err != nil {
 
 ### Resource Deletion
 
-Invoked in the resource via the `schema.Resource` type `Delete`/`DeleteContext` function.
+Invoked in the resource via the `schema.Resource` type `Delete`/`DeleteWithoutTimeout` function.
 
 #### Resource Already Deleted
 
@@ -263,7 +265,7 @@ if _, err := VpcDeleted(conn, d.Id()); err != nil {
 
 ### Resource Read
 
-Invoked in the resource via the `schema.Resource` type `Read`/`ReadContext` function.
+Invoked in the resource via the `schema.Resource` type `Read`/`ReadWithoutTimeout` function.
 
 #### Singular Data Source Errors
 
@@ -316,7 +318,7 @@ if err != nil {
 
 ### Resource Update
 
-Invoked in the resource via the `schema.Resource` type `Update`/`UpdateContext` function.
+Invoked in the resource via the `schema.Resource` type `Update`/`UpdateWithoutTimeout` function.
 
 #### Update Error Message Context
 
