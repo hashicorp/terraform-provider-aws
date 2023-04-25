@@ -74,11 +74,6 @@ func DataSourceInstance() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"db_security_groups": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
 			"db_subnet_group": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -241,7 +236,6 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	for _, v := range v.DBSecurityGroups {
 		securityGroupNames = append(securityGroupNames, aws.StringValue(v.DBSecurityGroupName))
 	}
-	d.Set("db_security_groups", securityGroupNames)
 	if v.DBSubnetGroup != nil {
 		d.Set("db_subnet_group", v.DBSubnetGroup.DBSubnetGroupName)
 	} else {
