@@ -6,4 +6,5 @@ var (
 	ResourceIAMPolicyAssignment = newResourceIAMPolicyAssignment
 	ResourceIngestion           = newResourceIngestion
 	ResourceNamespace           = newResourceNamespace
+	ResourceRefreshSchedule     = newResourceRefreshSchedule
 )
