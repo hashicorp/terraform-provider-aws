@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_networkfirewall_rule_group: Update the allowed values for canned_acl_for_objects in aws_dms_s3_endpoint resource documentation.
-```
