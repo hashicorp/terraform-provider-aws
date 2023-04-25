@@ -1,23 +1,27 @@
 ```release-note:breaking-change
-provider: With the retirement of EC2-Classic the`aws_db_security_group` resource has been removed
+provider: With the retirement of EC2-Classic the `aws_db_security_group` resource has been removed
 ```
 
 ```release-note:breaking-change
-provider: With the retirement of EC2-Classic the`aws_elasticache_security_group` resource has been removed
+provider: With the retirement of EC2-Classic the `aws_elasticache_security_group` resource has been removed
 ```
 
 ```release-note:breaking-change
-provider: With the retirement of EC2-Classic the`aws_redshift_security_group` resource has been removed
+provider: With the retirement of EC2-Classic the `aws_redshift_security_group` resource has been removed
 ```
 
 ```release-note:breaking-change
-resource/aws_db_instance: With the retirement of EC2-Classic the`security_group_names` attribute has been removed
+resource/aws_db_instance: With the retirement of EC2-Classic the `security_group_names` attribute has been removed
 ```
 
 ```release-note:breaking-change
-data-source/aws_db_instance: With the retirement of EC2-Classic the`db_security_groups` attribute has been removed
+data-source/aws_db_instance: With the retirement of EC2-Classic the `db_security_groups` attribute has been removed
 ```
 
 ```release-note:breaking-change
-resource/aws_elasticache_cluster: With the retirement of EC2-Classic the`security_group_names` attribute has been removed
+resource/aws_elasticache_cluster: With the retirement of EC2-Classic the `security_group_names` attribute has been removed
+```
+
+```release-note:breaking-change
+data-source/aws_elasticache_cluster: With the retirement of EC2-Classic the `security_group_names` attribute has been removed
 ```
