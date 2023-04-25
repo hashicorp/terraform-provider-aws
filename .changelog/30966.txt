@@ -61,3 +61,7 @@ data-source/aws_vpc_peering_connection: With the retirement of EC2-Classic the `
 ```release-note:bug
 resource/aws_vpc_peering_connection: Fix crash in `vpcPeeringConnectionOptionsEqual`
 ```
+
+```release-note:breaking-change
+resource/aws_vpc: With the retirement of EC2-Classic the `enable_classiclink` and `enable_classiclink_dns_support` attributes have been removed
+```

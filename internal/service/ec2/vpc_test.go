@@ -41,8 +41,6 @@ func TestAccVPC_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "default_route_table_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dhcp_options_id"),
-					resource.TestCheckResourceAttr(resourceName, "enable_classiclink", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_classiclink_dns_support", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", "false"),

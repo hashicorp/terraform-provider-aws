@@ -90,18 +90,6 @@ func ResourceVPC() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"enable_classiclink": {
-				Type:       schema.TypeBool,
-				Optional:   true,
-				Computed:   true,
-				Deprecated: `With the retirement of EC2-Classic the enable_classiclink attribute has been deprecated and will be removed in a future version.`,
-			},
-			"enable_classiclink_dns_support": {
-				Type:       schema.TypeBool,
-				Optional:   true,
-				Computed:   true,
-				Deprecated: `With the retirement of EC2-Classic the enable_classiclink_dns_support attribute has been deprecated and will be removed in a future version.`,
-			},
 			"enable_dns_hostnames": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -186,10 +174,6 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	if _, ok := d.GetOk("enable_classiclink"); ok {
-		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic no new VPCs can be created with ClassicLink enabled`)
-	}
-
 	input := &ec2.CreateVpcInput{
 		AmazonProvidedIpv6CidrBlock: aws.Bool(d.Get("assign_generated_ipv6_cidr_block").(bool)),
 		InstanceTenancy:             aws.String(d.Get("instance_tenancy").(string)),
@@ -255,8 +239,6 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	vpcInfo := vpcInfo{
 		vpc:                              vpc,
-		enableClassicLink:                false,
-		enableClassicLinkDNSSupport:      false,
 		enableDnsHostnames:               false,
 		enableDnsSupport:                 true,
 		enableNetworkAddressUsageMetrics: false,
@@ -302,26 +284,6 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("dhcp_options_id", vpc.DhcpOptionsId)
 	d.Set("instance_tenancy", vpc.InstanceTenancy)
 	d.Set("owner_id", ownerID)
-
-	if v, err := FindVPCClassicLinkEnabled(ctx, conn, d.Id()); err != nil {
-		if tfresource.NotFound(err) {
-			d.Set("enable_classiclink", nil)
-		} else {
-			return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) ClassicLinkEnabled: %s", d.Id(), err)
-		}
-	} else {
-		d.Set("enable_classiclink", v)
-	}
-
-	if v, err := FindVPCClassicLinkDNSSupported(ctx, conn, d.Id()); err != nil {
-		if tfresource.NotFound(err) {
-			d.Set("enable_classiclink_dns_support", nil)
-		} else {
-			return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) ClassicLinkDnsSupported: %s", d.Id(), err)
-		}
-	} else {
-		d.Set("enable_classiclink_dns_support", v)
-	}
 
 	if v, err := FindVPCAttribute(ctx, conn, d.Id(), ec2.VpcAttributeNameEnableDnsHostnames); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), ec2.VpcAttributeNameEnableDnsHostnames, err)
@@ -425,18 +387,6 @@ func resourceVPCUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if d.HasChange("enable_network_address_usage_metrics") {
 		if err := modifyVPCNetworkAddressUsageMetrics(ctx, conn, d.Id(), d.Get("enable_network_address_usage_metrics").(bool)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 VPC (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("enable_classiclink") {
-		if err := modifyVPCClassicLink(ctx, conn, d.Id(), d.Get("enable_classiclink").(bool)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 VPC (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("enable_classiclink_dns_support") {
-		if err := modifyVPCClassicLinkDNSSupport(ctx, conn, d.Id(), d.Get("enable_classiclink_dns_support").(bool)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 VPC (%s): %s", d.Id(), err)
 		}
 	}
@@ -620,62 +570,6 @@ func modifyVPCAttributesOnCreate(ctx context.Context, conn *ec2.EC2, d *schema.R
 	if new, old := d.Get("enable_network_address_usage_metrics").(bool), vpcInfo.enableNetworkAddressUsageMetrics; old != new {
 		if err := modifyVPCNetworkAddressUsageMetrics(ctx, conn, d.Id(), new); err != nil {
 			return err
-		}
-	}
-
-	if new, old := d.Get("enable_classiclink").(bool), vpcInfo.enableClassicLink; old != new {
-		if err := modifyVPCClassicLink(ctx, conn, d.Id(), new); err != nil {
-			return err
-		}
-	}
-
-	if new, old := d.Get("enable_classiclink_dns_support").(bool), vpcInfo.enableClassicLinkDNSSupport; old != new {
-		if err := modifyVPCClassicLinkDNSSupport(ctx, conn, d.Id(), new); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func modifyVPCClassicLink(ctx context.Context, conn *ec2.EC2, vpcID string, v bool) error {
-	if v {
-		input := &ec2.EnableVpcClassicLinkInput{
-			VpcId: aws.String(vpcID),
-		}
-
-		if _, err := conn.EnableVpcClassicLinkWithContext(ctx, input); err != nil {
-			return fmt.Errorf("enabling EnableDnsHostnames: %w", err)
-		}
-	} else {
-		input := &ec2.DisableVpcClassicLinkInput{
-			VpcId: aws.String(vpcID),
-		}
-
-		if _, err := conn.DisableVpcClassicLinkWithContext(ctx, input); err != nil {
-			return fmt.Errorf("disabling EnableDnsHostnames: %w", err)
-		}
-	}
-
-	return nil
-}
-
-func modifyVPCClassicLinkDNSSupport(ctx context.Context, conn *ec2.EC2, vpcID string, v bool) error {
-	if v {
-		input := &ec2.EnableVpcClassicLinkDnsSupportInput{
-			VpcId: aws.String(vpcID),
-		}
-
-		if _, err := conn.EnableVpcClassicLinkDnsSupportWithContext(ctx, input); err != nil {
-			return fmt.Errorf("enabling ClassicLinkDnsSupport: %w", err)
-		}
-	} else {
-		input := &ec2.DisableVpcClassicLinkDnsSupportInput{
-			VpcId: aws.String(vpcID),
-		}
-
-		if _, err := conn.DisableVpcClassicLinkDnsSupportWithContext(ctx, input); err != nil {
-			return fmt.Errorf("disabling ClassicLinkDnsSupport: %w", err)
 		}
 	}
 
