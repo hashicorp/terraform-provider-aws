@@ -374,7 +374,7 @@ The following arguments are optional:
 * `adaptive_quantization` - (Optional) Enables or disables adaptive quantization.
 * `afd_signaling` - (Optional) Indicates that AFD values will be written into the output stream.
 * `alternative_transfer_function` - (Optional) Whether or not EML should insert an Alternative Transfer Function SEI message.
-* `bitrate` - (Optional) Average bitrate in bits/second.
+* `bitrate` - (Required) Average bitrate in bits/second.
 * `buf_size` - (Optional) Size of buffer in bits.
 * `color_metadata` - (Optional) Includes color space metadata in the output.
 * `color_space_settings` (Optional) Define the color metadata for the output. [H265 Color Space Settings](#h265-color-space-settings) for more details.
