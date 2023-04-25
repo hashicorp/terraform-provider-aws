@@ -22,9 +22,11 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_transfer_server")
+// @SDKResource("aws_transfer_server", name="Server")
+// @Tags(identifierAttribute="arn")
 func ResourceServer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServerCreate,
@@ -222,8 +224,8 @@ func ResourceServer() *schema.Resource {
 				Default:      SecurityPolicyName2018_11,
 				ValidateFunc: validation.StringInSlice(SecurityPolicyName_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"url": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -282,10 +284,10 @@ func ResourceServer() *schema.Resource {
 func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-	input := &transfer.CreateServerInput{}
+	input := &transfer.CreateServerInput{
+		Tags: GetTagsIn(ctx),
+	}
 
 	if v, ok := d.GetOk("certificate"); ok {
 		input.Certificate = aws.String(v.(string))
@@ -378,10 +380,6 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.WorkflowDetails = expandWorkflowDetails(v.([]interface{}))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	output, err := conn.CreateServerWithContext(ctx, input)
 
 	if err != nil {
@@ -422,8 +420,6 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := FindServerByID(ctx, conn, d.Id())
 
@@ -499,16 +495,7 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "setting workflow_details: %s", err)
 	}
 
-	tags := KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, output.Tags)
 
 	return diags
 }
@@ -723,14 +710,6 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Transfer Server (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceServerRead(ctx, d, meta)...)
 }
 
@@ -895,7 +874,7 @@ func flattenProtocolDetails(apiObject *transfer.ProtocolDetails) []interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.As2Transports; v != nil {
-		tfMap["as2_transport"] = aws.StringValueSlice(v)
+		tfMap["as2_transports"] = aws.StringValueSlice(v)
 	}
 
 	if v := apiObject.PassiveIp; v != nil {

@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -126,7 +126,7 @@ func resourceOutboundConnectionDelete(ctx context.Context, d *schema.ResourceDat
 	return nil
 }
 
-func outboundConnectionRefreshState(ctx context.Context, conn *opensearchservice.OpenSearchService, id string) resource.StateRefreshFunc {
+func outboundConnectionRefreshState(ctx context.Context, conn *opensearchservice.OpenSearchService, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.DescribeOutboundConnectionsWithContext(ctx, &opensearchservice.DescribeOutboundConnectionsInput{
 			Filters: []*opensearchservice.Filter{
@@ -166,7 +166,7 @@ func outboundConnectionRefreshState(ctx context.Context, conn *opensearchservice
 
 func outboundConnectionWaitUntilAvailable(ctx context.Context, conn *opensearchservice.OpenSearchService, id string, timeout time.Duration) error {
 	log.Printf("[DEBUG] Waiting for Outbound Connection (%s) to become available.", id)
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			opensearchservice.OutboundConnectionStatusCodeValidating,
 			opensearchservice.OutboundConnectionStatusCodeProvisioning,
@@ -188,7 +188,7 @@ func outboundConnectionWaitUntilAvailable(ctx context.Context, conn *opensearchs
 }
 
 func waitForOutboundConnectionDeletion(ctx context.Context, conn *opensearchservice.OpenSearchService, id string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			opensearchservice.OutboundConnectionStatusCodeActive,
 			opensearchservice.OutboundConnectionStatusCodePendingAcceptance,

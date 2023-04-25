@@ -1,9 +1,10 @@
 package apigateway_test
 
 import (
-	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 	"strconv"
 	"testing"
+
+	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -12,11 +13,12 @@ import (
 )
 
 func TestAccAPIGatewayAuthorizersDataSource(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "data.aws_api_gateway_authorizers.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{

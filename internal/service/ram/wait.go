@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/ram"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -15,7 +15,7 @@ const (
 
 // WaitResourceShareInvitationAccepted waits for a ResourceShareInvitation to return ACCEPTED
 func WaitResourceShareInvitationAccepted(ctx context.Context, conn *ram.RAM, arn string, timeout time.Duration) (*ram.ResourceShareInvitation, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{ram.ResourceShareInvitationStatusPending},
 		Target:  []string{ram.ResourceShareInvitationStatusAccepted},
 		Refresh: StatusResourceShareInvitation(ctx, conn, arn),
@@ -33,7 +33,7 @@ func WaitResourceShareInvitationAccepted(ctx context.Context, conn *ram.RAM, arn
 
 // WaitResourceShareOwnedBySelfDisassociated waits for a ResourceShare owned by own account to be disassociated
 func WaitResourceShareOwnedBySelfDisassociated(ctx context.Context, conn *ram.RAM, arn string, timeout time.Duration) (*ram.ResourceShare, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{ram.ResourceShareAssociationStatusAssociated},
 		Target:  []string{},
 		Refresh: StatusResourceShareOwnerSelf(ctx, conn, arn),
@@ -51,7 +51,7 @@ func WaitResourceShareOwnedBySelfDisassociated(ctx context.Context, conn *ram.RA
 
 // WaitResourceShareOwnedBySelfActive waits for a ResourceShare owned by own account to return ACTIVE
 func WaitResourceShareOwnedBySelfActive(ctx context.Context, conn *ram.RAM, arn string, timeout time.Duration) (*ram.ResourceShare, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{ram.ResourceShareStatusPending},
 		Target:  []string{ram.ResourceShareStatusActive},
 		Refresh: StatusResourceShareOwnerSelf(ctx, conn, arn),
@@ -69,7 +69,7 @@ func WaitResourceShareOwnedBySelfActive(ctx context.Context, conn *ram.RAM, arn 
 
 // WaitResourceShareOwnedBySelfDeleted waits for a ResourceShare owned by own account to return DELETED
 func WaitResourceShareOwnedBySelfDeleted(ctx context.Context, conn *ram.RAM, arn string, timeout time.Duration) (*ram.ResourceShare, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{ram.ResourceShareStatusDeleting},
 		Target:  []string{ram.ResourceShareStatusDeleted},
 		Refresh: StatusResourceShareOwnerSelf(ctx, conn, arn),
@@ -86,7 +86,7 @@ func WaitResourceShareOwnedBySelfDeleted(ctx context.Context, conn *ram.RAM, arn
 }
 
 func WaitResourceSharePrincipalAssociated(ctx context.Context, conn *ram.RAM, resourceShareARN, principal string) (*ram.ResourceShareAssociation, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{ram.ResourceShareAssociationStatusAssociating, PrincipalAssociationStatusNotFound},
 		Target:  []string{ram.ResourceShareAssociationStatusAssociated},
 		Refresh: StatusResourceSharePrincipalAssociation(ctx, conn, resourceShareARN, principal),
@@ -103,7 +103,7 @@ func WaitResourceSharePrincipalAssociated(ctx context.Context, conn *ram.RAM, re
 }
 
 func WaitResourceSharePrincipalDisassociated(ctx context.Context, conn *ram.RAM, resourceShareARN, principal string) (*ram.ResourceShareAssociation, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{ram.ResourceShareAssociationStatusAssociated, ram.ResourceShareAssociationStatusDisassociating},
 		Target:  []string{ram.ResourceShareAssociationStatusDisassociated, PrincipalAssociationStatusNotFound},
 		Refresh: StatusResourceSharePrincipalAssociation(ctx, conn, resourceShareARN, principal),

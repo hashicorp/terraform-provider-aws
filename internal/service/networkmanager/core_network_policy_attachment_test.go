@@ -23,7 +23,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_basic(t *testing.T) {
 	updatedSegmentValue := "segmentValue2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCoreNetworkPolicyAttachmentDestroy(ctx),
@@ -64,7 +64,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_vpcAttachment(t *testing.T
 	segmentValue := "segmentValue"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCoreNetworkPolicyAttachmentDestroy(ctx),
@@ -105,7 +105,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_vpcAttachmentMultiRegion(t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
@@ -134,6 +134,23 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_vpcAttachmentMultiRegion(t
 	})
 }
 
+func TestAccNetworkManagerCoreNetworkPolicyAttachment_expectPolicyErrorInvalidASNRange(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCoreNetworkPolicyAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCoreNetworkPolicyAttachmentConfig_expectPolicyErrorInvalidASNRange(),
+				ExpectError: regexp.MustCompile("INVALID_ASN_RANGE"),
+			},
+		},
+	})
+}
+
 func testAccCheckCoreNetworkPolicyAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	// policy document will not be reverted to empty if the attachment is deleted
 	return nil
@@ -152,7 +169,9 @@ func testAccCheckCoreNetworkPolicyAttachmentExists(ctx context.Context, n string
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
 
-		_, err := tfnetworkmanager.FindCoreNetworkPolicyByID(ctx, conn, rs.Primary.ID)
+		// pass in latestPolicyVersionId to get the latest version id by default
+		const latestPolicyVersionId = -1
+		_, err := tfnetworkmanager.FindCoreNetworkPolicyByTwoPartKey(ctx, conn, rs.Primary.ID, latestPolicyVersionId)
 
 		return err
 	}
@@ -386,4 +405,33 @@ resource "aws_networkmanager_vpc_attachment" "alternate_region" {
   vpc_arn         = aws_vpc.alternate_region.arn
 }
 `, acctest.Region(), acctest.AlternateRegion()))
+}
+
+func testAccCoreNetworkPolicyAttachmentConfig_expectPolicyErrorInvalidASNRange() string {
+	return fmt.Sprintf(`
+resource "aws_networkmanager_global_network" "test" {}
+
+data "aws_networkmanager_core_network_policy_document" "test" {
+  core_network_configuration {
+    asn_ranges = ["65022-65534123"] # not a valid range
+
+    edge_locations {
+      location = %[1]q
+    }
+  }
+
+  segments {
+    name = "test"
+  }
+}
+
+resource "aws_networkmanager_core_network" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+}
+
+resource "aws_networkmanager_core_network_policy_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network.test.id
+  policy_document = data.aws_networkmanager_core_network_policy_document.test.json
+}
+`, acctest.Region())
 }

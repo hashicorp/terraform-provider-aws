@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -29,7 +29,7 @@ const (
 )
 
 func waitInstanceCreated(ctx context.Context, conn *connect.Connect, timeout time.Duration, instanceId string) (*connect.DescribeInstanceOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{connect.InstanceStatusCreationInProgress},
 		Target:  []string{connect.InstanceStatusActive},
 		Refresh: statusInstance(ctx, conn, instanceId),
@@ -49,7 +49,7 @@ func waitInstanceCreated(ctx context.Context, conn *connect.Connect, timeout tim
 // If the Connect Instance has an associated EXISTING DIRECTORY, removing the connect instance
 // will cause an error because it is still has authorized applications.
 func waitInstanceDeleted(ctx context.Context, conn *connect.Connect, timeout time.Duration, instanceId string) (*connect.DescribeInstanceOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{connect.InstanceStatusActive},
 		Target:  []string{connect.ErrCodeResourceNotFoundException},
 		Refresh: statusInstance(ctx, conn, instanceId),
@@ -66,7 +66,7 @@ func waitInstanceDeleted(ctx context.Context, conn *connect.Connect, timeout tim
 }
 
 func waitPhoneNumberCreated(ctx context.Context, conn *connect.Connect, timeout time.Duration, phoneNumberId string) (*connect.DescribePhoneNumberOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{connect.PhoneNumberWorkflowStatusInProgress},
 		Target:  []string{connect.PhoneNumberWorkflowStatusClaimed},
 		Refresh: statusPhoneNumber(ctx, conn, phoneNumberId),
@@ -86,7 +86,7 @@ func waitPhoneNumberCreated(ctx context.Context, conn *connect.Connect, timeout 
 }
 
 func waitPhoneNumberUpdated(ctx context.Context, conn *connect.Connect, timeout time.Duration, phoneNumberId string) (*connect.DescribePhoneNumberOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{connect.PhoneNumberWorkflowStatusInProgress},
 		Target:  []string{connect.PhoneNumberWorkflowStatusClaimed},
 		Refresh: statusPhoneNumber(ctx, conn, phoneNumberId),
@@ -106,7 +106,7 @@ func waitPhoneNumberUpdated(ctx context.Context, conn *connect.Connect, timeout 
 }
 
 func waitPhoneNumberDeleted(ctx context.Context, conn *connect.Connect, timeout time.Duration, phoneNumberId string) (*connect.DescribePhoneNumberOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{connect.PhoneNumberWorkflowStatusInProgress},
 		Target:  []string{connect.ErrCodeResourceNotFoundException},
 		Refresh: statusPhoneNumber(ctx, conn, phoneNumberId),
@@ -123,7 +123,7 @@ func waitPhoneNumberDeleted(ctx context.Context, conn *connect.Connect, timeout 
 }
 
 func waitVocabularyCreated(ctx context.Context, conn *connect.Connect, timeout time.Duration, instanceId, vocabularyId string) (*connect.DescribeVocabularyOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{connect.VocabularyStateCreationInProgress},
 		Target:  []string{connect.VocabularyStateActive, connect.VocabularyStateCreationFailed},
 		Refresh: statusVocabulary(ctx, conn, instanceId, vocabularyId),
@@ -140,7 +140,7 @@ func waitVocabularyCreated(ctx context.Context, conn *connect.Connect, timeout t
 }
 
 func waitVocabularyDeleted(ctx context.Context, conn *connect.Connect, timeout time.Duration, instanceId, vocabularyId string) (*connect.DescribeVocabularyOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{connect.VocabularyStateDeleteInProgress},
 		Target:  []string{connect.ErrCodeResourceNotFoundException},
 		Refresh: statusVocabulary(ctx, conn, instanceId, vocabularyId),

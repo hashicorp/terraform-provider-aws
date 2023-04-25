@@ -31,7 +31,7 @@ func testAccGrantAccepter_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, licensemanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamed(ctx, t, providers),
@@ -74,7 +74,7 @@ func testAccGrantAccepter_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, licensemanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamed(ctx, t, providers),

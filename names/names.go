@@ -10,7 +10,6 @@
 // It is very important that information in the names_data.csv be exactly
 // correct because the Terrform AWS Provider relies on the information to
 // function correctly.
-
 package names
 
 import (
@@ -23,26 +22,29 @@ import (
 
 // This "should" be defined by the AWS Go SDK v2, but currently isn't.
 const (
-	AuditManagerEndpointID         = "auditmanager"
-	CloudWatchLogsEndpointID       = "logs"
-	ComprehendEndpointID           = "comprehend"
-	ComputeOptimizerEndpointID     = "computeoptimizer"
-	IdentityStoreEndpointID        = "identitystore"
-	Inspector2EndpointID           = "inspector2"
-	IVSChatEndpointID              = "ivschat"
-	KendraEndpointID               = "kendra"
-	LambdaEndpointID               = "lambda"
-	MediaLiveEndpointID            = "medialive"
-	OpenSearchServerlessEndpointID = "aoss"
-	PipesEndpointID                = "pipes"
-	ResourceExplorer2EndpointID    = "resource-explorer-2"
-	RolesAnywhereEndpointID        = "rolesanywhere"
-	Route53DomainsEndpointID       = "route53domains"
-	SchedulerEndpointID            = "scheduler"
-	SESV2EndpointID                = "sesv2"
-	SSMEndpointID                  = "ssm"
-	SSMContactsEndpointId          = "ssm-contacts"
-	TranscribeEndpointID           = "transcribe"
+	AuditManagerEndpointID               = "auditmanager"
+	CloudWatchLogsEndpointID             = "logs"
+	ComprehendEndpointID                 = "comprehend"
+	ComputeOptimizerEndpointID           = "computeoptimizer"
+	IdentityStoreEndpointID              = "identitystore"
+	Inspector2EndpointID                 = "inspector2"
+	IVSChatEndpointID                    = "ivschat"
+	KendraEndpointID                     = "kendra"
+	LambdaEndpointID                     = "lambda"
+	MediaLiveEndpointID                  = "medialive"
+	ObservabilityAccessManagerEndpointID = "oam"
+	OpenSearchServerlessEndpointID       = "aoss"
+	PipesEndpointID                      = "pipes"
+	ResourceExplorer2EndpointID          = "resource-explorer-2"
+	RolesAnywhereEndpointID              = "rolesanywhere"
+	Route53DomainsEndpointID             = "route53domains"
+	SchedulerEndpointID                  = "scheduler"
+	SESV2EndpointID                      = "sesv2"
+	SSMEndpointID                        = "ssm"
+	SSMContactsEndpointID                = "ssm-contacts"
+	SSMIncidentsEndpointID               = "ssm-incidents"
+	TranscribeEndpointID                 = "transcribe"
+	VPCLatticeEndpointID                 = "vpc-lattice"
 )
 
 // Type ServiceDatum corresponds closely to columns in `names_data.csv` and are

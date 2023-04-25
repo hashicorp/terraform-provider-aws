@@ -6,12 +6,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // FindCertificateAuthorityCertificateByARN returns the certificate for the certificate authority corresponding to the specified ARN.
-// Returns a resource.NotFoundError if no certificate authority is found or the certificate authority does not have a certificate assigned.
+// Returns a retry.NotFoundError if no certificate authority is found or the certificate authority does not have a certificate assigned.
 func FindCertificateAuthorityCertificateByARN(ctx context.Context, conn *acmpca.ACMPCA, arn string) (*acmpca.GetCertificateAuthorityCertificateOutput, error) {
 	input := &acmpca.GetCertificateAuthorityCertificateInput{
 		CertificateAuthorityArn: aws.String(arn),
@@ -19,7 +19,7 @@ func FindCertificateAuthorityCertificateByARN(ctx context.Context, conn *acmpca.
 
 	output, err := conn.GetCertificateAuthorityCertificateWithContext(ctx, input)
 	if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -29,7 +29,7 @@ func FindCertificateAuthorityCertificateByARN(ctx context.Context, conn *acmpca.
 	}
 
 	if output == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     "empty result",
 			LastRequest: input,
 		}
@@ -46,7 +46,7 @@ func FindPolicyByARN(ctx context.Context, conn *acmpca.ACMPCA, arn string) (stri
 	output, err := conn.GetPolicyWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
-		return "", &resource.NotFoundError{
+		return "", &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -85,7 +85,7 @@ func FindPermission(ctx context.Context, conn *acmpca.ACMPCA, certificateAuthori
 
 	if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) ||
 		tfawserr.ErrMessageContains(err, acmpca.ErrCodeInvalidStateException, "The certificate authority is in the DELETED state") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -101,5 +101,5 @@ func FindPermission(ctx context.Context, conn *acmpca.ACMPCA, certificateAuthori
 		}
 	}
 
-	return nil, &resource.NotFoundError{LastRequest: input}
+	return nil, &retry.NotFoundError{LastRequest: input}
 }

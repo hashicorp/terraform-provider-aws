@@ -137,6 +137,7 @@ The `firehose` object takes the following arguments:
 * `delivery_stream_name` - (Required) The delivery stream name.
 * `role_arn` - (Required) The IAM role ARN that grants access to the Amazon Kinesis Firehose stream.
 * `separator` - (Optional) A character separator that is used to separate records written to the Firehose stream. Valid values are: '\n' (newline), '\t' (tab), '\r\n' (Windows newline), ',' (comma).
+* `batch_mode` - (Optional) The payload that contains a JSON array of records will be sent to Kinesis Firehose via a batch call.
 
 The `http` object takes the following arguments:
 
@@ -153,12 +154,14 @@ The `iot_analytics` object takes the following arguments:
 
 * `channel_name` - (Required) Name of AWS IOT Analytics channel.
 * `role_arn` - (Required) The ARN of the IAM role that grants access.
+* `batch_mode` - (Optional) The payload that contains a JSON array of records will be sent to IoT Analytics via a batch call.
 
 The `iot_events` object takes the following arguments:
 
 * `input_name` - (Required) The name of the AWS IoT Events input.
 * `role_arn` - (Required) The ARN of the IAM role that grants access.
 * `message_id` - (Optional) Use this to ensure that only one input (message) with a given messageId is processed by an AWS IoT Events detector.
+* `batch_mode` - (Optional) The payload that contains a JSON array of records will be sent to IoT Events via a batch call.
 
 The `kafka` object takes the following arguments:
 

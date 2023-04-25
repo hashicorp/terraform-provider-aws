@@ -27,7 +27,7 @@ func TestAccCloudFrontOriginAccessControl_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -75,7 +75,7 @@ func TestAccCloudFrontOriginAccessControl_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -103,7 +103,7 @@ func TestAccCloudFrontOriginAccessControl_Name(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -139,7 +139,7 @@ func TestAccCloudFrontOriginAccessControl_Description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
@@ -186,7 +186,7 @@ func TestAccCloudFrontOriginAccessControl_SigningBehavior(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},

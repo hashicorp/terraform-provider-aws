@@ -69,6 +69,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceExternalKey,
 			TypeName: "aws_kms_external_key",
+			Name:     "External Key",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceGrant,
@@ -77,14 +81,30 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceKey,
 			TypeName: "aws_kms_key",
+			Name:     "Key",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
+			Factory:  ResourceKeyPolicy,
+			TypeName: "aws_kms_key_policy",
 		},
 		{
 			Factory:  ResourceReplicaExternalKey,
 			TypeName: "aws_kms_replica_external_key",
+			Name:     "Replica External Key",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceReplicaKey,
 			TypeName: "aws_kms_replica_key",
+			Name:     "Replica Key",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 	}
 }
