@@ -1633,12 +1633,14 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														ValidateDiagFunc: enum.Validate[types.H265AlternativeTransferFunction](),
 													},
 													"bitrate": {
-														Type:     schema.TypeInt,
-														Required: true,
+														Type:         schema.TypeInt,
+														Required:     true,
+														ValidateFunc: validation.IntAtLeast(1),
 													},
 													"buf_size": {
-														Type:     schema.TypeInt,
-														Optional: true,
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ValidateFunc: validation.IntAtLeast(1),
 													},
 													"color_metadata": {
 														Type:             schema.TypeString,
