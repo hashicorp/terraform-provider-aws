@@ -245,12 +245,12 @@ data "aws_iam_session_context" "current" {
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required        = false
   network_load_balancer_arns = aws_lb.test[*].arn
-  allowed_principals = ["arn:aws:iam::123456789012:root"]
+  allowed_principals         = ["arn:aws:iam::123456789012:root"]
 
   lifecycle {
-	ignore_changes = [
-		allowed_principals
-	]
+    ignore_changes = [
+      allowed_principals
+    ]
   }
 }
 
