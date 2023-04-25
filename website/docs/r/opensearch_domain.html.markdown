@@ -332,6 +332,7 @@ The following arguments are optional:
 * `snapshot_options` - (Optional) Configuration block for snapshot related options. Detailed below. DEPRECATED. For domains running OpenSearch 5.3 and later, Amazon OpenSearch takes hourly automated snapshots, making this setting irrelevant. For domains running earlier versions, OpenSearch takes daily automated snapshots.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_options` - (Optional) Configuration block for VPC related options. Adding or removing this configuration forces a new resource ([documentation](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/vpc.html)). Detailed below.
+* `off_peak_window_options` - (Optional) Configuration to add Off Peak update options. ([documentation](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/off-peak.html)). Detailed below.
 
 ### advanced_security_options
 
@@ -443,6 +444,16 @@ AWS documentation: [VPC Support for Amazon OpenSearch Service Domains](https://d
 
 * `security_group_ids` - (Optional) List of VPC Security Group IDs to be applied to the OpenSearch domain endpoints. If omitted, the default Security Group for the VPC will be used.
 * `subnet_ids` - (Required) List of VPC Subnet IDs for the OpenSearch domain endpoints to be created in.
+
+### off_peak_window_options
+
+AWS documentation: [Off Peak Hours Support for Amazon OpenSearch Service Domains](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/off-peak.html)
+
+* `enabled` - Enabled disabled toggle for off-peak update window
+* `off_peak_window` - (Optional) 
+  * `window_start_time` - (Optional) 10h window for updates
+    * `hours` - (Required) Starting hour of the 10-hour window for updates
+    * `minutes` - (Required) Starting minute of the 10-hour window for updates
 
 ## Attributes Reference
 
