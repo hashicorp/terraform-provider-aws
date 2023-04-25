@@ -45,3 +45,7 @@ data-source/aws_launch_configuration: With the retirement of EC2-Classic the `vp
 ```release-note:breaking-change
 resource/aws_vpc_peering_connection: With the retirement of EC2-Classic the `allow_classic_link_to_remote_vpc` and `allow_vpc_to_remote_classic_link` attributes have been removed
 ```
+
+```release-note:breaking-change
+resource/aws_vpc_peering_connection_accepter: With the retirement of EC2-Classic the `allow_classic_link_to_remote_vpc` and `allow_vpc_to_remote_classic_link` attributes have been removed
+```
