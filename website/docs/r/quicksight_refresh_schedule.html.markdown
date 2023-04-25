@@ -93,7 +93,7 @@ The following arguments are optional:
 
 ### schedule_frequency
 
-* `interval` - (Required) The interval between scheduled refreshes. Valid values are `MINUTE15`, `MINUTE30`, `HOURLY`, `DAILY`, `WEEKLY` and `MONTHLY`
+* `interval` - (Required) The interval between scheduled refreshes. Valid values are `MINUTE15`, `MINUTE30`, `HOURLY`, `DAILY`, `WEEKLY` and `MONTHLY`.
 * `time_of_day` - (Optional) The time of day that you want the dataset to refresh. This value is expressed in `HH:MM` format. This field is not required for schedules that refresh hourly.
 * `timezone` - (Optional) The timezone that you want the refresh schedule to use.
 * `refresh_on_day` - (Optional) The [refresh on entity](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ScheduleRefreshOnEntity.html) configuration for weekly or monthly schedules. See [refresh_on_day](#refresh_on_day).
@@ -101,7 +101,7 @@ The following arguments are optional:
 ### refresh_on_day
 
 * `day_of_month` - (Optional) The day of the month that you want to schedule refresh on.
-* `day_of_week` - (Optional) The day of the week that you want to schedule a refresh on. Valid values are `SUNDAY`, `MONDAY`, `TUESDAY`, `WEDNESDAY`, `THURSDAY`, `FRIDAY` and `SATURDAY`
+* `day_of_week` - (Optional) The day of the week that you want to schedule a refresh on. Valid values are `SUNDAY`, `MONDAY`, `TUESDAY`, `WEDNESDAY`, `THURSDAY`, `FRIDAY` and `SATURDAY`.
 
 ## Attributes Reference
 
