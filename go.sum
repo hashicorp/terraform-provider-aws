@@ -59,8 +59,8 @@ github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.10 h1:S5KfC/c9s3/laYc4Bx
 github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.10/go.mod h1:/hg0Z2APD1zFe758rOTwIuIQEe7ohaodrhY906f4ISs=
 github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.20.10 h1:3OAeRqUboCVhc3cozVzckL501B6V6mu4qyo08s3jsms=
 github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.20.10/go.mod h1:5k59EsYR4orIPOQrGAKtQjIsM4Yw9qfxMeSs6+/UVN0=
-github.com/aws/aws-sdk-go-v2/service/comprehend v1.24.0 h1:sIEAyerSMo/dPtW0fAXtN+eL+4D1oDguevqpzGYO3/8=
-github.com/aws/aws-sdk-go-v2/service/comprehend v1.24.0/go.mod h1:wosyuBOnz9m1Oj9F3wuCDRwomUxebSVCNc+PeQCQ5DE=
+github.com/aws/aws-sdk-go-v2/service/comprehend v1.24.1 h1:9xO1KwU+O/46RWd71hD/PO4Xq0pllECfMQlocmnQE/c=
+github.com/aws/aws-sdk-go-v2/service/comprehend v1.24.1/go.mod h1:YDZOE9XpbohvywpWpxDCPIEWlpALTsR+o6Ny6UgHXeE=
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.22.2 h1:wgJr0EwZea2E7Xv8nawVIUrf7eam/dLaxHBxC4jbkos=
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.22.2/go.mod h1:d0fe6UNPcZ3FMT7NFdIuKrF4SNXPWDhxSzA8N/z+KP4=
 github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.1.8 h1:Tap169lBqVla3crC6+2l7lkU2XZoZzBa4LnbSdqtWH4=
