@@ -260,7 +260,7 @@ func (r *resourceRefreshSchedule) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	_, read, err := FindRefreshScheduleByID(ctx, conn, plan.ID.ValueString())
+	_, outFind, err := FindRefreshScheduleByID(ctx, conn, plan.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.QuickSight, create.ErrActionReading, ResNameRefreshSchedule, plan.ID.String(), nil),
@@ -269,7 +269,7 @@ func (r *resourceRefreshSchedule) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	resp.Diagnostics.Append(plan.refreshFromRead(ctx, out.Arn, read)...)
+	resp.Diagnostics.Append(plan.refreshFromRead(ctx, out.Arn, outFind)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -282,7 +282,7 @@ func (r *resourceRefreshSchedule) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	arn, schedule, err := FindRefreshScheduleByID(ctx, conn, state.ID.ValueString())
+	arn, outFind, err := FindRefreshScheduleByID(ctx, conn, state.ID.ValueString())
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
@@ -294,7 +294,7 @@ func (r *resourceRefreshSchedule) Read(ctx context.Context, req resource.ReadReq
 		)
 		return
 	}
-	resp.Diagnostics.Append(state.refreshFromRead(ctx, arn, schedule)...)
+	resp.Diagnostics.Append(state.refreshFromRead(ctx, arn, outFind)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -355,7 +355,7 @@ func (r *resourceRefreshSchedule) Update(ctx context.Context, req resource.Updat
 			return
 		}
 
-		_, schedule, err := FindRefreshScheduleByID(ctx, conn, plan.ID.ValueString())
+		_, outFind, err := FindRefreshScheduleByID(ctx, conn, plan.ID.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.QuickSight, create.ErrActionReading, ResNameRefreshSchedule, plan.ID.String(), nil),
@@ -364,7 +364,7 @@ func (r *resourceRefreshSchedule) Update(ctx context.Context, req resource.Updat
 			return
 		}
 
-		resp.Diagnostics.Append(plan.refreshFromRead(ctx, out.Arn, schedule)...)
+		resp.Diagnostics.Append(plan.refreshFromRead(ctx, out.Arn, outFind)...)
 		resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 	}
 }
@@ -476,6 +476,8 @@ func FindRefreshScheduleByID(ctx context.Context, conn *quicksight.QuickSight, i
 		return nil, nil, tfresource.NewEmptyResultError(in)
 	}
 
+	// NOTE: out.RefreshSchedule.Arn is always empty, so the root struct field out.Arn
+	// must be included as a separate return value instead.
 	return out.Arn, out.RefreshSchedule, nil
 }
 
