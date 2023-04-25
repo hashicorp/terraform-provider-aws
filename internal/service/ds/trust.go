@@ -93,7 +93,7 @@ func (r *resourceTrust) Schema(ctx context.Context, req resource.SchemaRequest, 
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(1024),
-					fqdnValidator,
+					domainWithTrailingDotValidator,
 				},
 			},
 			"selective_auth": schema.StringAttribute{
@@ -269,6 +269,13 @@ func (r *resourceTrust) Update(ctx context.Context, req resource.UpdateRequest, 
 
 		forwarder, err := findConditionalForwarder(ctx, conn, plan.DirectoryID.ValueString(), plan.RemoteDomainName.ValueString())
 		if err != nil {
+			// Outputting a NotFoundError does not include the original error.
+			// Retrieve it to give the user an actionalble error message.
+			if nfe, ok := errs.As[*retry.NotFoundError](err); ok {
+				if nfe.LastError != nil {
+					err = nfe.LastError
+				}
+			}
 			resp.Diagnostics.Append(create.DiagErrorFramework(names.DS, create.ErrActionReading, ResNameTrust, plan.ID.ValueString(), fmt.Errorf("reading Conditional Forwarder: %w", err)))
 			return
 		}
@@ -519,6 +526,10 @@ func statusTrust(ctx context.Context, conn directoryservice.DescribeTrustsAPICli
 }
 
 func findConditionalForwarder(ctx context.Context, conn *directoryservice.Client, directoryID, remoteDomainName string) (*awstypes.ConditionalForwarder, error) {
+	// Directory Trust optionally accepts a remote domain name with a trailing period.
+	// Conditional Forwarders
+	remoteDomainName = strings.TrimRight(remoteDomainName, ".")
+
 	input := &directoryservice.DescribeConditionalForwardersInput{
 		DirectoryId:       aws.String(directoryID),
 		RemoteDomainNames: []string{remoteDomainName},

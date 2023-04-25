@@ -72,7 +72,7 @@ func TestDirectoryIDValidator(t *testing.T) {
 	}
 }
 
-func TestFQDNValidator(t *testing.T) {
+func TestDomainWithTrailingDotValidatorValidator(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -117,7 +117,7 @@ func TestFQDNValidator(t *testing.T) {
 				ConfigValue:    test.val,
 			}
 			response := validator.StringResponse{}
-			fqdnValidator.ValidateString(ctx, request, &response)
+			domainWithTrailingDotValidator.ValidateString(ctx, request, &response)
 
 			if diff := cmp.Diff(response.Diagnostics, test.expectedDiagnostics); diff != "" {
 				t.Errorf("unexpected diagnostics difference: %s", diff)

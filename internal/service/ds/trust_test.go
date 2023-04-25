@@ -66,7 +66,7 @@ func TestAccDSTrust_basic(t *testing.T) {
 	})
 }
 
-func TestAccDSTrust_fqdn(t *testing.T) {
+func TestAccDSTrust_Domain_TrailingPeriod(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Trust
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -84,7 +84,7 @@ func TestAccDSTrust_fqdn(t *testing.T) {
 		CheckDestroy:             testAccCheckTrustDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrustConfig_fqdn(rName, domainName, domainNameOther),
+				Config: testAccTrustConfig_domain_trailingPeriod(rName, domainName, domainNameOther),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "remote_domain_name", fmt.Sprintf("%s.", domainNameOther)),
@@ -504,7 +504,7 @@ resource "aws_security_group_rule" "other" {
 	)
 }
 
-func testAccTrustConfig_fqdn(rName, domain, domainOther string) string {
+func testAccTrustConfig_domain_trailingPeriod(rName, domain, domainOther string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`

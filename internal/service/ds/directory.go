@@ -132,9 +132,10 @@ func ResourceDirectory() *schema.Resource {
 				Default:  false,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: domainValidator,
 			},
 			"password": {
 				Type:      schema.TypeString,
