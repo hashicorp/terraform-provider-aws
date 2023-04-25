@@ -11,9 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+// @SDKDataSource("aws_route53_traffic_policy_document")
 func DataSourceTrafficPolicyDocument() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceTrafficPolicyDocumentRead,
+		ReadWithoutTimeout: dataSourceTrafficPolicyDocumentRead,
 
 		Schema: map[string]*schema.Schema{
 			"endpoint": {
@@ -28,7 +29,7 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 						"type": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice(Route53TrafficPolicyDocEndpointType_Values(), false),
+							ValidateFunc: validation.StringInSlice(TrafficPolicyDocEndpointType_values(), false),
 						},
 						"region": {
 							Type:     schema.TypeString,

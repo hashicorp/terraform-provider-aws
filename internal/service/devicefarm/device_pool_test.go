@@ -1,6 +1,7 @@
 package devicefarm_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -17,6 +18,7 @@ import (
 )
 
 func TestAccDeviceFarmDevicePool_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var pool devicefarm.DevicePool
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-updated")
@@ -24,20 +26,20 @@ func TestAccDeviceFarmDevicePool_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(devicefarm.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, devicefarm.EndpointsID)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeviceFarmDevicePoolDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDevicePoolDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceFarmDevicePoolConfig(rName),
+				Config: testAccDevicePoolConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmDevicePoolExists(resourceName, &pool),
+					testAccCheckDevicePoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
@@ -51,9 +53,9 @@ func TestAccDeviceFarmDevicePool_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeviceFarmDevicePoolConfig(rNameUpdated),
+				Config: testAccDevicePoolConfig_basic(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmDevicePoolExists(resourceName, &pool),
+					testAccCheckDevicePoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexp.MustCompile(`devicepool:.+`)),
 				),
@@ -63,26 +65,27 @@ func TestAccDeviceFarmDevicePool_basic(t *testing.T) {
 }
 
 func TestAccDeviceFarmDevicePool_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var pool devicefarm.DevicePool
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_devicefarm_device_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(devicefarm.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, devicefarm.EndpointsID)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeviceFarmDevicePoolDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDevicePoolDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceFarmDevicePoolConfigTags1(rName, "key1", "value1"),
+				Config: testAccDevicePoolConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmDevicePoolExists(resourceName, &pool),
+					testAccCheckDevicePoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -93,18 +96,18 @@ func TestAccDeviceFarmDevicePool_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeviceFarmDevicePoolConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDevicePoolConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmDevicePoolExists(resourceName, &pool),
+					testAccCheckDevicePoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccDeviceFarmDevicePoolConfigTags1(rName, "key2", "value2"),
+				Config: testAccDevicePoolConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmDevicePoolExists(resourceName, &pool),
+					testAccCheckDevicePoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -114,28 +117,29 @@ func TestAccDeviceFarmDevicePool_tags(t *testing.T) {
 }
 
 func TestAccDeviceFarmDevicePool_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var pool devicefarm.DevicePool
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_devicefarm_device_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(devicefarm.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, devicefarm.EndpointsID)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeviceFarmDevicePoolDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDevicePoolDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceFarmDevicePoolConfig(rName),
+				Config: testAccDevicePoolConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmDevicePoolExists(resourceName, &pool),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceDevicePool(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceDevicePool(), resourceName),
+					testAccCheckDevicePoolExists(ctx, resourceName, &pool),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceDevicePool(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceDevicePool(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -144,28 +148,29 @@ func TestAccDeviceFarmDevicePool_disappears(t *testing.T) {
 }
 
 func TestAccDeviceFarmDevicePool_disappears_project(t *testing.T) {
+	ctx := acctest.Context(t)
 	var pool devicefarm.DevicePool
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_devicefarm_device_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(devicefarm.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, devicefarm.EndpointsID)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeviceFarmDevicePoolDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDevicePoolDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceFarmDevicePoolConfig(rName),
+				Config: testAccDevicePoolConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmDevicePoolExists(resourceName, &pool),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceProject(), "aws_devicefarm_project.test"),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceDevicePool(), resourceName),
+					testAccCheckDevicePoolExists(ctx, resourceName, &pool),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceProject(), "aws_devicefarm_project.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceDevicePool(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -173,7 +178,7 @@ func TestAccDeviceFarmDevicePool_disappears_project(t *testing.T) {
 	})
 }
 
-func testAccCheckDeviceFarmDevicePoolExists(n string, v *devicefarm.DevicePool) resource.TestCheckFunc {
+func testAccCheckDevicePoolExists(ctx context.Context, n string, v *devicefarm.DevicePool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -184,8 +189,8 @@ func testAccCheckDeviceFarmDevicePoolExists(n string, v *devicefarm.DevicePool) 
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
-		resp, err := tfdevicefarm.FindDevicepoolByArn(conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn()
+		resp, err := tfdevicefarm.FindDevicePoolByARN(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -199,32 +204,34 @@ func testAccCheckDeviceFarmDevicePoolExists(n string, v *devicefarm.DevicePool) 
 	}
 }
 
-func testAccCheckDeviceFarmDevicePoolDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
+func testAccCheckDevicePoolDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_devicefarm_device_pool" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_devicefarm_device_pool" {
+				continue
+			}
+
+			// Try to find the resource
+			_, err := tfdevicefarm.FindDevicePoolByARN(ctx, conn, rs.Primary.ID)
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("DeviceFarm Device Pool %s still exists", rs.Primary.ID)
 		}
 
-		// Try to find the resource
-		_, err := tfdevicefarm.FindDevicepoolByArn(conn, rs.Primary.ID)
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("DeviceFarm Device Pool %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccDeviceFarmDevicePoolConfig(rName string) string {
-	return testAccDeviceFarmProjectConfig(rName) + fmt.Sprintf(`
+func testAccDevicePoolConfig_basic(rName string) string {
+	return testAccProjectConfig_basic(rName) + fmt.Sprintf(`
 resource "aws_devicefarm_device_pool" "test" {
   name        = %[1]q
   project_arn = aws_devicefarm_project.test.arn
@@ -237,8 +244,8 @@ resource "aws_devicefarm_device_pool" "test" {
 `, rName)
 }
 
-func testAccDeviceFarmDevicePoolConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return testAccDeviceFarmProjectConfig(rName) + fmt.Sprintf(`
+func testAccDevicePoolConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return testAccProjectConfig_basic(rName) + fmt.Sprintf(`
 resource "aws_devicefarm_device_pool" "test" {
   name        = %[1]q
   project_arn = aws_devicefarm_project.test.arn
@@ -254,8 +261,8 @@ resource "aws_devicefarm_device_pool" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccDeviceFarmDevicePoolConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccDeviceFarmProjectConfig(rName) + fmt.Sprintf(`
+func testAccDevicePoolConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccProjectConfig_basic(rName) + fmt.Sprintf(`
 resource "aws_devicefarm_device_pool" "test" {
   name        = %[1]q
   project_arn = aws_devicefarm_project.test.arn

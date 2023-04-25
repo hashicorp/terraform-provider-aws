@@ -9,30 +9,28 @@ import (
 )
 
 func TestAccIoTIndexingConfiguration_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]func(t *testing.T){
 		"basic":         testAccIndexingConfiguration_basic,
 		"allAttributes": testAccIndexingConfiguration_allAttributes,
 	}
 
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
 func testAccIndexingConfiguration_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_iot_indexing_configuration.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: acctest.CheckDestroyNoop,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIndexingConfigurationConfig,
+				Config: testAccIndexingConfigurationConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "thing_group_indexing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "thing_group_indexing_configuration.0.custom_field.#", "0"),
@@ -57,16 +55,17 @@ func testAccIndexingConfiguration_basic(t *testing.T) {
 }
 
 func testAccIndexingConfiguration_allAttributes(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_iot_indexing_configuration.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: acctest.CheckDestroyNoop,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIndexingConfigurationAllAttributesConfig,
+				Config: testAccIndexingConfigurationConfig_allAttributes,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "thing_group_indexing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "thing_group_indexing_configuration.0.custom_field.#", "0"),
@@ -102,7 +101,7 @@ func testAccIndexingConfiguration_allAttributes(t *testing.T) {
 	})
 }
 
-const testAccIndexingConfigurationConfig = `
+const testAccIndexingConfigurationConfig_basic = `
 resource "aws_iot_indexing_configuration" "test" {
   thing_group_indexing_configuration {
     thing_group_indexing_mode = "OFF"
@@ -114,7 +113,7 @@ resource "aws_iot_indexing_configuration" "test" {
 }
 `
 
-const testAccIndexingConfigurationAllAttributesConfig = `
+const testAccIndexingConfigurationConfig_allAttributes = `
 resource "aws_iot_indexing_configuration" "test" {
   thing_group_indexing_configuration {
     thing_group_indexing_mode = "ON"

@@ -1,5 +1,13 @@
 package opsworks
 
+import (
+	"time"
+)
+
+const (
+	defaultBerkshelfVersion = "3.2.0"
+)
+
 const (
 	instanceStatusBooting      = "booting"
 	instanceStatusOnline       = "online"
@@ -12,4 +20,8 @@ const (
 	instanceStatusStopping     = "stopping"
 	instanceStatusTerminated   = "terminated"
 	instanceStatusTerminating  = "terminating"
+)
+
+const (
+	propagationTimeout = 2 * time.Minute
 )

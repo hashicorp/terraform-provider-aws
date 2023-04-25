@@ -11,18 +11,19 @@ import (
 )
 
 func TestAccImageBuilderImagePipelineDataSource_arn(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_imagebuilder_image_pipeline.test"
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckImagePipelineDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImagePipelineARNDataSourceConfig(rName),
+				Config: testAccImagePipelineDataSourceConfig_arn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "container_recipe_arn", resourceName, "container_recipe_arn"),
@@ -48,18 +49,19 @@ func TestAccImageBuilderImagePipelineDataSource_arn(t *testing.T) {
 }
 
 func TestAccImageBuilderImagePipelineDataSource_containerRecipeARN(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_imagebuilder_image_pipeline.test"
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckImagePipelineDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImagePipelineContainerRecipeARNDataSourceConfig(rName),
+				Config: testAccImagePipelineDataSourceConfig_containerRecipeARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "container_recipe_arn", resourceName, "container_recipe_arn"),
@@ -122,7 +124,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 `, rName)
 }
 
-func testAccImagePipelineARNDataSourceConfig(rName string) string {
+func testAccImagePipelineDataSourceConfig_arn(rName string) string {
 	return acctest.ConfigCompose(
 		testAccImagePipelineBaseDataSourceConfig(rName),
 		fmt.Sprintf(`
@@ -148,7 +150,7 @@ data "aws_imagebuilder_image_pipeline" "test" {
 `, rName))
 }
 
-func testAccImagePipelineContainerRecipeARNDataSourceConfig(rName string) string {
+func testAccImagePipelineDataSourceConfig_containerRecipeARN(rName string) string {
 	return acctest.ConfigCompose(
 		testAccImagePipelineBaseDataSourceConfig(rName),
 		fmt.Sprintf(`

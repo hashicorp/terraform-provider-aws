@@ -11,15 +11,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func testAccBackupFrameworkDataSource_basic(t *testing.T) {
+func testAccFrameworkDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_backup_framework.test"
 	resourceName := "aws_backup_framework.test"
 	rName := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccFrameworkPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccFrameworkDataSourceConfig_nonExistent,
@@ -67,15 +68,16 @@ func testAccBackupFrameworkDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccBackupFrameworkDataSource_controlScopeTag(t *testing.T) {
+func testAccFrameworkDataSource_controlScopeTag(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_backup_framework.test"
 	resourceName := "aws_backup_framework.test"
 	rName := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccFrameworkPreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccFrameworkPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFrameworkDataSourceConfig_controlScopeTag(rName),

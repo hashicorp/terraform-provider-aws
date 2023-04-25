@@ -12,22 +12,23 @@ import (
 )
 
 func TestAccS3BucketDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	region := acctest.Region()
 	hostedZoneID, _ := tfs3.HostedZoneIDForRegion(region)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketDataSourceConfig_basic(bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists("data.aws_s3_bucket.bucket"),
+					testAccCheckBucketExists(ctx, "data.aws_s3_bucket.bucket"),
 					resource.TestCheckResourceAttrPair("data.aws_s3_bucket.bucket", "arn", "aws_s3_bucket.bucket", "arn"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket.bucket", "region", region),
-					testAccCheckS3BucketDomainName("data.aws_s3_bucket.bucket", "bucket_domain_name", bucketName),
+					testAccCheckBucketDomainName("data.aws_s3_bucket.bucket", "bucket_domain_name", bucketName),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket.bucket", "bucket_regional_domain_name", testAccBucketRegionalDomainName(bucketName, region)),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket.bucket", "hosted_zone_id", hostedZoneID),
 					resource.TestCheckNoResourceAttr("data.aws_s3_bucket.bucket", "website_endpoint"),
@@ -38,17 +39,18 @@ func TestAccS3BucketDataSource_basic(t *testing.T) {
 }
 
 func TestAccS3BucketDataSource_website(t *testing.T) {
+	ctx := acctest.Context(t)
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketWebsiteDataSourceConfig(bucketName),
+				Config: testAccBucketDataSourceConfig_website(bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists("data.aws_s3_bucket.bucket"),
+					testAccCheckBucketExists(ctx, "data.aws_s3_bucket.bucket"),
 					resource.TestCheckResourceAttrPair("data.aws_s3_bucket.bucket", "bucket", "aws_s3_bucket.bucket", "id"),
 					resource.TestCheckResourceAttrPair("data.aws_s3_bucket.bucket", "website_domain", "aws_s3_bucket_website_configuration.test", "website_domain"),
 					resource.TestCheckResourceAttrPair("data.aws_s3_bucket.bucket", "website_endpoint", "aws_s3_bucket_website_configuration.test", "website_endpoint"),
@@ -70,15 +72,10 @@ data "aws_s3_bucket" "bucket" {
 `, bucketName)
 }
 
-func testAccBucketWebsiteDataSourceConfig(bucketName string) string {
+func testAccBucketDataSourceConfig_website(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
-  acl    = "public-read"
 }
 
 resource "aws_s3_bucket_website_configuration" "test" {

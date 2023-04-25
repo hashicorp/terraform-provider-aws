@@ -10,18 +10,19 @@ import (
 )
 
 func TestAccAPIGatewayRestAPIDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandString(8)
 	dataSourceName := "data.aws_api_gateway_rest_api.test"
 	resourceName := "aws_api_gateway_rest_api.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck: acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					testAccRestAPIConfig_Name(rName),
-					testAccRestAPINameDataSourceConfig(),
+					testAccRestAPIConfig_name(rName),
+					testAccRestAPIDataSourceConfig_name(),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
@@ -42,18 +43,19 @@ func TestAccAPIGatewayRestAPIDataSource_basic(t *testing.T) {
 }
 
 func TestAccAPIGatewayRestAPIDataSource_Endpoint_vpcEndpointIDs(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandString(8)
 	dataSourceName := "data.aws_api_gateway_rest_api.test"
 	resourceName := "aws_api_gateway_rest_api.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					testAccRestAPIEndpointConfigurationVPCEndpointIds1Config(rName),
-					testAccRestAPINameDataSourceConfig(),
+					testAccRestAPIConfig_vpcEndpointIDs1(rName),
+					testAccRestAPIDataSourceConfig_name(),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
@@ -74,7 +76,7 @@ func TestAccAPIGatewayRestAPIDataSource_Endpoint_vpcEndpointIDs(t *testing.T) {
 	})
 }
 
-func testAccRestAPINameDataSourceConfig() string {
+func testAccRestAPIDataSourceConfig_name() string {
 	return `
 data "aws_api_gateway_rest_api" "test" {
   name = aws_api_gateway_rest_api.test.name

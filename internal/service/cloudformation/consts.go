@@ -1,5 +1,13 @@
 package cloudformation
 
+import (
+	"time"
+)
+
 const (
-	ResStack = "Stack"
+	ResNameStack = "Stack"
+)
+
+const (
+	propagationTimeout = 2 * time.Minute
 )

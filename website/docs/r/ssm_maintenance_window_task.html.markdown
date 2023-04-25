@@ -84,7 +84,7 @@ resource "aws_ssm_maintenance_window_task" "example" {
 
   task_invocation_parameters {
     run_command_parameters {
-      output_s3_bucket     = aws_s3_bucket.example.bucket
+      output_s3_bucket     = aws_s3_bucket.example.id
       output_s3_key_prefix = "output"
       service_role_arn     = aws_iam_role.example.arn
       timeout_seconds      = 600
@@ -173,7 +173,7 @@ The following arguments are supported:
 * `output_s3_bucket` - (Optional) The name of the Amazon S3 bucket.
 * `output_s3_key_prefix` - (Optional) The Amazon S3 bucket subfolder.
 * `parameter` - (Optional) The parameters for the RUN_COMMAND task execution. Documented below.
-* `service_role_arn` - (Optional) The IAM service role to assume during task execution.
+* `service_role_arn` - (Optional) The Amazon Resource Name (ARN) of the AWS Identity and Access Management (IAM) service role to use to publish Amazon Simple Notification Service (Amazon SNS) notifications for maintenance window Run Command tasks.
 * `timeout_seconds` - (Optional) If this time is reached and the command has not already started executing, it doesn't run.
 * `cloudwatch_config` - (Optional) Configuration options for sending command output to CloudWatch Logs. Documented below.
 

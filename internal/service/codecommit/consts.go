@@ -1,5 +1,5 @@
 package codecommit
 
 const (
-	ResRepository = "Repository"
+	ResNameRepository = "Repository"
 )

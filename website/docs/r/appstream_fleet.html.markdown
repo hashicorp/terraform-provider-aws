@@ -78,7 +78,6 @@ The following arguments are optional:
 * `security_group_ids` - Identifiers of the security groups for the fleet or image builder.
 * `subnet_ids` - Identifiers of the subnets to which a network interface is attached from the fleet instance or image builder instance.
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -94,7 +93,6 @@ In addition to all arguments above, the following attributes are exported:
 * `available` - Number of currently available instances that can be used to stream sessions.
 * `in_use` - Number of instances in use for streaming.
 * `running` - Total number of simultaneous streaming instances that are running.
-
 
 ## Import
 

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_organizations_delegated_services")
 func DataSourceDelegatedServices() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDelegatedServicesRead,
@@ -43,7 +44,7 @@ func DataSourceDelegatedServices() *schema.Resource {
 }
 
 func dataSourceDelegatedServicesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	input := &organizations.ListDelegatedServicesForAccountInput{
 		AccountId: aws.String(d.Get("account_id").(string)),
@@ -63,7 +64,7 @@ func dataSourceDelegatedServicesRead(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(fmt.Errorf("error describing organizations delegated services: %w", err))
 	}
 
-	if err = d.Set("delegated_services", flattenOrganizationsDelegatedServices(delegators)); err != nil {
+	if err = d.Set("delegated_services", flattenDelegatedServices(delegators)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting delegated_services: %w", err))
 	}
 
@@ -72,7 +73,7 @@ func dataSourceDelegatedServicesRead(ctx context.Context, d *schema.ResourceData
 	return nil
 }
 
-func flattenOrganizationsDelegatedServices(delegatedServices []*organizations.DelegatedService) []map[string]interface{} {
+func flattenDelegatedServices(delegatedServices []*organizations.DelegatedService) []map[string]interface{} {
 	if len(delegatedServices) == 0 {
 		return nil
 	}

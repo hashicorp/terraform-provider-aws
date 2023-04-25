@@ -11,17 +11,18 @@ import (
 )
 
 func TestAccNetworkManagerDeviceDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_networkmanager_device.test"
 	resourceName := "aws_networkmanager_device.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceDataSourceConfig(rName),
+				Config: testAccDeviceDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "aws_location.#", resourceName, "aws_location.#"),
@@ -40,7 +41,7 @@ func TestAccNetworkManagerDeviceDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccDeviceDataSourceConfig(rName string) string {
+func testAccDeviceDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
   tags = {

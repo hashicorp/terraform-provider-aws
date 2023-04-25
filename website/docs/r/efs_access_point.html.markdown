@@ -25,7 +25,7 @@ The following arguments are supported:
 * `file_system_id` - (Required) ID of the file system for which the access point is intended.
 * `posix_user` - (Optional) Operating system user and group applied to all file system requests made using the access point. [Detailed](#posix_user) below.
 * `root_directory`- (Optional) Directory on the Amazon EFS file system that the access point provides access to. [Detailed](#root_directory) below.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### posix_user
 
@@ -55,7 +55,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - ARN of the access point.
 * `file_system_arn` - ARN of the file system.
 * `id` - ID of the access point.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

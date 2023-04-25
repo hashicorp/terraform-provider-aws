@@ -1,6 +1,14 @@
 package codepipeline
 
+import (
+	"time"
+)
+
 const (
-	ResWebhook      = "Webhook"
-	ResCodePipeline = "Pipeline"
+	ResNameWebhook  = "Webhook"
+	ResNamePipeline = "Pipeline"
+)
+
+const (
+	propagationTimeout = 2 * time.Minute
 )

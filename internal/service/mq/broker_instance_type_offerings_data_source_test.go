@@ -9,13 +9,14 @@ import (
 )
 
 func TestAccMQBrokerInstanceTypeOfferingsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(mq.EndpointsID, t) },
-		ErrorCheck: acctest.ErrorCheck(t, mq.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, mq.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerDataSourceInstanceTypeOfferingsConfig(),
+				Config: testAccBrokerInstanceTypeOfferingsDataSourceConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_mq_broker_instance_type_offerings.empty", "broker_instance_options.#"),
 					resource.TestCheckTypeSetElemNestedAttrs("data.aws_mq_broker_instance_type_offerings.empty", "broker_instance_options.*", map[string]string{
@@ -45,7 +46,7 @@ func TestAccMQBrokerInstanceTypeOfferingsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccBrokerDataSourceInstanceTypeOfferingsConfig() string {
+func testAccBrokerInstanceTypeOfferingsDataSourceConfig_basic() string {
 	return `
 data "aws_mq_broker_instance_type_offerings" "empty" {}
 

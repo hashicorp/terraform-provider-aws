@@ -39,9 +39,18 @@ data "aws_servicequotas_service_quota" "by_quota_name" {
 In addition to all arguments above, the following attributes are exported:
 
 * `adjustable` - Whether the service quota is adjustable.
-* `arn` - Amazon Resource Name (ARN) of the service quota.
+* `arn` - ARN of the service quota.
 * `default_value` - Default value of the service quota.
 * `global_quota` - Whether the service quota is global for the AWS account.
-* `id` - Amazon Resource Name (ARN) of the service quota.
+* `id` - ARN of the service quota.
 * `service_name` - Name of the service.
+* `usage_metric` - Information about the measurement.
+    * `metric_dimensions` - The metric dimensions.
+        * `class`
+        * `resource`
+        * `service`
+        * `type`
+    * `metric_name` - The name of the metric.
+    * `metric_namespace` - The namespace of the metric.
+    * `metric_statistic_recommendation` - The metric statistic that AWS recommend you use when determining quota usage.
 * `value` - Current value of the service quota.

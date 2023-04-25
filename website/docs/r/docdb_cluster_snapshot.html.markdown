@@ -43,9 +43,9 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_docdb_cluster_snapshot` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `20m`) How long to wait for the snapshot to be available.
+* `create` - (Default `20m`)
 
 ## Import
 

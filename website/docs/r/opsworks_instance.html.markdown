@@ -131,12 +131,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_opsworks_instance` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10 minutes`) Used when the instance is created. It should cover the time needed for the instance to start successfully.
-- `delete` - (Default `10 minutes`) Used when the instance is deleted. It should cover the time needed for the instance to stop successfully.
-- `update` - (Default `10 minutes`) Used when the instance is changed. It should cover the time needed to either start or stop the instance.
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
+- `update` - (Default `10m`)
 
 ## Import
 
@@ -145,4 +144,3 @@ Opsworks Instances can be imported using the `instance id`, e.g.,
 ```
 $ terraform import aws_opsworks_instance.my_instance 4d6d1710-ded9-42a1-b08e-b043ad7af1e2
 ```
-
