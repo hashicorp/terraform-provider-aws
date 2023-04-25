@@ -41,8 +41,6 @@ func TestAccAutoScalingLaunchConfigurationDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "spot_price", resourceName, "spot_price"),
 					// Resource and data source user_data have differing representations in state.
 					resource.TestCheckResourceAttrSet(datasourceName, "user_data"),
-					resource.TestCheckResourceAttrPair(datasourceName, "vpc_classic_link_id", resourceName, "vpc_classic_link_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "vpc_classic_link_security_groups.#", resourceName, "vpc_classic_link_security_groups.#"),
 				),
 			},
 		},
