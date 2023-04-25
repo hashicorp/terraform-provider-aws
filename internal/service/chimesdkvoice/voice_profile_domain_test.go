@@ -25,17 +25,17 @@ func TestAccChimeSDKVoiceVoiceProfileDomain_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"VoiceProfileDomain": {
-			"basic":      testAccChimeSDKVoiceVoiceProfileDomain_basic,
-			"disappears": testAccChimeSDKVoiceVoiceProfileDomain_disappears,
-			"update":     testAccChimeSDKVoiceVoiceProfileDomain_update,
-			"tags":       testAccChimeSDKVoiceVoiceProfileDomain_tags,
+			"basic":      testAccVoiceProfileDomain_basic,
+			"disappears": testAccVoiceProfileDomain_disappears,
+			"update":     testAccVoiceProfileDomain_update,
+			"tags":       testAccVoiceProfileDomain_tags,
 		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
-func testAccChimeSDKVoiceVoiceProfileDomain_basic(t *testing.T) {
+func testAccVoiceProfileDomain_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var voiceprofiledomain chimesdkvoice.GetVoiceProfileDomainOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -57,7 +57,6 @@ func testAccChimeSDKVoiceVoiceProfileDomain_basic(t *testing.T) {
 					testAccCheckVoiceProfileDomainExists(ctx, resourceName, &voiceprofiledomain),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "server_side_encryption_configuration.0.kms_key_arn"),
-					resource.TestCheckNoResourceAttr(resourceName, "description"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "chime", regexp.MustCompile(`voice-profile-domain/+.`)),
 				),
 			},
@@ -75,7 +74,7 @@ func testAccChimeSDKVoiceVoiceProfileDomain_basic(t *testing.T) {
 	})
 }
 
-func testAccChimeSDKVoiceVoiceProfileDomain_disappears(t *testing.T) {
+func testAccVoiceProfileDomain_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var voiceprofiledomain chimesdkvoice.GetVoiceProfileDomainOutput
@@ -104,7 +103,7 @@ func testAccChimeSDKVoiceVoiceProfileDomain_disappears(t *testing.T) {
 	})
 }
 
-func testAccChimeSDKVoiceVoiceProfileDomain_update(t *testing.T) {
+func testAccVoiceProfileDomain_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 chimesdkvoice.GetVoiceProfileDomainOutput
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -128,7 +127,6 @@ func testAccChimeSDKVoiceVoiceProfileDomain_update(t *testing.T) {
 					testAccCheckVoiceProfileDomainExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
 					resource.TestCheckResourceAttrSet(resourceName, "server_side_encryption_configuration.0.kms_key_arn"),
-					resource.TestCheckNoResourceAttr(resourceName, "description"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "chime", regexp.MustCompile(`voice-profile-domain/+.`)),
 				),
 			},
@@ -147,7 +145,7 @@ func testAccChimeSDKVoiceVoiceProfileDomain_update(t *testing.T) {
 	})
 }
 
-func testAccChimeSDKVoiceVoiceProfileDomain_tags(t *testing.T) {
+func testAccVoiceProfileDomain_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var voiceprofiledomain chimesdkvoice.GetVoiceProfileDomainOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

@@ -144,10 +144,7 @@ func resourceVoiceProfileDomainRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("arn", out.VoiceProfileDomainArn)
 	d.Set("id", out.VoiceProfileDomainId)
 	d.Set("name", out.Name)
-
-	if out.Description != nil {
-		d.Set("description", out.Description)
-	}
+	d.Set("description", out.Description)
 
 	if err := d.Set("server_side_encryption_configuration", flattenServerSideEncryptionConfiguration(out.ServerSideEncryptionConfiguration)); err != nil {
 		return create.DiagError(names.ChimeSDKVoice, create.ErrActionSetting, ResNameVoiceProfileDomain, d.Id(), err)
