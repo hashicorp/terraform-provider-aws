@@ -55,15 +55,6 @@ func init() {
 		},
 	})
 
-	resource.AddTestSweepers("aws_elasticache_security_group", &resource.Sweeper{
-		Name: "aws_elasticache_security_group",
-		F:    sweepCacheSecurityGroups,
-		Dependencies: []string{
-			"aws_elasticache_cluster",
-			"aws_elasticache_replication_group",
-		},
-	})
-
 	resource.AddTestSweepers("aws_elasticache_subnet_group", &resource.Sweeper{
 		Name: "aws_elasticache_subnet_group",
 		F:    sweepSubnetGroups,
@@ -268,48 +259,6 @@ func sweepReplicationGroups(region string) error {
 	}
 
 	return errs.ErrorOrNil()
-}
-
-func sweepCacheSecurityGroups(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).ElastiCacheConn()
-
-	err = conn.DescribeCacheSecurityGroupsPagesWithContext(ctx, &elasticache.DescribeCacheSecurityGroupsInput{}, func(page *elasticache.DescribeCacheSecurityGroupsOutput, lastPage bool) bool {
-		if len(page.CacheSecurityGroups) == 0 {
-			log.Print("[DEBUG] No ElastiCache Cache Security Groups to sweep")
-			return false
-		}
-
-		for _, securityGroup := range page.CacheSecurityGroups {
-			name := aws.StringValue(securityGroup.CacheSecurityGroupName)
-
-			if name == "default" {
-				log.Printf("[INFO] Skipping ElastiCache Cache Security Group: %s", name)
-				continue
-			}
-
-			log.Printf("[INFO] Deleting ElastiCache Cache Security Group: %s", name)
-			_, err := conn.DeleteCacheSecurityGroupWithContext(ctx, &elasticache.DeleteCacheSecurityGroupInput{
-				CacheSecurityGroupName: aws.String(name),
-			})
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete ElastiCache Cache Security Group (%s): %s", name, err)
-			}
-		}
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping ElastiCache Cache Security Group sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving ElastiCache Cache Security Groups: %s", err)
-	}
-	return nil
 }
 
 func sweepSubnetGroups(region string) error {
