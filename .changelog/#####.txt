@@ -17,3 +17,7 @@ resource/aws_db_instance: With the retirement of EC2-Classic the`security_group_
 ```release-note:breaking-change
 data-source/aws_db_instance: With the retirement of EC2-Classic the`db_security_groups` attribute has been removed
 ```
+
+```release-note:breaking-change
+resource/aws_elasticache_cluster: With the retirement of EC2-Classic the`security_group_names` attribute has been removed
+```
