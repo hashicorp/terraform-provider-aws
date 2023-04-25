@@ -125,6 +125,8 @@ data "aws_ec2_transit_gateway_vpc_attachment" "unit-eu-central-1" {
 }
 
 locals {
+  trusted_aws_accounts_ids = {} # add to this list all account ids you trust
+
   trusted_vpc_attachments_list_eu-central-1 = compact([for k, tva in data.aws_ec2_transit_gateway_vpc_attachment.unit-eu-central-1 : contains(local.trusted_aws_accounts_ids, lookup(tva, "vpc_owner_id", "")) ? tva.id : ""])
   ## create a map with all vpc attachments trusted to be able to use for_each to avoid conflict on plan/apply ##
   trusted_vpc_attachements_eu-central-1 = toset(sort(local.trusted_vpc_attachments_list_eu-central-1))
@@ -160,9 +162,8 @@ resource "aws_ec2_transit_gateway_route_table_propagation" "trusted_accounts_eu-
 
 data "aws_ec2_transit_gateway_route_table_routes" "test" {
   filter {
-    name = "type"
-    #values = ["propagated"]
-    values = ["static"]
+    name   = "type"
+    values = ["propagated"]
   }
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.eu-central-1.id
   provider                       = aws.eu-central-1
@@ -170,7 +171,7 @@ data "aws_ec2_transit_gateway_route_table_routes" "test" {
 }
 
 resource "aws_ec2_transit_gateway_route" "default-region-to-eu-central-1" {
-  for_each                       = { for r in aws_ec2_transit_gateway_route_table_routes.test.routes : r.destination_cidr_block => r }
+  for_each                       = { for r in data.aws_ec2_transit_gateway_route_table_routes.test.routes : r.destination_cidr_block => r }
   destination_cidr_block         = each.key
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.this.id
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment.eu-central-1.id
