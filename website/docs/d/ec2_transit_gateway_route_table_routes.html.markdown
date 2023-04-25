@@ -25,7 +25,7 @@ data "aws_ec2_transit_gateway_route_table_routes" "test" {
 ```terraform
 data "aws_ec2_transit_gateway_route_table_routes" "test" {
   filter {
-    name = "type"
+    name   = "type"
     values = ["propagated"]
   }
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.example.id
@@ -34,7 +34,7 @@ data "aws_ec2_transit_gateway_route_table_routes" "test" {
 
 ### Complexe use case with transit gateway peering
 
-This exemple allow to create a mesh of transit gateway for différent regions routing all traffic to on-prem VPN
+This example allow to create a mesh of transit gateway for différent regions routing all traffic to on-prem VPN
 
 ```terraform
 resource "aws_ec2_transit_gateway" "this" {
@@ -170,7 +170,7 @@ data "aws_ec2_transit_gateway_route_table_routes" "test" {
 }
 
 resource "aws_ec2_transit_gateway_route" "default-region-to-eu-central-1" {
-  for_each                       = { for r in aws_ec2_transit_gateway_route_table_routes.test.routes: r.destination_cidr_block => r }
+  for_each                       = { for r in aws_ec2_transit_gateway_route_table_routes.test.routes : r.destination_cidr_block => r }
   destination_cidr_block         = each.key
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.this.id
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment.eu-central-1.id
@@ -209,4 +209,3 @@ In addition to all arguments above, the following attributes are exported:
 * `state` - The current state of the route, can be `active`, `deleted`, `pending`, `blackhole`, `deleting`.
 * `transit_gateway_route_table_announcement_id` - The id of the transit gateway route table announcement, most of the time it is an empty string.
 * `type` - The type of the route, can be `propagated` or `static`.
-

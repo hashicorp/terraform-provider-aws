@@ -41,7 +41,7 @@ func testAccTransitGatewayRouteTableRoutesDataSource_filter(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayRouteTableRoutesDataSourceConfig_basic(rName),
+				Config: testAccTransitGatewayRouteTableRoutesDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "routes.#", "1"),
 				),
@@ -50,7 +50,7 @@ func testAccTransitGatewayRouteTableRoutesDataSource_filter(t *testing.T) {
 	})
 }
 
-func testAcctestAccTransitGatewayRouteTableRoutesDataSourceConfig_basic(rName string) string {
+func testAccTransitGatewayRouteTableRoutesDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   tags = {
@@ -90,14 +90,14 @@ resource "aws_ec2_transit_gateway_route_table_propagation" "test" {
 
 data "aws_ec2_transit_gateway_route_table_routes" "test" {
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.test.id
-  depends_on = [aws_ec2_transit_gateway_route_table_association.test, aws_ec2_transit_gateway_route_table_propagation.test]
+  depends_on                     = [aws_ec2_transit_gateway_route_table_association.test, aws_ec2_transit_gateway_route_table_propagation.test]
 }
 
 
   `, rName))
 }
 
-func testAcctestAccTransitGatewayRouteTableRoutesDataSourceConfig_basic(rName string) string {
+func testAccTransitGatewayRouteTableRoutesDataSourceConfig_filter(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   tags = {
