@@ -199,7 +199,7 @@ func ValidIAMPolicyJSON(v interface{}, k string) (ws []string, errors []error) {
 		errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: %s", k, errStr))
 	}
 
-	return
+	return //nolint:nakedret // Just a long function.
 }
 
 // ValidateIPv4CIDRBlock validates that the specified CIDR block is valid:
