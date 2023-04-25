@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/timestamp"
 )
 
@@ -192,7 +193,7 @@ func ValidIAMPolicyJSON(v interface{}, k string) (ws []string, errors []error) {
 		}
 	} else if _, err := structure.NormalizeJsonString(v); err != nil {
 		errStr := err.Error()
-		if err, ok := err.(*json.SyntaxError); ok {
+		if err, ok := errs.As[*json.SyntaxError](err); ok {
 			errStr = fmt.Sprintf("%s, at byte offset %d", errStr, err.Offset)
 		}
 		errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: %s", k, errStr))
