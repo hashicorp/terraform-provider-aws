@@ -29,3 +29,7 @@ data-source/aws_elasticache_cluster: With the retirement of EC2-Classic the `sec
 ```release-note:breaking-change
 resource/aws_redshift_cluster: With the retirement of EC2-Classic the `cluster_security_groups` attribute has been removed
 ```
+
+```release-note:breaking-change
+data-source/aws_redshift_cluster: With the retirement of EC2-Classic the `cluster_security_groups` attribute has been removed
+```
