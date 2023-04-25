@@ -46,6 +46,7 @@ func TestAccDSTrust_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "trust_direction", string(awstypes.TrustDirectionTwoWay)),
 					resource.TestCheckResourceAttr(resourceName, "trust_password", "Some0therPassword"),
 					resource.TestCheckResourceAttr(resourceName, "trust_type", string(awstypes.TrustTypeForest)),
+					resource.TestCheckResourceAttr(resourceName, "delete_associated_conditional_forwarder", "false"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_date_time"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_updated_date_time"),
 					resource.TestCheckResourceAttr(resourceName, "trust_state", string(awstypes.TrustStateVerifyFailed)),
@@ -59,6 +60,7 @@ func TestAccDSTrust_basic(t *testing.T) {
 				ImportStateIdFunc: testAccTrustStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"delete_associated_conditional_forwarder",
 					"trust_password",
 				},
 			},
@@ -96,6 +98,7 @@ func TestAccDSTrust_Domain_TrailingPeriod(t *testing.T) {
 				ImportStateIdFunc: testAccTrustStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"delete_associated_conditional_forwarder",
 					"trust_password",
 				},
 			},
@@ -139,6 +142,7 @@ func TestAccDSTrust_bidirectionalBasic(t *testing.T) {
 				ImportStateIdFunc: testAccTrustStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"delete_associated_conditional_forwarder",
 					"trust_password",
 				},
 			},
@@ -177,6 +181,7 @@ func TestAccDSTrust_SelectiveAuth(t *testing.T) {
 				ImportStateIdFunc: testAccTrustStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"delete_associated_conditional_forwarder",
 					"trust_password",
 				},
 			},
@@ -194,6 +199,7 @@ func TestAccDSTrust_SelectiveAuth(t *testing.T) {
 				ImportStateIdFunc: testAccTrustStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"delete_associated_conditional_forwarder",
 					"trust_password",
 				},
 			},
@@ -232,6 +238,7 @@ func TestAccDSTrust_bidirectionalSelectiveAuth(t *testing.T) {
 				ImportStateIdFunc: testAccTrustStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"delete_associated_conditional_forwarder",
 					"trust_password",
 				},
 			},
@@ -249,6 +256,7 @@ func TestAccDSTrust_bidirectionalSelectiveAuth(t *testing.T) {
 				ImportStateIdFunc: testAccTrustStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"delete_associated_conditional_forwarder",
 					"trust_password",
 				},
 			},
@@ -287,6 +295,7 @@ func TestAccDSTrust_TrustType(t *testing.T) {
 				ImportStateIdFunc: testAccTrustStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"delete_associated_conditional_forwarder",
 					"trust_password",
 				},
 			},
@@ -356,6 +365,7 @@ func TestAccDSTrust_ConditionalForwarderIPs(t *testing.T) {
 				ImportStateIdFunc: testAccTrustStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"delete_associated_conditional_forwarder",
 					"trust_password",
 				},
 			},
@@ -372,6 +382,7 @@ func TestAccDSTrust_ConditionalForwarderIPs(t *testing.T) {
 				ImportStateIdFunc: testAccTrustStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"delete_associated_conditional_forwarder",
 					"trust_password",
 				},
 			},
@@ -380,6 +391,46 @@ func TestAccDSTrust_ConditionalForwarderIPs(t *testing.T) {
 }
 
 // TODO: Test one-directional trusts
+
+func TestAccDSTrust_deleteAssociatedConditionalForwarder(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Trust
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_directory_service_trust.test"
+	domainName := acctest.RandomDomainName()
+	domainNameOther := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckDirectoryService(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrustDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTrustConfig_deleteAssociatedConditionalForwarder(rName, domainName, domainNameOther),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTrustExists(ctx, resourceName, &v),
+					resource.TestMatchResourceAttr(resourceName, "id", regexp.MustCompile(`^t-\w{10}`)),
+					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "delete_associated_conditional_forwarder", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccTrustStateIdFunc(resourceName),
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"delete_associated_conditional_forwarder",
+					"trust_password",
+				},
+			},
+		},
+	})
+}
 
 func testAccCheckTrustExists(ctx context.Context, n string, v *awstypes.Trust) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -847,6 +898,68 @@ resource "aws_directory_service_trust" "test" {
   trust_password     = "Some0therPassword"
 
   conditional_forwarder_ip_addrs = toset(slice(tolist(aws_directory_service_directory.other.dns_ip_addresses), 0, 1))
+}
+
+resource "aws_directory_service_directory" "test" {
+  name     = %[1]q
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+  edition  = "Standard"
+
+  vpc_settings {
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = aws_subnet.test[*].id
+  }
+}
+
+resource "aws_directory_service_directory" "other" {
+  name     = %[2]q
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+  edition  = "Standard"
+
+  vpc_settings {
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = aws_subnet.test[*].id
+  }
+}
+
+resource "aws_security_group_rule" "test" {
+  security_group_id = aws_directory_service_directory.test.security_group_id
+
+  type                     = "egress"
+  protocol                 = "all"
+  from_port                = 0
+  to_port                  = 65535
+  source_security_group_id = aws_directory_service_directory.other.security_group_id
+}
+
+resource "aws_security_group_rule" "other" {
+  security_group_id = aws_directory_service_directory.other.security_group_id
+
+  type                     = "egress"
+  protocol                 = "all"
+  from_port                = 0
+  to_port                  = 65535
+  source_security_group_id = aws_directory_service_directory.test.security_group_id
+}
+`, domain, domainOther),
+	)
+}
+
+func testAccTrustConfig_deleteAssociatedConditionalForwarder(rName, domain, domainOther string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_directory_service_trust" "test" {
+  directory_id = aws_directory_service_directory.test.id
+
+  remote_domain_name = aws_directory_service_directory.other.name
+  trust_direction    = "Two-Way"
+  trust_password     = "Some0therPassword"
+
+  conditional_forwarder_ip_addrs          = aws_directory_service_directory.other.dns_ip_addresses
+  delete_associated_conditional_forwarder = true
 }
 
 resource "aws_directory_service_directory" "test" {
