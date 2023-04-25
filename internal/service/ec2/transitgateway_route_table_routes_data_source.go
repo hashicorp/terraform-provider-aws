@@ -67,6 +67,7 @@ func dataSourceTransitGatewayRouteTableRoutesRead(ctx context.Context, d *schema
 	input := &ec2.SearchTransitGatewayRoutesInput{}
 	if v, ok := d.GetOk("transit_gateway_route_table_id"); ok {
 		input.TransitGatewayRouteTableId = aws.String(v.(string))
+	  d.SetId( v.(string) + "-routes")
 	}
 	input.Filters = append(input.Filters, BuildFiltersDataSource(
 		d.Get("filter").(*schema.Set),
@@ -80,7 +81,7 @@ func dataSourceTransitGatewayRouteTableRoutesRead(ctx context.Context, d *schema
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Route Table Routes: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	//d.SetId(meta.(*conns.AWSClient).Region)
 	for _, route := range output {
 		routes = append(routes, map[string]interface{}{
 			"destination_cidr_block": aws.StringValue(route.DestinationCidrBlock),
