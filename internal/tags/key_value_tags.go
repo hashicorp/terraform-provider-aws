@@ -745,7 +745,7 @@ type schemaResourceData interface {
 	GetRawState() cty.Value
 }
 
-func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *DefaultConfig, d schemaResourceData) KeyValueTags {
+func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *DefaultConfig, ignoreConfig *IgnoreConfig, d schemaResourceData) KeyValueTags {
 	// remove default config.
 	t := tags.RemoveDefaultConfig(defaultConfig)
 
@@ -803,7 +803,7 @@ func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *D
 		}
 	}
 
-	return New(ctx, result)
+	return New(ctx, result).IgnoreConfig(ignoreConfig)
 }
 
 // ToSnakeCase converts a string to snake case.

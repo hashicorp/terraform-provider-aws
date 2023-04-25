@@ -90,7 +90,7 @@ func (r *ResourceWithConfigure) SetTagsAll(ctx context.Context, request resource
 	}
 
 	if !planTags.IsUnknown() {
-		if !HasUnknownElements(planTags) {
+		if !mapHasUnknownElements(planTags) {
 			resourceTags := tftags.New(ctx, planTags)
 
 			allTags := defaultTagsConfig.MergeTags(resourceTags).IgnoreConfig(ignoreTagsConfig)
@@ -209,7 +209,7 @@ func (w *WithTimeouts) DeleteTimeout(ctx context.Context, timeouts timeouts.Valu
 	return timeout
 }
 
-func HasUnknownElements(m types.Map) bool {
+func mapHasUnknownElements(m types.Map) bool {
 	for _, v := range m.Elements() {
 		if v.IsUnknown() {
 			return true
