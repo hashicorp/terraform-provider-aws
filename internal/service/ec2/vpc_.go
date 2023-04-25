@@ -545,8 +545,6 @@ func defaultIPv6CIDRBlockAssociation(vpc *ec2.Vpc, associationID string) *ec2.Vp
 
 type vpcInfo struct {
 	vpc                              *ec2.Vpc
-	enableClassicLink                bool
-	enableClassicLinkDNSSupport      bool
 	enableDnsHostnames               bool
 	enableDnsSupport                 bool
 	enableNetworkAddressUsageMetrics bool
