@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccOrganizationPolicyDataSource_UnattachedPolicy(t *testing.T) {
+func TestAccOrganizationsPolicyDataSource_UnattachedPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_organizations_policy.test"
@@ -26,7 +26,7 @@ func TestAccOrganizationPolicyDataSource_UnattachedPolicy(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationPolicyDataSourceConfig_UnattachedPolicy(rName),
+				Config: testAccOrganizationsPolicyDataSourceConfig_UnattachedPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "policy_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
@@ -39,7 +39,7 @@ func TestAccOrganizationPolicyDataSource_UnattachedPolicy(t *testing.T) {
 	})
 }
 
-func testAccOrganizationPolicyDataSourceConfig_UnattachedPolicy(rName string) string {
+func testAccOrganizationsPolicyDataSourceConfig_UnattachedPolicy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {
 	feature_set = "ALL"
@@ -61,7 +61,6 @@ EOF
 
 name = %[1]q
 }
-
 
 data "aws_organizations_policy" "test" {
 	policy_id = aws_organizations_policy.test.id
