@@ -232,10 +232,6 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 		parameterGroupNames = append(parameterGroupNames, aws.StringValue(v.DBParameterGroupName))
 	}
 	d.Set("db_parameter_groups", parameterGroupNames)
-	var securityGroupNames []string
-	for _, v := range v.DBSecurityGroups {
-		securityGroupNames = append(securityGroupNames, aws.StringValue(v.DBSecurityGroupName))
-	}
 	if v.DBSubnetGroup != nil {
 		d.Set("db_subnet_group", v.DBSubnetGroup.DBSubnetGroupName)
 	} else {
