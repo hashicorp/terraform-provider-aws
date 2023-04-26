@@ -70,6 +70,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_config_organization_conformance_pack",
 		},
 		{
+			Factory:  ResourceOrganizationCustomPolicyRule,
+			TypeName: "aws_config_organization_custom_policy_rule",
+		},
+		{
 			Factory:  ResourceOrganizationCustomRule,
 			TypeName: "aws_config_organization_custom_rule",
 		},

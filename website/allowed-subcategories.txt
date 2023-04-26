@@ -52,6 +52,7 @@ CloudTrail
 CloudWatch
 CloudWatch Application Insights
 CloudWatch Evidently
+CloudWatch Internet Monitor
 CloudWatch Logs
 CloudWatch Observability Access Manager
 CloudWatch RUM
@@ -270,7 +271,7 @@ SMS (Server Migration)
 SNS (Simple Notification)
 SQS (Simple Queue)
 SSM (Systems Manager)
-SSM Incident Manager Contacts
+SSM Contacts
 SSM Incident Manager Incidents
 SSO (Single Sign-On)
 SSO Admin

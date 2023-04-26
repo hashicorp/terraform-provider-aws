@@ -96,6 +96,15 @@ func SetTagsOut(ctx context.Context, tags []*route53.Tag) {
 	}
 }
 
+// createTags creates route53 service tags for new resources.
+func createTags(ctx context.Context, conn route53iface.Route53API, identifier, resourceType string, tags []*route53.Tag) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return UpdateTags(ctx, conn, identifier, resourceType, nil, KeyValueTags(ctx, tags))
+}
+
 // UpdateTags updates route53 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
