@@ -803,7 +803,6 @@ func updateSecurityGroupRules(ctx context.Context, conn *ec2.EC2, d *schema.Reso
 // if it finds invalid permissions input, namely a protocol of "-1" with either
 // to_port or from_port set to a non-zero value.
 func ExpandIPPerms(group *ec2.SecurityGroup, configured []interface{}) ([]*ec2.IpPermission, error) {
-
 	perms := make([]*ec2.IpPermission, len(configured))
 	for i, mRaw := range configured {
 		var perm ec2.IpPermission
