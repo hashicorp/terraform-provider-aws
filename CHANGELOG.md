@@ -45,6 +45,7 @@ BUG FIXES:
 * resource/aws_api_gateway_api_key: Fix `value` minimum length verification when specified. ([#30894](https://github.com/hashicorp/terraform-provider-aws/issues/30894))
 * resource/aws_apprunner_service: Allow additional `instance_configuration.cpu` and `instance_configuration.memory` values ([#30889](https://github.com/hashicorp/terraform-provider-aws/issues/30889))
 * resource/aws_dms_replication_task: Fix perpetual diff on dms replication_task settings ([#30885](https://github.com/hashicorp/terraform-provider-aws/issues/30885))
+* resource/aws_ecs_service: Fix removal of `service_registries` configuration block ([#30852](https://github.com/hashicorp/terraform-provider-aws/issues/30852))
 
 ## 4.64.0 (April 20, 2023)
 
