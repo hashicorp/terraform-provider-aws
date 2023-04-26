@@ -744,52 +744,6 @@ func ResourceGroup() *schema.Resource {
 
 					return create.StringHashcode(buf.String())
 				},
-				ConflictsWith: []string{"tags"},
-			},
-			"tags": {
-				Deprecated: "Use tag instead",
-				Type:       schema.TypeSet,
-				Optional:   true,
-				Elem: &schema.Schema{
-					Type: schema.TypeMap,
-					Elem: &schema.Schema{Type: schema.TypeString},
-				},
-				// Terraform 0.11 and earlier can provide incorrect type
-				// information during difference handling, in which boolean
-				// values are represented as "0" and "1". This Set function
-				// normalizes these hashing variations, while the Terraform
-				// Plugin SDK automatically suppresses the boolean/string
-				// difference in the value itself.
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-
-					m, ok := v.(map[string]interface{})
-
-					if !ok {
-						return 0
-					}
-
-					if v, ok := m["key"].(string); ok {
-						buf.WriteString(fmt.Sprintf("%s-", v))
-					}
-
-					if v, ok := m["value"].(string); ok {
-						buf.WriteString(fmt.Sprintf("%s-", v))
-					}
-
-					if v, ok := m["propagate_at_launch"].(bool); ok {
-						buf.WriteString(fmt.Sprintf("%t-", v))
-					} else if v, ok := m["propagate_at_launch"].(string); ok {
-						if b, err := strconv.ParseBool(v); err == nil {
-							buf.WriteString(fmt.Sprintf("%t-", b))
-						} else {
-							buf.WriteString(fmt.Sprintf("%s-", v))
-						}
-					}
-
-					return create.StringHashcode(buf.String())
-				},
-				ConflictsWith: []string{"tag"},
 			},
 			"target_group_arns": {
 				Type:     schema.TypeSet,
@@ -974,10 +928,6 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("tag"); ok {
-		createInput.Tags = Tags(KeyValueTags(ctx, v, asgName, TagResourceTypeGroup).IgnoreAWS())
-	}
-
-	if v, ok := d.GetOk("tags"); ok {
 		createInput.Tags = Tags(KeyValueTags(ctx, v, asgName, TagResourceTypeGroup).IgnoreAWS())
 	}
 
@@ -1177,31 +1127,8 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("warm_pool", nil)
 	}
 
-	var tagOk, tagsOk bool
-	var v interface{}
-
-	// Deprecated: In a future major version, this should always set all tags except those ignored.
-	//             Remove d.GetOk() and Only() handling.
-	if v, tagOk = d.GetOk("tag"); tagOk {
-		proposedStateTags := KeyValueTags(ctx, v, d.Id(), TagResourceTypeGroup)
-
-		if err := d.Set("tag", ListOfMap(KeyValueTags(ctx, g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags))); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting tag: %s", err)
-		}
-	}
-
-	if v, tagsOk = d.GetOk("tags"); tagsOk {
-		proposedStateTags := KeyValueTags(ctx, v, d.Id(), TagResourceTypeGroup)
-
-		if err := d.Set("tags", ListOfStringMap(KeyValueTags(ctx, g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags))); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-		}
-	}
-
-	if !tagOk && !tagsOk {
-		if err := d.Set("tag", ListOfMap(KeyValueTags(ctx, g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting tag: %s", err)
-		}
+	if err := d.Set("tag", ListOfMap(KeyValueTags(ctx, g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tag: %s", err)
 	}
 
 	return diags
@@ -1219,7 +1146,6 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		"load_balancers",
 		"suspended_processes",
 		"tag",
-		"tags",
 		"target_group_arns",
 		"warm_pool",
 	) {
@@ -1339,17 +1265,11 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if d.HasChanges("tag", "tags") {
+	if d.HasChanges("tag") {
 		oTagRaw, nTagRaw := d.GetChange("tag")
-		oTagsRaw, nTagsRaw := d.GetChange("tags")
 
-		oTag := KeyValueTags(ctx, oTagRaw, d.Id(), TagResourceTypeGroup)
-		oTags := KeyValueTags(ctx, oTagsRaw, d.Id(), TagResourceTypeGroup)
-		oldTags := Tags(oTag.Merge(oTags))
-
-		nTag := KeyValueTags(ctx, nTagRaw, d.Id(), TagResourceTypeGroup)
-		nTags := KeyValueTags(ctx, nTagsRaw, d.Id(), TagResourceTypeGroup)
-		newTags := Tags(nTag.Merge(nTags))
+		oldTags := Tags(KeyValueTags(ctx, oTagRaw, d.Id(), TagResourceTypeGroup))
+		newTags := Tags(KeyValueTags(ctx, nTagRaw, d.Id(), TagResourceTypeGroup))
 
 		if err := UpdateTags(ctx, conn, d.Id(), TagResourceTypeGroup, oldTags, newTags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating tags for Auto Scaling Group (%s): %s", d.Id(), err)
@@ -1499,12 +1419,6 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 					if v := v.(string); v != "" {
 						triggers = append(triggers, v)
 					}
-				}
-
-				if v.Contains("tag") && !v.Contains("tags") {
-					triggers = append(triggers, "tags") // nozero
-				} else if !v.Contains("tag") && v.Contains("tags") {
-					triggers = append(triggers, "tag") // nozero
 				}
 
 				shouldRefreshInstances = d.HasChanges(triggers...)
