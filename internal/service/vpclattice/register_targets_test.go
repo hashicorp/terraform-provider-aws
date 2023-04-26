@@ -58,7 +58,7 @@ resource "aws_vpclattice_register_targets" "test" {
   targets {
     id   = "i-081f98c4ef2ff21e3"
     port = 80
-  }
+  	}
 }
 `
 }
