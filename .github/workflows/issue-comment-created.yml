@@ -5,11 +5,16 @@ on:
     types: [created]
 
 jobs:
+  community_check:
+    uses: ./.github/workflows/community-check.yml
+    secrets: inherit
+
   issue_comment_triage:
-    if: github.event_name == 'issue_comment' && !contains(fromJSON('["anGie44", "bflad", "breathingdust", "dependabot[bot]", "DrFaust92", "ewbankkit", "gdavison", "justinretzolk", "maryelizbeth", "YakDriver", "zhelding", "johnsonaj"]'), github.actor)
+    needs: community_check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions-ecosystem/action-remove-labels@v1
+      - uses: actions-ecosystem/action-remove-labels@2ce5d41b4b6aa8503e285553f75ed56e0a40bae0
+        if: github.event_name == 'issue_comment' && needs.community_check.outputs.maintainer == 'false'
         with:
           labels: |
             stale

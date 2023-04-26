@@ -1,5 +1,5 @@
 ---
-subcategory: "IoT"
+subcategory: "IoT Core"
 layout: "aws"
 page_title: "AWS: aws_iot_authorizer"
 description: |-
@@ -21,7 +21,7 @@ resource "aws_iot_authorizer" "example" {
   token_key_name          = "Token-Header"
 
   token_signing_public_keys = {
-    Key1 = "${file("test-fixtures/iot-authorizer-signing-key.pem")}"
+    Key1 = file("test-fixtures/iot-authorizer-signing-key.pem")
   }
 }
 ```
@@ -29,6 +29,7 @@ resource "aws_iot_authorizer" "example" {
 ## Argument Reference
 
 * `authorizer_function_arn` - (Required) The ARN of the authorizer's Lambda function.
+* `enable_caching_for_http`  - (Optional) Specifies whether the HTTP caching is enabled or not. Default: `false`.
 * `name` - (Required) The name of the authorizer.
 * `signing_disabled` - (Optional) Specifies whether AWS IoT validates the token signature in an authorization request. Default: `false`.
 * `status` - (Optional) The status of Authorizer request at creation. Valid values: `ACTIVE`, `INACTIVE`. Default: `ACTIVE`.

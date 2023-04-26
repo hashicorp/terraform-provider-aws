@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_internet_gateway_attachment"
 description: |-
@@ -38,6 +38,12 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the VPC and Internet Gateway separated by a colon.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `20m`)
+- `delete` - (Default `20m`)
 
 ## Import
 

@@ -1,5 +1,5 @@
 ---
-subcategory: "S3"
+subcategory: "S3 (Simple Storage)"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_cors_configuration"
 description: |-
@@ -10,6 +10,8 @@ description: |-
 
 Provides an S3 bucket CORS configuration resource. For more information about CORS, go to [Enabling Cross-Origin Resource Sharing](https://docs.aws.amazon.com/AmazonS3/latest/userguide/cors.html) in the Amazon S3 User Guide.
 
+~> **NOTE:** S3 Buckets only support a single CORS configuration. Declaring multiple `aws_s3_bucket_cors_configuration` resources to the same S3 Bucket will cause a perpetual difference in configuration.
+
 ## Example Usage
 
 ```terraform
@@ -18,7 +20,7 @@ resource "aws_s3_bucket" "example" {
 }
 
 resource "aws_s3_bucket_cors_configuration" "example" {
-  bucket = aws_s3_bucket.example.bucket
+  bucket = aws_s3_bucket.example.id
 
   cors_rule {
     allowed_headers = ["*"]
@@ -39,9 +41,9 @@ resource "aws_s3_bucket_cors_configuration" "example" {
 
 The following arguments are supported:
 
-* `bucket` - (Required, Forces new resource) The name of the bucket.
-* `expected_bucket_owner` - (Optional, Forces new resource) The account ID of the expected bucket owner.
-* `cors_rule` - (Required) Set of origins and methods (cross-origin access that you want to allow) [documented below](#cors_rule). You can configure up to 100 rules.
+* `bucket` - (Required, Forces new resource) Name of the bucket.
+* `expected_bucket_owner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
+* `cors_rule` - (Required) Set of origins and methods (cross-origin access that you want to allow). [See below](#cors_rule). You can configure up to 100 rules.
 
 ### cors_rule
 
@@ -52,7 +54,7 @@ The `cors_rule` configuration block supports the following arguments:
 * `allowed_origins` - (Required) Set of origins you want customers to be able to access the bucket from.
 * `expose_headers` - (Optional) Set of headers in the response that you want customers to be able to access from their applications (for example, from a JavaScript `XMLHttpRequest` object).
 * `id` - (Optional) Unique identifier for the rule. The value cannot be longer than 255 characters.
-* `max_age_seconds` - (Optional) The time in seconds that your browser is to cache the preflight response for the specified resource.
+* `max_age_seconds` - (Optional) Time in seconds that your browser is to cache the preflight response for the specified resource.
 
 ## Attributes Reference
 

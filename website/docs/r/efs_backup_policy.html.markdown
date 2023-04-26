@@ -1,5 +1,5 @@
 ---
-subcategory: "EFS"
+subcategory: "EFS (Elastic File System)"
 layout: "aws"
 page_title: "AWS: aws_efs_backup_policy"
 description: |-
@@ -35,6 +35,7 @@ The following arguments are supported:
 * `backup_policy` - (Required) A backup_policy object (documented below).
 
 ### Backup Policy Arguments
+
 For **backup_policy** the following attributes are supported:
 
 * `status` - (Required) A status of the backup policy. Valid values: `ENABLED`, `DISABLED`.

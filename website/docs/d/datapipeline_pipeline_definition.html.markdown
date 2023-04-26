@@ -1,5 +1,5 @@
 ---
-subcategory: "DataPipeline"
+subcategory: "Data Pipeline"
 layout: "aws"
 page_title: "AWS: aws_datapipeline_pipeline_definition"
 description: |-
@@ -23,7 +23,6 @@ data "aws_datapipeline_pipeline_definition" "example" {
 The following arguments are required:
 
 * `pipeline_id` - (Required) ID of the pipeline.
-
 
 ## Attributes Reference
 

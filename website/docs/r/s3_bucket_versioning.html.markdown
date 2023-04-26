@@ -1,5 +1,5 @@
 ---
-subcategory: "S3"
+subcategory: "S3 (Simple Storage)"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_versioning"
 description: |-
@@ -9,12 +9,16 @@ description: |-
 # Resource: aws_s3_bucket_versioning
 
 Provides a resource for controlling versioning on an S3 bucket.
-Deleting this resource will suspend versioning on the associated S3 bucket.
+Deleting this resource will either suspend versioning on the associated S3 bucket or
+simply remove the resource from Terraform state if the associated S3 bucket is unversioned.
+
 For more information, see [How S3 versioning works](https://docs.aws.amazon.com/AmazonS3/latest/userguide/manage-versioning-examples.html).
 
 ~> **NOTE:** If you are enabling versioning on the bucket for the first time, AWS recommends that you wait for 15 minutes after enabling versioning before issuing write operations (PUT or DELETE) on objects in the bucket.
 
 ## Example Usage
+
+### With Versioning Enabled
 
 ```terraform
 resource "aws_s3_bucket" "example" {
@@ -30,6 +34,26 @@ resource "aws_s3_bucket_versioning" "versioning_example" {
   bucket = aws_s3_bucket.example.id
   versioning_configuration {
     status = "Enabled"
+  }
+}
+```
+
+### With Versioning Disabled
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "example-bucket"
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.example.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_versioning" "versioning_example" {
+  bucket = aws_s3_bucket.example.id
+  versioning_configuration {
+    status = "Disabled"
   }
 }
 ```
@@ -56,7 +80,7 @@ resource "aws_s3_bucket_versioning" "example" {
 }
 
 resource "aws_s3_object" "example" {
-  bucket = aws_s3_bucket_versioning.example.bucket
+  bucket = aws_s3_bucket_versioning.example.id
   key    = "droeloe"
   source = "example.txt"
 }
@@ -66,16 +90,19 @@ resource "aws_s3_object" "example" {
 
 The following arguments are supported:
 
-* `bucket` - (Required, Forces new resource) The name of the S3 bucket.
-* `versioning_configuration` - (Required) Configuration block for the versioning parameters [detailed below](#versioning_configuration).
-* `expected_bucket_owner` - (Optional, Forces new resource) The account ID of the expected bucket owner.
-* `mfa` - (Optional, Required if `versioning_configuration` `mfa_delete` is enabled) The concatenation of the authentication device's serial number, a space, and the value that is displayed on your authentication device.
+* `bucket` - (Required, Forces new resource) Name of the S3 bucket.
+* `versioning_configuration` - (Required) Configuration block for the versioning parameters. [See below](#versioning_configuration).
+* `expected_bucket_owner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
+* `mfa` - (Optional, Required if `versioning_configuration` `mfa_delete` is enabled) Concatenation of the authentication device's serial number, a space, and the value that is displayed on your authentication device.
 
 ### versioning_configuration
 
+~> **Note:** While the `versioning_configuration.status` parameter supports `Disabled`, this value is only intended for _creating_ or _importing_ resources that correspond to unversioned S3 buckets.
+Updating the value from `Enabled` or `Suspended` to `Disabled` will result in errors as the AWS S3 API does not support returning buckets to an unversioned state.
+
 The `versioning_configuration` configuration block supports the following arguments:
 
-* `status` - (Required) The versioning state of the bucket. Valid values: `Enabled` or `Suspended`.
+* `status` - (Required) Versioning state of the bucket. Valid values: `Enabled`, `Suspended`, or `Disabled`. `Disabled` should only be used when creating or importing resources that correspond to unversioned S3 buckets.
 * `mfa_delete` - (Optional) Specifies whether MFA delete is enabled in the bucket versioning configuration. Valid values: `Enabled` or `Disabled`.
 
 ## Attributes Reference

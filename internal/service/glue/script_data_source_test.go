@@ -10,15 +10,16 @@ import (
 )
 
 func TestAccGlueScriptDataSource_Language_python(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_glue_script.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScriptPythonDataSourceConfig(),
+				Config: testAccScriptDataSourceConfig_python(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "python_script", regexp.MustCompile(`from awsglue\.job import Job`)),
 				),
@@ -28,15 +29,16 @@ func TestAccGlueScriptDataSource_Language_python(t *testing.T) {
 }
 
 func TestAccGlueScriptDataSource_Language_scala(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_glue_script.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScriptScalaDataSourceConfig(),
+				Config: testAccScriptDataSourceConfig_scala(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "scala_code", regexp.MustCompile(`import com\.amazonaws\.services\.glue\.util\.Job`)),
 				),
@@ -45,7 +47,7 @@ func TestAccGlueScriptDataSource_Language_scala(t *testing.T) {
 	})
 }
 
-func testAccScriptPythonDataSourceConfig() string {
+func testAccScriptDataSourceConfig_python() string {
 	return `
 data "aws_glue_script" "test" {
   language = "PYTHON"
@@ -143,7 +145,7 @@ data "aws_glue_script" "test" {
 `
 }
 
-func testAccScriptScalaDataSourceConfig() string {
+func testAccScriptDataSourceConfig_scala() string {
 	return `
 data "aws_glue_script" "test" {
   language = "SCALA"

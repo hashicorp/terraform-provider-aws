@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 func FindAddonByClusterNameAndAddonName(ctx context.Context, conn *eks.EKS, clusterName, addonName string) (*eks.Addon, error) {
@@ -18,7 +18,7 @@ func FindAddonByClusterNameAndAddonName(ctx context.Context, conn *eks.EKS, clus
 	output, err := conn.DescribeAddonWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -29,7 +29,7 @@ func FindAddonByClusterNameAndAddonName(ctx context.Context, conn *eks.EKS, clus
 	}
 
 	if output == nil || output.Addon == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
 		}
@@ -48,7 +48,7 @@ func FindAddonUpdateByClusterNameAddonNameAndID(ctx context.Context, conn *eks.E
 	output, err := conn.DescribeUpdateWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -59,7 +59,7 @@ func FindAddonUpdateByClusterNameAddonNameAndID(ctx context.Context, conn *eks.E
 	}
 
 	if output == nil || output.Update == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
 		}
@@ -68,46 +68,37 @@ func FindAddonUpdateByClusterNameAddonNameAndID(ctx context.Context, conn *eks.E
 	return output.Update, nil
 }
 
-func FindClusterByName(conn *eks.EKS, name string) (*eks.Cluster, error) {
-	input := &eks.DescribeClusterInput{
-		Name: aws.String(name),
+func FindAddonVersionByAddonNameAndKubernetesVersion(ctx context.Context, conn *eks.EKS, addonName, kubernetesVersion string, mostRecent bool) (*eks.AddonVersionInfo, error) {
+	input := &eks.DescribeAddonVersionsInput{
+		AddonName:         aws.String(addonName),
+		KubernetesVersion: aws.String(kubernetesVersion),
 	}
+	var version *eks.AddonVersionInfo
 
-	output, err := conn.DescribeCluster(input)
-
-	// Sometimes the EKS API returns the ResourceNotFound error in this form:
-	// ClientException: No cluster found for name: tf-acc-test-0o1f8
-	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, eks.ErrCodeClientException, "No cluster found for name:") {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+	err := conn.DescribeAddonVersionsPagesWithContext(ctx, input, func(page *eks.DescribeAddonVersionsOutput, lastPage bool) bool {
+		if page == nil || len(page.Addons) == 0 {
+			return !lastPage
 		}
-	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Cluster == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
+		for _, addon := range page.Addons {
+			for i, addonVersion := range addon.AddonVersions {
+				if mostRecent && i == 0 {
+					version = addonVersion
+					return !lastPage
+				}
+				for _, versionCompatibility := range addonVersion.Compatibilities {
+					if aws.BoolValue(versionCompatibility.DefaultVersion) {
+						version = addonVersion
+						return !lastPage
+					}
+				}
+			}
 		}
-	}
-
-	return output.Cluster, nil
-}
-
-func FindClusterUpdateByNameAndID(conn *eks.EKS, name, id string) (*eks.Update, error) {
-	input := &eks.DescribeUpdateInput{
-		Name:     aws.String(name),
-		UpdateId: aws.String(id),
-	}
-
-	output, err := conn.DescribeUpdate(input)
+		return lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -117,26 +108,26 @@ func FindClusterUpdateByNameAndID(conn *eks.EKS, name, id string) (*eks.Update, 
 		return nil, err
 	}
 
-	if output == nil || output.Update == nil {
-		return nil, &resource.NotFoundError{
+	if version == nil || version.AddonVersion == nil {
+		return nil, &retry.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
 		}
 	}
 
-	return output.Update, nil
+	return version, nil
 }
 
-func FindFargateProfileByClusterNameAndFargateProfileName(conn *eks.EKS, clusterName, fargateProfileName string) (*eks.FargateProfile, error) {
+func FindFargateProfileByClusterNameAndFargateProfileName(ctx context.Context, conn *eks.EKS, clusterName, fargateProfileName string) (*eks.FargateProfile, error) {
 	input := &eks.DescribeFargateProfileInput{
 		ClusterName:        aws.String(clusterName),
 		FargateProfileName: aws.String(fargateProfileName),
 	}
 
-	output, err := conn.DescribeFargateProfile(input)
+	output, err := conn.DescribeFargateProfileWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -147,7 +138,7 @@ func FindFargateProfileByClusterNameAndFargateProfileName(conn *eks.EKS, cluster
 	}
 
 	if output == nil || output.FargateProfile == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
 		}
@@ -156,16 +147,16 @@ func FindFargateProfileByClusterNameAndFargateProfileName(conn *eks.EKS, cluster
 	return output.FargateProfile, nil
 }
 
-func FindNodegroupByClusterNameAndNodegroupName(conn *eks.EKS, clusterName, nodeGroupName string) (*eks.Nodegroup, error) {
+func FindNodegroupByClusterNameAndNodegroupName(ctx context.Context, conn *eks.EKS, clusterName, nodeGroupName string) (*eks.Nodegroup, error) {
 	input := &eks.DescribeNodegroupInput{
 		ClusterName:   aws.String(clusterName),
 		NodegroupName: aws.String(nodeGroupName),
 	}
 
-	output, err := conn.DescribeNodegroup(input)
+	output, err := conn.DescribeNodegroupWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -176,7 +167,7 @@ func FindNodegroupByClusterNameAndNodegroupName(conn *eks.EKS, clusterName, node
 	}
 
 	if output == nil || output.Nodegroup == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
 		}
@@ -185,17 +176,17 @@ func FindNodegroupByClusterNameAndNodegroupName(conn *eks.EKS, clusterName, node
 	return output.Nodegroup, nil
 }
 
-func FindNodegroupUpdateByClusterNameNodegroupNameAndID(conn *eks.EKS, clusterName, nodeGroupName, id string) (*eks.Update, error) {
+func FindNodegroupUpdateByClusterNameNodegroupNameAndID(ctx context.Context, conn *eks.EKS, clusterName, nodeGroupName, id string) (*eks.Update, error) {
 	input := &eks.DescribeUpdateInput{
 		Name:          aws.String(clusterName),
 		NodegroupName: aws.String(nodeGroupName),
 		UpdateId:      aws.String(id),
 	}
 
-	output, err := conn.DescribeUpdate(input)
+	output, err := conn.DescribeUpdateWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -206,7 +197,7 @@ func FindNodegroupUpdateByClusterNameNodegroupNameAndID(conn *eks.EKS, clusterNa
 	}
 
 	if output == nil || output.Update == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
 		}
@@ -227,7 +218,7 @@ func FindOIDCIdentityProviderConfigByClusterNameAndConfigName(ctx context.Contex
 	output, err := conn.DescribeIdentityProviderConfigWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -238,7 +229,7 @@ func FindOIDCIdentityProviderConfigByClusterNameAndConfigName(ctx context.Contex
 	}
 
 	if output == nil || output.IdentityProviderConfig == nil || output.IdentityProviderConfig.Oidc == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
 		}

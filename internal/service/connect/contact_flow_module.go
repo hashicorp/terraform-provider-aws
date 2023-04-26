@@ -17,17 +17,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/mitchellh/go-homedir"
 )
 
-const awsMutexConnectContactFlowModuleKey = `aws_connect_contact_flow_module`
+const contactFlowModuleMutexKey = `aws_connect_contact_flow_module`
 
+// @SDKResource("aws_connect_contact_flow_module", name="Contact Flow Module")
+// @Tags(identifierAttribute="arn")
 func ResourceContactFlowModule() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceContactFlowModuleCreate,
-		ReadContext:   resourceContactFlowModuleRead,
-		UpdateContext: resourceContactFlowModuleUpdate,
-		DeleteContext: resourceContactFlowModuleDelete,
+		CreateWithoutTimeout: resourceContactFlowModuleCreate,
+		ReadWithoutTimeout:   resourceContactFlowModuleRead,
+		UpdateWithoutTimeout: resourceContactFlowModuleUpdate,
+		DeleteWithoutTimeout: resourceContactFlowModuleDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -76,16 +79,14 @@ func ResourceContactFlowModule() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 127),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
@@ -93,6 +94,7 @@ func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData
 	input := &connect.CreateContactFlowModuleInput{
 		Name:       aws.String(name),
 		InstanceId: aws.String(instanceID),
+		Tags:       GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -104,8 +106,8 @@ func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData
 		// Grab an exclusive lock so that we're only reading one contact flow module into
 		// memory at a time.
 		// See https://github.com/hashicorp/terraform/issues/9364
-		conns.GlobalMutexKV.Lock(awsMutexConnectContactFlowModuleKey)
-		defer conns.GlobalMutexKV.Unlock(awsMutexConnectContactFlowModuleKey)
+		conns.GlobalMutexKV.Lock(contactFlowModuleMutexKey)
+		defer conns.GlobalMutexKV.Unlock(contactFlowModuleMutexKey)
 		file, err := resourceContactFlowModuleLoadFileContent(filename)
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("unable to load %q: %w", filename, err))
@@ -113,10 +115,6 @@ func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData
 		input.Content = aws.String(file)
 	} else if v, ok := d.GetOk("content"); ok {
 		input.Content = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	output, err := conn.CreateContactFlowModuleWithContext(ctx, input)
@@ -135,9 +133,7 @@ func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, contactFlowModuleID, err := ContactFlowModuleParseID(d.Id())
 
@@ -171,22 +167,13 @@ func resourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("description", resp.ContactFlowModule.Description)
 	d.Set("content", resp.ContactFlowModule.Content)
 
-	tags := KeyValueTags(resp.ContactFlowModule.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
-	}
+	SetTagsOut(ctx, resp.ContactFlowModule.Tags)
 
 	return nil
 }
 
 func resourceContactFlowModuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, contactFlowModuleID, err := ContactFlowModuleParseID(d.Id())
 
@@ -220,8 +207,8 @@ func resourceContactFlowModuleUpdate(ctx context.Context, d *schema.ResourceData
 			// Grab an exclusive lock so that we're only reading one contact flow module into
 			// memory at a time.
 			// See https://github.com/hashicorp/terraform/issues/9364
-			conns.GlobalMutexKV.Lock(awsMutexConnectContactFlowModuleKey)
-			defer conns.GlobalMutexKV.Unlock(awsMutexConnectContactFlowModuleKey)
+			conns.GlobalMutexKV.Lock(contactFlowModuleMutexKey)
+			defer conns.GlobalMutexKV.Unlock(contactFlowModuleMutexKey)
 			file, err := resourceContactFlowModuleLoadFileContent(filename)
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("unable to load %q: %w", filename, err))
@@ -238,18 +225,11 @@ func resourceContactFlowModuleUpdate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
-		}
-	}
-
 	return resourceContactFlowModuleRead(ctx, d, meta)
 }
 
 func resourceContactFlowModuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, contactFlowModuleID, err := ContactFlowModuleParseID(d.Id())
 	if err != nil {

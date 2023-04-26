@@ -1,30 +1,35 @@
 package datasync
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceLocationHdfs() *schema.Resource {
+// @SDKResource("aws_datasync_location_hdfs", name="Location HDFS")
+// @Tags(identifierAttribute="id")
+func ResourceLocationHDFS() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceLocationHdfsCreate,
-		Read:   resourceLocationHdfsRead,
-		Update: resourceLocationHdfsUpdate,
-		Delete: resourceLocationHdfsDelete,
+		CreateWithoutTimeout: resourceLocationHDFSCreate,
+		ReadWithoutTimeout:   resourceLocationHDFSRead,
+		UpdateWithoutTimeout: resourceLocationHDFSUpdate,
+		DeleteWithoutTimeout: resourceLocationHDFSDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -136,8 +141,8 @@ func ResourceLocationHdfs() *schema.Resource {
 					return false
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"uri": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -148,17 +153,16 @@ func ResourceLocationHdfs() *schema.Resource {
 	}
 }
 
-func resourceLocationHdfsCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceLocationHDFSCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	input := &datasync.CreateLocationHdfsInput{
 		AgentArns:          flex.ExpandStringSet(d.Get("agent_arns").(*schema.Set)),
-		NameNodes:          expandDataSyncHdfsNameNodes(d.Get("name_node").(*schema.Set)),
+		NameNodes:          expandHDFSNameNodes(d.Get("name_node").(*schema.Set)),
 		AuthenticationType: aws.String(d.Get("authentication_type").(string)),
 		Subdirectory:       aws.String(d.Get("subdirectory").(string)),
-		Tags:               Tags(tags.IgnoreAWS()),
+		Tags:               GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("simple_user"); ok {
@@ -190,41 +194,40 @@ func resourceLocationHdfsCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if v, ok := d.GetOk("qop_configuration"); ok && len(v.([]interface{})) > 0 {
-		input.QopConfiguration = expandDataSyncHdfsQopConfiguration(v.([]interface{}))
+		input.QopConfiguration = expandHDFSQOPConfiguration(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating DataSync Location Hdfs: %s", input)
-	output, err := conn.CreateLocationHdfs(input)
+	log.Printf("[DEBUG] Creating DataSync Location HDFS: %s", input)
+	output, err := conn.CreateLocationHdfsWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating DataSync Location Hdfs: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating DataSync Location HDFS: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.LocationArn))
 
-	return resourceLocationHdfsRead(d, meta)
+	return append(diags, resourceLocationHDFSRead(ctx, d, meta)...)
 }
 
-func resourceLocationHdfsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceLocationHDFSRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
-	output, err := FindLocationHdfsByARN(conn, d.Id())
+	output, err := FindLocationHDFSByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] DataSync Location Hdfs (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] DataSync Location HDFS (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DataSync Location Hdfs (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DataSync Location HDFS (%s): %s", d.Id(), err)
 	}
 
 	subdirectory, err := SubdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading DataSync Location HDFS (%s): %s", d.Id(), err)
 	}
 
 	d.Set("agent_arns", flex.FlattenStringSet(output.AgentArns))
@@ -238,36 +241,20 @@ func resourceLocationHdfsRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("kms_key_provider_uri", output.KmsKeyProviderUri)
 	d.Set("subdirectory", subdirectory)
 
-	if err := d.Set("name_node", flattenDataSyncHdfsNameNodes(output.NameNodes)); err != nil {
-		return fmt.Errorf("error setting name_node: %w", err)
+	if err := d.Set("name_node", flattenHDFSNameNodes(output.NameNodes)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting name_node: %s", err)
 	}
 
-	if err := d.Set("qop_configuration", flattenDataSyncHdfsQopConfiguration(output.QopConfiguration)); err != nil {
-		return fmt.Errorf("error setting qop_configuration: %w", err)
+	if err := d.Set("qop_configuration", flattenHDFSQOPConfiguration(output.QopConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting qop_configuration: %s", err)
 	}
 
-	tags, err := ListTags(conn, d.Id())
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for DataSync Location Hdfs (%s): %w", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceLocationHdfsUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+func resourceLocationHDFSUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &datasync.UpdateLocationHdfsInput{
@@ -314,52 +301,46 @@ func resourceLocationHdfsUpdate(d *schema.ResourceData, meta interface{}) error 
 			input.AgentArns = flex.ExpandStringSet(d.Get("agent_arns").(*schema.Set))
 		}
 
-		if d.HasChange("name_noode") {
-			input.NameNodes = expandDataSyncHdfsNameNodes(d.Get("name_node").(*schema.Set))
+		if d.HasChange("name_node") {
+			input.NameNodes = expandHDFSNameNodes(d.Get("name_node").(*schema.Set))
 		}
 
 		if d.HasChange("qop_configuration") {
-			input.QopConfiguration = expandDataSyncHdfsQopConfiguration(d.Get("qop_configuration").([]interface{}))
+			input.QopConfiguration = expandHDFSQOPConfiguration(d.Get("qop_configuration").([]interface{}))
 		}
 
-		_, err := conn.UpdateLocationHdfs(input)
+		_, err := conn.UpdateLocationHdfsWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("error updating DataSync Location Hdfs (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating DataSync Location HDFS (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating Datasync Hdfs location (%s) tags: %w", d.Id(), err)
-		}
-	}
-	return resourceLocationHdfsRead(d, meta)
+	return append(diags, resourceLocationHDFSRead(ctx, d, meta)...)
 }
 
-func resourceLocationHdfsDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+func resourceLocationHDFSDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	input := &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Deleting DataSync Location Hdfs: %s", input)
-	_, err := conn.DeleteLocation(input)
+	log.Printf("[DEBUG] Deleting DataSync Location HDFS: %s", input)
+	_, err := conn.DeleteLocationWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting DataSync Location Hdfs (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting DataSync Location HDFS (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func expandDataSyncHdfsNameNodes(l *schema.Set) []*datasync.HdfsNameNode {
+func expandHDFSNameNodes(l *schema.Set) []*datasync.HdfsNameNode {
 	nameNodes := make([]*datasync.HdfsNameNode, 0)
 	for _, m := range l.List() {
 		raw := m.(map[string]interface{})
@@ -373,7 +354,7 @@ func expandDataSyncHdfsNameNodes(l *schema.Set) []*datasync.HdfsNameNode {
 	return nameNodes
 }
 
-func flattenDataSyncHdfsNameNodes(nodes []*datasync.HdfsNameNode) []map[string]interface{} {
+func flattenHDFSNameNodes(nodes []*datasync.HdfsNameNode) []map[string]interface{} {
 	dataResources := make([]map[string]interface{}, 0, len(nodes))
 
 	for _, raw := range nodes {
@@ -387,7 +368,7 @@ func flattenDataSyncHdfsNameNodes(nodes []*datasync.HdfsNameNode) []map[string]i
 	return dataResources
 }
 
-func expandDataSyncHdfsQopConfiguration(l []interface{}) *datasync.QopConfiguration {
+func expandHDFSQOPConfiguration(l []interface{}) *datasync.QopConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -402,7 +383,7 @@ func expandDataSyncHdfsQopConfiguration(l []interface{}) *datasync.QopConfigurat
 	return qopConfig
 }
 
-func flattenDataSyncHdfsQopConfiguration(qopConfig *datasync.QopConfiguration) []interface{} {
+func flattenHDFSQOPConfiguration(qopConfig *datasync.QopConfiguration) []interface{} {
 	if qopConfig == nil {
 		return []interface{}{}
 	}

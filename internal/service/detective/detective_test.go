@@ -3,36 +3,30 @@ package detective_test
 import (
 	"os"
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDetective_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"Graph": {
-			"basic":      testAccDetectiveGraph_basic,
-			"disappears": testAccDetectiveGraph_disappears,
-			"tags":       testAccDetectiveGraph_tags,
+			"basic":      testAccGraph_basic,
+			"disappears": testAccGraph_disappears,
+			"tags":       testAccGraph_tags,
 		},
 		"InvitationAccepter": {
-			"basic": testAccDetectiveInvitationAccepter_basic,
+			"basic": testAccInvitationAccepter_basic,
 		},
 		"Member": {
-			"basic":     testAccDetectiveMember_basic,
-			"disappear": testAccDetectiveMember_disappears,
-			"message":   testAccDetectiveMember_message,
+			"basic":     testAccMember_basic,
+			"disappear": testAccMember_disappears,
+			"message":   testAccMember_message,
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
 func testAccMemberFromEnv(t *testing.T) string {

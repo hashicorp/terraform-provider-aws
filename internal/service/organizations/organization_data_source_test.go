@@ -9,22 +9,23 @@ import (
 )
 
 func testAccOrganizationDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_organizations_organization.test"
 	dataSourceName := "data.aws_organizations_organization.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckOrganizationsAccount(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
-		ErrorCheck: acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:  acctest.Providers,
+		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSOrganizationResourceOnlyConfig,
+				Config: testAccOrganizationDataSourceConfig_resourceOnly,
 			},
 			{
-				Config: testAccCheckAWSOrganizationConfig,
+				Config: testAccOrganizationDataSourceConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "accounts.#", dataSourceName, "accounts.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
@@ -43,17 +44,17 @@ func testAccOrganizationDataSource_basic(t *testing.T) {
 			{
 				// This is to make sure the data source isn't around trying to read the resource
 				// when the resource is being destroyed
-				Config: testAccCheckAWSOrganizationResourceOnlyConfig,
+				Config: testAccOrganizationDataSourceConfig_resourceOnly,
 			},
 		},
 	})
 }
 
-const testAccCheckAWSOrganizationResourceOnlyConfig = `
+const testAccOrganizationDataSourceConfig_resourceOnly = `
 resource "aws_organizations_organization" "test" {}
 `
 
-const testAccCheckAWSOrganizationConfig = `
+const testAccOrganizationDataSourceConfig_basic = `
 resource "aws_organizations_organization" "test" {}
 
 data "aws_organizations_organization" "test" {}

@@ -1,5 +1,5 @@
 ---
-subcategory: "Route53"
+subcategory: "Route 53"
 layout: "aws"
 page_title: "AWS: aws_route53_hosted_zone_dnssec"
 description: |-
@@ -19,6 +19,8 @@ provider "aws" {
   region = "us-east-1"
 }
 
+data "aws_caller_identity" "current" {}
+
 resource "aws_kms_key" "example" {
   customer_master_key_spec = "ECC_NIST_P256"
   deletion_window_in_days  = 7
@@ -30,36 +32,23 @@ resource "aws_kms_key" "example" {
           "kms:DescribeKey",
           "kms:GetPublicKey",
           "kms:Sign",
+          "kms:Verify",
         ],
         Effect = "Allow"
         Principal = {
           Service = "dnssec-route53.amazonaws.com"
         }
+        Resource = "*"
         Sid      = "Allow Route 53 DNSSEC Service",
-        Resource = "*"
-      },
-      {
-        Action = "kms:CreateGrant",
-        Effect = "Allow"
-        Principal = {
-          Service = "dnssec-route53.amazonaws.com"
-        }
-        Sid      = "Allow Route 53 DNSSEC Service to CreateGrant",
-        Resource = "*"
-        Condition = {
-          Bool = {
-            "kms:GrantIsForAWSResource" = "true"
-          }
-        }
       },
       {
         Action = "kms:*"
         Effect = "Allow"
         Principal = {
-          AWS = "*"
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
         }
         Resource = "*"
-        Sid      = "IAM User Permissions"
+        Sid      = "Enable IAM User Permissions"
       },
     ]
     Version = "2012-10-17"

@@ -1,10 +1,10 @@
 package backup_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -12,11 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccBackupReportPlan_basic(t *testing.T) {
-	var reportPlan backup.DescribeReportPlanOutput
-
+	ctx := acctest.Context(t)
+	var reportPlan backup.ReportPlan
 	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	rName2 := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
 	originalDescription := "original description"
@@ -24,15 +25,15 @@ func TestAccBackupReportPlan_basic(t *testing.T) {
 	resourceName := "aws_backup_report_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccReportPlanPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckReportPlanDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccReportPlanPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReportPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupReportPlanConfig_basic(rName, rName2, originalDescription),
+				Config: testAccReportPlanConfig_basic(rName, rName2, originalDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportPlanExists(resourceName, &reportPlan),
+					testAccCheckReportPlanExists(ctx, resourceName, &reportPlan),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
@@ -53,9 +54,9 @@ func TestAccBackupReportPlan_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBackupReportPlanConfig_basic(rName, rName2, updatedDescription),
+				Config: testAccReportPlanConfig_basic(rName, rName2, updatedDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportPlanExists(resourceName, &reportPlan),
+					testAccCheckReportPlanExists(ctx, resourceName, &reportPlan),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
@@ -75,23 +76,23 @@ func TestAccBackupReportPlan_basic(t *testing.T) {
 }
 
 func TestAccBackupReportPlan_updateTags(t *testing.T) {
-	var reportPlan backup.DescribeReportPlanOutput
-
+	ctx := acctest.Context(t)
+	var reportPlan backup.ReportPlan
 	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	rName2 := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
 	description := "example description"
 	resourceName := "aws_backup_report_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccReportPlanPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckReportPlanDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccReportPlanPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReportPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupReportPlanConfig_basic(rName, rName2, description),
+				Config: testAccReportPlanConfig_basic(rName, rName2, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportPlanExists(resourceName, &reportPlan),
+					testAccCheckReportPlanExists(ctx, resourceName, &reportPlan),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
@@ -112,9 +113,9 @@ func TestAccBackupReportPlan_updateTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBackupReportPlanConfig_tags(rName, rName2, description),
+				Config: testAccReportPlanConfig_tags1(rName, rName2, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportPlanExists(resourceName, &reportPlan),
+					testAccCheckReportPlanExists(ctx, resourceName, &reportPlan),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
@@ -136,9 +137,9 @@ func TestAccBackupReportPlan_updateTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBackupReportPlanConfig_tagsUpdated(rName, rName2, description),
+				Config: testAccReportPlanConfig_tags2(rName, rName2, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportPlanExists(resourceName, &reportPlan),
+					testAccCheckReportPlanExists(ctx, resourceName, &reportPlan),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
@@ -160,23 +161,23 @@ func TestAccBackupReportPlan_updateTags(t *testing.T) {
 }
 
 func TestAccBackupReportPlan_updateReportDeliveryChannel(t *testing.T) {
-	var reportPlan backup.DescribeReportPlanOutput
-
+	ctx := acctest.Context(t)
+	var reportPlan backup.ReportPlan
 	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	rName2 := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
 	description := "example description"
 	resourceName := "aws_backup_report_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccReportPlanPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckReportPlanDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccReportPlanPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReportPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupReportPlanConfig_basic(rName, rName2, description),
+				Config: testAccReportPlanConfig_basic(rName, rName2, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportPlanExists(resourceName, &reportPlan),
+					testAccCheckReportPlanExists(ctx, resourceName, &reportPlan),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
@@ -197,9 +198,9 @@ func TestAccBackupReportPlan_updateReportDeliveryChannel(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBackupReportPlanConfig_reportDeliveryChannel(rName, rName2, description),
+				Config: testAccReportPlanConfig_deliveryChannel(rName, rName2, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportPlanExists(resourceName, &reportPlan),
+					testAccCheckReportPlanExists(ctx, resourceName, &reportPlan),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
@@ -219,25 +220,90 @@ func TestAccBackupReportPlan_updateReportDeliveryChannel(t *testing.T) {
 	})
 }
 
-func TestAccBackupReportPlan_disappears(t *testing.T) {
-	var reportPlan backup.DescribeReportPlanOutput
+func TestAccBackupReportPlan_updateReportSettings(t *testing.T) {
+	ctx := acctest.Context(t)
+	var reportPlan backup.ReportPlan
+	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	rName2 := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
+	description := "example description"
+	resourceName := "aws_backup_report_plan.test"
 
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccReportPlanPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReportPlanDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReportPlanConfig_basic(rName, rName2, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReportPlanExists(ctx, resourceName, &reportPlan),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "report_delivery_channel.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "report_delivery_channel.0.formats.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "report_delivery_channel.0.formats.0", "CSV"),
+					resource.TestCheckResourceAttrPair(resourceName, "report_delivery_channel.0.s3_bucket_name", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "report_setting.#", "1"),
+					resource.TestCheckNoResourceAttr(resourceName, "report_setting.0.accounts"),
+					resource.TestCheckNoResourceAttr(resourceName, "report_setting.0.regions"),
+					resource.TestCheckResourceAttr(resourceName, "report_setting.0.report_template", "RESTORE_JOB_REPORT"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Report Plan"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccReportPlanConfig_reportSettings(rName, rName2, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReportPlanExists(ctx, resourceName, &reportPlan),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "report_delivery_channel.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "report_delivery_channel.0.formats.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "report_delivery_channel.0.formats.0", "CSV"),
+					resource.TestCheckResourceAttrPair(resourceName, "report_delivery_channel.0.s3_bucket_name", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "report_setting.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "report_setting.0.accounts.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "report_setting.0.accounts.0", "data.aws_caller_identity.current", "id"),
+					resource.TestCheckResourceAttr(resourceName, "report_setting.0.regions.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "report_setting.0.regions.0", "data.aws_region.current", "name"),
+					resource.TestCheckResourceAttr(resourceName, "report_setting.0.report_template", "RESTORE_JOB_REPORT"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Report Plan"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccBackupReportPlan_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var reportPlan backup.ReportPlan
 	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	rName2 := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
 	description := "disappears"
 	resourceName := "aws_backup_report_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccReportPlanPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckReportPlanDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccReportPlanPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReportPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackupReportPlanConfig_basic(rName, rName2, description),
+				Config: testAccReportPlanConfig_basic(rName, rName2, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportPlanExists(resourceName, &reportPlan),
-					acctest.CheckResourceDisappears(acctest.Provider, tfbackup.ResourceReportPlan(), resourceName),
+					testAccCheckReportPlanExists(ctx, resourceName, &reportPlan),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbackup.ResourceReportPlan(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -245,10 +311,10 @@ func TestAccBackupReportPlan_disappears(t *testing.T) {
 	})
 }
 
-func testAccReportPlanPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
+func testAccReportPlanPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
 
-	_, err := conn.ListReportPlans(&backup.ListReportPlansInput{})
+	_, err := conn.ListReportPlansWithContext(ctx, &backup.ListReportPlansInput{})
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -259,55 +325,63 @@ func testAccReportPlanPreCheck(t *testing.T) {
 	}
 }
 
-func testAccCheckReportPlanDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_backup_report_plan" {
-			continue
-		}
-
-		input := &backup.DescribeReportPlanInput{
-			ReportPlanName: aws.String(rs.Primary.ID),
-		}
-
-		resp, err := conn.DescribeReportPlan(input)
-
-		if err == nil {
-			if aws.StringValue(resp.ReportPlan.ReportPlanName) == rs.Primary.ID {
-				return fmt.Errorf("Backup Report Plan '%s' was not deleted properly", rs.Primary.ID)
-			}
-		}
-	}
-
-	return nil
-}
-
-func testAccCheckReportPlanExists(name string, reportPlan *backup.DescribeReportPlanOutput) resource.TestCheckFunc {
+func testAccCheckReportPlanDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
 
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_backup_report_plan" {
+				continue
+			}
+
+			_, err := tfbackup.FindReportPlanByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Backup Report Plan %s still exists", rs.Primary.ID)
 		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
-		input := &backup.DescribeReportPlanInput{
-			ReportPlanName: aws.String(rs.Primary.ID),
-		}
-		resp, err := conn.DescribeReportPlan(input)
-
-		if err != nil {
-			return err
-		}
-
-		*reportPlan = *resp
 
 		return nil
 	}
 }
 
-func testAccBackupReportPlanBaseConfig(bucketName string) string {
+func testAccCheckReportPlanExists(ctx context.Context, n string, v *backup.ReportPlan) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Backup Report Plan ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
+
+		output, err := tfbackup.FindReportPlanByName(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccReportPlanBaseConfig(bucketName string) string {
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+data "aws_caller_identity" "current" {}
+
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
@@ -322,10 +396,8 @@ resource "aws_s3_bucket_public_access_block" "test" {
 `, bucketName)
 }
 
-func testAccBackupReportPlanConfig_basic(rName, rName2, label string) string {
-	return acctest.ConfigCompose(
-		testAccBackupReportPlanBaseConfig(rName),
-		fmt.Sprintf(`
+func testAccReportPlanConfig_basic(rName, rName2, label string) string {
+	return acctest.ConfigCompose(testAccReportPlanBaseConfig(rName), fmt.Sprintf(`
 resource "aws_backup_report_plan" "test" {
   name        = %[1]q
   description = %[2]q
@@ -348,10 +420,8 @@ resource "aws_backup_report_plan" "test" {
 `, rName2, label))
 }
 
-func testAccBackupReportPlanConfig_tags(rName, rName2, label string) string {
-	return acctest.ConfigCompose(
-		testAccBackupReportPlanBaseConfig(rName),
-		fmt.Sprintf(`
+func testAccReportPlanConfig_tags1(rName, rName2, label string) string {
+	return acctest.ConfigCompose(testAccReportPlanBaseConfig(rName), fmt.Sprintf(`
 resource "aws_backup_report_plan" "test" {
   name        = %[1]q
   description = %[2]q
@@ -375,10 +445,8 @@ resource "aws_backup_report_plan" "test" {
 `, rName2, label))
 }
 
-func testAccBackupReportPlanConfig_tagsUpdated(rName, rName2, label string) string {
-	return acctest.ConfigCompose(
-		testAccBackupReportPlanBaseConfig(rName),
-		fmt.Sprintf(`
+func testAccReportPlanConfig_tags2(rName, rName2, label string) string {
+	return acctest.ConfigCompose(testAccReportPlanBaseConfig(rName), fmt.Sprintf(`
 resource "aws_backup_report_plan" "test" {
   name        = %[1]q
   description = %[2]q
@@ -403,10 +471,8 @@ resource "aws_backup_report_plan" "test" {
 `, rName2, label))
 }
 
-func testAccBackupReportPlanConfig_reportDeliveryChannel(rName, rName2, label string) string {
-	return acctest.ConfigCompose(
-		testAccBackupReportPlanBaseConfig(rName),
-		fmt.Sprintf(`
+func testAccReportPlanConfig_deliveryChannel(rName, rName2, label string) string {
+	return acctest.ConfigCompose(testAccReportPlanBaseConfig(rName), fmt.Sprintf(`
 resource "aws_backup_report_plan" "test" {
   name        = %[1]q
   description = %[2]q
@@ -420,6 +486,36 @@ resource "aws_backup_report_plan" "test" {
   }
 
   report_setting {
+    report_template = "RESTORE_JOB_REPORT"
+  }
+
+  tags = {
+    "Name" = "Test Report Plan"
+  }
+}
+`, rName2, label))
+}
+
+func testAccReportPlanConfig_reportSettings(rName, rName2, label string) string {
+	return acctest.ConfigCompose(testAccReportPlanBaseConfig(rName), fmt.Sprintf(`
+resource "aws_backup_report_plan" "test" {
+  name        = %[1]q
+  description = %[2]q
+
+  report_delivery_channel {
+    formats = [
+      "CSV"
+    ]
+    s3_bucket_name = aws_s3_bucket.test.id
+  }
+
+  report_setting {
+    accounts = [
+      data.aws_caller_identity.current.id
+    ]
+    regions = [
+      data.aws_region.current.name
+    ]
     report_template = "RESTORE_JOB_REPORT"
   }
 

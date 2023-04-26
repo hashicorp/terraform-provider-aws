@@ -1,5 +1,5 @@
 ---
-subcategory: "Image Builder"
+subcategory: "EC2 Image Builder"
 layout: "aws"
 page_title: "AWS: aws_imagebuilder_infrastructure_configuration"
 description: |-
@@ -22,7 +22,7 @@ data "aws_imagebuilder_infrastructure_configuration" "example" {
 
 The following arguments are required:
 
-* `arn` - (Required) Amazon Resource Name (ARN) of the infrastructure configuration.
+* `arn` - (Required) ARN of the infrastructure configuration.
 
 ## Attributes Reference
 
@@ -31,6 +31,9 @@ In addition to all arguments above, the following attributes are exported:
 * `date_created` - Date the infrastructure configuration was created.
 * `date_created` - Date the infrastructure configuration was updated.
 * `description` - Description of the infrastructure configuration.
+* `instance_metadata_options` - Nested list of instance metadata options for the HTTP requests that pipeline builds use to launch EC2 build and test instances.
+    * `http_put_response_hop_limit` - Number of hops that an instance can traverse to reach its destonation.
+    * `http_tokens` - Whether a signed token is required for instance metadata retrieval requests.
 * `instance_profile_name` - Name of the IAM Instance Profile associated with the configuration.
 * `instance_types` - Set of EC2 Instance Types associated with the configuration.
 * `key_pair` - Name of the EC2 Key Pair associated with the configuration.
@@ -41,7 +44,7 @@ In addition to all arguments above, the following attributes are exported:
 * `name` - Name of the infrastructure configuration.
 * `resource_tags` - Key-value map of resource tags for the infrastructure created by the infrastructure configuration.
 * `security_group_ids` - Set of EC2 Security Group identifiers associated with the configuration.
-* `sns_topic_arn` - Amazon Resource Name (ARN) of the SNS Topic associated with the configuration.
+* `sns_topic_arn` - ARN of the SNS Topic associated with the configuration.
 * `subnet_id` - Identifier of the EC2 Subnet associated with the configuration.
 * `tags` - Key-value map of resource tags for the infrastructure configuration.
 * `terminate_instance_on_failure` - Whether instances are terminated on failure.

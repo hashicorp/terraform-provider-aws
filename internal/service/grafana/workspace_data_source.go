@@ -1,18 +1,23 @@
 package grafana
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/managedgrafana"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_grafana_workspace")
 func DataSourceWorkspace() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceWorkspaceRead,
+		ReadWithoutTimeout: dataSourceWorkspaceRead,
 
 		Schema: map[string]*schema.Schema{
 			"account_access_type": {
@@ -91,6 +96,7 @@ func DataSourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tftags.TagsSchemaComputed(),
 			"workspace_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -99,14 +105,16 @@ func DataSourceWorkspace() *schema.Resource {
 	}
 }
 
-func dataSourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GrafanaConn
+func dataSourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GrafanaConn()
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	workspaceID := d.Get("workspace_id").(string)
-	workspace, err := FindWorkspaceByID(conn, workspaceID)
+	workspace, err := FindWorkspaceByID(ctx, conn, workspaceID)
 
 	if err != nil {
-		return fmt.Errorf("error reading Grafana Workspace (%s): %w", workspaceID, err)
+		return sdkdiag.AppendErrorf(diags, "reading Grafana Workspace (%s): %s", workspaceID, err)
 	}
 
 	d.SetId(workspaceID)
@@ -137,5 +145,9 @@ func dataSourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("stack_set_name", workspace.StackSetName)
 	d.Set("status", workspace.Status)
 
-	return nil
+	if err := d.Set("tags", KeyValueTags(ctx, workspace.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+	}
+
+	return diags
 }

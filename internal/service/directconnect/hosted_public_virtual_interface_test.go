@@ -1,6 +1,7 @@
 package directconnect_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"regexp"
@@ -11,19 +12,18 @@ import (
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDirectConnectHostedPublicVirtualInterface_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	key := "DX_CONNECTION_ID"
 	connectionId := os.Getenv(key)
 	if connectionId == "" {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	var providers []*schema.Provider
 	var vif directconnect.VirtualInterface
 	resourceName := "aws_dx_hosted_public_virtual_interface.test"
 	accepterResourceName := "aws_dx_hosted_public_virtual_interface_accepter.test"
@@ -35,17 +35,17 @@ func TestAccDirectConnectHostedPublicVirtualInterface_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckHostedPublicVirtualInterfaceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckHostedPublicVirtualInterfaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxHostedPublicVirtualInterfaceConfig_basic(connectionId, rName, amazonAddress, customerAddress, bgpAsn, vlan),
+				Config: testAccHostedPublicVirtualInterfaceConfig_basic(connectionId, rName, amazonAddress, customerAddress, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostedPublicVirtualInterfaceExists(resourceName, &vif),
+					testAccCheckHostedPublicVirtualInterfaceExists(ctx, resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
@@ -68,7 +68,7 @@ func TestAccDirectConnectHostedPublicVirtualInterface_basic(t *testing.T) {
 			},
 			// Test import.
 			{
-				Config:            testAccDxHostedPublicVirtualInterfaceConfig_basic(connectionId, rName, amazonAddress, customerAddress, bgpAsn, vlan),
+				Config:            testAccHostedPublicVirtualInterfaceConfig_basic(connectionId, rName, amazonAddress, customerAddress, bgpAsn, vlan),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -78,13 +78,13 @@ func TestAccDirectConnectHostedPublicVirtualInterface_basic(t *testing.T) {
 }
 
 func TestAccDirectConnectHostedPublicVirtualInterface_accepterTags(t *testing.T) {
+	ctx := acctest.Context(t)
 	key := "DX_CONNECTION_ID"
 	connectionId := os.Getenv(key)
 	if connectionId == "" {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	var providers []*schema.Provider
 	var vif directconnect.VirtualInterface
 	resourceName := "aws_dx_hosted_public_virtual_interface.test"
 	accepterResourceName := "aws_dx_hosted_public_virtual_interface_accepter.test"
@@ -96,17 +96,17 @@ func TestAccDirectConnectHostedPublicVirtualInterface_accepterTags(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckHostedPublicVirtualInterfaceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckHostedPublicVirtualInterfaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxHostedPublicVirtualInterfaceConfig_accepterTags(connectionId, rName, amazonAddress, customerAddress, bgpAsn, vlan),
+				Config: testAccHostedPublicVirtualInterfaceConfig_accepterTags(connectionId, rName, amazonAddress, customerAddress, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostedPublicVirtualInterfaceExists(resourceName, &vif),
+					testAccCheckHostedPublicVirtualInterfaceExists(ctx, resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "amazon_address", amazonAddress),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
@@ -131,9 +131,9 @@ func TestAccDirectConnectHostedPublicVirtualInterface_accepterTags(t *testing.T)
 				),
 			},
 			{
-				Config: testAccDxHostedPublicVirtualInterfaceConfig_accepterTagsUpdated(connectionId, rName, amazonAddress, customerAddress, bgpAsn, vlan),
+				Config: testAccHostedPublicVirtualInterfaceConfig_accepterTagsUpdated(connectionId, rName, amazonAddress, customerAddress, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostedPublicVirtualInterfaceExists(resourceName, &vif),
+					testAccCheckHostedPublicVirtualInterfaceExists(ctx, resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "amazon_address", amazonAddress),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
@@ -161,15 +161,17 @@ func TestAccDirectConnectHostedPublicVirtualInterface_accepterTags(t *testing.T)
 	})
 }
 
-func testAccCheckHostedPublicVirtualInterfaceDestroy(s *terraform.State) error {
-	return testAccCheckDxVirtualInterfaceDestroy(s, "aws_dx_hosted_public_virtual_interface")
+func testAccCheckHostedPublicVirtualInterfaceDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return testAccCheckVirtualInterfaceDestroy(ctx, s, "aws_dx_hosted_public_virtual_interface")
+	}
 }
 
-func testAccCheckHostedPublicVirtualInterfaceExists(name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
-	return testAccCheckDxVirtualInterfaceExists(name, vif)
+func testAccCheckHostedPublicVirtualInterfaceExists(ctx context.Context, name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
+	return testAccCheckVirtualInterfaceExists(ctx, name, vif)
 }
 
-func testAccDxHostedPublicVirtualInterfaceConfig_base(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
+func testAccHostedPublicVirtualInterfaceConfig_base(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 # Creator
 resource "aws_dx_hosted_public_virtual_interface" "test" {
@@ -195,8 +197,8 @@ data "aws_caller_identity" "accepter" {
 `, cid, rName, amzAddr, custAddr, bgpAsn, vlan)
 }
 
-func testAccDxHostedPublicVirtualInterfaceConfig_basic(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
-	return testAccDxHostedPublicVirtualInterfaceConfig_base(cid, rName, amzAddr, custAddr, bgpAsn, vlan) + `
+func testAccHostedPublicVirtualInterfaceConfig_basic(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
+	return testAccHostedPublicVirtualInterfaceConfig_base(cid, rName, amzAddr, custAddr, bgpAsn, vlan) + `
 resource "aws_dx_hosted_public_virtual_interface_accepter" "test" {
   provider = "awsalternate"
 
@@ -205,8 +207,8 @@ resource "aws_dx_hosted_public_virtual_interface_accepter" "test" {
 `
 }
 
-func testAccDxHostedPublicVirtualInterfaceConfig_accepterTags(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
-	return testAccDxHostedPublicVirtualInterfaceConfig_base(cid, rName, amzAddr, custAddr, bgpAsn, vlan) + fmt.Sprintf(`
+func testAccHostedPublicVirtualInterfaceConfig_accepterTags(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
+	return testAccHostedPublicVirtualInterfaceConfig_base(cid, rName, amzAddr, custAddr, bgpAsn, vlan) + fmt.Sprintf(`
 resource "aws_dx_hosted_public_virtual_interface_accepter" "test" {
   provider = "awsalternate"
 
@@ -221,8 +223,8 @@ resource "aws_dx_hosted_public_virtual_interface_accepter" "test" {
 `, rName)
 }
 
-func testAccDxHostedPublicVirtualInterfaceConfig_accepterTagsUpdated(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
-	return testAccDxHostedPublicVirtualInterfaceConfig_base(cid, rName, amzAddr, custAddr, bgpAsn, vlan) + fmt.Sprintf(`
+func testAccHostedPublicVirtualInterfaceConfig_accepterTagsUpdated(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
+	return testAccHostedPublicVirtualInterfaceConfig_base(cid, rName, amzAddr, custAddr, bgpAsn, vlan) + fmt.Sprintf(`
 resource "aws_dx_hosted_public_virtual_interface_accepter" "test" {
   provider = "awsalternate"
 

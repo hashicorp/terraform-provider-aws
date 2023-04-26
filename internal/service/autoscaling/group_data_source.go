@@ -1,24 +1,21 @@
 package autoscaling
 
 import (
-	"fmt"
-	"log"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_autoscaling_group")
 func DataSourceGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceGroupRead,
+		ReadWithoutTimeout: dataSourceGroupRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -37,6 +34,17 @@ func DataSourceGroup() *schema.Resource {
 			"desired_capacity": {
 				Type:     schema.TypeInt,
 				Computed: true,
+			},
+			"desired_capacity_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"enabled_metrics": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 			"health_check_grace_period": {
 				Type:     schema.TypeInt,
@@ -77,16 +85,20 @@ func DataSourceGroup() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"new_instances_protected_from_scale_in": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
 			"max_size": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"min_size": {
 				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"new_instances_protected_from_scale_in": {
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"placement_group": {
@@ -123,74 +135,45 @@ func DataSourceGroup() *schema.Resource {
 	}
 }
 
-func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	groupName := d.Get("name").(string)
-
-	input := &autoscaling.DescribeAutoScalingGroupsInput{
-		AutoScalingGroupNames: []*string{
-			aws.String(groupName),
-		},
-	}
-
-	log.Printf("[DEBUG] Reading Autoscaling Group: %s", input)
-
-	result, err := conn.DescribeAutoScalingGroups(input)
-
-	log.Printf("[DEBUG] Checking for error: %s", err)
+	group, err := FindGroupByName(ctx, conn, groupName)
 
 	if err != nil {
-		return fmt.Errorf("error describing AutoScaling Groups: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Group (%s): %s", groupName, err)
 	}
-
-	log.Printf("[DEBUG] Found Autoscaling Group: %s", result)
-
-	if len(result.AutoScalingGroups) < 1 {
-		return fmt.Errorf("Your query did not return any results. Please try a different search criteria.")
-	}
-
-	if len(result.AutoScalingGroups) > 1 {
-		return fmt.Errorf("Your query returned more than one result. Please try a more " +
-			"specific search criteria.")
-	}
-
-	// If execution made it to this point, we have exactly one 1 group returned
-	// and this is a safe operation
-	group := result.AutoScalingGroups[0]
-
-	log.Printf("[DEBUG] aws_autoscaling_group - Single Auto Scaling Group found: %s", *group.AutoScalingGroupName)
 
 	d.SetId(aws.StringValue(group.AutoScalingGroupName))
-	d.Set("name", group.AutoScalingGroupName)
 	d.Set("arn", group.AutoScalingGroupARN)
-	if err := d.Set("availability_zones", aws.StringValueSlice(group.AvailabilityZones)); err != nil {
-		return fmt.Errorf("error setting availability_zones: %w", err)
-	}
+	d.Set("availability_zones", aws.StringValueSlice(group.AvailabilityZones))
 	d.Set("default_cooldown", group.DefaultCooldown)
 	d.Set("desired_capacity", group.DesiredCapacity)
+	d.Set("desired_capacity_type", group.DesiredCapacityType)
+	d.Set("enabled_metrics", flattenEnabledMetrics(group.EnabledMetrics))
 	d.Set("health_check_grace_period", group.HealthCheckGracePeriod)
 	d.Set("health_check_type", group.HealthCheckType)
 	d.Set("launch_configuration", group.LaunchConfigurationName)
-	if err := d.Set("launch_template", flattenLaunchTemplateSpecification(group.LaunchTemplate)); err != nil {
-		return fmt.Errorf("error setting launch_template: %w", err)
+	if group.LaunchTemplate != nil {
+		if err := d.Set("launch_template", []interface{}{flattenLaunchTemplateSpecification(group.LaunchTemplate)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting launch_template: %s", err)
+		}
+	} else {
+		d.Set("launch_template", nil)
 	}
-	if err := d.Set("load_balancers", aws.StringValueSlice(group.LoadBalancerNames)); err != nil {
-		return fmt.Errorf("error setting load_balancers: %w", err)
-	}
-	d.Set("new_instances_protected_from_scale_in", group.NewInstancesProtectedFromScaleIn)
+	d.Set("load_balancers", aws.StringValueSlice(group.LoadBalancerNames))
 	d.Set("max_size", group.MaxSize)
 	d.Set("min_size", group.MinSize)
+	d.Set("name", group.AutoScalingGroupName)
+	d.Set("new_instances_protected_from_scale_in", group.NewInstancesProtectedFromScaleIn)
 	d.Set("placement_group", group.PlacementGroup)
 	d.Set("service_linked_role_arn", group.ServiceLinkedRoleARN)
 	d.Set("status", group.Status)
-	if err := d.Set("target_group_arns", aws.StringValueSlice(group.TargetGroupARNs)); err != nil {
-		return fmt.Errorf("error setting target_group_arns: %w", err)
-	}
-	if err := d.Set("termination_policies", aws.StringValueSlice(group.TerminationPolicies)); err != nil {
-		return fmt.Errorf("error setting termination_policies: %w", err)
-	}
+	d.Set("target_group_arns", aws.StringValueSlice(group.TargetGroupARNs))
+	d.Set("termination_policies", aws.StringValueSlice(group.TerminationPolicies))
 	d.Set("vpc_zone_identifier", group.VPCZoneIdentifier)
 
-	return nil
+	return diags
 }

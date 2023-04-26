@@ -43,9 +43,10 @@ The following arguments are supported:
 * `name` - (Required) The unique name of the report plan. The name must be between 1 and 256 characters, starting with a letter, and consisting of letters, numbers, and underscores.
 * `report_delivery_channel` - (Required) An object that contains information about where and how to deliver your reports, specifically your Amazon S3 bucket name, S3 key prefix, and the formats of your reports. Detailed below.
 * `report_setting` - (Required) An object that identifies the report template for the report. Reports are built using a report template. Detailed below.
-* `tags` - (Optional) Metadata that you can assign to help organize the report plans you create. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Metadata that you can assign to help organize the report plans you create. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Report Delivery Channel Arguments
+
 For **report_delivery_channel** the following attributes are supported:
 
 * `formats` - (Optional) A list of the format of your reports: CSV, JSON, or both. If not specified, the default format is CSV.
@@ -53,10 +54,14 @@ For **report_delivery_channel** the following attributes are supported:
 * `s3_key_prefix` - (Optional) The prefix for where Backup Audit Manager delivers your reports to Amazon S3. The prefix is this part of the following path: s3://your-bucket-name/prefix/Backup/us-west-2/year/month/day/report-name. If not specified, there is no prefix.
 
 ### Report Setting Arguments
+
 For **report_setting** the following attributes are supported:
 
+* `accounts` - (Optional) Specifies the list of accounts a report covers.
 * `framework_arns` - (Optional) Specifies the Amazon Resource Names (ARNs) of the frameworks a report covers.
 * `number_of_frameworks` - (Optional) Specifies the number of frameworks a report covers.
+* `organization_units` - (Optional) Specifies the list of Organizational Units a report covers.
+* `regions` - (Optional) Specifies the list of regions a report covers.
 * `report_template` - (Required) Identifies the report template for the report. Reports are built using a report template. The report templates are: `RESOURCE_COMPLIANCE_REPORT` | `CONTROL_COMPLIANCE_REPORT` | `BACKUP_JOB_REPORT` | `COPY_JOB_REPORT` | `RESTORE_JOB_REPORT`.
 
 ## Attributes Reference
@@ -67,7 +72,7 @@ In addition to all arguments above, the following attributes are exported:
 * `creation_time` - The date and time that a report plan is created, in Unix format and Coordinated Universal Time (UTC).
 * `deployment_status` - The deployment status of a report plan. The statuses are: `CREATE_IN_PROGRESS` | `UPDATE_IN_PROGRESS` | `DELETE_IN_PROGRESS` | `COMPLETED`.
 * `id` - The id of the backup report plan.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

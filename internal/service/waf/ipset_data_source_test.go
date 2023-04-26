@@ -12,21 +12,22 @@ import (
 )
 
 func TestAccWAFIPSetDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_waf_ipset.ipset"
 	datasourceName := "data.aws_waf_ipset.ipset"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(waf.EndpointsID, t) },
-		ErrorCheck: acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, waf.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccIPSetDataSource_NonExistent,
+				Config:      testAccIPSetDataSourceConfig_nonExistent,
 				ExpectError: regexp.MustCompile(`WAF IP Set not found`),
 			},
 			{
-				Config: testAccIPSetDataSource_Name(name),
+				Config: testAccIPSetDataSourceConfig_name(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
@@ -36,7 +37,7 @@ func TestAccWAFIPSetDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccIPSetDataSource_Name(name string) string {
+func testAccIPSetDataSourceConfig_name(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_ipset" "ipset" {
   name = %[1]q
@@ -48,7 +49,7 @@ data "aws_waf_ipset" "ipset" {
 `, name)
 }
 
-const testAccIPSetDataSource_NonExistent = `
+const testAccIPSetDataSourceConfig_nonExistent = `
 data "aws_waf_ipset" "ipset" {
   name = "tf-acc-test-does-not-exist"
 }

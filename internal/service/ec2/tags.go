@@ -1,53 +1,50 @@
 package ec2
 
 import (
+	"context"
+	"fmt"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// getInstanceTagValue returns instance tag value by name
-func getInstanceTagValue(conn *ec2.EC2, instanceId string, tagKey string) (*string, error) {
-	tagsResp, err := conn.DescribeTags(&ec2.DescribeTagsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("resource-id"),
-				Values: []*string{aws.String(instanceId)},
-			},
-			{
-				Name:   aws.String("key"),
-				Values: []*string{aws.String(tagKey)},
-			},
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
+const eventualConsistencyTimeout = 5 * time.Minute
 
-	if len(tagsResp.Tags) != 1 {
-		return nil, nil
-	}
-
-	return tagsResp.Tags[0].Value, nil
-}
-
-// ec2TagSpecificationsFromKeyValueTags returns the tag specifications for the given KeyValueTags object and resource type.
-func ec2TagSpecificationsFromKeyValueTags(tags tftags.KeyValueTags, t string) []*ec2.TagSpecification {
+// createTags creates ec2 service tags for new resources.
+func createTags(ctx context.Context, conn ec2iface.EC2API, identifier string, tags []*ec2.Tag) error {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	return []*ec2.TagSpecification{
-		{
-			ResourceType: aws.String(t),
-			Tags:         Tags(tags.IgnoreAWS()),
+	newTagsMap := KeyValueTags(ctx, tags)
+
+	_, err := tfresource.RetryWhen(ctx, eventualConsistencyTimeout,
+		func() (interface{}, error) {
+			return nil, UpdateTags(ctx, conn, identifier, nil, newTagsMap)
 		},
+		func(err error) (bool, error) {
+			if tfawserr.ErrCodeContains(err, ".NotFound") {
+				return true, err
+			}
+
+			return false, err
+		})
+
+	if err != nil {
+		return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 	}
+
+	return nil
 }
 
-// ec2TagSpecificationsFromMap returns the tag specifications for the given tag key/value map and resource type.
-func ec2TagSpecificationsFromMap(m map[string]interface{}, t string) []*ec2.TagSpecification {
+// tagSpecificationsFromMap returns the tag specifications for the given tag key/value map and resource type.
+func tagSpecificationsFromMap(ctx context.Context, m map[string]interface{}, t string) []*ec2.TagSpecification {
 	if len(m) == 0 {
 		return nil
 	}
@@ -55,14 +52,31 @@ func ec2TagSpecificationsFromMap(m map[string]interface{}, t string) []*ec2.TagS
 	return []*ec2.TagSpecification{
 		{
 			ResourceType: aws.String(t),
-			Tags:         Tags(tftags.New(m).IgnoreAWS()),
+			Tags:         Tags(tftags.New(ctx, m).IgnoreAWS()),
 		},
 	}
 }
 
-// ec2TagsFromTagDescriptions returns the tags from the given tag descriptions.
+// getTagSpecificationsIn returns EC2 service tags from Context.
+// nil is returned if there are no input tags.
+func getTagSpecificationsIn(ctx context.Context, resourceType string) []*ec2.TagSpecification {
+	tags := GetTagsIn(ctx)
+
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return []*ec2.TagSpecification{
+		{
+			ResourceType: aws.String(resourceType),
+			Tags:         tags,
+		},
+	}
+}
+
+// tagsFromTagDescriptions returns the tags from the given tag descriptions.
 // No attempt is made to remove duplicates.
-func ec2TagsFromTagDescriptions(tds []*ec2.TagDescription) []*ec2.Tag {
+func tagsFromTagDescriptions(tds []*ec2.TagDescription) []*ec2.Tag {
 	if len(tds) == 0 {
 		return nil
 	}
@@ -79,10 +93,8 @@ func ec2TagsFromTagDescriptions(tds []*ec2.TagDescription) []*ec2.Tag {
 }
 
 func tagsSchemaConflictsWith(conflictsWith []string) *schema.Schema {
-	return &schema.Schema{
-		ConflictsWith: conflictsWith,
-		Type:          schema.TypeMap,
-		Optional:      true,
-		Elem:          &schema.Schema{Type: schema.TypeString},
-	}
+	v := tftags.TagsSchema()
+	v.ConflictsWith = conflictsWith
+
+	return v
 }

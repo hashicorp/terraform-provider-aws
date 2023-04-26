@@ -1,6 +1,7 @@
 package ssoadmin_test
 
 import (
+	"context"
 	"regexp"
 	"testing"
 
@@ -10,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func testAccPreCheckInstances(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
+func testAccPreCheckInstances(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn()
 
 	var instances []*ssoadmin.InstanceMetadata
-	err := conn.ListInstancesPages(&ssoadmin.ListInstancesInput{}, func(page *ssoadmin.ListInstancesOutput, lastPage bool) bool {
+	err := conn.ListInstancesPagesWithContext(ctx, &ssoadmin.ListInstancesInput{}, func(page *ssoadmin.ListInstancesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -38,15 +39,16 @@ func testAccPreCheckInstances(t *testing.T) {
 }
 
 func TestAccSSOAdminInstancesDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ssoadmin_instances.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
-		ErrorCheck: acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckInstances(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstancesBasicDataSourceConfig,
+				Config: testAccInstancesDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "identity_store_ids.#", "1"),
@@ -58,4 +60,4 @@ func TestAccSSOAdminInstancesDataSource_basic(t *testing.T) {
 	})
 }
 
-const testAccInstancesBasicDataSourceConfig = `data "aws_ssoadmin_instances" "test" {}`
+const testAccInstancesDataSourceConfig_basic = `data "aws_ssoadmin_instances" "test" {}`

@@ -1,5 +1,5 @@
 ---
-subcategory: "API Gateway (REST APIs)"
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_documentation_version"
 description: |-
@@ -38,9 +38,9 @@ resource "aws_api_gateway_documentation_part" "example" {
 
 The following argument is supported:
 
-* `version` - (Required) The version identifier of the API documentation snapshot.
-* `rest_api_id` - (Required) The ID of the associated Rest API
-* `description` - (Optional) The description of the API documentation version.
+* `version` - (Required) Version identifier of the API documentation snapshot.
+* `rest_api_id` - (Required) ID of the associated Rest API
+* `description` - (Optional) Description of the API documentation version.
 
 ## Attributes Reference
 

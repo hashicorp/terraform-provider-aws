@@ -1,55 +1,71 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-const (
-	carrierGatewayStateNotFound = "NotFound"
-	carrierGatewayStateUnknown  = "Unknown"
-)
-
-// StatusCarrierGatewayState fetches the CarrierGateway and its State
-func StatusCarrierGatewayState(conn *ec2.EC2, carrierGatewayID string) resource.StateRefreshFunc {
+func StatusAvailabilityZoneGroupOptInStatus(ctx context.Context, conn *ec2.EC2, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		carrierGateway, err := FindCarrierGatewayByID(conn, carrierGatewayID)
-		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidCarrierGatewayIDNotFound) {
-			return nil, carrierGatewayStateNotFound, nil
+		output, err := FindAvailabilityZoneGroupByName(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
+
 		if err != nil {
-			return nil, carrierGatewayStateUnknown, err
+			return nil, "", err
 		}
 
-		if carrierGateway == nil {
-			return nil, carrierGatewayStateNotFound, nil
+		return output, aws.StringValue(output.OptInStatus), nil
+	}
+}
+
+func StatusCapacityReservationState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindCapacityReservationByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
-		state := aws.StringValue(carrierGateway.State)
-
-		if state == ec2.CarrierGatewayStateDeleted {
-			return nil, carrierGatewayStateNotFound, nil
+		if err != nil {
+			return nil, "", err
 		}
 
-		return carrierGateway, state, nil
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusCarrierGatewayState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindCarrierGatewayByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
 	}
 }
 
 // StatusLocalGatewayRouteTableVPCAssociationState fetches the LocalGatewayRouteTableVpcAssociation and its State
-func StatusLocalGatewayRouteTableVPCAssociationState(conn *ec2.EC2, localGatewayRouteTableVpcAssociationID string) resource.StateRefreshFunc {
+func StatusLocalGatewayRouteTableVPCAssociationState(ctx context.Context, conn *ec2.EC2, localGatewayRouteTableVpcAssociationID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &ec2.DescribeLocalGatewayRouteTableVpcAssociationsInput{
 			LocalGatewayRouteTableVpcAssociationIds: aws.StringSlice([]string{localGatewayRouteTableVpcAssociationID}),
 		}
 
-		output, err := conn.DescribeLocalGatewayRouteTableVpcAssociations(input)
+		output, err := conn.DescribeLocalGatewayRouteTableVpcAssociationsWithContext(ctx, input)
 
 		if err != nil {
 			return nil, "", err
@@ -76,9 +92,9 @@ func StatusLocalGatewayRouteTableVPCAssociationState(conn *ec2.EC2, localGateway
 	}
 }
 
-func StatusClientVPNEndpointState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusClientVPNEndpointState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindClientVPNEndpointByID(conn, id)
+		output, err := FindClientVPNEndpointByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -92,9 +108,9 @@ func StatusClientVPNEndpointState(conn *ec2.EC2, id string) resource.StateRefres
 	}
 }
 
-func StatusClientVPNEndpointClientConnectResponseOptionsState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusClientVPNEndpointClientConnectResponseOptionsState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindClientVPNEndpointClientConnectResponseOptionsByID(conn, id)
+		output, err := FindClientVPNEndpointClientConnectResponseOptionsByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -108,9 +124,9 @@ func StatusClientVPNEndpointClientConnectResponseOptionsState(conn *ec2.EC2, id 
 	}
 }
 
-func StatusClientVPNAuthorizationRule(conn *ec2.EC2, endpointID, targetNetworkCIDR, accessGroupID string) resource.StateRefreshFunc {
+func StatusClientVPNAuthorizationRule(ctx context.Context, conn *ec2.EC2, endpointID, targetNetworkCIDR, accessGroupID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindClientVPNAuthorizationRuleByThreePartKey(conn, endpointID, targetNetworkCIDR, accessGroupID)
+		output, err := FindClientVPNAuthorizationRuleByThreePartKey(ctx, conn, endpointID, targetNetworkCIDR, accessGroupID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -124,9 +140,9 @@ func StatusClientVPNAuthorizationRule(conn *ec2.EC2, endpointID, targetNetworkCI
 	}
 }
 
-func StatusClientVPNNetworkAssociation(conn *ec2.EC2, associationID, endpointID string) resource.StateRefreshFunc {
+func StatusClientVPNNetworkAssociation(ctx context.Context, conn *ec2.EC2, associationID, endpointID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindClientVPNNetworkAssociationByIDs(conn, associationID, endpointID)
+		output, err := FindClientVPNNetworkAssociationByIDs(ctx, conn, associationID, endpointID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -140,9 +156,9 @@ func StatusClientVPNNetworkAssociation(conn *ec2.EC2, associationID, endpointID 
 	}
 }
 
-func StatusClientVPNRoute(conn *ec2.EC2, endpointID, targetSubnetID, destinationCIDR string) resource.StateRefreshFunc {
+func StatusClientVPNRoute(ctx context.Context, conn *ec2.EC2, endpointID, targetSubnetID, destinationCIDR string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindClientVPNRouteByThreePartKey(conn, endpointID, targetSubnetID, destinationCIDR)
+		output, err := FindClientVPNRouteByThreePartKey(ctx, conn, endpointID, targetSubnetID, destinationCIDR)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -153,6 +169,41 @@ func StatusClientVPNRoute(conn *ec2.EC2, endpointID, targetSubnetID, destination
 		}
 
 		return output, aws.StringValue(output.Status.Code), nil
+	}
+}
+
+func StatusFleetState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		// Don't call FindFleetByID as it maps useful status codes to NotFoundError.
+		output, err := FindFleet(ctx, conn, &ec2.DescribeFleetsInput{
+			FleetIds: aws.StringSlice([]string{id}),
+		})
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.FleetState), nil
+	}
+}
+
+func StatusImageState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindImageByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
 	}
 }
 
@@ -160,9 +211,9 @@ func StatusClientVPNRoute(conn *ec2.EC2, endpointID, targetSubnetID, destination
 //
 // The EC2 API accepts a name and always returns an ARN, so it is converted
 // back to the name to prevent unexpected differences.
-func StatusInstanceIAMInstanceProfile(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusInstanceIAMInstanceProfile(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		instance, err := FindInstanceByID(conn, id)
+		instance, err := FindInstanceByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -176,7 +227,7 @@ func StatusInstanceIAMInstanceProfile(conn *ec2.EC2, id string) resource.StateRe
 			return instance, "", nil
 		}
 
-		name, err := tfiam.InstanceProfileARNToName(aws.StringValue(instance.IamInstanceProfile.Arn))
+		name, err := InstanceProfileARNToName(aws.StringValue(instance.IamInstanceProfile.Arn))
 
 		if err != nil {
 			return instance, "", err
@@ -186,9 +237,106 @@ func StatusInstanceIAMInstanceProfile(conn *ec2.EC2, id string) resource.StateRe
 	}
 }
 
-func StatusNATGatewayState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusInstanceState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindNATGatewayByID(conn, id)
+		// Don't call FindInstanceByID as it maps useful status codes to NotFoundError.
+		output, err := FindInstance(ctx, conn, &ec2.DescribeInstancesInput{
+			InstanceIds: aws.StringSlice([]string{id}),
+		})
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State.Name), nil
+	}
+}
+
+func StatusInstanceCapacityReservationSpecificationEquals(ctx context.Context, conn *ec2.EC2, id string, expectedValue *ec2.CapacityReservationSpecification) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindInstanceByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output.CapacityReservationSpecification, strconv.FormatBool(capacityReservationSpecificationResponsesEqual(output.CapacityReservationSpecification, expectedValue)), nil
+	}
+}
+
+func StatusInstanceMaintenanceOptionsAutoRecovery(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindInstanceByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if v := output.MaintenanceOptions; v != nil {
+			return v, aws.StringValue(v.AutoRecovery), nil
+		}
+
+		return nil, "", nil
+	}
+}
+
+func StatusInstanceMetadataOptionsState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindInstanceByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output.MetadataOptions == nil {
+			return nil, "", nil
+		}
+
+		return output.MetadataOptions, aws.StringValue(output.MetadataOptions.State), nil
+	}
+}
+
+func StatusInstanceRootBlockDeviceDeleteOnTermination(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindInstanceByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		for _, v := range output.BlockDeviceMappings {
+			if aws.StringValue(v.DeviceName) == aws.StringValue(output.RootDeviceName) && v.Ebs != nil {
+				return v.Ebs, strconv.FormatBool(aws.BoolValue(v.Ebs.DeleteOnTermination)), nil
+			}
+		}
+
+		return nil, "", nil
+	}
+}
+
+func StatusNATGatewayState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindNATGatewayByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -206,9 +354,9 @@ const (
 	RouteStatusReady = "ready"
 )
 
-func StatusRoute(conn *ec2.EC2, routeFinder RouteFinder, routeTableID, destination string) resource.StateRefreshFunc {
+func StatusRoute(ctx context.Context, conn *ec2.EC2, routeFinder RouteFinder, routeTableID, destination string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := routeFinder(conn, routeTableID, destination)
+		output, err := routeFinder(ctx, conn, routeTableID, destination)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -226,9 +374,9 @@ const (
 	RouteTableStatusReady = "ready"
 )
 
-func StatusRouteTable(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusRouteTable(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindRouteTableByID(conn, id)
+		output, err := FindRouteTableByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -242,9 +390,9 @@ func StatusRouteTable(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	}
 }
 
-func StatusRouteTableAssociationState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusRouteTableAssociationState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindRouteTableAssociationByID(conn, id)
+		output, err := FindRouteTableAssociationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -270,9 +418,9 @@ const (
 	SecurityGroupStatusCreated = "Created"
 )
 
-func StatusSecurityGroup(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusSecurityGroup(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindSecurityGroupByID(conn, id)
+		output, err := FindSecurityGroupByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -286,9 +434,44 @@ func StatusSecurityGroup(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	}
 }
 
-func StatusSubnetState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusSpotFleetActivityStatus(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindSubnetByID(conn, id)
+		output, err := FindSpotFleetRequestByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.ActivityStatus), nil
+	}
+}
+
+func StatusSpotFleetRequestState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		// Don't call FindSpotFleetRequestByID as it maps useful status codes to NotFoundError.
+		output, err := FindSpotFleetRequest(ctx, conn, &ec2.DescribeSpotFleetRequestsInput{
+			SpotFleetRequestIds: aws.StringSlice([]string{id}),
+		})
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.SpotFleetRequestState), nil
+	}
+}
+
+func StatusSubnetState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindSubnetByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -302,9 +485,9 @@ func StatusSubnetState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	}
 }
 
-func StatusSubnetIPv6CIDRBlockAssociationState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusSubnetIPv6CIDRBlockAssociationState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindSubnetIPv6CIDRBlockAssociationByID(conn, id)
+		output, err := FindSubnetIPv6CIDRBlockAssociationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -318,9 +501,9 @@ func StatusSubnetIPv6CIDRBlockAssociationState(conn *ec2.EC2, id string) resourc
 	}
 }
 
-func StatusSubnetAssignIpv6AddressOnCreation(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusSubnetAssignIPv6AddressOnCreation(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindSubnetByID(conn, id)
+		output, err := FindSubnetByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -334,9 +517,9 @@ func StatusSubnetAssignIpv6AddressOnCreation(conn *ec2.EC2, id string) resource.
 	}
 }
 
-func StatusSubnetEnableDns64(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusSubnetEnableDNS64(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindSubnetByID(conn, id)
+		output, err := FindSubnetByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -350,9 +533,25 @@ func StatusSubnetEnableDns64(conn *ec2.EC2, id string) resource.StateRefreshFunc
 	}
 }
 
-func StatusSubnetEnableResourceNameDnsAAAARecordOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusSubnetEnableLniAtDeviceIndex(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindSubnetByID(conn, id)
+		output, err := FindSubnetByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, strconv.FormatInt(aws.Int64Value(output.EnableLniAtDeviceIndex), 10), nil
+	}
+}
+
+func StatusSubnetEnableResourceNameDNSAAAARecordOnLaunch(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindSubnetByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -366,9 +565,9 @@ func StatusSubnetEnableResourceNameDnsAAAARecordOnLaunch(conn *ec2.EC2, id strin
 	}
 }
 
-func StatusSubnetEnableResourceNameDnsARecordOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusSubnetEnableResourceNameDNSARecordOnLaunch(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindSubnetByID(conn, id)
+		output, err := FindSubnetByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -382,9 +581,9 @@ func StatusSubnetEnableResourceNameDnsARecordOnLaunch(conn *ec2.EC2, id string) 
 	}
 }
 
-func StatusSubnetMapCustomerOwnedIPOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusSubnetMapCustomerOwnedIPOnLaunch(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindSubnetByID(conn, id)
+		output, err := FindSubnetByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -398,9 +597,9 @@ func StatusSubnetMapCustomerOwnedIPOnLaunch(conn *ec2.EC2, id string) resource.S
 	}
 }
 
-func StatusSubnetMapPublicIPOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusSubnetMapPublicIPOnLaunch(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindSubnetByID(conn, id)
+		output, err := FindSubnetByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -414,9 +613,9 @@ func StatusSubnetMapPublicIPOnLaunch(conn *ec2.EC2, id string) resource.StateRef
 	}
 }
 
-func StatusSubnetPrivateDNSHostnameTypeOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusSubnetPrivateDNSHostnameTypeOnLaunch(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindSubnetByID(conn, id)
+		output, err := FindSubnetByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -430,9 +629,9 @@ func StatusSubnetPrivateDNSHostnameTypeOnLaunch(conn *ec2.EC2, id string) resour
 	}
 }
 
-func StatusTransitGatewayState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusTransitGatewayState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindTransitGatewayByID(conn, id)
+		output, err := FindTransitGatewayByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -446,9 +645,9 @@ func StatusTransitGatewayState(conn *ec2.EC2, id string) resource.StateRefreshFu
 	}
 }
 
-func StatusTransitGatewayConnectState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusTransitGatewayConnectState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindTransitGatewayConnectByID(conn, id)
+		output, err := FindTransitGatewayConnectByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -462,9 +661,9 @@ func StatusTransitGatewayConnectState(conn *ec2.EC2, id string) resource.StateRe
 	}
 }
 
-func StatusTransitGatewayConnectPeerState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusTransitGatewayConnectPeerState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindTransitGatewayConnectPeerByID(conn, id)
+		output, err := FindTransitGatewayConnectPeerByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -478,9 +677,9 @@ func StatusTransitGatewayConnectPeerState(conn *ec2.EC2, id string) resource.Sta
 	}
 }
 
-func StatusTransitGatewayMulticastDomainState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusTransitGatewayMulticastDomainState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindTransitGatewayMulticastDomainByID(conn, id)
+		output, err := FindTransitGatewayMulticastDomainByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -494,9 +693,9 @@ func StatusTransitGatewayMulticastDomainState(conn *ec2.EC2, id string) resource
 	}
 }
 
-func StatusTransitGatewayMulticastDomainAssociationState(conn *ec2.EC2, multicastDomainID, attachmentID, subnetID string) resource.StateRefreshFunc {
+func StatusTransitGatewayMulticastDomainAssociationState(ctx context.Context, conn *ec2.EC2, multicastDomainID, attachmentID, subnetID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindTransitGatewayMulticastDomainAssociationByThreePartKey(conn, multicastDomainID, attachmentID, subnetID)
+		output, err := FindTransitGatewayMulticastDomainAssociationByThreePartKey(ctx, conn, multicastDomainID, attachmentID, subnetID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -510,9 +709,12 @@ func StatusTransitGatewayMulticastDomainAssociationState(conn *ec2.EC2, multicas
 	}
 }
 
-func StatusTransitGatewayPrefixListReferenceState(conn *ec2.EC2, transitGatewayRouteTableID string, prefixListID string) resource.StateRefreshFunc {
+func StatusTransitGatewayPeeringAttachmentState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindTransitGatewayPrefixListReferenceByTwoPartKey(conn, transitGatewayRouteTableID, prefixListID)
+		// Don't call FindTransitGatewayPeeringAttachmentByID as it maps useful status codes to NotFoundError.
+		output, err := FindTransitGatewayPeeringAttachment(ctx, conn, &ec2.DescribeTransitGatewayPeeringAttachmentsInput{
+			TransitGatewayAttachmentIds: aws.StringSlice([]string{id}),
+		})
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -526,9 +728,9 @@ func StatusTransitGatewayPrefixListReferenceState(conn *ec2.EC2, transitGatewayR
 	}
 }
 
-func StatusTransitGatewayRouteState(conn *ec2.EC2, transitGatewayRouteTableID, destination string) resource.StateRefreshFunc {
+func StatusTransitGatewayPrefixListReferenceState(ctx context.Context, conn *ec2.EC2, transitGatewayRouteTableID string, prefixListID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindTransitGatewayRoute(conn, transitGatewayRouteTableID, destination)
+		output, err := FindTransitGatewayPrefixListReferenceByTwoPartKey(ctx, conn, transitGatewayRouteTableID, prefixListID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -542,25 +744,9 @@ func StatusTransitGatewayRouteState(conn *ec2.EC2, transitGatewayRouteTableID, d
 	}
 }
 
-func StatusTransitGatewayRouteTablePropagationState(conn *ec2.EC2, transitGatewayRouteTableID string, transitGatewayAttachmentID string) resource.StateRefreshFunc {
+func StatusTransitGatewayRouteState(ctx context.Context, conn *ec2.EC2, transitGatewayRouteTableID, destination string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		transitGatewayRouteTablePropagation, err := FindTransitGatewayRouteTablePropagation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if transitGatewayRouteTablePropagation == nil {
-			return nil, "", nil
-		}
-
-		return transitGatewayRouteTablePropagation, aws.StringValue(transitGatewayRouteTablePropagation.State), nil
-	}
-}
-
-func StatusVPCState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindVPCByID(conn, id)
+		output, err := FindTransitGatewayRoute(ctx, conn, transitGatewayRouteTableID, destination)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -574,9 +760,172 @@ func StatusVPCState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	}
 }
 
-func StatusVPCAttributeValue(conn *ec2.EC2, id string, attribute string) resource.StateRefreshFunc {
+func StatusTransitGatewayRouteTableState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		attributeValue, err := FindVPCAttribute(conn, id, attribute)
+		output, err := FindTransitGatewayRouteTableByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusTransitGatewayPolicyTableState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindTransitGatewayPolicyTableByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusTransitGatewayPolicyTableAssociationState(ctx context.Context, conn *ec2.EC2, transitGatewayPolicyTableID, transitGatewayAttachmentID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindTransitGatewayPolicyTableAssociationByTwoPartKey(ctx, conn, transitGatewayPolicyTableID, transitGatewayAttachmentID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusTransitGatewayRouteTableAssociationState(ctx context.Context, conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindTransitGatewayRouteTableAssociationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusTransitGatewayRouteTablePropagationState(ctx context.Context, conn *ec2.EC2, transitGatewayRouteTableID string, transitGatewayAttachmentID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindTransitGatewayRouteTablePropagationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusTransitGatewayVPCAttachmentState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		// Don't call FindTransitGatewayVPCAttachmentByID as it maps useful status codes to NotFoundError.
+		output, err := FindTransitGatewayVPCAttachment(ctx, conn, &ec2.DescribeTransitGatewayVpcAttachmentsInput{
+			TransitGatewayAttachmentIds: aws.StringSlice([]string{id}),
+		})
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusVolumeState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindEBSVolumeByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusVolumeAttachmentState(ctx context.Context, conn *ec2.EC2, volumeID, instanceID, deviceName string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindEBSVolumeAttachment(ctx, conn, volumeID, instanceID, deviceName)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusVolumeModificationState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindVolumeModificationByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.ModificationState), nil
+	}
+}
+
+func StatusVPCState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindVPCByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusVPCAttributeValue(ctx context.Context, conn *ec2.EC2, id string, attribute string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		attributeValue, err := FindVPCAttribute(ctx, conn, id, attribute)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -590,9 +939,9 @@ func StatusVPCAttributeValue(conn *ec2.EC2, id string, attribute string) resourc
 	}
 }
 
-func StatusVPCCIDRBlockAssociationState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusVPCCIDRBlockAssociationState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, _, err := FindVPCCIDRBlockAssociationByID(conn, id)
+		output, _, err := FindVPCCIDRBlockAssociationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -606,9 +955,9 @@ func StatusVPCCIDRBlockAssociationState(conn *ec2.EC2, id string) resource.State
 	}
 }
 
-func StatusVPCIPv6CIDRBlockAssociationState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusVPCIPv6CIDRBlockAssociationState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, _, err := FindVPCIPv6CIDRBlockAssociationByID(conn, id)
+		output, _, err := FindVPCIPv6CIDRBlockAssociationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -622,10 +971,10 @@ func StatusVPCIPv6CIDRBlockAssociationState(conn *ec2.EC2, id string) resource.S
 	}
 }
 
-func StatusVPCPeeringConnectionActive(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusVPCPeeringConnectionActive(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		// Don't call FindVPCPeeringConnectionByID as it maps useful status codes to NotFoundError.
-		output, err := FindVPCPeeringConnection(conn, &ec2.DescribeVpcPeeringConnectionsInput{
+		output, err := FindVPCPeeringConnection(ctx, conn, &ec2.DescribeVpcPeeringConnectionsInput{
 			VpcPeeringConnectionIds: aws.StringSlice([]string{id}),
 		})
 
@@ -641,9 +990,9 @@ func StatusVPCPeeringConnectionActive(conn *ec2.EC2, id string) resource.StateRe
 	}
 }
 
-func StatusVPCPeeringConnectionDeleted(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusVPCPeeringConnectionDeleted(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindVPCPeeringConnectionByID(conn, id)
+		output, err := FindVPCPeeringConnectionByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -657,9 +1006,9 @@ func StatusVPCPeeringConnectionDeleted(conn *ec2.EC2, id string) resource.StateR
 	}
 }
 
-func StatusVPNGatewayVPCAttachmentState(conn *ec2.EC2, vpnGatewayID, vpcID string) resource.StateRefreshFunc {
+func StatusVPNGatewayVPCAttachmentState(ctx context.Context, conn *ec2.EC2, vpnGatewayID, vpcID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindVPNGatewayVPCAttachment(conn, vpnGatewayID, vpcID)
+		output, err := FindVPNGatewayVPCAttachment(ctx, conn, vpnGatewayID, vpcID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -673,9 +1022,9 @@ func StatusVPNGatewayVPCAttachmentState(conn *ec2.EC2, vpnGatewayID, vpcID strin
 	}
 }
 
-func StatusCustomerGatewayState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusCustomerGatewayState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindCustomerGatewayByID(conn, id)
+		output, err := FindCustomerGatewayByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -689,9 +1038,9 @@ func StatusCustomerGatewayState(conn *ec2.EC2, id string) resource.StateRefreshF
 	}
 }
 
-func StatusVPNConnectionState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusVPNConnectionState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindVPNConnectionByID(conn, id)
+		output, err := FindVPNConnectionByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -705,9 +1054,9 @@ func StatusVPNConnectionState(conn *ec2.EC2, id string) resource.StateRefreshFun
 	}
 }
 
-func StatusVPNConnectionRouteState(conn *ec2.EC2, vpnConnectionID, cidrBlock string) resource.StateRefreshFunc {
+func StatusVPNConnectionRouteState(ctx context.Context, conn *ec2.EC2, vpnConnectionID, cidrBlock string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindVPNConnectionRouteByVPNConnectionIDAndCIDR(conn, vpnConnectionID, cidrBlock)
+		output, err := FindVPNConnectionRouteByVPNConnectionIDAndCIDR(ctx, conn, vpnConnectionID, cidrBlock)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -721,9 +1070,9 @@ func StatusVPNConnectionRouteState(conn *ec2.EC2, vpnConnectionID, cidrBlock str
 	}
 }
 
-func StatusHostState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusHostState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindHostByID(conn, id)
+		output, err := FindHostByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -737,9 +1086,9 @@ func StatusHostState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	}
 }
 
-func StatusInternetGatewayAttachmentState(conn *ec2.EC2, internetGatewayID, vpcID string) resource.StateRefreshFunc {
+func StatusInternetGatewayAttachmentState(ctx context.Context, conn *ec2.EC2, internetGatewayID, vpcID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindInternetGatewayAttachment(conn, internetGatewayID, vpcID)
+		output, err := FindInternetGatewayAttachment(ctx, conn, internetGatewayID, vpcID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -753,9 +1102,9 @@ func StatusInternetGatewayAttachmentState(conn *ec2.EC2, internetGatewayID, vpcI
 	}
 }
 
-func StatusManagedPrefixListState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusManagedPrefixListState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindManagedPrefixListByID(conn, id)
+		output, err := FindManagedPrefixListByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -769,9 +1118,9 @@ func StatusManagedPrefixListState(conn *ec2.EC2, id string) resource.StateRefres
 	}
 }
 
-func StatusNetworkInterfaceStatus(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusNetworkInsightsAnalysis(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindNetworkInterfaceByID(conn, id)
+		output, err := FindNetworkInsightsAnalysisByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -785,9 +1134,9 @@ func StatusNetworkInterfaceStatus(conn *ec2.EC2, id string) resource.StateRefres
 	}
 }
 
-func StatusNetworkInterfaceAttachmentStatus(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusNetworkInterfaceStatus(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindNetworkInterfaceAttachmentByID(conn, id)
+		output, err := FindNetworkInterfaceByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -801,9 +1150,25 @@ func StatusNetworkInterfaceAttachmentStatus(conn *ec2.EC2, id string) resource.S
 	}
 }
 
-func StatusPlacementGroupState(conn *ec2.EC2, name string) resource.StateRefreshFunc {
+func StatusNetworkInterfaceAttachmentStatus(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindPlacementGroupByName(conn, name)
+		output, err := FindNetworkInterfaceAttachmentByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func StatusPlacementGroupState(ctx context.Context, conn *ec2.EC2, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindPlacementGroupByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -817,9 +1182,9 @@ func StatusPlacementGroupState(conn *ec2.EC2, name string) resource.StateRefresh
 	}
 }
 
-func StatusVPCEndpointState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusVPCEndpointState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindVPCEndpointByID(conn, id)
+		output, err := FindVPCEndpointByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -830,6 +1195,41 @@ func StatusVPCEndpointState(conn *ec2.EC2, id string) resource.StateRefreshFunc 
 		}
 
 		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusVPCEndpointServiceStateAvailable(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		// Don't call FindVPCEndpointServiceConfigurationByID as it maps useful status codes to NotFoundError.
+		output, err := FindVPCEndpointServiceConfiguration(ctx, conn, &ec2.DescribeVpcEndpointServiceConfigurationsInput{
+			ServiceIds: aws.StringSlice([]string{id}),
+		})
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.ServiceState), nil
+	}
+}
+
+func StatusVPCEndpointServiceStateDeleted(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindVPCEndpointServiceConfigurationByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.ServiceState), nil
 	}
 }
 
@@ -837,9 +1237,9 @@ const (
 	VPCEndpointRouteTableAssociationStatusReady = "ready"
 )
 
-func StatusVPCEndpointRouteTableAssociation(conn *ec2.EC2, vpcEndpointID, routeTableID string) resource.StateRefreshFunc {
+func StatusVPCEndpointRouteTableAssociation(ctx context.Context, conn *ec2.EC2, vpcEndpointID, routeTableID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		err := FindVPCEndpointRouteTableAssociationExists(conn, vpcEndpointID, routeTableID)
+		err := FindVPCEndpointRouteTableAssociationExists(ctx, conn, vpcEndpointID, routeTableID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -853,40 +1253,25 @@ func StatusVPCEndpointRouteTableAssociation(conn *ec2.EC2, vpcEndpointID, routeT
 	}
 }
 
-const (
-	snapshotImportNotFound = "NotFound"
-)
-
-func StatusEBSSnapshotImport(conn *ec2.EC2, importTaskId string) resource.StateRefreshFunc {
+func StatusEBSSnapshotImport(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		params := &ec2.DescribeImportSnapshotTasksInput{
-			ImportTaskIds: []*string{aws.String(importTaskId)},
+		output, err := FindImportSnapshotTaskByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
-		resp, err := conn.DescribeImportSnapshotTasks(params)
 		if err != nil {
 			return nil, "", err
 		}
 
-		if resp == nil || len(resp.ImportSnapshotTasks) < 1 {
-			return nil, snapshotImportNotFound, nil
-		}
-
-		if task := resp.ImportSnapshotTasks[0]; task != nil {
-			detail := task.SnapshotTaskDetail
-			if detail.Status != nil && aws.StringValue(detail.Status) == EBSSnapshotImportStateDeleting {
-				err = fmt.Errorf("Snapshot import task is deleting")
-			}
-			return detail, aws.StringValue(detail.Status), err
-		} else {
-			return nil, snapshotImportNotFound, nil
-		}
+		return output.SnapshotTaskDetail, aws.StringValue(output.SnapshotTaskDetail.Status), nil
 	}
 }
 
-func statusVPCEndpointConnectionVPCEndpointState(conn *ec2.EC2, serviceID, vpcEndpointID string) resource.StateRefreshFunc {
+func statusVPCEndpointConnectionVPCEndpointState(ctx context.Context, conn *ec2.EC2, serviceID, vpcEndpointID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindVPCEndpointConnectionByServiceIDAndVPCEndpointID(conn, serviceID, vpcEndpointID)
+		output, err := FindVPCEndpointConnectionByServiceIDAndVPCEndpointID(ctx, conn, serviceID, vpcEndpointID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -900,9 +1285,9 @@ func statusVPCEndpointConnectionVPCEndpointState(conn *ec2.EC2, serviceID, vpcEn
 	}
 }
 
-func StatusSnapshotTierStatus(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusSnapshotStorageTier(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindSnapshotTierStatusById(conn, id)
+		output, err := FindSnapshotTierStatusBySnapshotID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -913,5 +1298,135 @@ func StatusSnapshotTierStatus(conn *ec2.EC2, id string) resource.StateRefreshFun
 		}
 
 		return output, aws.StringValue(output.StorageTier), nil
+	}
+}
+
+func StatusIPAMState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindIPAMByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusIPAMPoolState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindIPAMPoolByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusIPAMPoolCIDRState(ctx context.Context, conn *ec2.EC2, cidrBlock, poolID, poolCidrId string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		if cidrBlock == "" {
+			output, err := FindIPAMPoolCIDRByPoolCIDRId(ctx, conn, poolCidrId, poolID)
+
+			if tfresource.NotFound(err) {
+				return nil, "", nil
+			}
+
+			if err != nil {
+				return nil, "", err
+			}
+			cidrBlock = aws.StringValue(output.Cidr)
+		}
+
+		output, err := FindIPAMPoolCIDRByTwoPartKey(ctx, conn, cidrBlock, poolID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+const (
+	// naming mapes to the SDK constants that exist for IPAM
+	IpamPoolCIDRAllocationCreateComplete = "create-complete" // nosemgrep:ci.caps2-in-const-name, ci.caps2-in-var-name, ci.caps5-in-const-name, ci.caps5-in-var-name
+)
+
+func StatusIPAMPoolCIDRAllocationState(ctx context.Context, conn *ec2.EC2, allocationID, poolID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindIPAMPoolAllocationByTwoPartKey(ctx, conn, allocationID, poolID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, IpamPoolCIDRAllocationCreateComplete, nil
+	}
+}
+
+func StatusIPAMResourceDiscoveryState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindIPAMResourceDiscoveryByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusIPAMResourceDiscoveryAssociationStatus(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindIPAMResourceDiscoveryAssociationByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusIPAMScopeState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindIPAMScopeByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
 	}
 }

@@ -1,5 +1,5 @@
 ---
-subcategory: "IoT"
+subcategory: "IoT Core"
 layout: "aws"
 page_title: "AWS: aws_iot_policy"
 description: |-

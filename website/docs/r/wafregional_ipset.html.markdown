@@ -1,5 +1,5 @@
 ---
-subcategory: "WAF Regional"
+subcategory: "WAF Classic Regional"
 layout: "aws"
 page_title: "AWS: aws_wafregional_ipset"
 description: |-
@@ -43,7 +43,6 @@ The following arguments are supported:
 
 * `type` - (Required) The string like IPV4 or IPV6.
 * `value` - (Required) The CIDR notation.
-
 
 ## Remarks
 

@@ -1,5 +1,5 @@
 ---
-subcategory: "Cognito"
+subcategory: "Cognito Identity"
 layout: "aws"
 page_title: "AWS: aws_cognito_identity_pool_roles_attachment"
 description: |-
@@ -22,55 +22,54 @@ resource "aws_cognito_identity_pool" "main" {
   }
 }
 
-resource "aws_iam_role" "authenticated" {
-  name = "cognito_authenticated"
+data "aws_iam_policy_document" "authenticated" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Federated": "cognito-identity.amazonaws.com"
-      },
-      "Action": "sts:AssumeRoleWithWebIdentity",
-      "Condition": {
-        "StringEquals": {
-          "cognito-identity.amazonaws.com:aud": "${aws_cognito_identity_pool.main.id}"
-        },
-        "ForAnyValue:StringLike": {
-          "cognito-identity.amazonaws.com:amr": "authenticated"
-        }
-      }
+    principals {
+      type        = "Federated"
+      identifiers = ["cognito-identity.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "cognito-identity.amazonaws.com:aud"
+      values   = [aws_cognito_identity_pool.main.id]
+    }
+
+    condition {
+      test     = "ForAnyValue:StringLike"
+      variable = "cognito-identity.amazonaws.com:amr"
+      values   = ["authenticated"]
+    }
+  }
 }
-EOF
+
+resource "aws_iam_role" "authenticated" {
+  name               = "cognito_authenticated"
+  assume_role_policy = data.aws_iam_policy_document.authenticated.json
+}
+
+data "aws_iam_policy_document" "authenticated_role_policy" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "mobileanalytics:PutEvents",
+      "cognito-sync:*",
+      "cognito-identity:*",
+    ]
+
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_role_policy" "authenticated" {
-  name = "authenticated_policy"
-  role = aws_iam_role.authenticated.id
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "mobileanalytics:PutEvents",
-        "cognito-sync:*",
-        "cognito-identity:*"
-      ],
-      "Resource": [
-        "*"
-      ]
-    }
-  ]
-}
-EOF
+  name   = "authenticated_policy"
+  role   = aws_iam_role.authenticated.id
+  policy = data.aws_iam_policy_document.authenticated_role_policy.json
 }
 
 resource "aws_cognito_identity_pool_roles_attachment" "main" {
@@ -99,7 +98,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
 
 The Cognito Identity Pool Roles Attachment argument layout is a structure composed of several sub-resources - these resources are laid out below.
 
-* `identity_pool_id` (Required) - An identity pool ID in the format REGION:GUID.
+* `identity_pool_id` (Required) - An identity pool ID in the format `REGION_GUID`.
 * `role_mapping` (Optional) - A List of [Role Mapping](#role-mappings).
 * `roles` (Required) - The map of roles associated with this pool. For a given role, the key will be either "authenticated" or "unauthenticated" and the value will be the Role ARN.
 
@@ -122,14 +121,11 @@ The Cognito Identity Pool Roles Attachment argument layout is a structure compos
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The identity pool ID.
-* `identity_pool_id` (Required) - An identity pool ID in the format REGION:GUID.
-* `role_mapping` (Optional) - The List of [Role Mapping](#role-mappings).
-* `roles` (Required) - The map of roles associated with this pool. For a given role, the key will be either "authenticated" or "unauthenticated" and the value will be the Role ARN.
 
 ## Import
 
-Cognito Identity Pool Roles Attachment can be imported using the Identity Pool id, e.g.,
+Cognito Identity Pool Roles Attachment can be imported using the Identity Pool ID, e.g.,
 
 ```
-$ terraform import aws_cognito_identity_pool_roles_attachment.example <identity-pool-id>
+$ terraform import aws_cognito_identity_pool_roles_attachment.example us-west-2:b64805ad-cb56-40ba-9ffc-f5d8207e6d42
 ```

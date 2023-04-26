@@ -1,0 +1,15 @@
+```release-note:bug
+resource/aws_rds_event_subscription: Fix issue where `enabled` was sometimes not updated
+```
+
+```release-note:bug
+resource/aws_db_instance: Fix issues where configured update timeout was not respected, and update would fail if instance were in the process of being configured.
+```
+
+```release-note:bug
+resource/aws_rds_global_cluster: Fix ability to perform cluster version upgrades, including of clusters in distinct regions, such as previously got error: "Invalid database cluster identifier"
+```
+
+```release-note:enhancement
+resource/aws_rds_global_cluster: Add configurable timeouts
+```

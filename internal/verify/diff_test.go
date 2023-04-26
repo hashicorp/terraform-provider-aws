@@ -3,40 +3,53 @@ package verify
 import (
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
-func TestSuppressEquivalentTypeStringBoolean(t *testing.T) {
+func TestSuppressEquivalentRoundedTime(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		old        string
 		new        string
+		layout     string
+		d          time.Duration
 		equivalent bool
 	}{
 		{
-			old:        "false",
-			new:        "0",
+			old:        "2024-04-19T23:00:00.000Z",
+			new:        "2024-04-19T23:00:13.000Z",
+			layout:     time.RFC3339,
+			d:          time.Minute,
 			equivalent: true,
 		},
 		{
-			old:        "true",
-			new:        "1",
+			old:        "2024-04-19T23:01:00.000Z",
+			new:        "2024-04-19T23:00:45.000Z",
+			layout:     time.RFC3339,
+			d:          time.Minute,
 			equivalent: true,
 		},
 		{
-			old:        "",
-			new:        "0",
+			old:        "2024-04-19T23:00:00.000Z",
+			new:        "2024-04-19T23:00:45.000Z",
+			layout:     time.RFC3339,
+			d:          time.Minute,
 			equivalent: false,
 		},
 		{
-			old:        "",
-			new:        "1",
-			equivalent: false,
+			old:        "2024-04-19T23:00:00.000Z",
+			new:        "2024-04-19T23:00:45.000Z",
+			layout:     time.RFC3339,
+			d:          time.Hour,
+			equivalent: true,
 		},
 	}
 
 	for i, tc := range testCases {
-		value := SuppressEquivalentTypeStringBoolean("test_property", tc.old, tc.new, nil)
+		value := SuppressEquivalentRoundedTime(tc.layout, tc.d)("test_property", tc.old, tc.new, nil)
 
 		if tc.equivalent && !value {
 			t.Fatalf("expected test case %d to be equivalent", i)
@@ -49,6 +62,8 @@ func TestSuppressEquivalentTypeStringBoolean(t *testing.T) {
 }
 
 func TestDiffStringMaps(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Old, New                  map[string]interface{}
 		Create, Remove, Unchanged map[string]interface{}

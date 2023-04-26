@@ -14,12 +14,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKResource("aws_connect_user_hierarchy_structure")
 func ResourceUserHierarchyStructure() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceUserHierarchyStructureCreate,
-		ReadContext:   resourceUserHierarchyStructureRead,
-		UpdateContext: resourceUserHierarchyStructureUpdate,
-		DeleteContext: resourceUserHierarchyStructureDelete,
+		CreateWithoutTimeout: resourceUserHierarchyStructureCreate,
+		ReadWithoutTimeout:   resourceUserHierarchyStructureRead,
+		UpdateWithoutTimeout: resourceUserHierarchyStructureUpdate,
+		DeleteWithoutTimeout: resourceUserHierarchyStructureDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -31,23 +32,23 @@ func ResourceUserHierarchyStructure() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"level_one": func() *schema.Schema {
-							schema := connectUserHierarchyLevelSchema()
+							schema := userHierarchyLevelSchema()
 							return schema
 						}(),
 						"level_two": func() *schema.Schema {
-							schema := connectUserHierarchyLevelSchema()
+							schema := userHierarchyLevelSchema()
 							return schema
 						}(),
 						"level_three": func() *schema.Schema {
-							schema := connectUserHierarchyLevelSchema()
+							schema := userHierarchyLevelSchema()
 							return schema
 						}(),
 						"level_four": func() *schema.Schema {
-							schema := connectUserHierarchyLevelSchema()
+							schema := userHierarchyLevelSchema()
 							return schema
 						}(),
 						"level_five": func() *schema.Schema {
-							schema := connectUserHierarchyLevelSchema()
+							schema := userHierarchyLevelSchema()
 							return schema
 						}(),
 					},
@@ -63,7 +64,7 @@ func ResourceUserHierarchyStructure() *schema.Resource {
 }
 
 // Each level shares the same schema
-func connectUserHierarchyLevelSchema() *schema.Schema {
+func userHierarchyLevelSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -90,7 +91,7 @@ func connectUserHierarchyLevelSchema() *schema.Schema {
 }
 
 func resourceUserHierarchyStructureCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID := d.Get("instance_id").(string)
 
@@ -112,7 +113,7 @@ func resourceUserHierarchyStructureCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceUserHierarchyStructureRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID := d.Id()
 
@@ -144,7 +145,7 @@ func resourceUserHierarchyStructureRead(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceUserHierarchyStructureUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID := d.Id()
 
@@ -163,7 +164,7 @@ func resourceUserHierarchyStructureUpdate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceUserHierarchyStructureDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID := d.Id()
 

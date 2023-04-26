@@ -1,19 +1,22 @@
 package kafka
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_msk_cluster")
 func DataSourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceClusterRead,
+		ReadWithoutTimeout: dataSourceClusterRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -21,6 +24,18 @@ func DataSourceCluster() *schema.Resource {
 				Computed: true,
 			},
 			"bootstrap_brokers": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"bootstrap_brokers_public_sasl_iam": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"bootstrap_brokers_public_sasl_scram": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"bootstrap_brokers_public_tls": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,12 +69,17 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"zookeeper_connect_string_tls": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
 
-func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
+func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KafkaConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterName := d.Get("cluster_name").(string)
@@ -68,7 +88,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	var cluster *kafka.ClusterInfo
 
-	err := conn.ListClustersPages(input, func(page *kafka.ListClustersOutput, lastPage bool) bool {
+	err := conn.ListClustersPagesWithContext(ctx, input, func(page *kafka.ListClustersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -85,25 +105,28 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("error listing MSK Clusters: %w", err)
+		return sdkdiag.AppendErrorf(diags, "listing MSK Clusters: %s", err)
 	}
 
 	if cluster == nil {
-		return fmt.Errorf("error reading MSK Cluster (%s): no results found", clusterName)
+		return sdkdiag.AppendErrorf(diags, "reading MSK Cluster (%s): no results found", clusterName)
 	}
 
 	bootstrapBrokersInput := &kafka.GetBootstrapBrokersInput{
 		ClusterArn: cluster.ClusterArn,
 	}
 
-	bootstrapBrokersOutput, err := conn.GetBootstrapBrokers(bootstrapBrokersInput)
+	bootstrapBrokersOutput, err := conn.GetBootstrapBrokersWithContext(ctx, bootstrapBrokersInput)
 
 	if err != nil {
-		return fmt.Errorf("error reading MSK Cluster (%s) bootstrap brokers: %w", aws.StringValue(cluster.ClusterArn), err)
+		return sdkdiag.AppendErrorf(diags, "reading MSK Cluster (%s) bootstrap brokers: %s", aws.StringValue(cluster.ClusterArn), err)
 	}
 
 	d.Set("arn", cluster.ClusterArn)
 	d.Set("bootstrap_brokers", SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerString)))
+	d.Set("bootstrap_brokers_public_sasl_iam", SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringPublicSaslIam)))
+	d.Set("bootstrap_brokers_public_sasl_scram", SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringPublicSaslScram)))
+	d.Set("bootstrap_brokers_public_tls", SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringPublicTls)))
 	d.Set("bootstrap_brokers_sasl_iam", SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringSaslIam)))
 	d.Set("bootstrap_brokers_sasl_scram", SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringSaslScram)))
 	d.Set("bootstrap_brokers_tls", SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringTls)))
@@ -111,13 +134,14 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("kafka_version", cluster.CurrentBrokerSoftwareInfo.KafkaVersion)
 	d.Set("number_of_broker_nodes", cluster.NumberOfBrokerNodes)
 
-	if err := d.Set("tags", KeyValueTags(cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	if err := d.Set("tags", KeyValueTags(ctx, cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	d.Set("zookeeper_connect_string", SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectString)))
+	d.Set("zookeeper_connect_string_tls", SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectStringTls)))
 
 	d.SetId(aws.StringValue(cluster.ClusterArn))
 
-	return nil
+	return diags
 }

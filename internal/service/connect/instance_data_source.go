@@ -14,9 +14,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_connect_instance")
 func DataSourceInstance() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceInstanceRead,
+		ReadWithoutTimeout: dataSourceInstanceRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -62,6 +63,10 @@ func DataSourceInstance() *schema.Resource {
 				Computed:     true,
 				ExactlyOneOf: []string{"instance_id", "instance_alias"},
 			},
+			"multi_party_conference_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"outbound_calls_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -83,7 +88,7 @@ func DataSourceInstance() *schema.Resource {
 }
 
 func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	var matchedInstance *connect.Instance
 
@@ -96,7 +101,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 
 		log.Printf("[DEBUG] Reading Connect Instance by instance_id: %s", input)
 
-		output, err := conn.DescribeInstance(&input)
+		output, err := conn.DescribeInstanceWithContext(ctx, &input)
 
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error getting Connect Instance by instance_id (%s): %w", instanceId, err))
@@ -107,11 +112,10 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		matchedInstance = output.Instance
-
 	} else if v, ok := d.GetOk("instance_alias"); ok {
 		instanceAlias := v.(string)
 
-		instanceSummary, err := dataSourceGetConnectInstanceSummaryByInstanceAlias(ctx, conn, instanceAlias)
+		instanceSummary, err := dataSourceGetInstanceSummaryByInstanceAlias(ctx, conn, instanceAlias)
 
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error finding Connect Instance Summary by instance_alias (%s): %w", instanceAlias, err))
@@ -160,7 +164,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	return nil
 }
 
-func dataSourceGetConnectInstanceSummaryByInstanceAlias(ctx context.Context, conn *connect.Connect, instanceAlias string) (*connect.InstanceSummary, error) {
+func dataSourceGetInstanceSummaryByInstanceAlias(ctx context.Context, conn *connect.Connect, instanceAlias string) (*connect.InstanceSummary, error) {
 	var result *connect.InstanceSummary
 
 	input := &connect.ListInstancesInput{

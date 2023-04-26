@@ -20,13 +20,14 @@ package ecs
 
 Some flags control generation a certain section of code, such as whether the generator generates a certain function. Other flags determine how generated code will work. Do not include flags where you want the generator to use the default value.
 
-| Flag | Default | Description | Example Use | 
+| Flag | Default | Description | Example Use |
 | --- | --- | --- | --- |
 | `GetTag` |  | Whether to generate GetTag | `-GetTag` |
 | `ListTags` |  | Whether to generate ListTags | `-ListTags` |
 | `ServiceTagsMap` |  | Whether to generate map service tags (use this or `ServiceTagsSlice`, not both) | `-ServiceTagsMap` |
 | `ServiceTagsSlice` |  | Whether to generate slice service tags (use this or `ServiceTagsMap`, not both) | `-ServiceTagsSlice` |
 | `UpdateTags` |  | Whether to generate UpdateTags | `-UpdateTags` |
+| `ContextOnly` |  | Whether to generator only Context-aware functions | `-ContextOnly` |
 | `ListTagsInFiltIDName` |  | List tags input filter identifier name | `-ListTagsInFiltIDName=resource-id` |
 | `ListTagsInIDElem` | `ResourceArn` | List tags input identifier element | `-ListTagsInIDElem=ResourceARN` |
 | `ListTagsInIDNeedSlice` |  | Whether list tags input identifier needs a slice | `-ListTagsInIDNeedSlice=yes` |
@@ -54,7 +55,7 @@ Some flags control generation a certain section of code, such as whether the gen
 
 ## Legacy Documentation
 
-(This needs to be updated...)
+(TODO: This needs to be updated...)
 
 The `keyvaluetags` package is designed to provide a consistent interface for handling AWS resource key-value tags. Many of the AWS Go SDK services, implement their own Go struct with `Key` and `Value` fields (e.g. `athena.Tag`) while others simply use a map (e.g. `map[string]string`). These inconsistent implementations and numerous Go types makes the process of correctly working with each of the services a tedius, previously copy-paste-modify process.
 
@@ -89,6 +90,7 @@ aws/internal/keyvaluetags
 └── <service name>_tags.go (any service-specific functions that cannot be generated)
 ```
 
+<!-- markdownlint-disable -->
 # listtags
 
 This package contains a code generator to consistently handle the various AWS Go SDK service implementations for listing resource tags. Not all AWS Go SDK services that support tagging are generated in this manner.
@@ -349,7 +351,7 @@ func AthenaUpdateTags(conn *athena.Athena, identifier string, oldTagsMap interfa
         _, err := conn.UntagResource(input)
 
         if err != nil {
-            return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+            return fmt.Errorf("untagging resource (%s): %s", identifier, err)
         }
     }
 
@@ -362,7 +364,7 @@ func AthenaUpdateTags(conn *athena.Athena, identifier string, oldTagsMap interfa
         _, err := conn.TagResource(input)
 
         if err != nil {
-            return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+            return fmt.Errorf("tagging resource (%s): %s", identifier, err)
         }
     }
 

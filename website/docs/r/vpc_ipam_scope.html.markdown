@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC IPAM (IP Address Manager)"
 layout: "aws"
 page_title: "AWS: aws_vpc_ipam_scope"
 description: |-
@@ -35,15 +35,18 @@ The following arguments are supported:
 
 * `ipam_id` - The ID of the IPAM for which you're creating this scope.
 * `description` - (Optional) A description for the scope you're creating.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The Amazon Resource Name (ARN) of the scope.
 * `id` - The ID of the IPAM Scope.
 * `ipam_arn` - The ARN of the IPAM for which you're creating this scope.
 * `is_default` - Defines if the scope is the default scope or not.
-* `pool_count` - Count of pools under this scope
+* `pool_count` - The number of pools in the scope.
+* `type` - The type of the scope.
 
 ## Import
 
