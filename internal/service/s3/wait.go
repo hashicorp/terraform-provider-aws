@@ -15,6 +15,7 @@ const (
 	lifecycleConfigurationRulesPropagationTimeout = 3 * time.Minute
 	lifecycleConfigurationRulesSteadyTimeout      = 2 * time.Minute
 	propagationTimeout                            = 1 * time.Minute
+	replicationConfigPropagationTimeout           = 30 * time.Second
 
 	// LifecycleConfigurationRulesStatusReady occurs when all configured rules reach their desired state (Enabled or Disabled)
 	LifecycleConfigurationRulesStatusReady = "READY"
@@ -24,6 +25,10 @@ const (
 
 func retryWhenBucketNotFound(ctx context.Context, f func() (interface{}, error)) (interface{}, error) {
 	return tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, f, s3.ErrCodeNoSuchBucket)
+}
+
+func retryWhenReplicationConfigNotFound(ctx context.Context, f func() (interface{}, error)) (interface{}, error) {
+	return tfresource.RetryWhenAWSErrMessageContains(ctx, replicationConfigPropagationTimeout, f, ErrCodeReplicationConfigurationNotFound, "The replication configuration was not found")
 }
 
 func waitForLifecycleConfigurationRulesStatus(ctx context.Context, conn *s3.S3, bucket, expectedBucketOwner string, rules []*s3.LifecycleRule) error {

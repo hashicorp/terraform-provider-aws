@@ -359,7 +359,9 @@ func resourceBucketReplicationConfigurationRead(ctx context.Context, d *schema.R
 
 	// Read the bucket replication configuration
 	output, err := retryWhenBucketNotFound(ctx, func() (interface{}, error) {
-		return conn.GetBucketReplicationWithContext(ctx, input)
+		return retryWhenReplicationConfigNotFound(ctx, func() (interface{}, error) {
+			return conn.GetBucketReplicationWithContext(ctx, input)
+		})
 	})
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeReplicationConfigurationNotFound, s3.ErrCodeNoSuchBucket) {
