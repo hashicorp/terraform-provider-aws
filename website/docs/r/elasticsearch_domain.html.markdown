@@ -307,7 +307,7 @@ AWS documentation: [Amazon Cognito Authentication for Kibana](https://docs.aws.a
 
 ### log_publishing_options
 
-* `cloudwatch_log_group_arn` - (Required) ARN of the Cloudwatch log group to which log needs to be published.
+* `cloudwatch_log_group_arn` - (Optional) ARN of the Cloudwatch log group to which log needs to be published.
 * `enabled` - (Optional, Default: true) Whether given log publishing option is enabled or not.
 * `log_type` - (Required) Type of Elasticsearch log. Valid values: `INDEX_SLOW_LOGS`, `SEARCH_SLOW_LOGS`, `ES_APPLICATION_LOGS`, `AUDIT_LOGS`.
 
