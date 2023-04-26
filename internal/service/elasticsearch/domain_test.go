@@ -921,6 +921,46 @@ func TestAccElasticsearchDomain_LogPublishingOptions_unsetLogGroup(t *testing.T)
 	})
 }
 
+func TestAccElasticsearchDomain_LogPublishingOptions_unsetPublishLog(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain elasticsearch.ElasticsearchDomainStatus
+	rName := testAccRandomDomainName()
+	resourceName := "aws_elasticsearch_domain.test"
+	setPublishLogs := false
+	setLogGroup := false
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_logPublishingOptions(rName, elasticsearch.LogTypeAuditLogs, setPublishLogs, setLogGroup),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
+						"log_type": elasticsearch.LogTypeAuditLogs,
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+				// MasterUserOptions are not returned from DescribeElasticsearchDomainConfig
+				ImportStateVerifyIgnore: []string{"advanced_security_options.0.master_user_options"},
+			},
+		},
+	})
+}
+
 func TestAccElasticsearchDomain_cognitoOptionsCreateAndRemove(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
