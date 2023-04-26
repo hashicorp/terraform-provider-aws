@@ -13,6 +13,7 @@ FEATURES:
 * **New Data Source:** `aws_api_gateway_authorizer` ([#28148](https://github.com/hashicorp/terraform-provider-aws/issues/28148))
 * **New Data Source:** `aws_api_gateway_authorizers` ([#28148](https://github.com/hashicorp/terraform-provider-aws/issues/28148))
 * **New Data Source:** `aws_dms_replication_subnet_group` ([#30832](https://github.com/hashicorp/terraform-provider-aws/issues/30832))
+* **New Data Source:** `aws_dms_replication_task` ([#30967](https://github.com/hashicorp/terraform-provider-aws/issues/30967))
 * **New Data Source:** `aws_ssmcontacts_contact` ([#30667](https://github.com/hashicorp/terraform-provider-aws/issues/30667))
 * **New Data Source:** `aws_ssmcontacts_contact_channel` ([#30667](https://github.com/hashicorp/terraform-provider-aws/issues/30667))
 * **New Data Source:** `aws_ssmcontacts_plan` ([#30667](https://github.com/hashicorp/terraform-provider-aws/issues/30667))
@@ -36,6 +37,7 @@ ENHANCEMENTS:
 * resource/aws_backup_report_plan: Add `accounts`, `organization_units` and `regions` attributes to the `report_setting` block ([#28309](https://github.com/hashicorp/terraform-provider-aws/issues/28309))
 * resource/aws_db_subnet_group: Add `vpc_id` attribute ([#30775](https://github.com/hashicorp/terraform-provider-aws/issues/30775))
 * resource/aws_imagebuilder_image: Add `containers` attribute to the `output_resources` block ([#30899](https://github.com/hashicorp/terraform-provider-aws/issues/30899))
+* resource/aws_networkfirewall_rule_group: Add limit for `reference_sets` ([#30759](https://github.com/hashicorp/terraform-provider-aws/issues/30759))
 * resource/aws_networkmanager_core_network: Wait for the network policy to be in the `READY_TO_EXECUTE` state before executing any changes ([#30879](https://github.com/hashicorp/terraform-provider-aws/issues/30879))
 * resource/aws_wafv2_web_acl: Add `token_domains` argument ([#30340](https://github.com/hashicorp/terraform-provider-aws/issues/30340))
 * various IAM resource types: more detailed error messages for invalid policy document JSON ([#27502](https://github.com/hashicorp/terraform-provider-aws/issues/27502))
@@ -46,6 +48,7 @@ BUG FIXES:
 * resource/aws_apprunner_service: Allow additional `instance_configuration.cpu` and `instance_configuration.memory` values ([#30889](https://github.com/hashicorp/terraform-provider-aws/issues/30889))
 * resource/aws_dms_replication_task: Fix perpetual diff on dms replication_task settings ([#30885](https://github.com/hashicorp/terraform-provider-aws/issues/30885))
 * resource/aws_ecs_service: Fix removal of `service_registries` configuration block ([#30852](https://github.com/hashicorp/terraform-provider-aws/issues/30852))
+* resource/aws_vpc_endpoint_route_table_association: Retry resource Create for EC2 eventual consistency ([#30994](https://github.com/hashicorp/terraform-provider-aws/issues/30994))
 
 ## 4.64.0 (April 20, 2023)
 
