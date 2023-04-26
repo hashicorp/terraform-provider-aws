@@ -74,14 +74,6 @@ func ResourceReplicationGroup() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"availability_zones": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				ForceNew:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				Set:           schema.HashString,
-				ConflictsWith: []string{"preferred_cache_cluster_azs"},
-			},
 			"cluster_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -264,10 +256,9 @@ func ResourceReplicationGroup() *schema.Resource {
 				},
 			},
 			"preferred_cache_cluster_azs": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"availability_zones"},
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"primary_endpoint_address": {
 				Type:     schema.TypeString,
@@ -452,9 +443,6 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 
 	if preferredAZs, ok := d.GetOk("preferred_cache_cluster_azs"); ok {
 		input.PreferredCacheClusterAZs = flex.ExpandStringList(preferredAZs.([]interface{}))
-	}
-	if availabilityZones := d.Get("availability_zones").(*schema.Set); availabilityZones.Len() > 0 {
-		input.PreferredCacheClusterAZs = flex.ExpandStringSet(availabilityZones)
 	}
 
 	if v, ok := d.GetOk("parameter_group_name"); ok {
