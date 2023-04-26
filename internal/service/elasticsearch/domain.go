@@ -452,7 +452,7 @@ func ResourceDomain() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"cloudwatch_log_group_arn": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Required:     false,
 							ValidateFunc: verify.ValidARN,
 						},
 						"enabled": {
