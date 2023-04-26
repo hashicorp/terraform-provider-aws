@@ -915,8 +915,6 @@ func TestFlattenSecurityGroups(t *testing.T) {
 				},
 			},
 		},
-		// include the owner id, but keep it consitent with the same account. Tests
-		// EC2 classic situation
 		{
 			ownerId: aws.String("user1234"),
 			pairs: []*ec2.UserIdGroupPair{
@@ -931,28 +929,6 @@ func TestFlattenSecurityGroups(t *testing.T) {
 				},
 			},
 		},
-
-		// include the owner id, but from a different account. This is reflects
-		// EC2 Classic when referring to groups by name
-		{
-			ownerId: aws.String("user1234"),
-			pairs: []*ec2.UserIdGroupPair{
-				{
-					GroupId:   aws.String("sg-12345"),
-					GroupName: aws.String("somegroup"), // GroupName is only included in Classic
-					UserId:    aws.String("user4321"),
-				},
-			},
-			expected: []*tfec2.GroupIdentifier{
-				{
-					GroupId:   aws.String("sg-12345"),
-					GroupName: aws.String("user4321/somegroup"),
-				},
-			},
-		},
-
-		// include the owner id, but from a different account. This reflects in
-		// EC2 VPC when referring to groups by id
 		{
 			ownerId: aws.String("user1234"),
 			pairs: []*ec2.UserIdGroupPair{
