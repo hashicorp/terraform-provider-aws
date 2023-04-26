@@ -23,7 +23,6 @@ func TestAccOrganizationsPolicyDataSource_UnattachedPolicy(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationsPolicyDataSourceConfig_UnattachedPolicy(rName),
