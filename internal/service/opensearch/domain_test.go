@@ -924,44 +924,6 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_disabled(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchDomain_LogPublishingOptions_CloudWatchLogGroupArn(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var domain opensearchservice.DomainStatus
-	rName := testAccRandomDomainName()
-	resourceName := "aws_opensearch_domain.test"
-	setPublishLogs := true
-	setLogGroup := true
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDomainConfig_logPublishingOptions(rName, opensearchservice.LogTypeIndexSlowLogs, setPublishLogs, setLogGroup),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
-						"log_type": opensearchservice.LogTypeIndexSlowLogs,
-					}),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateId:     rName,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccOpenSearchDomain_LogPublishingOptions_indexSlowLogs(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
