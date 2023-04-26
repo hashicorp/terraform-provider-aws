@@ -902,7 +902,7 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlockWithNetworkBorderGroup(t *testing.T)
 			// https://docs.aws.amazon.com/vpc/latest/userguide/Extend_VPCs.html#local-zone:
 			// "You can request the IPv6 Amazon-provided IP addresses and associate them with the network border group
 			//  for a new or existing VPCs only for us-west-2-lax-1a and use-west-2-lax-1b. All other Local Zones don't support IPv6."
-			testAccPreCheckLocalZoneAvailable(ctx, t, "us-west-2-lax-1")
+			testAccPreCheckLocalZoneAvailable(ctx, t, "us-west-2-lax-1") //lintignore:AWSAT003
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1194,7 +1194,7 @@ resource "aws_vpc" "test" {
 `, rName, assignGeneratedIpv6CidrBlock)
 }
 
-func testAccVPCConfig_assignGeneratedIPv6CIDRBlockOptionalNetworkBorderGroup(rName string, localZoneNetworkBorderGroup bool) string {
+func testAccVPCConfig_assignGeneratedIPv6CIDRBlockOptionalNetworkBorderGroup(rName string, localZoneNetworkBorderGroup bool) string { // lintignore:AWSAT003
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
