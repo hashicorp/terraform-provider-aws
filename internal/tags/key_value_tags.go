@@ -7,9 +7,13 @@ import (
 	"reflect"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/hashicorp/go-cty/cty"
+	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -745,7 +749,7 @@ type schemaResourceData interface {
 	GetRawState() cty.Value
 }
 
-func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *DefaultConfig, d schemaResourceData) KeyValueTags {
+func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *DefaultConfig, ignoreConfig *IgnoreConfig, d schemaResourceData) KeyValueTags {
 	// remove default config.
 	t := tags.RemoveDefaultConfig(defaultConfig)
 
@@ -803,7 +807,45 @@ func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *D
 		}
 	}
 
-	return New(ctx, result)
+	return New(ctx, result).IgnoreConfig(ignoreConfig)
+}
+
+func (tags KeyValueTags) ResolveDuplicatesFramework(ctx context.Context, defaultConfig *DefaultConfig, ignoreConfig *IgnoreConfig, resp *resource.ReadResponse, diags fwdiag.Diagnostics) KeyValueTags {
+	// remove default config.
+	t := tags.RemoveDefaultConfig(defaultConfig)
+
+	var tagsAll types.Map
+	diags.Append(resp.State.GetAttribute(ctx, path.Root("tags"), &tagsAll)...)
+
+	if diags.HasError() {
+		return KeyValueTags{}
+	}
+
+	result := make(map[string]string)
+	for k, v := range t {
+		result[k] = v.ValueString()
+	}
+
+	for k, v := range tagsAll.Elements() {
+		if _, ok := result[k]; !ok {
+			if defaultConfig != nil {
+				s, err := strconv.Unquote(v.String()) // TODO rework to use Framework Map.Equals() value
+
+				if err != nil {
+					diags.AddError(
+						"unable to normalize string",
+						"unable to normalize string default value",
+					)
+				}
+
+				if val, ok := defaultConfig.Tags[k]; ok && val.ValueString() == s {
+					result[k] = s
+				}
+			}
+		}
+	}
+
+	return New(ctx, result).IgnoreConfig(ignoreConfig)
 }
 
 // ToSnakeCase converts a string to snake case.
