@@ -96,46 +96,34 @@ func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 		input.PublicIp = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating EC2 EIP Association: %s", input)
 	output, err := conn.AssociateAddressWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 EIP Association: %s", err)
 	}
 
-	if output.AssociationId != nil {
-		d.SetId(aws.StringValue(output.AssociationId))
+	d.SetId(aws.StringValue(output.AssociationId))
 
-		_, err = tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (interface{}, error) {
-				return FindEIPByAssociationID(ctx, conn, d.Id())
-			},
-			func(err error) (bool, error) {
-				if tfresource.NotFound(err) {
-					return true, err
-				}
+	_, err = tfresource.RetryWhen(ctx, propagationTimeout,
+		func() (interface{}, error) {
+			return FindEIPByAssociationID(ctx, conn, d.Id())
+		},
+		func(err error) (bool, error) {
+			if tfresource.NotFound(err) {
+				return true, err
+			}
 
-				// "InvalidInstanceID: The pending instance 'i-0504e5b44ea06d599' is not in a valid state for this operation."
-				if tfawserr.ErrMessageContains(err, errCodeInvalidInstanceID, "pending instance") {
-					return true, err
-				}
+			// "InvalidInstanceID: The pending instance 'i-0504e5b44ea06d599' is not in a valid state for this operation."
+			if tfawserr.ErrMessageContains(err, errCodeInvalidInstanceID, "pending instance") {
+				return true, err
+			}
 
-				return false, err
-			},
-		)
+			return false, err
+		},
+	)
 
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for EC2 EIP Association (%s) create: %s", d.Id(), err)
-		}
-	} else {
-		// EC2-Classic.
-		publicIP := aws.StringValue(input.PublicIp)
-		d.SetId(publicIP)
-
-		instanceID := aws.StringValue(input.InstanceId)
-		if err := waitForAddressAssociationClassic(ctx, conn, publicIP, instanceID); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for EC2 EIP (%s) to associate with EC2-Classic Instance (%s): %s", publicIP, instanceID, err)
-		}
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 EIP Association (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceEIPAssociationRead(ctx, d, meta)...)
@@ -145,14 +133,11 @@ func resourceEIPAssociationRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	var err error
-	var address *ec2.Address
-
-	if eipAssociationID(d.Id()).IsVPC() {
-		address, err = FindEIPByAssociationID(ctx, conn, d.Id())
-	} else {
-		address, err = FindEIPByPublicIP(ctx, conn, d.Id())
+	if !eipAssociationID(d.Id()).IsVPC() {
+		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic %s domain EC2 EIPs are no longer supported`, ec2.DomainTypeStandard)
 	}
+
+	address, err := FindEIPByAssociationID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 EIP Association (%s) not found, removing from state", d.Id())
@@ -177,12 +162,12 @@ func resourceEIPAssociationDelete(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	input := &ec2.DisassociateAddressInput{}
+	if !eipAssociationID(d.Id()).IsVPC() {
+		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic %s domain EC2 EIPs are no longer supported`, ec2.DomainTypeStandard)
+	}
 
-	if eipAssociationID(d.Id()).IsVPC() {
-		input.AssociationId = aws.String(d.Id())
-	} else {
-		input.PublicIp = aws.String(d.Id())
+	input := &ec2.DisassociateAddressInput{
+		AssociationId: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 EIP Association: %s", d.Id())

@@ -792,28 +792,6 @@ func FindEIPByAssociationID(ctx context.Context, conn *ec2.EC2, id string) (*ec2
 	return output, nil
 }
 
-// TODO Delete me.
-func FindEIPByPublicIP(ctx context.Context, conn *ec2.EC2, ip string) (*ec2.Address, error) {
-	input := &ec2.DescribeAddressesInput{
-		PublicIps: aws.StringSlice([]string{ip}),
-	}
-
-	output, err := FindEIP(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// Eventual consistency check.
-	if aws.StringValue(output.PublicIp) != ip {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return output, nil
-}
-
 func FindHostByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Host, error) {
 	input := &ec2.DescribeHostsInput{
 		HostIds: aws.StringSlice([]string{id}),

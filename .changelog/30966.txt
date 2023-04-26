@@ -73,3 +73,7 @@ resource/aws_default_vpc: With the retirement of EC2-Classic the `enable_classic
 ```release-note:breaking-change
 resource/aws_eip: With the retirement of EC2-Classic the `standard` domain is no longer supported
 ```
+
+```release-note:breaking-change
+resource/aws_eip_association: With the retirement of EC2-Classic the `standard` domain is no longer supported
+```

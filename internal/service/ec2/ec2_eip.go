@@ -2,7 +2,6 @@ package ec2
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -13,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -21,11 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-)
-
-const (
-	// Maximum amount of time to wait for EIP association with EC2-Classic instances
-	addressAssociationClassicTimeout = 2 * time.Minute
 )
 
 // @SDKResource("aws_eip", name="EIP")
@@ -379,36 +372,6 @@ func disassociateEIP(ctx context.Context, conn *ec2.EC2, associationID string) e
 	}
 
 	return nil
-}
-
-// waitForAddressAssociationClassic ensures the correct Instance is associated with an Address
-//
-// This can take a few seconds to appear correctly for EC2-Classic addresses.
-// TODO Delete me.
-func waitForAddressAssociationClassic(ctx context.Context, conn *ec2.EC2, publicIP, instanceID string) error {
-	err := retry.RetryContext(ctx, addressAssociationClassicTimeout, func() *retry.RetryError {
-		address, err := FindEIPByPublicIP(ctx, conn, publicIP)
-
-		if tfresource.NotFound(err) {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		if aws.StringValue(address.InstanceId) != instanceID {
-			return retry.RetryableError(errors.New("not associated"))
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) { // nosemgrep:ci.helper-schema-TimeoutError-check-doesnt-return-output
-		_, err = FindEIPByPublicIP(ctx, conn, publicIP)
-	}
-
-	return err
 }
 
 func ConvertIPToDashIP(ip string) string {
