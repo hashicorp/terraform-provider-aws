@@ -36,6 +36,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 				IdentifierAttribute: "arn",
 			},
 		},
+		{
+			Factory: newResourceRefreshSchedule,
+			Name:    "Refresh Schedule",
+		},
 	}
 }
 

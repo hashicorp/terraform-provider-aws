@@ -16,7 +16,7 @@ Terraform data source for managing an AWS DMS (Database Migration) Replication T
 
 ```terraform
 data "aws_dms_replication_task" "test" {
-	replication_task_id = aws_dms_replication_task.test.replication_task_id
+  replication_task_id = aws_dms_replication_task.test.replication_task_id
 }
 ```
 
