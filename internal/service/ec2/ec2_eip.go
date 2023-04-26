@@ -140,16 +140,16 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeElasticIp),
 	}
 
-	if v := d.Get("vpc"); v != nil && v.(bool) {
-		input.Domain = aws.String(ec2.DomainTypeVpc)
-	}
-
 	if v, ok := d.GetOk("address"); ok {
 		input.Address = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("customer_owned_ipv4_pool"); ok {
 		input.CustomerOwnedIpv4Pool = aws.String(v.(string))
+	}
+
+	if v := d.Get("vpc"); v != nil && v.(bool) {
+		input.Domain = aws.String(ec2.DomainTypeVpc)
 	}
 
 	if v, ok := d.GetOk("network_border_group"); ok {
@@ -176,17 +176,14 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 EIP (%s) create: %s", d.Id(), err)
 	}
 
-	instanceID := d.Get("instance").(string)
-	eniID := d.Get("network_interface").(string)
-
-	if instanceID != "" || eniID != "" {
+	if instanceID, eniID := d.Get("instance").(string), d.Get("network_interface").(string); instanceID != "" || eniID != "" {
 		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate),
 			func() (interface{}, error) {
 				return nil, associateEIP(ctx, conn, d.Id(), instanceID, eniID, d.Get("associate_with_private_ip").(string))
 			}, errCodeInvalidAllocationIDNotFound)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating EC2 EIP (%s): %s", d.Id(), err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -197,14 +194,11 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	var err error
-	var address *ec2.Address
-
-	if eipID(d.Id()).IsVPC() {
-		address, err = FindEIPByAllocationID(ctx, conn, d.Id())
-	} else {
-		address, err = FindEIPByPublicIP(ctx, conn, d.Id())
+	if !eipID(d.Id()).IsVPC() {
+		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic %s domain EC2 EIPs are no longer supported`, ec2.DomainTypeStandard)
 	}
+
+	address, err := FindEIPByAllocationID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 EIP (%s) not found, removing from state", d.Id())
@@ -256,19 +250,16 @@ func resourceEIPUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	if d.HasChanges("associate_with_private_ip", "instance", "network_interface") {
 		o, n := d.GetChange("instance")
 		oldInstanceID, newInstanceID := o.(string), n.(string)
-		associationID := d.Get("association_id").(string)
 
-		if oldInstanceID != "" || associationID != "" {
-			if err := disassociateEIP(ctx, conn, d.Id(), associationID); err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating EC2 EIP (%s): %s", d.Id(), err)
+		if associationID := d.Get("association_id").(string); oldInstanceID != "" || associationID != "" {
+			if err := disassociateEIP(ctx, conn, associationID); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 
-		newNetworkInterfaceID := d.Get("network_interface").(string)
-
-		if newInstanceID != "" || newNetworkInterfaceID != "" {
+		if newNetworkInterfaceID := d.Get("network_interface").(string); newInstanceID != "" || newNetworkInterfaceID != "" {
 			if err := associateEIP(ctx, conn, d.Id(), newInstanceID, newNetworkInterfaceID, d.Get("associate_with_private_ip").(string)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating EC2 EIP (%s): %s", d.Id(), err)
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 	}
@@ -280,25 +271,26 @@ func resourceEIPDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
+	if !eipID(d.Id()).IsVPC() {
+		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic %s domain EC2 EIPs are no longer supported`, ec2.DomainTypeStandard)
+	}
+
 	// If we are attached to an instance or interface, detach first.
 	if associationID := d.Get("association_id").(string); associationID != "" || d.Get("instance").(string) != "" {
-		if err := disassociateEIP(ctx, conn, d.Id(), associationID); err != nil {
-			return sdkdiag.AppendErrorf(diags, "deleting EC2 EIP (%s): %s", d.Id(), err)
+		if err := disassociateEIP(ctx, conn, associationID); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	input := &ec2.ReleaseAddressInput{}
-
-	if eipID(d.Id()).IsVPC() {
-		input.AllocationId = aws.String(d.Id())
-
-		if v, ok := d.GetOk("network_border_group"); ok {
-			input.NetworkBorderGroup = aws.String(v.(string))
-		}
-	} else {
-		input.PublicIp = aws.String(d.Id())
+	input := &ec2.ReleaseAddressInput{
+		AllocationId: aws.String(d.Id()),
 	}
 
+	if v, ok := d.GetOk("network_border_group"); ok {
+		input.NetworkBorderGroup = aws.String(v.(string))
+	}
+
+	log.Printf("[INFO] Deleting EC2 EIP: %s", d.Id())
 	_, err := conn.ReleaseAddressWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidAllocationIDNotFound) {
@@ -319,13 +311,9 @@ func (id eipID) IsVPC() bool {
 	return strings.HasPrefix(string(id), "eipalloc-")
 }
 
-func associateEIP(ctx context.Context, conn *ec2.EC2, id, instanceID, networkInterfaceID, privateIPAddress string) error {
-	input := &ec2.AssociateAddressInput{}
-
-	if eipID(id).IsVPC() {
-		input.AllocationId = aws.String(id)
-	} else {
-		input.PublicIp = aws.String(id)
+func associateEIP(ctx context.Context, conn *ec2.EC2, allocationID, instanceID, networkInterfaceID, privateIPAddress string) error {
+	input := &ec2.AssociateAddressInput{
+		AllocationId: aws.String(allocationID),
 	}
 
 	if instanceID != "" {
@@ -343,51 +331,41 @@ func associateEIP(ctx context.Context, conn *ec2.EC2, id, instanceID, networkInt
 	output, err := conn.AssociateAddressWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("associating: %w", err)
+		return fmt.Errorf("associating EC2 EIP (%s): %w", allocationID, err)
 	}
 
-	if associationID := aws.StringValue(output.AssociationId); associationID != "" {
-		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (interface{}, error) {
-				return FindEIPByAssociationID(ctx, conn, associationID)
-			},
-			func(err error) (bool, error) {
-				if tfresource.NotFound(err) {
-					return true, err
-				}
+	_, err = tfresource.RetryWhen(ctx, propagationTimeout,
+		func() (interface{}, error) {
+			return FindEIPByAssociationID(ctx, conn, aws.StringValue(output.AssociationId))
+		},
+		func(err error) (bool, error) {
+			if tfresource.NotFound(err) {
+				return true, err
+			}
 
-				// "InvalidInstanceID: The pending instance 'i-0504e5b44ea06d599' is not in a valid state for this operation."
-				if tfawserr.ErrMessageContains(err, errCodeInvalidInstanceID, "pending instance") {
-					return true, err
-				}
+			// "InvalidInstanceID: The pending instance 'i-0504e5b44ea06d599' is not in a valid state for this operation."
+			if tfawserr.ErrMessageContains(err, errCodeInvalidInstanceID, "pending instance") {
+				return true, err
+			}
 
-				return false, err
-			},
-		)
+			return false, err
+		},
+	)
 
-		if err != nil {
-			return fmt.Errorf("associating: waiting for completion: %w", err)
-		}
-	} else {
-		if err := waitForAddressAssociationClassic(ctx, conn, id, instanceID); err != nil {
-			return fmt.Errorf("associating: waiting for completion: %w", err)
-		}
+	if err != nil {
+		return fmt.Errorf("waiting for EC2 EIP (%s) association: %w", allocationID, err)
 	}
 
 	return nil
 }
 
-func disassociateEIP(ctx context.Context, conn *ec2.EC2, id, associationID string) error {
-	input := &ec2.DisassociateAddressInput{}
+func disassociateEIP(ctx context.Context, conn *ec2.EC2, associationID string) error {
+	if associationID == "" {
+		return nil
+	}
 
-	if eipID(id).IsVPC() {
-		if associationID == "" {
-			return nil
-		}
-
-		input.AssociationId = aws.String(associationID)
-	} else {
-		input.PublicIp = aws.String(id)
+	input := &ec2.DisassociateAddressInput{
+		AssociationId: aws.String(associationID),
 	}
 
 	_, err := conn.DisassociateAddressWithContext(ctx, input)
@@ -397,7 +375,7 @@ func disassociateEIP(ctx context.Context, conn *ec2.EC2, id, associationID strin
 	}
 
 	if err != nil {
-		return fmt.Errorf("disassociating: %w", err)
+		return fmt.Errorf("disassociating EC2 EIP (%s): %w", associationID, err)
 	}
 
 	return nil
@@ -406,6 +384,7 @@ func disassociateEIP(ctx context.Context, conn *ec2.EC2, id, associationID strin
 // waitForAddressAssociationClassic ensures the correct Instance is associated with an Address
 //
 // This can take a few seconds to appear correctly for EC2-Classic addresses.
+// TODO Delete me.
 func waitForAddressAssociationClassic(ctx context.Context, conn *ec2.EC2, publicIP, instanceID string) error {
 	err := retry.RetryContext(ctx, addressAssociationClassicTimeout, func() *retry.RetryError {
 		address, err := FindEIPByPublicIP(ctx, conn, publicIP)

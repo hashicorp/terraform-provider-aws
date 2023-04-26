@@ -69,3 +69,7 @@ resource/aws_vpc: With the retirement of EC2-Classic the `enable_classiclink` an
 ```release-note:breaking-change
 resource/aws_default_vpc: With the retirement of EC2-Classic the `enable_classiclink` and `enable_classiclink_dns_support` attributes have been removed
 ```
+
+```release-note:breaking-change
+resource/aws_eip: With the retirement of EC2-Classic the `standard` domain is no longer supported
+```
