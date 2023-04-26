@@ -3355,10 +3355,10 @@ func FindVPCEndpointServicePermissionsByServiceID(ctx context.Context, conn *ec2
 
 func FindVPCEndpointServicePermission(ctx context.Context, conn *ec2.EC2, serviceID, principalARN string) (*ec2.AllowedPrincipal, error) {
 	input := &ec2.DescribeVpcEndpointServicePermissionsInput{
-		ServiceId: aws.String(serviceID),
 		Filters: BuildAttributeFilterList(map[string]string{
 			"principal": principalARN,
 		}),
+		ServiceId: aws.String(serviceID),
 	}
 
 	allowedPrincipals, err := FindVPCEndpointServicePermissions(ctx, conn, input)

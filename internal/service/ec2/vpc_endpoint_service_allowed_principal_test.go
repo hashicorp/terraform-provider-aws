@@ -212,8 +212,7 @@ func testAccCheckVPCEndpointServiceAllowedPrincipalExists(ctx context.Context, n
 }
 
 func testAccVPCEndpointServiceAllowedPrincipalConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		testAccVPCEndpointServiceConfig_networkLoadBalancerBase(rName, 1), `
+	return acctest.ConfigCompose(testAccVPCEndpointServiceConfig_baseNetworkLoadBalancer(rName, 1), `
 data "aws_caller_identity" "current" {}
 
 data "aws_iam_session_context" "current" {
@@ -234,9 +233,9 @@ resource "aws_vpc_endpoint_service_allowed_principal" "test" {
 }
 
 func testAccVPCEndpointServiceAllowedPrincipalConfig_Multiple(rName string) string {
-	return acctest.ConfigCompose(
-		testAccVPCEndpointServiceConfig_networkLoadBalancerBase(rName, 1), `
+	return acctest.ConfigCompose(testAccVPCEndpointServiceConfig_baseNetworkLoadBalancer(rName, 1), `
 data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
 
 data "aws_iam_session_context" "current" {
   arn = data.aws_caller_identity.current.arn
@@ -245,7 +244,7 @@ data "aws_iam_session_context" "current" {
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required        = false
   network_load_balancer_arns = aws_lb.test[*].arn
-  allowed_principals         = ["arn:aws:iam::123456789012:root"]
+  allowed_principals         = ["arn:${data.aws_partition.current.partition}:iam::123456789012:root"]
 
   lifecycle {
     ignore_changes = [
@@ -263,9 +262,7 @@ resource "aws_vpc_endpoint_service_allowed_principal" "test" {
 }
 
 func testAccVPCEndpointServiceAllowedPrincipalConfig_tag(rName string) string {
-	return acctest.ConfigCompose(
-		testAccVPCEndpointServiceAllowedPrincipalConfig_basic(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccVPCEndpointServiceAllowedPrincipalConfig_basic(rName), fmt.Sprintf(`
 resource "aws_ec2_tag" "test" {
   resource_id = aws_vpc_endpoint_service_allowed_principal.test.id
 
