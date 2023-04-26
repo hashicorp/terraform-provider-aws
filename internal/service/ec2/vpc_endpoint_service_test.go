@@ -444,25 +444,7 @@ resource "aws_vpc_endpoint_service" "test" {
 }
 
 func testAccVPCEndpointServiceConfig_gatewayLoadBalancerARNs(rName string, count int) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.10.0/25"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, 0)
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_lb" "test" {
   count = %[2]d
 
@@ -470,7 +452,7 @@ resource "aws_lb" "test" {
   name               = "%[1]s-${count.index}"
 
   subnet_mapping {
-    subnet_id = aws_subnet.test.id
+    subnet_id = aws_subnet.test[0].id
   }
 }
 

@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -3354,10 +3355,10 @@ func FindVPCEndpointServicePermissionsByServiceID(ctx context.Context, conn *ec2
 }
 
 func FindVPCEndpointServicePermission(ctx context.Context, conn *ec2.EC2, serviceID, principalARN string) (*ec2.AllowedPrincipal, error) {
+	// Applying a server-side filter on "principal" can lead to errors like
+	// "An error occurred (InvalidFilter) when calling the DescribeVpcEndpointServicePermissions operation: The filter value arn:aws:iam::123456789012:role/developer contains unsupported characters".
+	// Apply the filter client-side.
 	input := &ec2.DescribeVpcEndpointServicePermissionsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
-			"principal": principalARN,
-		}),
 		ServiceId: aws.String(serviceID),
 	}
 
@@ -3366,6 +3367,10 @@ func FindVPCEndpointServicePermission(ctx context.Context, conn *ec2.EC2, servic
 	if err != nil {
 		return nil, err
 	}
+
+	allowedPrincipals = slices.Filter(allowedPrincipals, func(v *ec2.AllowedPrincipal) bool {
+		return aws.StringValue(v.Principal) == principalARN
+	})
 
 	return tfresource.AssertSingleResult(allowedPrincipals)
 }
