@@ -1,0 +1,7 @@
+```release-note:breaking-change
+resource/aws_elasticache_replication_group: Removed `availability_zones` argument -- use `preferred_cache_cluster_azs` instead
+```
+
+```release-note:note
+resource/aws_elasticache_replication_group: Update configurations to use the `preferred_cache_cluster_azs` instead of the `availability_zones` argument
+```
