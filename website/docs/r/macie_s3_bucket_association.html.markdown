@@ -3,16 +3,14 @@ subcategory: "Macie Classic"
 layout: "aws"
 page_title: "AWS: aws_macie_s3_bucket_association"
 description: |-
-  Associates an S3 resource with Amazon Macie for monitoring and data classification.
+  Associates an S3 resource with Amazon Macie Classic for monitoring and data classification.
 ---
 
 # Resource: aws_macie_s3_bucket_association
 
 ~> **NOTE:** This resource interacts with [Amazon Macie Classic](https://docs.aws.amazon.com/macie/latest/userguide/what-is-macie.html). Macie Classic cannot be activated in new accounts. See the [FAQ](https://aws.amazon.com/macie/classic-faqs/) for more details.
 
-Associates an S3 resource with Amazon Macie for monitoring and data classification.
-
-~> **NOTE:** Before using Amazon Macie for the first time it must be enabled manually. Instructions are [here](https://docs.aws.amazon.com/macie/latest/userguide/macie-setting-up.html#macie-setting-up-enable).
+Associates an S3 resource with Amazon Macie Classic for monitoring and data classification.
 
 ## Example Usage
 
@@ -31,9 +29,9 @@ resource "aws_macie_s3_bucket_association" "example" {
 
 The following arguments are supported:
 
-* `bucket_name` - (Required) The name of the S3 bucket that you want to associate with Amazon Macie.
-* `classification_type` - (Optional) The configuration of how Amazon Macie classifies the S3 objects.
-* `member_account_id` - (Optional) The ID of the Amazon Macie member account whose S3 resources you want to associate with Macie. If `member_account_id` isn't specified, the action associates specified S3 resources with Macie for the current master account.
+* `bucket_name` - (Required) The name of the S3 bucket that you want to associate with Amazon Macie Classic.
+* `classification_type` - (Optional) The configuration of how Amazon Macie Classic classifies the S3 objects.
+* `member_account_id` - (Optional) The ID of the Amazon Macie Classic member account whose S3 resources you want to associate with Macie. If `member_account_id` isn't specified, the action associates specified S3 resources with Macie for the current master account.
 * `prefix` - (Optional) Object key prefix identifying one or more S3 objects to which the association applies.
 
 The `classification_type` object supports the following:
