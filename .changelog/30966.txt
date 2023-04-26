@@ -81,3 +81,7 @@ resource/aws_eip_association: With the retirement of EC2-Classic the `standard` 
 ```release-note:breaking-change
 resource/aws_security_group: With the retirement of EC2-Classic non-VPC security groups are no longer supported
 ```
+
+```release-note:breaking-change
+resource/aws_security_group_rule: With the retirement of EC2-Classic non-VPC security groups are no longer supported
+```
