@@ -792,27 +792,6 @@ func FindEIPByAssociationID(ctx context.Context, conn *ec2.EC2, id string) (*ec2
 	return output, nil
 }
 
-func FindEIPByPublicIP(ctx context.Context, conn *ec2.EC2, ip string) (*ec2.Address, error) {
-	input := &ec2.DescribeAddressesInput{
-		PublicIps: aws.StringSlice([]string{ip}),
-	}
-
-	output, err := FindEIP(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// Eventual consistency check.
-	if aws.StringValue(output.PublicIp) != ip {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return output, nil
-}
-
 func FindHostByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Host, error) {
 	input := &ec2.DescribeHostsInput{
 		HostIds: aws.StringSlice([]string{id}),
@@ -2794,83 +2773,6 @@ func FindVPCAttribute(ctx context.Context, conn *ec2.EC2, vpcID string, attribut
 	}
 
 	return aws.BoolValue(v.Value), nil
-}
-
-func FindVPCClassicLinkEnabled(ctx context.Context, conn *ec2.EC2, vpcID string) (bool, error) {
-	input := &ec2.DescribeVpcClassicLinkInput{
-		VpcIds: aws.StringSlice([]string{vpcID}),
-	}
-
-	output, err := conn.DescribeVpcClassicLinkWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound, errCodeUnsupportedOperation) {
-		return false, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return false, err
-	}
-
-	if output == nil || len(output.Vpcs) == 0 || output.Vpcs[0] == nil {
-		return false, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.Vpcs); count > 1 {
-		return false, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	vpc := output.Vpcs[0]
-
-	// Eventual consistency check.
-	if aws.StringValue(vpc.VpcId) != vpcID {
-		return false, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return aws.BoolValue(vpc.ClassicLinkEnabled), nil
-}
-
-func FindVPCClassicLinkDNSSupported(ctx context.Context, conn *ec2.EC2, vpcID string) (bool, error) {
-	input := &ec2.DescribeVpcClassicLinkDnsSupportInput{
-		VpcIds: aws.StringSlice([]string{vpcID}),
-	}
-
-	output, err := conn.DescribeVpcClassicLinkDnsSupportWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound, errCodeUnsupportedOperation) ||
-		tfawserr.ErrMessageContains(err, errCodeAuthFailure, "This request has been administratively disabled") {
-		return false, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return false, err
-	}
-
-	if output == nil || len(output.Vpcs) == 0 || output.Vpcs[0] == nil {
-		return false, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.Vpcs); count > 1 {
-		return false, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	vpc := output.Vpcs[0]
-
-	// Eventual consistency check.
-	if aws.StringValue(vpc.VpcId) != vpcID {
-		return false, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return aws.BoolValue(vpc.ClassicLinkDnsSupported), nil
 }
 
 func FindVPC(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeVpcsInput) (*ec2.Vpc, error) {

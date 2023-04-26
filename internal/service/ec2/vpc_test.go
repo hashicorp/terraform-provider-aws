@@ -41,8 +41,6 @@ func TestAccVPC_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "default_route_table_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dhcp_options_id"),
-					resource.TestCheckResourceAttr(resourceName, "enable_classiclink", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_classiclink_dns_support", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", "false"),
@@ -898,7 +896,14 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlockWithNetworkBorderGroup(t *testing.T)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckLocalZoneAvailable(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
+			// https://docs.aws.amazon.com/vpc/latest/userguide/Extend_VPCs.html#local-zone:
+			// "You can request the IPv6 Amazon-provided IP addresses and associate them with the network border group
+			//  for a new or existing VPCs only for us-west-2-lax-1a and use-west-2-lax-1b. All other Local Zones don't support IPv6."
+			testAccPreCheckLocalZoneAvailable(ctx, t, "us-west-2-lax-1") //lintignore:AWSAT003
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCDestroy(ctx),
@@ -1189,7 +1194,7 @@ resource "aws_vpc" "test" {
 `, rName, assignGeneratedIpv6CidrBlock)
 }
 
-func testAccVPCConfig_assignGeneratedIPv6CIDRBlockOptionalNetworkBorderGroup(rName string, localZoneNetworkBorderGroup bool) string {
+func testAccVPCConfig_assignGeneratedIPv6CIDRBlockOptionalNetworkBorderGroup(rName string, localZoneNetworkBorderGroup bool) string { // lintignore:AWSAT003
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -1204,6 +1209,11 @@ data "aws_availability_zones" "available" {
   filter {
     name   = "opt-in-status"
     values = ["opted-in"]
+  }
+
+  filter {
+    name   = "group-name"
+    values = ["us-west-2-lax-1"]
   }
 }
 

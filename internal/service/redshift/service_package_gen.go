@@ -119,10 +119,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_redshift_scheduled_action",
 		},
 		{
-			Factory:  ResourceSecurityGroup,
-			TypeName: "aws_redshift_security_group",
-		},
-		{
 			Factory:  ResourceSnapshotCopyGrant,
 			TypeName: "aws_redshift_snapshot_copy_grant",
 			Name:     "Snapshot Copy Grant",

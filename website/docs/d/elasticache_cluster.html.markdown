@@ -35,7 +35,6 @@ In addition to all arguments above, the following attributes are exported:
 * `ip_discovery` - The IP version advertised in the discovery protocol.
 * `network_type` - The IP versions for cache cluster connections.
 * `subnet_group_name` – Name of the subnet group associated to the cache cluster.
-* `security_group_names` – List of security group names associated with this cache cluster.
 * `security_group_ids` – List VPC security groups associated with the cache cluster.
 * `parameter_group_name` – Name of the parameter group associated with this cache cluster.
 * `replication_group_id` - The replication group to which this cache cluster belongs.
