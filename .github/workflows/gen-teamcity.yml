@@ -13,8 +13,8 @@ jobs:
     name: Validate TeamCity Configuration
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
-      - uses: actions/setup-java@v3
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
+      - uses: actions/setup-java@v3 # TSCCR: no entry for repository "actions/setup-java"
         with:
           distribution: adopt
           java-version: 11

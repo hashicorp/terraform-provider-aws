@@ -12,7 +12,7 @@ jobs:
   Comment:
     runs-on: ubuntu-latest
     steps:
-      - uses: bflad/action-milestone-comment@v1
+      - uses: bflad/action-milestone-comment@v1 # TSCCR: no entry for repository "bflad/action-milestone-comment"
         with:
           body: |
             This functionality has been released in [${{ github.event.milestone.title }} of the Terraform AWS Provider](https://github.com/${{ github.repository }}/blob/${{ github.event.milestone.title }}/CHANGELOG.md).  Please see the [Terraform documentation on provider versioning](https://www.terraform.io/docs/configuration/providers.html#provider-versions) or reach out if you need any assistance upgrading.

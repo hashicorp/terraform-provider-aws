@@ -11,9 +11,9 @@ jobs:
   Labeler:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Apply Labels
-        uses: actions/labeler@v4
+        uses: actions/labeler@ba790c862c380240c6d5e7427be5ace9a05c754b # v4.0.3
         with:
           configuration-path: .github/labeler-pr-triage.yml
           repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -22,9 +22,9 @@ jobs:
     needs: community_check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
       - name: Apply needs-triage Label
-        uses: actions/labeler@v4
+        uses: actions/labeler@ba790c862c380240c6d5e7427be5ace9a05c754b # v4.0.3
         if: github.event.action == 'opened' && needs.community_check.outputs.maintainer == 'false'
         with:
           configuration-path: .github/labeler-pr-needs-triage.yml
@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Apply Size Label
-        uses: codelytv/pr-size-labeler@v1
+        uses: codelytv/pr-size-labeler@v1 # TSCCR: no entry for repository "codelytv/pr-size-labeler"
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           xs_label: 'size/XS'
@@ -52,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Add comment to add helpful context for new contributors
-        uses: actions/first-interaction@v1.1.1
+        uses: actions/first-interaction@v1.1.1 # TSCCR: no entry for repository "actions/first-interaction"
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           pr-message: |-

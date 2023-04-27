@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Move Roadmap Items To Working Board
-        uses: alex-page/github-project-automation-plus@v0.8.3
+        uses: alex-page/github-project-automation-plus@v0.8.3 # TSCCR: no entry for repository "alex-page/github-project-automation-plus"
         if: github.event.issue.milestone.title == 'Roadmap'
         with:
           project: AWS Provider Working Board

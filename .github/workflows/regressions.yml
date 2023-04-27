@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Issues
         if: ${{ github.event_name == 'issues' }}
-        uses: actions-ecosystem/action-slack-notifier@v1
+        uses: actions-ecosystem/action-slack-notifier@v1 # TSCCR: no entry for repository "actions-ecosystem/action-slack-notifier"
         with:
           slack_token: ${{ secrets.SLACK_BOT_TOKEN }}
           channel: ${{ secrets.SLACK_CHANNEL }}
@@ -24,7 +24,7 @@ jobs:
             https://github.com/${{ github.repository }}/issues/${{ github.event.issue.number }}
       - name: Pull Requests
         if: ${{ github.event_name == 'pull_request' }}
-        uses: actions-ecosystem/action-slack-notifier@v1
+        uses: actions-ecosystem/action-slack-notifier@v1 # TSCCR: no entry for repository "actions-ecosystem/action-slack-notifier"
         with:
           slack_token: ${{ secrets.SLACK_BOT_TOKEN }}
           channel: ${{ secrets.SLACK_CHANNEL }}
@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Add regressions to To Do column
-        uses: alex-page/github-project-automation-plus@v0.8.3
+        uses: alex-page/github-project-automation-plus@v0.8.3 # TSCCR: no entry for repository "alex-page/github-project-automation-plus"
         with:
           project: AWS Provider Working Board
           column: To Do
