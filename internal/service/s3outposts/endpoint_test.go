@@ -281,7 +281,8 @@ resource "aws_ec2_local_gateway_route_table_vpc_association" "test" {
 }
 
 resource "aws_s3outposts_endpoint" "test" {
-  depends_on = [ aws_ec2_local_gateway_route_table_vpc_association.test ]
+  depends_on = [aws_ec2_local_gateway_route_table_vpc_association.test]
+
   outpost_id               = data.aws_outposts_outpost.test.id
   security_group_id        = aws_security_group.test.id
   subnet_id                = aws_subnet.test.id
