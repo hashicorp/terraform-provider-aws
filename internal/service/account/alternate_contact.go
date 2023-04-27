@@ -38,17 +38,17 @@ func ResourceAlternateContact() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"alternate_contact_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(account.AlternateContactType_Values(), false),
-			},
 			"account_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
+			},
+			"alternate_contact_type": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(account.AlternateContactType_Values(), false),
 			},
 			"email_address": {
 				Type:         schema.TypeString,
