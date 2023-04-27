@@ -172,7 +172,7 @@ func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateReques
 		RequestId:   aws.String(id.UniqueId()),
 	}
 
-	mps := make(mpSettingsObject, 1)
+	mps := make(multiplexProgramSettingsObject, 1)
 	resp.Diagnostics.Append(plan.MultiplexProgramSettings.ElementsAs(ctx, &mps, false)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -281,7 +281,7 @@ func (m *multiplexProgram) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	mps := make(mpSettingsObject, 1)
+	mps := make(multiplexProgramSettingsObject, 1)
 	resp.Diagnostics.Append(plan.MultiplexProgramSettings.ElementsAs(ctx, &mps, false)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -393,9 +393,9 @@ func FindMultiplexProgramByID(ctx context.Context, conn *medialive.Client, multi
 	return out, nil
 }
 
-type mpSettingsObject []multiplexProgramSettings
+type multiplexProgramSettingsObject []multiplexProgramSettings
 
-func (mps mpSettingsObject) expand(ctx context.Context) (*mltypes.MultiplexProgramSettings, diag.Diagnostics) {
+func (mps multiplexProgramSettingsObject) expand(ctx context.Context) (*mltypes.MultiplexProgramSettings, diag.Diagnostics) {
 	if len(mps) == 0 {
 		return nil, nil
 	}
@@ -408,41 +408,32 @@ func (mps mpSettingsObject) expand(ctx context.Context) (*mltypes.MultiplexProgr
 	}
 
 	if len(data.ServiceDescriptor.Elements()) > 0 && !data.ServiceDescriptor.IsNull() {
-		sd := make([]serviceDescriptor, 1)
+		sd := make(serviceDescriptorObject, 1)
 		err := data.ServiceDescriptor.ElementsAs(ctx, &sd, false)
 		if err.HasError() {
 			return nil, err
 		}
 
-		l.ServiceDescriptor = &mltypes.MultiplexProgramServiceDescriptor{
-			ProviderName: flex.StringFromFramework(ctx, sd[0].ProviderName),
-			ServiceName:  flex.StringFromFramework(ctx, sd[0].ServiceName),
-		}
+		l.ServiceDescriptor = sd.expand(ctx)
 	}
 
 	if len(data.VideoSettings.Elements()) > 0 && !data.VideoSettings.IsNull() {
-		vs := make([]videoSettings, 1)
+		vs := make(videoSettingsObject, 1)
 		err := data.VideoSettings.ElementsAs(ctx, &vs, false)
 		if err.HasError() {
 			return nil, err
 		}
 
-		l.VideoSettings = &mltypes.MultiplexVideoSettings{
-			ConstantBitrate: int32(vs[0].ConstantBitrate.ValueInt64()),
-		}
+		l.VideoSettings = vs.expand(ctx)
 
 		if len(vs[0].StatmuxSettings.Elements()) > 0 && !vs[0].StatmuxSettings.IsNull() {
-			sms := make([]statmuxSettings, 1)
+			sms := make(statmuxSettingsObject, 1)
 			err := vs[0].StatmuxSettings.ElementsAs(ctx, &sms, false)
 			if err.HasError() {
 				return nil, err
 			}
 
-			l.VideoSettings.StatmuxSettings = &mltypes.MultiplexStatmuxVideoSettings{
-				MinimumBitrate: int32(sms[0].MinimumBitrate.ValueInt64()),
-				MaximumBitrate: int32(sms[0].MaximumBitrate.ValueInt64()),
-				Priority:       int32(sms[0].Priority.ValueInt64()),
-			}
+			l.VideoSettings.StatmuxSettings = sms.expand(ctx)
 		}
 	}
 
@@ -450,6 +441,43 @@ func (mps mpSettingsObject) expand(ctx context.Context) (*mltypes.MultiplexProgr
 }
 
 type serviceDescriptorObject []serviceDescriptor
+
+func (sd serviceDescriptorObject) expand(ctx context.Context) *mltypes.MultiplexProgramServiceDescriptor {
+	if len(sd) == 0 {
+		return nil
+	}
+
+	return &mltypes.MultiplexProgramServiceDescriptor{
+		ProviderName: flex.StringFromFramework(ctx, sd[0].ProviderName),
+		ServiceName:  flex.StringFromFramework(ctx, sd[0].ServiceName),
+	}
+}
+
+type videoSettingsObject []videoSettings
+
+func (vs videoSettingsObject) expand(_ context.Context) *mltypes.MultiplexVideoSettings {
+	if len(vs) == 0 {
+		return nil
+	}
+
+	return &mltypes.MultiplexVideoSettings{
+		ConstantBitrate: int32(vs[0].ConstantBitrate.ValueInt64()),
+	}
+}
+
+type statmuxSettingsObject []statmuxSettings
+
+func (sms statmuxSettingsObject) expand(ctx context.Context) *mltypes.MultiplexStatmuxVideoSettings {
+	if len(sms) == 0 {
+		return nil
+	}
+
+	return &mltypes.MultiplexStatmuxVideoSettings{
+		MaximumBitrate: int32(sms[0].MaximumBitrate.ValueInt64()),
+		MinimumBitrate: int32(sms[0].MinimumBitrate.ValueInt64()),
+		Priority:       int32(sms[0].Priority.ValueInt64()),
+	}
+}
 
 var (
 	statmuxAttrs = map[string]attr.Type{
