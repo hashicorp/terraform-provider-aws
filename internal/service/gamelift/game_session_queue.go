@@ -3,16 +3,19 @@ package gamelift
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -123,32 +126,17 @@ func resourceGameSessionQueueRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftConn()
 
-	log.Printf("[INFO] Describing GameLift Session Queues: %s", d.Id())
-	limit := int64(1)
-	out, err := conn.DescribeGameSessionQueuesWithContext(ctx, &gamelift.DescribeGameSessionQueuesInput{
-		Names: aws.StringSlice([]string{d.Id()}),
-		Limit: &limit,
-	})
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
-			log.Printf("[WARN] GameLift Session Queues (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "reading GameLift Game Session Queue (%s): %s", d.Id(), err)
-	}
-	sessionQueues := out.GameSessionQueues
+	sessionQueue, err := FindGameSessionQueueByName(ctx, conn, d.Id())
 
-	if len(sessionQueues) < 1 {
-		log.Printf("[WARN] GameLift Session Queue (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] GameLift Game Session Queue %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
-	if len(sessionQueues) != 1 {
-		return sdkdiag.AppendErrorf(diags, "expected exactly 1 GameLift Session Queues, found %d under %q",
-			len(sessionQueues), d.Id())
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading GameLift Game Session Queue (%s): %s", d.Id(), err)
 	}
-	sessionQueue := sessionQueues[0]
 
 	arn := aws.StringValue(sessionQueue.GameSessionQueueArn)
 	d.Set("arn", arn)
@@ -213,7 +201,45 @@ func resourceGameSessionQueueDelete(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "deleting GameLift Game Session Queue (%s): %s", d.Id(), err)
 	}
 
+	// Deletions can take a few seconds.
+	_, err = tfresource.RetryUntilNotFound(ctx, 30*time.Second, func() (interface{}, error) {
+		return FindGameSessionQueueByName(ctx, conn, d.Id())
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for GameLift Game Session Queue (%s) delete: %s", d.Id(), err)
+	}
+
 	return diags
+}
+
+func FindGameSessionQueueByName(ctx context.Context, conn *gamelift.GameLift, name string) (*gamelift.GameSessionQueue, error) {
+	input := &gamelift.DescribeGameSessionQueuesInput{
+		Names: aws.StringSlice([]string{name}),
+	}
+
+	output, err := conn.DescribeGameSessionQueuesWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.GameSessionQueues) == 0 || output.GameSessionQueues[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.GameSessionQueues); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.GameSessionQueues[0], nil
 }
 
 func flattenGameSessionQueueDestinations(destinations []*gamelift.GameSessionQueueDestination) []interface{} {
