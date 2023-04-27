@@ -191,7 +191,6 @@ func resourceAlternateContactDelete(ctx context.Context, d *schema.ResourceData,
 	input := &account.DeleteAlternateContactInput{
 		AlternateContactType: aws.String(contactType),
 	}
-
 	if accountID != "" {
 		input.AccountId = aws.String(accountID)
 	}
@@ -204,11 +203,15 @@ func resourceAlternateContactDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting Account Alternate Contact (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting Account Alternate Contact (%s): %s", d.Id(), err)
 	}
 
-	if err := waitAlternateContactDeleted(ctx, conn, accountID, contactType, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("error waiting for Account Alternate Contact (%s) delete: %s", d.Id(), err)
+	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+		return FindAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
+	})
+
+	if err != nil {
+		return diag.Errorf("waiting for Account Alternate Contact (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
@@ -320,19 +323,6 @@ func waitAlternateContactUpdated(ctx context.Context, conn *account.Account, acc
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
-}
-
-func waitAlternateContactDeleted(ctx context.Context, conn *account.Account, accountID, contactType string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{statusFound},
-		Target:  []string{},
-		Refresh: statusAlternateContact(ctx, conn, accountID, contactType),
-		Timeout: timeout,
 	}
 
 	_, err := stateConf.WaitForStateContext(ctx)
