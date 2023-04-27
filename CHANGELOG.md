@@ -35,7 +35,10 @@ ENHANCEMENTS:
 * data-source/aws_imagebuilder_image: Add `containers` attribute to the `output_resources` block ([#30899](https://github.com/hashicorp/terraform-provider-aws/issues/30899))
 * resource/aws_appstream_stack: Add `streaming_experience_settings` attribute ([#28512](https://github.com/hashicorp/terraform-provider-aws/issues/28512))
 * resource/aws_backup_report_plan: Add `accounts`, `organization_units` and `regions` attributes to the `report_setting` block ([#28309](https://github.com/hashicorp/terraform-provider-aws/issues/28309))
+* resource/aws_chime_voice_connector_streaming: Add `media_insights_configuration` argument ([#30713](https://github.com/hashicorp/terraform-provider-aws/issues/30713))
 * resource/aws_db_subnet_group: Add `vpc_id` attribute ([#30775](https://github.com/hashicorp/terraform-provider-aws/issues/30775))
+* resource/aws_fis_experiment_template: Add support for `Cluster` Network Actions to `actions.*.target` ([#27337](https://github.com/hashicorp/terraform-provider-aws/issues/27337))
+* resource/aws_gamelift_game_session_queue: Add `custom_event_data` argument ([#26206](https://github.com/hashicorp/terraform-provider-aws/issues/26206))
 * resource/aws_imagebuilder_image: Add `containers` attribute to the `output_resources` block ([#30899](https://github.com/hashicorp/terraform-provider-aws/issues/30899))
 * resource/aws_networkfirewall_rule_group: Add limit for `reference_sets` ([#30759](https://github.com/hashicorp/terraform-provider-aws/issues/30759))
 * resource/aws_networkmanager_core_network: Wait for the network policy to be in the `READY_TO_EXECUTE` state before executing any changes ([#30879](https://github.com/hashicorp/terraform-provider-aws/issues/30879))
@@ -50,6 +53,7 @@ BUG FIXES:
 * resource/aws_dms_replication_task: Fix perpetual diff on dms replication_task settings ([#30885](https://github.com/hashicorp/terraform-provider-aws/issues/30885))
 * resource/aws_ds_shared_directory: Properly handle paged response objects on read ([#30914](https://github.com/hashicorp/terraform-provider-aws/issues/30914))
 * resource/aws_ecs_service: Fix removal of `service_registries` configuration block ([#30852](https://github.com/hashicorp/terraform-provider-aws/issues/30852))
+* resource/aws_redshiftdata_statement: Fix `ValidationException` errors reading expired statements ([#26343](https://github.com/hashicorp/terraform-provider-aws/issues/26343))
 * resource/aws_vpc_endpoint_route_table_association: Retry resource Create for EC2 eventual consistency ([#30994](https://github.com/hashicorp/terraform-provider-aws/issues/30994))
 * resource/aws_vpc_endpoint_service_allowed_principal: Fix `too many results` error ([#30974](https://github.com/hashicorp/terraform-provider-aws/issues/30974))
 
