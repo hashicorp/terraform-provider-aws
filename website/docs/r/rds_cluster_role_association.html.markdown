@@ -37,6 +37,14 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - DB Cluster Identifier and IAM Role ARN separated by a comma (`,`)
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `30m`)
+- `update` - (Default `30m`)
+- `delete` - (Default `30m`)
+
 ## Import
 
 `aws_rds_cluster_role_association` can be imported using the DB Cluster Identifier and IAM Role ARN separated by a comma (`,`), e.g.,
