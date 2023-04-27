@@ -5028,10 +5028,12 @@ func TestInstanceCPUThreadsPerCoreSchema(t *testing.T) {
 
 	actualSchema := tfec2.ResourceInstance().Schema["cpu_threads_per_core"]
 	expectedSchema := &schema.Schema{
-		Type:     schema.TypeInt,
-		Optional: true,
-		Computed: true,
-		ForceNew: true,
+		Type:          schema.TypeInt,
+		Optional:      true,
+		Computed:      true,
+		ForceNew:      true,
+		Deprecated:    "use 'cpu_options' argument instead",
+		ConflictsWith: []string{"cpu_options.0.threads_per_core"},
 	}
 	if !reflect.DeepEqual(actualSchema, expectedSchema) {
 		t.Fatalf(
