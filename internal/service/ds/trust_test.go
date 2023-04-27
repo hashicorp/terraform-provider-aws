@@ -150,7 +150,7 @@ func TestAccDSTrust_twoWayBasic(t *testing.T) {
 	})
 }
 
-func TestAccDSTrust_oneWay(t *testing.T) {
+func TestAccDSTrust_oneWayBasic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 awstypes.Trust
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -176,7 +176,7 @@ func TestAccDSTrust_oneWay(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "trust_state_reason"),
 
 					testAccCheckTrustExists(ctx, resourceOtherName, &v2),
-					resource.TestCheckResourceAttr(resourceOtherName, "trust_state", string(awstypes.TrustStateVerified)),
+					resource.TestCheckResourceAttr(resourceOtherName, "trust_state", string(awstypes.TrustStateCreated)),
 					resource.TestCheckNoResourceAttr(resourceOtherName, "trust_state_reason"),
 				),
 			},
@@ -433,8 +433,6 @@ func TestAccDSTrust_ConditionalForwarderIPs(t *testing.T) {
 		},
 	})
 }
-
-// TODO: Test one-directional trusts
 
 func TestAccDSTrust_deleteAssociatedConditionalForwarder(t *testing.T) {
 	ctx := acctest.Context(t)

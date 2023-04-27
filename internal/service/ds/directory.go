@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -220,6 +221,8 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	// Sometimes creating a directory will return `Failed`, especially when multiple directories are being
 	// created concurrently. Retry creation in that case.
+	// When it fails, it will typically be within the first few minutes of creation, so there is no need
+	// to wait for deletion.
 	err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		if err := creator.Create(ctx, conn, name, d); err != nil {
 			return retry.NonRetryableError(err)
@@ -228,6 +231,19 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 		if _, err := waitDirectoryCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 			if use, ok := errs.As[*retry.UnexpectedStateError](err); ok {
 				if use.State == directoryservice.DirectoryStageFailed {
+					tflog.Info(ctx, "retrying failed Directory creation", map[string]any{
+						"directory_id": d.Id(),
+						"domain_name":  name,
+					})
+					_, deleteErr := conn.DeleteDirectoryWithContext(ctx, &directoryservice.DeleteDirectoryInput{
+						DirectoryId: aws.String(d.Id()),
+					})
+					if deleteErr != nil {
+						diags = append(diags, errs.NewWarningDiagnostic(
+							"Unable to Delete Failed Directory",
+							fmt.Sprintf("While creating the Directory Service Directory %q, an attempt failed. Deleting the failed Directory failed: %s", name, deleteErr),
+						))
+					}
 					return retry.RetryableError(err)
 				}
 			}
@@ -259,6 +275,111 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	return append(diags, resourceDirectoryRead(ctx, d, meta)...)
+}
+
+func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DSConn()
+
+	dir, err := FindDirectoryByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Directory Service Directory (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Directory Service Directory (%s): %s", d.Id(), err)
+	}
+
+	d.Set("access_url", dir.AccessUrl)
+	d.Set("alias", dir.Alias)
+	if dir.ConnectSettings != nil {
+		if err := d.Set("connect_settings", []interface{}{flattenDirectoryConnectSettingsDescription(dir.ConnectSettings, dir.DnsIpAddrs)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting connect_settings: %s", err)
+		}
+	} else {
+		d.Set("connect_settings", nil)
+	}
+	d.Set("description", dir.Description)
+	d.Set("desired_number_of_domain_controllers", dir.DesiredNumberOfDomainControllers)
+	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
+		d.Set("dns_ip_addresses", aws.StringValueSlice(dir.ConnectSettings.ConnectIps))
+	} else {
+		d.Set("dns_ip_addresses", aws.StringValueSlice(dir.DnsIpAddrs))
+	}
+	d.Set("edition", dir.Edition)
+	d.Set("enable_sso", dir.SsoEnabled)
+	d.Set("name", dir.Name)
+	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
+		d.Set("security_group_id", dir.ConnectSettings.SecurityGroupId)
+	} else {
+		d.Set("security_group_id", dir.VpcSettings.SecurityGroupId)
+	}
+	d.Set("short_name", dir.ShortName)
+	d.Set("size", dir.Size)
+	d.Set("type", dir.Type)
+	if dir.VpcSettings != nil {
+		if err := d.Set("vpc_settings", []interface{}{flattenDirectoryVpcSettingsDescription(dir.VpcSettings)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting vpc_settings: %s", err)
+		}
+	} else {
+		d.Set("vpc_settings", nil)
+	}
+
+	return diags
+}
+
+func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DSConn()
+
+	if d.HasChange("desired_number_of_domain_controllers") {
+		if err := updateNumberOfDomainControllers(ctx, conn, d.Id(), d.Get("desired_number_of_domain_controllers").(int), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if d.HasChange("enable_sso") {
+		if _, ok := d.GetOk("enable_sso"); ok {
+			if err := enableSSO(ctx, conn, d.Id()); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+		} else {
+			if err := disableSSO(ctx, conn, d.Id()); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+		}
+	}
+
+	return append(diags, resourceDirectoryRead(ctx, d, meta)...)
+}
+
+func resourceDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DSConn()
+
+	log.Printf("[DEBUG] Deleting Directory Service Directory: %s", d.Id())
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, directoryApplicationDeauthorizedPropagationTimeout, func() (interface{}, error) {
+		return conn.DeleteDirectoryWithContext(ctx, &directoryservice.DeleteDirectoryInput{
+			DirectoryId: aws.String(d.Id()),
+		})
+	}, directoryservice.ErrCodeClientException, "authorized applications")
+
+	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Directory Service Directory (%s): %s", d.Id(), err)
+	}
+
+	if _, err := waitDirectoryDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Directory Service Directory (%s) delete: %s", d.Id(), err)
+	}
+
+	return diags
 }
 
 type directoryCreator interface {
@@ -390,111 +511,6 @@ func (c simpleADCreator) Create(ctx context.Context, conn *directoryservice.Dire
 	d.SetId(aws.StringValue(output.DirectoryId))
 
 	return nil
-}
-
-func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn()
-
-	dir, err := FindDirectoryByID(ctx, conn, d.Id())
-
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Directory Service Directory (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Directory Service Directory (%s): %s", d.Id(), err)
-	}
-
-	d.Set("access_url", dir.AccessUrl)
-	d.Set("alias", dir.Alias)
-	if dir.ConnectSettings != nil {
-		if err := d.Set("connect_settings", []interface{}{flattenDirectoryConnectSettingsDescription(dir.ConnectSettings, dir.DnsIpAddrs)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting connect_settings: %s", err)
-		}
-	} else {
-		d.Set("connect_settings", nil)
-	}
-	d.Set("description", dir.Description)
-	d.Set("desired_number_of_domain_controllers", dir.DesiredNumberOfDomainControllers)
-	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
-		d.Set("dns_ip_addresses", aws.StringValueSlice(dir.ConnectSettings.ConnectIps))
-	} else {
-		d.Set("dns_ip_addresses", aws.StringValueSlice(dir.DnsIpAddrs))
-	}
-	d.Set("edition", dir.Edition)
-	d.Set("enable_sso", dir.SsoEnabled)
-	d.Set("name", dir.Name)
-	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
-		d.Set("security_group_id", dir.ConnectSettings.SecurityGroupId)
-	} else {
-		d.Set("security_group_id", dir.VpcSettings.SecurityGroupId)
-	}
-	d.Set("short_name", dir.ShortName)
-	d.Set("size", dir.Size)
-	d.Set("type", dir.Type)
-	if dir.VpcSettings != nil {
-		if err := d.Set("vpc_settings", []interface{}{flattenDirectoryVpcSettingsDescription(dir.VpcSettings)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting vpc_settings: %s", err)
-		}
-	} else {
-		d.Set("vpc_settings", nil)
-	}
-
-	return diags
-}
-
-func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn()
-
-	if d.HasChange("desired_number_of_domain_controllers") {
-		if err := updateNumberOfDomainControllers(ctx, conn, d.Id(), d.Get("desired_number_of_domain_controllers").(int), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-	}
-
-	if d.HasChange("enable_sso") {
-		if _, ok := d.GetOk("enable_sso"); ok {
-			if err := enableSSO(ctx, conn, d.Id()); err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
-			}
-		} else {
-			if err := disableSSO(ctx, conn, d.Id()); err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
-			}
-		}
-	}
-
-	return append(diags, resourceDirectoryRead(ctx, d, meta)...)
-}
-
-func resourceDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DSConn()
-
-	log.Printf("[DEBUG] Deleting Directory Service Directory: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, directoryApplicationDeauthorizedPropagationTimeout, func() (interface{}, error) {
-		return conn.DeleteDirectoryWithContext(ctx, &directoryservice.DeleteDirectoryInput{
-			DirectoryId: aws.String(d.Id()),
-		})
-	}, directoryservice.ErrCodeClientException, "authorized applications")
-
-	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Directory Service Directory (%s): %s", d.Id(), err)
-	}
-
-	if _, err := waitDirectoryDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Directory Service Directory (%s) delete: %s", d.Id(), err)
-	}
-
-	return diags
 }
 
 func createAlias(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, alias string) error {
@@ -757,6 +773,13 @@ func waitDirectoryDeleted(ctx context.Context, conn *directoryservice.DirectoryS
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	// Wrap any error returned with waiting message
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("waiting for completion: %w", err)
+		}
+	}()
 
 	if output, ok := outputRaw.(*directoryservice.DirectoryDescription); ok {
 		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StageReason)))

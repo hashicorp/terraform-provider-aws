@@ -180,7 +180,13 @@ func (r *resourceTrust) Create(ctx context.Context, req resource.CreateRequest, 
 	state := plan
 	state.ID = types.StringValue(aws.ToString(output.TrustId))
 
-	trust, err := waitTrustCreated(ctx, conn, state.DirectoryID.ValueString(), state.ID.ValueString(), trustCreatedTimeout)
+	// When Trust Direction is `One-Way: Incoming`, the Trust terminates at Created. Otherwise, it terminates at Verified
+	var trust *awstypes.Trust
+	if plan.TrustDirection.ValueString() == string(awstypes.TrustDirectionOneWayIncoming) {
+		trust, err = waitTrustCreated(ctx, conn, state.DirectoryID.ValueString(), state.ID.ValueString(), trustCreatedTimeout)
+	} else {
+		trust, err = waitTrustVerified(ctx, conn, state.DirectoryID.ValueString(), state.ID.ValueString(), trustCreatedTimeout)
+	}
 	if err != nil {
 		resp.Diagnostics.Append(create.DiagErrorFramework(names.DS, create.ErrActionCreating, ResNameTrust, state.ID.ValueString(), err))
 		return
@@ -486,8 +492,40 @@ func isConditionalForwarderNotFoundErr(err error) bool {
 	return errs.IsA[*awstypes.EntityDoesNotExistException](err)
 }
 
-// waitTrustCreated waits until a Trust is created. On first creation, `VerifyFailed` is expected.
+// waitTrustCreated waits until a Trust is created.
 func waitTrustCreated(ctx context.Context, conn directoryservice.DescribeTrustsAPIClient, directoryID, trustID string, timeout time.Duration) (*awstypes.Trust, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			awstypes.TrustStateCreating,
+		),
+		Target: enum.Slice(
+			awstypes.TrustStateCreated,
+		),
+		Refresh: statusTrust(ctx, conn, directoryID, trustID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	// Wrap any error returned with waiting message
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("waiting for completion: %w", err)
+		}
+	}()
+
+	if output, ok := outputRaw.(*awstypes.Trust); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.TrustStateReason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+// waitTrustVerified waits until a Trust is created and verified.
+// On first side of a Two-Way Trust relationship, `VerifyFailed` is expected. This then gets updated when the second side is created.
+func waitTrustVerified(ctx context.Context, conn directoryservice.DescribeTrustsAPIClient, directoryID, trustID string, timeout time.Duration) (*awstypes.Trust, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.TrustStateCreating,
