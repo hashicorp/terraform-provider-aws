@@ -52,6 +52,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"canvas":                                                 testAccDomain_canvasAppSettings,
 			"domainSettings":                                         testAccDomain_domainSettings,
 			"rSessionAppSettings":                                    testAccDomain_rSessionAppSettings,
+			"rStudioServerProAppSettings":                            testAccDomain_rStudioServerProAppSettings,
 			"spaceSettingsKernelGatewayAppSettings":                  testAccDomain_spaceSettingsKernelGatewayAppSettings,
 			"code":                                                   testAccDomain_jupyterServerAppSettings_code,
 		},
