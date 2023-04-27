@@ -6,11 +6,13 @@ import (
 	"log"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/account"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -210,6 +212,133 @@ func resourceAlternateContactDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	return nil
+}
+
+func FindAlternateContactByAccountIDAndContactType(ctx context.Context, conn *account.Account, accountID, contactType string) (*account.AlternateContact, error) { // nosemgrep:ci.account-in-func-name
+	input := &account.GetAlternateContactInput{
+		AlternateContactType: aws.String(contactType),
+	}
+
+	if accountID != "" {
+		input.AccountId = aws.String(accountID)
+	}
+
+	output, err := conn.GetAlternateContactWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, account.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.AlternateContact == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.AlternateContact, nil
+}
+
+const (
+	statusFound      = "FOUND"
+	statusUpdated    = "UPDATED"
+	statusNotUpdated = "NOT_UPDATED"
+)
+
+func statusAlternateContact(ctx context.Context, conn *account.Account, accountID, contactType string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindAlternateContactByAccountIDAndContactType(ctx, conn, accountID, contactType)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, statusFound, nil
+	}
+}
+
+func statusAlternateContactUpdate(ctx context.Context, conn *account.Account, accountID, contactType, email, name, phone, title string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindAlternateContactByAccountIDAndContactType(ctx, conn, accountID, contactType)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if email == aws.StringValue(output.EmailAddress) &&
+			name == aws.StringValue(output.Name) &&
+			phone == aws.StringValue(output.PhoneNumber) &&
+			title == aws.StringValue(output.Title) {
+			return output, statusUpdated, nil
+		}
+
+		return output, statusNotUpdated, nil
+	}
+}
+
+const (
+	alternateContactCreateTimeout = 5 * time.Minute
+	alternateContactUpdateTimeout = 5 * time.Minute
+	alternateContactDeleteTimeout = 5 * time.Minute
+)
+
+func waitAlternateContactCreated(ctx context.Context, conn *account.Account, accountID, contactType string, timeout time.Duration) (*account.AlternateContact, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{},
+		Target:                    []string{statusFound},
+		Refresh:                   statusAlternateContact(ctx, conn, accountID, contactType),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*account.AlternateContact); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitAlternateContactUpdated(ctx context.Context, conn *account.Account, accountID, contactType, email, name, phone, title string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{statusNotUpdated},
+		Target:                    []string{statusUpdated},
+		Refresh:                   statusAlternateContactUpdate(ctx, conn, accountID, contactType, email, name, phone, title),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+func waitAlternateContactDeleted(ctx context.Context, conn *account.Account, accountID, contactType string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{statusFound},
+		Target:  []string{},
+		Refresh: statusAlternateContact(ctx, conn, accountID, contactType),
+		Timeout: timeout,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
 }
 
 const alternateContactResourceIDSeparator = "/"
