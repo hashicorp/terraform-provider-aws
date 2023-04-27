@@ -1021,9 +1021,14 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("tenancy", v.Tenancy)
 	}
 
+	// preserved to maintain backward compatibility
 	if v := instance.CpuOptions; v != nil {
 		d.Set("cpu_core_count", v.CoreCount)
 		d.Set("cpu_threads_per_core", v.ThreadsPerCore)
+	}
+
+	if err := d.Set("cpu_options", flattenCpuOptions(instance.CpuOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting cpu_options: %s", err)
 	}
 
 	if v := instance.HibernationOptions; v != nil {
@@ -3012,6 +3017,28 @@ func flattenInstanceMetadataOptions(opts *ec2.InstanceMetadataOptionsResponse) [
 		"http_put_response_hop_limit": aws.Int64Value(opts.HttpPutResponseHopLimit),
 		"http_tokens":                 aws.StringValue(opts.HttpTokens),
 		"instance_metadata_tags":      aws.StringValue(opts.InstanceMetadataTags),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCpuOptions(opts *ec2.CpuOptions) []interface{} {
+	if opts == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := opts.AmdSevSnp; v != nil {
+		m["amd_sev_snp"] = aws.StringValue(v)
+	}
+
+	if v := opts.CoreCount; v != nil {
+		m["core_count"] = aws.Int64Value(v)
+	}
+
+	if v := opts.ThreadsPerCore; v != nil {
+		m["threads_per_core"] = aws.Int64Value(v)
 	}
 
 	return []interface{}{m}
