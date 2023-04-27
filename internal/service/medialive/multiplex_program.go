@@ -172,13 +172,13 @@ func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateReques
 		RequestId:   aws.String(id.UniqueId()),
 	}
 
-	mps := make([]multiplexProgramSettings, 1)
+	mps := make(mpSettingsObject, 1)
 	resp.Diagnostics.Append(plan.MultiplexProgramSettings.ElementsAs(ctx, &mps, false)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	mpSettings, err := expandMultiplexProgramSettings(ctx, mps)
+	mpSettings, err := mps.expand(ctx)
 
 	resp.Diagnostics.Append(err...)
 	if resp.Diagnostics.HasError() {
@@ -200,9 +200,9 @@ func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateReques
 	var result resourceMultiplexProgramData
 
 	result.ID = flex.StringValueToFramework(ctx, fmt.Sprintf("%s/%s", programName, multiplexId))
-	result.ProgramName = types.StringValue(aws.ToString(out.MultiplexProgram.ProgramName))
-	result.MultiplexID = types.StringValue(plan.MultiplexID.ValueString())
-	result.MultiplexProgramSettings = flattenMultiplexProgramSettings(out.MultiplexProgram.MultiplexProgramSettings)
+	result.ProgramName = flex.StringToFrameworkLegacy(ctx, out.MultiplexProgram.ProgramName)
+	result.MultiplexID = plan.MultiplexID
+	result.MultiplexProgramSettings = flattenMultiplexProgramSettings(ctx, out.MultiplexProgram.MultiplexProgramSettings)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, result)...)
 
@@ -251,16 +251,7 @@ func (m *multiplexProgram) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	sm := make([]videoSettings, 1)
-	attErr := req.State.GetAttribute(ctx, path.Root("multiplex_program_settings").
-		AtListIndex(0).AtName("video_settings"), &sm)
-
-	resp.Diagnostics.Append(attErr...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	state.MultiplexProgramSettings = flattenMultiplexProgramSettings(out.MultiplexProgramSettings)
+	state.MultiplexProgramSettings = flattenMultiplexProgramSettings(ctx, out.MultiplexProgramSettings)
 	state.ProgramName = types.StringValue(aws.ToString(out.ProgramName))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -290,13 +281,13 @@ func (m *multiplexProgram) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	mps := make([]multiplexProgramSettings, 1)
+	mps := make(mpSettingsObject, 1)
 	resp.Diagnostics.Append(plan.MultiplexProgramSettings.ElementsAs(ctx, &mps, false)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	mpSettings, errExpand := expandMultiplexProgramSettings(ctx, mps)
+	mpSettings, errExpand := mps.expand(ctx)
 
 	resp.Diagnostics.Append(errExpand...)
 	if resp.Diagnostics.HasError() {
@@ -330,7 +321,7 @@ func (m *multiplexProgram) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	plan.MultiplexProgramSettings = flattenMultiplexProgramSettings(out.MultiplexProgramSettings)
+	plan.MultiplexProgramSettings = flattenMultiplexProgramSettings(ctx, out.MultiplexProgramSettings)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -402,7 +393,9 @@ func FindMultiplexProgramByID(ctx context.Context, conn *medialive.Client, multi
 	return out, nil
 }
 
-func expandMultiplexProgramSettings(ctx context.Context, mps []multiplexProgramSettings) (*mltypes.MultiplexProgramSettings, diag.Diagnostics) {
+type mpSettingsObject []multiplexProgramSettings
+
+func (mps mpSettingsObject) expand(ctx context.Context) (*mltypes.MultiplexProgramSettings, diag.Diagnostics) {
 	if len(mps) == 0 {
 		return nil, nil
 	}
@@ -422,8 +415,8 @@ func expandMultiplexProgramSettings(ctx context.Context, mps []multiplexProgramS
 		}
 
 		l.ServiceDescriptor = &mltypes.MultiplexProgramServiceDescriptor{
-			ProviderName: aws.String(sd[0].ProviderName.ValueString()),
-			ServiceName:  aws.String(sd[0].ServiceName.ValueString()),
+			ProviderName: flex.StringFromFramework(ctx, sd[0].ProviderName),
+			ServiceName:  flex.StringFromFramework(ctx, sd[0].ServiceName),
 		}
 	}
 
@@ -456,6 +449,8 @@ func expandMultiplexProgramSettings(ctx context.Context, mps []multiplexProgramS
 	return l, nil
 }
 
+type serviceDescriptorObject []serviceDescriptor
+
 var (
 	statmuxAttrs = map[string]attr.Type{
 		"minimum_bitrate": types.Int64Type,
@@ -481,7 +476,7 @@ var (
 	}
 )
 
-func flattenMultiplexProgramSettings(mps *mltypes.MultiplexProgramSettings) types.List {
+func flattenMultiplexProgramSettings(ctx context.Context, mps *mltypes.MultiplexProgramSettings) types.List {
 	elemType := types.ObjectType{AttrTypes: multiplexProgramSettingsAttrs}
 
 	if mps == nil {
@@ -490,16 +485,16 @@ func flattenMultiplexProgramSettings(mps *mltypes.MultiplexProgramSettings) type
 
 	attrs := map[string]attr.Value{}
 	attrs["program_number"] = types.Int64Value(int64(mps.ProgramNumber))
-	attrs["preferred_channel_pipeline"] = types.StringValue(string(mps.PreferredChannelPipeline))
-	attrs["service_descriptor"] = flattenServiceDescriptor(mps.ServiceDescriptor)
-	attrs["video_settings"] = flattenVideoSettings(mps.VideoSettings)
+	attrs["preferred_channel_pipeline"] = flex.StringValueToFrameworkLegacy(ctx, mps.PreferredChannelPipeline)
+	attrs["service_descriptor"] = flattenServiceDescriptor(ctx, mps.ServiceDescriptor)
+	attrs["video_settings"] = flattenVideoSettings(ctx, mps.VideoSettings)
 
 	vals := types.ObjectValueMust(multiplexProgramSettingsAttrs, attrs)
 
 	return types.ListValueMust(elemType, []attr.Value{vals})
 }
 
-func flattenServiceDescriptor(sd *mltypes.MultiplexProgramServiceDescriptor) types.List {
+func flattenServiceDescriptor(ctx context.Context, sd *mltypes.MultiplexProgramServiceDescriptor) types.List {
 	elemType := types.ObjectType{AttrTypes: serviceDescriptorAttrs}
 
 	if sd == nil {
@@ -507,15 +502,15 @@ func flattenServiceDescriptor(sd *mltypes.MultiplexProgramServiceDescriptor) typ
 	}
 
 	attrs := map[string]attr.Value{}
-	attrs["provider_name"] = types.StringValue(aws.ToString(sd.ProviderName))
-	attrs["service_name"] = types.StringValue(aws.ToString(sd.ServiceName))
+	attrs["provider_name"] = flex.StringToFrameworkLegacy(ctx, sd.ProviderName)
+	attrs["service_name"] = flex.StringToFrameworkLegacy(ctx, sd.ServiceName)
 
 	vals := types.ObjectValueMust(serviceDescriptorAttrs, attrs)
 
 	return types.ListValueMust(elemType, []attr.Value{vals})
 }
 
-func flattenStatMuxSettings(mps *mltypes.MultiplexStatmuxVideoSettings) types.List {
+func flattenStatMuxSettings(_ context.Context, mps *mltypes.MultiplexStatmuxVideoSettings) types.List {
 	elemType := types.ObjectType{AttrTypes: statmuxAttrs}
 
 	if mps == nil {
@@ -532,7 +527,7 @@ func flattenStatMuxSettings(mps *mltypes.MultiplexStatmuxVideoSettings) types.Li
 	return types.ListValueMust(elemType, []attr.Value{vals})
 }
 
-func flattenVideoSettings(mps *mltypes.MultiplexVideoSettings) types.List {
+func flattenVideoSettings(ctx context.Context, mps *mltypes.MultiplexVideoSettings) types.List {
 	elemType := types.ObjectType{AttrTypes: videoSettingsAttrs}
 
 	if mps == nil {
@@ -541,7 +536,7 @@ func flattenVideoSettings(mps *mltypes.MultiplexVideoSettings) types.List {
 
 	attrs := map[string]attr.Value{}
 	attrs["constant_bitrate"] = types.Int64Value(int64(mps.ConstantBitrate))
-	attrs["statmux_settings"] = flattenStatMuxSettings(mps.StatmuxSettings)
+	attrs["statmux_settings"] = flattenStatMuxSettings(ctx, mps.StatmuxSettings)
 
 	vals := types.ObjectValueMust(videoSettingsAttrs, attrs)
 
