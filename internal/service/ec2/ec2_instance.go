@@ -2723,7 +2723,10 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 		opts.Placement.HostResourceGroupArn = aws.String(v.(string))
 	}
 
-	if v := d.Get("cpu_core_count").(int); v > 0 {
+	if v, ok := d.GetOk("cpu_options"); ok {
+		opts.CpuOptions = expandCpuOptions(v.([]interface{}))
+	} else if v := d.Get("cpu_core_count").(int); v > 0 {
+		// preserved to maintain backward compatibility
 		tc := d.Get("cpu_threads_per_core").(int)
 		if tc < 0 {
 			tc = 2
@@ -2975,6 +2978,31 @@ func expandInstanceMetadataOptions(l []interface{}) *ec2.InstanceMetadataOptions
 		if v, ok := m["instance_metadata_tags"].(string); ok && v != "" {
 			opts.InstanceMetadataTags = aws.String(v)
 		}
+	}
+
+	return opts
+}
+
+func expandCpuOptions(l []interface{}) *ec2.CpuOptionsRequest {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	opts := &ec2.CpuOptionsRequest{}
+
+	if v, ok := m["amd_sev_snp"].(string); ok && v != "" {
+		opts.AmdSevSnp = aws.String(v)
+	}
+
+	if v, ok := m["core_count"].(int); ok && v > 0 {
+		tc := m["threads_per_core"].(int)
+		if tc < 0 {
+			tc = 2
+		}
+		opts.CoreCount = aws.Int64(int64(v))
+		opts.ThreadsPerCore = aws.Int64(int64(tc))
 	}
 
 	return opts
