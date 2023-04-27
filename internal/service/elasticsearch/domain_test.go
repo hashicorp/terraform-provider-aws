@@ -2997,52 +2997,52 @@ func testAccDomainConfig_logPublishingOptions(rName, logType string, setPublishL
 		logPublishingBaseConfig = testAccDomain_LogPublishingOptions_BaseConfig(rName)
 
 		logPublishingOptionsConfig = fmt.Sprintf(`
-    log_publishing_options {
-      log_type                 = %[1]q
-      cloudwatch_log_group_arn = %[2]t ? aws_cloudwatch_log_group.test.arn : null
-    }`, logType, setLogGroup)
+      log_publishing_options {
+        log_type                 = %[1]q
+        cloudwatch_log_group_arn = %[2]t ? aws_cloudwatch_log_group.test.arn : null
+      }`, logType, setLogGroup)
 	}
 
 	if logType == elasticsearch.LogTypeAuditLogs {
 		auditLogsConfig = `
-	  advanced_security_options {
-		  enabled                        = true
-		  internal_user_database_enabled = true
-		  master_user_options {
-		    master_user_name     = "testmasteruser"
-		    master_user_password = "Barbarbarbar1!"
-		  }
-	 	}
-	
-		domain_endpoint_options {
-	  		enforce_https       = true
-	  		tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
-		}
-	
-		encrypt_at_rest {
-			enabled = true
-		}
-	
-		node_to_node_encryption {
-			enabled = true
-		}`
+      advanced_security_options {
+        enabled                        = true
+        internal_user_database_enabled = true
+        master_user_options {
+          master_user_name     = "testmasteruser"
+          master_user_password = "Barbarbarbar1!"
+        }
+      }
+
+      domain_endpoint_options {
+        enforce_https       = true
+        tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+      }
+
+      encrypt_at_rest {
+        enabled = true
+      }
+
+      node_to_node_encryption {
+        enabled = true
+      }`
 	}
 
 	domainResourcesConfig := fmt.Sprintf(`
-resource "aws_elasticsearch_domain" "test" {
-  domain_name           = %[1]q
-  elasticsearch_version = "7.1" # needed for ESApplication/Audit Log Types
+    resource "aws_elasticsearch_domain" "test" {
+      domain_name           = %[1]q
+      elasticsearch_version = "7.1" # needed for ESApplication/Audit Log Types
 
-  ebs_options {
-    ebs_enabled = true
-    volume_size = 10
-  }
+      ebs_options {
+        ebs_enabled = true
+        volume_size = 10
+      }
 
-  %[2]s
- 
-  %[3]s
+      %[2]s
 
-}`, rName, auditLogsConfig, logPublishingOptionsConfig)
+      %[3]s
+
+    }`, rName, auditLogsConfig, logPublishingOptionsConfig)
 
 	return acctest.ConfigCompose(logPublishingBaseConfig, domainResourcesConfig)
 }
