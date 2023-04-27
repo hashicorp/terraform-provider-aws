@@ -196,8 +196,6 @@ resource "aws_rds_cluster" "test" {
   database_name           = "mydb"
   master_username         = "foo"
   master_password         = "foobarfoobarfoobar"
-  backup_retention_period = 5
-  preferred_backup_window = "07:00-09:00"
   skip_final_snapshot     = true
 }
 
