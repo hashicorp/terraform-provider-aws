@@ -103,6 +103,7 @@ func testAccCheckTargetsDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := conn.ListTargets(ctx, &vpclattice.ListTargetsInput{
 				TargetGroupIdentifier: aws.String(targetGroupIdentifier),
+				Targets:               []types.Target{},
 			})
 			if err != nil {
 				var nfe *types.ResourceNotFoundException

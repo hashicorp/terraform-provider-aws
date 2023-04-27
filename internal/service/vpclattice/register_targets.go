@@ -6,13 +6,14 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	// "strings"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	// "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -32,8 +33,18 @@ func ResourceRegisterTargets() *schema.Resource {
 		UpdateWithoutTimeout: resourceRegisterTargetsUpdate,
 		DeleteWithoutTimeout: resourceRegisterTargetsDelete,
 
+		// Importer: &schema.ResourceImporter{
+		// 	StateContext: schema.ImportStatePassthroughContext,
+		// },
+
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				idParts := strings.Split(d.Id(), "/")
+				fmt.Println(idParts)
+				d.Set("target_group_identifier", idParts[0])
+
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -50,6 +61,8 @@ func ResourceRegisterTargets() *schema.Resource {
 			"targets": {
 				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 1,
+				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -64,50 +77,50 @@ func ResourceRegisterTargets() *schema.Resource {
 					},
 				},
 			},
-			"successful": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 2048),
-						},
-						"port": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-					},
-				},
-			},
-			"unsuccessful": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 2048),
-						},
-						"port": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"failure_code": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 2048),
-						},
-						"failure_message": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 2048),
-						},
-					},
-				},
-			},
+			// "successful": {
+			// 	Type:     schema.TypeList,
+			// 	Computed: true,
+			// 	Elem: &schema.Resource{
+			// 		Schema: map[string]*schema.Schema{
+			// 			"id": {
+			// 				Type:         schema.TypeString,
+			// 				Optional:     true,
+			// 				ValidateFunc: validation.StringLenBetween(1, 2048),
+			// 			},
+			// 			"port": {
+			// 				Type:     schema.TypeInt,
+			// 				Optional: true,
+			// 			},
+			// 		},
+			// 	},
+			// },
+			// "unsuccessful": {
+			// 	Type:     schema.TypeList,
+			// 	Computed: true,
+			// 	Elem: &schema.Resource{
+			// 		Schema: map[string]*schema.Schema{
+			// 			"id": {
+			// 				Type:         schema.TypeString,
+			// 				Optional:     true,
+			// 				ValidateFunc: validation.StringLenBetween(1, 2048),
+			// 			},
+			// 			"port": {
+			// 				Type:     schema.TypeInt,
+			// 				Optional: true,
+			// 			},
+			// 			"failure_code": {
+			// 				Type:         schema.TypeString,
+			// 				Optional:     true,
+			// 				ValidateFunc: validation.StringLenBetween(1, 2048),
+			// 			},
+			// 			"failure_message": {
+			// 				Type:         schema.TypeString,
+			// 				Optional:     true,
+			// 				ValidateFunc: validation.StringLenBetween(1, 2048),
+			// 			},
+			// 		},
+			// 	},
+			// },
 		},
 	}
 }
@@ -123,10 +136,13 @@ func resourceRegisterTargetsCreate(ctx context.Context, d *schema.ResourceData, 
 		TargetGroupIdentifier: aws.String(d.Get("target_group_identifier").(string)),
 	}
 
+	var targetId string
 	if v, ok := d.GetOk("targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{}) != nil {
 		targets := expandTargets(v.([]interface{}))
+
 		for _, target := range targets {
 			log.Printf("[INFO] Registering Target %s with Target Group %s", aws.ToString(target.Id), d.Get("target_group_identifier").(string))
+			targetId = *target.Id
 		}
 		in.Targets = targets
 	}
@@ -140,14 +156,17 @@ func resourceRegisterTargetsCreate(ctx context.Context, d *schema.ResourceData, 
 		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameRegisterTargets, d.Get("target_group_identifier").(string), errors.New("empty output"))
 	}
 
-	d.Set("successful", flattenTargetsSuccessful(out.Successful))
-	d.Set("unsuccessful", flattenTargetsUnSuccessful(out.Unsuccessful))
-
-
-	d.SetId(aws.ToString(in.TargetGroupIdentifier))
-
 	targetGroupIdentifier := d.Get("target_group_identifier").(string)
 	targets := d.Get("targets").([]interface{})
+
+	parts := []string{
+		d.Get("target_group_identifier").(string),
+		targetId,
+	}
+	fmt.Println(parts)
+	d.SetId(strings.Join(parts, "/"))
+	// d.SetId(id.PrefixedUniqueId(fmt.Sprintf("%s/", d.Get("target_group_arn"))))
+	// d.SetId(aws.ToString(in.TargetGroupIdentifier))
 
 	if _, err := waitRegisterTargets(ctx, conn, targetGroupIdentifier, targets, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionWaitingForCreation, ResNameRegisterTargets, d.Id(), err)
@@ -157,6 +176,7 @@ func resourceRegisterTargetsCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceRegisterTargetsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	fmt.Println("Running on Read")
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
 	targetGroupId := d.Get("target_group_identifier").(string)
@@ -238,7 +258,7 @@ func resourceRegisterTargetsDelete(ctx context.Context, d *schema.ResourceData, 
 
 		return create.DiagError(names.VPCLattice, create.ErrActionDeleting, ResNameRegisterTargets, d.Id(), err)
 	}
-	
+	fmt.Println("Starting Delete Waiter")
 	if _, err := waitDeleteTargets(ctx, conn, targetGroupIdentifier, targetsRaw, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionWaitingForDeletion, ResNameRegisterTargets, d.Id(), err)
 	}
@@ -247,6 +267,7 @@ func resourceRegisterTargetsDelete(ctx context.Context, d *schema.ResourceData, 
 }
 
 func findRegisterTargets(ctx context.Context, conn *vpclattice.Client, targetGroupId string, targets []interface{}) (*vpclattice.ListTargetsOutput, error) {
+	fmt.Println("Inside the Finder")
 	in := &vpclattice.ListTargetsInput{
 		TargetGroupIdentifier: aws.String(targetGroupId),
 		Targets:               expandTargets(targets),
@@ -271,7 +292,8 @@ func findRegisterTargets(ctx context.Context, conn *vpclattice.Client, targetGro
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Returning from Find targets:", string(j))
+	fmt.Println("Returning from defaultAction:", string(j))
+
 	return out, nil
 }
 
@@ -294,8 +316,9 @@ func waitRegisterTargets(ctx context.Context, conn *vpclattice.Client, id string
 }
 
 func waitDeleteTargets(ctx context.Context, conn *vpclattice.Client, id string, targets []interface{}, timeout time.Duration) (*vpclattice.DeregisterTargetsOutput, error) {
+	fmt.Println("Starting Inside Delete waiter")
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.TargetStatusDraining),
+		Pending: enum.Slice(types.TargetStatusDraining, types.TargetStatusInitial),
 		Target:  []string{},
 		Refresh: statusTarget(ctx, conn, id, targets),
 		Timeout: timeout,
@@ -320,87 +343,23 @@ func statusTarget(ctx context.Context, conn *vpclattice.Client, id string, targe
 			return nil, "", err
 		}
 
-		status := out.Items[0].Status
+		j, err := json.Marshal(out.Items)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println("Returning from Status:", string(j))
 
-		return out, string(status), nil
+		var status types.TargetStatus
+		if len(out.Items) > 0 {
+			fmt.Println("Inside the len")
+			fmt.Println(len(out.Items))
+			status = out.Items[0].Status
+			return out, string(status), nil
+		}
+
+		return nil, "", err
 	}
 }
-
-// func statusTarget(ctx context.Context, conn *vpclattice.Client, id string, target types.Target) retry.StateRefreshFunc {
-// 	return func() (interface{}, string, error) {
-// 		in := &vpclattice.ListTargetsInput{
-// 			TargetGroupIdentifier: aws.String(id),
-// 		}
-// 		out, err := conn.ListTargets(ctx, in)
-// 		if err != nil {
-// 			return nil, "", err
-// 		}
-
-// 		for _, targetSummary := range out.Items {
-// 			if aws.ToString(targetSummary.Id) == aws.ToString(target.Id) && (target.Port == nil || aws.ToInt32(targetSummary.Port) == aws.ToInt32(target.Port)) {
-// 				return targetSummary, string(targetSummary.Status), nil
-// 			}
-// 		}
-
-// 		return nil, "", &retry.NotFoundError{LastError: err, LastRequest: in}
-// 	}
-// }
-
-// func waitRegisterTargets(ctx context.Context, conn *vpclattice.Client, id string, out *vpclattice.RegisterTargetsOutput, timeout time.Duration) (*vpclattice.RegisterTargetsOutput, error) {
-// 	var lastErr error
-
-// 	for _, target := range out.Successful {
-// 		log.Printf("[INFO] Registering Target %s with Target Group %s", *target.Id, id)
-// 		stateConf := &retry.StateChangeConf{
-// 			Pending:                   enum.Slice(types.TargetStatusInitial),
-// 			Target:                    enum.Slice(types.TargetStatusHealthy, types.TargetStatusUnhealthy),
-// 			Refresh:                   statusTarget(ctx, conn, id, target),
-// 			Timeout:                   timeout,
-// 			NotFoundChecks:            20,
-// 			ContinuousTargetOccurence: 2,
-// 		}
-
-// 		outputRaw, err := stateConf.WaitForStateContext(ctx)
-// 		if err != nil {
-// 			lastErr = err
-// 			continue
-// 		}
-
-// 		if out, ok := outputRaw.(*vpclattice.RegisterTargetsOutput); ok {
-// 			out.Successful = append(out.Successful, target)
-// 		}
-// 	}
-
-// 	if lastErr != nil {
-// 		return nil, lastErr
-// 	}
-
-// 	return out, nil
-// }
-
-// func waitDeleteTargets(ctx context.Context, conn *vpclattice.Client, id string, out *vpclattice.DeregisterTargetsInput, timeout time.Duration) (*vpclattice.DeregisterTargetsOutput, error) {
-// 	var lastErr error
-// 	for _, target := range out.Targets {
-// 		log.Printf("[INFO] Deleting Target %s with Target Group %s", *target.Id, id)
-// 		stateConf := &retry.StateChangeConf{
-// 			Pending: enum.Slice(types.TargetStatusDraining),
-// 			Target:  []string{},
-// 			Refresh: statusTarget(ctx, conn, id, target),
-// 			Timeout: timeout,
-// 		}
-
-// 		outputRaw, err := stateConf.WaitForStateContext(ctx)
-// 		if out, ok := outputRaw.(*vpclattice.DeregisterTargetsOutput); ok {
-// 			out.Successful = append(out.Successful, target)
-// 			return out, err
-// 		}
-// 	}
-
-// 	if lastErr != nil {
-// 		return nil, lastErr
-// 	}
-
-// }
 
 func flattenTargetsUnSuccessful(apiObjects []types.TargetFailure) []interface{} {
 	if len(apiObjects) == 0 {
