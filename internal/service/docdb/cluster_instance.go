@@ -73,6 +73,11 @@ func ResourceClusterInstance() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"copy_tags_to_snapshot": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"db_subnet_group_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -181,6 +186,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).DocDBConn()
 
 	input := &docdb.CreateDBInstanceInput{
+		CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 		DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 		DBClusterIdentifier:     aws.String(d.Get("cluster_identifier").(string)),
 		Engine:                  aws.String(d.Get("engine").(string)),
@@ -309,6 +315,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("auto_minor_version_upgrade", db.AutoMinorVersionUpgrade)
 	d.Set("availability_zone", db.AvailabilityZone)
 	d.Set("cluster_identifier", db.DBClusterIdentifier)
+	d.Set("copy_tags_to_snapshot", db.CopyTagsToSnapshot)
 	d.Set("dbi_resource_id", db.DbiResourceId)
 	// The AWS API does not expose 'EnablePerformanceInsights' the line below should be uncommented
 	// as soon as it is available in the DescribeDBClusters output.
@@ -339,6 +346,11 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 	req := &docdb.ModifyDBInstanceInput{
 		ApplyImmediately:     aws.Bool(d.Get("apply_immediately").(bool)),
 		DBInstanceIdentifier: aws.String(d.Id()),
+	}
+
+	if d.HasChange("copy_tags_to_snapshot") {
+		req.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
+		requestUpdate = true
 	}
 
 	if d.HasChange("instance_class") {

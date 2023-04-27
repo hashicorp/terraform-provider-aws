@@ -270,6 +270,46 @@ func TestAccDocDBClusterInstance_disappears(t *testing.T) {
 	})
 }
 
+func TestAccDocDBClusterInstance_copyTagsToSnapshot(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v docdb.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_docdb_cluster_instance.cluster_instances"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterInstanceConfig_copyTagsToSnapshot(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "true"),
+				),
+			},
+			{
+				Config: testAccClusterInstanceConfig_copyTagsToSnapshot(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
+				),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckClusterInstanceAttributes(v *docdb.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *v.Engine != "docdb" {
@@ -620,4 +660,29 @@ resource "aws_docdb_cluster_instance" "cluster_instances" {
   instance_class     = data.aws_docdb_orderable_db_instance.test.instance_class
 }
 `, rName))
+}
+
+func testAccClusterInstanceConfig_copyTagsToSnapshot(rName string, flag bool) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_docdb_cluster" "default" {
+  cluster_identifier  = %[1]q
+  availability_zones  = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
+  master_username     = "foo"
+  master_password     = "mustbeeightcharaters"
+  skip_final_snapshot = true
+}
+
+data "aws_docdb_orderable_db_instance" "test" {
+  engine                     = "docdb"
+  preferred_instance_classes = ["db.t3.medium", "db.t4g.medium", "db.r4.large", "db.r5.large", "db.r5.xlarge"]
+}
+
+resource "aws_docdb_cluster_instance" "cluster_instances" {
+  identifier            = %[1]q
+  cluster_identifier    = aws_docdb_cluster.default.id
+  copy_tags_to_snapshot = %[2]t
+  instance_class        = data.aws_docdb_orderable_db_instance.test.instance_class
+  promotion_tier        = "3"
+} 
+`, rName, flag))
 }
