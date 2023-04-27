@@ -963,7 +963,7 @@ func expandDomainDefaultUserSettings(l []interface{}) *sagemaker.UserSettings {
 		config.TensorBoardAppSettings = expandDomainTensorBoardAppSettings(v)
 	}
 
-	if v, ok := m["tensor_board_app_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["r_studio_server_pro_app_settings"].([]interface{}); ok && len(v) > 0 {
 		config.RStudioServerProAppSettings = expandRStudioServerProAppSettings(v)
 	}
 
