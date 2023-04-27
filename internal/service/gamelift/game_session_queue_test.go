@@ -219,7 +219,7 @@ func testAccCheckGameSessionQueueExists(ctx context.Context, n string, v *gameli
 		output, err := tfgamelift.FindGameSessionQueueByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return nil
+			return err
 		}
 
 		*v = *output
