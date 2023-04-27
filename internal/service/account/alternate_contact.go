@@ -117,7 +117,7 @@ func resourceAlternateContactRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 
-	output, err := FindAlternateContactByAccountIDAndContactType(ctx, conn, accountID, contactType)
+	output, err := FindAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Account Alternate Contact (%s) not found, removing from state", d.Id())
@@ -214,11 +214,10 @@ func resourceAlternateContactDelete(ctx context.Context, d *schema.ResourceData,
 	return nil
 }
 
-func FindAlternateContactByAccountIDAndContactType(ctx context.Context, conn *account.Account, accountID, contactType string) (*account.AlternateContact, error) { // nosemgrep:ci.account-in-func-name
+func FindAlternateContactByTwoPartKey(ctx context.Context, conn *account.Account, accountID, contactType string) (*account.AlternateContact, error) {
 	input := &account.GetAlternateContactInput{
 		AlternateContactType: aws.String(contactType),
 	}
-
 	if accountID != "" {
 		input.AccountId = aws.String(accountID)
 	}
@@ -251,7 +250,7 @@ const (
 
 func statusAlternateContact(ctx context.Context, conn *account.Account, accountID, contactType string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindAlternateContactByAccountIDAndContactType(ctx, conn, accountID, contactType)
+		output, err := FindAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -267,7 +266,7 @@ func statusAlternateContact(ctx context.Context, conn *account.Account, accountI
 
 func statusAlternateContactUpdate(ctx context.Context, conn *account.Account, accountID, contactType, email, name, phone, title string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindAlternateContactByAccountIDAndContactType(ctx, conn, accountID, contactType)
+		output, err := FindAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

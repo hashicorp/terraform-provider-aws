@@ -156,7 +156,7 @@ func testAccCheckAlternateContactDestroy(ctx context.Context) resource.TestCheck
 				return err
 			}
 
-			_, err = tfaccount.FindAlternateContactByAccountIDAndContactType(ctx, conn, accountID, contactType)
+			_, err = tfaccount.FindAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -192,7 +192,7 @@ func testAccCheckAlternateContactExists(ctx context.Context, n string) resource.
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AccountConn()
 
-		_, err = tfaccount.FindAlternateContactByAccountIDAndContactType(ctx, conn, accountID, contactType)
+		_, err = tfaccount.FindAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
 
 		return err
 	}
@@ -232,7 +232,7 @@ resource "aws_account_alternate_contact" "test" {
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AccountConn()
 
-	_, err := tfaccount.FindAlternateContactByAccountIDAndContactType(ctx, conn, "", account.AlternateContactTypeOperations)
+	_, err := tfaccount.FindAlternateContactByTwoPartKey(ctx, conn, "", account.AlternateContactTypeOperations)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
