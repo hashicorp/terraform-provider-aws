@@ -6,6 +6,8 @@ import (
 )
 
 func TestValidAssumeRoleDuration(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		val         interface{}
 		expectedErr *regexp.Regexp
@@ -51,7 +53,7 @@ func TestValidAssumeRoleDuration(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		_, errs := ValidAssumeRoleDuration(tc.val, "test_property")
+		_, errs := validAssumeRoleDuration(tc.val, "test_property")
 
 		if len(errs) == 0 && tc.expectedErr == nil {
 			continue

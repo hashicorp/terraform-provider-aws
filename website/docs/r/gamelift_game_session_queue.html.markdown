@@ -1,14 +1,14 @@
 ---
-subcategory: "Gamelift"
+subcategory: "GameLift"
 layout: "aws"
 page_title: "AWS: aws_gamelift_game_session_queue"
 description: |-
-  Provides a Gamelift Game Session Queue resource.
+  Provides a GameLift Game Session Queue resource.
 ---
 
 # Resource: aws_gamelift_game_session_queue
 
-Provides an Gamelift Game Session Queue resource.
+Provides an GameLift Game Session Queue resource.
 
 ## Example Usage
 
@@ -20,6 +20,8 @@ resource "aws_gamelift_game_session_queue" "test" {
     aws_gamelift_fleet.us_west_2_fleet.arn,
     aws_gamelift_fleet.eu_central_1_fleet.arn,
   ]
+
+  notification_target = aws_sns_topic.game_session_queue_notifications.arn
 
   player_latency_policy {
     maximum_individual_player_latency_milliseconds = 100
@@ -41,8 +43,9 @@ The following arguments are supported:
 * `name` - (Required) Name of the session queue.
 * `timeout_in_seconds` - (Required) Maximum time a game session request can remain in the queue.
 * `destinations` - (Optional) List of fleet/alias ARNs used by session queue for placing game sessions.
+* `notification_target` - (Optional) An SNS topic ARN that is set up to receive game session placement notifications.
 * `player_latency_policy` - (Optional) One or more policies used to choose fleet based on player latency. See below.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Nested Fields
 
@@ -56,11 +59,11 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Game Session Queue ARN.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-Gamelift Game Session Queues can be imported by their `name`, e.g.,
+GameLift Game Session Queues can be imported by their `name`, e.g.,
 
 ```
 $ terraform import aws_gamelift_game_session_queue.example example

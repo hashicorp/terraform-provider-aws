@@ -1,34 +1,33 @@
 package elasticsearch
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 const (
 	domainUpgradeSuccessMinTimeout = 10 * time.Second
 	domainUpgradeSuccessDelay      = 30 * time.Second
-	domainRetryTimeout             = 60 * time.Minute
-	domainDeleteRetryTimeout       = 90 * time.Minute
 )
 
 // UpgradeSucceeded waits for an Upgrade to return Success
-func waitUpgradeSucceeded(conn *elasticsearch.ElasticsearchService, name string, timeout time.Duration) (*elasticsearch.GetUpgradeStatusOutput, error) {
-	stateConf := &resource.StateChangeConf{
+func waitUpgradeSucceeded(ctx context.Context, conn *elasticsearch.ElasticsearchService, name string, timeout time.Duration) (*elasticsearch.GetUpgradeStatusOutput, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{elasticsearch.UpgradeStatusInProgress},
 		Target:     []string{elasticsearch.UpgradeStatusSucceeded},
-		Refresh:    statusUpgradeStatus(conn, name),
+		Refresh:    statusUpgradeStatus(ctx, conn, name),
 		Timeout:    timeout,
 		MinTimeout: domainUpgradeSuccessMinTimeout,
 		Delay:      domainUpgradeSuccessDelay,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*elasticsearch.GetUpgradeStatusOutput); ok {
 		return output, err
@@ -37,24 +36,24 @@ func waitUpgradeSucceeded(conn *elasticsearch.ElasticsearchService, name string,
 	return nil, err
 }
 
-func WaitForDomainCreation(conn *elasticsearch.ElasticsearchService, domainName string) error {
+func WaitForDomainCreation(ctx context.Context, conn *elasticsearch.ElasticsearchService, domainName string, timeout time.Duration) error {
 	var out *elasticsearch.ElasticsearchDomainStatus
-	err := resource.Retry(domainRetryTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		var err error
-		out, err = FindDomainByName(conn, domainName)
+		out, err = FindDomainByName(ctx, conn, domainName)
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if !aws.BoolValue(out.Processing) && (out.Endpoint != nil || out.Endpoints != nil) {
 			return nil
 		}
 
-		return resource.RetryableError(
+		return retry.RetryableError(
 			fmt.Errorf("%q: Timeout while waiting for the domain to be created", domainName))
 	})
 	if tfresource.TimedOut(err) {
-		out, err = FindDomainByName(conn, domainName)
+		out, err = FindDomainByName(ctx, conn, domainName)
 		if err != nil {
 			return fmt.Errorf("Error describing Elasticsearch domain: %w", err)
 		}
@@ -62,30 +61,28 @@ func WaitForDomainCreation(conn *elasticsearch.ElasticsearchService, domainName 
 			return nil
 		}
 	}
-	if err != nil {
-		return fmt.Errorf("Error waiting for Elasticsearch domain to be created: %w", err)
-	}
-	return nil
+
+	return err
 }
 
-func waitForDomainUpdate(conn *elasticsearch.ElasticsearchService, domainName string) error {
+func waitForDomainUpdate(ctx context.Context, conn *elasticsearch.ElasticsearchService, domainName string, timeout time.Duration) error {
 	var out *elasticsearch.ElasticsearchDomainStatus
-	err := resource.Retry(domainRetryTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		var err error
-		out, err = FindDomainByName(conn, domainName)
+		out, err = FindDomainByName(ctx, conn, domainName)
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if !aws.BoolValue(out.Processing) {
 			return nil
 		}
 
-		return resource.RetryableError(
+		return retry.RetryableError(
 			fmt.Errorf("%q: Timeout while waiting for changes to be processed", domainName))
 	})
 	if tfresource.TimedOut(err) {
-		out, err = FindDomainByName(conn, domainName)
+		out, err = FindDomainByName(ctx, conn, domainName)
 		if err != nil {
 			return fmt.Errorf("Error describing Elasticsearch domain: %w", err)
 		}
@@ -93,33 +90,31 @@ func waitForDomainUpdate(conn *elasticsearch.ElasticsearchService, domainName st
 			return nil
 		}
 	}
-	if err != nil {
-		return fmt.Errorf("Error waiting for Elasticsearch domain changes to be processed: %w", err)
-	}
-	return nil
+
+	return err
 }
 
-func waitForDomainDelete(conn *elasticsearch.ElasticsearchService, domainName string) error {
+func waitForDomainDelete(ctx context.Context, conn *elasticsearch.ElasticsearchService, domainName string, timeout time.Duration) error {
 	var out *elasticsearch.ElasticsearchDomainStatus
-	err := resource.Retry(domainDeleteRetryTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		var err error
-		out, err = FindDomainByName(conn, domainName)
+		out, err = FindDomainByName(ctx, conn, domainName)
 
 		if err != nil {
 			if tfresource.NotFound(err) {
 				return nil
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if out != nil && !aws.BoolValue(out.Processing) {
 			return nil
 		}
 
-		return resource.RetryableError(fmt.Errorf("timeout while waiting for the domain %q to be deleted", domainName))
+		return retry.RetryableError(fmt.Errorf("timeout while waiting for the domain %q to be deleted", domainName))
 	})
 	if tfresource.TimedOut(err) {
-		out, err = FindDomainByName(conn, domainName)
+		out, err = FindDomainByName(ctx, conn, domainName)
 		if err != nil {
 			if tfresource.NotFound(err) {
 				return nil
@@ -130,8 +125,21 @@ func waitForDomainDelete(conn *elasticsearch.ElasticsearchService, domainName st
 			return nil
 		}
 	}
+
 	if err != nil {
-		return fmt.Errorf("Error waiting for Elasticsearch domain to be deleted: %s", err)
+		return err
 	}
-	return nil
+
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{ConfigStatusUnknown, ConfigStatusExists},
+		Target:                    []string{ConfigStatusNotFound},
+		Refresh:                   domainConfigStatus(ctx, conn, domainName),
+		Timeout:                   timeout,
+		MinTimeout:                10 * time.Second,
+		ContinuousTargetOccurence: 3,
+	}
+
+	_, err = stateConf.WaitForStateContext(ctx)
+
+	return err
 }

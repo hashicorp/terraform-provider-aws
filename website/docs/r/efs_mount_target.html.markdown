@@ -1,5 +1,5 @@
 ---
-subcategory: "EFS"
+subcategory: "EFS (Elastic File System)"
 layout: "aws"
 page_title: "AWS: aws_efs_mount_target"
 description: |-
@@ -56,6 +56,13 @@ In addition to all arguments above, the following attributes are exported:
 * `availability_zone_name` - The name of the Availability Zone (AZ) that the mount target resides in.
 * `availability_zone_id` - The unique and consistent identifier of the Availability Zone (AZ) that the mount target resides in.
 * `owner_id` - AWS account ID that owns the resource.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `30m`)
+- `delete` - (Default `10m`)
 
 ## Import
 

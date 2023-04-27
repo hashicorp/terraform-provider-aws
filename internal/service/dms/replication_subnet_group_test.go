@@ -1,6 +1,7 @@
 package dms_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,19 +16,20 @@ import (
 )
 
 func TestAccDMSReplicationSubnetGroup_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_dms_replication_subnet_group.dms_replication_subnet_group"
 	randId := sdkacctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: dmsReplicationSubnetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationSubnetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: dmsReplicationSubnetGroupConfig(randId),
+				Config: testAccReplicationSubnetGroupConfig_basic(randId),
 				Check: resource.ComposeTestCheckFunc(
-					checkDmsReplicationSubnetGroupExists(resourceName),
+					checkReplicationSubnetGroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
 				),
 			},
@@ -37,21 +39,21 @@ func TestAccDMSReplicationSubnetGroup_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: dmsReplicationSubnetGroupConfigUpdate(randId),
+				Config: testAccReplicationSubnetGroupConfig_update(randId),
 				Check: resource.ComposeTestCheckFunc(
-					checkDmsReplicationSubnetGroupExists(resourceName),
+					checkReplicationSubnetGroupExists(ctx, resourceName),
 				),
 			},
 		},
 	})
 }
 
-func checkDmsReplicationSubnetGroupExists(n string) resource.TestCheckFunc {
+func checkReplicationSubnetGroupExists(ctx context.Context, n string) resource.TestCheckFunc {
 	providers := []*schema.Provider{acctest.Provider}
-	return checkDmsReplicationSubnetGroupExistsWithProviders(n, &providers)
+	return checkReplicationSubnetGroupExistsProviders(ctx, n, &providers)
 }
 
-func checkDmsReplicationSubnetGroupExistsWithProviders(n string, providers *[]*schema.Provider) resource.TestCheckFunc {
+func checkReplicationSubnetGroupExistsProviders(ctx context.Context, n string, providers *[]*schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -67,8 +69,8 @@ func checkDmsReplicationSubnetGroupExistsWithProviders(n string, providers *[]*s
 				continue
 			}
 
-			conn := provider.Meta().(*conns.AWSClient).DMSConn
-			_, err := conn.DescribeReplicationSubnetGroups(&dms.DescribeReplicationSubnetGroupsInput{
+			conn := provider.Meta().(*conns.AWSClient).DMSConn()
+			_, err := conn.DescribeReplicationSubnetGroupsWithContext(ctx, &dms.DescribeReplicationSubnetGroupsInput{
 				Filters: []*dms.Filter{
 					{
 						Name:   aws.String("replication-subnet-group-id"),
@@ -87,22 +89,24 @@ func checkDmsReplicationSubnetGroupExistsWithProviders(n string, providers *[]*s
 	}
 }
 
-func dmsReplicationSubnetGroupDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_dms_replication_subnet_group" {
-			continue
+func testAccCheckReplicationSubnetGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_dms_replication_subnet_group" {
+				continue
+			}
+
+			err := checkReplicationSubnetGroupExists(ctx, rs.Primary.ID)
+			if err == nil {
+				return fmt.Errorf("Found replication subnet group that was not destroyed: %s", rs.Primary.ID)
+			}
 		}
 
-		err := checkDmsReplicationSubnetGroupExists(rs.Primary.ID)
-		if err == nil {
-			return fmt.Errorf("Found replication subnet group that was not destroyed: %s", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func dmsReplicationSubnetGroupConfig(randId string) string {
+func testAccReplicationSubnetGroupConfig_basic(randId string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "dms_vpc" {
   cidr_block = "10.1.0.0/16"
@@ -162,7 +166,7 @@ resource "aws_dms_replication_subnet_group" "dms_replication_subnet_group" {
 `, randId))
 }
 
-func dmsReplicationSubnetGroupConfigUpdate(randId string) string {
+func testAccReplicationSubnetGroupConfig_update(randId string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "dms_vpc" {
   cidr_block = "10.1.0.0/16"

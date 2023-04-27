@@ -1,12 +1,16 @@
 package names
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"testing"
 )
 
-func TestServiceForHCLKey(t *testing.T) {
+func TestProviderPackageForAlias(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName string
 		Input    string
@@ -34,8 +38,11 @@ func TestServiceForHCLKey(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
-			got, err := ServiceForHCLKey(testCase.Input)
+			t.Parallel()
+
+			got, err := ProviderPackageForAlias(testCase.Input)
 
 			if err != nil && !testCase.Error {
 				t.Errorf("got error (%s), expected no error", err)
@@ -53,9 +60,14 @@ func TestServiceForHCLKey(t *testing.T) {
 }
 
 func TestServicesForDirectories(t *testing.T) {
+	t.Parallel()
+
 	nonExisting := []string{
 		"alexaforbusiness",
 		"amplifybackend",
+		"amplifyuibuilder",
+		"apigatewaymanagementapi",
+		"appconfigdata",
 		"appflow",
 		"appintegrations",
 		"applicationcostprofiler",
@@ -64,9 +76,16 @@ func TestServicesForDirectories(t *testing.T) {
 		"appregistry",
 		"auditmanager",
 		"augmentedairuntime",
+		"backupgateway",
+		"billingconductor",
 		"braket",
+		"ce",
+		"chimesdkidentity",
+		"chimesdkmeetings",
+		"chimesdkmessaging",
 		"clouddirectory",
 		"cloudsearchdomain",
+		"cloudwatchevidently",
 		"cloudwatchrum",
 		"codeguruprofiler",
 		"codegurureviewer",
@@ -74,14 +93,21 @@ func TestServicesForDirectories(t *testing.T) {
 		"cognitosync",
 		"comprehend",
 		"comprehendmedical",
+		"computeoptimizer",
 		"connectcontactlens",
 		"connectparticipant",
 		"costexplorer",
+		"customerprofiles",
+		"databrew",
 		"devopsguru",
+		"discovery",
+		"drs",
 		"dynamodbstreams",
+		"ebs",
 		"ec2instanceconnect",
 		"elasticinference",
 		"emrcontainers",
+		"evidently",
 		"finspace",
 		"finspacedata",
 		"fis",
@@ -94,20 +120,25 @@ func TestServicesForDirectories(t *testing.T) {
 		"health",
 		"healthlake",
 		"honeycode",
+		"inspector2",
 		"iot1clickdevices",
 		"iot1clickprojects",
+		"iotdata",
 		"iotdataplane",
 		"iotdeviceadvisor",
 		"ioteventsdata",
 		"iotfleethub",
+		"iotjobsdata",
 		"iotjobsdataplane",
 		"iotsecuretunneling",
 		"iotsitewise",
 		"iotthingsgraph",
+		"iottwinmaker",
 		"iotwireless",
 		"kendra",
 		"kinesisvideoarchivedmedia",
 		"kinesisvideomedia",
+		"kinesisvideosignaling",
 		"kinesisvideosignalingchannels",
 		"lexmodelsv2",
 		"lexruntime",
@@ -116,6 +147,7 @@ func TestServicesForDirectories(t *testing.T) {
 		"lookoutequipment",
 		"lookoutforvision",
 		"lookoutmetrics",
+		"lookoutvision",
 		"machinelearning",
 		"managedblockchain",
 		"marketplacecatalog",
@@ -125,14 +157,19 @@ func TestServicesForDirectories(t *testing.T) {
 		"mediapackagevod",
 		"mediastoredata",
 		"mediatailor",
+		"mgh",
 		"mgn",
 		"migrationhub",
 		"migrationhubconfig",
+		"migrationhubrefactorspaces",
+		"migrationhubstrategy",
 		"mobile",
 		"mobileanalytics",
 		"mturk",
+		"nimble",
 		"nimblestudio",
 		"opsworkscm",
+		"panorama",
 		"personalize",
 		"personalizeevents",
 		"personalizeruntime",
@@ -142,17 +179,25 @@ func TestServicesForDirectories(t *testing.T) {
 		"polly",
 		"proton",
 		"qldbsession",
+		"rbin",
 		"rdsdata",
 		"redshiftdata",
 		"rekognition",
+		"resiliencehub",
 		"robomaker",
+		"route53recoverycluster",
+		"rum",
+		"sagemakera2iruntime",
+		"sagemakeredge",
 		"sagemakeredgemanager",
 		"sagemakerfeaturestoreruntime",
 		"sagemakerruntime",
 		"savingsplans",
+		"servicecatalogappregistry",
 		"sesv2",
 		"sms",
 		"snowball",
+		"snowdevicemanagement",
 		"ssmcontacts",
 		"ssmincidents",
 		"sso",
@@ -163,20 +208,26 @@ func TestServicesForDirectories(t *testing.T) {
 		"transcribe",
 		"transcribestreaming",
 		"translate",
+		"voiceid",
 		"wellarchitected",
+		"wisdom",
 		"workdocs",
 		"workmail",
 		"workmailmessageflow",
+		"workspacesweb",
 	}
 
-	for _, testCase := range ServiceKeys() {
+	for _, testCase := range ProviderPackages() {
+		testCase := testCase
 		t.Run(testCase, func(t *testing.T) {
+			t.Parallel()
+
 			wd, err := os.Getwd()
 			if err != nil {
 				t.Errorf("error reading working directory: %s", err)
 			}
 
-			if _, err := os.Stat(fmt.Sprintf("%s/../internal/service/%s", wd, testCase)); os.IsNotExist(err) {
+			if _, err := os.Stat(fmt.Sprintf("%s/../internal/service/%s", wd, testCase)); errors.Is(err, fs.ErrNotExist) {
 				for _, service := range nonExisting {
 					if service == testCase {
 						t.Skipf("skipping %s because not yet implemented", testCase)
@@ -189,7 +240,9 @@ func TestServicesForDirectories(t *testing.T) {
 	}
 }
 
-func TestServiceProviderNameUpper(t *testing.T) {
+func TestProviderNameUpper(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName string
 		Input    string
@@ -223,8 +276,11 @@ func TestServiceProviderNameUpper(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
-			got, err := ServiceProviderNameUpper(testCase.Input)
+			t.Parallel()
+
+			got, err := ProviderNameUpper(testCase.Input)
 
 			if err != nil && !testCase.Error {
 				t.Errorf("got error (%s), expected no error", err)
@@ -241,7 +297,9 @@ func TestServiceProviderNameUpper(t *testing.T) {
 	}
 }
 
-func TestAWSServiceName(t *testing.T) {
+func TestFullHumanFriendly(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName string
 		Input    string
@@ -257,26 +315,173 @@ func TestAWSServiceName(t *testing.T) {
 		{
 			TestName: Transcribe,
 			Input:    Transcribe,
-			Expected: "Transcribe",
+			Expected: "Amazon Transcribe",
 			Error:    false,
 		},
 		{
-			TestName: AppAutoScaling,
-			Input:    AppAutoScaling,
-			Expected: "AppAutoScaling",
+			TestName: Synthetics,
+			Input:    Synthetics,
+			Expected: "Amazon CloudWatch Synthetics",
 			Error:    false,
 		},
 		{
-			TestName: DMS,
-			Input:    DMS,
-			Expected: "DMS",
+			TestName: "alias",
+			Input:    "cloudwatchevidently",
+			Expected: "Amazon CloudWatch Evidently",
 			Error:    false,
+		},
+		{
+			TestName: DRS,
+			Input:    DRS,
+			Expected: "AWS DRS (Elastic Disaster Recovery)",
+			Error:    false,
+		},
+		{
+			TestName: "doesnotexist",
+			Input:    "doesnotexist",
+			Expected: "",
+			Error:    true,
 		},
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
-			got, err := ServiceProviderNameUpper(testCase.Input)
+			t.Parallel()
+
+			got, err := FullHumanFriendly(testCase.Input)
+
+			if err != nil && !testCase.Error {
+				t.Errorf("got error (%s), expected no error", err)
+			}
+
+			if err == nil && testCase.Error {
+				t.Errorf("got (%s) and no error, expected error", got)
+			}
+
+			if got != testCase.Expected {
+				t.Errorf("got %s, expected %s", got, testCase.Expected)
+			}
+		})
+	}
+}
+
+func TestAWSGoV1Package(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		TestName string
+		Input    string
+		Expected string
+		Error    bool
+	}{
+		{
+			TestName: "empty",
+			Input:    "",
+			Expected: "",
+			Error:    true,
+		},
+		{
+			TestName: "same as AWS",
+			Input:    Translate,
+			Expected: Translate,
+			Error:    false,
+		},
+		{
+			TestName: "different from AWS",
+			Input:    Transcribe,
+			Expected: "transcribeservice",
+			Error:    false,
+		},
+		{
+			TestName: "different from AWS 2",
+			Input:    RBin,
+			Expected: "recyclebin",
+			Error:    false,
+		},
+		{
+			TestName: "doesnotexist",
+			Input:    "doesnotexist",
+			Expected: "",
+			Error:    true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := AWSGoV1Package(testCase.Input)
+
+			if err != nil && !testCase.Error {
+				t.Errorf("got error (%s), expected no error", err)
+			}
+
+			if err == nil && testCase.Error {
+				t.Errorf("got (%s) and no error, expected error", got)
+			}
+
+			if got != testCase.Expected {
+				t.Errorf("got %s, expected %s", got, testCase.Expected)
+			}
+		})
+	}
+}
+
+func TestAWSGoV1ClientName(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		TestName string
+		Input    string
+		Expected string
+		Error    bool
+	}{
+		{
+			TestName: "empty",
+			Input:    "",
+			Expected: "",
+			Error:    true,
+		},
+		{
+			TestName: Elasticsearch,
+			Input:    Elasticsearch,
+			Expected: "ElasticsearchService",
+			Error:    false,
+		},
+		{
+			TestName: Deploy,
+			Input:    Deploy,
+			Expected: "CodeDeploy",
+			Error:    false,
+		},
+		{
+			TestName: RUM,
+			Input:    RUM,
+			Expected: "CloudWatchRUM",
+			Error:    false,
+		},
+		{
+			TestName: CloudControl,
+			Input:    CloudControl,
+			Expected: "CloudControlApi",
+			Error:    false,
+		},
+		{
+			TestName: "doesnotexist",
+			Input:    "doesnotexist",
+			Expected: "",
+			Error:    true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := AWSGoV1ClientTypeName(testCase.Input)
 
 			if err != nil && !testCase.Error {
 				t.Errorf("got error (%s), expected no error", err)

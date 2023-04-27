@@ -12,14 +12,15 @@ import (
 )
 
 func TestAccIAMUsersDataSource_nameRegex(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iam_users.test"
 	rCount := strconv.Itoa(sdkacctest.RandIntRange(1, 4))
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUsersDataSourceConfig_nameRegex(rCount, rName),
@@ -33,15 +34,16 @@ func TestAccIAMUsersDataSource_nameRegex(t *testing.T) {
 }
 
 func TestAccIAMUsersDataSource_pathPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iam_users.test"
 	rCount := strconv.Itoa(sdkacctest.RandIntRange(1, 4))
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rPathPrefix := sdkacctest.RandomWithPrefix("tf-acc-path")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUsersDataSourceConfig_pathPrefix(rCount, rName, rPathPrefix),
@@ -55,12 +57,13 @@ func TestAccIAMUsersDataSource_pathPrefix(t *testing.T) {
 }
 
 func TestAccIAMUsersDataSource_nonExistentNameRegex(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iam_users.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUsersDataSourceConfig_nonExistentNameRegex,
@@ -74,12 +77,13 @@ func TestAccIAMUsersDataSource_nonExistentNameRegex(t *testing.T) {
 }
 
 func TestAccIAMUsersDataSource_nonExistentPathPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iam_users.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUsersDataSourceConfig_nonExistentPathPrefix,
@@ -95,7 +99,7 @@ func TestAccIAMUsersDataSource_nonExistentPathPrefix(t *testing.T) {
 func testAccUsersDataSourceConfig_nameRegex(rCount, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
-  count = %[1]q
+  count = %[1]s
   name  = "%[2]s-${count.index}-user"
 
   tags = {
@@ -112,7 +116,7 @@ data "aws_iam_users" "test" {
 func testAccUsersDataSourceConfig_pathPrefix(rCount, rName, rPathPrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
-  count = %[1]q
+  count = %[1]s
   name  = "%[2]s-${count.index}-user"
   path  = "/%[3]s/"
 }

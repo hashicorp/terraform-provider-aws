@@ -1,5 +1,5 @@
 ---
-subcategory: "Route53"
+subcategory: "Route 53"
 layout: "aws"
 page_title: "AWS: aws_route53_key_signing_key"
 description: |-
@@ -39,7 +39,7 @@ resource "aws_kms_key" "example" {
         Resource = "*"
         Condition = {
           StringEquals = {
-            "aws:SourceAccount" = "${data.aws_caller_identity.current.account_id}"
+            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
           }
           ArnLike = {
             "aws:SourceArn" = "arn:aws:route53:::hostedzone/*"

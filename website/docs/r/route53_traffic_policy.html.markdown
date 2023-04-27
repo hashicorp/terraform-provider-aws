@@ -1,5 +1,5 @@
 ---
-subcategory: "Route53"
+subcategory: "Route 53"
 layout: "aws"
 page_title: "AWS: aws_route53_traffic_policy"
 description: |-
@@ -50,7 +50,6 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - ID of the traffic policy
 * `type` - DNS type of the resource record sets that Amazon Route 53 creates when you use a traffic policy to create a traffic policy instance.
 * `version` - Version number of the traffic policy. This value is automatically incremented by AWS after each update of this resource.
-
 
 ## Import
 

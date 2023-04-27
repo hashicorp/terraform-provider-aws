@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,12 +22,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_s3_bucket_lifecycle_configuration")
 func ResourceBucketLifecycleConfiguration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceBucketLifecycleConfigurationCreate,
-		ReadContext:   resourceBucketLifecycleConfigurationRead,
-		UpdateContext: resourceBucketLifecycleConfigurationUpdate,
-		DeleteContext: resourceBucketLifecycleConfigurationDelete,
+		CreateWithoutTimeout: resourceBucketLifecycleConfigurationCreate,
+		ReadWithoutTimeout:   resourceBucketLifecycleConfigurationRead,
+		UpdateWithoutTimeout: resourceBucketLifecycleConfigurationUpdate,
+		DeleteWithoutTimeout: resourceBucketLifecycleConfigurationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -95,7 +97,7 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 							// we apply the Default behavior from v3.x of the provider (Filter with empty string Prefix),
 							// which will thus return a Filter in the GetBucketLifecycleConfiguration request and
 							// require diff suppression.
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+							DiffSuppressFunc: suppressMissingFilterConfigurationBlock,
 							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -251,12 +253,12 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 }
 
 func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
 
-	rules, err := ExpandLifecycleRules(d.Get("rule").([]interface{}))
+	rules, err := ExpandLifecycleRules(ctx, d.Get("rule").([]interface{}))
 	if err != nil {
 		return diag.Errorf("error creating S3 Lifecycle Configuration for bucket (%s): %s", bucket, err)
 	}
@@ -272,9 +274,9 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketLifecycleConfigurationWithContext(ctx, input)
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	if err != nil {
 		return diag.Errorf("error creating S3 Lifecycle Configuration for bucket (%s): %s", bucket, err)
@@ -290,7 +292,7 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 }
 
 func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -307,7 +309,7 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 
 	var lastOutput, output *s3.GetBucketLifecycleConfigurationOutput
 
-	err = resource.RetryContext(ctx, lifecycleConfigurationRulesSteadyTimeout, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, lifecycleConfigurationRulesSteadyTimeout, func() *retry.RetryError {
 		var err error
 
 		time.Sleep(lifecycleConfigurationExtraRetryDelay)
@@ -315,16 +317,16 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 		output, err = conn.GetBucketLifecycleConfigurationWithContext(ctx, input)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeNoSuchLifecycleConfiguration, s3.ErrCodeNoSuchBucket) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if lastOutput == nil || !reflect.DeepEqual(*lastOutput, *output) {
 			lastOutput = output
-			return resource.RetryableError(fmt.Errorf("bucket lifecycle configuration has not stablized; trying again"))
+			return retry.RetryableError(fmt.Errorf("bucket lifecycle configuration has not stablized; trying again"))
 		}
 
 		return nil
@@ -346,7 +348,7 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 
 	d.Set("bucket", bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
-	if err := d.Set("rule", FlattenLifecycleRules(output.Rules)); err != nil {
+	if err := d.Set("rule", FlattenLifecycleRules(ctx, output.Rules)); err != nil {
 		return diag.Errorf("error setting rule: %s", err)
 	}
 
@@ -354,14 +356,14 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 }
 
 func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	rules, err := ExpandLifecycleRules(d.Get("rule").([]interface{}))
+	rules, err := ExpandLifecycleRules(ctx, d.Get("rule").([]interface{}))
 	if err != nil {
 		return diag.Errorf("error updating S3 Bucket Lifecycle Configuration rule: %s", err)
 	}
@@ -377,9 +379,9 @@ func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.R
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = verify.RetryOnAWSCode(ErrCodeNoSuchLifecycleConfiguration, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketLifecycleConfigurationWithContext(ctx, input)
-	})
+	}, ErrCodeNoSuchLifecycleConfiguration)
 
 	if err != nil {
 		return diag.Errorf("error updating S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
@@ -393,7 +395,7 @@ func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.R
 }
 
 func resourceBucketLifecycleConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -419,4 +421,27 @@ func resourceBucketLifecycleConfigurationDelete(ctx context.Context, d *schema.R
 	}
 
 	return nil
+}
+
+// suppressMissingFilterConfigurationBlock suppresses the diff that results from an omitted
+// filter configuration block and one returned from the S3 API.
+// To work around the issue, https://github.com/hashicorp/terraform-plugin-sdk/issues/743,
+// this method only looks for changes in the "filter.#" value and not its nested fields
+// which are incorrectly suppressed when using the verify.SuppressMissingOptionalConfigurationBlock method.
+func suppressMissingFilterConfigurationBlock(k, old, new string, d *schema.ResourceData) bool {
+	if strings.HasSuffix(k, "filter.#") {
+		o, n := d.GetChange(k)
+		oVal, nVal := o.(int), n.(int)
+
+		if oVal == 1 && nVal == 0 {
+			return true
+		}
+
+		if oVal == 1 && nVal == 1 {
+			return old == "1" && new == "0"
+		}
+
+		return false
+	}
+	return false
 }

@@ -12,17 +12,18 @@ import (
 )
 
 func TestAccRDSClusterSnapshotDataSource_dbClusterSnapshotIdentifier(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_db_cluster_snapshot.test"
 	resourceName := "aws_db_cluster_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckClusterSnapshotDataSourceConfig_DbClusterSnapshotIdentifier(rName),
+				Config: testAccClusterSnapshotDataSourceConfig_clusterSnapshotIdentifier(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterSnapshotExistsDataSource(dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "allocated_storage", resourceName, "allocated_storage"),
@@ -49,17 +50,18 @@ func TestAccRDSClusterSnapshotDataSource_dbClusterSnapshotIdentifier(t *testing.
 }
 
 func TestAccRDSClusterSnapshotDataSource_dbClusterIdentifier(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_db_cluster_snapshot.test"
 	resourceName := "aws_db_cluster_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckClusterSnapshotDataSourceConfig_DbClusterIdentifier(rName),
+				Config: testAccClusterSnapshotDataSourceConfig_clusterIdentifier(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterSnapshotExistsDataSource(dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "allocated_storage", resourceName, "allocated_storage"),
@@ -86,17 +88,18 @@ func TestAccRDSClusterSnapshotDataSource_dbClusterIdentifier(t *testing.T) {
 }
 
 func TestAccRDSClusterSnapshotDataSource_mostRecent(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_db_cluster_snapshot.test"
 	resourceName := "aws_db_cluster_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckClusterSnapshotDataSourceConfig_MostRecent(rName),
+				Config: testAccClusterSnapshotDataSourceConfig_mostRecent(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterSnapshotExistsDataSource(dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_cluster_snapshot_arn", resourceName, "db_cluster_snapshot_arn"),
@@ -121,7 +124,7 @@ func testAccCheckClusterSnapshotExistsDataSource(dataSourceName string) resource
 	}
 }
 
-func testAccCheckClusterSnapshotDataSourceConfig_DbClusterSnapshotIdentifier(rName string) string {
+func testAccClusterSnapshotDataSourceConfig_clusterSnapshotIdentifier(rName string) string {
 	return acctest.ConfigAvailableAZsNoOptIn() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/16"
@@ -145,7 +148,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_db_subnet_group" "test" {
   name       = %[1]q
-  subnet_ids = [aws_subnet.test.*.id[0], aws_subnet.test.*.id[1]]
+  subnet_ids = [aws_subnet.test[0].id, aws_subnet.test[1].id]
 }
 
 resource "aws_rds_cluster" "test" {
@@ -171,7 +174,7 @@ data "aws_db_cluster_snapshot" "test" {
 `, rName)
 }
 
-func testAccCheckClusterSnapshotDataSourceConfig_DbClusterIdentifier(rName string) string {
+func testAccClusterSnapshotDataSourceConfig_clusterIdentifier(rName string) string {
 	return acctest.ConfigAvailableAZsNoOptIn() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/16"
@@ -195,7 +198,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_db_subnet_group" "test" {
   name       = %[1]q
-  subnet_ids = [aws_subnet.test.*.id[0], aws_subnet.test.*.id[1]]
+  subnet_ids = [aws_subnet.test[0].id, aws_subnet.test[1].id]
 }
 
 resource "aws_rds_cluster" "test" {
@@ -221,7 +224,7 @@ data "aws_db_cluster_snapshot" "test" {
 `, rName)
 }
 
-func testAccCheckClusterSnapshotDataSourceConfig_MostRecent(rName string) string {
+func testAccClusterSnapshotDataSourceConfig_mostRecent(rName string) string {
 	return acctest.ConfigAvailableAZsNoOptIn() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/16"
@@ -245,7 +248,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_db_subnet_group" "test" {
   name       = %[1]q
-  subnet_ids = [aws_subnet.test.*.id[0], aws_subnet.test.*.id[1]]
+  subnet_ids = [aws_subnet.test[0].id, aws_subnet.test[1].id]
 }
 
 resource "aws_rds_cluster" "test" {

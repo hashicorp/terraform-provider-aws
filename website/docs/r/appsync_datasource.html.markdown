@@ -3,12 +3,12 @@ subcategory: "AppSync"
 layout: "aws"
 page_title: "AWS: aws_appsync_datasource"
 description: |-
-  Provides an AppSync DataSource.
+  Provides an AppSync Data Source.
 ---
 
 # Resource: aws_appsync_datasource
 
-Provides an AppSync DataSource.
+Provides an AppSync Data Source.
 
 ## Example Usage
 
@@ -25,45 +25,35 @@ resource "aws_dynamodb_table" "example" {
   }
 }
 
-resource "aws_iam_role" "example" {
-  name = "example"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "appsync.amazonaws.com"
-      },
-      "Effect": "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["appsync.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-EOF
+resource "aws_iam_role" "example" {
+  name               = "example"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "example" {
+  statement {
+    effect    = "Allow"
+    actions   = ["dynamodb:*"]
+    resources = [aws_dynamodb_table.example.arn]
+  }
 }
 
 resource "aws_iam_role_policy" "example" {
-  name = "example"
-  role = aws_iam_role.example.id
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "dynamodb:*"
-      ],
-      "Effect": "Allow",
-      "Resource": [
-        "${aws_dynamodb_table.example.arn}"
-      ]
-    }
-  ]
-}
-EOF
+  name   = "example"
+  role   = aws_iam_role.example.id
+  policy = data.aws_iam_policy_document.example.json
 }
 
 resource "aws_appsync_graphql_api" "example" {
@@ -87,16 +77,18 @@ resource "aws_appsync_datasource" "example" {
 
 The following arguments are supported:
 
-* `api_id` - (Required) The API ID for the GraphQL API for the DataSource.
-* `name` - (Required) A user-supplied name for the DataSource.
-* `type` - (Required) The type of the DataSource. Valid values: `AWS_LAMBDA`, `AMAZON_DYNAMODB`, `AMAZON_ELASTICSEARCH`, `HTTP`, `NONE`, `RELATIONAL_DATABASE`.
-* `description` - (Optional) A description of the DataSource.
-* `service_role_arn` - (Optional) The IAM service role ARN for the data source.
+* `api_id` - (Required) API ID for the GraphQL API for the data source.
+* `name` - (Required) User-supplied name for the data source.
+* `type` - (Required) Type of the Data Source. Valid values: `AWS_LAMBDA`, `AMAZON_DYNAMODB`, `AMAZON_ELASTICSEARCH`, `HTTP`, `NONE`, `RELATIONAL_DATABASE`, `AMAZON_EVENTBRIDGE`.
+* `description` - (Optional) Description of the data source.
 * `dynamodb_config` - (Optional) DynamoDB settings. See [below](#dynamodb_config)
 * `elasticsearch_config` - (Optional) Amazon Elasticsearch settings. See [below](#elasticsearch_config)
+* `event_bridge_config` - (Optional) AWS EventBridge settings. See [below](#event_bridge_config)
 * `http_config` - (Optional) HTTP settings. See [below](#http_config)
 * `lambda_config` - (Optional) AWS Lambda settings. See [below](#lambda_config)
+* `opensearchservice_config` - (Optional) Amazon OpenSearch Service settings. See [below](#opensearchservice_config)
 * `relational_database_config` (Optional) AWS RDS settings. See [Relational Database Config](#relational_database_config)
+* `service_role_arn` - (Optional) IAM service role ARN for the data source.
 
 ### dynamodb_config
 
@@ -113,32 +105,51 @@ The following arguments are supported:
 * `endpoint` - (Required) HTTP endpoint of the Elasticsearch domain.
 * `region` - (Optional) AWS region of Elasticsearch domain. Defaults to current region.
 
+### event_bridge_config
+
+The following arguments are supported:
+
+* `event_bus_arn` - (Required) ARN for the EventBridge bus.
+
 ### http_config
 
 The following arguments are supported:
 
 * `endpoint` - (Required) HTTP URL.
-* `authorization_config` - (Optional) The authorization configuration in case the HTTP endpoint requires authorization. See [Authorization Config](#authorization_config).
+* `authorization_config` - (Optional) Authorization configuration in case the HTTP endpoint requires authorization. See [Authorization Config](#authorization_config).
 
 #### authorization_config
 
 The following arguments are supported:
 
-* `authorization_type` - (Optional) The authorization type that the HTTP endpoint requires. Default values is `AWS_IAM`.
-* `aws_iam_config` - (Optional) The Identity and Access Management (IAM) settings. See [AWS IAM Config](#aws_iam_config).
+* `authorization_type` - (Optional) Authorization type that the HTTP endpoint requires. Default values is `AWS_IAM`.
+* `aws_iam_config` - (Optional) Identity and Access Management (IAM) settings. See [AWS IAM Config](#aws_iam_config).
 
 ##### aws_iam_config
 
 The following arguments are supported:
 
-* `signing_region` - (Optional) The signing Amazon Web Services Region for IAM authorization.
-* `signing_service_name`- (Optional) The signing service name for IAM authorization.
+* `signing_region` - (Optional) Signing Amazon Web Services Region for IAM authorization.
+* `signing_service_name`- (Optional) Signing service name for IAM authorization.
+
+### lambda_config
+
+The following arguments are supported:
+
+* `function_arn` - (Required) ARN for the Lambda function.
+
+### opensearchservice_config
+
+The following arguments are supported:
+
+* `endpoint` - (Required) HTTP endpoint of the OpenSearch domain.
+* `region` - (Optional) AWS region of the OpenSearch domain. Defaults to current region.
 
 ### relational_database_config
 
 The following arguments are supported:
 
-* `http_endpoint_config` - (Required) The Amazon RDS HTTP endpoint configuration. See [HTTP Endpoint Config](#http_endpoint_config).
+* `http_endpoint_config` - (Required) Amazon RDS HTTP endpoint configuration. See [HTTP Endpoint Config](#http_endpoint_config).
 * `source_type` - (Optional) Source type for the relational database. Valid values: `RDS_HTTP_ENDPOINT`.
 
 #### http_endpoint_config
@@ -151,17 +162,11 @@ The following arguments are supported:
 * `region` - (Optional) AWS Region for RDS HTTP endpoint. Defaults to current region.
 * `schema` - (Optional) Logical schema name.
 
-### lambda_config
-
-The following arguments are supported:
-
-* `function_arn` - (Required) The ARN for the Lambda function.
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN
+* `arn` - ARN
 
 ## Import
 

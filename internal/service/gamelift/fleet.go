@@ -1,6 +1,7 @@
 package gamelift
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"reflect"
@@ -9,15 +10,17 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -25,14 +28,16 @@ const (
 	FleetDeletedDefaultTimeout = 20 * time.Minute
 )
 
+// @SDKResource("aws_gamelift_fleet", name="Fleet")
+// @Tags(identifierAttribute="arn")
 func ResourceFleet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceFleetCreate,
-		Read:   resourceFleetRead,
-		Update: resourceFleetUpdate,
-		Delete: resourceFleetDelete,
+		CreateWithoutTimeout: resourceFleetCreate,
+		ReadWithoutTimeout:   resourceFleetRead,
+		UpdateWithoutTimeout: resourceFleetUpdate,
+		DeleteWithoutTimeout: resourceFleetDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -227,23 +232,22 @@ func ResourceFleet() *schema.Resource {
 				ForceNew:     true,
 				ExactlyOneOf: []string{"build_id", "script_id"},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GameLiftConn()
 
 	input := &gamelift.CreateFleetInput{
 		EC2InstanceType: aws.String(d.Get("ec2_instance_type").(string)),
 		Name:            aws.String(d.Get("name").(string)),
-		Tags:            Tags(tags.IgnoreAWS()),
+		Tags:            GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("build_id"); ok {
@@ -261,7 +265,7 @@ func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 		input.FleetType = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("ec2_inbound_permission"); ok {
-		input.EC2InboundPermissions = expandGameliftIpPermissions(v.(*schema.Set))
+		input.EC2InboundPermissions = expandIPPermissions(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("instance_role_arn"); ok {
@@ -275,65 +279,64 @@ func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 		input.NewGameSessionProtectionPolicy = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("resource_creation_limit_policy"); ok {
-		input.ResourceCreationLimitPolicy = expandGameliftResourceCreationLimitPolicy(v.([]interface{}))
+		input.ResourceCreationLimitPolicy = expandResourceCreationLimitPolicy(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("runtime_configuration"); ok {
-		input.RuntimeConfiguration = expandGameliftRuntimeConfiguration(v.([]interface{}))
+		input.RuntimeConfiguration = expandRuntimeConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("certificate_configuration"); ok {
-		input.CertificateConfiguration = expandGameliftCertificateConfiguration(v.([]interface{}))
+		input.CertificateConfiguration = expandCertificateConfiguration(v.([]interface{}))
 	}
 
-	log.Printf("[INFO] Creating Gamelift Fleet: %s", input)
+	log.Printf("[INFO] Creating GameLift Fleet: %s", input)
 	var out *gamelift.CreateFleetOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
-		out, err = conn.CreateFleet(input)
+		out, err = conn.CreateFleetWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, "GameLift is not authorized to perform") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
 	})
 
 	if tfresource.TimedOut(err) {
-		out, err = conn.CreateFleet(input)
+		out, err = conn.CreateFleetWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating GameLift Fleet (%s): %w", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating GameLift Fleet (%s): %s", d.Get("name").(string), err)
 	}
 
 	d.SetId(aws.StringValue(out.FleetAttributes.FleetId))
 
-	if _, err := waitFleetActive(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for GameLift Fleet (%s) to active: %w", d.Id(), err)
+	if _, err := waitFleetActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for GameLift Fleet (%s) to active: %s", d.Id(), err)
 	}
 
-	return resourceFleetRead(d, meta)
+	return append(diags, resourceFleetRead(ctx, d, meta)...)
 }
 
-func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GameLiftConn()
 
-	log.Printf("[INFO] Describing Gamelift Fleet: %s", d.Id())
-	fleet, err := FindFleetByID(conn, d.Id())
+	log.Printf("[INFO] Describing GameLift Fleet: %s", d.Id())
+	fleet, err := FindFleetByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] GameLift Fleet (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading GameLift Fleet (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading GameLift Fleet (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(fleet.FleetArn)
@@ -352,67 +355,47 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("script_arn", fleet.ScriptArn)
 	d.Set("script_id", fleet.ScriptId)
 
-	if err := d.Set("certificate_configuration", flattenGameliftCertificateConfiguration(fleet.CertificateConfiguration)); err != nil {
-		return fmt.Errorf("error setting certificate_configuration: %w", err)
+	if err := d.Set("certificate_configuration", flattenCertificateConfiguration(fleet.CertificateConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting certificate_configuration: %s", err)
 	}
 
-	if err := d.Set("resource_creation_limit_policy", flattenGameliftResourceCreationLimitPolicy(fleet.ResourceCreationLimitPolicy)); err != nil {
-		return fmt.Errorf("error setting resource_creation_limit_policy: %w", err)
+	if err := d.Set("resource_creation_limit_policy", flattenResourceCreationLimitPolicy(fleet.ResourceCreationLimitPolicy)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting resource_creation_limit_policy: %s", err)
 	}
 
 	portInput := &gamelift.DescribeFleetPortSettingsInput{
 		FleetId: aws.String(d.Id()),
 	}
 
-	portConfig, err := conn.DescribeFleetPortSettings(portInput)
+	portConfig, err := conn.DescribeFleetPortSettingsWithContext(ctx, portInput)
 	if err != nil {
-		return fmt.Errorf("error reading for GameLift Fleet ec2 inbound permission (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading for GameLift Fleet ec2 inbound permission (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("ec2_inbound_permission", flattenGameliftIpPermissions(portConfig.InboundPermissions)); err != nil {
-		return fmt.Errorf("error setting ec2_inbound_permission: %w", err)
+	if err := d.Set("ec2_inbound_permission", flattenIPPermissions(portConfig.InboundPermissions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ec2_inbound_permission: %s", err)
 	}
 
-	tags, err := ListTags(conn, arn)
-
-	if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, fmt.Sprintf("Resource %s is not in a taggable state", d.Id())) {
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for Game Lift Fleet (%s): %w", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
+func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GameLiftConn()
 
-	log.Printf("[INFO] Updating Gamelift Fleet: %s", d.Id())
+	log.Printf("[INFO] Updating GameLift Fleet: %s", d.Id())
 
 	if d.HasChanges("description", "metric_groups", "name", "new_game_session_protection_policy", "resource_creation_limit_policy") {
-		_, err := conn.UpdateFleetAttributes(&gamelift.UpdateFleetAttributesInput{
+		_, err := conn.UpdateFleetAttributesWithContext(ctx, &gamelift.UpdateFleetAttributesInput{
 			Description:                    aws.String(d.Get("description").(string)),
 			FleetId:                        aws.String(d.Id()),
 			MetricGroups:                   flex.ExpandStringList(d.Get("metric_groups").([]interface{})),
 			Name:                           aws.String(d.Get("name").(string)),
 			NewGameSessionProtectionPolicy: aws.String(d.Get("new_game_session_protection_policy").(string)),
-			ResourceCreationLimitPolicy:    expandGameliftResourceCreationLimitPolicy(d.Get("resource_creation_limit_policy").([]interface{})),
+			ResourceCreationLimitPolicy:    expandResourceCreationLimitPolicy(d.Get("resource_creation_limit_policy").([]interface{})),
 		})
 		if err != nil {
-			return fmt.Errorf("error updating for GameLift Fleet attributes (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating for GameLift Fleet attributes (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -420,76 +403,68 @@ func resourceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 		oldPerms, newPerms := d.GetChange("ec2_inbound_permission")
 		authorizations, revocations := DiffPortSettings(oldPerms.(*schema.Set).List(), newPerms.(*schema.Set).List())
 
-		_, err := conn.UpdateFleetPortSettings(&gamelift.UpdateFleetPortSettingsInput{
+		_, err := conn.UpdateFleetPortSettingsWithContext(ctx, &gamelift.UpdateFleetPortSettingsInput{
 			FleetId:                         aws.String(d.Id()),
 			InboundPermissionAuthorizations: authorizations,
 			InboundPermissionRevocations:    revocations,
 		})
 		if err != nil {
-			return fmt.Errorf("error updating for GameLift Fleet port settings (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating for GameLift Fleet port settings (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("runtime_configuration") {
-		_, err := conn.UpdateRuntimeConfiguration(&gamelift.UpdateRuntimeConfigurationInput{
+		_, err := conn.UpdateRuntimeConfigurationWithContext(ctx, &gamelift.UpdateRuntimeConfigurationInput{
 			FleetId:              aws.String(d.Id()),
-			RuntimeConfiguration: expandGameliftRuntimeConfiguration(d.Get("runtime_configuration").([]interface{})),
+			RuntimeConfiguration: expandRuntimeConfiguration(d.Get("runtime_configuration").([]interface{})),
 		})
 		if err != nil {
-			return fmt.Errorf("error updating for GameLift Fleet runtime configuration (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating for GameLift Fleet runtime configuration (%s): %s", d.Id(), err)
 		}
 	}
 
-	arn := d.Get("arn").(string)
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating Game Lift Fleet (%s) tags: %w", arn, err)
-		}
-	}
-
-	return resourceFleetRead(d, meta)
+	return append(diags, resourceFleetRead(ctx, d, meta)...)
 }
 
-func resourceFleetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
+func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GameLiftConn()
 
-	log.Printf("[INFO] Deleting Gamelift Fleet: %s", d.Id())
-	// It can take ~ 1 hr as Gamelift will keep retrying on errors like
+	log.Printf("[INFO] Deleting GameLift Fleet: %s", d.Id())
+	// It can take ~ 1 hr as GameLift will keep retrying on errors like
 	// invalid launch path and remain in state when it can't be deleted :/
 	input := &gamelift.DeleteFleetInput{
 		FleetId: aws.String(d.Id()),
 	}
-	err := resource.Retry(60*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteFleet(input)
+	err := retry.RetryContext(ctx, 60*time.Minute, func() *retry.RetryError {
+		_, err := conn.DeleteFleetWithContext(ctx, input)
 		if err != nil {
 			msg := fmt.Sprintf("Cannot delete fleet %s that is in status of ", d.Id())
 			if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, msg) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteFleet(input)
+		_, err = conn.DeleteFleetWithContext(ctx, input)
 	}
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("Error deleting Gamelift fleet: %w", err)
+		return sdkdiag.AppendErrorf(diags, "deleting GameLift fleet: %s", err)
 	}
 
-	if _, err := waitFleetTerminated(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for GameLift Fleet (%s) to be deleted: %w", d.Id(), err)
+	if _, err := waitFleetTerminated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for GameLift Fleet (%s) to be deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func expandGameliftIpPermissions(cfgs *schema.Set) []*gamelift.IpPermission {
+func expandIPPermissions(cfgs *schema.Set) []*gamelift.IpPermission {
 	if cfgs.Len() < 1 {
 		return []*gamelift.IpPermission{}
 	}
@@ -497,12 +472,12 @@ func expandGameliftIpPermissions(cfgs *schema.Set) []*gamelift.IpPermission {
 	perms := make([]*gamelift.IpPermission, cfgs.Len())
 	for i, rawCfg := range cfgs.List() {
 		cfg := rawCfg.(map[string]interface{})
-		perms[i] = expandGameliftIpPermission(cfg)
+		perms[i] = expandIPPermission(cfg)
 	}
 	return perms
 }
 
-func expandGameliftIpPermission(cfg map[string]interface{}) *gamelift.IpPermission {
+func expandIPPermission(cfg map[string]interface{}) *gamelift.IpPermission {
 	return &gamelift.IpPermission{
 		FromPort: aws.Int64(int64(cfg["from_port"].(int))),
 		IpRange:  aws.String(cfg["ip_range"].(string)),
@@ -511,7 +486,7 @@ func expandGameliftIpPermission(cfg map[string]interface{}) *gamelift.IpPermissi
 	}
 }
 
-func flattenGameliftIpPermissions(apiObjects []*gamelift.IpPermission) []interface{} {
+func flattenIPPermissions(apiObjects []*gamelift.IpPermission) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -522,7 +497,7 @@ func flattenGameliftIpPermissions(apiObjects []*gamelift.IpPermission) []interfa
 			continue
 		}
 
-		if v := flattenGameliftIpPermission(apiObject); len(v) > 0 {
+		if v := flattenIPPermission(apiObject); len(v) > 0 {
 			tfList = append(tfList, v)
 		}
 	}
@@ -530,7 +505,7 @@ func flattenGameliftIpPermissions(apiObjects []*gamelift.IpPermission) []interfa
 	return tfList
 }
 
-func flattenGameliftIpPermission(apiObject *gamelift.IpPermission) map[string]interface{} {
+func flattenIPPermission(apiObject *gamelift.IpPermission) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -545,7 +520,7 @@ func flattenGameliftIpPermission(apiObject *gamelift.IpPermission) map[string]in
 	return tfMap
 }
 
-func expandGameliftResourceCreationLimitPolicy(cfg []interface{}) *gamelift.ResourceCreationLimitPolicy {
+func expandResourceCreationLimitPolicy(cfg []interface{}) *gamelift.ResourceCreationLimitPolicy {
 	if len(cfg) < 1 {
 		return nil
 	}
@@ -562,7 +537,7 @@ func expandGameliftResourceCreationLimitPolicy(cfg []interface{}) *gamelift.Reso
 	return &out
 }
 
-func flattenGameliftResourceCreationLimitPolicy(policy *gamelift.ResourceCreationLimitPolicy) []interface{} {
+func flattenResourceCreationLimitPolicy(policy *gamelift.ResourceCreationLimitPolicy) []interface{} {
 	if policy == nil {
 		return []interface{}{}
 	}
@@ -574,7 +549,7 @@ func flattenGameliftResourceCreationLimitPolicy(policy *gamelift.ResourceCreatio
 	return []interface{}{m}
 }
 
-func expandGameliftRuntimeConfiguration(cfg []interface{}) *gamelift.RuntimeConfiguration {
+func expandRuntimeConfiguration(cfg []interface{}) *gamelift.RuntimeConfiguration {
 	if len(cfg) < 1 {
 		return nil
 	}
@@ -588,13 +563,13 @@ func expandGameliftRuntimeConfiguration(cfg []interface{}) *gamelift.RuntimeConf
 		out.MaxConcurrentGameSessionActivations = aws.Int64(int64(v))
 	}
 	if v, ok := m["server_process"]; ok {
-		out.ServerProcesses = expandGameliftServerProcesses(v.([]interface{}))
+		out.ServerProcesses = expandServerProcesses(v.([]interface{}))
 	}
 
 	return &out
 }
 
-func expandGameliftServerProcesses(cfgs []interface{}) []*gamelift.ServerProcess {
+func expandServerProcesses(cfgs []interface{}) []*gamelift.ServerProcess {
 	if len(cfgs) < 1 {
 		return []*gamelift.ServerProcess{}
 	}
@@ -614,7 +589,7 @@ func expandGameliftServerProcesses(cfgs []interface{}) []*gamelift.ServerProcess
 	return processes
 }
 
-func expandGameliftCertificateConfiguration(cfg []interface{}) *gamelift.CertificateConfiguration {
+func expandCertificateConfiguration(cfg []interface{}) *gamelift.CertificateConfiguration {
 	if len(cfg) < 1 {
 		return nil
 	}
@@ -628,7 +603,7 @@ func expandGameliftCertificateConfiguration(cfg []interface{}) *gamelift.Certifi
 	return &out
 }
 
-func flattenGameliftCertificateConfiguration(config *gamelift.CertificateConfiguration) []interface{} {
+func flattenCertificateConfiguration(config *gamelift.CertificateConfiguration) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
@@ -656,13 +631,13 @@ OUTER:
 		}
 
 		// Add what's left for revocation
-		r = append(r, expandGameliftIpPermission(oldPerm))
+		r = append(r, expandIPPermission(oldPerm))
 	}
 
 	for _, np := range newPerms {
 		newPerm := np.(map[string]interface{})
 		// Add what's left for authorization
-		a = append(a, expandGameliftIpPermission(newPerm))
+		a = append(a, expandIPPermission(newPerm))
 	}
 	return
 }

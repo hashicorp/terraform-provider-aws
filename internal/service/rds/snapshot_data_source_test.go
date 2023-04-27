@@ -12,18 +12,19 @@ import (
 )
 
 func TestAccRDSSnapshotDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	rInt := sdkacctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckSnapshotDataSourceConfig(rInt),
+				Config: testAccSnapshotDataSourceConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotIDDataSource("data.aws_db_snapshot.snapshot"),
 				),
@@ -46,7 +47,7 @@ func testAccCheckSnapshotIDDataSource(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckSnapshotDataSourceConfig(rInt int) string {
+func testAccSnapshotDataSourceConfig_basic(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "mysql"

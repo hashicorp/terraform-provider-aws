@@ -11,15 +11,16 @@ import (
 )
 
 func TestAccRoute53DelegationSetDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_route53_delegation_set.dset"
 	resourceName := "aws_route53_delegation_set.dset"
 
 	zoneName := acctest.RandomDomainName()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDelegationSetDataSourceConfig_basic(zoneName),

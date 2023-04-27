@@ -10,18 +10,19 @@ import (
 	"github.com/aws/aws-sdk-go/service/macie2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_macie2_invitation_accepter")
 func ResourceInvitationAccepter() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceMacie2InvitationAccepterCreate,
-		ReadWithoutTimeout:   resourceMacie2InvitationAccepterRead,
-		DeleteWithoutTimeout: resourceMacie2InvitationAccepterDelete,
+		CreateWithoutTimeout: resourceInvitationAccepterCreate,
+		ReadWithoutTimeout:   resourceInvitationAccepterRead,
+		DeleteWithoutTimeout: resourceInvitationAccepterDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -43,16 +44,16 @@ func ResourceInvitationAccepter() *schema.Resource {
 	}
 }
 
-func resourceMacie2InvitationAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	adminAccountID := d.Get("administrator_account_id").(string)
 	var invitationID string
 
 	listInvitationsInput := &macie2.ListInvitationsInput{}
 
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		err := conn.ListInvitationsPages(listInvitationsInput, func(page *macie2.ListInvitationsOutput, lastPage bool) bool {
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
+		err := conn.ListInvitationsPagesWithContext(ctx, listInvitationsInput, func(page *macie2.ListInvitationsOutput, lastPage bool) bool {
 			for _, invitation := range page.Invitations {
 				if aws.StringValue(invitation.AccountId) == adminAccountID {
 					invitationID = aws.StringValue(invitation.InvitationId)
@@ -63,18 +64,18 @@ func resourceMacie2InvitationAccepterCreate(ctx context.Context, d *schema.Resou
 		})
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if invitationID == "" {
-			return resource.RetryableError(fmt.Errorf("unable to find pending Macie Invitation for administrator account ID (%s)", adminAccountID))
+			return retry.RetryableError(fmt.Errorf("unable to find pending Macie Invitation for administrator account ID (%s)", adminAccountID))
 		}
 
 		return nil
 	})
 
 	if tfresource.TimedOut(err) {
-		err = conn.ListInvitationsPages(listInvitationsInput, func(page *macie2.ListInvitationsOutput, lastPage bool) bool {
+		err = conn.ListInvitationsPagesWithContext(ctx, listInvitationsInput, func(page *macie2.ListInvitationsOutput, lastPage bool) bool {
 			for _, invitation := range page.Invitations {
 				if aws.StringValue(invitation.AccountId) == adminAccountID {
 					invitationID = aws.StringValue(invitation.InvitationId)
@@ -101,11 +102,11 @@ func resourceMacie2InvitationAccepterCreate(ctx context.Context, d *schema.Resou
 
 	d.SetId(adminAccountID)
 
-	return resourceMacie2InvitationAccepterRead(ctx, d, meta)
+	return resourceInvitationAccepterRead(ctx, d, meta)
 }
 
-func resourceMacie2InvitationAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	var err error
 
@@ -113,8 +114,8 @@ func resourceMacie2InvitationAccepterRead(ctx context.Context, d *schema.Resourc
 
 	output, err := conn.GetAdministratorAccountWithContext(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-		tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
+	if !d.IsNewResource() && (tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
+		tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled")) {
 		log.Printf("[WARN] Macie InvitationAccepter (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -133,8 +134,8 @@ func resourceMacie2InvitationAccepterRead(ctx context.Context, d *schema.Resourc
 	return nil
 }
 
-func resourceMacie2InvitationAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+func resourceInvitationAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	input := &macie2.DisassociateFromAdministratorAccountInput{}
 

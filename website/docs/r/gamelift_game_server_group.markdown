@@ -1,14 +1,14 @@
 ---
-subcategory: "Gamelift"
+subcategory: "GameLift"
 layout: "aws"
 page_title: "AWS: aws_gamelift_game_server_group"
 description: |-
-  Provides a Gamelift Game Server Group resource.
+  Provides a GameLift Game Server Group resource.
 ---
 
 # Resource: aws_gamelift_game_server_group
 
-Provides an Gamelift Game Server Group resource.
+Provides an GameLift Game Server Group resource.
 
 ## Example Usage
 
@@ -87,30 +87,33 @@ resource "aws_gamelift_game_server_group" "example" {
 }
 ```
 
-### Example IAM Role for Gamelift Game Server Group
+### Example IAM Role for GameLift Game Server Group
 
 ```terraform
 data "aws_partition" "current" {}
-resource "aws_iam_role" "example" {
-  assume_role_policy = <<-EOF
-    {
-      "Version": "2012-10-17",
-      "Statement": [
-        {
-          "Effect": "Allow",
-          "Principal": {
-            "Service": [
-              "autoscaling.amazonaws.com",
-              "gamelift.amazonaws.com"
-            ]
-          },
-          "Action": "sts:AssumeRole"
-        }
+
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type = "Service"
+
+      identifiers = [
+        "autoscaling.amazonaws.com",
+        "gamelift.amazonaws.com",
       ]
     }
-  EOF
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+resource "aws_iam_role" "example" {
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
   name               = "gamelift-game-server-group-example"
 }
+
 resource "aws_iam_role_policy_attachment" "example" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/GameLiftGameServerGroupPolicy"
   role       = aws_iam_role.example.name
@@ -183,21 +186,20 @@ You can specify the template using either the template name or ID.
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The name of the Gamelift Game Server Group.
-* `arn` - The ARN of the Gamelift Game Server Group.
+* `id` - The name of the GameLift Game Server Group.
+* `arn` - The ARN of the GameLift Game Server Group.
 * `auto_scaling_group_arn` - The ARN of the created EC2 Auto Scaling group.
 
 ## Timeouts
 
-`aws_gamelift_game_server_group` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `10 minutes`) How long to wait for the Gamelift Game Server Group to be created.
-* `delete` - (Default `30 minutes`) How long to wait for the Gamelift Game Server Group to be deleted.
+* `create` - (Default `10m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
-Gamelift Game Server Group can be imported using the `name`, e.g.
+GameLift Game Server Group can be imported using the `name`, e.g.
 
 ```
 $ terraform import aws_gamelift_game_server_group.example example

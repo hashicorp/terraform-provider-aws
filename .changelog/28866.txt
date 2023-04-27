@@ -1,0 +1,19 @@
+```release-note:bug
+resource/aws_s3_access_point: Improve refresh to avoid unnecessary diffs in `policy`
+```
+
+```release-note:bug
+resource/aws_s3control_bucket_policy: Improve refresh to avoid unnecessary diffs in `policy`
+```
+
+```release-note:bug
+resource/aws_s3control_multi_region_access_point_policy: Improve refresh to avoid unnecessary diffs in `details` `policy`
+```
+
+```release-note:bug
+resource/aws_s3control_object_lambda_access_point_policy: Improve refresh to avoid unnecessary diffs in `policy`
+```
+
+```release-note:bug
+resource/aws_s3control_access_point_policy: Improve refresh to avoid unnecessary diffs in `policy`
+```

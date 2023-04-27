@@ -1,34 +1,29 @@
 package kafka
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-)
-
-const (
-	clusterCreateDefaultTimeout = 120 * time.Minute
-	clusterUpdateDefaultTimeout = 120 * time.Minute
-	clusterDeleteDefaultTimeout = 120 * time.Minute
 )
 
 const (
 	configurationDeletedTimeout = 5 * time.Minute
 )
 
-func waitClusterCreated(conn *kafka.Kafka, arn string, timeout time.Duration) (*kafka.ClusterInfo, error) {
-	stateConf := &resource.StateChangeConf{
+func waitClusterCreated(ctx context.Context, conn *kafka.Kafka, arn string, timeout time.Duration) (*kafka.ClusterInfo, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{kafka.ClusterStateCreating},
 		Target:  []string{kafka.ClusterStateActive},
-		Refresh: statusClusterState(conn, arn),
+		Refresh: statusClusterState(ctx, conn, arn),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*kafka.ClusterInfo); ok {
 		if state, stateInfo := aws.StringValue(output.State), output.StateInfo; state == kafka.ClusterStateFailed && stateInfo != nil {
@@ -41,15 +36,15 @@ func waitClusterCreated(conn *kafka.Kafka, arn string, timeout time.Duration) (*
 	return nil, err
 }
 
-func waitClusterDeleted(conn *kafka.Kafka, arn string, timeout time.Duration) (*kafka.ClusterInfo, error) {
-	stateConf := &resource.StateChangeConf{
+func waitClusterDeleted(ctx context.Context, conn *kafka.Kafka, arn string, timeout time.Duration) (*kafka.ClusterInfo, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{kafka.ClusterStateDeleting},
 		Target:  []string{},
-		Refresh: statusClusterState(conn, arn),
+		Refresh: statusClusterState(ctx, conn, arn),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*kafka.ClusterInfo); ok {
 		if state, stateInfo := aws.StringValue(output.State), output.StateInfo; state == kafka.ClusterStateFailed && stateInfo != nil {
@@ -62,15 +57,15 @@ func waitClusterDeleted(conn *kafka.Kafka, arn string, timeout time.Duration) (*
 	return nil, err
 }
 
-func waitClusterOperationCompleted(conn *kafka.Kafka, arn string, timeout time.Duration) (*kafka.ClusterOperationInfo, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+func waitClusterOperationCompleted(ctx context.Context, conn *kafka.Kafka, arn string, timeout time.Duration) (*kafka.ClusterOperationInfo, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{ClusterOperationStatePending, ClusterOperationStateUpdateInProgress},
 		Target:  []string{ClusterOperationStateUpdateComplete},
-		Refresh: statusClusterOperationState(conn, arn),
+		Refresh: statusClusterOperationState(ctx, conn, arn),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*kafka.ClusterOperationInfo); ok {
 		if state, errorInfo := aws.StringValue(output.OperationState), output.ErrorInfo; state == ClusterOperationStateUpdateFailed && errorInfo != nil {
@@ -83,15 +78,15 @@ func waitClusterOperationCompleted(conn *kafka.Kafka, arn string, timeout time.D
 	return nil, err
 }
 
-func waitConfigurationDeleted(conn *kafka.Kafka, arn string) (*kafka.DescribeConfigurationOutput, error) {
-	stateConf := &resource.StateChangeConf{
+func waitConfigurationDeleted(ctx context.Context, conn *kafka.Kafka, arn string) (*kafka.DescribeConfigurationOutput, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{kafka.ConfigurationStateDeleting},
 		Target:  []string{},
-		Refresh: statusConfigurationState(conn, arn),
+		Refresh: statusConfigurationState(ctx, conn, arn),
 		Timeout: configurationDeletedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*kafka.DescribeConfigurationOutput); ok {
 		return output, err

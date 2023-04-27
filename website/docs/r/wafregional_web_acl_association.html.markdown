@@ -1,5 +1,5 @@
 ---
-subcategory: "WAF Regional"
+subcategory: "WAF Classic Regional"
 layout: "aws"
 page_title: "AWS: aws_wafregional_web_acl_association"
 description: |-

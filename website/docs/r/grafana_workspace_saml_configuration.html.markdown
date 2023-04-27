@@ -1,5 +1,5 @@
 ---
-subcategory: "Grafana"
+subcategory: "Managed Grafana"
 layout: "aws"
 page_title: "AWS: aws_grafana_workspace_saml_configuration"
 description: |-

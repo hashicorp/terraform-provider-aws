@@ -1,5 +1,5 @@
 ---
-subcategory: "DataPipeline"
+subcategory: "Data Pipeline"
 layout: "aws"
 page_title: "AWS: aws_datapipeline_pipeline_definition"
 description: |-
@@ -114,7 +114,6 @@ The following arguments are optional:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Unique ID of the datapipeline definition.
-
 
 ## Import
 

@@ -10,7 +10,7 @@ resource "aws_elb" "web" {
   name = "terraform-example-elb"
 
   # The same availability zone as our instances
-  availability_zones = aws_instance.web.*.availability_zone
+  availability_zones = aws_instance.web[*].availability_zone
 
   listener {
     instance_port     = 80
@@ -20,7 +20,7 @@ resource "aws_elb" "web" {
   }
 
   # The instances are registered automatically
-  instances = aws_instance.web.*.id
+  instances = aws_instance.web[*].id
 }
 
 data "aws_ami" "ubuntu" {

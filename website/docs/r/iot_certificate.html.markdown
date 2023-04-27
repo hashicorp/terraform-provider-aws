@@ -1,5 +1,5 @@
 ---
-subcategory: "IoT"
+subcategory: "IoT Core"
 layout: "aws"
 page_title: "AWS: aws_iot_certificate"
 description: |-
@@ -38,7 +38,6 @@ resource "aws_iot_certificate" "cert" {
 }
 ```
 
-
 ## Argument Reference
 
 * `active` - (Required)  Boolean flag to indicate if the certificate should be active
@@ -54,7 +53,6 @@ resource "aws_iot_certificate" "cert" {
   for more information on registering a certificate.
 * `ca_pem` - (Optional) The CA certificate for the certificate to be registered. If this is set, the CA needs to be registered with AWS IoT beforehand.
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -64,4 +62,3 @@ In addition to all arguments above, the following attributes are exported:
 * `certificate_pem` - The certificate data, in PEM format.
 * `public_key` - When neither CSR nor certificate is provided, the public key.
 * `private_key` - When neither CSR nor certificate is provided, the private key.
-

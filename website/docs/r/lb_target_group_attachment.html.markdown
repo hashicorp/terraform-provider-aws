@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Load Balancing v2 (ALB/NLB)"
+subcategory: "ELB (Elastic Load Balancing)"
 layout: "aws"
 page_title: "AWS: aws_lb_target_group_attachment"
 description: |-
@@ -37,7 +37,7 @@ resource "aws_instance" "test" {
 resource "aws_lambda_permission" "with_lb" {
   statement_id  = "AllowExecutionFromlb"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.test.arn
+  function_name = aws_lambda_function.test.function_name
   principal     = "elasticloadbalancing.amazonaws.com"
   source_arn    = aws_lb_target_group.test.arn
 }
@@ -76,4 +76,3 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 Target Group Attachments cannot be imported.
-

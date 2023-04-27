@@ -1,5 +1,5 @@
 ---
-subcategory: "CloudWatch"
+subcategory: "EventBridge"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_event_bus"
 description: |-
@@ -22,8 +22,8 @@ data "aws_cloudwatch_event_bus" "example" {
 
 ## Argument Reference
 
-* `name` - (Required) The friendly EventBridge event bus name.
+* `name` - (Required) Friendly EventBridge event bus name.
 
 ## Attributes Reference
 
-* `arn` - The Amazon Resource Name (ARN) specifying the role.
+* `arn` - ARN.

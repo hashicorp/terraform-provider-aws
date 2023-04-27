@@ -1,5 +1,5 @@
 ---
-subcategory: "WAF Regional"
+subcategory: "WAF Classic Regional"
 layout: "aws"
 page_title: "AWS: aws_wafregional_byte_match_set"
 description: |-
@@ -35,7 +35,6 @@ The following arguments are supported:
 
 * `name` - (Required) The name or description of the ByteMatchSet.
 * `byte_match_tuples` - (Optional)Settings for the ByteMatchSet, such as the bytes (typically a string that corresponds with ASCII characters) that you want AWS WAF to search for in web requests. ByteMatchTuple documented below.
-
 
 ByteMatchTuples(byte_match_tuples) support the following:
 

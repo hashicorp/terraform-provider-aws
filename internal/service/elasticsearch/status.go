@@ -1,18 +1,24 @@
 package elasticsearch
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
 	UpgradeStatusUnknown = "Unknown"
+	ConfigStatusNotFound = "NotFound"
+	ConfigStatusUnknown  = "Unknown"
+	ConfigStatusExists   = "Exists"
 )
 
-func statusUpgradeStatus(conn *elasticsearch.ElasticsearchService, name string) resource.StateRefreshFunc {
+func statusUpgradeStatus(ctx context.Context, conn *elasticsearch.ElasticsearchService, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := conn.GetUpgradeStatus(&elasticsearch.GetUpgradeStatusInput{
+		out, err := conn.GetUpgradeStatusWithContext(ctx, &elasticsearch.GetUpgradeStatusInput{
 			DomainName: aws.String(name),
 		})
 		if err != nil {
@@ -27,5 +33,24 @@ func statusUpgradeStatus(conn *elasticsearch.ElasticsearchService, name string) 
 		}
 
 		return out, aws.StringValue(out.StepStatus), nil
+	}
+}
+
+func domainConfigStatus(ctx context.Context, conn *elasticsearch.ElasticsearchService, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		out, err := conn.DescribeElasticsearchDomainConfigWithContext(ctx, &elasticsearch.DescribeElasticsearchDomainConfigInput{
+			DomainName: aws.String(name),
+		})
+
+		if tfawserr.ErrCodeEquals(err, elasticsearch.ErrCodeResourceNotFoundException) {
+			// if first return value is nil, WaitForState treats as not found - here not found is treated differently
+			return "not nil", ConfigStatusNotFound, nil
+		}
+
+		if err != nil {
+			return nil, ConfigStatusUnknown, err
+		}
+
+		return out, ConfigStatusExists, nil
 	}
 }

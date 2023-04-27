@@ -1,12 +1,12 @@
 ---
-subcategory: "EKS"
+subcategory: "EKS (Elastic Kubernetes)"
 layout: "aws"
 page_title: "AWS: aws_eks_clusters"
 description: |-
   Retrieve EKS Clusters list
 ---
 
-# Data Source: aws_eks_cluster
+# Data Source: aws_eks_clusters
 
 Retrieve EKS Clusters list
 

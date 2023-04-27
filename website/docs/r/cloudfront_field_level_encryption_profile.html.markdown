@@ -1,7 +1,7 @@
 ---
 subcategory: "CloudFront"
 layout: "aws"
-page_title: "AWS: cloudfront_field_level_encryption_profile"
+page_title: "AWS: aws_cloudfront_field_level_encryption_profile"
 description: |-
   Provides a CloudFront Field-level Encryption Profile resource.
 ---
