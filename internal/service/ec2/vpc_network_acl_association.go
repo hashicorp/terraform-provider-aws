@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_network_acl_association")
 func ResourceNetworkACLAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkACLAssociationCreate,
@@ -58,7 +59,9 @@ func resourceNetworkACLAssociationRead(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	association, err := FindNetworkACLAssociationByID(ctx, conn, d.Id())
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindNetworkACLAssociationByID(ctx, conn, d.Id())
+	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Network ACL Association (%s) not found, removing from state", d.Id())
@@ -69,6 +72,8 @@ func resourceNetworkACLAssociationRead(ctx context.Context, d *schema.ResourceDa
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACL Association (%s): %s", d.Id(), err)
 	}
+
+	association := outputRaw.(*ec2.NetworkAclAssociation)
 
 	d.Set("network_acl_id", association.NetworkAclId)
 	d.Set("subnet_id", association.SubnetId)
@@ -121,7 +126,7 @@ func networkACLAssociationCreate(ctx context.Context, conn *ec2.EC2, naclID, sub
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Network ACL Association: %s", input)
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.ReplaceNetworkAclAssociationWithContext(ctx, input)
 	}, errCodeInvalidAssociationIDNotFound)
 

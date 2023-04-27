@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/xray"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -14,8 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_xray_sampling_rule", name="Sampling Rule")
+// @Tags(identifierAttribute="arn")
 func ResourceSamplingRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSamplingRuleCreate,
@@ -97,8 +101,8 @@ func ResourceSamplingRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -106,8 +110,6 @@ func ResourceSamplingRule() *schema.Resource {
 func resourceSamplingRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).XRayConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	samplingRule := &xray.SamplingRule{
 		RuleName:      aws.String(d.Get("rule_name").(string)),
@@ -129,7 +131,7 @@ func resourceSamplingRuleCreate(ctx context.Context, d *schema.ResourceData, met
 
 	params := &xray.CreateSamplingRuleInput{
 		SamplingRule: samplingRule,
-		Tags:         Tags(tags.IgnoreAWS()),
+		Tags:         GetTagsIn(ctx),
 	}
 
 	out, err := conn.CreateSamplingRuleWithContext(ctx, params)
@@ -145,8 +147,6 @@ func resourceSamplingRuleCreate(ctx context.Context, d *schema.ResourceData, met
 func resourceSamplingRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).XRayConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	samplingRule, err := GetSamplingRule(ctx, conn, d.Id())
 
@@ -175,35 +175,12 @@ func resourceSamplingRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("attributes", aws.StringValueMap(samplingRule.Attributes))
 	d.Set("arn", arn)
 
-	tags, err := ListTags(ctx, conn, arn)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Xray Sampling group (%q): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceSamplingRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).XRayConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
-		}
-	}
 
 	if d.HasChanges("attributes", "priority", "fixed_rate", "reservoir_size", "service_name", "service_type",
 		"host", "http_method", "url_path", "resource_arn") {
@@ -248,11 +225,14 @@ func resourceSamplingRuleDelete(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).XRayConn()
 
 	log.Printf("[INFO] Deleting XRay Sampling Rule: %s", d.Id())
-
-	params := &xray.DeleteSamplingRuleInput{
+	_, err := conn.DeleteSamplingRuleWithContext(ctx, &xray.DeleteSamplingRuleInput{
 		RuleName: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrMessageContains(err, xray.ErrCodeInvalidRequestException, "Sampling rule does not exist") {
+		return diags
 	}
-	_, err := conn.DeleteSamplingRuleWithContext(ctx, params)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting XRay Sampling Rule: %s", d.Id())
 	}

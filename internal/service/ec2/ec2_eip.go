@@ -13,13 +13,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -27,6 +28,8 @@ const (
 	addressAssociationClassicTimeout = 2 * time.Minute
 )
 
+// @SDKResource("aws_eip", name="EIP")
+// @Tags(identifierAttribute="id")
 func ResourceEIP() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEIPCreate,
@@ -117,8 +120,8 @@ func ResourceEIP() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -132,10 +135,10 @@ func ResourceEIP() *schema.Resource {
 func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	input := &ec2.AllocateAddressInput{}
+	input := &ec2.AllocateAddressInput{
+		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeElasticIp),
+	}
 
 	if v := d.Get("vpc"); v != nil && v.(bool) {
 		input.Domain = aws.String(ec2.DomainTypeVpc)
@@ -157,11 +160,6 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.PublicIpv4Pool = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeElasticIp)
-	}
-
-	log.Printf("[DEBUG] Creating EC2 EIP: %s", input)
 	output, err := conn.AllocateAddressWithContext(ctx, input)
 
 	if err != nil {
@@ -170,7 +168,7 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.StringValue(output.AllocationId))
 
-	_, err = tfresource.RetryWhenNotFoundContext(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return FindEIPByAllocationID(ctx, conn, d.Id())
 	})
 
@@ -182,7 +180,7 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	eniID := d.Get("network_interface").(string)
 
 	if instanceID != "" || eniID != "" {
-		_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutCreate),
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate),
 			func() (interface{}, error) {
 				return nil, associateEIP(ctx, conn, d.Id(), instanceID, eniID, d.Get("associate_with_private_ip").(string))
 			}, errCodeInvalidAllocationIDNotFound)
@@ -198,8 +196,6 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var err error
 	var address *ec2.Address
@@ -248,16 +244,7 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface
 		d.SetId(aws.StringValue(address.AllocationId))
 	}
 
-	tags := KeyValueTags(address.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, address.Tags)
 
 	return diags
 }
@@ -283,18 +270,6 @@ func resourceEIPUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 			if err := associateEIP(ctx, conn, d.Id(), newInstanceID, newNetworkInterfaceID, d.Get("associate_with_private_ip").(string)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EC2 EIP (%s): %s", d.Id(), err)
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		if d.Get("domain").(string) == ec2.DomainTypeStandard {
-			return sdkdiag.AppendErrorf(diags, "tags cannot be set for a standard-domain EIP - must be a VPC-domain EIP")
-		}
-
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 EIP (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -372,7 +347,7 @@ func associateEIP(ctx context.Context, conn *ec2.EC2, id, instanceID, networkInt
 	}
 
 	if associationID := aws.StringValue(output.AssociationId); associationID != "" {
-		_, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return FindEIPByAssociationID(ctx, conn, associationID)
 			},
@@ -432,19 +407,19 @@ func disassociateEIP(ctx context.Context, conn *ec2.EC2, id, associationID strin
 //
 // This can take a few seconds to appear correctly for EC2-Classic addresses.
 func waitForAddressAssociationClassic(ctx context.Context, conn *ec2.EC2, publicIP, instanceID string) error {
-	err := resource.RetryContext(ctx, addressAssociationClassicTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, addressAssociationClassicTimeout, func() *retry.RetryError {
 		address, err := FindEIPByPublicIP(ctx, conn, publicIP)
 
 		if tfresource.NotFound(err) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if aws.StringValue(address.InstanceId) != instanceID {
-			return resource.RetryableError(errors.New("not associated"))
+			return retry.RetryableError(errors.New("not associated"))
 		}
 
 		return nil

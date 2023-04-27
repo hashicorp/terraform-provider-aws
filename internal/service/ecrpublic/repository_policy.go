@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecrpublic"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ecrpublic_repository_policy")
 func ResourceRepositoryPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRepositoryPolicyPut,
@@ -75,7 +76,7 @@ func resourceRepositoryPolicyPut(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	log.Printf("[DEBUG] Setting ECR Public Repository Policy: %s", input)
-	outputRaw, err := tfresource.RetryWhenContext(ctx, policyPutTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, policyPutTimeout,
 		func() (interface{}, error) {
 			return conn.SetRepositoryPolicyWithContext(ctx, input)
 		},
@@ -162,7 +163,7 @@ func FindRepositoryPolicyByName(ctx context.Context, conn *ecrpublic.ECRPublic, 
 	output, err := conn.GetRepositoryPolicyWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, ecrpublic.ErrCodeRepositoryNotFoundException, ecrpublic.ErrCodeRepositoryPolicyNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_appsync_domain_name")
 func ResourceDomainName() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainNameCreate,
@@ -128,13 +129,13 @@ func resourceDomainNameDelete(ctx context.Context, d *schema.ResourceData, meta 
 		DomainName: aws.String(d.Id()),
 	}
 
-	err := resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
 		_, err := conn.DeleteDomainNameWithContext(ctx, input)
 		if tfawserr.ErrCodeEquals(err, appsync.ErrCodeConcurrentModificationException) {
-			return resource.RetryableError(fmt.Errorf("deleting Appsync Domain Name %q: %w", d.Id(), err))
+			return retry.RetryableError(fmt.Errorf("deleting Appsync Domain Name %q: %w", d.Id(), err))
 		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil

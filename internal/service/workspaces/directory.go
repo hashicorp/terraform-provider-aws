@@ -16,17 +16,22 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_workspaces_directory", name="Directory")
+// @Tags(identifierAttribute="id")
 func ResourceDirectory() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDirectoryCreate,
 		ReadWithoutTimeout:   resourceDirectoryRead,
 		UpdateWithoutTimeout: resourceDirectoryUpdate,
 		DeleteWithoutTimeout: resourceDirectoryDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"alias": {
 				Type:     schema.TypeString,
@@ -110,8 +115,8 @@ func ResourceDirectory() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"workspace_access_properties": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -208,16 +213,14 @@ func ResourceDirectory() *schema.Resource {
 func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkSpacesConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-	directoryID := d.Get("directory_id").(string)
 
+	directoryID := d.Get("directory_id").(string)
 	input := &workspaces.RegisterWorkspaceDirectoryInput{
 		DirectoryId:       aws.String(directoryID),
 		EnableSelfService: aws.Bool(false), // this is handled separately below
 		EnableWorkDocs:    aws.Bool(false),
 		Tenancy:           aws.String(workspaces.TenancyShared),
-		Tags:              Tags(tags.IgnoreAWS()),
+		Tags:              GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("subnet_ids"); ok {
@@ -225,7 +228,7 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	log.Printf("[DEBUG] Registering WorkSpaces Directory: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, DirectoryRegisterInvalidResourceStateTimeout,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, DirectoryRegisterInvalidResourceStateTimeout,
 		func() (interface{}, error) {
 			return conn.RegisterWorkspaceDirectoryWithContext(ctx, input)
 		},
@@ -300,8 +303,6 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkSpacesConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	directory, err := FindDirectoryByID(ctx, conn, d.Id())
 
@@ -344,22 +345,6 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	if err := d.Set("dns_ip_addresses", flex.FlattenStringSet(directory.DnsIpAddresses)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting dns_ip_addresses: %s", err)
-	}
-
-	tags, err := ListTags(ctx, conn, d.Id())
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags: %s", err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	return diags
@@ -439,13 +424,6 @@ func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		log.Printf("[INFO] Updated WorkSpaces Directory (%s) IP Groups", d.Id())
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
-		}
-	}
-
 	return append(diags, resourceDirectoryRead(ctx, d, meta)...)
 }
 
@@ -454,7 +432,7 @@ func resourceDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 
 	log.Printf("[DEBUG] Deregistering WorkSpaces Directory: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, DirectoryDeregisterInvalidResourceStateTimeout,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, DirectoryDeregisterInvalidResourceStateTimeout,
 		func() (interface{}, error) {
 			return conn.DeregisterWorkspaceDirectoryWithContext(ctx, &workspaces.DeregisterWorkspaceDirectoryInput{
 				DirectoryId: aws.String(d.Id()),

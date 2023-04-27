@@ -23,6 +23,7 @@ const (
 	customerPolicyAttachmentTimeout = 5 * time.Minute
 )
 
+// @SDKResource("aws_ssoadmin_customer_managed_policy_attachment")
 func ResourceCustomerManagedPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomerManagedPolicyAttachmentCreate,
@@ -90,7 +91,7 @@ func resourceCustomerManagedPolicyAttachmentCreate(ctx context.Context, d *schem
 	}
 
 	log.Printf("[INFO] Attaching customer managed policy reference to permission set: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, customerPolicyAttachmentTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, customerPolicyAttachmentTimeout, func() (interface{}, error) {
 		return conn.AttachCustomerManagedPolicyReferenceToPermissionSetWithContext(ctx, input)
 	}, ssoadmin.ErrCodeConflictException, ssoadmin.ErrCodeThrottlingException)
 
@@ -159,7 +160,7 @@ func resourceCustomerManagedPolicyAttachmentDelete(ctx context.Context, d *schem
 	}
 
 	log.Printf("[INFO] Detaching customer managed policy reference from permission set: %s", input)
-	_, err = tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, customerPolicyAttachmentTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, customerPolicyAttachmentTimeout, func() (interface{}, error) {
 		return conn.DetachCustomerManagedPolicyReferenceFromPermissionSetWithContext(ctx, input)
 	}, ssoadmin.ErrCodeConflictException, ssoadmin.ErrCodeThrottlingException)
 

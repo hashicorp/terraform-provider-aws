@@ -6,11 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/sqs"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusQueueState(ctx context.Context, conn *sqs.SQS, url string) resource.StateRefreshFunc {
+func statusQueueState(ctx context.Context, conn *sqs.SQS, url string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindQueueAttributesByURL(ctx, conn, url)
 
@@ -26,7 +26,7 @@ func statusQueueState(ctx context.Context, conn *sqs.SQS, url string) resource.S
 	}
 }
 
-func statusQueueAttributeState(ctx context.Context, conn *sqs.SQS, url string, expected map[string]string) resource.StateRefreshFunc {
+func statusQueueAttributeState(ctx context.Context, conn *sqs.SQS, url string, expected map[string]string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		attributesMatch := func(got map[string]string) string {
 			for k, e := range expected {

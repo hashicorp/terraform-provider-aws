@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
@@ -116,16 +116,16 @@ func NewSweepResource(resource *schema.Resource, d *schema.ResourceData, meta in
 }
 
 func (sr *SweepResource) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
-	err := tfresource.RetryContext(ctx, timeout, func() *resource.RetryError {
+	err := tfresource.Retry(ctx, timeout, func() *retry.RetryError {
 		err := DeleteResource(ctx, sr.resource, sr.d, sr.meta)
 
 		if err != nil {
 			if strings.Contains(err.Error(), "Throttling") {
 				log.Printf("[INFO] While sweeping resource (%s), encountered throttling error (%s). Retrying...", sr.d.Id(), err)
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -232,7 +232,7 @@ func SkipSweepError(err error) bool {
 	return false
 }
 
-func DeleteResource(ctx context.Context, resource *schema.Resource, d *schema.ResourceData, meta interface{}) error {
+func DeleteResource(ctx context.Context, resource *schema.Resource, d *schema.ResourceData, meta any) error {
 	if resource.DeleteContext != nil || resource.DeleteWithoutTimeout != nil {
 		var diags diag.Diagnostics
 
@@ -246,6 +246,22 @@ func DeleteResource(ctx context.Context, resource *schema.Resource, d *schema.Re
 	}
 
 	return resource.Delete(d, meta)
+}
+
+func ReadResource(ctx context.Context, resource *schema.Resource, d *schema.ResourceData, meta any) error {
+	if resource.ReadContext != nil || resource.ReadWithoutTimeout != nil {
+		var diags diag.Diagnostics
+
+		if resource.ReadContext != nil {
+			diags = resource.ReadContext(ctx, d, meta)
+		} else {
+			diags = resource.ReadWithoutTimeout(ctx, d, meta)
+		}
+
+		return sdkdiag.DiagnosticsError(diags)
+	}
+
+	return resource.Read(d, meta)
 }
 
 func Partition(region string) string {

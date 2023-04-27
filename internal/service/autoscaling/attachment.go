@@ -8,13 +8,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_autoscaling_attachment")
 func ResourceAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAttachmentCreate,
@@ -62,7 +64,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 			LoadBalancerNames:    aws.StringSlice([]string{lbName}),
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, d.Timeout(schema.TimeoutCreate),
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate),
 			func() (interface{}, error) {
 				return conn.AttachLoadBalancersWithContext(ctx, input)
 			},
@@ -85,7 +87,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 			TargetGroupARNs:      aws.StringSlice([]string{targetGroupARN}),
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, d.Timeout(schema.TimeoutCreate),
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate),
 			func() (interface{}, error) {
 				return conn.AttachLoadBalancerTargetGroupsWithContext(ctx, input)
 			},
@@ -97,7 +99,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	//lintignore:R016 // Allow legacy unstable ID usage in managed resource
-	d.SetId(resource.PrefixedUniqueId(fmt.Sprintf("%s-", asgName)))
+	d.SetId(id.PrefixedUniqueId(fmt.Sprintf("%s-", asgName)))
 
 	return append(diags, resourceAttachmentRead(ctx, d, meta)...)
 }
@@ -147,7 +149,7 @@ func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta 
 			LoadBalancerNames:    aws.StringSlice([]string{lbName}),
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, d.Timeout(schema.TimeoutCreate),
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate),
 			func() (interface{}, error) {
 				return conn.DetachLoadBalancersWithContext(ctx, input)
 			},
@@ -169,7 +171,7 @@ func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta 
 			TargetGroupARNs:      aws.StringSlice([]string{targetGroupARN}),
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, d.Timeout(schema.TimeoutCreate),
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate),
 			func() (interface{}, error) {
 				return conn.DetachLoadBalancerTargetGroupsWithContext(ctx, input)
 			},
@@ -196,7 +198,7 @@ func FindAttachmentByLoadBalancerName(ctx context.Context, conn *autoscaling.Aut
 		}
 	}
 
-	return &resource.NotFoundError{
+	return &retry.NotFoundError{
 		LastError: fmt.Errorf("Auto Scaling Group (%s) load balancer (%s) attachment not found", asgName, loadBalancerName),
 	}
 }
@@ -214,7 +216,7 @@ func FindAttachmentByTargetGroupARN(ctx context.Context, conn *autoscaling.AutoS
 		}
 	}
 
-	return &resource.NotFoundError{
+	return &retry.NotFoundError{
 		LastError: fmt.Errorf("Auto Scaling Group (%s) target group (%s) attachment not found", asgName, targetGroupARN),
 	}
 }

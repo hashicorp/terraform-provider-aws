@@ -3,17 +3,19 @@ package elasticbeanstalk
 import (
 	"context"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_elastic_beanstalk_configuration_template")
 func ResourceConfigurationTemplate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationTemplateCreate,
@@ -22,11 +24,6 @@ func ResourceConfigurationTemplate() *schema.Resource {
 		DeleteWithoutTimeout: resourceConfigurationTemplateDelete,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"application": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -41,11 +38,16 @@ func ResourceConfigurationTemplate() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 			"setting": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
-				Elem:     resourceOptionSetting(),
+				Elem:     settingSchema(),
 				Set:      optionSettingValueHash,
 			},
 			"solution_stack_name": {
@@ -61,36 +63,32 @@ func resourceConfigurationTemplateCreate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 
-	// Get the relevant properties
 	name := d.Get("name").(string)
-	appName := d.Get("application").(string)
-
-	optionSettings := gatherOptionSettings(d)
-
-	opts := elasticbeanstalk.CreateConfigurationTemplateInput{
-		ApplicationName: aws.String(appName),
+	input := &elasticbeanstalk.CreateConfigurationTemplateInput{
+		ApplicationName: aws.String(d.Get("application").(string)),
+		OptionSettings:  gatherOptionSettings(d),
 		TemplateName:    aws.String(name),
-		OptionSettings:  optionSettings,
 	}
 
 	if attr, ok := d.GetOk("description"); ok {
-		opts.Description = aws.String(attr.(string))
+		input.Description = aws.String(attr.(string))
 	}
 
 	if attr, ok := d.GetOk("environment_id"); ok {
-		opts.EnvironmentId = aws.String(attr.(string))
+		input.EnvironmentId = aws.String(attr.(string))
 	}
 
 	if attr, ok := d.GetOk("solution_stack_name"); ok {
-		opts.SolutionStackName = aws.String(attr.(string))
+		input.SolutionStackName = aws.String(attr.(string))
 	}
 
-	log.Printf("[DEBUG] Elastic Beanstalk configuration template create opts: %s", opts)
-	if _, err := conn.CreateConfigurationTemplateWithContext(ctx, &opts); err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Elastic Beanstalk configuration template: %s", err)
+	output, err := conn.CreateConfigurationTemplateWithContext(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating Elastic Beanstalk Configuration Template (%s): %s", name, err)
 	}
 
-	d.SetId(name)
+	d.SetId(aws.StringValue(output.TemplateName))
 
 	return append(diags, resourceConfigurationTemplateRead(ctx, d, meta)...)
 }
@@ -99,33 +97,22 @@ func resourceConfigurationTemplateRead(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 
-	log.Printf("[DEBUG] Elastic Beanstalk configuration template read: %s", d.Get("name").(string))
+	settings, err := FindConfigurationSettingsByTwoPartKey(ctx, conn, d.Get("application").(string), d.Id())
 
-	resp, err := conn.DescribeConfigurationSettingsWithContext(ctx, &elasticbeanstalk.DescribeConfigurationSettingsInput{
-		TemplateName:    aws.String(d.Id()),
-		ApplicationName: aws.String(d.Get("application").(string)),
-	})
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Elastic Beanstalk Configuration Template (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
 
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "InvalidParameterValue" && strings.Contains(awsErr.Message(), "No Configuration Template named") {
-				log.Printf("[WARN] No Configuration Template named (%s) found", d.Id())
-				d.SetId("")
-				return diags
-			} else if awsErr.Code() == "InvalidParameterValue" && strings.Contains(awsErr.Message(), "No Platform named") {
-				log.Printf("[WARN] No Platform named (%s) found", d.Get("solution_stack_name").(string))
-				d.SetId("")
-				return diags
-			}
-		}
 		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Configuration Template (%s): %s", d.Id(), err)
 	}
 
-	if len(resp.ConfigurationSettings) != 1 {
-		return sdkdiag.AppendErrorf(diags, "reading application properties: found %d applications, expected 1", len(resp.ConfigurationSettings))
-	}
-
-	d.Set("description", resp.ConfigurationSettings[0].Description)
+	d.Set("application", settings.ApplicationName)
+	d.Set("description", settings.Description)
+	d.Set("name", settings.TemplateName)
+	d.Set("solution_stack_name", settings.SolutionStackName)
 
 	return diags
 }
@@ -134,44 +121,21 @@ func resourceConfigurationTemplateUpdate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 
-	log.Printf("[DEBUG] Elastic Beanstalk configuration template update: %s", d.Get("name").(string))
-
 	if d.HasChange("description") {
-		if err := resourceConfigurationTemplateDescriptionUpdate(ctx, conn, d); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Configuration Template (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("setting") {
-		if err := resourceConfigurationTemplateOptionSettingsUpdate(ctx, conn, d); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Configuration Template (%s): %s", d.Id(), err)
-		}
-	}
-
-	return append(diags, resourceConfigurationTemplateRead(ctx, d, meta)...)
-}
-
-func resourceConfigurationTemplateDescriptionUpdate(ctx context.Context, conn *elasticbeanstalk.ElasticBeanstalk, d *schema.ResourceData) error {
-	_, err := conn.UpdateConfigurationTemplateWithContext(ctx, &elasticbeanstalk.UpdateConfigurationTemplateInput{
-		ApplicationName: aws.String(d.Get("application").(string)),
-		TemplateName:    aws.String(d.Get("name").(string)),
-		Description:     aws.String(d.Get("description").(string)),
-	})
-
-	return err
-}
-
-func resourceConfigurationTemplateOptionSettingsUpdate(ctx context.Context, conn *elasticbeanstalk.ElasticBeanstalk, d *schema.ResourceData) error {
-	if d.HasChange("setting") {
-		_, err := conn.ValidateConfigurationSettingsWithContext(ctx, &elasticbeanstalk.ValidateConfigurationSettingsInput{
+		input := &elasticbeanstalk.UpdateConfigurationTemplateInput{
 			ApplicationName: aws.String(d.Get("application").(string)),
-			TemplateName:    aws.String(d.Get("name").(string)),
-			OptionSettings:  gatherOptionSettings(d),
-		})
-		if err != nil {
-			return err
+			Description:     aws.String(d.Get("description").(string)),
+			TemplateName:    aws.String(d.Id()),
 		}
 
+		_, err := conn.UpdateConfigurationTemplateWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Configuration Template (%s): %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("setting") {
 		o, n := d.GetChange("setting")
 		if o == nil {
 			o = new(schema.Set)
@@ -205,42 +169,78 @@ func resourceConfigurationTemplateOptionSettingsUpdate(ctx context.Context, conn
 			}
 		}
 
-		req := &elasticbeanstalk.UpdateConfigurationTemplateInput{
+		input := &elasticbeanstalk.UpdateConfigurationTemplateInput{
 			ApplicationName: aws.String(d.Get("application").(string)),
-			TemplateName:    aws.String(d.Get("name").(string)),
 			OptionSettings:  add,
+			TemplateName:    aws.String(d.Id()),
 		}
 
 		for _, elem := range remove {
-			req.OptionsToRemove = append(req.OptionsToRemove, &elasticbeanstalk.OptionSpecification{
+			input.OptionsToRemove = append(input.OptionsToRemove, &elasticbeanstalk.OptionSpecification{
 				Namespace:  elem.Namespace,
 				OptionName: elem.OptionName,
 			})
 		}
 
-		log.Printf("[DEBUG] Update Configuration Template request: %s", req)
-		if _, err := conn.UpdateConfigurationTemplateWithContext(ctx, req); err != nil {
-			return err
+		_, err := conn.UpdateConfigurationTemplateWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Configuration Template (%s): %s", d.Id(), err)
 		}
 	}
 
-	return nil
+	return append(diags, resourceConfigurationTemplateRead(ctx, d, meta)...)
 }
 
 func resourceConfigurationTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 
-	application := d.Get("application").(string)
-
+	log.Printf("[INFO] Deleting Elastic Beanstalk Configuration Template: %s", d.Id())
 	_, err := conn.DeleteConfigurationTemplateWithContext(ctx, &elasticbeanstalk.DeleteConfigurationTemplateInput{
-		ApplicationName: aws.String(application),
+		ApplicationName: aws.String(d.Get("application").(string)),
 		TemplateName:    aws.String(d.Id()),
 	})
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Elastic Beanstalk Configuration Template (%s): %s", d.Id(), err)
 	}
+
 	return diags
+}
+
+const (
+	errCodeInvalidParameterValue = "InvalidParameterValue"
+)
+
+func FindConfigurationSettingsByTwoPartKey(ctx context.Context, conn *elasticbeanstalk.ElasticBeanstalk, applicationName, templateName string) (*elasticbeanstalk.ConfigurationSettingsDescription, error) {
+	input := &elasticbeanstalk.DescribeConfigurationSettingsInput{
+		ApplicationName: aws.String(applicationName),
+		TemplateName:    aws.String(templateName),
+	}
+
+	output, err := conn.DescribeConfigurationSettingsWithContext(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Configuration Template named") || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Application named") || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Platform named") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.ConfigurationSettings) == 0 || output.ConfigurationSettings[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.ConfigurationSettings); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.ConfigurationSettings[0], nil
 }
 
 func gatherOptionSettings(d *schema.ResourceData) []*elasticbeanstalk.ConfigurationOptionSetting {

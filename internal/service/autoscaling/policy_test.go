@@ -24,7 +24,7 @@ func TestAccAutoScalingPolicy_basic(t *testing.T) {
 	resourceTargetTrackingName := "aws_autoscaling_policy.test_tracking"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -120,7 +120,7 @@ func TestAccAutoScalingPolicy_disappears(t *testing.T) {
 	resourceName := "aws_autoscaling_policy.test_simple"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -144,7 +144,7 @@ func TestAccAutoScalingPolicy_predictiveScalingPredefined(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -174,6 +174,43 @@ func TestAccAutoScalingPolicy_predictiveScalingPredefined(t *testing.T) {
 	})
 }
 
+func TestAccAutoScalingPolicy_predictiveScalingResourceLabel(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v autoscaling.ScalingPolicy
+	resourceSimpleName := "aws_autoscaling_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_predictiveScalingPredefined_resourceLabel(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScalingPolicyExists(ctx, resourceSimpleName, &v),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.mode", "ForecastAndScale"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.scheduling_buffer_time", "10"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.max_capacity_breach_behavior", "IncreaseMaxCapacity"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.max_capacity_buffer", "0"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.target_value", "32"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.predefined_scaling_metric_specification.0.predefined_metric_type", "ASGAverageCPUUtilization"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.predefined_scaling_metric_specification.0.resource_label", ""),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.predefined_load_metric_specification.0.predefined_metric_type", "ASGTotalCPUUtilization"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.predefined_load_metric_specification.0.resource_label", ""),
+				),
+			},
+			{
+				ResourceName:      resourceSimpleName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceSimpleName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAutoScalingPolicy_predictiveScalingCustom(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v autoscaling.ScalingPolicy
@@ -181,7 +218,7 @@ func TestAccAutoScalingPolicy_predictiveScalingCustom(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -234,7 +271,7 @@ func TestAccAutoScalingPolicy_predictiveScalingRemoved(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -270,7 +307,7 @@ func TestAccAutoScalingPolicy_predictiveScalingUpdated(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -315,6 +352,37 @@ func TestAccAutoScalingPolicy_predictiveScalingUpdated(t *testing.T) {
 	})
 }
 
+func TestAccAutoScalingPolicy_predictiveScalingFloatTargetValue(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v autoscaling.ScalingPolicy
+	resourceSimpleName := "aws_autoscaling_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_predictiveScalingFloatTargetValue(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScalingPolicyExists(ctx, resourceSimpleName, &v),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.target_value", "0.2"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.predefined_metric_pair_specification.0.predefined_metric_type", "ASGCPUUtilization"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.predefined_metric_pair_specification.0.resource_label", "testLabel"),
+				),
+			},
+			{
+				ResourceName:      resourceSimpleName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceSimpleName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAutoScalingPolicy_simpleScalingStepAdjustment(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v autoscaling.ScalingPolicy
@@ -322,7 +390,7 @@ func TestAccAutoScalingPolicy_simpleScalingStepAdjustment(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -352,7 +420,7 @@ func TestAccAutoScalingPolicy_TargetTrack_predefined(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -380,13 +448,41 @@ func TestAccAutoScalingPolicy_TargetTrack_custom(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_targetTrackingCustom(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScalingPolicyExists(ctx, resourceName, &v),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAutoScalingPolicy_TargetTrack_metricMath(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v autoscaling.ScalingPolicy
+	resourceName := "aws_autoscaling_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_targetTrackingMetricMath(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists(ctx, resourceName, &v),
 				),
@@ -409,7 +505,7 @@ func TestAccAutoScalingPolicy_zeroValue(t *testing.T) {
 	resourceStepName := "aws_autoscaling_policy.test_step"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -596,6 +692,31 @@ resource "aws_autoscaling_policy" "test" {
 `, rName))
 }
 
+func testAccPolicyConfig_predictiveScalingPredefined_resourceLabel(rName string) string {
+	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+resource "aws_autoscaling_policy" "test" {
+  name                   = "%[1]s-predictive"
+  policy_type            = "PredictiveScaling"
+  autoscaling_group_name = aws_autoscaling_group.test.name
+  predictive_scaling_configuration {
+    metric_specification {
+      target_value = 32
+      predefined_scaling_metric_specification {
+        predefined_metric_type = "ASGAverageCPUUtilization"
+      }
+      predefined_load_metric_specification {
+        predefined_metric_type = "ASGTotalCPUUtilization"
+      }
+    }
+    mode                         = "ForecastAndScale"
+    scheduling_buffer_time       = 10
+    max_capacity_breach_behavior = "IncreaseMaxCapacity"
+    max_capacity_buffer          = 0
+  }
+}
+`, rName))
+}
+
 func testAccPolicyConfig_predictiveScalingCustom(rName string) string {
 	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
@@ -704,6 +825,25 @@ resource "aws_autoscaling_policy" "test" {
 `, rName))
 }
 
+func testAccPolicyConfig_predictiveScalingFloatTargetValue(rName string) string {
+	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+resource "aws_autoscaling_policy" "test" {
+  name                   = "%[1]s-predictive"
+  policy_type            = "PredictiveScaling"
+  autoscaling_group_name = aws_autoscaling_group.test.name
+  predictive_scaling_configuration {
+    metric_specification {
+      target_value = 0.2
+      predefined_metric_pair_specification {
+        predefined_metric_type = "ASGCPUUtilization"
+        resource_label         = "testLabel"
+      }
+    }
+  }
+}
+`, rName))
+}
+
 func testAccPolicyConfig_basicUpdate(rName string) string {
 	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test_simple" {
@@ -806,6 +946,65 @@ resource "aws_autoscaling_policy" "test" {
     }
 
     target_value = 40.0
+  }
+}
+`, rName))
+}
+
+func testAccPolicyConfig_targetTrackingMetricMath(rName string) string {
+	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+resource "aws_autoscaling_policy" "test" {
+  name                   = "%[1]s-tracking"
+  policy_type            = "TargetTrackingScaling"
+  autoscaling_group_name = aws_autoscaling_group.test.name
+
+  target_tracking_configuration {
+    customized_metric_specification {
+      metrics {
+        id          = "m1"
+        expression  = "TIME_SERIES(20)"
+        return_data = false
+      }
+      metrics {
+        id = "m2"
+        metric_stat {
+          metric {
+            namespace   = "foo"
+            metric_name = "bar"
+          }
+          unit = "Percent"
+          stat = "Sum"
+        }
+        return_data = false
+      }
+      metrics {
+        id = "m3"
+        metric_stat {
+          metric {
+            namespace   = "foo"
+            metric_name = "bar"
+            dimensions {
+              name  = "x"
+              value = "y"
+            }
+            dimensions {
+              name  = "y"
+              value = "x"
+            }
+          }
+          unit = "Percent"
+          stat = "Sum"
+        }
+        return_data = false
+      }
+      metrics {
+        id          = "e1"
+        expression  = "m1 + m2 + m3"
+        return_data = true
+      }
+    }
+
+    target_value = 12.3
   }
 }
 `, rName))

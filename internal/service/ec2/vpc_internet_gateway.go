@@ -17,8 +17,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_internet_gateway", name="Internet Gateway")
+// @Tags(identifierAttribute="id")
 func ResourceInternetGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInternetGatewayCreate,
@@ -45,8 +48,8 @@ func ResourceInternetGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -61,11 +64,9 @@ func ResourceInternetGateway() *schema.Resource {
 func resourceInternetGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateInternetGatewayInput{
-		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeInternetGateway),
+		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeInternetGateway),
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Internet Gateway: %s", input)
@@ -89,10 +90,8 @@ func resourceInternetGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 func resourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFoundContext(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindInternetGatewayByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -125,16 +124,7 @@ func resourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, me
 		d.Set("vpc_id", ig.Attachments[0].VpcId)
 	}
 
-	tags := KeyValueTags(ig.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, ig.Tags)
 
 	return diags
 }
@@ -159,14 +149,6 @@ func resourceInternetGatewayUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 Internet Gateway (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceInternetGatewayRead(ctx, d, meta)...)
 }
 
@@ -186,7 +168,7 @@ func resourceInternetGatewayDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	log.Printf("[INFO] Deleting Internet Gateway: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		return conn.DeleteInternetGatewayWithContext(ctx, input)
 	}, errCodeDependencyViolation)
 
@@ -208,7 +190,7 @@ func attachInternetGateway(ctx context.Context, conn *ec2.EC2, internetGatewayID
 	}
 
 	log.Printf("[INFO] Attaching EC2 Internet Gateway: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (interface{}, error) {
 		return conn.AttachInternetGatewayWithContext(ctx, input)
 	}, errCodeInvalidInternetGatewayIDNotFound)
 
@@ -232,7 +214,7 @@ func detachInternetGateway(ctx context.Context, conn *ec2.EC2, internetGatewayID
 	}
 
 	log.Printf("[INFO] Detaching EC2 Internet Gateway: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (interface{}, error) {
 		return conn.DetachInternetGatewayWithContext(ctx, input)
 	}, errCodeDependencyViolation)
 

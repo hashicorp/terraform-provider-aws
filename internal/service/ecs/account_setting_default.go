@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_ecs_account_setting_default")
 func ResourceAccountSettingDefault() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountSettingDefaultCreate,

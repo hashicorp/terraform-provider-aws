@@ -1,9 +1,9 @@
 ---
-subcategory: "DocDB (DocumentDB)"
+subcategory: "DocumentDB"
 layout: "aws"
 page_title: "AWS: aws_docdb_global_cluster"
 description: |-
-  Manages a DocDB Global Cluster
+  Manages a DocumentDB Global Cluster
 ---
 
 # Resource: aws_docdb_global_cluster
@@ -118,7 +118,7 @@ In addition to all arguments above, the following attributes are exported:
     * `db_cluster_arn` - Amazon Resource Name (ARN) of member DB Cluster.
     * `is_writer` - Whether the member is the primary DB Cluster.
 * `global_cluster_resource_id` - AWS Region-unique, immutable identifier for the global database cluster. This identifier is found in AWS CloudTrail log entries whenever the AWS KMS key for the DB cluster is accessed.
-* `id` - DocDB Global Cluster.
+* `id` - DocumentDB Global Cluster ID.
 
 ## Timeouts
 

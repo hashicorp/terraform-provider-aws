@@ -35,43 +35,36 @@ resource "aws_config_configuration_recorder" "foo" {
   role_arn = aws_iam_role.r.arn
 }
 
-resource "aws_iam_role" "r" {
-  name = "my-awsconfig-role"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "config.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+    principals {
+      type        = "Service"
+      identifiers = ["config.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-POLICY
+
+resource "aws_iam_role" "r" {
+  name               = "my-awsconfig-role"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "p" {
+  statement {
+    effect    = "Allow"
+    actions   = ["config:Put*"]
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_role_policy" "p" {
-  name = "my-awsconfig-policy"
-  role = aws_iam_role.r.id
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-  	{
-  		"Action": "config:Put*",
-  		"Effect": "Allow",
-  		"Resource": "*"
-
-  	}
-  ]
-}
-POLICY
+  name   = "my-awsconfig-policy"
+  role   = aws_iam_role.r.id
+  policy = data.aws_iam_policy_document.p.json
 }
 ```
 

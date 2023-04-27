@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_dynamodb_contributor_insights")
 func ResourceContributorInsights() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContributorInsightsCreate,

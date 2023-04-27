@@ -55,6 +55,7 @@ The following arguments are supported:
 * `name` - (Required, Forces new resource) The friendly name of the AWS Firewall Manager Policy.
 * `delete_all_policy_resources` - (Optional) If true, the request will also perform a clean-up process. Defaults to `true`. More information can be found here [AWS Firewall Manager delete policy](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_DeletePolicy.html)
 * `delete_unused_fm_managed_resources` - (Optional) If true, Firewall Manager will automatically remove protections from resources that leave the policy scope. Defaults to `false`. More information can be found here [AWS Firewall Manager policy contents](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html)
+* `description` - (Optional) The description of the AWS Network Firewall firewall policy.
 * `exclude_map` - (Optional) A map of lists of accounts and OU's to exclude from the policy.
 * `exclude_resource_tags` - (Required, Forces new resource) A boolean value, if true the tags that are specified in the `resource_tags` are not protected by this policy. If set to false and resource_tags are populated, resources that contain tags will be protected by this policy.
 * `include_map` - (Optional) A map of lists of accounts and OU's to include in the policy.
@@ -68,14 +69,14 @@ The following arguments are supported:
 ## `exclude_map` Configuration Block
 
 * `account` - (Optional) A list of AWS Organization member Accounts that you want to exclude from this AWS FMS Policy.
-* `orgunit` - (Optional) A list of AWS Organizational Units that you want to exclude from this AWS FMS Policy. Specifying an OU is the equivalent of specifying all accounts in the OU and in any of its child OUs, including any child OUs and accounts that are added at a later time.
+* `orgunit` - (Optional) A list of IDs of the AWS Organizational Units that you want to exclude from this AWS FMS Policy. Specifying an OU is the equivalent of specifying all accounts in the OU and in any of its child OUs, including any child OUs and accounts that are added at a later time.
 
 You can specify inclusions or exclusions, but not both. If you specify an `include_map`, AWS Firewall Manager applies the policy to all accounts specified by the `include_map`, and does not evaluate any `exclude_map` specifications. If you do not specify an `include_map`, then Firewall Manager applies the policy to all accounts except for those specified by the `exclude_map`.
 
 ## `include_map` Configuration Block
 
 * `account` - (Optional) A list of AWS Organization member Accounts that you want to include for this AWS FMS Policy.
-* `orgunit` - (Optional) A list of AWS Organizational Units that you want to include for this AWS FMS Policy. Specifying an OU is the equivalent of specifying all accounts in the OU and in any of its child OUs, including any child OUs and accounts that are added at a later time.
+* `orgunit` - (Optional) A list of IDs of the AWS Organizational Units that you want to include for this AWS FMS Policy. Specifying an OU is the equivalent of specifying all accounts in the OU and in any of its child OUs, including any child OUs and accounts that are added at a later time.
 
 You can specify inclusions or exclusions, but not both. If you specify an `include_map`, AWS Firewall Manager applies the policy to all accounts specified by the `include_map`, and does not evaluate any `exclude_map` specifications. If you do not specify an `include_map`, then Firewall Manager applies the policy to all accounts except for those specified by the `exclude_map`.
 

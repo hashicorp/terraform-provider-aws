@@ -59,7 +59,8 @@ resource "aws_networkfirewall_rule_group" "example" {
             source           = stateful_rule.value
           }
           rule_option {
-            keyword = "sid:1"
+            keyword  = "sid"
+            settings = ["1"]
           }
         }
       }
@@ -96,7 +97,8 @@ resource "aws_networkfirewall_rule_group" "example" {
           source_port      = 53
         }
         rule_option {
-          keyword = "sid:1"
+          keyword  = "sid"
+          settings = ["1"]
         }
       }
     }
@@ -286,7 +288,7 @@ The following arguments are supported:
 
 The `rule_group` block supports the following argument:
 
-* `reference_sets` - (Optional) A configuration block that defines the IP Set References for the rule group. See [Reference Sets](#reference-sets) below for details.
+* `reference_sets` - (Optional) A configuration block that defines the IP Set References for the rule group. See [Reference Sets](#reference-sets) below for details. Please notes that there can only be a maximum of 5 `reference_sets` in a `rule_group`. See the [AWS documentation](https://docs.aws.amazon.com/network-firewall/latest/developerguide/rule-groups-ip-set-references.html#rule-groups-ip-set-reference-limits) for details.
 
 * `rule_variables` - (Optional) A configuration block that defines additional settings available to use in the rules defined in the rule group. Can only be specified for **stateful** rule groups. See [Rule Variables](#rule-variables) below for details.
 
@@ -416,7 +418,6 @@ The `rule_option` block supports the following arguments:
 
 * `keyword` - (Required) Keyword defined by open source detection systems like Snort or Suricata for stateful rule inspection.
 See [Snort General Rule Options](http://manual-snort-org.s3-website-us-east-1.amazonaws.com/node31.html) or [Suricata Rule Options](https://suricata.readthedocs.io/en/suricata-5.0.1/rules/intro.html#rule-options) for more details.
-
 * `settings` - (Optional) Set of strings for additional settings to use in stateful rule inspection.
 
 ### Custom Action

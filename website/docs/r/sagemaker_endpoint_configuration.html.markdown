@@ -37,7 +37,8 @@ The following arguments are supported:
 
 * `production_variants` - (Required) An list of ProductionVariant objects, one for each model that you want to host at this endpoint. Fields are documented below.
 * `kms_key_arn` - (Optional) Amazon Resource Name (ARN) of a AWS Key Management Service key that Amazon SageMaker uses to encrypt data on the storage volume attached to the ML compute instance that hosts the endpoint.
-* `name` - (Optional) The name of the endpoint configuration. If omitted, Terraform will assign a random, unique name.
+* `name` - (Optional) The name of the endpoint configuration. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
+* `name_prefix` - (Optional) Creates a unique endpoint configuration name beginning with the specified prefix. Conflicts with `name`.
 * `tags` - (Optional) A mapping of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `data_capture_config` - (Optional) Specifies the parameters to capture input/output of SageMaker models endpoints. Fields are documented below.
 * `async_inference_config` - (Optional) Specifies configuration for how an endpoint performs asynchronous inference.
@@ -48,6 +49,7 @@ The following arguments are supported:
 * `accelerator_type` - (Optional) The size of the Elastic Inference (EI) instance to use for the production variant.
 * `container_startup_health_check_timeout_in_seconds` - (Optional) The timeout value, in seconds, for your inference container to pass health check by SageMaker Hosting. For more information about health check, see [How Your Container Should Respond to Health Check (Ping) Requests](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-inference-code.html#your-algorithms-inference-algo-ping-requests). Valid values between `60` and `3600`.
 * `core_dump_config` - (Optional) Specifies configuration for a core dump from the model container when the process crashes. Fields are documented below.
+* `enable_ssm_access` - (Optional) You can use this parameter to turn on native Amazon Web Services Systems Manager (SSM) access for a production variant behind an endpoint. By default, SSM access is disabled for all production variants behind an endpoints.
 * `initial_instance_count` - (Optional) Initial number of instances used for auto-scaling.
 * `instance_type` - (Optional)  The type of instance to start.
 * `initial_variant_weight` - (Optional) Determines initial traffic distribution among all of the models that you specify in the endpoint configuration. If unspecified, it defaults to `1.0`.

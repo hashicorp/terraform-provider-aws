@@ -10,7 +10,7 @@ description: |-
 
 ## Example Usage
 
-The following shows outputing all network ACL ids in a vpc.
+The following shows outputting all network ACL ids in a vpc.
 
 ```terraform
 data "aws_network_acls" "example" {

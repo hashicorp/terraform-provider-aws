@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_s3_bucket_replication_configuration")
 func ResourceBucketReplicationConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketReplicationConfigurationCreate,
@@ -312,7 +313,7 @@ func resourceBucketReplicationConfigurationCreate(ctx context.Context, d *schema
 
 	rc := &s3.ReplicationConfiguration{
 		Role:  aws.String(d.Get("role").(string)),
-		Rules: ExpandReplicationRules(d.Get("rule").([]interface{})),
+		Rules: ExpandReplicationRules(ctx, d.Get("rule").([]interface{})),
 	}
 
 	input := &s3.PutBucketReplicationInput{
@@ -324,13 +325,13 @@ func resourceBucketReplicationConfigurationCreate(ctx context.Context, d *schema
 		input.Token = aws.String(v.(string))
 	}
 
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err := conn.PutBucketReplicationWithContext(ctx, input)
 		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrMessageContains(err, "InvalidRequest", "Versioning must be 'Enabled' on the bucket") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -381,7 +382,7 @@ func resourceBucketReplicationConfigurationRead(ctx context.Context, d *schema.R
 
 	d.Set("bucket", d.Id())
 	d.Set("role", r.Role)
-	if err := d.Set("rule", FlattenReplicationRules(r.Rules)); err != nil {
+	if err := d.Set("rule", FlattenReplicationRules(ctx, r.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
 
@@ -394,7 +395,7 @@ func resourceBucketReplicationConfigurationUpdate(ctx context.Context, d *schema
 
 	rc := &s3.ReplicationConfiguration{
 		Role:  aws.String(d.Get("role").(string)),
-		Rules: ExpandReplicationRules(d.Get("rule").([]interface{})),
+		Rules: ExpandReplicationRules(ctx, d.Get("rule").([]interface{})),
 	}
 
 	input := &s3.PutBucketReplicationInput{
@@ -406,13 +407,13 @@ func resourceBucketReplicationConfigurationUpdate(ctx context.Context, d *schema
 		input.Token = aws.String(v.(string))
 	}
 
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err := conn.PutBucketReplicationWithContext(ctx, input)
 		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrMessageContains(err, "InvalidRequest", "Versioning must be 'Enabled' on the bucket") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})

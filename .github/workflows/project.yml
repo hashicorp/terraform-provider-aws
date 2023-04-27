@@ -4,16 +4,18 @@ on:
   pull_request_target:
     types: [opened, ready_for_review]
 
-env:
-  IN_MAINTAINER_LIST: ${{ contains(secrets.MAINTAINER_LIST, github.actor) }}
-
 jobs:
+  community_check:
+    uses: ./.github/workflows/community-check.yml
+    secrets: inherit
+
   WorkingBoardReview:
+    needs: community_check
     runs-on: ubuntu-latest
     steps:
       - name: Move team PRs to Review column
-        uses: alex-page/github-project-automation-plus@v0.8.2
-        if: env.IN_MAINTAINER_LIST == 'true' && github.event.pull_request.draft == false
+        uses: alex-page/github-project-automation-plus@v0.8.3
+        if: github.event.pull_request.draft == false && needs.community_check.outputs.maintainer == 'true'
         with:
           project: AWS Provider Working Board
           column: Open Maintainer PR

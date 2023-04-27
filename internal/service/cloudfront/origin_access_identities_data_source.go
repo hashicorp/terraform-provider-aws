@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_cloudfront_origin_access_identities")
 func DataSourceOriginAccessIdentities() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOriginAccessIdentitiesRead,

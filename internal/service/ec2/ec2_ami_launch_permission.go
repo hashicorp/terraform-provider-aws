@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ami_launch_permission")
 func ResourceAMILaunchPermission() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAMILaunchPermissionCreate,
