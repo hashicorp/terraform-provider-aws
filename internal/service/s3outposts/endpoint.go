@@ -29,6 +29,13 @@ func ResourceEndpoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"access_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(s3outposts.EndpointAccessType_Values(), false),
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -40,6 +47,12 @@ func ResourceEndpoint() *schema.Resource {
 			"creation_time": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"customer_owned_ipv4_pool": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 			"network_interfaces": {
 				Type:     schema.TypeSet,
@@ -68,22 +81,6 @@ func ResourceEndpoint() *schema.Resource {
 			"subnet_id": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringIsNotEmpty,
-			},
-			"access_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  "Private",
-				ValidateFunc: validation.StringInSlice([]string{
-					"Private",
-					"CustomerOwnedIp",
-				}, false),
-			},
-			"customer_owned_ipv4_pool": {
-				Type:         schema.TypeString,
-				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
