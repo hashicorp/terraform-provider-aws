@@ -27,14 +27,15 @@ func ResourceAlternateContact() *schema.Resource {
 		ReadWithoutTimeout:   resourceAlternateContactRead,
 		UpdateWithoutTimeout: resourceAlternateContactUpdate,
 		DeleteWithoutTimeout: resourceAlternateContactDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(alternateContactCreateTimeout),
-			Update: schema.DefaultTimeout(alternateContactUpdateTimeout),
-			Delete: schema.DefaultTimeout(alternateContactDeleteTimeout),
+			Create: schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(5 * time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -77,7 +78,9 @@ func ResourceAlternateContact() *schema.Resource {
 func resourceAlternateContactCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AccountConn()
 
+	accountID := d.Get("account_id").(string)
 	contactType := d.Get("alternate_contact_type").(string)
+	id := AlternateContactCreateResourceID(accountID, contactType)
 	input := &account.PutAlternateContactInput{
 		AlternateContactType: aws.String(contactType),
 		EmailAddress:         aws.String(d.Get("email_address").(string)),
@@ -86,23 +89,24 @@ func resourceAlternateContactCreate(ctx context.Context, d *schema.ResourceData,
 		Title:                aws.String(d.Get("title").(string)),
 	}
 
-	accountID := d.Get("account_id").(string)
 	if accountID != "" {
 		input.AccountId = aws.String(accountID)
 	}
-	id := AlternateContactCreateResourceID(accountID, contactType)
 
-	log.Printf("[DEBUG] Creating Account Alternate Contact: %s", input)
 	_, err := conn.PutAlternateContactWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating Account Alternate Contact (%s): %s", id, err)
+		return diag.Errorf("creating Account Alternate Contact (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
-	if _, err := waitAlternateContactCreated(ctx, conn, accountID, contactType, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("error waiting for Account Alternate Contact (%s) create: %s", d.Id(), err)
+	_, err = tfresource.RetryWhenNotFoundN(ctx, d.Timeout(schema.TimeoutCreate), func() (*account.AlternateContact, error) {
+		return FindAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
+	}, 2)
+
+	if err != nil {
+		return diag.Errorf("waiting for Account Alternate Contact (%s) create: %s", d.Id(), err)
 	}
 
 	return resourceAlternateContactRead(ctx, d, meta)
@@ -126,7 +130,7 @@ func resourceAlternateContactRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading Account Alternate Contact (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Account Alternate Contact (%s): %s", d.Id(), err)
 	}
 
 	d.Set("account_id", accountID)
@@ -165,15 +169,29 @@ func resourceAlternateContactUpdate(ctx context.Context, d *schema.ResourceData,
 		input.AccountId = aws.String(accountID)
 	}
 
-	log.Printf("[DEBUG] Updating Account Alternate Contact: %s", input)
 	_, err = conn.PutAlternateContactWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error updating Account Alternate Contact (%s): %s", d.Id(), err)
+		return diag.Errorf("updating Account Alternate Contact (%s): %s", d.Id(), err)
 	}
 
-	if err := waitAlternateContactUpdated(ctx, conn, accountID, contactType, email, name, phone, title, d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return diag.Errorf("error waiting for Account Alternate Contact (%s) update: %s", d.Id(), err)
+	_, err = tfresource.RetryIf(ctx, d.Timeout(schema.TimeoutUpdate),
+		func() (*account.AlternateContact, error) {
+			return FindAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
+		},
+		func(v *account.AlternateContact, err error) (bool, error) {
+			if err != nil {
+				return false, err
+			}
+
+			equal := email == aws.StringValue(v.EmailAddress) && name == aws.StringValue(v.Name) && phone == aws.StringValue(v.PhoneNumber) && title == aws.StringValue(v.Title)
+
+			return !equal, nil
+		},
+	)
+
+	if err != nil {
+		return diag.Errorf("waiting for Account Alternate Contact (%s) update: %s", d.Id(), err)
 	}
 
 	return resourceAlternateContactRead(ctx, d, meta)
@@ -243,91 +261,6 @@ func FindAlternateContactByTwoPartKey(ctx context.Context, conn *account.Account
 	}
 
 	return output.AlternateContact, nil
-}
-
-const (
-	statusFound      = "FOUND"
-	statusUpdated    = "UPDATED"
-	statusNotUpdated = "NOT_UPDATED"
-)
-
-func statusAlternateContact(ctx context.Context, conn *account.Account, accountID, contactType string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, statusFound, nil
-	}
-}
-
-func statusAlternateContactUpdate(ctx context.Context, conn *account.Account, accountID, contactType, email, name, phone, title string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if email == aws.StringValue(output.EmailAddress) &&
-			name == aws.StringValue(output.Name) &&
-			phone == aws.StringValue(output.PhoneNumber) &&
-			title == aws.StringValue(output.Title) {
-			return output, statusUpdated, nil
-		}
-
-		return output, statusNotUpdated, nil
-	}
-}
-
-const (
-	alternateContactCreateTimeout = 5 * time.Minute
-	alternateContactUpdateTimeout = 5 * time.Minute
-	alternateContactDeleteTimeout = 5 * time.Minute
-)
-
-func waitAlternateContactCreated(ctx context.Context, conn *account.Account, accountID, contactType string, timeout time.Duration) (*account.AlternateContact, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{statusFound},
-		Refresh:                   statusAlternateContact(ctx, conn, accountID, contactType),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*account.AlternateContact); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitAlternateContactUpdated(ctx context.Context, conn *account.Account, accountID, contactType, email, name, phone, title string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusNotUpdated},
-		Target:                    []string{statusUpdated},
-		Refresh:                   statusAlternateContactUpdate(ctx, conn, accountID, contactType, email, name, phone, title),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
 }
 
 const alternateContactResourceIDSeparator = "/"
