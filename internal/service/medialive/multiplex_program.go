@@ -467,7 +467,7 @@ func (vs videoSettingsObject) expand(_ context.Context) *mltypes.MultiplexVideoS
 
 type statmuxSettingsObject []statmuxSettings
 
-func (sms statmuxSettingsObject) expand(ctx context.Context) *mltypes.MultiplexStatmuxVideoSettings {
+func (sms statmuxSettingsObject) expand(_ context.Context) *mltypes.MultiplexStatmuxVideoSettings {
 	if len(sms) == 0 {
 		return nil
 	}
