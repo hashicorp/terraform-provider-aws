@@ -118,17 +118,60 @@ func ResourceInstance() *schema.Resource {
 					},
 				},
 			},
-			"cpu_core_count": {
-				Type:     schema.TypeInt,
+			"cpu_options": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"amd_sev_snp": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(ec2.AmdSevSnpSpecification_Values(), false),
+							// prevents ForceNew for the case where users launch EC2 instances without cpu_options
+							// then in a second apply set cpu_options.0.amd_sev_snp to "disabled"
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								if d.Id() != "" && old == "" && new == ec2.AmdSevSnpSpecificationDisabled {
+									return true
+								}
+								return false
+							},
+						},
+						"core_count": {
+							Type:          schema.TypeInt,
+							Optional:      true,
+							Computed:      true,
+							ForceNew:      true,
+							ConflictsWith: []string{"cpu_core_count"},
+						},
+						"threads_per_core": {
+							Type:          schema.TypeInt,
+							Optional:      true,
+							Computed:      true,
+							ForceNew:      true,
+							ConflictsWith: []string{"cpu_threads_per_core"},
+						},
+					},
+				},
+			},
+			"cpu_core_count": {
+				Type:          schema.TypeInt,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				Deprecated:    "use 'cpu_options' argument instead",
+				ConflictsWith: []string{"cpu_options.0.core_count"},
 			},
 			"cpu_threads_per_core": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
+				Type:          schema.TypeInt,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				Deprecated:    "use 'cpu_options' argument instead",
+				ConflictsWith: []string{"cpu_options.0.threads_per_core"},
 			},
 			"credit_specification": {
 				Type:     schema.TypeList,
