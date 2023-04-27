@@ -430,16 +430,7 @@ resource "aws_fis_experiment_template" "test" {
 `, rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, paramK, paramV, targetResType, targetSelectMode, targetResTagK, targetResTagV)
 }
 func testAccExperimentTemplateConfig_baseEKSCluster(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
@@ -503,7 +494,7 @@ resource "aws_eks_cluster" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
 }
-`, rName)
+`, rName))
 }
 
 func testAccExperimentTemplateConfig_eks(rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, paramK1, paramV1, paramK2, paramV2, paramK3, paramV3, paramK4, paramV4, paramK5, paramV5, targetResType, targetSelectMode, targetResTagK, targetResTagV string) string {
@@ -548,22 +539,22 @@ resource "aws_fis_experiment_template" "test" {
       value = %[9]q
     }
 
-		parameter {
+    parameter {
       key   = %[10]q
       value = %[11]q
     }
 
-		parameter {
+    parameter {
       key   = %[12]q
       value = %[13]q
     }
 
-		parameter {
+    parameter {
       key   = %[14]q
       value = %[15]q
     }
 
-		parameter {
+    parameter {
       key   = %[16]q
       value = %[17]q
     }
