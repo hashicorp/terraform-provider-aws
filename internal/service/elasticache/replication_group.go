@@ -78,32 +78,6 @@ func ResourceReplicationGroup() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"cluster_mode": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				Computed:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"num_node_groups", "replicas_per_node_group"},
-				Deprecated:    "Use num_node_groups and replicas_per_node_group instead",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"num_node_groups": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							Computed:      true,
-							ConflictsWith: []string{"num_node_groups", "number_cache_clusters", "num_cache_clusters", "global_replication_group_id"},
-							Deprecated:    "Use root-level num_node_groups instead",
-						},
-						"replicas_per_node_group": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							Computed:      true,
-							ConflictsWith: []string{"replicas_per_node_group"},
-							Deprecated:    "Use root-level replicas_per_node_group instead",
-						},
-					},
-				},
-			},
 			"configuration_endpoint_address": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -118,7 +92,6 @@ func ResourceReplicationGroup() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"description", "replication_group_description"},
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
 			"engine": {
@@ -144,7 +117,6 @@ func ResourceReplicationGroup() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 				ConflictsWith: []string{
-					"cluster_mode.0.num_node_groups",
 					"num_node_groups",
 					"parameter_group_name",
 					"engine",
@@ -220,20 +192,13 @@ func ResourceReplicationGroup() *schema.Resource {
 				Type:          schema.TypeInt,
 				Computed:      true,
 				Optional:      true,
-				ConflictsWith: []string{"cluster_mode.0.num_node_groups", "num_node_groups", "number_cache_clusters"},
+				ConflictsWith: []string{"num_node_groups"},
 			},
 			"num_node_groups": {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"cluster_mode", "number_cache_clusters", "num_cache_clusters", "global_replication_group_id"},
-			},
-			"number_cache_clusters": {
-				Type:          schema.TypeInt,
-				Computed:      true,
-				Optional:      true,
-				ConflictsWith: []string{"cluster_mode.0.num_node_groups", "num_cache_clusters", "num_node_groups"},
-				Deprecated:    "Use num_cache_clusters instead",
+				ConflictsWith: []string{"num_cache_clusters", "global_replication_group_id"},
 			},
 			"parameter_group_name": {
 				Type:     schema.TypeString,
@@ -269,18 +234,9 @@ func ResourceReplicationGroup() *schema.Resource {
 				Computed: true,
 			},
 			"replicas_per_node_group": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"cluster_mode"},
-			},
-			"replication_group_description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"description", "replication_group_description"},
-				Deprecated:   "Use description instead",
-				ValidateFunc: validation.StringIsNotEmpty,
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
 			},
 			"replication_group_id": {
 				Type:         schema.TypeString,
@@ -386,10 +342,7 @@ func ResourceReplicationGroup() *schema.Resource {
 			CustomizeDiffValidateReplicationGroupAutomaticFailover,
 			customizeDiffEngineVersionForceNewOnDowngrade,
 			customdiff.ComputedIf("member_clusters", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-				return diff.HasChange("number_cache_clusters") ||
-					diff.HasChange("num_cache_clusters") ||
-					diff.HasChange("cluster_mode.0.num_node_groups") ||
-					diff.HasChange("cluster_mode.0.replicas_per_node_group") ||
+				return diff.HasChange("num_cache_clusters") ||
 					diff.HasChange("num_node_groups") ||
 					diff.HasChange("replicas_per_node_group")
 			}),
@@ -408,9 +361,6 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if v, ok := d.GetOk("description"); ok {
-		input.ReplicationGroupDescription = aws.String(v.(string))
-	}
-	if v, ok := d.GetOk("replication_group_description"); ok {
 		input.ReplicationGroupDescription = aws.String(v.(string))
 	}
 
@@ -518,29 +468,12 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		input.AuthToken = aws.String(v.(string))
 	}
 
-	if clusterMode, ok := d.GetOk("cluster_mode"); ok {
-		clusterModeList := clusterMode.([]interface{})
-		attributes := clusterModeList[0].(map[string]interface{})
-
-		if v, ok := attributes["num_node_groups"]; ok && v != 0 {
-			input.NumNodeGroups = aws.Int64(int64(v.(int)))
-		}
-
-		if v, ok := attributes["replicas_per_node_group"]; ok {
-			input.ReplicasPerNodeGroup = aws.Int64(int64(v.(int)))
-		}
-	}
-
 	if v, ok := d.GetOk("num_node_groups"); ok && v != 0 {
 		input.NumNodeGroups = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("replicas_per_node_group"); ok {
 		input.ReplicasPerNodeGroup = aws.Int64(int64(v.(int)))
-	}
-
-	if cacheClusters, ok := d.GetOk("number_cache_clusters"); ok {
-		input.NumCacheClusters = aws.Int64(int64(cacheClusters.(int)))
 	}
 
 	if numCacheClusters, ok := d.GetOk("num_cache_clusters"); ok {
@@ -646,14 +579,9 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set("kms_key_id", rgp.KmsKeyId)
 	d.Set("description", rgp.Description)
-	d.Set("replication_group_description", rgp.Description)
-	d.Set("number_cache_clusters", len(rgp.MemberClusters))
 	d.Set("num_cache_clusters", len(rgp.MemberClusters))
 	if err := d.Set("member_clusters", flex.FlattenStringSet(rgp.MemberClusters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting member_clusters: %s", err)
-	}
-	if err := d.Set("cluster_mode", flattenNodeGroupsToClusterMode(rgp.NodeGroups)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting cluster_mode attribute: %s", err)
 	}
 
 	d.Set("num_node_groups", len(rgp.NodeGroups))
@@ -735,20 +663,12 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	if d.HasChanges(
-		"cluster_mode.0.num_node_groups",
-		"cluster_mode.0.replicas_per_node_group",
 		"num_node_groups",
 		"replicas_per_node_group",
 	) {
 		err := modifyReplicationGroupShardConfiguration(ctx, conn, d)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying ElastiCache Replication Group (%s) shard configuration: %s", d.Id(), err)
-		}
-	} else if d.HasChange("number_cache_clusters") {
-		// TODO: remove when number_cache_clusters is removed from resource schema
-		err := modifyReplicationGroupNumCacheClusters(ctx, conn, d, "number_cache_clusters")
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "modifying ElastiCache Replication Group (%s) clusters: %s", d.Id(), err)
 		}
 	} else if d.HasChange("num_cache_clusters") {
 		err := modifyReplicationGroupNumCacheClusters(ctx, conn, d, "num_cache_clusters")
@@ -765,11 +685,6 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 
 	if d.HasChange("description") {
 		params.ReplicationGroupDescription = aws.String(d.Get("description").(string))
-		requestUpdate = true
-	}
-
-	if d.HasChange("replication_group_description") {
-		params.ReplicationGroupDescription = aws.String(d.Get("replication_group_description").(string))
 		requestUpdate = true
 	}
 
@@ -1052,20 +967,6 @@ func flattenNodeGroupsToClusterMode(nodeGroups []*elasticache.NodeGroup) []map[s
 }
 
 func modifyReplicationGroupShardConfiguration(ctx context.Context, conn *elasticache.ElastiCache, d *schema.ResourceData) error {
-	if d.HasChange("cluster_mode.0.num_node_groups") {
-		err := modifyReplicationGroupShardConfigurationNumNodeGroups(ctx, conn, d, "cluster_mode.0.num_node_groups")
-		if err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("cluster_mode.0.replicas_per_node_group") {
-		err := modifyReplicationGroupShardConfigurationReplicasPerNodeGroup(ctx, conn, d, "cluster_mode.0.replicas_per_node_group")
-		if err != nil {
-			return err
-		}
-	}
-
 	if d.HasChange("num_node_groups") {
 		err := modifyReplicationGroupShardConfigurationNumNodeGroups(ctx, conn, d, "num_node_groups")
 		if err != nil {
