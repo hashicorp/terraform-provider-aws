@@ -12,12 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/acm"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_acm_certificate_validation")
 func ResourceCertificateValidation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateValidationCreate,
@@ -45,7 +46,7 @@ func ResourceCertificateValidation() *schema.Resource {
 }
 
 func resourceCertificateValidationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ACMConn
+	conn := meta.(*conns.AWSClient).ACMConn()
 
 	arn := d.Get("certificate_arn").(string)
 	certificate, err := FindCertificateByARN(ctx, conn, arn)
@@ -98,7 +99,7 @@ func resourceCertificateValidationCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceCertificateValidationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ACMConn
+	conn := meta.(*conns.AWSClient).ACMConn()
 
 	arn := d.Get("certificate_arn").(string)
 	certificate, err := FindCertificateValidationByARN(ctx, conn, arn)
@@ -126,7 +127,7 @@ func FindCertificateValidationByARN(ctx context.Context, conn *acm.ACM, arn stri
 	}
 
 	if status := aws.StringValue(output.Status); status != acm.CertificateStatusIssued {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     status,
 			LastRequest: arn,
 		}
@@ -135,7 +136,7 @@ func FindCertificateValidationByARN(ctx context.Context, conn *acm.ACM, arn stri
 	return output, nil
 }
 
-func statusCertificate(ctx context.Context, conn *acm.ACM, arn string) resource.StateRefreshFunc {
+func statusCertificate(ctx context.Context, conn *acm.ACM, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		// Don't call FindCertificateByARN as it maps useful status codes to NotFoundError.
 		input := &acm.DescribeCertificateInput{
@@ -157,7 +158,7 @@ func statusCertificate(ctx context.Context, conn *acm.ACM, arn string) resource.
 }
 
 func waitCertificateIssued(ctx context.Context, conn *acm.ACM, arn string, timeout time.Duration) (*acm.CertificateDetail, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{acm.CertificateStatusPendingValidation},
 		Target:  []string{acm.CertificateStatusIssued},
 		Refresh: statusCertificate(ctx, conn, arn),

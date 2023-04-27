@@ -20,12 +20,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ce_anomaly_monitor", name="Anomaly Monitor")
+// @Tags(identifierAttribute="id")
 func ResourceAnomalyMonitor() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAnomalyMonitorCreate,
-		ReadContext:   resourceAnomalyMonitorRead,
-		UpdateContext: resourceAnomalyMonitorUpdate,
-		DeleteContext: resourceAnomalyMonitorDelete,
+		CreateWithoutTimeout: resourceAnomalyMonitorCreate,
+		ReadWithoutTimeout:   resourceAnomalyMonitorRead,
+		UpdateWithoutTimeout: resourceAnomalyMonitorUpdate,
+		DeleteWithoutTimeout: resourceAnomalyMonitorDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -61,8 +63,8 @@ func ResourceAnomalyMonitor() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(costexplorer.MonitorType_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -70,15 +72,14 @@ func ResourceAnomalyMonitor() *schema.Resource {
 }
 
 func resourceAnomalyMonitorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).CEConn()
 
 	input := &costexplorer.CreateAnomalyMonitorInput{
 		AnomalyMonitor: &costexplorer.AnomalyMonitor{
 			MonitorName: aws.String(d.Get("name").(string)),
 			MonitorType: aws.String(d.Get("monitor_type").(string)),
 		},
+		ResourceTags: GetTagsIn(ctx),
 	}
 	switch d.Get("monitor_type").(string) {
 	case costexplorer.MonitorTypeDimensional:
@@ -101,10 +102,6 @@ func resourceAnomalyMonitorCreate(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	if len(tags) > 0 {
-		input.ResourceTags = Tags(tags.IgnoreAWS())
-	}
-
 	resp, err := conn.CreateAnomalyMonitorWithContext(ctx, input)
 
 	if err != nil {
@@ -121,9 +118,7 @@ func resourceAnomalyMonitorCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceAnomalyMonitorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).CEConn()
 
 	monitor, err := FindAnomalyMonitorByARN(ctx, conn, d.Id())
 
@@ -156,27 +151,11 @@ func resourceAnomalyMonitorRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("name", monitor.MonitorName)
 	d.Set("monitor_type", monitor.MonitorType)
 
-	tags, err := ListTags(conn, aws.StringValue(monitor.MonitorArn))
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err != nil {
-		return create.DiagError(names.CE, create.ErrActionReading, ResNameAnomalyMonitor, d.Id(), err)
-	}
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.CE, create.ErrActionReading, ResNameAnomalyMonitor, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.CE, create.ErrActionReading, ResNameAnomalyMonitor, d.Id(), err)
-	}
-
 	return nil
 }
 
 func resourceAnomalyMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn
+	conn := meta.(*conns.AWSClient).CEConn()
 	requestUpdate := false
 
 	input := &costexplorer.UpdateAnomalyMonitorInput{
@@ -186,22 +165,6 @@ func resourceAnomalyMonitorUpdate(ctx context.Context, d *schema.ResourceData, m
 	if d.HasChange("name") {
 		input.MonitorName = aws.String(d.Get("name").(string))
 		requestUpdate = true
-	}
-
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return create.DiagError(names.CE, create.ErrActionUpdating, ResNameAnomalyMonitor, d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return create.DiagError(names.CE, create.ErrActionUpdating, ResNameAnomalyMonitor, d.Id(), err)
-		}
 	}
 
 	if requestUpdate {
@@ -216,7 +179,7 @@ func resourceAnomalyMonitorUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceAnomalyMonitorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn
+	conn := meta.(*conns.AWSClient).CEConn()
 
 	_, err := conn.DeleteAnomalyMonitorWithContext(ctx, &costexplorer.DeleteAnomalyMonitorInput{MonitorArn: aws.String(d.Id())})
 

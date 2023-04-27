@@ -1,16 +1,65 @@
 package conns
 
 import (
-	"fmt"
+	"context"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	awsbasev1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/version"
 )
+
+// ServicePackage is the minimal interface exported from each AWS service package.
+// Its methods return the Plugin SDK and Framework resources and data sources implemented in the package.
+type ServicePackage interface {
+	FrameworkDataSources(context.Context) []*types.ServicePackageFrameworkDataSource
+	FrameworkResources(context.Context) []*types.ServicePackageFrameworkResource
+	SDKDataSources(context.Context) []*types.ServicePackageSDKDataSource
+	SDKResources(context.Context) []*types.ServicePackageSDKResource
+	ServicePackageName() string
+}
+
+type (
+	contextKeyType int
+)
+
+var (
+	contextKey contextKeyType
+)
+
+// InContext represents the resource information kept in Context.
+type InContext struct {
+	IsDataSource       bool   // Data source?
+	ResourceName       string // Friendly resource name, e.g. "Subnet"
+	ServicePackageName string // Canonical name defined as a constant in names package
+}
+
+func NewDataSourceContext(ctx context.Context, servicePackageName, resourceName string) context.Context {
+	v := InContext{
+		IsDataSource:       true,
+		ResourceName:       resourceName,
+		ServicePackageName: servicePackageName,
+	}
+
+	return context.WithValue(ctx, contextKey, &v)
+}
+
+func NewResourceContext(ctx context.Context, servicePackageName, resourceName string) context.Context {
+	v := InContext{
+		ResourceName:       resourceName,
+		ServicePackageName: servicePackageName,
+	}
+
+	return context.WithValue(ctx, contextKey, &v)
+}
+
+func FromContext(ctx context.Context) (*InContext, bool) {
+	v, ok := ctx.Value(contextKey).(*InContext)
+	return v, ok
+}
 
 func NewSessionForRegion(cfg *aws.Config, region, terraformVersion string) (*session.Session, error) {
 	session, err := session.NewSession(cfg)
@@ -34,43 +83,6 @@ func StdUserAgentProducts(terraformVersion string) *awsbase.APNInfo {
 			{Name: "terraform-provider-aws", Version: version.ProviderVersion, Comment: "+https://registry.terraform.io/providers/hashicorp/aws"},
 		},
 	}
-}
-
-func HasEC2Classic(platforms []string) bool {
-	for _, p := range platforms {
-		if p == "EC2" {
-			return true
-		}
-	}
-	return false
-}
-
-func GetSupportedEC2Platforms(conn *ec2.EC2) ([]string, error) {
-	attrName := "supported-platforms"
-
-	input := ec2.DescribeAccountAttributesInput{
-		AttributeNames: []*string{aws.String(attrName)},
-	}
-	attributes, err := conn.DescribeAccountAttributes(&input)
-	if err != nil {
-		return nil, err
-	}
-
-	var platforms []string
-	for _, attr := range attributes.AccountAttributes {
-		if *attr.AttributeName == attrName {
-			for _, v := range attr.AttributeValues {
-				platforms = append(platforms, *v.AttributeValue)
-			}
-			break
-		}
-	}
-
-	if len(platforms) == 0 {
-		return nil, fmt.Errorf("no EC2 platforms detected")
-	}
-
-	return platforms, nil
 }
 
 // ReverseDNS switches a DNS hostname to reverse DNS and vice-versa.

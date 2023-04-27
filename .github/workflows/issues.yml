@@ -4,15 +4,12 @@ on:
   issues:
     types: [opened]
 
-env:
-  IN_MAINTAINER_LIST: ${{ contains(secrets.MAINTAINER_LIST, github.actor) }}
-
 jobs:
   AddLabelsForIssueTriage:
     runs-on: ubuntu-latest
     steps:
       - name: Apply Issue Triage Labels
-        uses: github/issue-labeler@v2.5
+        uses: github/issue-labeler@v3.1
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
           configuration-path: .github/labeler-issue-triage.yml

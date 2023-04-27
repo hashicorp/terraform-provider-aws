@@ -7,11 +7,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusGlobalClusterRefreshFunc(ctx context.Context, conn *docdb.DocDB, globalClusterID string) resource.StateRefreshFunc {
+func statusGlobalClusterRefreshFunc(ctx context.Context, conn *docdb.DocDB, globalClusterID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		globalCluster, err := FindGlobalClusterById(ctx, conn, globalClusterID)
 
@@ -20,14 +20,14 @@ func statusGlobalClusterRefreshFunc(ctx context.Context, conn *docdb.DocDB, glob
 		}
 
 		if err != nil {
-			return nil, "", fmt.Errorf("error reading DocDB Global Cluster (%s): %w", globalClusterID, err)
+			return nil, "", fmt.Errorf("reading DocumentDB Global Cluster (%s): %w", globalClusterID, err)
 		}
 
 		return globalCluster, aws.StringValue(globalCluster.Status), nil
 	}
 }
 
-func statusDBClusterRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBClusterID string) resource.StateRefreshFunc {
+func statusDBClusterRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBClusterID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		dBCluster, err := FindDBClusterById(ctx, conn, dBClusterID)
 
@@ -36,14 +36,14 @@ func statusDBClusterRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBCluste
 		}
 
 		if err != nil {
-			return nil, "", fmt.Errorf("error reading DocDB Cluster (%s): %w", dBClusterID, err)
+			return nil, "", fmt.Errorf("reading DocumentDB Cluster (%s): %w", dBClusterID, err)
 		}
 
 		return dBCluster, aws.StringValue(dBCluster.Status), nil
 	}
 }
 
-func statusDBClusterSnapshotRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBClusterSnapshotID string) resource.StateRefreshFunc {
+func statusDBClusterSnapshotRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBClusterSnapshotID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		dBClusterSnapshot, err := FindDBClusterSnapshotById(ctx, conn, dBClusterSnapshotID)
 
@@ -52,14 +52,14 @@ func statusDBClusterSnapshotRefreshFunc(ctx context.Context, conn *docdb.DocDB, 
 		}
 
 		if err != nil {
-			return nil, "", fmt.Errorf("error reading DocDB Cluster Snapshot (%s): %w", dBClusterSnapshotID, err)
+			return nil, "", fmt.Errorf("reading DocumentDB Cluster Snapshot (%s): %w", dBClusterSnapshotID, err)
 		}
 
 		return dBClusterSnapshot, aws.StringValue(dBClusterSnapshot.Status), nil
 	}
 }
 
-func statusDBInstanceRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBInstanceID string) resource.StateRefreshFunc {
+func statusDBInstanceRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBInstanceID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		dBInstance, err := FindDBInstanceById(ctx, conn, dBInstanceID)
 
@@ -68,14 +68,14 @@ func statusDBInstanceRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBInsta
 		}
 
 		if err != nil {
-			return nil, "", fmt.Errorf("error reading DocDB Instance (%s): %w", dBInstanceID, err)
+			return nil, "", fmt.Errorf("reading DocumentDB Instance (%s): %w", dBInstanceID, err)
 		}
 
 		return dBInstance, aws.StringValue(dBInstance.DBInstanceStatus), nil
 	}
 }
 
-func statusDBSubnetGroupRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBSubnetGroupName string) resource.StateRefreshFunc {
+func statusDBSubnetGroupRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBSubnetGroupName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		dBSubnetGroup, err := FindDBSubnetGroupByName(ctx, conn, dBSubnetGroupName)
 
@@ -84,14 +84,14 @@ func statusDBSubnetGroupRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBSu
 		}
 
 		if err != nil {
-			return nil, "", fmt.Errorf("error reading DocDB Subnet Group (%s): %w", dBSubnetGroupName, err)
+			return nil, "", fmt.Errorf("reading DocumentDB Subnet Group (%s): %w", dBSubnetGroupName, err)
 		}
 
 		return dBSubnetGroup, aws.StringValue(dBSubnetGroup.SubnetGroupStatus), nil
 	}
 }
 
-func statusEventSubscription(ctx context.Context, conn *docdb.DocDB, id string) resource.StateRefreshFunc {
+func statusEventSubscription(ctx context.Context, conn *docdb.DocDB, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindEventSubscriptionByID(ctx, conn, id)
 

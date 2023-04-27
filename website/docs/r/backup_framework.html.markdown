@@ -65,6 +65,46 @@ resource "aws_backup_framework" "Example" {
     name = "BACKUP_RECOVERY_POINT_MANUAL_DELETION_DISABLED"
   }
 
+  control {
+    name = "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_VAULT_LOCK"
+
+    input_parameter {
+      name  = "maxRetentionDays"
+      value = "100"
+    }
+
+    input_parameter {
+      name  = "minRetentionDays"
+      value = "1"
+    }
+
+    scope {
+      compliance_resource_types = [
+        "EBS"
+      ]
+    }
+  }
+
+  control {
+    name = "BACKUP_LAST_RECOVERY_POINT_CREATED"
+
+    input_parameter {
+      name  = "recoveryPointAgeUnit"
+      value = "days"
+    }
+
+    input_parameter {
+      name  = "recoveryPointAgeValue"
+      value = "1"
+    }
+
+    scope {
+      compliance_resource_types = [
+        "EBS"
+      ]
+    }
+  }
+
   tags = {
     "Name" = "Example Framework"
   }
@@ -81,6 +121,7 @@ The following arguments are supported:
 * `tags` - (Optional) Metadata that you can assign to help organize the frameworks you create. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Control Arguments
+
 For **control** the following attributes are supported:
 
 * `input_parameter` - (Optional) One or more input parameter blocks. An example of a control with two parameters is: "backup plan frequency is at least daily and the retention period is at least 1 year". The first parameter is daily. The second parameter is 1 year. Detailed below.
@@ -88,12 +129,14 @@ For **control** the following attributes are supported:
 * `scope` - (Optional) The scope of a control. The control scope defines what the control will evaluate. Three examples of control scopes are: a specific backup plan, all backup plans with a specific tag, or all backup plans. Detailed below.
 
 ### Input Parameter Arguments
+
 For **input_parameter** the following attributes are supported:
 
 * `name` - (Optional) The name of a parameter, for example, BackupPlanFrequency.
 * `value` - (Optional) The value of parameter, for example, hourly.
 
 ### Scope Arguments
+
 For **scope** the following attributes are supported:
 
 * `compliance_resource_ids` - (Optional) The ID of the only AWS resource that you want your control scope to contain. Minimum number of 1 item. Maximum number of 100 items.
@@ -113,7 +156,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `2m`)
 * `update` - (Default `2m`)

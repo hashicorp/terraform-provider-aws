@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccIdentityStoreUserDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_identitystore_user.test"
 	resourceName := "aws_identitystore_user.test"
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -19,12 +20,12 @@ func TestAccIdentityStoreUserDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSSOAdminInstances(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDataSourceConfig_basic(name, email),
@@ -53,6 +54,7 @@ func TestAccIdentityStoreUserDataSource_basic(t *testing.T) {
 }
 
 func TestAccIdentityStoreUserDataSource_filterUserName(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_identitystore_user.test"
 	resourceName := "aws_identitystore_user.test"
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -60,12 +62,12 @@ func TestAccIdentityStoreUserDataSource_filterUserName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSSOAdminInstances(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDataSourceConfig_filterUserName(name, email),
@@ -79,6 +81,7 @@ func TestAccIdentityStoreUserDataSource_filterUserName(t *testing.T) {
 }
 
 func TestAccIdentityStoreUserDataSource_uniqueAttributeUserName(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_identitystore_user.test"
 	resourceName := "aws_identitystore_user.test"
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -86,12 +89,12 @@ func TestAccIdentityStoreUserDataSource_uniqueAttributeUserName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSSOAdminInstances(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDataSourceConfig_uniqueAttributeUserName(name, email),
@@ -105,6 +108,7 @@ func TestAccIdentityStoreUserDataSource_uniqueAttributeUserName(t *testing.T) {
 }
 
 func TestAccIdentityStoreUserDataSource_email(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_identitystore_user.test"
 	resourceName := "aws_identitystore_user.test"
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -112,12 +116,12 @@ func TestAccIdentityStoreUserDataSource_email(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSSOAdminInstances(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDataSourceConfig_email(name, email),
@@ -131,6 +135,7 @@ func TestAccIdentityStoreUserDataSource_email(t *testing.T) {
 }
 
 func TestAccIdentityStoreUserDataSource_userID(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_identitystore_user.test"
 	resourceName := "aws_identitystore_user.test"
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -138,12 +143,12 @@ func TestAccIdentityStoreUserDataSource_userID(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSSOAdminInstances(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDataSourceConfig_id(name, email),
@@ -157,11 +162,12 @@ func TestAccIdentityStoreUserDataSource_userID(t *testing.T) {
 }
 
 func TestAccIdentityStoreUserDataSource_nonExistent(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSSOAdminInstances(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccUserDataSourceConfig_nonExistent,
@@ -172,16 +178,17 @@ func TestAccIdentityStoreUserDataSource_nonExistent(t *testing.T) {
 }
 
 func TestAccIdentityStoreUserDataSource_userIdFilterMismatch(t *testing.T) {
+	ctx := acctest.Context(t)
 	name1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	email1 := acctest.RandomEmailAddress(acctest.RandomDomainName())
 	name2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	email2 := acctest.RandomEmailAddress(acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSSOAdminInstances(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccUserDataSourceConfig_userIdFilterMismatch(name1, email1, name2, email2),
@@ -192,11 +199,12 @@ func TestAccIdentityStoreUserDataSource_userIdFilterMismatch(t *testing.T) {
 }
 
 func TestAccIdentityStoreUserDataSource_externalIdConflictsWithUniqueAttribute(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSSOAdminInstances(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccUserDataSourceConfig_externalIdConflictsWithUniqueAttribute,
@@ -207,14 +215,15 @@ func TestAccIdentityStoreUserDataSource_externalIdConflictsWithUniqueAttribute(t
 }
 
 func TestAccIdentityStoreUserDataSource_filterConflictsWithExternalId(t *testing.T) {
+	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	email := acctest.RandomEmailAddress(acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSSOAdminInstances(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccUserDataSourceConfig_filterConflictsWithUniqueAttribute(name, email),
@@ -225,14 +234,15 @@ func TestAccIdentityStoreUserDataSource_filterConflictsWithExternalId(t *testing
 }
 
 func TestAccIdentityStoreUserDataSource_userIdConflictsWithExternalId(t *testing.T) {
+	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	email := acctest.RandomEmailAddress(acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSSOAdminInstances(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccUserDataSourceConfig_userIdConflictsWithUniqueAttribute(name, email),

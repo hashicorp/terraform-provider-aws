@@ -11,13 +11,14 @@ import (
 )
 
 func TestAccGlobalAcceleratorAcceleratorDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_globalaccelerator_accelerator.test"
 	dataSource1Name := "data.aws_globalaccelerator_accelerator.test_by_arn"
 	dataSource2Name := "data.aws_globalaccelerator_accelerator.test_by_name"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -29,6 +30,7 @@ func TestAccGlobalAcceleratorAcceleratorDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSource1Name, "attributes.0.flow_logs_s3_bucket", resourceName, "attributes.0.flow_logs_s3_bucket"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "attributes.0.flow_logs_s3_prefix", resourceName, "attributes.0.flow_logs_s3_prefix"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "dns_name", resourceName, "dns_name"),
+					resource.TestCheckResourceAttrPair(dataSource1Name, "dual_stack_dns_name", resourceName, "dual_stack_dns_name"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "enabled", resourceName, "enabled"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "hosted_zone_id", resourceName, "hosted_zone_id"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "ip_address_type", resourceName, "ip_address_type"),
@@ -45,6 +47,7 @@ func TestAccGlobalAcceleratorAcceleratorDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSource2Name, "attributes.0.flow_logs_s3_bucket", resourceName, "attributes.0.flow_logs_s3_bucket"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "attributes.0.flow_logs_s3_prefix", resourceName, "attributes.0.flow_logs_s3_prefix"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "dns_name", resourceName, "dns_name"),
+					resource.TestCheckResourceAttrPair(dataSource2Name, "dual_stack_dns_name", resourceName, "dual_stack_dns_name"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "enabled", resourceName, "enabled"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "hosted_zone_id", resourceName, "hosted_zone_id"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "ip_address_type", resourceName, "ip_address_type"),

@@ -32,6 +32,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the Dedicated IP Pool.
 * `dedicated_ips` - A list of objects describing the pool's dedicated IP's. See [`dedicated_ips`](#dedicated_ips).
+* `scaling_mode` - (Optional) IP pool scaling mode. Valid values: `STANDARD`, `MANAGED`.
 * `tags` - A map of tags attached to the pool.
 
 ### dedicated_ips
