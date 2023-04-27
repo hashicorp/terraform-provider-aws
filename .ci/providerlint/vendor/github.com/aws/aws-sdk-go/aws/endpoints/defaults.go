@@ -38090,6 +38090,13 @@ var awsisoPartition = partition{
 				}: endpoint{},
 			},
 		},
+		"athena": service{
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "us-iso-east-1",
+				}: endpoint{},
+			},
+		},
 		"autoscaling": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
@@ -39298,6 +39305,13 @@ var awsisobPartition = partition{
 					SignatureVersions: []string{"s3v4"},
 				},
 			},
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "us-isob-east-1",
+				}: endpoint{},
+			},
+		},
+		"secretsmanager": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
 					Region: "us-isob-east-1",
