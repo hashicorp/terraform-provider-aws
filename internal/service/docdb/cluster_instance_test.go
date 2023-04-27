@@ -273,8 +273,8 @@ func TestAccDocDBClusterInstance_disappears(t *testing.T) {
 func TestAccDocDBClusterInstance_copyTagsToSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v docdb.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_cluster_instance.cluster_instances"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
