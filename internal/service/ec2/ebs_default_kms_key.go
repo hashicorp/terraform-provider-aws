@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ebs_default_kms_key")
 func ResourceEBSDefaultKMSKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEBSDefaultKMSKeyCreate,

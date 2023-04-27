@@ -15,12 +15,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_account_primary_contact")
 func ResourcePrimaryContact() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePrimaryContactCreate,
 		ReadWithoutTimeout:   resourcePrimaryContactRead,
 		UpdateWithoutTimeout: resourcePrimaryContactUpdate,
 		DeleteWithoutTimeout: resourcePrimaryContactDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -87,7 +89,7 @@ func ResourcePrimaryContact() *schema.Resource {
 }
 
 func resourcePrimaryContactCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccountConn
+	conn := meta.(*conns.AWSClient).AccountConn()
 
 	input := putContactInformationFromSchema(d)
 
@@ -109,7 +111,7 @@ func resourcePrimaryContactCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourcePrimaryContactRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccountConn
+	conn := meta.(*conns.AWSClient).AccountConn()
 
 	input := &account.GetContactInformationInput{}
 
@@ -148,7 +150,7 @@ func resourcePrimaryContactRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourcePrimaryContactUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccountConn
+	conn := meta.(*conns.AWSClient).AccountConn()
 
 	input := putContactInformationFromSchema(d)
 

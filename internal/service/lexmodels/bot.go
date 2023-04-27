@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_lex_bot")
 func ResourceBot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBotCreate,

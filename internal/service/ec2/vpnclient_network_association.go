@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_ec2_client_vpn_network_association")
 func ResourceClientVPNNetworkAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClientVPNNetworkAssociationCreate,

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_s3_bucket_server_side_encryption_configuration")
 func ResourceBucketServerSideEncryptionConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketServerSideEncryptionConfigurationCreate,
@@ -95,7 +96,7 @@ func resourceBucketServerSideEncryptionConfigurationCreate(ctx context.Context, 
 			return conn.PutBucketEncryptionWithContext(ctx, input)
 		},
 		s3.ErrCodeNoSuchBucket,
-		ErrCodeOperationAborted,
+		errCodeOperationAborted,
 	)
 
 	if err != nil {
@@ -186,7 +187,7 @@ func resourceBucketServerSideEncryptionConfigurationUpdate(ctx context.Context, 
 			return conn.PutBucketEncryptionWithContext(ctx, input)
 		},
 		s3.ErrCodeNoSuchBucket,
-		ErrCodeOperationAborted,
+		errCodeOperationAborted,
 	)
 
 	if err != nil {

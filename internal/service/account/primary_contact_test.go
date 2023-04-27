@@ -7,20 +7,20 @@ import (
 	"github.com/aws/aws-sdk-go/service/account"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAccountPrimary_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_account_primary_contact.test"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, account.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPrimaryContactDestroy,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPrimaryConfig_basic(rName1),
@@ -61,10 +61,6 @@ func TestAccAccountPrimary_basic(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckPrimaryContactDestroy(s *terraform.State) error {
-	return nil
 }
 
 func testAccPrimaryConfig_basic(name string) string {

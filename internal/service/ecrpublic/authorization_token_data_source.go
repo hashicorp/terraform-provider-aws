@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_ecrpublic_authorization_token")
 func DataSourceAuthorizationToken() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAuthorizationTokenRead,
@@ -49,7 +50,7 @@ func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceDat
 	out, err := conn.GetAuthorizationTokenWithContext(ctx, params)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Public ECR authorization token: %s", err)
+		return sdkdiag.AppendErrorf(diags, "getting ECR Public authorization token: %s", err)
 	}
 
 	authorizationData := out.AuthorizationData
@@ -57,12 +58,12 @@ func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceDat
 	expiresAt := aws.TimeValue(authorizationData.ExpiresAt).Format(time.RFC3339)
 	authBytes, err := base64.URLEncoding.DecodeString(authorizationToken)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "decoding Public ECR authorization token: %s", err)
+		return sdkdiag.AppendErrorf(diags, "decoding ECR Public authorization token: %s", err)
 	}
 
 	basicAuthorization := strings.Split(string(authBytes), ":")
 	if len(basicAuthorization) != 2 {
-		return sdkdiag.AppendErrorf(diags, "unknown Public ECR authorization token format")
+		return sdkdiag.AppendErrorf(diags, "unknown ECR Public authorization token format")
 	}
 
 	userName := basicAuthorization[0]

@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/emrserverless"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,8 +18,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_emrserverless_application", name="Application")
+// @Tags(identifierAttribute="arn")
 func ResourceApplication() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceApplicationCreate,
@@ -75,6 +78,20 @@ func ResourceApplication() *schema.Resource {
 							Optional:     true,
 							Default:      15,
 							ValidateFunc: validation.IntBetween(1, 10080),
+						},
+					},
+				},
+			},
+			"image_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"image_uri": {
+							Type:     schema.TypeString,
+							Required: true,
 						},
 					},
 				},
@@ -186,8 +203,8 @@ func ResourceApplication() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -203,14 +220,13 @@ func ResourceApplication() *schema.Resource {
 func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRServerlessConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &emrserverless.CreateApplicationInput{
-		ClientToken:  aws.String(resource.UniqueId()),
+		ClientToken:  aws.String(id.UniqueId()),
 		ReleaseLabel: aws.String(d.Get("release_label").(string)),
 		Name:         aws.String(name),
+		Tags:         GetTagsIn(ctx),
 		Type:         aws.String(d.Get("type").(string)),
 	}
 
@@ -226,6 +242,10 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.AutoStopConfiguration = expandAutoStopConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("image_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.ImageConfiguration = expandImageConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("initial_capacity"); ok && v.(*schema.Set).Len() > 0 {
 		input.InitialCapacity = expandInitialCapacity(v.(*schema.Set))
 	}
@@ -238,11 +258,6 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.NetworkConfiguration = expandNetworkConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating EMR Serveless Application: %s", input)
 	result, err := conn.CreateApplicationWithContext(ctx, input)
 
 	if err != nil {
@@ -261,8 +276,6 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRServerlessConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	application, err := FindApplicationByID(ctx, conn, d.Id())
 
@@ -290,6 +303,10 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting auto_stop_configuration: %s", err)
 	}
 
+	if err := d.Set("image_configuration", flattenImageConfiguration(application.ImageConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting image_configuration: %s", err)
+	}
+
 	if err := d.Set("initial_capacity", flattenInitialCapacity(application.InitialCapacity)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting initial_capacity: %s", err)
 	}
@@ -302,16 +319,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
 
-	tags := KeyValueTags(application.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, application.Tags)
 
 	return diags
 }
@@ -323,7 +331,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &emrserverless.UpdateApplicationInput{
 			ApplicationId: aws.String(d.Id()),
-			ClientToken:   aws.String(resource.UniqueId()),
+			ClientToken:   aws.String(id.UniqueId()),
 		}
 
 		if v, ok := d.GetOk("architecture"); ok {
@@ -336,6 +344,10 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if v, ok := d.GetOk("auto_stop_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.AutoStopConfiguration = expandAutoStopConfig(v.([]interface{})[0].(map[string]interface{}))
+		}
+
+		if v, ok := d.GetOk("image_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.ImageConfiguration = expandImageConfiguration(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		if v, ok := d.GetOk("initial_capacity"); ok && v.(*schema.Set).Len() > 0 {
@@ -355,14 +367,6 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EMR Serveless Application (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EMR Serverless Application (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -535,6 +539,36 @@ func flattenNetworkConfiguration(apiObject *emrserverless.NetworkConfiguration) 
 	}
 
 	return tfMap
+}
+
+func expandImageConfiguration(tfMap map[string]interface{}) *emrserverless.ImageConfigurationInput_ {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &emrserverless.ImageConfigurationInput_{}
+
+	if v, ok := tfMap["image_uri"].(string); ok && v != "" {
+		apiObject.ImageUri = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenImageConfiguration(apiObject *emrserverless.ImageConfiguration) []interface{} {
+	if apiObject == nil || apiObject.ImageUri == nil {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	if v := apiObject.ImageUri; v != nil {
+		tfList = append(tfList, map[string]interface{}{
+			"image_uri": aws.StringValue(v),
+		})
+	}
+
+	return tfList
 }
 
 func expandInitialCapacity(tfMap *schema.Set) map[string]*emrserverless.InitialCapacityConfig {

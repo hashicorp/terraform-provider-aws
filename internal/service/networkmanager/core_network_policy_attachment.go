@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_networkmanager_core_network_policy_attachment")
 func ResourceCoreNetworkPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCoreNetworkPolicyAttachmentCreate,
@@ -87,7 +88,8 @@ func resourceCoreNetworkPolicyAttachmentRead(ctx context.Context, d *schema.Reso
 	d.Set("state", coreNetwork.State)
 
 	// getting the policy document uses a different API call
-	coreNetworkPolicy, err := FindCoreNetworkPolicyByID(ctx, conn, d.Id())
+	// pass in latestPolicyVersionId to get the latest version id by default
+	coreNetworkPolicy, err := FindCoreNetworkPolicyByTwoPartKey(ctx, conn, d.Id(), latestPolicyVersionID)
 
 	if tfresource.NotFound(err) {
 		d.Set("policy_document", nil)

@@ -10,13 +10,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_waf_size_constraint_set")
 func ResourceSizeConstraintSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSizeConstraintSetCreate,
@@ -159,7 +160,7 @@ func FindSizeConstraintSetByID(ctx context.Context, conn *waf.WAF, id string) (*
 	output, err := conn.GetSizeConstraintSetWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

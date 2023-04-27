@@ -4,28 +4,37 @@ package conns
 import (
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
+	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	"github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
+	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
+	"github.com/aws/aws-sdk-go-v2/service/healthlake"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
+	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
+	"github.com/aws/aws-sdk-go-v2/service/oam"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/pipes"
+	"github.com/aws/aws-sdk-go-v2/service/rbin"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
+	"github.com/aws/aws-sdk-go-v2/service/securitylake"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
+	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
+	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
@@ -64,8 +73,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/aws/aws-sdk-go/service/chime"
 	"github.com/aws/aws-sdk-go/service/chimesdkidentity"
+	"github.com/aws/aws-sdk-go/service/chimesdkmediapipelines"
 	"github.com/aws/aws-sdk-go/service/chimesdkmeetings"
 	"github.com/aws/aws-sdk-go/service/chimesdkmessaging"
+	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
 	"github.com/aws/aws-sdk-go/service/cloud9"
 	"github.com/aws/aws-sdk-go/service/clouddirectory"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
@@ -152,11 +163,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/groundstation"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/aws/aws-sdk-go/service/health"
-	"github.com/aws/aws-sdk-go/service/healthlake"
 	"github.com/aws/aws-sdk-go/service/honeycode"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/aws/aws-sdk-go/service/inspector"
+	"github.com/aws/aws-sdk-go/service/internetmonitor"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/aws/aws-sdk-go/service/iot1clickdevicesservice"
 	"github.com/aws/aws-sdk-go/service/iot1clickprojects"
@@ -249,7 +260,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/rdsdataservice"
-	"github.com/aws/aws-sdk-go/service/recyclebin"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/redshiftdataapiservice"
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
@@ -284,7 +294,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/aws/aws-sdk-go/service/ssmcontacts"
 	"github.com/aws/aws-sdk-go/service/sso"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/aws/aws-sdk-go/service/ssooidc"
@@ -351,8 +360,10 @@ func (c *Config) sdkv1Conns(client *AWSClient, sess *session.Session) {
 	client.curConn = costandusagereportservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CUR])}))
 	client.chimeConn = chime.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Chime])}))
 	client.chimesdkidentityConn = chimesdkidentity.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ChimeSDKIdentity])}))
+	client.chimesdkmediapipelinesConn = chimesdkmediapipelines.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ChimeSDKMediaPipelines])}))
 	client.chimesdkmeetingsConn = chimesdkmeetings.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ChimeSDKMeetings])}))
 	client.chimesdkmessagingConn = chimesdkmessaging.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ChimeSDKMessaging])}))
+	client.chimesdkvoiceConn = chimesdkvoice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ChimeSDKVoice])}))
 	client.cloud9Conn = cloud9.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Cloud9])}))
 	client.clouddirectoryConn = clouddirectory.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CloudDirectory])}))
 	client.cloudformationConn = cloudformation.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CloudFormation])}))
@@ -436,12 +447,12 @@ func (c *Config) sdkv1Conns(client *AWSClient, sess *session.Session) {
 	client.groundstationConn = groundstation.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.GroundStation])}))
 	client.guarddutyConn = guardduty.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.GuardDuty])}))
 	client.healthConn = health.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Health])}))
-	client.healthlakeConn = healthlake.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.HealthLake])}))
 	client.honeycodeConn = honeycode.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Honeycode])}))
 	client.iamConn = iam.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.IAM])}))
 	client.ivsConn = ivs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.IVS])}))
 	client.imagebuilderConn = imagebuilder.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ImageBuilder])}))
 	client.inspectorConn = inspector.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Inspector])}))
+	client.internetmonitorConn = internetmonitor.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.InternetMonitor])}))
 	client.iotConn = iot.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.IoT])}))
 	client.iot1clickdevicesConn = iot1clickdevicesservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.IoT1ClickDevices])}))
 	client.iot1clickprojectsConn = iot1clickprojects.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.IoT1ClickProjects])}))
@@ -530,7 +541,6 @@ func (c *Config) sdkv1Conns(client *AWSClient, sess *session.Session) {
 	client.qldbsessionConn = qldbsession.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.QLDBSession])}))
 	client.quicksightConn = quicksight.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.QuickSight])}))
 	client.ramConn = ram.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.RAM])}))
-	client.rbinConn = recyclebin.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.RBin])}))
 	client.rdsConn = rds.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.RDS])}))
 	client.rdsdataConn = rdsdataservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.RDSData])}))
 	client.rumConn = cloudwatchrum.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.RUM])}))
@@ -552,7 +562,6 @@ func (c *Config) sdkv1Conns(client *AWSClient, sess *session.Session) {
 	client.snsConn = sns.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SNS])}))
 	client.sqsConn = sqs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SQS])}))
 	client.ssmConn = ssm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SSM])}))
-	client.ssmcontactsConn = ssmcontacts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SSMContacts])}))
 	client.ssoConn = sso.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SSO])}))
 	client.ssoadminConn = ssoadmin.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SSOAdmin])}))
 	client.ssooidcConn = ssooidc.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SSOOIDC])}))
@@ -606,6 +615,11 @@ func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
 			o.EndpointResolver = auditmanager.EndpointResolverFromURL(endpoint)
 		}
 	})
+	client.cleanroomsClient = cleanrooms.NewFromConfig(cfg, func(o *cleanrooms.Options) {
+		if endpoint := c.Endpoints[names.CleanRooms]; endpoint != "" {
+			o.EndpointResolver = cleanrooms.EndpointResolverFromURL(endpoint)
+		}
+	})
 	client.cloudcontrolClient = cloudcontrol.NewFromConfig(cfg, func(o *cloudcontrol.Options) {
 		if endpoint := c.Endpoints[names.CloudControl]; endpoint != "" {
 			o.EndpointResolver = cloudcontrol.EndpointResolverFromURL(endpoint)
@@ -621,9 +635,19 @@ func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
 			o.EndpointResolver = computeoptimizer.EndpointResolverFromURL(endpoint)
 		}
 	})
+	client.docdbelasticClient = docdbelastic.NewFromConfig(cfg, func(o *docdbelastic.Options) {
+		if endpoint := c.Endpoints[names.DocDBElastic]; endpoint != "" {
+			o.EndpointResolver = docdbelastic.EndpointResolverFromURL(endpoint)
+		}
+	})
 	client.fisClient = fis.NewFromConfig(cfg, func(o *fis.Options) {
 		if endpoint := c.Endpoints[names.FIS]; endpoint != "" {
 			o.EndpointResolver = fis.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.healthlakeClient = healthlake.NewFromConfig(cfg, func(o *healthlake.Options) {
+		if endpoint := c.Endpoints[names.HealthLake]; endpoint != "" {
+			o.EndpointResolver = healthlake.EndpointResolverFromURL(endpoint)
 		}
 	})
 	client.ivschatClient = ivschat.NewFromConfig(cfg, func(o *ivschat.Options) {
@@ -651,6 +675,11 @@ func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
 			o.EndpointResolver = medialive.EndpointResolverFromURL(endpoint)
 		}
 	})
+	client.oamClient = oam.NewFromConfig(cfg, func(o *oam.Options) {
+		if endpoint := c.Endpoints[names.ObservabilityAccessManager]; endpoint != "" {
+			o.EndpointResolver = oam.EndpointResolverFromURL(endpoint)
+		}
+	})
 	client.opensearchserverlessClient = opensearchserverless.NewFromConfig(cfg, func(o *opensearchserverless.Options) {
 		if endpoint := c.Endpoints[names.OpenSearchServerless]; endpoint != "" {
 			o.EndpointResolver = opensearchserverless.EndpointResolverFromURL(endpoint)
@@ -659,6 +688,11 @@ func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
 	client.pipesClient = pipes.NewFromConfig(cfg, func(o *pipes.Options) {
 		if endpoint := c.Endpoints[names.Pipes]; endpoint != "" {
 			o.EndpointResolver = pipes.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.rbinClient = rbin.NewFromConfig(cfg, func(o *rbin.Options) {
+		if endpoint := c.Endpoints[names.RBin]; endpoint != "" {
+			o.EndpointResolver = rbin.EndpointResolverFromURL(endpoint)
 		}
 	})
 	client.resourceexplorer2Client = resourceexplorer2.NewFromConfig(cfg, func(o *resourceexplorer2.Options) {
@@ -676,6 +710,11 @@ func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
 			o.EndpointResolver = sesv2.EndpointResolverFromURL(endpoint)
 		}
 	})
+	client.ssmcontactsClient = ssmcontacts.NewFromConfig(cfg, func(o *ssmcontacts.Options) {
+		if endpoint := c.Endpoints[names.SSMContacts]; endpoint != "" {
+			o.EndpointResolver = ssmcontacts.EndpointResolverFromURL(endpoint)
+		}
+	})
 	client.ssmincidentsClient = ssmincidents.NewFromConfig(cfg, func(o *ssmincidents.Options) {
 		if endpoint := c.Endpoints[names.SSMIncidents]; endpoint != "" {
 			o.EndpointResolver = ssmincidents.EndpointResolverFromURL(endpoint)
@@ -686,9 +725,19 @@ func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
 			o.EndpointResolver = scheduler.EndpointResolverFromURL(endpoint)
 		}
 	})
+	client.securitylakeClient = securitylake.NewFromConfig(cfg, func(o *securitylake.Options) {
+		if endpoint := c.Endpoints[names.SecurityLake]; endpoint != "" {
+			o.EndpointResolver = securitylake.EndpointResolverFromURL(endpoint)
+		}
+	})
 	client.transcribeClient = transcribe.NewFromConfig(cfg, func(o *transcribe.Options) {
 		if endpoint := c.Endpoints[names.Transcribe]; endpoint != "" {
 			o.EndpointResolver = transcribe.EndpointResolverFromURL(endpoint)
+		}
+	})
+	client.vpclatticeClient = vpclattice.NewFromConfig(cfg, func(o *vpclattice.Options) {
+		if endpoint := c.Endpoints[names.VPCLattice]; endpoint != "" {
+			o.EndpointResolver = vpclattice.EndpointResolverFromURL(endpoint)
 		}
 	})
 }
@@ -699,6 +748,13 @@ func (c *Config) sdkv2LazyConns(client *AWSClient, cfg aws_sdkv2.Config) {
 		return ec2_sdkv2.NewFromConfig(cfg, func(o *ec2_sdkv2.Options) {
 			if endpoint := c.Endpoints[names.EC2]; endpoint != "" {
 				o.EndpointResolver = ec2_sdkv2.EndpointResolverFromURL(endpoint)
+			}
+		})
+	})
+	client.lambdaClient.init(&cfg, func() *lambda_sdkv2.Client {
+		return lambda_sdkv2.NewFromConfig(cfg, func(o *lambda_sdkv2.Options) {
+			if endpoint := c.Endpoints[names.Lambda]; endpoint != "" {
+				o.EndpointResolver = lambda_sdkv2.EndpointResolverFromURL(endpoint)
 			}
 		})
 	})

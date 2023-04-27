@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_config_organization_custom_rule")
 func ResourceOrganizationCustomRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationCustomRuleCreate,
@@ -212,6 +213,10 @@ func resourceOrganizationCustomRuleRead(ctx context.Context, d *schema.ResourceD
 
 	if d.IsNewResource() && rule == nil {
 		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameOrganizationCustomRule, d.Id(), errors.New("empty rule after creation"))
+	}
+
+	if rule.OrganizationCustomPolicyRuleMetadata != nil {
+		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameOrganizationCustomRule, d.Id(), errors.New("expected Organization Custom Rule, found Organization Custom Policy Rule"))
 	}
 
 	if rule.OrganizationManagedRuleMetadata != nil {
