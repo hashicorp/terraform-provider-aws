@@ -21,7 +21,7 @@ func ResourcePrimaryContact() *schema.Resource {
 		CreateWithoutTimeout: resourcePrimaryContactCreate,
 		ReadWithoutTimeout:   resourcePrimaryContactRead,
 		UpdateWithoutTimeout: resourcePrimaryContactUpdate,
-		DeleteWithoutTimeout: resourcePrimaryContactDelete,
+		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -162,12 +162,6 @@ func resourcePrimaryContactUpdate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	return resourcePrimaryContactRead(ctx, d, meta)
-}
-
-func resourcePrimaryContactDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// this resource cannot be deleted
-
-	return nil
 }
 
 func putContactInformationFromSchema(d *schema.ResourceData) *account.PutContactInformationInput {
