@@ -27,7 +27,7 @@ resource "aws_chime_voice_connector_streaming" "default" {
 }
 ```
 
-### Example usage with media insights
+### Example Usage With Media Insights
 
 ```terraform
 resource "aws_chime_voice_connector" "default" {
@@ -96,9 +96,12 @@ The following arguments are supported:
 * `data_retention`  - (Required) The retention period, in hours, for the Amazon Kinesis data.
 * `disabled` - (Optional) When true, media streaming to Amazon Kinesis is turned off. Default: `false`
 * `streaming_notification_targets` - (Optional) The streaming notification targets. Valid Values: `EventBridge | SNS | SQS`
-* `media_insights_configuration` - (Optional) The media insights configuration.
-    * `disabled` - (Optional) When true, the media insights configuration is not enabled. Default: `false`
-    * `configuration_arn` - (Optional) The media insights configuration that will be invoked by the Voice Connector.
+* `media_insights_configuration` - (Optional) The media insights configuration. See [`media_insights_configuration`](#media_insights_configuration).
+
+### media_insights_configuration
+
+* `disabled` - (Optional) When `true`, the media insights configuration is not enabled. Defaults to `false`.
+* `configuration_arn` - (Optional) The media insights configuration that will be invoked by the Voice Connector.
 
 ## Attributes Reference
 
