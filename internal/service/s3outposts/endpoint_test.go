@@ -13,11 +13,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3outposts "github.com/hashicorp/terraform-provider-aws/internal/service/s3outposts"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccS3OutpostsEndpoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3outposts_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rInt := sdkacctest.RandIntRange(0, 255)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -27,7 +29,7 @@ func TestAccS3OutpostsEndpoint_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig_basic(rInt),
+				Config: testAccEndpointConfig_basic(rName, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "s3-outposts", regexp.MustCompile(`outpost/[^/]+/endpoint/[a-z0-9]+`)),
@@ -53,6 +55,7 @@ func TestAccS3OutpostsEndpoint_basic(t *testing.T) {
 func TestAccS3OutpostsEndpoint_private(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3outposts_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rInt := sdkacctest.RandIntRange(0, 255)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -62,7 +65,7 @@ func TestAccS3OutpostsEndpoint_private(t *testing.T) {
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointPrivateConfig(rInt),
+				Config: testAccEndpointConfig_private(rName, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "s3-outposts", regexp.MustCompile(`outpost/[^/]+/endpoint/[a-z0-9]+`)),
@@ -88,6 +91,7 @@ func TestAccS3OutpostsEndpoint_private(t *testing.T) {
 func TestAccS3OutpostsEndpoint_customerOwnedIPv4Pool(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3outposts_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rInt := sdkacctest.RandIntRange(0, 255)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -97,7 +101,7 @@ func TestAccS3OutpostsEndpoint_customerOwnedIPv4Pool(t *testing.T) {
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointCustomerOwnedIPv4PoolConfig(rInt),
+				Config: testAccEndpointConfig_customerOwnedIPv4Pool(rName, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "s3-outposts", regexp.MustCompile(`outpost/[^/]+/endpoint/[a-z0-9]+`)),
@@ -124,6 +128,7 @@ func TestAccS3OutpostsEndpoint_customerOwnedIPv4Pool(t *testing.T) {
 func TestAccS3OutpostsEndpoint_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3outposts_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rInt := sdkacctest.RandIntRange(0, 255)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -133,7 +138,7 @@ func TestAccS3OutpostsEndpoint_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig_basic(rInt),
+				Config: testAccEndpointConfig_basic(rName, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3outposts.ResourceEndpoint(), resourceName),
@@ -153,45 +158,38 @@ func testAccCheckEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			endpoint, err := tfs3outposts.FindEndpoint(ctx, conn, rs.Primary.ID)
+			_, err := tfs3outposts.FindEndpointByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
 
 			if err != nil {
 				return err
 			}
 
-			if endpoint != nil {
-				return fmt.Errorf("S3 Outposts Endpoint (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("S3 Outposts Endpoint %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckEndpointExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckEndpointExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no resource ID is set")
+			return fmt.Errorf("No S3 Outposts Endpoint ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3OutpostsConn()
 
-		endpoint, err := tfs3outposts.FindEndpoint(ctx, conn, rs.Primary.ID)
+		_, err := tfs3outposts.FindEndpointByARN(ctx, conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		if endpoint == nil {
-			return fmt.Errorf("S3 Outposts Endpoint (%s) not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -206,7 +204,7 @@ func testAccEndpointImportStateIdFunc(resourceName string) resource.ImportStateI
 	}
 }
 
-func testAccEndpointConfig_basic(rInt int) string {
+func testAccEndpointConfig_base(rName string, rInt int) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
@@ -215,11 +213,20 @@ data "aws_outposts_outpost" "test" {
 }
 
 resource "aws_vpc" "test" {
-  cidr_block = "10.%[1]d.0.0/16"
+  cidr_block = "10.%[2]d.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group" "test" {
+  name   = %[1]q
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_subnet" "test" {
@@ -227,80 +234,50 @@ resource "aws_subnet" "test" {
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
   outpost_arn       = data.aws_outposts_outpost.test.arn
   vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, rInt)
 }
 
+func testAccEndpointConfig_basic(rName string, rInt int) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_base(rName, rInt), `
 resource "aws_s3outposts_endpoint" "test" {
   outpost_id        = data.aws_outposts_outpost.test.id
   security_group_id = aws_security_group.test.id
   subnet_id         = aws_subnet.test.id
 }
-`, rInt)
+`)
 }
 
-func testAccEndpointPrivateConfig(rInt int) string {
-	return fmt.Sprintf(`
-data "aws_outposts_outposts" "test" {}
-
-data "aws_outposts_outpost" "test" {
-  id = tolist(data.aws_outposts_outposts.test.ids)[0]
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.%[1]d.0.0/16"
-}
-
-resource "aws_security_group" "test" {
-  vpc_id = aws_vpc.test.id
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_outposts_outpost.test.availability_zone
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
-  outpost_arn       = data.aws_outposts_outpost.test.arn
-  vpc_id            = aws_vpc.test.id
-}
-
+func testAccEndpointConfig_private(rName string, rInt int) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_base(rName, rInt), `
 resource "aws_s3outposts_endpoint" "test" {
   outpost_id        = data.aws_outposts_outpost.test.id
   security_group_id = aws_security_group.test.id
   subnet_id         = aws_subnet.test.id
   access_type       = "Private"
 }
-`, rInt)
+`)
 }
 
-func testAccEndpointCustomerOwnedIPv4PoolConfig(rInt int) string {
-	return fmt.Sprintf(`
-data "aws_outposts_outposts" "test" {}
-
-data "aws_outposts_outpost" "test" {
-  id = tolist(data.aws_outposts_outposts.test.ids)[0]
-}
-
+func testAccEndpointConfig_customerOwnedIPv4Pool(rName string, rInt int) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_base(rName, rInt), fmt.Sprintf(`
 data "aws_ec2_coip_pools" "test" {}
 
 data "aws_ec2_local_gateway_route_table" "test" {
   outpost_arn = data.aws_outposts_outpost.test.arn
 }
 
-resource "aws_vpc" "test" {
-  cidr_block = "10.%[1]d.0.0/16"
-}
-
 resource "aws_ec2_local_gateway_route_table_vpc_association" "test" {
   local_gateway_route_table_id = data.aws_ec2_local_gateway_route_table.test.id
   vpc_id                       = aws_vpc.test.id
-}
 
-resource "aws_security_group" "test" {
-  vpc_id = aws_vpc.test.id
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_outposts_outpost.test.availability_zone
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
-  outpost_arn       = data.aws_outposts_outpost.test.arn
-  vpc_id            = aws_vpc.test.id
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_s3outposts_endpoint" "test" {
@@ -311,5 +288,5 @@ resource "aws_s3outposts_endpoint" "test" {
   access_type              = "CustomerOwnedIp"
   customer_owned_ipv4_pool = tolist(data.aws_ec2_coip_pools.test.pool_ids)[0]
 }
-`, rInt)
+`, rName))
 }
