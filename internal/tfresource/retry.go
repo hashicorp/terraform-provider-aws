@@ -18,7 +18,7 @@ import (
 // If the error is not retryable, returns a bool value of `false` and either no error (success state) or an error (not necessarily the error passed as the argument).
 type Retryable func(error) (bool, error)
 
-// RetryWhen retries the function `f` when the error it returns satisfies `predicate`.
+// RetryWhen retries the function `f` when the error it returns satisfies `retryable`.
 // `f` is retried until `timeout` expires.
 func RetryWhen(ctx context.Context, timeout time.Duration, f func() (interface{}, error), retryable Retryable) (interface{}, error) {
 	var output interface{}
@@ -110,6 +110,51 @@ func RetryWhenNotFound(ctx context.Context, timeout time.Duration, f func() (int
 
 		return false, err
 	})
+}
+
+// RetryWhenNotFoundN retries the specified function when it returns a retry.NotFoundError.
+// The function must return success continuousTargetOccurence times in a row.
+func RetryWhenNotFoundN[T any](ctx context.Context, timeout time.Duration, f func() (T, error), continuousTargetOccurence int) (T, error) {
+	return RetryIf(ctx, timeout, f, func(_ T, err error) (bool, error) {
+		if NotFound(err) {
+			return true, err
+		}
+
+		return false, err
+	}, WithContinuousTargetOccurence(continuousTargetOccurence))
+}
+
+func RetryIf[T any](ctx context.Context, timeout time.Duration, f func() (T, error), predicate func(T, error) (bool, error), optFns ...OptionsFunc) (T, error) {
+	var output T
+
+	err := Retry(ctx, timeout, func() *retry.RetryError {
+		var err error
+		var again bool
+
+		output, err = f()
+		again, err = predicate(output, err)
+
+		if again {
+			return retry.RetryableError(err)
+		}
+
+		if err != nil {
+			return retry.NonRetryableError(err)
+		}
+
+		return nil
+	}, optFns...)
+
+	if TimedOut(err) {
+		output, err = f()
+	}
+
+	if err != nil {
+		var zero T
+		return zero, err
+	}
+
+	return output, nil
 }
 
 // RetryWhenNewResourceNotFound retries the specified function when it returns a retry.NotFoundError and `isNewResource` is true.
