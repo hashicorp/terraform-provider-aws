@@ -43,7 +43,7 @@ In addition to all arguments above, the following attributes are exported:
 * `min_storage_size` - Minimum storage size for a DB instance.
 * `multi_az_capable` - Whether a DB instance is Multi-AZ capable.
 * `read_replica_capable` - Whether a DB instance can have a read replica.
-* `storage_type` - The storage type for a DB instance.
+* `storage_type` - Storage type for a DB instance.
 * `supports_enhanced_monitoring` - Whether a DB instance supports Enhanced Monitoring at intervals from 1 to 60 seconds.
 * `supports_iam_database_authentication` - Whether a DB instance supports IAM database authentication.
 * `supports_iops` - Whether a DB instance supports provisioned IOPS.

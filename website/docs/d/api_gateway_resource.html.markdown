@@ -26,8 +26,8 @@ data "aws_api_gateway_resource" "my_resource" {
 
 ## Argument Reference
 
-* `rest_api_id` - (Required) The REST API id that owns the resource. If no REST API is found, an error will be returned.
-* `path` - (Required) The full path of the resource.  If no path is found, an error will be returned.
+* `rest_api_id` - (Required) REST API id that owns the resource. If no REST API is found, an error will be returned.
+* `path` - (Required) Full path of the resource.  If no path is found, an error will be returned.
 
 ## Attributes Reference
 

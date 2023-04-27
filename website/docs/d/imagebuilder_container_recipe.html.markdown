@@ -22,14 +22,14 @@ data "aws_imagebuilder_container_recipe" "example" {
 
 The following arguments are required:
 
-* `arn` - (Required) Amazon Resource Name (ARN) of the container recipe.
+* `arn` - (Required) ARN of the container recipe.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `component` - List of objects with components for the container recipe.
-    * `component_arn` - Amazon Resource Name (ARN) of the Image Builder Component.
+    * `component_arn` - ARN of the Image Builder Component.
     * `parameter` - Set of parameters that are used to configure the component.
         * `name` - Name of the component parameter.
         * `value` - Value of the component parameter.
@@ -45,7 +45,7 @@ In addition to all arguments above, the following attributes are exported:
             * `delete_on_termination` - Whether to delete the volume on termination. Defaults to unset, which is the value inherited from the parent image.
             * `encrypted` - Whether to encrypt the volume. Defaults to unset, which is the value inherited from the parent image.
             * `iops` - Number of Input/Output (I/O) operations per second to provision for an `io1` or `io2` volume.
-            * `kms_key_id` - Amazon Resource Name (ARN) of the Key Management Service (KMS) Key for encryption.
+            * `kms_key_id` - ARN of the Key Management Service (KMS) Key for encryption.
             * `snapshot_id` - Identifier of the EC2 Volume Snapshot.
             * `throughput` - For GP3 volumes only. The throughput in MiB/s that the volume supports.
             * `volume_size` - Size of the volume, in GiB.
@@ -63,4 +63,4 @@ In addition to all arguments above, the following attributes are exported:
     * `repository_name` - Name of the container repository where the output container image is stored. The name is prefixed by the repository location.
     * `service` - Service in which this image is registered.
 * `version` - Version of the container recipe.
-* `working_directory` - The working directory used during build and test workflows.
+* `working_directory` - Working directory used during build and test workflows.

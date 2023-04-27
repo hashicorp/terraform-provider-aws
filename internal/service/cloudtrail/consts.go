@@ -1,6 +1,8 @@
 package cloudtrail
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	ResNameTrail = "Trail"

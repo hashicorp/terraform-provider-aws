@@ -21,44 +21,37 @@ resource "aws_transfer_server" "foo" {
   }
 }
 
-resource "aws_iam_role" "foo" {
-  name = "tf-test-transfer-user-iam-role"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-		"Effect": "Allow",
-		"Principal": {
-			"Service": "transfer.amazonaws.com"
-		},
-		"Action": "sts:AssumeRole"
-		}
-	]
+    principals {
+      type        = "Service"
+      identifiers = ["transfer.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-EOF
+
+resource "aws_iam_role" "foo" {
+  name               = "tf-test-transfer-user-iam-role"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "foo" {
+  statement {
+    sid       = "AllowFullAccesstoS3"
+    effect    = "Allow"
+    actions   = ["s3:*"]
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_role_policy" "foo" {
-  name = "tf-test-transfer-user-iam-policy"
-  role = aws_iam_role.foo.id
-
-  policy = <<POLICY
-{
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Sid": "AllowFullAccesstoS3",
-			"Effect": "Allow",
-			"Action": [
-				"s3:*"
-			],
-			"Resource": "*"
-		}
-	]
-}
-POLICY
+  name   = "tf-test-transfer-user-iam-policy"
+  role   = aws_iam_role.foo.id
+  policy = data.aws_iam_role_policy.foo.json
 }
 
 resource "aws_transfer_user" "foo" {
@@ -88,7 +81,6 @@ The following arguments are supported:
 * `role` - (Required) Amazon Resource Name (ARN) of an IAM role that allows the service to controls your user’s access to your Amazon S3 bucket.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-
 ### Home Directory Mappings
 
 * `entry` - (Required) Represents an entry and a target.
@@ -110,10 +102,17 @@ home_directory_mappings {
 * `secondary_gids` - (Optional) The secondary POSIX group IDs used for all EFS operations by this user.
 
 ## Attributes Reference
+
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of Transfer User
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `delete` - (Default `10m`)
 
 ## Import
 

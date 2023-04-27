@@ -67,7 +67,7 @@ resource "aws_cognito_user" "example" {
 The following arguments are required:
 
 * `user_pool_id` - (Required) The user pool ID for the user pool where the user will be created.
-* `user_name` - (Required) The username for the user. Must be unique within the user pool. Must be a UTF-8 string between 1 and 128 characters. After the user is created, the username cannot be changed.
+* `username` - (Required) The username for the user. Must be unique within the user pool. Must be a UTF-8 string between 1 and 128 characters. After the user is created, the username cannot be changed.
 
 The following arguments are optional:
 

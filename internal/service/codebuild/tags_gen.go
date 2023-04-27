@@ -2,9 +2,12 @@
 package codebuild
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // []*SERVICE.Tag handling
@@ -26,12 +29,31 @@ func Tags(tags tftags.KeyValueTags) []*codebuild.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from codebuild service tags.
-func KeyValueTags(tags []*codebuild.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []*codebuild.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
 		m[aws.StringValue(tag.Key)] = tag.Value
 	}
 
-	return tftags.New(m)
+	return tftags.New(ctx, m)
+}
+
+// GetTagsIn returns codebuild service tags from Context.
+// nil is returned if there are no input tags.
+func GetTagsIn(ctx context.Context) []*codebuild.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// SetTagsOut sets codebuild service tags in Context.
+func SetTagsOut(ctx context.Context, tags []*codebuild.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+	}
 }

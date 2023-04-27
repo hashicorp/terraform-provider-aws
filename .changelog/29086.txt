@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dynamodb_table: Fix unexpected state 'DISABLED' error when waiting for PITR to update
+```

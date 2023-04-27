@@ -1,16 +1,19 @@
 package autoscaling
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_launch_configuration")
 func DataSourceLaunchConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceLaunchConfigurationRead,
+		ReadWithoutTimeout: dataSourceLaunchConfigurationRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -179,27 +182,30 @@ func DataSourceLaunchConfiguration() *schema.Resource {
 				Computed: true,
 			},
 			"vpc_classic_link_id": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: `With the retirement of EC2-Classic the vpc_classic_link_id attribute has been deprecated and will be removed in a future version.`,
 			},
 			"vpc_classic_link_security_groups": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:       schema.TypeSet,
+				Computed:   true,
+				Elem:       &schema.Schema{Type: schema.TypeString},
+				Deprecated: `With the retirement of EC2-Classic the vpc_classic_link_security_groups attribute has been deprecated and will be removed in a future version.`,
 			},
 		},
 	}
 }
 
-func dataSourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn
-	ec2conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn()
+	ec2conn := meta.(*conns.AWSClient).EC2Conn()
 
 	name := d.Get("name").(string)
-	lc, err := FindLaunchConfigurationByName(autoscalingconn, name)
+	lc, err := FindLaunchConfigurationByName(ctx, autoscalingconn, name)
 
 	if err != nil {
-		return fmt.Errorf("reading Auto Scaling Launch Configuration (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Launch Configuration (%s): %s", name, err)
 	}
 
 	d.SetId(name)
@@ -218,7 +224,7 @@ func dataSourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{})
 	d.Set("key_name", lc.KeyName)
 	if lc.MetadataOptions != nil {
 		if err := d.Set("metadata_options", []interface{}{flattenInstanceMetadataOptions(lc.MetadataOptions)}); err != nil {
-			return fmt.Errorf("setting metadata_options: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting metadata_options: %s", err)
 		}
 	} else {
 		d.Set("metadata_options", nil)
@@ -231,23 +237,23 @@ func dataSourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{})
 	d.Set("vpc_classic_link_id", lc.ClassicLinkVPCId)
 	d.Set("vpc_classic_link_security_groups", aws.StringValueSlice(lc.ClassicLinkVPCSecurityGroups))
 
-	rootDeviceName, err := findImageRootDeviceName(ec2conn, d.Get("image_id").(string))
+	rootDeviceName, err := findImageRootDeviceName(ctx, ec2conn, d.Get("image_id").(string))
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Launch Configuration (%s): %s", name, err)
 	}
 
 	tfListEBSBlockDevice, tfListEphemeralBlockDevice, tfListRootBlockDevice := flattenBlockDeviceMappings(lc.BlockDeviceMappings, rootDeviceName, map[string]map[string]interface{}{})
 
 	if err := d.Set("ebs_block_device", tfListEBSBlockDevice); err != nil {
-		return fmt.Errorf("setting ebs_block_device: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting ebs_block_device: %s", err)
 	}
 	if err := d.Set("ephemeral_block_device", tfListEphemeralBlockDevice); err != nil {
-		return fmt.Errorf("setting ephemeral_block_device: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting ephemeral_block_device: %s", err)
 	}
 	if err := d.Set("root_block_device", tfListRootBlockDevice); err != nil {
-		return fmt.Errorf("setting root_block_device: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting root_block_device: %s", err)
 	}
 
-	return nil
+	return diags
 }

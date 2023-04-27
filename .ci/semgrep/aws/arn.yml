@@ -1,0 +1,10 @@
+rules:
+  - id: prefer-isarn-to-stringshasprefix
+    languages: [go]
+    message: Prefer `aws.IsARN` to `strings.HasPrefix`
+    patterns:
+      - pattern: strings.HasPrefix($STR, $ARN)
+      - metavariable-regex:
+          metavariable: $ARN
+          regex: ^\"arn:[^"]*\"$
+    severity: WARNING
