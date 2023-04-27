@@ -683,6 +683,6 @@ resource "aws_docdb_cluster_instance" "cluster_instances" {
   copy_tags_to_snapshot = %[2]t
   instance_class        = data.aws_docdb_orderable_db_instance.test.instance_class
   promotion_tier        = "3"
-} 
+}
 `, rName, flag))
 }
