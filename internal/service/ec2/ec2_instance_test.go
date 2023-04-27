@@ -5008,10 +5008,12 @@ func TestInstanceCPUCoreCountSchema(t *testing.T) {
 
 	actualSchema := tfec2.ResourceInstance().Schema["cpu_core_count"]
 	expectedSchema := &schema.Schema{
-		Type:     schema.TypeInt,
-		Optional: true,
-		Computed: true,
-		ForceNew: true,
+		Type:          schema.TypeInt,
+		Optional:      true,
+		Computed:      true,
+		ForceNew:      true,
+		Deprecated:    "use 'cpu_options' argument instead",
+		ConflictsWith: []string{"cpu_options.0.core_count"},
 	}
 	if !reflect.DeepEqual(actualSchema, expectedSchema) {
 		t.Fatalf(
