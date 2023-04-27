@@ -92,7 +92,7 @@ func resourceVoiceConnectorStreamingCreate(ctx context.Context, d *schema.Resour
 		config.StreamingNotificationTargets = expandStreamingNotificationTargets(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("media_insights_configuration"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk("media_insights_configuration"); ok && len(v.([]interface{})) > 0 {
 		config.MediaInsightsConfiguration = expandMediaInsightsConfiguration(v.([]interface{}))
 	}
 
@@ -209,20 +209,17 @@ func expandStreamingNotificationTargets(data []interface{}) []*chimesdkvoice.Str
 	return streamingTargets
 }
 
-func expandMediaInsightsConfiguration(data []interface{}) *chimesdkvoice.MediaInsightsConfiguration {
-	if data == nil {
+func expandMediaInsightsConfiguration(tfList []interface{}) *chimesdkvoice.MediaInsightsConfiguration {
+	if len(tfList) == 0 {
 		return nil
 	}
-	mediaInsightsConfiguration := &chimesdkvoice.MediaInsightsConfiguration{}
+	tfMap := tfList[0].(map[string]interface{})
 
-	if len(data) != 1 {
-		return nil
-	}
-	tfMediaInsightsConfiguration := data[0].(map[string]interface{})
-	if v, ok := tfMediaInsightsConfiguration["disabled"]; ok {
+	mediaInsightsConfiguration := &chimesdkvoice.MediaInsightsConfiguration{}
+	if v, ok := tfMap["disabled"]; ok {
 		mediaInsightsConfiguration.Disabled = aws.Bool(v.(bool))
 	}
-	if v, ok := tfMediaInsightsConfiguration["configuration_arn"]; ok {
+	if v, ok := tfMap["configuration_arn"]; ok {
 		mediaInsightsConfiguration.ConfigurationArn = aws.String(v.(string))
 	}
 	return mediaInsightsConfiguration
@@ -242,9 +239,11 @@ func flattenMediaInsightsConfiguration(mediaInsightsConfiguration *chimesdkvoice
 	if mediaInsightsConfiguration == nil {
 		return nil
 	}
-	tfConfig := map[string]interface{}{}
-	tfConfig["disabled"] = mediaInsightsConfiguration.Disabled
-	tfConfig["configuration_arn"] = mediaInsightsConfiguration.ConfigurationArn
 
-	return []interface{}{tfConfig}
+	tfMap := map[string]interface{}{
+		"disabled":          mediaInsightsConfiguration.Disabled,
+		"configuration_arn": mediaInsightsConfiguration.ConfigurationArn,
+	}
+
+	return []interface{}{tfMap}
 }
