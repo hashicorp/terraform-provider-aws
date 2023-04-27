@@ -157,14 +157,14 @@ func TestAccElastiCacheReplicationGroupDataSource_Engine_Redis_LogDeliveryConfig
 func testAccReplicationGroupDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigAvailableAZsNoOptIn() + fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
-  replication_group_id       = %[1]q
-  description                = "test description"
-  node_type                  = "cache.t3.small"
-  num_cache_clusters         = 2
-  port                       = 6379
-  availability_zones         = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
-  automatic_failover_enabled = true
-  snapshot_window            = "01:00-02:00"
+  replication_group_id        = %[1]q
+  description                 = "test description"
+  node_type                   = "cache.t3.small"
+  num_cache_clusters          = 2
+  port                        = 6379
+  preferred_cache_cluster_azs = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
+  automatic_failover_enabled  = true
+  snapshot_window             = "01:00-02:00"
 }
 
 data "aws_elasticache_replication_group" "test" {
