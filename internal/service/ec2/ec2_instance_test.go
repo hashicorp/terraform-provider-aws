@@ -3672,6 +3672,55 @@ func TestAccEC2Instance_cpuOptionsCoreThreads(t *testing.T) {
 	})
 }
 
+func TestAccEC2Instance_cpuOptionsCoreThreadsMigration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	coreCount := 2
+	threadsPerCore := 2
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_cpuOptionsCoreThreadsDeprecated(rName, coreCount, threadsPerCore),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(coreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(threadsPerCore)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(coreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_threads_per_core", strconv.Itoa(threadsPerCore)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+			{
+				// EC2 instance should not be recreated
+				Config: testAccInstanceConfig_cpuOptionsCoreThreads(rName, coreCount, threadsPerCore),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v2),
+					testAccCheckInstanceNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(coreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(threadsPerCore)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(coreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_threads_per_core", strconv.Itoa(threadsPerCore)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_CreditSpecificationEmpty_nonBurstable(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.Instance
@@ -7625,6 +7674,27 @@ resource "aws_instance" "test" {
     core_count       = %[2]d
     threads_per_core = %[3]d
   }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, coreCount, threadsPerCore))
+}
+
+func testAccInstanceConfig_cpuOptionsCoreThreadsDeprecated(rName string, coreCount, threadsPerCore int) string {
+	return acctest.ConfigCompose(
+		testAccInstanceVPCConfig(rName, false, 0),
+		testAccLatestAmazonLinux2023AMIConfig(),
+		acctest.AvailableEC2InstanceTypeForRegion("c6a.2xlarge", "m6a.2xlarge"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-linux-2023-ami.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  cpu_core_count       = %[2]d
+  cpu_threads_per_core = %[3]d
 
   tags = {
     Name = %[1]q
