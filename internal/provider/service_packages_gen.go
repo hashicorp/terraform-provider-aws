@@ -128,7 +128,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/location"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/logs"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/macie"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconvert"
@@ -335,7 +334,6 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		lightsail.ServicePackage,
 		location.ServicePackage,
 		logs.ServicePackage,
-		macie.ServicePackage,
 		macie2.ServicePackage,
 		mediaconnect.ServicePackage,
 		mediaconvert.ServicePackage,
