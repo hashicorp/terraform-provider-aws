@@ -1027,7 +1027,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("cpu_threads_per_core", v.ThreadsPerCore)
 	}
 
-	if err := d.Set("cpu_options", flattenCpuOptions(instance.CpuOptions)); err != nil {
+	if err := d.Set("cpu_options", flattenCPUOptions(instance.CpuOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cpu_options: %s", err)
 	}
 
@@ -2724,7 +2724,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("cpu_options"); ok {
-		opts.CpuOptions = expandCpuOptions(v.([]interface{}))
+		opts.CpuOptions = expandCPUOptions(v.([]interface{}))
 	} else if v := d.Get("cpu_core_count").(int); v > 0 {
 		// preserved to maintain backward compatibility
 		tc := d.Get("cpu_threads_per_core").(int)
@@ -2983,7 +2983,7 @@ func expandInstanceMetadataOptions(l []interface{}) *ec2.InstanceMetadataOptions
 	return opts
 }
 
-func expandCpuOptions(l []interface{}) *ec2.CpuOptionsRequest {
+func expandCPUOptions(l []interface{}) *ec2.CpuOptionsRequest {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -3050,7 +3050,7 @@ func flattenInstanceMetadataOptions(opts *ec2.InstanceMetadataOptionsResponse) [
 	return []interface{}{m}
 }
 
-func flattenCpuOptions(opts *ec2.CpuOptions) []interface{} {
+func flattenCPUOptions(opts *ec2.CpuOptions) []interface{} {
 	if opts == nil {
 		return nil
 	}
