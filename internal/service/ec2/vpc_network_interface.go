@@ -412,8 +412,7 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 
 	// If IPv4 or IPv6 prefixes are specified, tag after create.
 	// Otherwise "An error occurred (InternalError) when calling the CreateNetworkInterface operation".
-	tags := KeyValueTags(ctx, GetTagsIn(ctx))
-	if len(tags) > 0 && !(ipv4PrefixesSpecified || ipv6PrefixesSpecified) {
+	if !(ipv4PrefixesSpecified || ipv6PrefixesSpecified) {
 		input.TagSpecifications = getTagSpecificationsIn(ctx, ec2.ResourceTypeNetworkInterface)
 	}
 
@@ -450,9 +449,9 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if len(tags) > 0 && (ipv4PrefixesSpecified || ipv6PrefixesSpecified) {
-		if err := UpdateTags(ctx, conn, d.Id(), nil, tags); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 Network Interface (%s) tags: %s", d.Id(), err)
+	if ipv4PrefixesSpecified || ipv6PrefixesSpecified {
+		if err := createTags(ctx, conn, d.Id(), GetTagsIn(ctx)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting EC2 Network Interface (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -731,8 +730,8 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 		o, n := d.GetChange("ipv4_prefix_count")
 		ipv4Prefixes := d.Get("ipv4_prefixes").(*schema.Set).List()
 
-		if o != nil && n != nil && n != len(ipv4Prefixes) {
-			if diff := n.(int) - o.(int); diff > 0 {
+		if o, n := o.(int), n.(int); n != len(ipv4Prefixes) {
+			if diff := n - o; diff > 0 {
 				input := &ec2.AssignPrivateIpAddressesInput{
 					NetworkInterfaceId: aws.String(d.Id()),
 					Ipv4PrefixCount:    aws.Int64(int64(diff)),
@@ -965,8 +964,8 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 		o, n := d.GetChange("ipv6_prefix_count")
 		ipv6Prefixes := d.Get("ipv6_prefixes").(*schema.Set).List()
 
-		if o != nil && n != nil && n != len(ipv6Prefixes) {
-			if diff := n.(int) - o.(int); diff > 0 {
+		if o, n := o.(int), n.(int); n != len(ipv6Prefixes) {
+			if diff := n - o; diff > 0 {
 				input := &ec2.AssignIpv6AddressesInput{
 					NetworkInterfaceId: aws.String(d.Id()),
 					Ipv6PrefixCount:    aws.Int64(int64(diff)),

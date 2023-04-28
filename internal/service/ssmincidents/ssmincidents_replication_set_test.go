@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-// only one replication set resource can be active at once so we must have serialised tests
+// only one replication set resource can be active at once, so we must have serialised tests
 func TestAccSSMIncidentsReplicationSet_serial(t *testing.T) {
 	t.Parallel()
 

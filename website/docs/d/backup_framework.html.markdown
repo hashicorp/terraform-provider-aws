@@ -38,6 +38,7 @@ In addition to the arguments above, the following attributes are exported:
 * `tags` - Metadata that helps organize the frameworks you create.
 
 ### Control Attributes
+
 For **control** the following attributes are supported:
 
 * `input_parameter` - One or more input parameter blocks. An example of a control with two parameters is: "backup plan frequency is at least daily and the retention period is at least 1 year". The first parameter is daily. The second parameter is 1 year. Detailed below.
@@ -45,12 +46,14 @@ For **control** the following attributes are supported:
 * `scope` - Scope of a control. The control scope defines what the control will evaluate. Three examples of control scopes are: a specific backup plan, all backup plans with a specific tag, or all backup plans. Detailed below.
 
 ### Input Parameter Attributes
+
 For **input_parameter** the following attributes are supported:
 
 * `name` - Name of a parameter, for example, BackupPlanFrequency.
 * `value` - Value of parameter, for example, hourly.
 
 ### Scope Attributes
+
 For **scope** the following attributes are supported:
 
 * `compliance_resource_ids` - The ID of the only AWS resource that you want your control scope to contain.

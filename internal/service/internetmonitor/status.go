@@ -1,17 +1,17 @@
-package redshiftdata
+package internetmonitor
 
 import (
 	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/redshiftdataapiservice"
+	"github.com/aws/aws-sdk-go/service/internetmonitor"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusStatement(ctx context.Context, conn *redshiftdataapiservice.RedshiftDataAPIService, id string) retry.StateRefreshFunc {
+func statusMonitor(ctx context.Context, conn *internetmonitor.InternetMonitor, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindStatementByID(ctx, conn, id)
+		monitor, err := FindMonitor(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -21,6 +21,6 @@ func statusStatement(ctx context.Context, conn *redshiftdataapiservice.RedshiftD
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return monitor, aws.StringValue(monitor.Status), nil
 	}
 }
