@@ -2,7 +2,6 @@ package vpclattice
 
 import (
 	"context"
-	// "encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -34,7 +33,6 @@ func ResourceRegisterTargets() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
-				fmt.Println(idParts)
 				d.Set("target_group_identifier", idParts[0])
 
 				return []*schema.ResourceData{d}, nil
@@ -117,7 +115,6 @@ func resourceRegisterTargetsCreate(ctx context.Context, d *schema.ResourceData, 
 		targetId,
 	}
 
-	fmt.Println(parts)
 	d.SetId(strings.Join(parts, "/"))
 
 	if _, err := waitRegisterTargets(ctx, conn, targetGroupIdentifier, targets, d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -128,15 +125,13 @@ func resourceRegisterTargetsCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceRegisterTargetsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	fmt.Println("Running on Read")
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
 	targetGroupId := d.Get("target_group_identifier").(string)
 	targets := d.Get("targets").([]interface{})
 
 	out, err := findRegisterTargets(ctx, conn, targetGroupId, targets)
-	fmt.Println("Find returns")
-	fmt.Println(out.Items, err)
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VpcLattice RegisterTargets (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -183,7 +178,6 @@ func resourceRegisterTargetsDelete(ctx context.Context, d *schema.ResourceData, 
 }
 
 func findRegisterTargets(ctx context.Context, conn *vpclattice.Client, targetGroupId string, targets []interface{}) (*vpclattice.ListTargetsOutput, error) {
-	fmt.Println("Inside the Finder")
 	in := &vpclattice.ListTargetsInput{
 		TargetGroupIdentifier: aws.String(targetGroupId),
 		Targets:               expandTargets(targets),
@@ -214,7 +208,7 @@ func findRegisterTargets(ctx context.Context, conn *vpclattice.Client, targetGro
 func waitRegisterTargets(ctx context.Context, conn *vpclattice.Client, id string, targets []interface{}, timeout time.Duration) (*vpclattice.RegisterTargetsOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.TargetStatusInitial),
-		Target:                    enum.Slice(types.TargetStatusHealthy, types.TargetStatusUnhealthy),
+		Target:                    enum.Slice(types.TargetStatusHealthy, types.TargetStatusUnhealthy, types.TargetStatusUnused, types.TargetStatusUnavailable),
 		Refresh:                   statusTarget(ctx, conn, id, targets),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -230,7 +224,6 @@ func waitRegisterTargets(ctx context.Context, conn *vpclattice.Client, id string
 }
 
 func waitDeleteTargets(ctx context.Context, conn *vpclattice.Client, id string, targets []interface{}, timeout time.Duration) (*vpclattice.DeregisterTargetsOutput, error) {
-	fmt.Println("Starting Inside Delete waiter")
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.TargetStatusDraining, types.TargetStatusInitial),
 		Target:  []string{},
