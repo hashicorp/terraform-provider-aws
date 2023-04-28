@@ -1431,8 +1431,9 @@ func flattenDomainSettings(config *sagemaker.DomainSettings) []map[string]interf
 	}
 
 	m := map[string]interface{}{
-		"execution_role_identity_config": aws.StringValue(config.ExecutionRoleIdentityConfig),
-		"security_group_ids":             flex.FlattenStringSet(config.SecurityGroupIds),
+		"execution_role_identity_config":      aws.StringValue(config.ExecutionRoleIdentityConfig),
+		"r_studio_server_pro_domain_settings": flattenRStudioServerProDomainSettings(config.RStudioServerProDomainSettings),
+		"security_group_ids":                  flex.FlattenStringSet(config.SecurityGroupIds),
 	}
 
 	return []map[string]interface{}{m}
