@@ -2448,6 +2448,10 @@ func flattenLaunchTemplateCPUOptions(apiObject *ec2.LaunchTemplateCpuOptions) ma
 
 	tfMap := map[string]interface{}{}
 
+	if v := apiObject.AmdSevSnp; v != nil {
+		tfMap["amd_sev_snp"] = aws.StringValue(v)
+	}
+
 	if v := apiObject.CoreCount; v != nil {
 		tfMap["core_count"] = aws.Int64Value(v)
 	}
