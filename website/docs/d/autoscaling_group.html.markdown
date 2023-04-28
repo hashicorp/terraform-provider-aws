@@ -37,6 +37,10 @@ interpolation.
 * `health_check_type` - Service to use for the health checks. The valid values are EC2 and ELB.
 * `id` - Name of the Auto Scaling Group.
 * `launch_configuration` - The name of the associated launch configuration.
+* `launch_template` - List of launch templates for the group.
+    * `id` - ID of the launch template.
+    * `name` - Name of the launch template.
+    * `version` - Template version.
 * `load_balancers` - One or more load balancers associated with the group.
 * `max_size` - Maximum size of the group.
 * `min_size` - Minimum size of the group.
