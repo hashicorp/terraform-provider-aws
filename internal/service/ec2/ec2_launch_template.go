@@ -1431,6 +1431,10 @@ func expandLaunchTemplateCPUOptionsRequest(tfMap map[string]interface{}) *ec2.La
 
 	apiObject := &ec2.LaunchTemplateCpuOptionsRequest{}
 
+	if v, ok := tfMap["amd_sev_snp"].(string); ok && v != "" {
+		apiObject.AmdSevSnp = aws.String(v)
+	}
+
 	if v, ok := tfMap["core_count"].(int); ok && v != 0 {
 		apiObject.CoreCount = aws.Int64(int64(v))
 	}
