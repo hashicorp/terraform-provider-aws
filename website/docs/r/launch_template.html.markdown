@@ -207,6 +207,7 @@ The `capacity_reservation_target` block supports the following:
 
 The `cpu_options` block supports the following:
 
+* `amd_sev_snp` - Indicates whether to enable the instance for AMD SEV-SNP. AMD SEV-SNP is supported with M6a, R6a, and C6a instance types only. Valid values are `enabled` and `disabled`.
 * `core_count` - The number of CPU cores for the instance.
 * `threads_per_core` - The number of threads per CPU core.
   To disable Intel Hyper-Threading Technology for the instance, specify a value of 1.
