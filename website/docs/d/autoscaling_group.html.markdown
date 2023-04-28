@@ -42,6 +42,7 @@ interpolation.
     * `name` - Name of the launch template.
     * `version` - Template version.
 * `load_balancers` - One or more load balancers associated with the group.
+* `max_instance_lifetime` - Maximum amount of time, in seconds, that an instance can be in service.
 * `max_size` - Maximum size of the group.
 * `min_size` - Minimum size of the group.
 * `name` - Name of the Auto Scaling Group.

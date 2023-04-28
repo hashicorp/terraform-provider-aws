@@ -35,6 +35,7 @@ func TestAccAutoScalingGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "launch_configuration", resourceName, "launch_configuration"),
 					resource.TestCheckResourceAttrPair(datasourceName, "launch_template.#", resourceName, "launch_template.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "load_balancers.#", resourceName, "load_balancers.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "max_instance_lifetime", resourceName, "max_instance_lifetime"),
 					resource.TestCheckResourceAttrPair(datasourceName, "max_size", resourceName, "max_size"),
 					resource.TestCheckResourceAttrPair(datasourceName, "min_size", resourceName, "min_size"),
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),

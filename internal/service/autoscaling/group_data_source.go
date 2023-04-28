@@ -85,6 +85,10 @@ func DataSourceGroup() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"max_instance_lifetime": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"max_size": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -164,6 +168,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("launch_template", nil)
 	}
 	d.Set("load_balancers", aws.StringValueSlice(group.LoadBalancerNames))
+	d.Set("max_instance_lifetime", group.MaxInstanceLifetime)
 	d.Set("max_size", group.MaxSize)
 	d.Set("min_size", group.MinSize)
 	d.Set("name", group.AutoScalingGroupName)
