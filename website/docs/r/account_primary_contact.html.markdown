@@ -3,7 +3,7 @@ subcategory: "Account Management"
 layout: "aws"
 page_title: "AWS: aws_account_primary_contact"
 description: |-
-  Manages the specified alternate contact attached to an AWS Account.
+  Manages the specified primary contact information associated with an AWS Account.
 ---
 
 # Resource: aws_account_primary_contact
