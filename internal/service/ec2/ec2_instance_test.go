@@ -3622,6 +3622,64 @@ func TestAccEC2Instance_GetPasswordData_trueToFalse(t *testing.T) {
 	})
 }
 
+// Tests run in third region us-east-2
+func TestAccEC2Instance_cpuOptionsAmdSevSnpCoreThreads(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 ec2.Instance
+	var providers []*schema.Provider
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	originalCoreCount := 2
+	updatedCoreCount := 3
+	originalThreadsPerCore := 2
+	updatedThreadsPerCore := 1
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 3)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternatePlusProvidersThird(ctx, t, &providers),
+		// issue faced when testing with the acctest.CheckWithProviders - panic: runtime error: invalid memory address or nil pointer dereference
+		CheckDestroy: testAccCheckInstanceDestroy(ctx), // acctest.CheckWithProviders(testAccCheckInstanceDestroyWithProvider(ctx), &providers),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpCoreThreads(rName, ec2.AmdSevSnpSpecificationEnabled, originalCoreCount, originalThreadsPerCore),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExistsWithProvider(ctx, resourceName, &v1, acctest.RegionProviderFunc(acctest.ThirdRegion(), &providers)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationEnabled),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(originalCoreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(originalThreadsPerCore)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(originalCoreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_threads_per_core", strconv.Itoa(originalThreadsPerCore)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+			{
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpCoreThreads(rName, ec2.AmdSevSnpSpecificationDisabled, updatedCoreCount, updatedThreadsPerCore),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExistsWithProvider(ctx, resourceName, &v2, acctest.RegionProviderFunc(acctest.ThirdRegion(), &providers)),
+					testAccCheckInstanceRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationDisabled),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(updatedCoreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(updatedThreadsPerCore)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(updatedCoreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_threads_per_core", strconv.Itoa(updatedThreadsPerCore)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_cpuOptionsCoreThreads(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 ec2.Instance
@@ -5384,6 +5442,44 @@ resource "aws_subnet" "test" {
   }
 }
 `, rName, mapPublicIpOnLaunch, azIndex))
+}
+
+func testAccInstanceVPCConfigWithProvider(rName string, mapPublicIpOnLaunch bool, azIndex int, provider string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  provider = %[4]s
+
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  provider = %[4]s
+
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  provider = %[4]s
+
+  cidr_block              = "10.1.1.0/24"
+  vpc_id                  = aws_vpc.test.id
+  availability_zone       = data.aws_availability_zones.available.names[%[3]d]
+  map_public_ip_on_launch = %[2]t
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, mapPublicIpOnLaunch, azIndex, provider)
 }
 
 // testAccInstanceVPCSecurityGroupConfig returns the configuration for tests that create
@@ -7706,6 +7802,44 @@ resource "aws_instance" "test" {
   }
 }
 `, rName, publicKey, val))
+}
+
+// alternate provider used to test amd_sev_snp in us-east-1 region
+func testAccInstanceConfig_cpuOptionsAmdSevSnpCoreThreads(rName, amdSevSnp string, coreCount, threadsPerCore int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		testAccInstanceVPCConfigWithProvider(rName, false, 0, "awsthird"),
+		testAccLatestAmazonLinux2023AMIConfigWithProvider("awsthird"),
+		fmt.Sprintf(`
+data "aws_ec2_instance_type_offering" "available" {
+  provider = "awsthird"
+
+  filter {
+    name   = "instance-type"
+    values = ["c6a.2xlarge", "m6a.2xlarge"]
+  }
+
+  preferred_instance_types = ["c6a.2xlarge"]
+}
+
+resource "aws_instance" "test" {
+  provider = "awsthird"
+
+  ami           = data.aws_ami.amzn-linux-2023-ami.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  cpu_options {
+    amd_sev_snp      = %[2]q
+    core_count       = %[3]d
+    threads_per_core = %[4]d
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, amdSevSnp, coreCount, threadsPerCore))
 }
 
 func testAccInstanceConfig_cpuOptionsUnspecified(rName string) string {

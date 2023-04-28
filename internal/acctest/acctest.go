@@ -179,6 +179,10 @@ func ProtoV5FactoriesPlusProvidersAlternate(ctx context.Context, t *testing.T, p
 	return protoV5ProviderFactoriesPlusProvidersInit(ctx, t, providers, ProviderName, ProviderNameAlternate)
 }
 
+func ProtoV5FactoriesPlusProvidersAlternatePlusProvidersThird(ctx context.Context, t *testing.T, providers *[]*schema.Provider) map[string]func() (tfprotov5.ProviderServer, error) {
+	return protoV5ProviderFactoriesPlusProvidersInit(ctx, t, providers, ProviderName, ProviderNameAlternate, ProviderNameThird)
+}
+
 func ProtoV5FactoriesNamed(ctx context.Context, t *testing.T, providers map[string]*schema.Provider) map[string]func() (tfprotov5.ProviderServer, error) {
 	return protoV5ProviderFactoriesNamedInit(ctx, t, providers, ProviderName, ProviderNameAlternate)
 }
