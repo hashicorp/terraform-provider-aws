@@ -2487,7 +2487,7 @@ func waitDBInstanceDeleted(ctx context.Context, conn *rds.RDS, id string, timeou
 			InstanceStatusConfiguringEnhancedMonitoring,
 			InstanceStatusConfiguringLogExports,
 			InstanceStatusCreating,
-			InstanceStatusDeletePrecheck,
+			InstanceStatusDeletePreCheck,
 			InstanceStatusDeleting,
 			InstanceStatusIncompatibleParameters,
 			InstanceStatusIncompatibleRestore,

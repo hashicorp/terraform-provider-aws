@@ -64,7 +64,7 @@ const (
 	InstanceStatusConfiguringLogExports                        = "configuring-log-exports"
 	InstanceStatusConvertingToVPC                              = "converting-to-vpc"
 	InstanceStatusCreating                                     = "creating"
-	InstanceStatusDeletePrecheck                               = "delete-precheck"
+	InstanceStatusDeletePreCheck                               = "delete-precheck"
 	InstanceStatusDeleting                                     = "deleting"
 	InstanceStatusFailed                                       = "failed"
 	InstanceStatusInaccessibleEncryptionCredentials            = "inaccessible-encryption-credentials"
