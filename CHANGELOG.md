@@ -4,6 +4,16 @@ ENHANCEMENTS:
 
 * resource/aws_lambda_function: Add support for `java17` `runtime` value ([#31027](https://github.com/hashicorp/terraform-provider-aws/issues/31027))
 * resource/aws_lambda_layer_version: Add support for `java17` `compatible_runtimes` value ([#31028](https://github.com/hashicorp/terraform-provider-aws/issues/31028))
+* resource/aws_medialive_channel: Added H265 support. ([#30908](https://github.com/hashicorp/terraform-provider-aws/issues/30908))
+* resource/aws_sagemaker_domain: Add `domain_settings.r_studio_server_pro_domain_settings`, `default_user_settings.canvas_app_settings.model_register_settings`, and `default_user_settings.r_studio_server_pro_app_settings` arguments ([#31031](https://github.com/hashicorp/terraform-provider-aws/issues/31031))
+
+BUG FIXES:
+
+* resource/aws_db_instance: Consider `delete-precheck` a valid pending state for resource deletion ([#31047](https://github.com/hashicorp/terraform-provider-aws/issues/31047))
+* resource/aws_inspector2_enabler: Correctly supports `LAMBDA` resource scanning ([#31038](https://github.com/hashicorp/terraform-provider-aws/issues/31038))
+* resource/aws_inspector2_enabler: Correctly supports multiple accounts ([#31038](https://github.com/hashicorp/terraform-provider-aws/issues/31038))
+* resource/aws_inspector2_enabler: No longer calls `Disable` API for status checking ([#31038](https://github.com/hashicorp/terraform-provider-aws/issues/31038))
+* resource/aws_rds_cluster_instance: Consider `delete-precheck` a valid pending state for resource deletion ([#31047](https://github.com/hashicorp/terraform-provider-aws/issues/31047))
 
 ## 4.65.0 (April 27, 2023)
 
