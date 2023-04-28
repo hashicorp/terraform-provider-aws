@@ -1660,3 +1660,212 @@ func expandVisuals(tfList []interface{}) []*quicksight.Visual {
 
 	return visuals
 }
+
+func flattenAnalysisDefaults(apiObject *quicksight.AnalysisDefaults) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.DefaultNewSheetConfiguration != nil {
+		tfMap["default_new_sheet_configuration"] = flattenDefaultNewSheetConfiguration(apiObject.DefaultNewSheetConfiguration)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenDefaultNewSheetConfiguration(apiObject *quicksight.DefaultNewSheetConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.InteractiveLayoutConfiguration != nil {
+		tfMap["interactive_layout_configuration"] = flattenDefaultInteractiveLayoutConfiguration(apiObject.InteractiveLayoutConfiguration)
+	}
+	if apiObject.PaginatedLayoutConfiguration != nil {
+		tfMap["paginated_layout_configuration"] = flattenDefaultPaginatedLayoutConfiguration(apiObject.PaginatedLayoutConfiguration)
+	}
+	if apiObject.SheetContentType != nil {
+		tfMap["sheet_content_type"] = aws.StringValue(apiObject.SheetContentType)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenDefaultInteractiveLayoutConfiguration(apiObject *quicksight.DefaultInteractiveLayoutConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.FreeForm != nil {
+		tfMap["free_form"] = flattenDefaultFreeFormLayoutConfiguration(apiObject.FreeForm)
+	}
+	if apiObject.Grid != nil {
+		tfMap["grid"] = flattenDefaultGridLayoutConfiguration(apiObject.Grid)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenDefaultFreeFormLayoutConfiguration(apiObject *quicksight.DefaultFreeFormLayoutConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CanvasSizeOptions != nil {
+		tfMap["canvas_size_options"] = flattenFreeFormLayoutCanvasSizeOptions(apiObject.CanvasSizeOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenFreeFormLayoutCanvasSizeOptions(apiObject *quicksight.FreeFormLayoutCanvasSizeOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ScreenCanvasSizeOptions != nil {
+		tfMap["canvas_size_options"] = flattenFreeFormLayoutScreenCanvasSizeOptions(apiObject.ScreenCanvasSizeOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenFreeFormLayoutScreenCanvasSizeOptions(apiObject *quicksight.FreeFormLayoutScreenCanvasSizeOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.OptimizedViewPortWidth != nil {
+		tfMap["optimized_view_port_width"] = aws.StringValue(apiObject.OptimizedViewPortWidth)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenDefaultGridLayoutConfiguration(apiObject *quicksight.DefaultGridLayoutConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CanvasSizeOptions != nil {
+		tfMap["canvas_size_options"] = flattenGridLayoutCanvasSizeOptions(apiObject.CanvasSizeOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenGridLayoutCanvasSizeOptions(apiObject *quicksight.GridLayoutCanvasSizeOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ScreenCanvasSizeOptions != nil {
+		tfMap["screen_canvas_size_options"] = flattenGridLayoutScreenCanvasSizeOptions(apiObject.ScreenCanvasSizeOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenGridLayoutScreenCanvasSizeOptions(apiObject *quicksight.GridLayoutScreenCanvasSizeOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.OptimizedViewPortWidth != nil {
+		tfMap["optimized_view_port_width"] = aws.StringValue(apiObject.OptimizedViewPortWidth)
+	}
+	if apiObject.ResizeOption != nil {
+		tfMap["resize_option"] = aws.StringValue(apiObject.ResizeOption)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenDefaultPaginatedLayoutConfiguration(apiObject *quicksight.DefaultPaginatedLayoutConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.SectionBased != nil {
+		tfMap["section_based"] = flattenDefaultSectionBasedLayoutConfiguration(apiObject.SectionBased)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenDefaultSectionBasedLayoutConfiguration(apiObject *quicksight.DefaultSectionBasedLayoutConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CanvasSizeOptions != nil {
+		tfMap["canvas_size_options"] = flattenSectionBasedLayoutCanvasSizeOptions(apiObject.CanvasSizeOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenSectionBasedLayoutCanvasSizeOptions(apiObject *quicksight.SectionBasedLayoutCanvasSizeOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.PaperCanvasSizeOptions != nil {
+		tfMap["paper_canvas_size_options"] = flattenSectionBasedLayoutPaperCanvasSizeOptions(apiObject.PaperCanvasSizeOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenSectionBasedLayoutPaperCanvasSizeOptions(apiObject *quicksight.SectionBasedLayoutPaperCanvasSizeOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.PaperMargin != nil {
+		tfMap["paper_margin"] = flattenSpacing(apiObject.PaperMargin)
+	}
+	if apiObject.PaperOrientation != nil {
+		tfMap["paper_orientation"] = aws.StringValue(apiObject.PaperOrientation)
+	}
+	if apiObject.PaperSize != nil {
+		tfMap["paper_size"] = aws.StringValue(apiObject.PaperSize)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenSpacing(apiObject *quicksight.Spacing) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Bottom != nil {
+		tfMap["bottom"] = aws.StringValue(apiObject.Bottom)
+	}
+	if apiObject.Left != nil {
+		tfMap["left"] = aws.StringValue(apiObject.Left)
+	}
+	if apiObject.Right != nil {
+		tfMap["right"] = aws.StringValue(apiObject.Right)
+	}
+	if apiObject.Top != nil {
+		tfMap["top"] = aws.StringValue(apiObject.Top)
+	}
+
+	return []interface{}{tfMap}
+}

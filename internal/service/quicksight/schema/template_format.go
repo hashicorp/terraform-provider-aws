@@ -708,3 +708,252 @@ func expandPercentageDisplayFormatConfiguration(tfList []interface{}) *quicksigh
 
 	return config
 }
+
+func flattenFormatConfiguration(apiObject *quicksight.FormatConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.DateTimeFormatConfiguration != nil {
+		tfMap["date_time_format_configuration"] = flattenDateTimeFormatConfiguration(apiObject.DateTimeFormatConfiguration)
+	}
+	if apiObject.NumberFormatConfiguration != nil {
+		tfMap["number_format_configuration"] = flattenNumberFormatConfiguration(apiObject.NumberFormatConfiguration)
+	}
+	if apiObject.StringFormatConfiguration != nil {
+		tfMap["string_format_configuration"] = flattenStringFormatConfiguration(apiObject.StringFormatConfiguration)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenDateTimeFormatConfiguration(apiObject *quicksight.DateTimeFormatConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.DateTimeFormat != nil {
+		tfMap["date_time_format"] = aws.StringValue(apiObject.DateTimeFormat)
+	}
+	if apiObject.NullValueFormatConfiguration != nil {
+		tfMap["null_value_format_configuration"] = flattenNullValueFormatConfiguration(apiObject.NullValueFormatConfiguration)
+	}
+	if apiObject.NumericFormatConfiguration != nil {
+		tfMap["numeric_format_configuration"] = flattenNumericFormatConfiguration(apiObject.NumericFormatConfiguration)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenNullValueFormatConfiguration(apiObject *quicksight.NullValueFormatConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.NullString != nil {
+		tfMap["null_string"] = aws.StringValue(apiObject.NullString)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenNumericFormatConfiguration(apiObject *quicksight.NumericFormatConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CurrencyDisplayFormatConfiguration != nil {
+		tfMap["currency_display_format_configuration"] = flattenCurrencyDisplayFormatConfiguration(apiObject.CurrencyDisplayFormatConfiguration)
+	}
+	if apiObject.NumberDisplayFormatConfiguration != nil {
+		tfMap["number_display_format_configuration"] = flattenNumberDisplayFormatConfiguration(apiObject.NumberDisplayFormatConfiguration)
+	}
+	if apiObject.PercentageDisplayFormatConfiguration != nil {
+		tfMap["percentage_display_format_configuration"] = flattenPercentageDisplayFormatConfiguration(apiObject.PercentageDisplayFormatConfiguration)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenCurrencyDisplayFormatConfiguration(apiObject *quicksight.CurrencyDisplayFormatConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.DecimalPlacesConfiguration != nil {
+		tfMap["decimal_places_configuration"] = flattenDecimalPlacesConfiguration(apiObject.DecimalPlacesConfiguration)
+	}
+	if apiObject.NegativeValueConfiguration != nil {
+		tfMap["negative_value_configuration"] = flattenNegativeValueConfiguration(apiObject.NegativeValueConfiguration)
+	}
+	if apiObject.NullValueFormatConfiguration != nil {
+		tfMap["null_value_format_configuration"] = flattenNullValueFormatConfiguration(apiObject.NullValueFormatConfiguration)
+	}
+	if apiObject.NumberScale != nil {
+		tfMap["number_scale"] = aws.StringValue(apiObject.NumberScale)
+	}
+	if apiObject.Prefix != nil {
+		tfMap["prefix"] = aws.StringValue(apiObject.Prefix)
+	}
+	if apiObject.SeparatorConfiguration != nil {
+		tfMap["separator_configuration"] = flattenNumericSeparatorConfiguration(apiObject.SeparatorConfiguration)
+	}
+	if apiObject.Suffix != nil {
+		tfMap["suffix"] = aws.StringValue(apiObject.Suffix)
+	}
+	if apiObject.Symbol != nil {
+		tfMap["symbol"] = aws.StringValue(apiObject.Symbol)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenDecimalPlacesConfiguration(apiObject *quicksight.DecimalPlacesConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.DecimalPlaces != nil {
+		tfMap["decimal_places"] = aws.Int64Value(apiObject.DecimalPlaces)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenNegativeValueConfiguration(apiObject *quicksight.NegativeValueConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.DisplayMode != nil {
+		tfMap["display_mode"] = aws.StringValue(apiObject.DisplayMode)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenNumericSeparatorConfiguration(apiObject *quicksight.NumericSeparatorConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.DecimalSeparator != nil {
+		tfMap["decimal_separator"] = aws.StringValue(apiObject.DecimalSeparator)
+	}
+	if apiObject.ThousandsSeparator != nil {
+		tfMap["thousands_separator"] = flattenThousandSeparatorOptions(apiObject.ThousandsSeparator)
+	}
+
+	return []interface{}{tfMap}
+}
+func flattenThousandSeparatorOptions(apiObject *quicksight.ThousandSeparatorOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Symbol != nil {
+		tfMap["symbol"] = aws.StringValue(apiObject.Symbol)
+	}
+	if apiObject.Visibility != nil {
+		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenNumberDisplayFormatConfiguration(apiObject *quicksight.NumberDisplayFormatConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.DecimalPlacesConfiguration != nil {
+		tfMap["decimal_places_configuration"] = flattenDecimalPlacesConfiguration(apiObject.DecimalPlacesConfiguration)
+	}
+	if apiObject.NegativeValueConfiguration != nil {
+		tfMap["negative_value_configuration"] = flattenNegativeValueConfiguration(apiObject.NegativeValueConfiguration)
+	}
+	if apiObject.NullValueFormatConfiguration != nil {
+		tfMap["null_value_format_configuration"] = flattenNullValueFormatConfiguration(apiObject.NullValueFormatConfiguration)
+	}
+	if apiObject.NumberScale != nil {
+		tfMap["number_scale"] = aws.StringValue(apiObject.NumberScale)
+	}
+	if apiObject.Prefix != nil {
+		tfMap["prefix"] = aws.StringValue(apiObject.Prefix)
+	}
+	if apiObject.SeparatorConfiguration != nil {
+		tfMap["separator_configuration"] = flattenNumericSeparatorConfiguration(apiObject.SeparatorConfiguration)
+	}
+	if apiObject.Suffix != nil {
+		tfMap["suffix"] = aws.StringValue(apiObject.Suffix)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenPercentageDisplayFormatConfiguration(apiObject *quicksight.PercentageDisplayFormatConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.DecimalPlacesConfiguration != nil {
+		tfMap["decimal_places_configuration"] = flattenDecimalPlacesConfiguration(apiObject.DecimalPlacesConfiguration)
+	}
+	if apiObject.NegativeValueConfiguration != nil {
+		tfMap["negative_value_configuration"] = flattenNegativeValueConfiguration(apiObject.NegativeValueConfiguration)
+	}
+	if apiObject.NullValueFormatConfiguration != nil {
+		tfMap["null_value_format_configuration"] = flattenNullValueFormatConfiguration(apiObject.NullValueFormatConfiguration)
+	}
+	if apiObject.Prefix != nil {
+		tfMap["prefix"] = aws.StringValue(apiObject.Prefix)
+	}
+	if apiObject.SeparatorConfiguration != nil {
+		tfMap["separator_configuration"] = flattenNumericSeparatorConfiguration(apiObject.SeparatorConfiguration)
+	}
+	if apiObject.Suffix != nil {
+		tfMap["suffix"] = aws.StringValue(apiObject.Suffix)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenNumberFormatConfiguration(apiObject *quicksight.NumberFormatConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.FormatConfiguration != nil {
+		tfMap["numeric_format_configuration"] = flattenNumericFormatConfiguration(apiObject.FormatConfiguration)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenStringFormatConfiguration(apiObject *quicksight.StringFormatConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.NullValueFormatConfiguration != nil {
+		tfMap["null_value_format_configuration"] = flattenNullValueFormatConfiguration(apiObject.NullValueFormatConfiguration)
+	}
+	if apiObject.NumericFormatConfiguration != nil {
+		tfMap["numeric_format_configuration"] = flattenNumericFormatConfiguration(apiObject.NumericFormatConfiguration)
+	}
+
+	return []interface{}{tfMap}
+}

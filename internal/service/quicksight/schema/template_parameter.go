@@ -748,3 +748,241 @@ func expandParameterSelectableValues(tfList []interface{}) *quicksight.Parameter
 
 	return values
 }
+
+func flattenDateTimeParameterDeclaration(apiObject *quicksight.DateTimeParameterDeclaration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.DefaultValues != nil {
+		tfMap["default_values"] = flattenDateTimeDefaultValues(apiObject.DefaultValues)
+	}
+	if apiObject.Name != nil {
+		tfMap["name"] = aws.StringValue(apiObject.Name)
+	}
+	if apiObject.TimeGranularity != nil {
+		tfMap["time_granularity"] = aws.StringValue(apiObject.TimeGranularity)
+	}
+	if apiObject.ValueWhenUnset != nil {
+		tfMap["values_when_unset"] = flattenDateTimeValueWhenUnsetConfiguration(apiObject.ValueWhenUnset)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenDateTimeDefaultValues(apiObject *quicksight.DateTimeDefaultValues) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.DynamicValue != nil {
+		tfMap["dynamic_value"] = flattenDynamicDefaultValue(apiObject.DynamicValue)
+	}
+	if apiObject.RollingDate != nil {
+		tfMap["rolling_date"] = flattenRollingDateConfiguration(apiObject.RollingDate)
+	}
+	if apiObject.StaticValues != nil {
+		tfMap["static_values"] = flex.FlattenTimeStringList(apiObject.StaticValues, time.RFC3339)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenDynamicDefaultValue(apiObject *quicksight.DynamicDefaultValue) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.DefaultValueColumn != nil {
+		tfMap["default_value_column"] = flattenColumnIdentifier(apiObject.DefaultValueColumn)
+	}
+	if apiObject.GroupNameColumn != nil {
+		tfMap["group_name_column"] = flattenColumnIdentifier(apiObject.GroupNameColumn)
+	}
+	if apiObject.UserNameColumn != nil {
+		tfMap["user_name_column"] = flattenColumnIdentifier(apiObject.UserNameColumn)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenDateTimeValueWhenUnsetConfiguration(apiObject *quicksight.DateTimeValueWhenUnsetConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CustomValue != nil {
+		tfMap["custom_value"] = apiObject.CustomValue.Format(time.RFC3339)
+	}
+	if apiObject.ValueWhenUnsetOption != nil {
+		tfMap["value_when_unset_option"] = aws.StringValue(apiObject.ValueWhenUnsetOption)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenDecimalParameterDeclaration(apiObject *quicksight.DecimalParameterDeclaration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.DefaultValues != nil {
+		tfMap["default_values"] = flattenDecimalDefaultValues(apiObject.DefaultValues)
+	}
+	if apiObject.Name != nil {
+		tfMap["name"] = aws.StringValue(apiObject.Name)
+	}
+	if apiObject.ParameterValueType != nil {
+		tfMap["parameter_value_type"] = aws.StringValue(apiObject.ParameterValueType)
+	}
+	if apiObject.ValueWhenUnset != nil {
+		tfMap["values_when_unset"] = flattenDecimalValueWhenUnsetConfiguration(apiObject.ValueWhenUnset)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenDecimalDefaultValues(apiObject *quicksight.DecimalDefaultValues) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.DynamicValue != nil {
+		tfMap["dynamic_value"] = flattenDynamicDefaultValue(apiObject.DynamicValue)
+	}
+	if apiObject.StaticValues != nil {
+		tfMap["static_values"] = flex.FlattenFloat64List(apiObject.StaticValues)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenDecimalValueWhenUnsetConfiguration(apiObject *quicksight.DecimalValueWhenUnsetConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CustomValue != nil {
+		tfMap["custom_value"] = aws.Float64Value(apiObject.CustomValue)
+	}
+	if apiObject.ValueWhenUnsetOption != nil {
+		tfMap["value_when_unset_option"] = aws.StringValue(apiObject.ValueWhenUnsetOption)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenIntegerParameterDeclaration(apiObject *quicksight.IntegerParameterDeclaration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.DefaultValues != nil {
+		tfMap["default_values"] = flattenIntegerDefaultValues(apiObject.DefaultValues)
+	}
+	if apiObject.Name != nil {
+		tfMap["name"] = aws.StringValue(apiObject.Name)
+	}
+	if apiObject.ParameterValueType != nil {
+		tfMap["parameter_value_type"] = aws.StringValue(apiObject.ParameterValueType)
+	}
+	if apiObject.ValueWhenUnset != nil {
+		tfMap["values_when_unset"] = flattenIntegerValueWhenUnsetConfiguration(apiObject.ValueWhenUnset)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenIntegerDefaultValues(apiObject *quicksight.IntegerDefaultValues) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.DynamicValue != nil {
+		tfMap["dynamic_value"] = flattenDynamicDefaultValue(apiObject.DynamicValue)
+	}
+	if apiObject.StaticValues != nil {
+		tfMap["static_values"] = flex.FlattenInt64List(apiObject.StaticValues)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenIntegerValueWhenUnsetConfiguration(apiObject *quicksight.IntegerValueWhenUnsetConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CustomValue != nil {
+		tfMap["custom_value"] = aws.Int64Value(apiObject.CustomValue)
+	}
+	if apiObject.ValueWhenUnsetOption != nil {
+		tfMap["value_when_unset_option"] = aws.StringValue(apiObject.ValueWhenUnsetOption)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenStringParameterDeclaration(apiObject *quicksight.StringParameterDeclaration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.DefaultValues != nil {
+		tfMap["default_values"] = flattenStringDefaultValues(apiObject.DefaultValues)
+	}
+	if apiObject.Name != nil {
+		tfMap["name"] = aws.StringValue(apiObject.Name)
+	}
+	if apiObject.ParameterValueType != nil {
+		tfMap["parameter_value_type"] = aws.StringValue(apiObject.ParameterValueType)
+	}
+	if apiObject.ValueWhenUnset != nil {
+		tfMap["values_when_unset"] = flattenStringValueWhenUnsetConfiguration(apiObject.ValueWhenUnset)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenStringDefaultValues(apiObject *quicksight.StringDefaultValues) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.DynamicValue != nil {
+		tfMap["dynamic_value"] = flattenDynamicDefaultValue(apiObject.DynamicValue)
+	}
+	if apiObject.StaticValues != nil {
+		tfMap["static_values"] = flex.FlattenStringList(apiObject.StaticValues)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenStringValueWhenUnsetConfiguration(apiObject *quicksight.StringValueWhenUnsetConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CustomValue != nil {
+		tfMap["custom_value"] = aws.StringValue(apiObject.CustomValue)
+	}
+	if apiObject.ValueWhenUnsetOption != nil {
+		tfMap["value_when_unset_option"] = aws.StringValue(apiObject.ValueWhenUnsetOption)
+	}
+
+	return []interface{}{tfMap}
+}

@@ -1019,3 +1019,344 @@ func expandSheetDefinitions(tfList []interface{}) []*quicksight.SheetDefinition 
 
 	return sheets
 }
+
+func FlattenTemplateDefinition(apiObject *quicksight.TemplateVersionDefinition) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.AnalysisDefaults != nil {
+		tfMap["analysis_defaults"] = flattenAnalysisDefaults(apiObject.AnalysisDefaults)
+	}
+	if apiObject.CalculatedFields != nil {
+		tfMap["calculated_fields"] = flattenCalculatedFields(apiObject.CalculatedFields)
+	}
+	if apiObject.ColumnConfigurations != nil {
+		tfMap["column_configurations"] = flattenColumnConfigurations(apiObject.ColumnConfigurations)
+	}
+	if apiObject.DataSetConfigurations != nil {
+		tfMap["data_set_configuration"] = flattenDataSetConfigurations(apiObject.DataSetConfigurations)
+	}
+	if apiObject.FilterGroups != nil {
+		tfMap["filter_groups"] = flattenFilterGroups(apiObject.FilterGroups)
+	}
+	if apiObject.ParameterDeclarations != nil {
+		tfMap["parameters_declarations"] = flattenParameterDeclarations(apiObject.ParameterDeclarations)
+	}
+	// TODO
+	//if apiObject.Sheets != nil {
+	//	tfMap["sheets"] = flattenSheetDefinitions(apiObject.Sheets)
+	//}
+
+	return []interface{}{tfMap}
+}
+
+func flattenCalculatedFields(apiObject []*quicksight.CalculatedField) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, field := range apiObject {
+		if field == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if field.DataSetIdentifier != nil {
+			tfMap["data_set_identifier"] = aws.StringValue(field.DataSetIdentifier)
+		}
+		if field.Expression != nil {
+			tfMap["expression"] = aws.StringValue(field.Expression)
+		}
+		if field.Name != nil {
+			tfMap["name"] = aws.StringValue(field.Name)
+		}
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenColumnConfigurations(apiObject []*quicksight.ColumnConfiguration) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, column := range apiObject {
+		if column == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if column.Column != nil {
+			tfMap["column"] = flattenColumnIdentifier(column.Column)
+		}
+		if column.FormatConfiguration != nil {
+			tfMap["format_configuration"] = flattenFormatConfiguration(column.FormatConfiguration)
+		}
+		if column.Role != nil {
+			tfMap["role"] = aws.StringValue(column.Role)
+		}
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenColumnIdentifier(apiObject *quicksight.ColumnIdentifier) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ColumnName != nil {
+		tfMap["column_name"] = aws.StringValue(apiObject.ColumnName)
+	}
+	if apiObject.DataSetIdentifier != nil {
+		tfMap["data_set_identifier"] = aws.StringValue(apiObject.DataSetIdentifier)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenDataSetConfigurations(apiObject []*quicksight.DataSetConfiguration) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if config.ColumnGroupSchemaList != nil {
+			tfMap["column_group_schema_list"] = flattenColumnGroupSchemas(config.ColumnGroupSchemaList)
+		}
+		if config.DataSetSchema != nil {
+			tfMap["data_set_schema"] = flattenDataSetSchema(config.DataSetSchema)
+		}
+		if config.Placeholder != nil {
+			tfMap["placeholder"] = aws.StringValue(config.Placeholder)
+		}
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenColumnGroupSchemas(apiObject []*quicksight.ColumnGroupSchema) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, schema := range apiObject {
+		if schema == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if schema.ColumnGroupColumnSchemaList != nil {
+			tfMap["column_group_column_schema_list"] = flattenColumnGroupColumnSchemas(schema.ColumnGroupColumnSchemaList)
+		}
+		if schema.Name != nil {
+			tfMap["name"] = aws.StringValue(schema.Name)
+		}
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenColumnGroupColumnSchemas(apiObject []*quicksight.ColumnGroupColumnSchema) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, schema := range apiObject {
+		if schema == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if schema.Name != nil {
+			tfMap["name"] = aws.StringValue(schema.Name)
+		}
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenDataSetSchema(apiObject *quicksight.DataSetSchema) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ColumnSchemaList != nil {
+		tfMap["column_schema_list"] = flattenColumnSchemas(apiObject.ColumnSchemaList)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenColumnSchemas(apiObject []*quicksight.ColumnSchema) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, column := range apiObject {
+		if column == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if column.DataType != nil {
+			tfMap["data_type"] = aws.StringValue(column.DataType)
+		}
+		if column.GeographicRole != nil {
+			tfMap["geographic_role"] = aws.StringValue(column.GeographicRole)
+		}
+		if column.Name != nil {
+			tfMap["name"] = aws.StringValue(column.Name)
+		}
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenFilterGroups(apiObject []*quicksight.FilterGroup) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, group := range apiObject {
+		if group == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if group.CrossDataset != nil {
+			tfMap["cross_dataset"] = aws.StringValue(group.CrossDataset)
+		}
+		if group.FilterGroupId != nil {
+			tfMap["filter_group_id"] = aws.StringValue(group.FilterGroupId)
+		}
+		if group.Filters != nil {
+			tfMap["filters"] = flattenFilters(group.Filters)
+		}
+		if group.ScopeConfiguration != nil {
+			tfMap["scope_configuration"] = flattenFilterScopeConfiguration(group.ScopeConfiguration)
+		}
+		if group.Status != nil {
+			tfMap["status"] = aws.StringValue(group.Status)
+		}
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenAggregationFunction(apiObject *quicksight.AggregationFunction) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CategoricalAggregationFunction != nil {
+		tfMap["categorical_aggregation_function"] = aws.StringValue(apiObject.CategoricalAggregationFunction)
+	}
+	if apiObject.DateAggregationFunction != nil {
+		tfMap["date_aggregation_function"] = aws.StringValue(apiObject.DateAggregationFunction)
+	}
+	if apiObject.NumericalAggregationFunction != nil {
+		tfMap["numerical_aggregation_function"] = flattenNumericalAggregationFunction(apiObject.NumericalAggregationFunction)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenNumericalAggregationFunction(apiObject *quicksight.NumericalAggregationFunction) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.PercentileAggregation != nil {
+		tfMap["percentile_aggregation"] = flattenPercentileAggregation(apiObject.PercentileAggregation)
+	}
+	if apiObject.SimpleNumericalAggregation != nil {
+		tfMap["simple_numerical_aggregation"] = aws.StringValue(apiObject.SimpleNumericalAggregation)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenPercentileAggregation(apiObject *quicksight.PercentileAggregation) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.PercentileValue != nil {
+		tfMap["percentile_value"] = aws.Float64Value(apiObject.PercentileValue)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenRollingDateConfiguration(apiObject *quicksight.RollingDateConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.DataSetIdentifier != nil {
+		tfMap["data_set_identifier"] = aws.StringValue(apiObject.DataSetIdentifier)
+	}
+	if apiObject.Expression != nil {
+		tfMap["expression"] = aws.StringValue(apiObject.Expression)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenParameterDeclarations(apiObject []*quicksight.ParameterDeclaration) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if config.DateTimeParameterDeclaration != nil {
+			tfMap["date_time_parameter_declaration"] = flattenDateTimeParameterDeclaration(config.DateTimeParameterDeclaration)
+		}
+		if config.DecimalParameterDeclaration != nil {
+			tfMap["decimal_parameter_declaration"] = flattenDecimalParameterDeclaration(config.DecimalParameterDeclaration)
+		}
+		if config.IntegerParameterDeclaration != nil {
+			tfMap["integer_parameter_declaration"] = flattenIntegerParameterDeclaration(config.IntegerParameterDeclaration)
+		}
+		if config.StringParameterDeclaration != nil {
+			tfMap["string_parameter_declaration"] = flattenStringParameterDeclaration(config.StringParameterDeclaration)
+		}
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}

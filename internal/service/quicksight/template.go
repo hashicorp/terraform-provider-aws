@@ -196,6 +196,20 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("version_description", out.Version.Description)
 	d.Set("version_number", out.Version.VersionNumber)
 
+	descResp, err := conn.DescribeTemplateDefinitionWithContext(ctx, &quicksight.DescribeTemplateDefinitionInput{
+		AwsAccountId:  aws.String(awsAccountId),
+		TemplateId:    aws.String(templateId),
+		VersionNumber: out.Version.VersionNumber,
+	})
+
+	if err != nil {
+		return diag.Errorf("error describing QuickSight Template (%s) Definition: %s", d.Id(), err)
+	}
+
+	if err := d.Set("definition", quicksightschema.FlattenTemplateDefinition(descResp.Definition)); err != nil {
+		return diag.Errorf("error setting definition: %s", err)
+	}
+
 	tags, err := ListTags(ctx, conn, aws.StringValue(out.Arn))
 	if err != nil {
 		return create.DiagError(names.QuickSight, create.ErrActionReading, ResNameTemplate, d.Id(), err)

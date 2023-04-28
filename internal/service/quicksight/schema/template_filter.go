@@ -1257,3 +1257,497 @@ func expandTimeRangeDrillDownFilter(tfList []interface{}) *quicksight.TimeRangeD
 
 	return filter
 }
+
+func flattenFilters(apiObject []*quicksight.Filter) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, filter := range apiObject {
+		if filter == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if filter.CategoryFilter != nil {
+			tfMap["category_filter"] = flattenCategoryFilter(filter.CategoryFilter)
+		}
+		if filter.NumericEqualityFilter != nil {
+			tfMap["numeric_equality_filter"] = flattenNumericEqualityFilter(filter.NumericEqualityFilter)
+		}
+		if filter.NumericRangeFilter != nil {
+			tfMap["numeric_range_filter"] = flattenNumericRangeFilter(filter.NumericRangeFilter)
+		}
+		if filter.RelativeDatesFilter != nil {
+			tfMap["relative_dates_filter"] = flattenRelativeDatesFilter(filter.RelativeDatesFilter)
+		}
+		if filter.TimeEqualityFilter != nil {
+			tfMap["time_equality_filter"] = flattenTimeEqualityFilter(filter.TimeEqualityFilter)
+		}
+		if filter.TimeRangeFilter != nil {
+			tfMap["time_range_filter"] = flattenTimeRangeFilter(filter.TimeRangeFilter)
+		}
+		if filter.TopBottomFilter != nil {
+			tfMap["top_bottom_filter"] = flattenTopBottomFilter(filter.TopBottomFilter)
+		}
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenCategoryFilter(apiObject *quicksight.CategoryFilter) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Column != nil {
+		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+	}
+	if apiObject.Configuration != nil {
+		tfMap["configuration"] = flattenCategoryFilterConfiguration(apiObject.Configuration)
+	}
+	if apiObject.FilterId != nil {
+		tfMap["filter_id"] = aws.StringValue(apiObject.FilterId)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenCategoryFilterConfiguration(apiObject *quicksight.CategoryFilterConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CustomFilterConfiguration != nil {
+		tfMap["custom_filter_configuration"] = flattenCustomFilterConfiguration(apiObject.CustomFilterConfiguration)
+	}
+	if apiObject.CustomFilterListConfiguration != nil {
+		tfMap["custom_filter_list_configuration"] = flattenCustomFilterListConfiguration(apiObject.CustomFilterListConfiguration)
+	}
+	if apiObject.FilterListConfiguration != nil {
+		tfMap["filter_list_configuration"] = flattenFilterListConfiguration(apiObject.FilterListConfiguration)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenCustomFilterConfiguration(apiObject *quicksight.CustomFilterConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CategoryValue != nil {
+		tfMap["category_value"] = aws.StringValue(apiObject.CategoryValue)
+	}
+	if apiObject.MatchOperator != nil {
+		tfMap["match_operator"] = aws.StringValue(apiObject.MatchOperator)
+	}
+	if apiObject.NullOption != nil {
+		tfMap["null_option"] = aws.StringValue(apiObject.NullOption)
+	}
+	if apiObject.ParameterName != nil {
+		tfMap["parameter_name"] = aws.StringValue(apiObject.ParameterName)
+	}
+	if apiObject.SelectAllOptions != nil {
+		tfMap["select_all_options"] = aws.StringValue(apiObject.SelectAllOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenCustomFilterListConfiguration(apiObject *quicksight.CustomFilterListConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CategoryValues != nil {
+		tfMap["category_values"] = flex.FlattenStringList(apiObject.CategoryValues)
+	}
+	if apiObject.MatchOperator != nil {
+		tfMap["match_operator"] = aws.StringValue(apiObject.MatchOperator)
+	}
+	if apiObject.NullOption != nil {
+		tfMap["null_option"] = aws.StringValue(apiObject.NullOption)
+	}
+	if apiObject.SelectAllOptions != nil {
+		tfMap["select_all_options"] = aws.StringValue(apiObject.SelectAllOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenFilterListConfiguration(apiObject *quicksight.FilterListConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CategoryValues != nil {
+		tfMap["category_values"] = flex.FlattenStringList(apiObject.CategoryValues)
+	}
+	if apiObject.MatchOperator != nil {
+		tfMap["match_operator"] = aws.StringValue(apiObject.MatchOperator)
+	}
+	if apiObject.SelectAllOptions != nil {
+		tfMap["select_all_options"] = aws.StringValue(apiObject.SelectAllOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenNumericEqualityFilter(apiObject *quicksight.NumericEqualityFilter) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.AggregationFunction != nil {
+		tfMap["aggregation_function"] = flattenAggregationFunction(apiObject.AggregationFunction)
+	}
+	if apiObject.Column != nil {
+		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+	}
+	if apiObject.FilterId != nil {
+		tfMap["filter_id"] = aws.StringValue(apiObject.FilterId)
+	}
+	if apiObject.MatchOperator != nil {
+		tfMap["match_operator"] = aws.StringValue(apiObject.MatchOperator)
+	}
+	if apiObject.NullOption != nil {
+		tfMap["null_option"] = aws.StringValue(apiObject.NullOption)
+	}
+	if apiObject.ParameterName != nil {
+		tfMap["parameter_name"] = aws.StringValue(apiObject.ParameterName)
+	}
+	if apiObject.SelectAllOptions != nil {
+		tfMap["select_all_options"] = aws.StringValue(apiObject.SelectAllOptions)
+	}
+	if apiObject.Value != nil {
+		tfMap["value"] = aws.Float64Value(apiObject.Value)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenNumericRangeFilter(apiObject *quicksight.NumericRangeFilter) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.AggregationFunction != nil {
+		tfMap["aggregation_function"] = flattenAggregationFunction(apiObject.AggregationFunction)
+	}
+	if apiObject.Column != nil {
+		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+	}
+	if apiObject.FilterId != nil {
+		tfMap["filter_id"] = aws.StringValue(apiObject.FilterId)
+	}
+	if apiObject.IncludeMaximum != nil {
+		tfMap["include_maximum"] = aws.BoolValue(apiObject.IncludeMaximum)
+	}
+	if apiObject.IncludeMinimum != nil {
+		tfMap["include_minimum"] = aws.BoolValue(apiObject.IncludeMinimum)
+	}
+	if apiObject.NullOption != nil {
+		tfMap["null_option"] = aws.StringValue(apiObject.NullOption)
+	}
+	if apiObject.RangeMaximum != nil {
+		tfMap["range_maximum"] = flattenNumericRangeFilterValue(apiObject.RangeMaximum)
+	}
+	if apiObject.RangeMinimum != nil {
+		tfMap["range_minimum"] = flattenNumericRangeFilterValue(apiObject.RangeMinimum)
+	}
+	if apiObject.SelectAllOptions != nil {
+		tfMap["select_all_options"] = aws.StringValue(apiObject.SelectAllOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenNumericRangeFilterValue(apiObject *quicksight.NumericRangeFilterValue) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Parameter != nil {
+		tfMap["parameter"] = aws.StringValue(apiObject.Parameter)
+	}
+	if apiObject.StaticValue != nil {
+		tfMap["static_value"] = aws.Float64Value(apiObject.StaticValue)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenRelativeDatesFilter(apiObject *quicksight.RelativeDatesFilter) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.AnchorDateConfiguration != nil {
+		tfMap["anchor_date_configuration"] = flattenAnchorDateConfiguration(apiObject.AnchorDateConfiguration)
+	}
+	if apiObject.Column != nil {
+		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+	}
+	if apiObject.ExcludePeriodConfiguration != nil {
+		tfMap["exclude_period_configuration"] = flattenExcludePeriodConfiguration(apiObject.ExcludePeriodConfiguration)
+	}
+	if apiObject.FilterId != nil {
+		tfMap["filter_id"] = aws.StringValue(apiObject.FilterId)
+	}
+	if apiObject.MinimumGranularity != nil {
+		tfMap["minimum_granularity"] = aws.StringValue(apiObject.MinimumGranularity)
+	}
+	if apiObject.NullOption != nil {
+		tfMap["null_option"] = aws.StringValue(apiObject.NullOption)
+	}
+	if apiObject.ParameterName != nil {
+		tfMap["parameter_name"] = aws.StringValue(apiObject.ParameterName)
+	}
+	if apiObject.RelativeDateType != nil {
+		tfMap["relative_date_type"] = aws.StringValue(apiObject.RelativeDateType)
+	}
+	if apiObject.RelativeDateValue != nil {
+		tfMap["relative_date_value"] = aws.Int64Value(apiObject.RelativeDateValue)
+	}
+	if apiObject.TimeGranularity != nil {
+		tfMap["time_granularity"] = aws.StringValue(apiObject.TimeGranularity)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenAnchorDateConfiguration(apiObject *quicksight.AnchorDateConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.AnchorOption != nil {
+		tfMap["anchor_option"] = aws.StringValue(apiObject.AnchorOption)
+	}
+	if apiObject.ParameterName != nil {
+		tfMap["parameter_name"] = aws.StringValue(apiObject.ParameterName)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenExcludePeriodConfiguration(apiObject *quicksight.ExcludePeriodConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Amount != nil {
+		tfMap["amount"] = aws.Int64Value(apiObject.Amount)
+	}
+	if apiObject.Granularity != nil {
+		tfMap["granularity"] = aws.StringValue(apiObject.Granularity)
+	}
+	if apiObject.Status != nil {
+		tfMap["status"] = aws.StringValue(apiObject.Status)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTimeEqualityFilter(apiObject *quicksight.TimeEqualityFilter) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Column != nil {
+		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+	}
+	if apiObject.FilterId != nil {
+		tfMap["filter_id"] = aws.StringValue(apiObject.FilterId)
+	}
+	if apiObject.ParameterName != nil {
+		tfMap["parameter_name"] = aws.StringValue(apiObject.ParameterName)
+	}
+	if apiObject.TimeGranularity != nil {
+		tfMap["time_granularity"] = aws.StringValue(apiObject.TimeGranularity)
+	}
+	if apiObject.Value != nil {
+		tfMap["value"] = apiObject.Value.Format(time.RFC3339)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTimeRangeFilter(apiObject *quicksight.TimeRangeFilter) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Column != nil {
+		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+	}
+	if apiObject.ExcludePeriodConfiguration != nil {
+		tfMap["exclude_period_configuration"] = flattenExcludePeriodConfiguration(apiObject.ExcludePeriodConfiguration)
+	}
+	if apiObject.FilterId != nil {
+		tfMap["filter_id"] = aws.StringValue(apiObject.FilterId)
+	}
+	if apiObject.IncludeMaximum != nil {
+		tfMap["include_maximum"] = aws.BoolValue(apiObject.IncludeMaximum)
+	}
+	if apiObject.IncludeMinimum != nil {
+		tfMap["include_minimum"] = aws.BoolValue(apiObject.IncludeMinimum)
+	}
+	if apiObject.NullOption != nil {
+		tfMap["null_option"] = aws.StringValue(apiObject.NullOption)
+	}
+	if apiObject.RangeMaximumValue != nil {
+		tfMap["range_maximum_value"] = flattenTimeRangeFilterValue(apiObject.RangeMaximumValue)
+	}
+	if apiObject.RangeMinimumValue != nil {
+		tfMap["range_minimum_value"] = flattenTimeRangeFilterValue(apiObject.RangeMinimumValue)
+	}
+	if apiObject.TimeGranularity != nil {
+		tfMap["time_granularity"] = aws.StringValue(apiObject.TimeGranularity)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTimeRangeFilterValue(apiObject *quicksight.TimeRangeFilterValue) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Parameter != nil {
+		tfMap["parameter"] = aws.StringValue(apiObject.Parameter)
+	}
+	if apiObject.RollingDate != nil {
+		tfMap["rolling_date"] = flattenRollingDateConfiguration(apiObject.RollingDate)
+	}
+	if apiObject.StaticValue != nil {
+		tfMap["static_value"] = apiObject.StaticValue.Format(time.RFC3339)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTopBottomFilter(apiObject *quicksight.TopBottomFilter) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.AggregationSortConfigurations != nil {
+		tfMap["aggregation_sort_configuration"] = flattenAggregationSortConfigurations(apiObject.AggregationSortConfigurations)
+	}
+	if apiObject.Column != nil {
+		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+	}
+	if apiObject.FilterId != nil {
+		tfMap["filter_id"] = aws.StringValue(apiObject.FilterId)
+	}
+	if apiObject.Limit != nil {
+		tfMap["limit"] = aws.Int64Value(apiObject.Limit)
+	}
+	if apiObject.ParameterName != nil {
+		tfMap["parameter_name"] = aws.StringValue(apiObject.ParameterName)
+	}
+	if apiObject.TimeGranularity != nil {
+		tfMap["time_granularity"] = aws.StringValue(apiObject.TimeGranularity)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenAggregationSortConfigurations(apiObject []*quicksight.AggregationSortConfiguration) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if config.AggregationFunction != nil {
+			tfMap["aggregation_function"] = flattenAggregationFunction(config.AggregationFunction)
+		}
+		if config.Column != nil {
+			tfMap["column"] = flattenColumnIdentifier(config.Column)
+		}
+		if config.SortDirection != nil {
+			tfMap["sort_direction"] = aws.StringValue(config.SortDirection)
+		}
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenFilterScopeConfiguration(apiObject *quicksight.FilterScopeConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.SelectedSheets != nil {
+		tfMap["selected_sheets"] = flattenSelectedSheetsFilterScopeConfiguration(apiObject.SelectedSheets)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenSelectedSheetsFilterScopeConfiguration(apiObject *quicksight.SelectedSheetsFilterScopeConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.SheetVisualScopingConfigurations != nil {
+		tfMap["sheet_visual_scoping_configurations"] = flattenSheetVisualScopingConfigurations(apiObject.SheetVisualScopingConfigurations)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenSheetVisualScopingConfigurations(apiObject []*quicksight.SheetVisualScopingConfiguration) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if config.Scope != nil {
+			tfMap["scope"] = aws.StringValue(config.Scope)
+		}
+		if config.SheetId != nil {
+			tfMap["sheet_id"] = aws.StringValue(config.SheetId)
+		}
+		if config.VisualIds != nil {
+			tfMap["visual_ids"] = flex.FlattenStringSet(config.VisualIds)
+		}
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}

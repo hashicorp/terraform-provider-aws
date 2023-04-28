@@ -69,6 +69,16 @@ func FlattenStringList(list []*string) []interface{} {
 	return vs
 }
 
+// Takes list of pointers to time.Time. Expand to an array
+// of strings and returns a []interface{}
+func FlattenTimeStringList(list []*time.Time, format string) []interface{} {
+	vs := make([]interface{}, 0, len(list))
+	for _, v := range list {
+		vs = append(vs, v.Format(format))
+	}
+	return vs
+}
+
 // Takes list of pointers to strings. Expand to an array
 // of raw strings and returns a []interface{}
 // to keep compatibility w/ schema.NewSetschema.NewSet
@@ -182,6 +192,17 @@ func FlattenInt64List(list []*int64) []interface{} {
 	vs := make([]interface{}, 0, len(list))
 	for _, v := range list {
 		vs = append(vs, int(aws.Int64Value(v)))
+	}
+	return vs
+}
+
+// Takes list of pointers to float64s. Expand to an array
+// of raw floats and returns a []interface{}
+// to keep compatibility w/ schema.NewSet
+func FlattenFloat64List(list []*float64) []interface{} {
+	vs := make([]interface{}, 0, len(list))
+	for _, v := range list {
+		vs = append(vs, int(aws.Float64Value(v)))
 	}
 	return vs
 }
