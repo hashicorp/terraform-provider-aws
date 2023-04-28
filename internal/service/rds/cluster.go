@@ -1167,6 +1167,8 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
+	SetTagsOut(ctx, dbc.TagList)
+
 	return nil
 }
 
