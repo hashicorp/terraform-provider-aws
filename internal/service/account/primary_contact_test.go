@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/account"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfaccount "github.com/hashicorp/terraform-provider-aws/internal/service/account"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccPrimaryContact_basic(t *testing.T) {
@@ -22,7 +22,7 @@ func testAccPrimaryContact_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, account.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AccountEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -80,7 +80,7 @@ func testAccCheckPrimaryContactExists(ctx context.Context, n string) resource.Te
 			return fmt.Errorf("No Account Primary Contact ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AccountConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AccountClient()
 
 		_, err := tfaccount.FindContactInformation(ctx, conn, rs.Primary.Attributes["account_id"])
 

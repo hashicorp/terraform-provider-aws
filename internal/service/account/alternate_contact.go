@@ -8,14 +8,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/account"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/account"
+	"github.com/aws/aws-sdk-go-v2/service/account/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/account/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -47,10 +49,10 @@ func ResourceAlternateContact() *schema.Resource {
 				ValidateFunc: verify.ValidAccountID,
 			},
 			"alternate_contact_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(account.AlternateContactType_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.AlternateContactType](),
 			},
 			"email_address": {
 				Type:         schema.TypeString,
@@ -77,13 +79,13 @@ func ResourceAlternateContact() *schema.Resource {
 }
 
 func resourceAlternateContactCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccountConn()
+	conn := meta.(*conns.AWSClient).AccountClient()
 
 	accountID := d.Get("account_id").(string)
 	contactType := d.Get("alternate_contact_type").(string)
 	id := AlternateContactCreateResourceID(accountID, contactType)
 	input := &account.PutAlternateContactInput{
-		AlternateContactType: aws.String(contactType),
+		AlternateContactType: types.AlternateContactType(contactType),
 		EmailAddress:         aws.String(d.Get("email_address").(string)),
 		Name:                 aws.String(d.Get("name").(string)),
 		PhoneNumber:          aws.String(d.Get("phone_number").(string)),
@@ -94,7 +96,7 @@ func resourceAlternateContactCreate(ctx context.Context, d *schema.ResourceData,
 		input.AccountId = aws.String(accountID)
 	}
 
-	_, err := conn.PutAlternateContactWithContext(ctx, input)
+	_, err := conn.PutAlternateContact(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("creating Account Alternate Contact (%s): %s", id, err)
@@ -102,7 +104,7 @@ func resourceAlternateContactCreate(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(id)
 
-	_, err = retry.UntilFoundN(ctx, d.Timeout(schema.TimeoutCreate), func() (*account.AlternateContact, error) {
+	_, err = retry.UntilFoundN(ctx, d.Timeout(schema.TimeoutCreate), func() (*types.AlternateContact, error) {
 		return FindAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
 	}, 2)
 
@@ -114,7 +116,7 @@ func resourceAlternateContactCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceAlternateContactRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccountConn()
+	conn := meta.(*conns.AWSClient).AccountClient()
 
 	accountID, contactType, err := AlternateContactParseResourceID(d.Id())
 
@@ -145,7 +147,7 @@ func resourceAlternateContactRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceAlternateContactUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccountConn()
+	conn := meta.(*conns.AWSClient).AccountClient()
 
 	accountID, contactType, err := AlternateContactParseResourceID(d.Id())
 
@@ -159,7 +161,7 @@ func resourceAlternateContactUpdate(ctx context.Context, d *schema.ResourceData,
 	title := d.Get("title").(string)
 
 	input := &account.PutAlternateContactInput{
-		AlternateContactType: aws.String(contactType),
+		AlternateContactType: types.AlternateContactType(contactType),
 		EmailAddress:         aws.String(email),
 		Name:                 aws.String(name),
 		PhoneNumber:          aws.String(phone),
@@ -170,22 +172,22 @@ func resourceAlternateContactUpdate(ctx context.Context, d *schema.ResourceData,
 		input.AccountId = aws.String(accountID)
 	}
 
-	_, err = conn.PutAlternateContactWithContext(ctx, input)
+	_, err = conn.PutAlternateContact(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("updating Account Alternate Contact (%s): %s", d.Id(), err)
 	}
 
 	_, err = retry.If(ctx, d.Timeout(schema.TimeoutUpdate),
-		func() (*account.AlternateContact, error) {
+		func() (*types.AlternateContact, error) {
 			return FindAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
 		},
-		func(v *account.AlternateContact, err error) (bool, error) {
+		func(v *types.AlternateContact, err error) (bool, error) {
 			if err != nil {
 				return false, err
 			}
 
-			equal := email == aws.StringValue(v.EmailAddress) && name == aws.StringValue(v.Name) && phone == aws.StringValue(v.PhoneNumber) && title == aws.StringValue(v.Title)
+			equal := email == aws.ToString(v.EmailAddress) && name == aws.ToString(v.Name) && phone == aws.ToString(v.PhoneNumber) && title == aws.ToString(v.Title)
 
 			return !equal, nil
 		},
@@ -199,7 +201,7 @@ func resourceAlternateContactUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceAlternateContactDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccountConn()
+	conn := meta.(*conns.AWSClient).AccountClient()
 
 	accountID, contactType, err := AlternateContactParseResourceID(d.Id())
 
@@ -208,16 +210,16 @@ func resourceAlternateContactDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	input := &account.DeleteAlternateContactInput{
-		AlternateContactType: aws.String(contactType),
+		AlternateContactType: types.AlternateContactType(contactType),
 	}
 	if accountID != "" {
 		input.AccountId = aws.String(accountID)
 	}
 
 	log.Printf("[DEBUG] Deleting Account Alternate Contact: %s", d.Id())
-	_, err = conn.DeleteAlternateContactWithContext(ctx, input)
+	_, err = conn.DeleteAlternateContact(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, account.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil
 	}
 
@@ -225,7 +227,7 @@ func resourceAlternateContactDelete(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("deleting Account Alternate Contact (%s): %s", d.Id(), err)
 	}
 
-	_, err = retry.UntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (*account.AlternateContact, error) {
+	_, err = retry.UntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (*types.AlternateContact, error) {
 		return FindAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
 	})
 
@@ -236,17 +238,17 @@ func resourceAlternateContactDelete(ctx context.Context, d *schema.ResourceData,
 	return nil
 }
 
-func FindAlternateContactByTwoPartKey(ctx context.Context, conn *account.Account, accountID, contactType string) (*account.AlternateContact, error) {
+func FindAlternateContactByTwoPartKey(ctx context.Context, conn *account.Client, accountID, contactType string) (*types.AlternateContact, error) {
 	input := &account.GetAlternateContactInput{
-		AlternateContactType: aws.String(contactType),
+		AlternateContactType: types.AlternateContactType(contactType),
 	}
 	if accountID != "" {
 		input.AccountId = aws.String(accountID)
 	}
 
-	output, err := conn.GetAlternateContactWithContext(ctx, input)
+	output, err := conn.GetAlternateContact(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, account.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

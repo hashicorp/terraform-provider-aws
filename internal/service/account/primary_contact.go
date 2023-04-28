@@ -5,14 +5,15 @@ import (
 	"log"
 	"regexp"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/account"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/account"
+	"github.com/aws/aws-sdk-go-v2/service/account/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -91,11 +92,11 @@ func ResourcePrimaryContact() *schema.Resource {
 }
 
 func resourcePrimaryContactPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccountConn()
+	conn := meta.(*conns.AWSClient).AccountClient()
 
 	id := "default"
 	input := &account.PutContactInformationInput{
-		ContactInformation: &account.ContactInformation{
+		ContactInformation: &types.ContactInformation{
 			AddressLine1: aws.String(d.Get("address_line_1").(string)),
 			City:         aws.String(d.Get("city").(string)),
 			CountryCode:  aws.String(d.Get("country_code").(string)),
@@ -134,7 +135,7 @@ func resourcePrimaryContactPut(ctx context.Context, d *schema.ResourceData, meta
 		input.ContactInformation.WebsiteUrl = aws.String(v.(string))
 	}
 
-	_, err := conn.PutContactInformationWithContext(ctx, input)
+	_, err := conn.PutContactInformation(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("creating Account Primary Contact (%s): %s", id, err)
@@ -148,7 +149,7 @@ func resourcePrimaryContactPut(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourcePrimaryContactRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccountConn()
+	conn := meta.(*conns.AWSClient).AccountClient()
 
 	contactInformation, err := FindContactInformation(ctx, conn, d.Get("account_id").(string))
 
@@ -179,15 +180,15 @@ func resourcePrimaryContactRead(ctx context.Context, d *schema.ResourceData, met
 	return nil
 }
 
-func FindContactInformation(ctx context.Context, conn *account.Account, accountID string) (*account.ContactInformation, error) {
+func FindContactInformation(ctx context.Context, conn *account.Client, accountID string) (*types.ContactInformation, error) {
 	input := &account.GetContactInformationInput{}
 	if accountID != "" {
 		input.AccountId = aws.String(accountID)
 	}
 
-	output, err := conn.GetContactInformationWithContext(ctx, input)
+	output, err := conn.GetContactInformation(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, account.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
