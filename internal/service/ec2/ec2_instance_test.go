@@ -3691,6 +3691,73 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToDisabledToEnabledToUnspe
 }
 
 // Tests run in third region us-east-2
+func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToEnabledToDisabledToUnspecified(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2, v3, v4 ec2.Instance
+	var providers []*schema.Provider
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 3)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternatePlusProvidersThird(ctx, t, &providers),
+		// issue faced when testing with the acctest.CheckWithProviders - panic: runtime error: invalid memory address or nil pointer dereference
+		CheckDestroy: testAccCheckInstanceDestroy(ctx), // acctest.CheckWithProviders(testAccCheckInstanceDestroyWithProvider(ctx), &providers),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpUnspecified(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExistsWithProvider(ctx, resourceName, &v1, acctest.RegionProviderFunc(acctest.ThirdRegion(), &providers)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					// API returns empty string if amd_sev_snp is not specified
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+			{
+				// expect recreation when it is enabled
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExistsWithProvider(ctx, resourceName, &v2, acctest.RegionProviderFunc(acctest.ThirdRegion(), &providers)),
+					testAccCheckInstanceRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationEnabled),
+				),
+			},
+			{
+				// expect recreation when it is disabled
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationDisabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExistsWithProvider(ctx, resourceName, &v3, acctest.RegionProviderFunc(acctest.ThirdRegion(), &providers)),
+					testAccCheckInstanceRecreated(&v2, &v3),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationDisabled),
+				),
+			},
+			{
+				// expect no recreation if the cpu options block is removed - amd_sev_snp should still be disabled
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpUnspecified(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExistsWithProvider(ctx, resourceName, &v4, acctest.RegionProviderFunc(acctest.ThirdRegion(), &providers)),
+					testAccCheckInstanceNotRecreated(&v3, &v4),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationDisabled),
+				),
+			},
+		},
+	})
+}
+
+// Tests run in third region us-east-2
 func TestAccEC2Instance_cpuOptionsAmdSevSnpEnabledToDisabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 ec2.Instance
