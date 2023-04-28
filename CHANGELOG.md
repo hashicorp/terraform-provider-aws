@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_dms_replication_instance` ([#15406](https://github.com/hashicorp/terraform-provider-aws/issues/15406))
 * **New Resource:** `aws_directory_service_trust` ([#31037](https://github.com/hashicorp/terraform-provider-aws/issues/31037))
 
 ENHANCEMENTS:
