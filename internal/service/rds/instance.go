@@ -544,12 +544,6 @@ func ResourceInstance() *schema.Resource {
 					},
 				},
 			},
-			"security_group_names": {
-				Type:       schema.TypeSet,
-				Optional:   true,
-				Elem:       &schema.Schema{Type: schema.TypeString},
-				Deprecated: `With the retirement of EC2-Classic the security_group_names attribute has been deprecated and will be removed in a future version.`,
-			},
 			"skip_final_snapshot": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -635,10 +629,6 @@ func ResourceInstance() *schema.Resource {
 func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
-
-	if v, ok := d.GetOk("security_group_names"); ok && v.(*schema.Set).Len() > 0 {
-		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic no new RDS DB Instances can be created referencing RDS DB Security Groups`)
-	}
 
 	// Some API calls (e.g. CreateDBInstanceReadReplica and
 	// RestoreDBInstanceFromDBSnapshot do not support all parameters to
@@ -1526,10 +1516,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.Port = aws.Int64(int64(v.(int)))
 		}
 
-		if v := d.Get("security_group_names").(*schema.Set); v.Len() > 0 {
-			input.DBSecurityGroups = flex.ExpandStringSet(v)
-		}
-
 		if v, ok := d.GetOk("storage_throughput"); ok {
 			input.StorageThroughput = aws.Int64(int64(v.(int)))
 		}
@@ -1704,11 +1690,6 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("replicas", aws.StringValueSlice(v.ReadReplicaDBInstanceIdentifiers))
 	d.Set("replicate_source_db", v.ReadReplicaSourceDBInstanceIdentifier)
 	d.Set("resource_id", v.DbiResourceId)
-	var securityGroupNames []string
-	for _, v := range v.DBSecurityGroups {
-		securityGroupNames = append(securityGroupNames, aws.StringValue(v.DBSecurityGroupName))
-	}
-	d.Set("security_group_names", securityGroupNames)
 	d.Set("status", v.DBInstanceStatus)
 	d.Set("storage_encrypted", v.StorageEncrypted)
 	d.Set("storage_throughput", v.StorageThroughput)
@@ -2139,13 +2120,6 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 	if d.HasChange("replica_mode") {
 		needsModify = true
 		input.ReplicaMode = types.ReplicaMode(d.Get("replica_mode").(string))
-	}
-
-	if d.HasChange("security_group_names") {
-		if v := d.Get("security_group_names").(*schema.Set); v.Len() > 0 {
-			needsModify = true
-			input.DBSecurityGroups = flex.ExpandStringValueSet(v)
-		}
 	}
 
 	if d.HasChange("storage_throughput") {

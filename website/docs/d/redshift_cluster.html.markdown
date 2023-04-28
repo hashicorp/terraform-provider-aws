@@ -63,7 +63,6 @@ In addition to all arguments above, the following attributes are exported:
 * `cluster_parameter_group_name` - The name of the parameter group to be associated with this cluster
 * `cluster_public_key` - Public key for the cluster
 * `cluster_revision_number` - The cluster revision number
-* `cluster_security_groups` - The security groups associated with the cluster
 * `cluster_subnet_group_name` - The name of a cluster subnet group to be associated with this cluster
 * `cluster_type` - Cluster type
 * `database_name` - Name of the default database in the cluster

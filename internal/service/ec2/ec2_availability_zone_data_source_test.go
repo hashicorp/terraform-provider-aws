@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -187,7 +188,7 @@ func TestAccEC2AvailabilityZoneDataSource_zoneID(t *testing.T) {
 	})
 }
 
-func testAccPreCheckLocalZoneAvailable(ctx context.Context, t *testing.T) {
+func testAccPreCheckLocalZoneAvailable(ctx context.Context, t *testing.T, groupNames ...string) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeAvailabilityZonesInput{
@@ -195,6 +196,13 @@ func testAccPreCheckLocalZoneAvailable(ctx context.Context, t *testing.T) {
 			"zone-type":     "local-zone",
 			"opt-in-status": "opted-in",
 		}),
+	}
+
+	if len(groupNames) > 0 {
+		input.Filters = append(input.Filters, &ec2.Filter{
+			Name:   aws.String("group-name"),
+			Values: aws.StringSlice(groupNames),
+		})
 	}
 
 	output, err := tfec2.FindAvailabilityZones(ctx, conn, input)

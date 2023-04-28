@@ -39,6 +39,11 @@ func DataSourceAMIIDs() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"include_deprecated": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
+			},
 			"name_regex": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -67,7 +72,8 @@ func dataSourceAMIIDsRead(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeImagesInput{
-		Owners: flex.ExpandStringList(d.Get("owners").([]interface{})),
+		IncludeDeprecated: aws.Bool(d.Get("include_deprecated").(bool)),
+		Owners:            flex.ExpandStringList(d.Get("owners").([]interface{})),
 	}
 
 	if v, ok := d.GetOk("executable_users"); ok {

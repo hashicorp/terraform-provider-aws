@@ -273,7 +273,6 @@ func ResourceCluster() *schema.Resource {
 					"parameter_group_name",
 					"port",
 					"security_group_ids",
-					"security_group_names",
 					"snapshot_arns",
 					"snapshot_name",
 					"snapshot_retention_limit",
@@ -286,14 +285,6 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"security_group_names": {
-				Type:       schema.TypeSet,
-				Optional:   true,
-				Computed:   true,
-				ForceNew:   true,
-				Elem:       &schema.Schema{Type: schema.TypeString},
-				Deprecated: `With the retirement of EC2-Classic the security_group_names attribute has been deprecated and will be removed in a future version.`,
 			},
 			"snapshot_arns": {
 				Type:     schema.TypeList,
@@ -349,10 +340,6 @@ func ResourceCluster() *schema.Resource {
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn()
-
-	if v, ok := d.GetOk("security_group_names"); ok && v.(*schema.Set).Len() > 0 {
-		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic no new ElastiCache Clusters can be created referencing ElastiCache Security Groups`)
-	}
 
 	input := &elasticache.CreateCacheClusterInput{
 		Tags: GetTagsIn(ctx),
@@ -571,9 +558,6 @@ func setFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) er
 	d.Set("auto_minor_version_upgrade", strconv.FormatBool(aws.BoolValue(c.AutoMinorVersionUpgrade)))
 
 	d.Set("subnet_group_name", c.CacheSubnetGroupName)
-	if err := d.Set("security_group_names", flattenSecurityGroupNames(c.CacheSecurityGroups)); err != nil {
-		return fmt.Errorf("setting security_group_names: %w", err)
-	}
 	if err := d.Set("security_group_ids", flattenSecurityGroupIDs(c.SecurityGroups)); err != nil {
 		return fmt.Errorf("setting security_group_ids: %w", err)
 	}

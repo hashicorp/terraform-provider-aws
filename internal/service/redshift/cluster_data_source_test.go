@@ -180,8 +180,6 @@ data "aws_redshift_cluster" "test" {
 
 func testAccClusterDataSourceConfig_logging(rName string) string {
 	return fmt.Sprintf(`
-data "aws_redshift_service_account" "test" {}
-
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
@@ -193,8 +191,8 @@ data "aws_iam_policy_document" "test" {
     resources = ["${aws_s3_bucket.test.arn}/*"]
 
     principals {
-      identifiers = [data.aws_redshift_service_account.test.arn]
-      type        = "AWS"
+      type        = "Service"
+      identifiers = ["redshift.amazonaws.com"]
     }
   }
 
@@ -203,8 +201,8 @@ data "aws_iam_policy_document" "test" {
     resources = [aws_s3_bucket.test.arn]
 
     principals {
-      identifiers = [data.aws_redshift_service_account.test.arn]
-      type        = "AWS"
+      type        = "Service"
+      identifiers = ["redshift.amazonaws.com"]
     }
   }
 }

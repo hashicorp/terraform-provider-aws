@@ -23,6 +23,7 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdktypes"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -391,14 +392,14 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 			m["resource"] = aws.StringValue(optionSetting.ResourceName)
 		}
 
-		if optionSetting.Value != nil {
+		if value := aws.StringValue(optionSetting.Value); value != "" {
 			switch aws.StringValue(optionSetting.OptionName) {
 			case "SecurityGroups":
-				m["value"] = dropGeneratedSecurityGroup(ctx, aws.StringValue(optionSetting.Value), meta)
+				m["value"] = dropGeneratedSecurityGroup(ctx, meta.(*conns.AWSClient).EC2Conn(), value)
 			case "Subnets", "ELBSubnets":
-				m["value"] = sortValues(aws.StringValue(optionSetting.Value))
+				m["value"] = sortValues(value)
 			default:
-				m["value"] = aws.StringValue(optionSetting.Value)
+				m["value"] = value
 			}
 		}
 
@@ -825,49 +826,21 @@ func extractOptionSettings(s *schema.Set) []*elasticbeanstalk.ConfigurationOptio
 	return settings
 }
 
-func dropGeneratedSecurityGroup(ctx context.Context, settingValue string, meta interface{}) string {
-	conn := meta.(*conns.AWSClient).EC2Conn()
-
-	groups := strings.Split(settingValue, ",")
-
-	// Check to see if groups are ec2-classic or vpc security groups
-	ec2Classic := true
-	beanstalkSGRegexp := regexp.MustCompile("sg-[0-9a-fA-F]{8}")
-	for _, g := range groups {
-		if beanstalkSGRegexp.MatchString(g) {
-			ec2Classic = false
-			break
-		}
+func dropGeneratedSecurityGroup(ctx context.Context, conn *ec2.EC2, settingValue string) string {
+	input := &ec2.DescribeSecurityGroupsInput{
+		GroupIds: aws.StringSlice(strings.Split(settingValue, ",")),
 	}
 
-	var resp *ec2.DescribeSecurityGroupsOutput
-	var err error
-
-	if ec2Classic {
-		resp, err = conn.DescribeSecurityGroupsWithContext(ctx, &ec2.DescribeSecurityGroupsInput{
-			GroupNames: aws.StringSlice(groups),
-		})
-	} else {
-		resp, err = conn.DescribeSecurityGroupsWithContext(ctx, &ec2.DescribeSecurityGroupsInput{
-			GroupIds: aws.StringSlice(groups),
-		})
-	}
+	securityGroup, err := tfec2.FindSecurityGroups(ctx, conn, input)
 
 	if err != nil {
-		log.Printf("[DEBUG] Elastic Beanstalk error describing SecurityGroups: %v", err)
 		return settingValue
 	}
 
-	log.Printf("[DEBUG] Elastic Beanstalk using ec2-classic security-groups: %t", ec2Classic)
 	var legitGroups []string
-	for _, group := range resp.SecurityGroups {
-		log.Printf("[DEBUG] Elastic Beanstalk SecurityGroup: %v", *group.GroupName)
-		if !strings.HasPrefix(*group.GroupName, "awseb") {
-			if ec2Classic {
-				legitGroups = append(legitGroups, *group.GroupName)
-			} else {
-				legitGroups = append(legitGroups, *group.GroupId)
-			}
+	for _, group := range securityGroup {
+		if !strings.HasPrefix(aws.StringValue(group.GroupName), "awseb") {
+			legitGroups = append(legitGroups, aws.StringValue(group.GroupId))
 		}
 	}
 
