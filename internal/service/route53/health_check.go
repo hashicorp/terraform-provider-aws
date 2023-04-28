@@ -290,7 +290,7 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(aws.StringValue(output.HealthCheck.Id))
 
-	if err := UpdateTags(ctx, conn, d.Id(), route53.TagResourceTypeHealthcheck, nil, KeyValueTags(ctx, GetTagsIn(ctx))); err != nil {
+	if err := createTags(ctx, conn, d.Id(), route53.TagResourceTypeHealthcheck, GetTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Route53 Health Check (%s) tags: %s", d.Id(), err)
 	}
 

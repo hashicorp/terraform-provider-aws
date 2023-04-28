@@ -208,6 +208,7 @@ provider "aws" {
   <li><code>imagebuilder</code></li>
   <li><code>inspector</code></li>
   <li><code>inspector2</code> (or <code>inspectorv2</code>)</li>
+  <li><code>internetmonitor</code></li>
   <li><code>iot</code></li>
   <li><code>iot1clickdevices</code> (or <code>iot1clickdevicesservice</code>)</li>
   <li><code>iot1clickprojects</code></li>

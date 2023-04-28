@@ -96,6 +96,15 @@ func SetTagsOut(ctx context.Context, tags []*ssm.Tag) {
 	}
 }
 
+// createTags creates ssm service tags for new resources.
+func createTags(ctx context.Context, conn ssmiface.SSMAPI, identifier, resourceType string, tags []*ssm.Tag) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return UpdateTags(ctx, conn, identifier, resourceType, nil, KeyValueTags(ctx, tags))
+}
+
 // UpdateTags updates ssm service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.

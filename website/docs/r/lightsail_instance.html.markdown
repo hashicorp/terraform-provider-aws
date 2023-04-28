@@ -90,6 +90,7 @@ Defines the add on configuration for the instance. The `add_on` configuration bl
 * `status` - (Required) The status of the add on. Valid Values: `Enabled`, `Disabled`.
 
 ## Availability Zones
+
 Lightsail currently supports the following Availability Zones (e.g., `us-east-1a`):
 
 - `ap-northeast-1{a,c,d}`

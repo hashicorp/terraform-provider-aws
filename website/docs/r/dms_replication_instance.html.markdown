@@ -11,6 +11,7 @@ description: |-
 Provides a DMS (Data Migration Service) replication instance resource. DMS replication instances can be created, updated, deleted, and imported.
 
 ## Example Usage
+
 Create required roles and then create a DMS instance, setting the depends_on to the required role policy attachments.
 
 ```terraform
