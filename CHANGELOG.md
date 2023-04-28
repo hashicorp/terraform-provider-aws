@@ -1,4 +1,10 @@
 ## 4.66.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_lambda_function: Add support for `java17` `runtime` value ([#31027](https://github.com/hashicorp/terraform-provider-aws/issues/31027))
+* resource/aws_lambda_layer_version: Add support for `java17` `compatible_runtimes` value ([#31028](https://github.com/hashicorp/terraform-provider-aws/issues/31028))
+
 ## 4.65.0 (April 27, 2023)
 
 NOTES:
