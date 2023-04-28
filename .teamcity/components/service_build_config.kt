@@ -1,9 +1,10 @@
+import java.io.File
 import jetbrains.buildServer.configs.kotlin.v2019_2.AbsoluteId
 import jetbrains.buildServer.configs.kotlin.v2019_2.BuildType
 import jetbrains.buildServer.configs.kotlin.v2019_2.DslContext
 import jetbrains.buildServer.configs.kotlin.v2019_2.ParameterDisplay
+import jetbrains.buildServer.configs.kotlin.v2019_2.buildFeatures.notifications
 import jetbrains.buildServer.configs.kotlin.v2019_2.buildSteps.script
-import java.io.File
 
 data class ServiceSpec(
     val readableName: String,
@@ -13,11 +14,16 @@ data class ServiceSpec(
     val regionOverride: String? = null,
 )
 
+data class Notifier(
+    val connectionID: String,
+    val destination: String,
+)
+
 class Service(name: String, spec: ServiceSpec) {
     val packageName = name
     val spec = spec
 
-    fun buildType(): BuildType {
+    fun buildType(notifier: Notifier?): BuildType {
         return BuildType {
             id = DslContext.createId("ServiceTest_$packageName")
 
@@ -67,11 +73,30 @@ class Service(name: String, spec: ServiceSpec) {
                 }
             }
 
-            if (spec.vpcLock) {
-                features {
+            features {
+                if (spec.vpcLock) {
                     feature {
                         type = "JetBrains.SharedResources"
                         param("locks-param", "${DslContext.getParameter("aws_account.vpc_lock_id")} readLock")
+                    }
+                }
+
+                if (notifier != null) {
+                    notifications {
+                        notifierSettings = slackNotifier {
+                            connection = notifier.connectionID
+                            sendTo = notifier.destination
+                            messageFormat = verboseMessageFormat {
+                                addBranch = true
+                                addStatusText = true
+                            }
+                        }
+                        buildStarted = true
+                        buildFailedToStart = true
+                        buildFailed = true
+                        buildFinishedSuccessfully = true
+                        // Ideally we'd have this enabled, but we have too many failures and this would get very noisy
+                        // firstBuildErrorOccurs = true
                     }
                 }
             }
