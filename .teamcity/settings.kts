@@ -135,6 +135,7 @@ object PullRequest : BuildType({
         executionTimeoutMin = Duration.ofHours(defaultPullRequestTimeoutHours).toMinutes().toInt()
     }
 
+    val accTestRoleARN = DslContext.getParameter("aws_account.role_arn", "")
     steps {
         script {
             name = "Setup GOENV"
