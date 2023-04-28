@@ -9,6 +9,7 @@ import (
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
+	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
@@ -744,6 +745,13 @@ func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
 
 // sdkv2LazyConns initializes AWS SDK for Go v2 lazy-load clients.
 func (c *Config) sdkv2LazyConns(client *AWSClient, cfg aws_sdkv2.Config) {
+	client.dsClient.init(&cfg, func() *directoryservice_sdkv2.Client {
+		return directoryservice_sdkv2.NewFromConfig(cfg, func(o *directoryservice_sdkv2.Options) {
+			if endpoint := c.Endpoints[names.DS]; endpoint != "" {
+				o.EndpointResolver = directoryservice_sdkv2.EndpointResolverFromURL(endpoint)
+			}
+		})
+	})
 	client.ec2Client.init(&cfg, func() *ec2_sdkv2.Client {
 		return ec2_sdkv2.NewFromConfig(cfg, func(o *ec2_sdkv2.Options) {
 			if endpoint := c.Endpoints[names.EC2]; endpoint != "" {

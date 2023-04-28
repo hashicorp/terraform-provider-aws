@@ -12,7 +12,7 @@ import (
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 )
 
-func TestIPv4CIDRNetworkAddressValidator(t *testing.T) {
+func TestIPv4AddressValidator(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -32,30 +32,30 @@ func TestIPv4CIDRNetworkAddressValidator(t *testing.T) {
 				diag.NewAttributeErrorDiagnostic(
 					path.Root("test"),
 					"Invalid Attribute Value",
-					`Attribute test value must be a valid IPv4 CIDR that represents a network address, got: test-value`,
+					`Attribute test value must be a valid IPv4 address, got: test-value`,
 				),
 			},
 		},
-		"valid IPv4 CIDR": {
-			val: types.StringValue("10.2.2.0/24"),
+		"valid IPv4 address": {
+			val: types.StringValue("10.2.2.0"),
 		},
-		"invalid IPv4 CIDR": {
-			val: types.StringValue("10.2.2.2/24"),
+		"invalid IPv4 address": {
+			val: types.StringValue("10.2.2.256"),
 			expectedDiagnostics: diag.Diagnostics{
 				diag.NewAttributeErrorDiagnostic(
 					path.Root("test"),
 					"Invalid Attribute Value",
-					`Attribute test value must be a valid IPv4 CIDR that represents a network address, got: 10.2.2.2/24`,
+					`Attribute test value must be a valid IPv4 address, got: 10.2.2.256`,
 				),
 			},
 		},
-		"valid IPv6 CIDR": {
-			val: types.StringValue("2001:db8::/122"),
+		"valid IPv6 address": {
+			val: types.StringValue("2001:db8::"),
 			expectedDiagnostics: diag.Diagnostics{
 				diag.NewAttributeErrorDiagnostic(
 					path.Root("test"),
 					"Invalid Attribute Value",
-					`Attribute test value must be a valid IPv4 CIDR that represents a network address, got: 2001:db8::/122`,
+					`Attribute test value must be a valid IPv4 address, got: 2001:db8::`,
 				),
 			},
 		},
@@ -74,7 +74,7 @@ func TestIPv4CIDRNetworkAddressValidator(t *testing.T) {
 				ConfigValue:    test.val,
 			}
 			response := validator.StringResponse{}
-			fwvalidators.IPv4CIDRNetworkAddress().ValidateString(ctx, request, &response)
+			fwvalidators.IPv4Address().ValidateString(ctx, request, &response)
 
 			if diff := cmp.Diff(response.Diagnostics, test.expectedDiagnostics); diff != "" {
 				t.Errorf("unexpected diagnostics difference: %s", diff)
@@ -83,7 +83,7 @@ func TestIPv4CIDRNetworkAddressValidator(t *testing.T) {
 	}
 }
 
-func TestIPv6CIDRNetworkAddressValidator(t *testing.T) {
+func TestIPv6AddressValidator(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -103,30 +103,30 @@ func TestIPv6CIDRNetworkAddressValidator(t *testing.T) {
 				diag.NewAttributeErrorDiagnostic(
 					path.Root("test"),
 					"Invalid Attribute Value",
-					`Attribute test value must be a valid IPv6 CIDR that represents a network address, got: test-value`,
+					`Attribute test value must be a valid IPv6 address, got: test-value`,
 				),
 			},
 		},
-		"valid IPv6 CIDR": {
-			val: types.StringValue("2001:db8::/122"),
+		"valid IPv6 address": {
+			val: types.StringValue("2001:db8::"),
 		},
-		"invalid IPv6 CIDR": {
-			val: types.StringValue("2001::/15"),
+		"invalid IPv6 address": {
+			val: types.StringValue("fe80:"),
 			expectedDiagnostics: diag.Diagnostics{
 				diag.NewAttributeErrorDiagnostic(
 					path.Root("test"),
 					"Invalid Attribute Value",
-					`Attribute test value must be a valid IPv6 CIDR that represents a network address, got: 2001::/15`,
+					`Attribute test value must be a valid IPv6 address, got: fe80:`,
 				),
 			},
 		},
-		"valid IPv4 CIDR": {
-			val: types.StringValue("10.2.2.0/24"),
+		"valid IPv4 address": {
+			val: types.StringValue("10.2.2.0"),
 			expectedDiagnostics: diag.Diagnostics{
 				diag.NewAttributeErrorDiagnostic(
 					path.Root("test"),
 					"Invalid Attribute Value",
-					`Attribute test value must be a valid IPv6 CIDR that represents a network address, got: 10.2.2.0/24`,
+					`Attribute test value must be a valid IPv6 address, got: 10.2.2.0`,
 				),
 			},
 		},
@@ -145,7 +145,7 @@ func TestIPv6CIDRNetworkAddressValidator(t *testing.T) {
 				ConfigValue:    test.val,
 			}
 			response := validator.StringResponse{}
-			fwvalidators.IPv6CIDRNetworkAddress().ValidateString(ctx, request, &response)
+			fwvalidators.IPv6Address().ValidateString(ctx, request, &response)
 
 			if diff := cmp.Diff(response.Diagnostics, test.expectedDiagnostics); diff != "" {
 				t.Errorf("unexpected diagnostics difference: %s", diff)
