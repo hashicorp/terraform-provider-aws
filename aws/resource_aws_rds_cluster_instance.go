@@ -467,7 +467,11 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 		d.Set("db_parameter_group_name", db.DBParameterGroups[0].DBParameterGroupName)
 	}
 
-	tags := keyvaluetags.RdsKeyValueTags(db.TagList).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags, err := keyvaluetags.RdsListTags(conn, aws.StringValue(db.DBInstanceArn))
+	if err != nil {
+		return fmt.Errorf("error listing tags for RDS Cluster Instance (%s): %s", d.Id(), err)
+	}
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
