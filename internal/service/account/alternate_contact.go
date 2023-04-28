@@ -106,7 +106,7 @@ func resourceAlternateContactCreate(ctx context.Context, d *schema.ResourceData,
 
 	_, err = retry.UntilFoundN(ctx, d.Timeout(schema.TimeoutCreate), func() (*types.AlternateContact, error) {
 		return FindAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
-	}, 2)
+	}, 2) //nolint:gomnd
 
 	if err != nil {
 		return diag.Errorf("waiting for Account Alternate Contact (%s) create: %s", d.Id(), err)
