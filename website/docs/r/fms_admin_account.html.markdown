@@ -1,5 +1,5 @@
 ---
-subcategory: "Firewall Manager (FMS)"
+subcategory: "FMS (Firewall Manager)"
 layout: "aws"
 page_title: "AWS: aws_fms_admin_account"
 description: |-
@@ -30,7 +30,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Firewall Manager administrator account association can be imported using the account ID, e.g.
+Firewall Manager administrator account association can be imported using the account ID, e.g.,
 
 ```
 $ terraform import aws_fms_admin_account.example 123456789012

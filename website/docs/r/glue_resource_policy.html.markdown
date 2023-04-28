@@ -12,7 +12,6 @@ Provides a Glue resource policy. Only one can exist per region.
 
 ## Example Usage
 
-
 ```terraform
 data "aws_caller_identity" "current" {}
 
@@ -43,6 +42,7 @@ resource "aws_glue_resource_policy" "example" {
 The following arguments are supported:
 
 * `policy` – (Required) The policy to be applied to the aws glue data catalog.
+* `enable_hybrid` - (Optional) Indicates that you are using both methods to grant cross-account. Valid values are `TRUE` and `FALSE`. Note the terraform will not perform drift detetction on this field as its not return on read.
 
 ## Attributes Reference
 

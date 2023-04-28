@@ -26,8 +26,8 @@ EOF
 }
 
 # Create API Gateway Role
-resource "aws_iam_role" "s3_api_gateyway_role" {
-  name = "s3-api-gateyway-role"
+resource "aws_iam_role" "s3_api_gateway_role" {
+  name = "s3-api-gateway-role"
 
   # Create Trust Policy for API Gateway
   assume_role_policy = <<EOF
@@ -49,7 +49,7 @@ EOF
 
 # Attach S3 Access Policy to the API Gateway Role
 resource "aws_iam_role_policy_attachment" "s3_policy_attach" {
-  role       = aws_iam_role.s3_api_gateyway_role.name
+  role       = aws_iam_role.s3_api_gateway_role.name
   policy_arn = aws_iam_policy.s3_policy.arn
 }
 
@@ -89,7 +89,7 @@ resource "aws_api_gateway_integration" "S3Integration" {
 
   # See uri description: https://docs.aws.amazon.com/apigateway/api-reference/resource/integration/
   uri         = "arn:aws:apigateway:${var.aws_region}:s3:path//"
-  credentials = aws_iam_role.s3_api_gateyway_role.arn
+  credentials = aws_iam_role.s3_api_gateway_role.arn
 }
 
 resource "aws_api_gateway_method_response" "Status200" {

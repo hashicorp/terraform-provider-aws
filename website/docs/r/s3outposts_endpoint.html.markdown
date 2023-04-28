@@ -1,5 +1,5 @@
 ---
-subcategory: "S3 Outposts"
+subcategory: "S3 on Outposts"
 layout: "aws"
 page_title: "AWS: aws_s3outposts_endpoint"
 description: |-
@@ -22,11 +22,13 @@ resource "aws_s3outposts_endpoint" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+The following arguments are supported:
 
 * `outpost_id` - (Required) Identifier of the Outpost to contain this endpoint.
 * `security_group_id` - (Required) Identifier of the EC2 Security Group.
 * `subnet_id` - (Required) Identifier of the EC2 Subnet.
+* `access_type` - (Optional) Type of access for the network connectivity. Valid values are `Private` or `CustomerOwnedIp`.
+* `customer_owned_ipv4_pool` - (Optional) The ID of a Customer Owned IP Pool. For more on customer owned IP addresses see the [User Guide](https://docs.aws.amazon.com/outposts/latest/userguide/local-rack.html#local-gateway-subnet).
 
 ## Attributes Reference
 
@@ -41,7 +43,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-S3 Outposts Endpoints can be imported using Amazon Resource Name (ARN), EC2 Security Group identifier, and EC2 Subnet identifier, separated by commas (`,`) e.g.
+S3 Outposts Endpoints can be imported using Amazon Resource Name (ARN), EC2 Security Group identifier, and EC2 Subnet identifier, separated by commas (`,`) e.g.,
 
 ```
 $ terraform import aws_s3outposts_endpoint.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-12345678/endpoint/0123456789abcdef,sg-12345678,subnet-12345678

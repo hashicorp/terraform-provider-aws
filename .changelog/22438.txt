@@ -1,0 +1,7 @@
+```release-note:bug
+data-source/aws_vpc_ipam_pool: Return an error if more than 1 IPAM Pool matches
+```
+
+```release-note:bug
+data-source/aws_vpc_ipam_pool: Set `address_family`, `allocation_default_netmask_length`, `allocation_max_netmask_length`, `allocation_min_netmask_length` and `tags` attributes
+```

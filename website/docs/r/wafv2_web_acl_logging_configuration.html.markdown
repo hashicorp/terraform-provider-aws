@@ -1,5 +1,5 @@
 ---
-subcategory: "WAFv2"
+subcategory: "WAF"
 layout: "aws"
 page_title: "AWS: aws_wafv2_web_acl_logging_configuration"
 description: |-
@@ -10,9 +10,9 @@ description: |-
 
 Creates a WAFv2 Web ACL Logging Configuration resource.
 
--> **Note:** To start logging from a WAFv2 Web ACL, an Amazon Kinesis Data Firehose (e.g. [`aws_kinesis_firehose_delivery_stream` resource](/docs/providers/aws/r/kinesis_firehose_delivery_stream.html) must also be created with a PUT source (not a stream) and in the region that you are operating.
+-> **Note:** To start logging from a WAFv2 Web ACL, an Amazon Kinesis Data Firehose (e.g., [`aws_kinesis_firehose_delivery_stream` resource](/docs/providers/aws/r/kinesis_firehose_delivery_stream.html) must also be created with a PUT source (not a stream) and in the region that you are operating.
 If you are capturing logs for Amazon CloudFront, always create the firehose in US East (N. Virginia).
-Be sure to give the data firehose a name that starts with the prefix `aws-waf-logs-`.
+Be sure to give the data firehose, cloudwatch log group, and/or s3 bucket a name that starts with the prefix `aws-waf-logs-`.
 
 ## Example Usage
 
@@ -77,7 +77,7 @@ resource "aws_wafv2_web_acl_logging_configuration" "example" {
 
 The following arguments are supported:
 
-* `log_destination_configs` - (Required) The Amazon Kinesis Data Firehose Amazon Resource Name (ARNs) that you want to associate with the web ACL. Currently, only 1 ARN is supported.
+* `log_destination_configs` - (Required) The Amazon Kinesis Data Firehose, Cloudwatch Log log group, or S3 bucket Amazon Resource Names (ARNs) that you want to associate with the web ACL.
 * `logging_filter` - (Optional) A configuration block that specifies which web requests are kept in the logs and which are dropped. You can filter on the rule action and on the web request labels that were applied by matching rules during web ACL evaluation. See [Logging Filter](#logging-filter) below for more details.
 * `redacted_fields` - (Optional) The parts of the request that you want to keep out of the logs. Up to 100 `redacted_fields` blocks are supported. See [Redacted Fields](#redacted-fields) below for more details.
 * `resource_arn` - (Required) The Amazon Resource Name (ARN) of the web ACL that you want to associate with `log_destination_configs`.
@@ -129,7 +129,7 @@ The `redacted_fields` block supports the following arguments:
 * `method` - (Optional) Redact the HTTP method. Must be specified as an empty configuration block `{}`. The method indicates the type of operation that the request is asking the origin to perform.
 * `query_string` - (Optional) Redact the query string. Must be specified as an empty configuration block `{}`. This is the part of a URL that appears after a `?` character, if any.
 * `single_header` - (Optional) Redact a single header. See [Single Header](#single-header) below for details.
-* `single_query_argument` - (Optional, **DEPRECATED**) Redact a single query argument. See [Single Query Argument](#single-query-argument) below for details.
+* `single_query_argument` - (Optional, **DEPRECATED**) Redact a single query argument. See [Single Query Argument](#single-query-argument-deprecated) below for details.
 * `uri_path` - (Optional) Redact the request URI path. Must be specified as an empty configuration block `{}`. This is the part of a web request that identifies a resource, for example, `/images/daily-ad.jpg`.
 
 ### Single Header
@@ -156,7 +156,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-WAFv2 Web ACL Logging Configurations can be imported using the WAFv2 Web ACL ARN e.g.
+WAFv2 Web ACL Logging Configurations can be imported using the WAFv2 Web ACL ARN e.g.,
 
 ```
 $ terraform import aws_wafv2_web_acl_logging_configuration.example arn:aws:wafv2:us-west-2:123456789012:regional/webacl/test-logs/a1b2c3d4-5678-90ab-cdef

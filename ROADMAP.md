@@ -1,92 +1,80 @@
-# Roadmap:  May 2021 - July 2021
+# Roadmap:  February 2023 - April 2023
 
 Every few months, the team will highlight areas of focus for our work and upcoming research.
 
-We select items for inclusion in the roadmap from the Top 10 Community Issues, [Core Services](docs/CORE_SERVICES.md), and internal priorities. Where community sourced contributions exist we will work with the authors to review and merge their work. Where this does not exist or the original contributors are not available we will create the resources and implementation ourselves.
+We select items for inclusion in the roadmap from the Top Community Issues, [Core Services](https://hashicorp.github.io/terraform-provider-aws/core-services/), and internal priorities. Where community sourced contributions exist we will work with the authors to review and merge their work. Where this does not exist or the original contributors are not available we will create the resources and implementation ourselves.
 
 Each weekly release will include necessary tasks that lead to the completion of the stated goals as well as community pull requests, enhancements, and features that are not highlighted in the roadmap. To view all the items we've prioritized for this quarter, please see the [Roadmap milestone](https://github.com/hashicorp/terraform-provider-aws/milestone/138).
 
-This roadmap does not describe all the work that will be included within this timeframe, but it does describe our focus. We will include other work as events occur .
+This roadmap does not describe all the work that will be included within this timeframe, but it does describe our focus. We will include other work as events occur.
 
-In the period spanning February to April 2021 846 Pull Requests were opened in the provider and 947 were merged, adding support for:
+In the period spanning August to October 2022, 808 Pull Requests were opened in the provider and 783 were closed/merged, adding support for the following (among many others):
 
-- Default Tags
-- CloudFront Origin Request and Cache Policies
-- Cloudwatch Synthetics
-- SecurityHub
-- Elasticache Global Replication Group
-- ACM Private Certificate Authorities
-- Managed Workflows for Apache Airflow
-- Managed Add Ons for EKS
-- ECR Cross Region Replication
-- SNS FIFO Topics
-- EC2 Autoscaling Warm Pools
+- AWS Audit Manager
+- Lambda SnapStart
+- RDS: Blue/Green Deployments
 
-Among many other enhancements, bug fixes and resolutions to technical debt items.
+From February - April 2023, we will be prioritizing the following areas of work:
 
-From May-July ‘21, we will be prioritizing the following areas of work:
+## New Services  
 
-## New Services
+### AWS Quicksight
 
-### AWS Amplify
-Issue: [#6917](https://github.com/hashicorp/terraform-provider-aws/issues/6917)
+Issue: [#10990]([https://github.com/hashicorp/terraform-provider-aws/issues/17981](https://github.com/hashicorp/terraform-provider-aws/issues/10990))
 
-_AWS Amplify is a set of tools and services that can be used together or on their own, to help front-end web and mobile developers build scalable full stack applications, powered by AWS. With Amplify, you can configure app backends and connect your app in minutes, deploy static web apps in a few clicks, and easily manage app content outside the AWS console._
-Support for AWS Amplify will include:
+[AWS Quicksight](https://aws.amazon.com/quicksight/) has a serverless architecture that automatically scales to hundreds of thousands of users without the need to set up, configure, or manage your own servers. It also ensures that your users don’t have to deal with slow dashboards during peak hours, when multiple business intelligence (BI) users are accessing the same dashboards or datasets. And with pay-per-session pricing, you pay only when your users access the dashboards or reports, which makes it cost effective for deployments with many users. QuickSight is also built with robust security, governance, and global collaboration features for your enterprise workloads.
 
-New Resource(s):
-- aws_amplify_app
-- aws_amplify_backend_environment
-- aws_amplify_branch
-- aws_amplify_domain_association
-- aws_amplify_webhook
-
-### Amazon Timestream
-
-Issue: [#15421](https://github.com/hashicorp/terraform-provider-aws/issues/15421)
-
-_Amazon Timestream is a fast, scalable, and serverless time series database service for IoT and operational applications that makes it easy to store and analyze trillions of events per day up to 1,000 times faster and at as little as 1/10th the cost of relational databases. Amazon Timestream saves you time and cost in managing the lifecycle of time series data, and its purpose-built query engine lets you access and analyze recent and historical data together with a single query. Amazon Timestream has built-in time series analytics functions, helping you identify trends and patterns in near real-time. Amazon Timestream is serverless and automatically scales up or down to adjust capacity and performance, so you don’t need to manage the underlying infrastructure, freeing you to focus on building your applications._
-
-Support for Amazon Timestream will include:
+Support for AWS Quicksight may include:
 
 New Resource(s):
 
-- aws_timestreamwrite_database
+- `aws_quicksight_iam_policy_assignment`
+- `aws_quicksight_data_set`
+- `aws_quicksight_ingestion`
+- `aws_quicksight_template`
+- `aws_quicksight_dashboard`
+- `aws_quicksight_template_alias`
 
-### AWS AppConfig
+### AWS Recycle Bin
 
-Issue: [#11973](https://github.com/hashicorp/terraform-provider-aws/issues/11973)
+Issue: [#23160](https://github.com/hashicorp/terraform-provider-aws/issues/23160)
 
-_Use AWS AppConfig, a capability of AWS Systems Manager, to create, manage, and quickly deploy application configurations. You can use AWS AppConfig with applications hosted on Amazon Elastic Compute Cloud (Amazon EC2) instances, AWS Lambda, containers, mobile applications, or IoT devices._
+[AWS Recycle Bin](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/recycle-bin.html) is a data recovery feature that enables you to restore accidentally deleted Amazon EBS snapshots and EBS-backed AMIs. When using Recycle Bin, if your resources are deleted, they are retained in the Recycle Bin for a time period that you specify before being permanently deleted.
 
-Support for AWS AppConfig will include:
+Support for AWS Recycle Bin may include:
 
-New Resource(s)
-- aws_appconfig_application
-- aws_appconfig_configuration_profile
-- aws_appconfig_deployment_strategy
-- aws_appconfig_environment
-- aws_appconfig_deployment
+New Resource(s):
 
+- `aws_recycle_bin_rule`
+
+### AWS Directory Service “Trust”
+
+Issue: [#11901](https://github.com/hashicorp/terraform-provider-aws/issues/11901)
+
+Easily integrate AWS Managed Microsoft AD with your existing AD by using AD trust relationships. Using trusts enables you to use your existing Active Directory to control which AD users can access your AWS resources.
+
+Support for AWS Director Service "Trust" may include:
+
+New Resource(s):
+
+- `aws_directory_service_directory_trust`
 
 ## Enhancements to Existing Services
-- [AWS Transfer Server: Attach VPC security groups at creation](https://github.com/hashicorp/terraform-provider-aws/issues/15788)
-- [EC2 Launch Templates](https://github.com/hashicorp/terraform-provider-aws/issues/4264)
-- [AWS ElasticSearch Native SAML for Kibana](https://github.com/hashicorp/terraform-provider-aws/issues/16259)
 
-## Core Service Reliability
+This quarter most of our efforts will be focused on enhancements and stability improvements of our core services, rather than adding brand new services to the provider. The following list comprises the items most important to the community.
 
-Core Services are areas of high usage or strategic importance for our users. We strive to offer rock solid reliability in these areas. This quarter we will have a focus on S3. We will be preparing a wholesale re-design of the `aws_s3_bucket` resource that we are planning to introduce in our major version release (v4.0) this year. Our focus will be on understanding how we can better break up the currently monolithic S3 bucket resource.
+- [Resource Identifiers and Tags for VPC Security Group Rules](https://github.com/hashicorp/terraform-provider-aws/issues/20104)
+- [Better Lambda error](https://github.com/hashicorp/terraform-provider-aws/issues/13709)
+- [AssumeRoleTokenProviderNotSetError when using assume_role with mfa enabled](https://github.com/hashicorp/terraform-provider-aws/issues/10491)
+- [Proposal: Add support Object-level logging in the existing trail for resource 'aws_s3_bucket'](https://github.com/hashicorp/terraform-provider-aws/issues/9459)
+- [Proposal: Add support Object-level logging in the existing trail for resource 'aws_s3_bucket'](https://github.com/hashicorp/terraform-provider-aws/issues/9459)
+- [Add support for elasticsearch outbound connection and relevant accepter](https://github.com/hashicorp/terraform-provider-aws/pull/22988)
+- [Add support for Route 53 IP Based Routing Policy](https://github.com/hashicorp/terraform-provider-aws/issues/25321)
+- [Add ability to query ECR repository for most recently pushed image](https://github.com/hashicorp/terraform-provider-aws/issues/12798)
 
-## Research Topics
+### Default Tags
 
-Research topics include features, architectural changes, and ideas that we are pursuing in the longer term that may significantly impact the core user experience of the AWS provider. Research topics are discovery only and are not guaranteed to be included in a future release.
-
-We are interested in your thoughts and feedback about the proposals below and encourage you to comment on the linked issues or schedule time with @maryelizbeth via the link on her GitHub profile to discuss.
-
-- Major Version Planning (v4.0) including wholesale redesign of the aws_s3_bucket resource to break it up into more manageable resources.
-- AWS Go SDK v2 Adoption
-- Test Discovery - Enable the automation of running the correct subset of acceptance tests for a given PR.
+[#17829](https://github.com/hashicorp/terraform-provider-aws/issues/17829) added the `default_tags` block to allow practitioners to tags at the provider level. This allows configured resources capable of assigning tags to have them inherit those as well as be able to specify them at the resource level. This has proven extremely popular with the community, however it comes with a number of significant caveats ([#18311](https://github.com/hashicorp/terraform-provider-aws/issues/18311), [#19583](https://github.com/hashicorp/terraform-provider-aws/issues/19583), [#19204](https://github.com/hashicorp/terraform-provider-aws/issues/19204)) for use which have resulted from limitations in the provider SDK we use. New functionality in the [terraform-plugin-sdk](https://github.com/hashicorp/terraform-plugin-sdk) and [terraform-plugin-framework](https://github.com/hashicorp/terraform-plugin-framework) should allow us to temper these caveats. This quarter we plan to begin the development of this feature, based on the research completed last quarter by the engineering team.
 
 ## Disclosures
 

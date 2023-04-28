@@ -21,8 +21,8 @@ Manages a Service Catalog Product.
 ```terraform
 resource "aws_servicecatalog_product" "example" {
   name  = "example"
-  owner = [aws_security_group.example.id]
-  type  = aws_subnet.main.id
+  owner = "example-owner"
+  type  = "CLOUD_FORMATION_TEMPLATE"
 
   provisioning_artifact_parameters {
     template_url = "https://s3.amazonaws.com/cf-templates-ozkq9d3hgiq2-us-east-1/temp1.json"
@@ -41,7 +41,7 @@ The following arguments are required:
 * `name` - (Required) Name of the product.
 * `owner` - (Required) Owner of the product.
 * `provisioning_artifact_parameters` - (Required) Configuration block for provisioning artifact (i.e., version) parameters. Detailed below.
-* `type` - (Required) Type of product. Valid values are `CLOUD_FORMATION_TEMPLATE`, `MARKETPLACE`.
+* `type` - (Required) Type of product. See [AWS Docs](https://docs.aws.amazon.com/servicecatalog/latest/dg/API_CreateProduct.html#API_CreateProduct_RequestSyntax) for valid list of values.
 
 The following arguments are optional:
 
@@ -51,7 +51,7 @@ The following arguments are optional:
 * `support_description` - (Optional) Support information about the product.
 * `support_email` - (Optional) Contact email for product support.
 * `support_url` - (Optional) Contact URL for product support.
-* `tags` - (Optional) Tags to apply to the product. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Tags to apply to the product. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### provisioning_artifact_parameters
 
@@ -62,7 +62,7 @@ The following arguments are supported:
 * `name` - (Optional) Name of the provisioning artifact (for example, `v1`, `v2beta`). No spaces are allowed.
 * `template_physical_id` - (Required if `template_url` is not provided) Template source as the physical ID of the resource that contains the template. Currently only supports CloudFormation stack ARN. Specify the physical ID as `arn:[partition]:cloudformation:[region]:[account ID]:stack/[stack name]/[resource ID]`.
 * `template_url` - (Required if `template_physical_id` is not provided) Template source as URL of the CloudFormation template in Amazon S3.
-* `type` - (Optional) Type of provisioning artifact. Valid values: `CLOUD_FORMATION_TEMPLATE`, `MARKETPLACE_AMI`, `MARKETPLACE_CAR` (Marketplace Clusters and AWS Resources).
+* `type` - (Optional) Type of provisioning artifact. See [AWS Docs](https://docs.aws.amazon.com/servicecatalog/latest/dg/API_ProvisioningArtifactProperties.html) for valid list of values.
 
 ## Attributes Reference
 
@@ -71,14 +71,23 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - ARN of the product.
 * `created_time` - Time when the product was created.
 * `has_default_path` - Whether the product has a default path. If the product does not have a default path, call `ListLaunchPaths` to disambiguate between paths.  Otherwise, `ListLaunchPaths` is not required, and the output of ProductViewSummary can be used directly with `DescribeProvisioningParameters`.
-* `id` - Product ID.
+* `id` - Product ID. For example, `prod-dnigbtea24ste`.
 * `status` - Status of the product.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `5m`)
+- `read` - (Default `10m`)
+- `update` - (Default `5m`)
+- `delete` - (Default `5m`)
 
 ## Import
 
-`aws_servicecatalog_product` can be imported using the product ID, e.g.
+`aws_servicecatalog_product` can be imported using the product ID, e.g.,
 
 ```
-$ terraform import aws_servicecatalog_product.example arn:aws:catalog:us-east-1:123456789012:product/prod-dnigbtea24ste
+$ terraform import aws_servicecatalog_product.example prod-dnigbtea24ste
 ```

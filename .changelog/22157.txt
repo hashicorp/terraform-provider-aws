@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_elasticsearch_domain: Fix erroneous diffs in `access_policies` when no changes made or policies are equivalent
+```
+
+```release-note:bug
+resource/aws_elasticsearch_domain: Fix erroneous diffs in `advanced_options` due to AWS defaults being returned
+```
+
+```release-note:bug
+resource/aws_elasticsearch_domain_policy: Fix erroneous diffs in `access_policies` when no changes made or policies are equivalent
+```

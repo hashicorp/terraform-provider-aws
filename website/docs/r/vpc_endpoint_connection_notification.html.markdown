@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_vpc_endpoint_connection_notification"
 description: |-
@@ -14,22 +14,23 @@ Connection notifications notify subscribers of VPC Endpoint events.
 ## Example Usage
 
 ```terraform
-resource "aws_sns_topic" "topic" {
-  name = "vpce-notification-topic"
+data "aws_iam_policy_document" "topic" {
+  statement {
+    effect = "Allow"
 
-  policy = <<POLICY
-{
-    "Version":"2012-10-17",
-    "Statement":[{
-        "Effect": "Allow",
-        "Principal": {
-            "Service": "vpce.amazonaws.com"
-        },
-        "Action": "SNS:Publish",
-        "Resource": "arn:aws:sns:*:*:vpce-notification-topic"
-    }]
+    principals {
+      type        = "Service"
+      identifiers = ["vpce.amazonaws.com"]
+    }
+
+    actions   = ["SNS:Publish"]
+    resources = ["arn:aws:sns:*:*:vpce-notification-topic"]
+  }
 }
-POLICY
+
+resource "aws_sns_topic" "topic" {
+  name   = "vpce-notification-topic"
+  policy = data.aws_iam_policy_document.topic.json
 }
 
 resource "aws_vpc_endpoint_service" "foo" {
@@ -65,7 +66,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-VPC Endpoint connection notifications can be imported using the `VPC endpoint connection notification id`, e.g.
+VPC Endpoint connection notifications can be imported using the `VPC endpoint connection notification id`, e.g.,
 
 ```
 $ terraform import aws_vpc_endpoint_connection_notification.foo vpce-nfn-09e6ed3b4efba2263

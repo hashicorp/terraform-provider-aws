@@ -1,5 +1,5 @@
 ---
-subcategory: "S3"
+subcategory: "S3 (Simple Storage)"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_ownership_controls"
 description: |-
@@ -30,16 +30,17 @@ resource "aws_s3_bucket_ownership_controls" "example" {
 
 The following arguments are required:
 
-* `bucket` - (Required) The name of the bucket that you want to associate this access point with.
+* `bucket` - (Required) Name of the bucket that you want to associate this access point with.
 * `rule` - (Required) Configuration block(s) with Ownership Controls rules. Detailed below.
 
 ### rule Configuration Block
 
 The following arguments are required:
 
-* `object_ownership` - (Optional) Object ownership. Valid values: `BucketOwnerPreferred` or `ObjectWriter`
+* `object_ownership` - (Required) Object ownership. Valid values: `BucketOwnerPreferred`, `ObjectWriter` or `BucketOwnerEnforced`
     * `BucketOwnerPreferred` - Objects uploaded to the bucket change ownership to the bucket owner if the objects are uploaded with the `bucket-owner-full-control` canned ACL.
-    * `ObjectWriter` - The uploading account will own the object if the object is uploaded with the `bucket-owner-full-control` canned ACL.
+    * `ObjectWriter` - Uploading account will own the object if the object is uploaded with the `bucket-owner-full-control` canned ACL.
+    * `BucketOwnerEnforced` - Bucket owner automatically owns and has full control over every object in the bucket. ACLs no longer affect permissions to data in the S3 bucket.
 
 ## Attributes Reference
 
@@ -49,7 +50,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-S3 Bucket Ownership Controls can be imported using S3 Bucket name, e.g.
+S3 Bucket Ownership Controls can be imported using S3 Bucket name, e.g.,
 
 ```
 $ terraform import aws_s3_bucket_ownership_controls.example my-bucket

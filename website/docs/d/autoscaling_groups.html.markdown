@@ -1,5 +1,5 @@
 ---
-subcategory: "Autoscaling"
+subcategory: "Auto Scaling"
 layout: "aws"
 page_title: "AWS: aws_autoscaling_groups"
 description: |-
@@ -16,13 +16,13 @@ ASGs within a specific region. This will allow you to pass a list of AutoScaling
 ```terraform
 data "aws_autoscaling_groups" "groups" {
   filter {
-    name   = "key"
-    values = ["Team"]
+    name   = "tag:Team"
+    values = ["Pets"]
   }
 
   filter {
-    name   = "value"
-    values = ["Pets"]
+    name   = "tag-key"
+    values = ["Environment"]
   }
 }
 
@@ -42,14 +42,15 @@ resource "aws_autoscaling_notification" "slack_notifications" {
 
 ## Argument Reference
 
-* `filter` - (Optional) A filter used to scope the list e.g. by tags. See [related docs](http://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_Filter.html).
-    * `name` - (Required) The name of the filter. The valid values are: `auto-scaling-group`, `key`, `value`, and `propagate-at-launch`.
-    * `values` - (Required) The value of the filter.
+* `names` - (Optional) List of autoscaling group names
+* `filter` - (Optional) Filter used to scope the list e.g., by tags. See [related docs](http://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_Filter.html).
+    * `name` - (Required) Name of the DescribeAutoScalingGroup filter. The recommended values are: `tag-key`, `tag-value`, and `tag:<tag name>`
+    * `values` - (Required) Value of the filter.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arns` - A list of the Autoscaling Groups Arns in the current region.
+* `arns` - List of the Autoscaling Groups Arns in the current region.
 * `id` - AWS Region.
-* `names` - A list of the Autoscaling Groups in the current region.
+* `names` - List of the Autoscaling Groups in the current region.

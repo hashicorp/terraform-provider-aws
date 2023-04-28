@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_glue_crawler: Add `catalog_target.dlq_event_queue_arn`, `catalog_target.event_queue_arn`, `catalog_target.connection_name`, `lake_formation_configuration`, and `jdbc_target.enable_additional_metadata` arguments
+```
+
+```release-note:enhancement
+resource/aws_glue_crawler: Make `delta_target.connection_name` optional
+```

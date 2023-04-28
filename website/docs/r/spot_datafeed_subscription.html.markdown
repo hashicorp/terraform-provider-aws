@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_spot_datafeed_subscription"
 description: |-
@@ -21,7 +21,7 @@ resource "aws_s3_bucket" "default" {
 }
 
 resource "aws_spot_datafeed_subscription" "default" {
-  bucket = aws_s3_bucket.default.bucket
+  bucket = aws_s3_bucket.default.id
   prefix = "my_subdirectory"
 }
 ```
@@ -37,7 +37,7 @@ No additional attributes are exported.
 
 ## Import
 
-A Spot Datafeed Subscription can be imported using the word `spot-datafeed-subscription`, e.g.
+A Spot Datafeed Subscription can be imported using the word `spot-datafeed-subscription`, e.g.,
 
 ```
 $ terraform import aws_spot_datafeed_subscription.mysubscription spot-datafeed-subscription

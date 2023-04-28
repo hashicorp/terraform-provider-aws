@@ -23,9 +23,9 @@ data "aws_redshift_orderable_cluster" "test" {
 
 The following arguments are supported:
 
-* `cluster_type` - (Optional) Reshift Cluster type. e.g. `multi-node` or `single-node`
-* `cluster_version` - (Optional) Redshift Cluster version. e.g. `1.0`
-* `node_type` - (Optional) Redshift Cluster node type. e.g. `dc2.8xlarge`
+* `cluster_type` - (Optional) Reshift Cluster typeE.g., `multi-node` or `single-node`
+* `cluster_version` - (Optional) Redshift Cluster versionE.g., `1.0`
+* `node_type` - (Optional) Redshift Cluster node typeE.g., `dc2.8xlarge`
 * `preferred_node_types` - (Optional) Ordered list of preferred Redshift Cluster node types. The first match in this list will be returned. If no preferred matches are found and the original search returned more than one result, an error is returned.
 
 ## Attribute Reference

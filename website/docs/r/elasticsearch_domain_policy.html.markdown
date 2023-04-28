@@ -1,14 +1,14 @@
 ---
-subcategory: "ElasticSearch"
+subcategory: "Elasticsearch"
 layout: "aws"
-page_title: "AWS: aws_elasticsearch_domain"
+page_title: "AWS: aws_elasticsearch_domain_policy"
 description: |-
   Provides an Elasticsearch Domain Policy.
 ---
 
 # Resource: aws_elasticsearch_domain_policy
 
-Allows setting policy to an Elasticsearch domain while referencing domain attributes (e.g. ARN)
+Allows setting policy to an Elasticsearch domain while referencing domain attributes (e.g., ARN)
 
 ## Example Usage
 

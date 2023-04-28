@@ -14,17 +14,17 @@ Provides an Elastic Transcoder pipeline resource.
 
 ```terraform
 resource "aws_elastictranscoder_pipeline" "bar" {
-  input_bucket = aws_s3_bucket.input_bucket.bucket
+  input_bucket = aws_s3_bucket.input_bucket.id
   name         = "aws_elastictranscoder_pipeline_tf_test_"
   role         = aws_iam_role.test_role.arn
 
   content_config {
-    bucket        = aws_s3_bucket.content_bucket.bucket
+    bucket        = aws_s3_bucket.content_bucket.id
     storage_class = "Standard"
   }
 
   thumbnail_config {
-    bucket        = aws_s3_bucket.thumb_bucket.bucket
+    bucket        = aws_s3_bucket.thumb_bucket.id
     storage_class = "Standard"
   }
 }
@@ -65,7 +65,6 @@ The `content_config_permissions` object supports the following:
 * `grantee` - The AWS user or group that you want to have access to transcoded files and playlists.
 * `grantee_type` - Specify the type of value that appears in the `content_config_permissions.grantee` object. Valid values are `Canonical`, `Email` or `Group`.
 
-
 The `notifications` object supports the following:
 
 * `completed` - The topic ARN for the Amazon SNS topic that you want to notify when Elastic Transcoder has finished processing a job in this pipeline.
@@ -103,7 +102,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Elastic Transcoder pipelines can be imported using the `id`, e.g.
+Elastic Transcoder pipelines can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_elastictranscoder_pipeline.basic_pipeline 1407981661351-cttk8b

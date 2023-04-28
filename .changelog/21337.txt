@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_s3_bucket: Return `hosted_zone_id` attribute for `cn-northwest-1` (Ningxia) region
+```
+
+```release-note:enhancement
+data-source/aws_s3_bucket: Return `hosted_zone_id` attribute for `cn-northwest-1` (Ningxia) region
+```

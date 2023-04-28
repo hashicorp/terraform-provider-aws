@@ -15,6 +15,8 @@ clusters.
 ElastiCache cluster **outside** of a VPC. If you are using a VPC, see the
 [ElastiCache Subnet Group resource](elasticache_subnet_group.html).
 
+!> **WARNING:** With the retirement of EC2-Classic the `aws_elasticache_security_group` resource has been deprecated and will be removed in a future version. Any existing resources can be removed from [Terraform state](https://www.terraform.io/language/state) using the [`terraform state rm`](https://www.terraform.io/cli/commands/state/rm#command-state-rm) command.
+
 ## Example Usage
 
 ```terraform
@@ -37,7 +39,6 @@ The following arguments are supported:
 * `security_group_names` – (Required) List of EC2 security group names to be
 authorized for ingress to the cache security group
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -48,7 +49,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-ElastiCache Security Groups can be imported by name, e.g.
+ElastiCache Security Groups can be imported by name, e.g.,
 
 ```
 $ terraform import aws_elasticache_security_group.my_ec_security_group ec-security-group-1

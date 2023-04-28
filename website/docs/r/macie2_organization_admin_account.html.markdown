@@ -15,9 +15,9 @@ Provides a resource to manage an [Amazon Macie Organization Admin Account](https
 ```terraform
 resource "aws_macie2_account" "example" {}
 
-resource "aws_macie2_organization_admin_account" "test" {
+resource "aws_macie2_organization_admin_account" "example" {
   admin_account_id = "ID OF THE ADMIN ACCOUNT"
-  depends_on       = [aws_macie2_account.test]
+  depends_on       = [aws_macie2_account.example]
 }
 ```
 
@@ -35,7 +35,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_macie2_organization_admin_account` can be imported using the id, e.g.
+`aws_macie2_organization_admin_account` can be imported using the id, e.g.,
 
 ```
 $ terraform import aws_macie2_organization_admin_account.example abcd1

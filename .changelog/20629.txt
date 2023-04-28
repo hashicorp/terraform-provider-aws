@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_elasticache_user: Mark `passwords` argument as sensitive.
+```
+
+```release-note:enhancement
+data-source/aws_elasticache_user: Mark `passwords` attribute as sensitive.
+```
