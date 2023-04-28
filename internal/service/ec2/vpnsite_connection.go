@@ -186,6 +186,10 @@ func ResourceVPNConnection() *schema.Resource {
 					return false
 				},
 			},
+			"tunnel1_enable_tunnel_lifecycle_control": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"tunnel1_ike_versions": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -398,6 +402,10 @@ func ResourceVPNConnection() *schema.Resource {
 					}
 					return false
 				},
+			},
+			"tunnel2_enable_tunnel_lifecycle_control": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"tunnel2_ike_versions": {
 				Type:     schema.TypeSet,
@@ -658,11 +666,12 @@ var (
 		vpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_384,
 		vpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_512,
 	}
-	defaultVPNTunnelOptionsPhase2LifetimeSeconds  = 3600
-	defaultVPNTunnelOptionsRekeyFuzzPercentage    = 100
-	defaultVPNTunnelOptionsRekeyMarginTimeSeconds = 540
-	defaultVPNTunnelOptionsReplayWindowSize       = 1024
-	defaultVPNTunnelOptionsStartupAction          = vpnTunnelOptionsStartupActionAdd
+	defaultVPNTunnelOptionsPhase2LifetimeSeconds        = 3600
+	defaultVPNTunnelOptionsRekeyFuzzPercentage          = 100
+	defaultVPNTunnelOptionsRekeyMarginTimeSeconds       = 540
+	defaultVPNTunnelOptionsReplayWindowSize             = 1024
+	defaultVPNTunnelOptionsStartupAction                = vpnTunnelOptionsStartupActionAdd
+	defaultVPNTunnelOptionsEnableTunnelLifecycleControl = false
 )
 
 func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -1092,6 +1101,10 @@ func expandVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix string) 
 		apiObject.TunnelInsideIpv6Cidr = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk(prefix + "enable_tunnel_lifecycle_control"); ok {
+		apiObject.EnableTunnelLifecycleControl = aws.Bool(v.(bool))
+	}
+
 	return apiObject
 }
 
@@ -1153,6 +1166,16 @@ func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 			apiObject.DPDTimeoutSeconds = aws.Int64(int64(v.(int)))
 		} else {
 			apiObject.DPDTimeoutSeconds = aws.Int64(int64(defaultVPNTunnelOptionsDPDTimeoutSeconds))
+		}
+
+		hasChange = true
+	}
+
+	if key := prefix + "enable_tunnel_lifecycle_control"; d.HasChange(key) {
+		if v, ok := d.GetOk(key); ok {
+			apiObject.EnableTunnelLifecycleControl = aws.Bool(v.(bool))
+		} else {
+			apiObject.EnableTunnelLifecycleControl = aws.Bool(defaultVPNTunnelOptionsEnableTunnelLifecycleControl)
 		}
 
 		hasChange = true
@@ -1406,6 +1429,7 @@ func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject *ec2.T
 	d.Set(prefix+"startup_action", apiObject.StartupAction)
 	d.Set(prefix+"inside_cidr", apiObject.TunnelInsideCidr)
 	d.Set(prefix+"inside_ipv6_cidr", apiObject.TunnelInsideIpv6Cidr)
+	d.Set(prefix+"enable_tunnel_lifecycle_control", apiObject.EnableTunnelLifecycleControl)
 
 	return nil
 }
