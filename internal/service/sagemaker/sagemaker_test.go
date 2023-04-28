@@ -50,6 +50,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"sharingSettings":                                        testAccDomain_sharingSettings,
 			"defaultUserSettingsUpdated":                             testAccDomain_defaultUserSettingsUpdated,
 			"canvas":                                                 testAccDomain_canvasAppSettings,
+			"modelRegisterSettings":                                  testAccDomain_modelRegisterSettings,
 			"domainSettings":                                         testAccDomain_domainSettings,
 			"rSessionAppSettings":                                    testAccDomain_rSessionAppSettings,
 			"rStudioServerProAppSettings":                            testAccDomain_rStudioServerProAppSettings,
