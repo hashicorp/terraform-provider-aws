@@ -7,7 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/account"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,9 +20,9 @@ import (
 // @SDKResource("aws_account_primary_contact")
 func ResourcePrimaryContact() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourcePrimaryContactCreate,
+		CreateWithoutTimeout: resourcePrimaryContactPut,
 		ReadWithoutTimeout:   resourcePrimaryContactRead,
-		UpdateWithoutTimeout: resourcePrimaryContactUpdate,
+		UpdateWithoutTimeout: resourcePrimaryContactPut,
 		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
@@ -88,24 +90,59 @@ func ResourcePrimaryContact() *schema.Resource {
 	}
 }
 
-func resourcePrimaryContactCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePrimaryContactPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AccountConn()
 
-	input := putContactInformationFromSchema(d)
+	id := "default"
+	input := &account.PutContactInformationInput{
+		ContactInformation: &account.ContactInformation{
+			AddressLine1: aws.String(d.Get("address_line_1").(string)),
+			City:         aws.String(d.Get("city").(string)),
+			CountryCode:  aws.String(d.Get("country_code").(string)),
+			FullName:     aws.String(d.Get("full_name").(string)),
+			PhoneNumber:  aws.String(d.Get("phone_number").(string)),
+			PostalCode:   aws.String(d.Get("postal_code").(string)),
+		},
+	}
 
-	log.Printf("[DEBUG] Creating Account Primary Contact: %s", input)
+	if v, ok := d.GetOk("account_id"); ok {
+		id = v.(string)
+		input.AccountId = aws.String(id)
+	}
+
+	if v, ok := d.GetOk("address_line_2"); ok {
+		input.ContactInformation.AddressLine2 = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("address_line_3"); ok {
+		input.ContactInformation.AddressLine3 = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("company_name"); ok {
+		input.ContactInformation.CompanyName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("district_or_county"); ok {
+		input.ContactInformation.DistrictOrCounty = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("state_or_region"); ok {
+		input.ContactInformation.StateOrRegion = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("website_url"); ok {
+		input.ContactInformation.WebsiteUrl = aws.String(v.(string))
+	}
+
 	_, err := conn.PutContactInformationWithContext(ctx, input)
 
-	id := d.Get("account_id").(string)
-	if id == "" {
-		id = "default"
-	}
-
 	if err != nil {
-		return diag.Errorf("error creating Account Primary Contact (%s): %s", id, err)
+		return diag.Errorf("creating Account Primary Contact (%s): %s", id, err)
 	}
 
-	d.SetId(id)
+	if d.IsNewResource() {
+		d.SetId(id)
+	}
 
 	return resourcePrimaryContactRead(ctx, d, meta)
 }
@@ -113,14 +150,7 @@ func resourcePrimaryContactCreate(ctx context.Context, d *schema.ResourceData, m
 func resourcePrimaryContactRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AccountConn()
 
-	input := &account.GetContactInformationInput{}
-
-	accountID := d.Get("account_id").(string)
-	if accountID != "" {
-		input.AccountId = aws.String(accountID)
-	}
-
-	output, err := conn.GetContactInformationWithContext(ctx, input)
+	contactInformation, err := FindContactInformation(ctx, conn, d.Get("account_id").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Account Primary Contact (%s) not found, removing from state", d.Id())
@@ -129,82 +159,48 @@ func resourcePrimaryContactRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading Account Primary Contact (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Account Primary Contact (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", accountID)
-	d.Set("address_line_1", output.ContactInformation.AddressLine1)
-	d.Set("address_line_2", output.ContactInformation.AddressLine2)
-	d.Set("address_line_3", output.ContactInformation.AddressLine3)
-	d.Set("city", output.ContactInformation.City)
-	d.Set("company_name", output.ContactInformation.CompanyName)
-	d.Set("country_code", output.ContactInformation.CountryCode)
-	d.Set("district_or_county", output.ContactInformation.DistrictOrCounty)
-	d.Set("full_name", output.ContactInformation.FullName)
-	d.Set("phone_number", output.ContactInformation.PhoneNumber)
-	d.Set("postal_code", output.ContactInformation.PostalCode)
-	d.Set("state_or_region", output.ContactInformation.StateOrRegion)
-	d.Set("website_url", output.ContactInformation.WebsiteUrl)
+	d.Set("account_id", d.Get("account_id"))
+	d.Set("address_line_1", contactInformation.AddressLine1)
+	d.Set("address_line_2", contactInformation.AddressLine2)
+	d.Set("address_line_3", contactInformation.AddressLine3)
+	d.Set("city", contactInformation.City)
+	d.Set("company_name", contactInformation.CompanyName)
+	d.Set("country_code", contactInformation.CountryCode)
+	d.Set("district_or_county", contactInformation.DistrictOrCounty)
+	d.Set("full_name", contactInformation.FullName)
+	d.Set("phone_number", contactInformation.PhoneNumber)
+	d.Set("postal_code", contactInformation.PostalCode)
+	d.Set("state_or_region", contactInformation.StateOrRegion)
+	d.Set("website_url", contactInformation.WebsiteUrl)
 
 	return nil
 }
 
-func resourcePrimaryContactUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccountConn()
-
-	input := putContactInformationFromSchema(d)
-
-	log.Printf("[DEBUG] Updating Account Primary Contact: %s", input)
-	_, err := conn.PutContactInformationWithContext(ctx, input)
-
-	if err != nil {
-		return diag.Errorf("error updating Account Primary Contact (%s): %s", d.Id(), err)
-	}
-
-	return resourcePrimaryContactRead(ctx, d, meta)
-}
-
-func putContactInformationFromSchema(d *schema.ResourceData) *account.PutContactInformationInput {
-	input := &account.PutContactInformationInput{}
-
-	accountID := d.Get("account_id").(string)
+func FindContactInformation(ctx context.Context, conn *account.Account, accountID string) (*account.ContactInformation, error) {
+	input := &account.GetContactInformationInput{}
 	if accountID != "" {
 		input.AccountId = aws.String(accountID)
 	}
 
-	input.ContactInformation = &account.ContactInformation{
-		AddressLine1: aws.String(d.Get("address_line_1").(string)),
-		City:         aws.String(d.Get("city").(string)),
-		CountryCode:  aws.String(d.Get("country_code").(string)),
-		FullName:     aws.String(d.Get("full_name").(string)),
-		PhoneNumber:  aws.String(d.Get("phone_number").(string)),
-		PostalCode:   aws.String(d.Get("postal_code").(string)),
+	output, err := conn.GetContactInformationWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, account.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
 	}
 
-	addressLine2 := d.Get("address_line_2").(string)
-	if addressLine2 != "" {
-		input.ContactInformation.AddressLine2 = aws.String(addressLine2)
-	}
-	addressLine3 := d.Get("address_line_3").(string)
-	if addressLine2 != "" {
-		input.ContactInformation.AddressLine3 = aws.String(addressLine3)
-	}
-	companyName := d.Get("company_name").(string)
-	if companyName != "" {
-		input.ContactInformation.CompanyName = aws.String(companyName)
-	}
-	districtOrCounty := d.Get("district_or_county").(string)
-	if districtOrCounty != "" {
-		input.ContactInformation.DistrictOrCounty = aws.String(districtOrCounty)
-	}
-	stateOrRegion := d.Get("state_or_region").(string)
-	if stateOrRegion != "" {
-		input.ContactInformation.StateOrRegion = aws.String(stateOrRegion)
-	}
-	websiteUrl := d.Get("website_url").(string)
-	if websiteUrl != "" {
-		input.ContactInformation.WebsiteUrl = aws.String(websiteUrl)
+	if err != nil {
+		return nil, err
 	}
 
-	return input
+	if output == nil || output.ContactInformation == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ContactInformation, nil
 }

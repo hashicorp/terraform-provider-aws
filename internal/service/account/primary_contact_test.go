@@ -1,16 +1,20 @@
 package account_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/account"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfaccount "github.com/hashicorp/terraform-provider-aws/internal/service/account"
 )
 
-func TestAccAccountPrimary_basic(t *testing.T) {
+func testAccPrimaryContact_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_account_primary_contact.test"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -25,6 +29,7 @@ func TestAccAccountPrimary_basic(t *testing.T) {
 			{
 				Config: testAccPrimaryConfig_basic(rName1),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPrimaryContactExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "account_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "address_line_1", "123 Any Street"),
 					resource.TestCheckResourceAttr(resourceName, "city", "Seattle"),
@@ -46,6 +51,7 @@ func TestAccAccountPrimary_basic(t *testing.T) {
 			{
 				Config: testAccPrimaryConfig_basic(rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPrimaryContactExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "account_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "address_line_1", "123 Any Street"),
 					resource.TestCheckResourceAttr(resourceName, "city", "Seattle"),
@@ -61,6 +67,25 @@ func TestAccAccountPrimary_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckPrimaryContactExists(ctx context.Context, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Account Primary Contact ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AccountConn()
+
+		_, err := tfaccount.FindContactInformation(ctx, conn, rs.Primary.Attributes["account_id"])
+
+		return err
+	}
 }
 
 func testAccPrimaryConfig_basic(name string) string {
