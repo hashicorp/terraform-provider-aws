@@ -56,7 +56,7 @@ resource "aws_vpclattice_register_targets" "test" {
   target_group_identifier = "tg-00153386728e69d10"
 
   targets {
-    id   = "i-081f98c4ef2ff21e3"
+    id   = "i-081f98c4ef2ff21e3x"
     port = 80
   	}
 }

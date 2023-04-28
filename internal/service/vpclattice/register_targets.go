@@ -2,7 +2,7 @@ package vpclattice
 
 import (
 	"context"
-	"encoding/json"
+	// "encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	// "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -30,12 +29,7 @@ func ResourceRegisterTargets() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRegisterTargetsCreate,
 		ReadWithoutTimeout:   resourceRegisterTargetsRead,
-		UpdateWithoutTimeout: resourceRegisterTargetsUpdate,
 		DeleteWithoutTimeout: resourceRegisterTargetsDelete,
-
-		// Importer: &schema.ResourceImporter{
-		// 	StateContext: schema.ImportStatePassthroughContext,
-		// },
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -49,7 +43,6 @@ func ResourceRegisterTargets() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
-			Update: schema.DefaultTimeout(30 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
@@ -57,10 +50,12 @@ func ResourceRegisterTargets() *schema.Resource {
 			"target_group_identifier": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"targets": {
 				Type:     schema.TypeList,
 				Optional: true,
+				ForceNew: true,
 				MaxItems: 1,
 				MinItems: 1,
 				Elem: &schema.Resource{
@@ -68,59 +63,17 @@ func ResourceRegisterTargets() *schema.Resource {
 						"id": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 2048),
 						},
 						"port": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							ForceNew: true,
 						},
 					},
 				},
 			},
-			// "successful": {
-			// 	Type:     schema.TypeList,
-			// 	Computed: true,
-			// 	Elem: &schema.Resource{
-			// 		Schema: map[string]*schema.Schema{
-			// 			"id": {
-			// 				Type:         schema.TypeString,
-			// 				Optional:     true,
-			// 				ValidateFunc: validation.StringLenBetween(1, 2048),
-			// 			},
-			// 			"port": {
-			// 				Type:     schema.TypeInt,
-			// 				Optional: true,
-			// 			},
-			// 		},
-			// 	},
-			// },
-			// "unsuccessful": {
-			// 	Type:     schema.TypeList,
-			// 	Computed: true,
-			// 	Elem: &schema.Resource{
-			// 		Schema: map[string]*schema.Schema{
-			// 			"id": {
-			// 				Type:         schema.TypeString,
-			// 				Optional:     true,
-			// 				ValidateFunc: validation.StringLenBetween(1, 2048),
-			// 			},
-			// 			"port": {
-			// 				Type:     schema.TypeInt,
-			// 				Optional: true,
-			// 			},
-			// 			"failure_code": {
-			// 				Type:         schema.TypeString,
-			// 				Optional:     true,
-			// 				ValidateFunc: validation.StringLenBetween(1, 2048),
-			// 			},
-			// 			"failure_message": {
-			// 				Type:         schema.TypeString,
-			// 				Optional:     true,
-			// 				ValidateFunc: validation.StringLenBetween(1, 2048),
-			// 			},
-			// 		},
-			// 	},
-			// },
 		},
 	}
 }
@@ -163,10 +116,9 @@ func resourceRegisterTargetsCreate(ctx context.Context, d *schema.ResourceData, 
 		d.Get("target_group_identifier").(string),
 		targetId,
 	}
+
 	fmt.Println(parts)
 	d.SetId(strings.Join(parts, "/"))
-	// d.SetId(id.PrefixedUniqueId(fmt.Sprintf("%s/", d.Get("target_group_arn"))))
-	// d.SetId(aws.ToString(in.TargetGroupIdentifier))
 
 	if _, err := waitRegisterTargets(ctx, conn, targetGroupIdentifier, targets, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionWaitingForCreation, ResNameRegisterTargets, d.Id(), err)
@@ -183,7 +135,8 @@ func resourceRegisterTargetsRead(ctx context.Context, d *schema.ResourceData, me
 	targets := d.Get("targets").([]interface{})
 
 	out, err := findRegisterTargets(ctx, conn, targetGroupId, targets)
-
+	fmt.Println("Find returns")
+	fmt.Println(out.Items, err)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VpcLattice RegisterTargets (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -199,42 +152,6 @@ func resourceRegisterTargetsRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	return nil
-}
-
-func resourceRegisterTargetsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// if d.HasChange("targets") {
-	// 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
-
-	// 	targetGroupIdentifier := d.Get("target_group_identifier").(string)
-
-	// 	// Deregister old targets
-	// 	oldTargetsRaw, _ := d.GetChange("targets")
-	// 	oldTargets := expandTargets(oldTargetsRaw.([]interface{}))
-
-	// 	_, err := conn.DeregisterTargets(ctx, &vpclattice.DeregisterTargetsInput{
-	// 		TargetGroupIdentifier: aws.String(targetGroupIdentifier),
-	// 		Targets:               oldTargets,
-	// 	})
-
-	// 	if err != nil {
-	// 		return diag.FromErr(fmt.Errorf("error deregistering old targets: %s", err))
-	// 	}
-
-	// 	// Register new targets
-	// 	newTargetsRaw := d.Get("targets")
-	// 	newTargets := expandTargets(newTargetsRaw.([]interface{}))
-
-	// 	_, err = conn.RegisterTargets(ctx, &vpclattice.RegisterTargetsInput{
-	// 		TargetGroupIdentifier: aws.String(targetGroupIdentifier),
-	// 		Targets:               newTargets,
-	// 	})
-
-	// 	if err != nil {
-	// 		return diag.FromErr(fmt.Errorf("error registering new targets: %s", err))
-	// 	}
-	// }
-
-	return resourceRegisterTargetsRead(ctx, d, meta)
 }
 
 func resourceRegisterTargetsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -258,7 +175,6 @@ func resourceRegisterTargetsDelete(ctx context.Context, d *schema.ResourceData, 
 
 		return create.DiagError(names.VPCLattice, create.ErrActionDeleting, ResNameRegisterTargets, d.Id(), err)
 	}
-	fmt.Println("Starting Delete Waiter")
 	if _, err := waitDeleteTargets(ctx, conn, targetGroupIdentifier, targetsRaw, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionWaitingForDeletion, ResNameRegisterTargets, d.Id(), err)
 	}
@@ -285,14 +201,12 @@ func findRegisterTargets(ctx context.Context, conn *vpclattice.Client, targetGro
 		return nil, err
 	}
 
-	if out == nil || out.Items == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if len(out.Items) == 0 {
+		out = nil
+		if out == nil {
+			return nil, tfresource.NewEmptyResultError(in)
+		}
 	}
-	j, err := json.Marshal(out)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("Returning from defaultAction:", string(j))
 
 	return out, nil
 }
@@ -343,16 +257,8 @@ func statusTarget(ctx context.Context, conn *vpclattice.Client, id string, targe
 			return nil, "", err
 		}
 
-		j, err := json.Marshal(out.Items)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println("Returning from Status:", string(j))
-
 		var status types.TargetStatus
 		if len(out.Items) > 0 {
-			fmt.Println("Inside the len")
-			fmt.Println(len(out.Items))
 			status = out.Items[0].Status
 			return out, string(status), nil
 		}
@@ -361,76 +267,7 @@ func statusTarget(ctx context.Context, conn *vpclattice.Client, id string, targe
 	}
 }
 
-func flattenTargetsUnSuccessful(apiObjects []types.TargetFailure) []interface{} {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var tfList []interface{}
-
-	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenTargetUnSuccessful(&apiObject))
-	}
-
-	return tfList
-}
-func flattenTargetUnSuccessful(apiObject *types.TargetFailure) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.Id; v != nil {
-		tfMap["id"] = aws.ToString(v)
-	}
-
-	if v := apiObject.Port; v != nil {
-		tfMap["port"] = aws.ToInt32(v)
-	}
-
-	if v := apiObject.Id; v != nil {
-		tfMap["failure_code"] = aws.ToString(v)
-	}
-
-	if v := apiObject.Id; v != nil {
-		tfMap["failure_message"] = aws.ToString(v)
-	}
-
-	return tfMap
-}
-
-func flattenTargetsSuccessful(apiObjects []types.Target) []interface{} {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var tfList []interface{}
-
-	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenTargetSuccessful(&apiObject))
-	}
-
-	return tfList
-}
-func flattenTargetSuccessful(apiObject *types.Target) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.Id; v != nil {
-		tfMap["id"] = aws.ToString(v)
-	}
-
-	if v := apiObject.Port; v != nil {
-		tfMap["port"] = aws.ToInt32(v)
-	}
-
-	return tfMap
-}
-
+// Flatten function for targets
 func flattenTargets(apiObjects []types.TargetSummary) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
@@ -463,87 +300,7 @@ func flattenTarget(apiObject *types.TargetSummary) map[string]interface{} {
 	return tfMap
 }
 
-// Expand function for target_groups
-func expandUnsuccesfulTargets(tfList []interface{}) []types.TargetFailure {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	var apiObjects []types.TargetFailure
-
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-
-		if !ok {
-			continue
-		}
-
-		apiObject := expandUnsuccesfulTarget(tfMap)
-
-		apiObjects = append(apiObjects, apiObject)
-	}
-
-	return apiObjects
-}
-
-func expandUnsuccesfulTarget(tfMap map[string]interface{}) types.TargetFailure {
-	apiObject := types.TargetFailure{}
-
-	if v, ok := tfMap["id"].(string); ok && v != "" {
-		apiObject.Id = aws.String(v)
-	}
-
-	if v, ok := tfMap["port"].(int); ok && v != 0 {
-		apiObject.Port = aws.Int32(int32(v))
-	}
-
-	if v, ok := tfMap["failure_code"].(string); ok && v != "" {
-		apiObject.Id = aws.String(v)
-	}
-
-	if v, ok := tfMap["failure_message"].(string); ok && v != "" {
-		apiObject.Id = aws.String(v)
-	}
-
-	return apiObject
-}
-
-func expandTargetsSuccessfull(tfList []interface{}) []types.Target {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	var apiObjects []types.Target
-
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-
-		if !ok {
-			continue
-		}
-
-		apiObject := expandTarget(tfMap)
-
-		apiObjects = append(apiObjects, apiObject)
-	}
-
-	return apiObjects
-}
-
-func expandTargetSuccessful(tfMap map[string]interface{}) types.Target {
-	apiObject := types.Target{}
-
-	if v, ok := tfMap["id"].(string); ok && v != "" {
-		apiObject.Id = aws.String(v)
-	}
-
-	if v, ok := tfMap["port"].(int); ok && v != 0 {
-		apiObject.Port = aws.Int32(int32(v))
-	}
-
-	return apiObject
-}
-
+// Expand function for targets
 func expandTargets(tfList []interface{}) []types.Target {
 	if len(tfList) == 0 {
 		return nil
