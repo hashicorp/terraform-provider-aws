@@ -1272,8 +1272,8 @@ resource "aws_sagemaker_domain" "test" {
     execution_role = aws_iam_role.test.arn
 
     r_studio_server_pro_app_settings {
-	  access_status = "ENABLED"
-	  user_group    = "R_STUDIO_ADMIN"
+      access_status = "ENABLED"
+      user_group    = "R_STUDIO_ADMIN"
     }
   }
 
