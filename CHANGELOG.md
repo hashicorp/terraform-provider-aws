@@ -1,7 +1,13 @@
 ## 4.66.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_directory_service_trust` ([#31037](https://github.com/hashicorp/terraform-provider-aws/issues/31037))
+
 ENHANCEMENTS:
 
+* resource/aws_directory_service_conditional_forwarder: Add plan time validation for `remote_domain_name` ([#31037](https://github.com/hashicorp/terraform-provider-aws/issues/31037))
+* resource/aws_directory_service_directory: Correct plan time validation for `remote_domain_name` ([#31037](https://github.com/hashicorp/terraform-provider-aws/issues/31037))
 * resource/aws_lambda_function: Add support for `java17` `runtime` value ([#31027](https://github.com/hashicorp/terraform-provider-aws/issues/31027))
 * resource/aws_lambda_layer_version: Add support for `java17` `compatible_runtimes` value ([#31028](https://github.com/hashicorp/terraform-provider-aws/issues/31028))
 * resource/aws_medialive_channel: Added H265 support. ([#30908](https://github.com/hashicorp/terraform-provider-aws/issues/30908))
