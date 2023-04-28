@@ -102,12 +102,6 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	accountIDs := getAccountIDs(d)
 
 	typeEnable := flex.ExpandStringyValueSet[types.ResourceScanType](d.Get("resource_types").(*schema.Set))
-	var typeDisable []types.ResourceScanType
-	for _, v := range types.ResourceScanType("").Values() {
-		if !slices.Contains(typeEnable, v) {
-			typeDisable = append(typeDisable, v)
-		}
-	}
 
 	in := &inspector2.EnableInput{
 		AccountIds:    accountIDs,
@@ -164,22 +158,33 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(id)
 
-	if err := waitEnabled(ctx, conn, accountIDs, d.Timeout(schema.TimeoutCreate)); err != nil {
+	st, err := waitEnabled(ctx, conn, accountIDs, d.Timeout(schema.TimeoutCreate))
+	if err != nil {
 		return append(diags, create.DiagError(names.Inspector2, create.ErrActionWaitingForCreation, ResNameEnabler, d.Id(), err)...)
 	}
 
-	if len(typeDisable) > 0 {
-		in := &inspector2.DisableInput{
-			AccountIds:    accountIDs,
-			ResourceTypes: typeDisable,
+	var disableAccountIDs []string
+	for acctID, acctStatus := range st {
+		resourceStatuses := acctStatus.ResourceStatuses
+		for _, resourceType := range typeEnable {
+			delete(resourceStatuses, resourceType)
 		}
+		if len(resourceStatuses) > 0 {
+			disableAccountIDs = append(disableAccountIDs, acctID)
+			in := &inspector2.DisableInput{
+				AccountIds:    []string{acctID},
+				ResourceTypes: maps.Keys(resourceStatuses),
+			}
 
-		_, err := conn.Disable(ctx, in)
-		if err != nil {
-			return append(diags, create.DiagError(names.Inspector2, create.ErrActionUpdating, ResNameEnabler, id, err)...)
+			_, err := conn.Disable(ctx, in)
+			if err != nil {
+				return append(diags, create.DiagError(names.Inspector2, create.ErrActionUpdating, ResNameEnabler, id, err)...)
+			}
 		}
+	}
 
-		if err := waitEnabled(ctx, conn, accountIDs, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if len(disableAccountIDs) > 0 {
+		if _, err := waitEnabled(ctx, conn, disableAccountIDs, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return append(diags, create.DiagError(names.Inspector2, create.ErrActionWaitingForUpdate, ResNameEnabler, id, err)...)
 		}
 	}
@@ -282,7 +287,7 @@ func resourceEnablerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				return append(diags, create.DiagError(names.Inspector2, create.ErrActionUpdating, ResNameEnabler, id, errors.New("failed accounts"))...)
 			}
 
-			if err := waitEnabled(ctx, conn, acctEnable, d.Timeout(schema.TimeoutCreate)); err != nil {
+			if _, err := waitEnabled(ctx, conn, acctEnable, d.Timeout(schema.TimeoutCreate)); err != nil {
 				return append(diags, create.DiagError(names.Inspector2, create.ErrActionWaitingForUpdate, ResNameEnabler, id, err)...)
 			}
 		}
@@ -298,7 +303,7 @@ func resourceEnablerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				return append(diags, create.DiagError(names.Inspector2, create.ErrActionUpdating, ResNameEnabler, id, err)...)
 			}
 
-			if err := waitEnabled(ctx, conn, acctEnable, d.Timeout(schema.TimeoutCreate)); err != nil {
+			if _, err := waitEnabled(ctx, conn, acctEnable, d.Timeout(schema.TimeoutCreate)); err != nil {
 				return append(diags, create.DiagError(names.Inspector2, create.ErrActionWaitingForUpdate, ResNameEnabler, id, err)...)
 			}
 		}
@@ -402,7 +407,7 @@ const (
 	statusInProgress = "IN_PROGRESS"
 )
 
-func waitEnabled(ctx context.Context, conn *inspector2.Client, accountIDs []string, timeout time.Duration) error {
+func waitEnabled(ctx context.Context, conn *inspector2.Client, accountIDs []string, timeout time.Duration) (map[string]AccountResourceStatus, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusInProgress},
 		Target:  []string{statusComplete},
@@ -411,8 +416,9 @@ func waitEnabled(ctx context.Context, conn *inspector2.Client, accountIDs []stri
 		Delay:   10 * time.Second,
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
-	return err
+	raw, err := stateConf.WaitForStateContext(ctx)
+	result := raw.(map[string]AccountResourceStatus)
+	return result, err
 }
 
 func waitDisabled(ctx context.Context, conn *inspector2.Client, accountIDs []string, timeout time.Duration) error {
