@@ -12,10 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/account"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/account/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -101,7 +102,7 @@ func resourceAlternateContactCreate(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(id)
 
-	_, err = tfresource.RetryWhenNotFoundN(ctx, d.Timeout(schema.TimeoutCreate), func() (*account.AlternateContact, error) {
+	_, err = retry.UntilFoundN(ctx, d.Timeout(schema.TimeoutCreate), func() (*account.AlternateContact, error) {
 		return FindAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
 	}, 2)
 
@@ -175,7 +176,7 @@ func resourceAlternateContactUpdate(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("updating Account Alternate Contact (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryIf(ctx, d.Timeout(schema.TimeoutUpdate),
+	_, err = retry.If(ctx, d.Timeout(schema.TimeoutUpdate),
 		func() (*account.AlternateContact, error) {
 			return FindAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
 		},
@@ -224,7 +225,7 @@ func resourceAlternateContactDelete(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("deleting Account Alternate Contact (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err = retry.UntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (*account.AlternateContact, error) {
 		return FindAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
 	})
 
@@ -246,7 +247,7 @@ func FindAlternateContactByTwoPartKey(ctx context.Context, conn *account.Account
 	output, err := conn.GetAlternateContactWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, account.ErrCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

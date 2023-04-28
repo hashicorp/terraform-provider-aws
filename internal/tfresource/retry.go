@@ -112,51 +112,6 @@ func RetryWhenNotFound(ctx context.Context, timeout time.Duration, f func() (int
 	})
 }
 
-// RetryWhenNotFoundN retries the specified function when it returns a retry.NotFoundError.
-// The function must return success continuousTargetOccurence times in a row.
-func RetryWhenNotFoundN[T any](ctx context.Context, timeout time.Duration, f func() (T, error), continuousTargetOccurence int) (T, error) {
-	return RetryIf(ctx, timeout, f, func(_ T, err error) (bool, error) {
-		if NotFound(err) {
-			return true, err
-		}
-
-		return false, err
-	}, WithContinuousTargetOccurence(continuousTargetOccurence))
-}
-
-func RetryIf[T any](ctx context.Context, timeout time.Duration, f func() (T, error), predicate func(T, error) (bool, error), optFns ...OptionsFunc) (T, error) {
-	var output T
-
-	err := Retry(ctx, timeout, func() *retry.RetryError {
-		var err error
-		var again bool
-
-		output, err = f()
-		again, err = predicate(output, err)
-
-		if again {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	}, optFns...)
-
-	if TimedOut(err) {
-		output, err = f()
-	}
-
-	if err != nil {
-		var zero T
-		return zero, err
-	}
-
-	return output, nil
-}
-
 // RetryWhenNewResourceNotFound retries the specified function when it returns a retry.NotFoundError and `isNewResource` is true.
 func RetryWhenNewResourceNotFound(ctx context.Context, timeout time.Duration, f func() (interface{}, error), isNewResource bool) (interface{}, error) {
 	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
