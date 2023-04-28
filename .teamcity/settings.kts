@@ -1,5 +1,6 @@
 import jetbrains.buildServer.configs.kotlin.v2019_2.* // ktlint-disable no-wildcard-imports
 import jetbrains.buildServer.configs.kotlin.v2019_2.buildFeatures.golang
+import jetbrains.buildServer.configs.kotlin.v2019_2.buildFeatures.notifications
 import jetbrains.buildServer.configs.kotlin.v2019_2.buildSteps.script
 import jetbrains.buildServer.configs.kotlin.v2019_2.triggers.schedule
 import java.io.File
@@ -167,6 +168,36 @@ object PullRequest : BuildType({
                 param("locks-param", "$alternateAccountLockId readLock")
             }
         }
+
+        val notifierConnectionID = DslContext.getParameter("notifier_id", "")
+        val notifier: Notifier? = if (notifierConnectionID != "") {
+            Notifier(notifierConnectionID, DslContext.getParameter("notifier_channel"))
+        } else {
+            null
+        }
+
+        if (notifier != null) {
+            notifications {
+                notifierSettings = slackNotifier {
+                    connection = notifier.connectionID
+                    sendTo = notifier.destination
+                    messageFormat = verboseMessageFormat {
+                        addBranch = true
+                        addChanges = true
+                        addStatusText = true
+                        maximumNumberOfChanges = 10
+                    }
+                }
+                branchFilter = "+:*"
+
+                buildStarted = true
+                buildFailedToStart = true
+                buildFailed = true
+                buildFinishedSuccessfully = true
+                firstBuildErrorOccurs = true
+                buildProbablyHanging = true
+            }
+        }
     }
 })
 
@@ -179,6 +210,13 @@ object FullBuild : BuildType({
         showDependenciesChanges = true
     }
 
+    val notifierConnectionID = DslContext.getParameter("notifier_id", "")
+    val notifier: Notifier? = if (notifierConnectionID != "") {
+        Notifier(notifierConnectionID, DslContext.getParameter("notifier_channel"))
+    } else {
+        null
+    }
+
     dependencies {
         snapshot(SetUp) {
             reuseBuilds = ReuseBuilds.NO
@@ -189,7 +227,7 @@ object FullBuild : BuildType({
         val testType = DslContext.getParameter("test_type", "")
         val serviceList = if (testType == "orgacct") orgacctServices else services
         serviceList.forEach { (serviceName, displayName) ->
-            snapshot(Service(serviceName, displayName).buildType()) {
+            snapshot(Service(serviceName, displayName).buildType(notifier)) {
                 reuseBuilds = ReuseBuilds.NO
                 onDependencyFailure = FailureAction.ADD_PROBLEM
                 onDependencyCancel = FailureAction.IGNORE
@@ -243,6 +281,21 @@ object FullBuild : BuildType({
                 param("locks-param", "$alternateAccountLockId readLock")
             }
         }
+
+        if (notifier != null) {
+            notifications {
+                notifierSettings = slackNotifier {
+                    connection = notifier.connectionID
+                    sendTo = notifier.destination
+                    messageFormat = simpleMessageFormat()
+                }
+                buildStarted = true
+                buildFailedToStart = true
+                buildFailed = true
+                buildFinishedSuccessfully = true
+                firstBuildErrorOccurs = true
+            }
+        }
     }
 })
 
@@ -279,6 +332,32 @@ object SetUp : BuildType({
         golang {
             testFormat = "json"
         }
+
+        val notifierConnectionID = DslContext.getParameter("notifier_id", "")
+        val notifier: Notifier? = if (notifierConnectionID != "") {
+            Notifier(notifierConnectionID, DslContext.getParameter("notifier_channel"))
+        } else {
+            null
+        }
+
+        if (notifier != null) {
+            notifications {
+                notifierSettings = slackNotifier {
+                    connection = notifier.connectionID
+                    sendTo = notifier.destination
+                    messageFormat = verboseMessageFormat {
+                        addBranch = true
+                        addStatusText = true
+                    }
+                }
+                buildStarted = true
+                buildFailedToStart = true
+                buildFailed = true
+                buildFinishedSuccessfully = true
+                // Ideally we'd have this enabled, but we have too many failures and this would get very noisy
+                // firstBuildErrorOccurs = true
+            }
+        }
     }
 })
 
@@ -287,6 +366,13 @@ object Services : Project({
 
     name = "Services"
 
+    val notifierConnectionID = DslContext.getParameter("notifier_id", "")
+    val notifier: Notifier? = if (notifierConnectionID != "") {
+        Notifier(notifierConnectionID, DslContext.getParameter("notifier_channel"))
+    } else {
+        null
+    }
+
     val buildChain = sequential {
         buildType(SetUp)
 
@@ -294,7 +380,7 @@ object Services : Project({
         val serviceList = if (testType == "orgacct") orgacctServices else services
         parallel(options = { onDependencyFailure = FailureAction.IGNORE }) {
             serviceList.forEach { (serviceName, displayName) ->
-                buildType(Service(serviceName, displayName).buildType())
+                buildType(Service(serviceName, displayName).buildType(notifier))
             }
         }
 
@@ -375,6 +461,30 @@ object Sweeper : BuildType({
         feature {
             type = "JetBrains.SharedResources"
             param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} writeLock")
+        }
+
+        val notifierConnectionID = DslContext.getParameter("notifier_id", "")
+        val notifier: Notifier? = if (notifierConnectionID != "") {
+            Notifier(notifierConnectionID, DslContext.getParameter("notifier_channel"))
+        } else {
+            null
+        }
+
+        if (notifier != null) {
+            notifications {
+                notifierSettings = slackNotifier {
+                    connection = notifier.connectionID
+                    sendTo = notifier.destination
+                    messageFormat = verboseMessageFormat {
+                        addStatusText = true
+                    }
+                }
+                buildStarted = true
+                buildFailedToStart = true
+                buildFailed = true
+                buildFinishedSuccessfully = true
+                firstBuildErrorOccurs = true
+            }
         }
     }
 })
