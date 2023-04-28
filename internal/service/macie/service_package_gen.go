@@ -26,10 +26,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceMemberAccountAssociation,
-			TypeName: "aws_macie_member_account_association",
-		},
-		{
 			Factory:  ResourceS3BucketAssociation,
 			TypeName: "aws_macie_s3_bucket_association",
 		},

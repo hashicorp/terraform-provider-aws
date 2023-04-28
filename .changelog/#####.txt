@@ -1,0 +1,3 @@
+```release-note:breaking-change
+provider: With the retirement of Macie Classic the `aws_macie_member_account_association` resource has been removed
+```
