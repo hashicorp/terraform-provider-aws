@@ -19,7 +19,7 @@ FEATURES:
 * **New Data Source:** `aws_ssmcontacts_contact_channel` ([#30667](https://github.com/hashicorp/terraform-provider-aws/issues/30667))
 * **New Data Source:** `aws_ssmcontacts_plan` ([#30667](https://github.com/hashicorp/terraform-provider-aws/issues/30667))
 * **New Data Source:** `aws_ssmincidents_response_plan` ([#30665](https://github.com/hashicorp/terraform-provider-aws/issues/30665))
-* **New Resource:** `aws_config_organization_custom_policy_rule` ([#21373](https://github.com/hashicorp/terraform-provider-aws/issues/21373))
+* **New Resource:** `aws_config_organization_custom_policy_rule` ([#28201](https://github.com/hashicorp/terraform-provider-aws/issues/28201))
 * **New Resource:** `aws_quicksight_folder_membership` ([#30871](https://github.com/hashicorp/terraform-provider-aws/issues/30871))
 * **New Resource:** `aws_quicksight_refresh_schedule` ([#30788](https://github.com/hashicorp/terraform-provider-aws/issues/30788))
 * **New Resource:** `aws_ssmcontacts_contact` ([#30667](https://github.com/hashicorp/terraform-provider-aws/issues/30667))
