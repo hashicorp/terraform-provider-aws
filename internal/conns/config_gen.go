@@ -3,6 +3,7 @@ package conns
 
 import (
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/account"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	"github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
@@ -38,7 +39,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
-	"github.com/aws/aws-sdk-go/service/account"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/alexaforbusiness"
@@ -331,7 +331,6 @@ func (c *Config) sdkv1Conns(client *AWSClient, sess *session.Session) {
 	client.apigatewaymanagementapiConn = apigatewaymanagementapi.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.APIGatewayManagementAPI])}))
 	client.apigatewayv2Conn = apigatewayv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.APIGatewayV2])}))
 	client.accessanalyzerConn = accessanalyzer.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.AccessAnalyzer])}))
-	client.accountConn = account.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Account])}))
 	client.alexaforbusinessConn = alexaforbusiness.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.AlexaForBusiness])}))
 	client.amplifyConn = amplify.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Amplify])}))
 	client.amplifybackendConn = amplifybackend.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.AmplifyBackend])}))
@@ -610,6 +609,11 @@ func (c *Config) sdkv1Conns(client *AWSClient, sess *session.Session) {
 
 // sdkv2Conns initializes AWS SDK for Go v2 clients.
 func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
+	client.accountClient = account.NewFromConfig(cfg, func(o *account.Options) {
+		if endpoint := c.Endpoints[names.Account]; endpoint != "" {
+			o.EndpointResolver = account.EndpointResolverFromURL(endpoint)
+		}
+	})
 	client.auditmanagerClient = auditmanager.NewFromConfig(cfg, func(o *auditmanager.Options) {
 		if endpoint := c.Endpoints[names.AuditManager]; endpoint != "" {
 			o.EndpointResolver = auditmanager.EndpointResolverFromURL(endpoint)
