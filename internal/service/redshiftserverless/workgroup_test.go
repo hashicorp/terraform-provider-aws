@@ -167,6 +167,11 @@ resource "aws_redshiftserverless_namespace" "test" {
 resource "aws_redshiftserverless_workgroup" "test" {
   namespace_name = aws_redshiftserverless_namespace.test.namespace_name
   workgroup_name = %[1]q
+
+  # Specify a timeout to ensure the schema is defined properly
+  timeouts {
+	create = "60m"
+  }
 }
 `, rName)
 }
