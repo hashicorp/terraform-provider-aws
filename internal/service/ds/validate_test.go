@@ -98,7 +98,7 @@ func TestDomainWithTrailingDotValidatorValidator(t *testing.T) {
 				diag.NewAttributeErrorDiagnostic(
 					path.Root("test"),
 					"Invalid Attribute Value Match",
-					`Attribute test must be a fully qualified domain name, got: test`,
+					`Attribute test must be a fully qualified domain name and may end with a trailing period, got: test`,
 				),
 			},
 		},
