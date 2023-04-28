@@ -44,13 +44,13 @@ resource "aws_directory_service_trust" "two" {
 resource "aws_directory_service_directory" "one" {
   name = "one.example.com"
   type = "MicrosoftAD"
-  // ...
+  # ...
 }
 
 resource "aws_directory_service_directory" "two" {
   name = "two.example.com"
   type = "MicrosoftAD"
-  // ...
+  # ...
 }
 ```
 
@@ -80,13 +80,13 @@ resource "aws_directory_service_trust" "two" {
 resource "aws_directory_service_directory" "one" {
   name = "one.example.com"
   type = "MicrosoftAD"
-  // ...
+  # ...
 }
 
 resource "aws_directory_service_directory" "two" {
   name = "two.example.com"
   type = "MicrosoftAD"
-  // ...
+  # ...
 }
 ```
 
