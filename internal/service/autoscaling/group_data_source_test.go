@@ -132,7 +132,7 @@ func TestAccAutoScalingGroupDataSource_warmPool(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupDataSourceConfig_launchTemplate(rName),
+				Config: testAccGroupDataSourceConfig_warmPool(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "warm_pool.#", resourceName, "warm_pool.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "warm_pool.0.instance_reuse_policy.#", resourceName, "warm_pool.0.instance_reuse_policy.#"),
