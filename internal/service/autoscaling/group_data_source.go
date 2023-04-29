@@ -1,12 +1,15 @@
 package autoscaling
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
@@ -446,6 +449,36 @@ func DataSourceGroup() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"tag": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"propagate_at_launch": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"value": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+				// This should be removable, but wait until other tags work is being done.
+				Set: func(v interface{}) int {
+					var buf bytes.Buffer
+					m := v.(map[string]interface{})
+					buf.WriteString(fmt.Sprintf("%s-", m["key"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m["value"].(string)))
+					buf.WriteString(fmt.Sprintf("%t-", m["propagate_at_launch"].(bool)))
+
+					return create.StringHashcode(buf.String())
+				},
+			},
 			"target_group_arns": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -507,6 +540,7 @@ func DataSourceGroup() *schema.Resource {
 func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingConn()
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	groupName := d.Get("name").(string)
 	group, err := FindGroupByName(ctx, conn, groupName)
@@ -550,6 +584,9 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("service_linked_role_arn", group.ServiceLinkedRoleARN)
 	d.Set("status", group.Status)
 	d.Set("suspended_processes", flattenSuspendedProcesses(group.SuspendedProcesses))
+	if err := d.Set("tag", ListOfMap(KeyValueTags(ctx, group.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tag: %s", err)
+	}
 	d.Set("target_group_arns", aws.StringValueSlice(group.TargetGroupARNs))
 	d.Set("termination_policies", aws.StringValueSlice(group.TerminationPolicies))
 	d.Set("vpc_zone_identifier", group.VPCZoneIdentifier)

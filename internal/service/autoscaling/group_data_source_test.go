@@ -46,6 +46,7 @@ func TestAccAutoScalingGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "service_linked_role_arn", resourceName, "service_linked_role_arn"),
 					resource.TestCheckResourceAttr(datasourceName, "status", ""), // Only set when the DeleteAutoScalingGroup operation is in progress.
 					resource.TestCheckResourceAttrPair(datasourceName, "suspended_processes", resourceName, "suspended_processes"),
+					resource.TestCheckResourceAttrPair(datasourceName, "tag.#", resourceName, "tag.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "target_group_arns.#", resourceName, "target_group_arns.#"),
 					resource.TestCheckResourceAttr(datasourceName, "termination_policies.#", "1"), // Not set in resource.
 					resource.TestCheckResourceAttr(datasourceName, "vpc_zone_identifier", ""),     // Not set in resource.
@@ -139,6 +140,38 @@ func TestAccAutoScalingGroupDataSource_warmPool(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "warm_pool.0.max_group_prepared_capacity", resourceName, "warm_pool.0.max_group_prepared_capacity"),
 					resource.TestCheckResourceAttrPair(datasourceName, "warm_pool.0.min_size", resourceName, "warm_pool.0.min_size"),
 					resource.TestCheckResourceAttrPair(datasourceName, "warm_pool.0.pool_state", resourceName, "warm_pool.0.pool_state"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAutoScalingGroupDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	datasourceName := "data.aws_autoscaling_group.test"
+	resourceName := "aws_autoscaling_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupDataSourceConfig_tags(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceName, "tag.#", "2"),
+					resource.TestCheckResourceAttrPair(datasourceName, "tag.#", resourceName, "tag.#"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tag.*", map[string]string{
+						"key":                 "key1",
+						"value":               "value1",
+						"propagate_at_launch": "true",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tag.*", map[string]string{
+						"key":                 "key2",
+						"value":               "value2",
+						"propagate_at_launch": "false",
+					}),
 				),
 			},
 		},
@@ -300,7 +333,49 @@ resource "aws_autoscaling_group" "test" {
       reuse_on_scale_in = true
     }
   }
+}
 
+resource "aws_launch_template" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+}
+`, rName))
+}
+
+func testAccGroupDataSourceConfig_tags(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigAvailableAZsNoOptIn(),
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
+		fmt.Sprintf(`
+data "aws_autoscaling_group" "test" {
+  name = aws_autoscaling_group.test.name
+}
+
+resource "aws_autoscaling_group" "test" {
+  name               = %[1]q
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  desired_capacity   = 0
+  max_size           = 0
+  min_size           = 0
+
+  launch_template {
+    id      = aws_launch_template.test.id
+    version = aws_launch_template.test.default_version
+  }
+
+  tag {
+    key                 = "key1"
+    value               = "value1"
+    propagate_at_launch = true
+  }
+
+  tag {
+    key                 = "key2"
+    value               = "value2"
+    propagate_at_launch = false
+  }
 }
 
 resource "aws_launch_template" "test" {

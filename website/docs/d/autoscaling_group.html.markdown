@@ -110,6 +110,10 @@ interpolation.
 * `service_linked_role_arn` - ARN of the service-linked role that the Auto Scaling group uses to call other AWS services on your behalf.
 * `status` - Current state of the group when DeleteAutoScalingGroup is in progress.
 * `suspended_processes` - List of processes suspended processes for the Auto Scaling Group.
+* `tag` - List of tags for the group.
+    * `key` - Key.
+    * `value` - Value.
+    * `propagate_at_launch` - Whether the tag is propagated to Amazon EC2 instances launched via this ASG.
 * `target_group_arns` - ARNs of the target groups for your load balancer.
 * `termination_policies` - The termination policies for the group.
 * `vpc_zone_identifier` - VPC ID for the group.
