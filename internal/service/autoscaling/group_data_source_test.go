@@ -325,6 +325,11 @@ resource "aws_autoscaling_group" "test" {
   max_size           = 0
   min_size           = 0
 
+  launch_template {
+    id      = aws_launch_template.test.id
+    version = aws_launch_template.test.default_version
+  }
+
   warm_pool {
     pool_state                  = "Stopped"
     min_size                    = 0
