@@ -68,7 +68,7 @@ interpolation.
                 * `accelerator_types` - List of accelerator types.
                 * `allowed_instance_types` - List of instance types to apply the specified attributes against.
                 * `bare_metal` - Indicates whether bare metal instances are included, excluded, or required.
-                * `baseline_ebs_bandwitdh_mbps` - List of objects describing the minimum and maximum baseline EBS bandwidth (Mbps).
+                * `baseline_ebs_bandwidth_mbps` - List of objects describing the minimum and maximum baseline EBS bandwidth (Mbps).
                     * `min` - Minimum.
                     * `max` - Maximum.
                 * `burstable_performance` - Indicates whether burstable performance instance types are included, excluded, or required.
@@ -83,7 +83,7 @@ interpolation.
                 * `memory_mib` - List of objects describing the minimum and maximum amount of memory (MiB).
                     * `min` - Minimum.
                     * `max` - Maximum.
-                * `network_bandwitdh_gbps` - List of objects describing the minimum and maximum amount of network bandwidth (Gbps).
+                * `network_bandwidth_gbps` - List of objects describing the minimum and maximum amount of network bandwidth (Gbps).
                     * `min` - Minimum.
                     * `max`- Maximum.
                 * `network_interface_count` - List of objects describing the minimum and maximum amount of network interfaces.
