@@ -861,6 +861,10 @@ func ResourceGroup() *schema.Resource {
 					},
 				},
 			},
+			"warm_pool_size": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -1181,6 +1185,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	} else {
 		d.Set("warm_pool", nil)
 	}
+	d.Set("warm_pool_size", g.WarmPoolSize)
 
 	var tagOk, tagsOk bool
 	var v interface{}

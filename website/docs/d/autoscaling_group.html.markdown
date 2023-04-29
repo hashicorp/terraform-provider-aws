@@ -113,3 +113,4 @@ interpolation.
 * `target_group_arns` - ARNs of the target groups for your load balancer.
 * `termination_policies` - The termination policies for the group.
 * `vpc_zone_identifier` - VPC ID for the group.
+* `warm_pool_size` - Current size of the warm pool.

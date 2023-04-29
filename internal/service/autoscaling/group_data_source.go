@@ -464,6 +464,10 @@ func DataSourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"warm_pool_size": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -517,6 +521,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("target_group_arns", aws.StringValueSlice(group.TargetGroupARNs))
 	d.Set("termination_policies", aws.StringValueSlice(group.TerminationPolicies))
 	d.Set("vpc_zone_identifier", group.VPCZoneIdentifier)
+	d.Set("warm_pool_size", group.WarmPoolSize)
 
 	return diags
 }

@@ -683,6 +683,7 @@ In addition to all arguments above, the following attributes are exported:
 * `launch_configuration` - The launch configuration of the Auto Scaling Group
 * `predicted_capacity` - Predicted capacity of the group.
 * `vpc_zone_identifier` (Optional) - The VPC zone identifier
+* `warm_pool_size` - Current size of the warm pool.
 
 ~> **NOTE:** When using `ELB` as the `health_check_type`, `health_check_grace_period` is required.
 

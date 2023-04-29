@@ -102,6 +102,7 @@ func TestAccAutoScalingGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "wait_for_capacity_timeout", "10m"),
 					resource.TestCheckNoResourceAttr(resourceName, "wait_for_elb_capacity"),
 					resource.TestCheckResourceAttr(resourceName, "warm_pool.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "warm_pool_size", "0"),
 				),
 			},
 			testAccGroupImportStep(resourceName),
