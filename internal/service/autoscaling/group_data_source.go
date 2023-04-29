@@ -429,6 +429,10 @@ func DataSourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"predicted_capacity": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"service_linked_role_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -436,6 +440,11 @@ func DataSourceGroup() *schema.Resource {
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"suspended_processes": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"target_group_arns": {
 				Type:     schema.TypeSet,
@@ -501,8 +510,10 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("name", group.AutoScalingGroupName)
 	d.Set("new_instances_protected_from_scale_in", group.NewInstancesProtectedFromScaleIn)
 	d.Set("placement_group", group.PlacementGroup)
+	d.Set("predicted_capacity", group.PredictedCapacity)
 	d.Set("service_linked_role_arn", group.ServiceLinkedRoleARN)
 	d.Set("status", group.Status)
+	d.Set("suspended_processes", flattenSuspendedProcesses(group.SuspendedProcesses))
 	d.Set("target_group_arns", aws.StringValueSlice(group.TargetGroupARNs))
 	d.Set("termination_policies", aws.StringValueSlice(group.TerminationPolicies))
 	d.Set("vpc_zone_identifier", group.VPCZoneIdentifier)

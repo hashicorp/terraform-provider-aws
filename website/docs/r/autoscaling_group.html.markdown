@@ -681,6 +681,7 @@ In addition to all arguments above, the following attributes are exported:
 * `health_check_type` - "EC2" or "ELB". Controls how health checking is done.
 * `desired_capacity` -The number of Amazon EC2 instances that should be running in the group.
 * `launch_configuration` - The launch configuration of the Auto Scaling Group
+* `predicted_capacity` - Predicted capacity of the group.
 * `vpc_zone_identifier` (Optional) - The VPC zone identifier
 
 ~> **NOTE:** When using `ELB` as the `health_check_type`, `health_check_grace_period` is required.

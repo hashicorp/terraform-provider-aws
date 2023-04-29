@@ -106,8 +106,10 @@ interpolation.
             * `weighted_capacity` - Number of capacity units, which gives the instance type a proportional weight to other instance types.
 * `name` - Name of the Auto Scaling Group.
 * `placement_group` - Name of the placement group into which to launch your instances, if any. For more information, see Placement Groups (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html) in the Amazon Elastic Compute Cloud User Guide.
+* `predicted_capacity` - Predicted capacity of the group.
 * `service_linked_role_arn` - ARN of the service-linked role that the Auto Scaling group uses to call other AWS services on your behalf.
 * `status` - Current state of the group when DeleteAutoScalingGroup is in progress.
+* `suspended_processes` - List of processes suspended processes for the Auto Scaling Group.
 * `target_group_arns` - ARNs of the target groups for your load balancer.
 * `termination_policies` - The termination policies for the group.
 * `vpc_zone_identifier` - VPC ID for the group.

@@ -42,8 +42,10 @@ func TestAccAutoScalingGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttr(datasourceName, "new_instances_protected_from_scale_in", "false"),
 					resource.TestCheckResourceAttrPair(datasourceName, "placement_group", resourceName, "placement_group"),
+					resource.TestCheckResourceAttrPair(datasourceName, "predicted_capacity", resourceName, "predicted_capacity"),
 					resource.TestCheckResourceAttrPair(datasourceName, "service_linked_role_arn", resourceName, "service_linked_role_arn"),
 					resource.TestCheckResourceAttr(datasourceName, "status", ""), // Only set when the DeleteAutoScalingGroup operation is in progress.
+					resource.TestCheckResourceAttrPair(datasourceName, "suspended_processes", resourceName, "suspended_processes"),
 					resource.TestCheckResourceAttrPair(datasourceName, "target_group_arns.#", resourceName, "target_group_arns.#"),
 					resource.TestCheckResourceAttr(datasourceName, "termination_policies.#", "1"), // Not set in resource.
 					resource.TestCheckResourceAttr(datasourceName, "vpc_zone_identifier", ""),     // Not set in resource.
