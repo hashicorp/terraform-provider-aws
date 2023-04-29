@@ -535,6 +535,7 @@ This configuration block supports the following:
 * `accelerator_total_memory_mib` - (Optional) Block describing the minimum and maximum total memory of the accelerators. Default is no minimum or maximum.
     * `min` - (Optional) Minimum.
     * `max` - (Optional) Maximum.
+
 * `accelerator_types` - (Optional) List of accelerator types. Default is any accelerator type.
 
     ```
