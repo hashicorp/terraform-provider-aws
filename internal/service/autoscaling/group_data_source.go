@@ -464,6 +464,38 @@ func DataSourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"warm_pool": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"instance_reuse_policy": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"reuse_on_scale_in": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"max_group_prepared_capacity": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"min_size": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"pool_state": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"warm_pool_size": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -521,6 +553,13 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("target_group_arns", aws.StringValueSlice(group.TargetGroupARNs))
 	d.Set("termination_policies", aws.StringValueSlice(group.TerminationPolicies))
 	d.Set("vpc_zone_identifier", group.VPCZoneIdentifier)
+	if group.WarmPoolConfiguration != nil {
+		if err := d.Set("warm_pool", []interface{}{flattenWarmPoolConfiguration(group.WarmPoolConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting warm_pool: %s", err)
+		}
+	} else {
+		d.Set("warm_pool", nil)
+	}
 	d.Set("warm_pool_size", group.WarmPoolSize)
 
 	return diags

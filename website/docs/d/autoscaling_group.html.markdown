@@ -113,4 +113,10 @@ interpolation.
 * `target_group_arns` - ARNs of the target groups for your load balancer.
 * `termination_policies` - The termination policies for the group.
 * `vpc_zone_identifier` - VPC ID for the group.
+* `warm_pool` - List of warm pool configuration objects.
+    * `instance_reuse_policy` - List of instance reuse policy objects.
+        * `reuse_on_scale_in` - Indicates whether instances in the Auto Scaling group can be returned to the warm pool on scale in.
+    * `max_group_prepared_policy` - Total maximum number of instances that are allowed to be in the warm pool or in any state except Terminated for the Auto Scaling group.
+    * `min_size` - Minimum number of instances to maintain in the warm pool.
+    * `pool_state` - Instance state to transition to after the lifecycle actions are complete.
 * `warm_pool_size` - Current size of the warm pool.

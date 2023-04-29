@@ -49,6 +49,7 @@ func TestAccAutoScalingGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "target_group_arns.#", resourceName, "target_group_arns.#"),
 					resource.TestCheckResourceAttr(datasourceName, "termination_policies.#", "1"), // Not set in resource.
 					resource.TestCheckResourceAttr(datasourceName, "vpc_zone_identifier", ""),     // Not set in resource.
+					resource.TestCheckResourceAttrPair(datasourceName, "warm_pool.#", resourceName, "warm_pool.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "warm_pool_size", resourceName, "warm_pool_size"),
 				),
 			},
@@ -112,6 +113,32 @@ func TestAccAutoScalingGroupDataSource_mixedInstancesPolicy(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "mixed_instances_policy.0.launch_template.0.override.0.weighted_capacity", resourceName, "mixed_instances_policy.0.launch_template.0.override.0.weighted_capacity"),
 					resource.TestCheckResourceAttrPair(datasourceName, "mixed_instances_policy.0.launch_template.0.override.1.instance_type", resourceName, "mixed_instances_policy.0.launch_template.0.override.1.instance_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "mixed_instances_policy.0.launch_template.0.override.1.weighted_capacity", resourceName, "mixed_instances_policy.0.launch_template.0.override.1.weighted_capacity"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAutoScalingGroupDataSource_warmPool(t *testing.T) {
+	ctx := acctest.Context(t)
+	datasourceName := "data.aws_autoscaling_group.test"
+	resourceName := "aws_autoscaling_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupDataSourceConfig_launchTemplate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "warm_pool.#", resourceName, "warm_pool.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "warm_pool.0.instance_reuse_policy.#", resourceName, "warm_pool.0.instance_reuse_policy.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "warm_pool.0.instance_reuse_policy.0.reuse_on_scale_in", resourceName, "warm_pool.0.instance_reuse_policy.0.reuse_on_scale_in"),
+					resource.TestCheckResourceAttrPair(datasourceName, "warm_pool.0.max_group_prepared_capacity", resourceName, "warm_pool.0.max_group_prepared_capacity"),
+					resource.TestCheckResourceAttrPair(datasourceName, "warm_pool.0.min_size", resourceName, "warm_pool.0.min_size"),
+					resource.TestCheckResourceAttrPair(datasourceName, "warm_pool.0.pool_state", resourceName, "warm_pool.0.pool_state"),
 				),
 			},
 		},
@@ -238,6 +265,42 @@ resource "aws_autoscaling_group" "test" {
       }
     }
   }
+}
+
+resource "aws_launch_template" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+}
+`, rName))
+}
+
+func testAccGroupDataSourceConfig_warmPool(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigAvailableAZsNoOptIn(),
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
+		fmt.Sprintf(`
+data "aws_autoscaling_group" "test" {
+  name = aws_autoscaling_group.test.name
+}
+
+resource "aws_autoscaling_group" "test" {
+  name               = %[1]q
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  desired_capacity   = 0
+  max_size           = 0
+  min_size           = 0
+
+  warm_pool {
+    pool_state                  = "Stopped"
+    min_size                    = 0
+    max_group_prepared_capacity = 2
+    instance_reuse_policy {
+      reuse_on_scale_in = true
+    }
+  }
+
 }
 
 resource "aws_launch_template" "test" {
