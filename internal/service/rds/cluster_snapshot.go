@@ -33,6 +33,7 @@ func ResourceClusterSnapshot() *schema.Resource {
 		ReadWithoutTimeout:   resourceClusterSnapshotRead,
 		DeleteWithoutTimeout: resourceClusterSnapshotDelete,
 		UpdateWithoutTimeout: resourceClusterSnapshotUpdate,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -42,6 +43,24 @@ func ResourceClusterSnapshot() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"allocated_storage": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"availability_zones": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+			},
+			"db_cluster_identifier": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"db_cluster_snapshot_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"db_cluster_snapshot_identifier": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -53,29 +72,6 @@ func ResourceClusterSnapshot() *schema.Resource {
 					validation.StringDoesNotMatch(regexp.MustCompile(`--`), "cannot contain two consecutive hyphens"),
 					validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
 				),
-			},
-			"db_cluster_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
-			"allocated_storage": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"availability_zones": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			"db_cluster_snapshot_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"storage_encrypted": {
-				Type:     schema.TypeBool,
-				Computed: true,
 			},
 			"engine": {
 				Type:     schema.TypeString,
@@ -109,12 +105,16 @@ func ResourceClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_id": {
-				Type:     schema.TypeString,
+			"storage_encrypted": {
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"vpc_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -240,6 +240,44 @@ func resourceClusterSnapshotDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	return diags
+}
+
+func FindDBClusterSnapshotByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBClusterSnapshot, error) {
+	input := &rds.DescribeDBClusterSnapshotsInput{
+		DBClusterSnapshotIdentifier: aws.String(id),
+	}
+
+	output, err := conn.DescribeDBClusterSnapshotsWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterSnapshotNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.DBClusterSnapshots) == 0 || output.DBClusterSnapshots[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.DBClusterSnapshots); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	dbClusterSnapshot := output.DBClusterSnapshots[0]
+
+	// Eventual consistency check.
+	if aws.StringValue(dbClusterSnapshot.DBClusterSnapshotIdentifier) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return dbClusterSnapshot, nil
 }
 
 func resourceClusterSnapshotStateRefreshFunc(ctx context.Context, dbClusterSnapshotIdentifier string, conn *rds.RDS) retry.StateRefreshFunc {
