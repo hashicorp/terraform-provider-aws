@@ -376,10 +376,7 @@ func testAccCheckCatalogDatabaseExists(ctx context.Context, name string) resourc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 		_, err = tfglue.FindDatabaseByName(ctx, conn, catalogId, dbName)
-		if err != nil {
-			return err
-		}
 
-		return nil
+		return err
 	}
 }
