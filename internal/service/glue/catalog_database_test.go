@@ -251,7 +251,7 @@ func testAccCheckDatabaseDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("Glue Crawler %s still exists", rs.Primary.ID)
+			return fmt.Errorf("Glue Catalog Database %s still exists", rs.Primary.ID)
 		}
 
 		return nil
