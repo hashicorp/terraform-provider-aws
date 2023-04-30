@@ -117,7 +117,7 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
 }
 
 resource "aws_vpc_peering_connection_options" "requester" {
-  provider = aws.requester
+  provider = aws.accepter
 
   # As options can't be set until the connection has been accepted
   # create an explicit dependency on the accepter.
