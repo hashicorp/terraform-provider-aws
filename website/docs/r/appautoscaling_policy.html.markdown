@@ -117,6 +117,7 @@ resource "aws_appautoscaling_policy" "replicas" {
 ```
 
 ### Create target tracking scaling policy using metric math
+
 ```terraform
 resource "aws_appautoscaling_target" "ecs_target" {
   max_capacity       = 4
