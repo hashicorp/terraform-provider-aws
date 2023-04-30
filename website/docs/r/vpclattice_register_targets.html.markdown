@@ -16,6 +16,13 @@ Terraform resource for managing an AWS VPC Lattice Register Targets.
 
 ```terraform
 resource "aws_vpclattice_register_targets" "example" {
+
+  target_group_identifier = aws_vpclattice_target_group.example.id
+
+  targets {
+    id   = aws_lb.example.arn
+    port = 80
+  }
 }
 ```
 
@@ -23,31 +30,11 @@ resource "aws_vpclattice_register_targets" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+- `target_group_identifier` - (Required) The ID or Amazon Resource Name (ARN) of the target group.
+- `targets` - (Required) The target.
 
-The following arguments are optional:
+targets (`targets`) supports the following:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+- `id` - (Required) The ID of the target. If the target type of the target group is INSTANCE, this is an instance ID. If the target type is IP , this is an IP address. If the target type is LAMBDA, this is the ARN of the Lambda function. If the target type is ALB, this is the ARN of the Application Load Balancer.
 
-## Attributes Reference
-
-In addition to all arguments above, the following attributes are exported:
-
-* `arn` - ARN of the Register Targets. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
-
-## Import
-
-VPC Lattice Register Targets can be imported using the `example_id_arg`, e.g.,
-
-```
-$ terraform import aws_vpclattice_register_targets.example rft-8012925589
-```
+- `port` - (Optional) The port on which the target is listening. For HTTP, the default is 80. For HTTPS, the default is 443.

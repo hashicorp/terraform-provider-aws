@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
-
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -166,30 +165,32 @@ func TestAccVPCLatticeRegisterTargets_alb(t *testing.T) {
 func testAccRegisterTargetsConfig_instance(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 
-	  data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
-		most_recent = true
-		owners      = ["amazon"]
-	  
-		filter {
-		  name   = "name"
-		  values = ["amzn-ami-minimal-hvm-*"]
-		}
-	  
-		filter {
-		  name   = "root-device-type"
-		  values = ["ebs"]
-		}
-	  }
-	  
-	  resource "aws_instance" "test_instance" {
-		ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-		instance_type = "t2.micro"
-		subnet_id     = aws_subnet.test[0].id
-	  }
+
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
+resource "aws_instance" "test_instance" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t3.large"
+  subnet_id     = aws_subnet.test[0].id
+}
 
 resource "aws_vpclattice_target_group" "test" {
-  name = %[1]q
-  type = "INSTANCE"
+  depends_on = [aws_instance.test_instance]
+  name       = %[1]q
+  type       = "INSTANCE"
 
   config {
     port           = 80
@@ -202,15 +203,16 @@ resource "aws_vpclattice_target_group" "test" {
 
 func testAccRegisterTargets_instance(rName string) string {
 	return acctest.ConfigCompose(testAccRegisterTargetsConfig_instance(rName), `
-	resource "aws_vpclattice_register_targets" "test" {
-		depends_on = [aws_instance.test_instance]
-		target_group_identifier = aws_vpclattice_target_group.test.id
-	  
-		targets {
-		  id   = aws_instance.test_instance.id
-		  port = 80
-			}
-	  }
+resource "aws_vpclattice_register_targets" "test" {
+  depends_on              = [aws_vpclattice_target_group.test]
+  target_group_identifier = aws_vpclattice_target_group.test.id
+
+  targets {
+    id   = aws_instance.test_instance.id
+    port = 80
+  }
+}
+
 
 `)
 }
@@ -218,30 +220,32 @@ func testAccRegisterTargets_instance(rName string) string {
 func testAccRegisterTargetsConfig_ipAddress(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 
-	  data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
-		most_recent = true
-		owners      = ["amazon"]
-	  
-		filter {
-		  name   = "name"
-		  values = ["amzn-ami-minimal-hvm-*"]
-		}
-	  
-		filter {
-		  name   = "root-device-type"
-		  values = ["ebs"]
-		}
-	  }
-	  
-	  resource "aws_instance" "test_ip" {
-		ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-		instance_type = "t2.micro"
-		subnet_id     = aws_subnet.test[0].id
-	  }
+
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
+resource "aws_instance" "test_ip" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t3.large"
+  subnet_id     = aws_subnet.test[0].id
+}
 
 resource "aws_vpclattice_target_group" "test" {
-  name = %[1]q
-  type = "IP"
+  depends_on = [aws_instance.test_ip]
+  name       = %[1]q
+  type       = "IP"
 
   config {
     port           = 80
@@ -255,15 +259,17 @@ resource "aws_vpclattice_target_group" "test" {
 func testAccRegisterTargets_ip(rName string) string {
 	return acctest.ConfigCompose(testAccRegisterTargetsConfig_ipAddress(rName), `
 
-	resource "aws_vpclattice_register_targets" "test" {
-		depends_on = [aws_instance.test_ip]
-		target_group_identifier = aws_vpclattice_target_group.test.id
-	  
-		targets {
-		  id   = aws_instance.test_ip.private_ip
-		  port = 80
-			}
-	  }
+
+resource "aws_vpclattice_register_targets" "test" {
+  depends_on              = [aws_vpclattice_target_group.test]
+  target_group_identifier = aws_vpclattice_target_group.test.id
+
+  targets {
+    id   = aws_instance.test_ip.private_ip
+    port = 80
+  }
+}
+
 
 `)
 }
@@ -273,10 +279,11 @@ func testAccRegisterTargetsConfig_lambda(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_vpclattice_target_group" "test" {
-	name = %[1]q
-	type = "LAMBDA"
-  
-  }
+  depends_on = [aws_lambda_function.test]
+  name       = %[1]q
+  type       = "LAMBDA"
+
+}
 
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambda.zip"
@@ -311,14 +318,15 @@ resource "aws_iam_role" "test" {
 
 func testAccRegisterTargets_lambda(rName string) string {
 	return acctest.ConfigCompose(testAccRegisterTargetsConfig_lambda(rName), `
-	resource "aws_vpclattice_register_targets" "test" {
-		depends_on = [aws_lambda_function.test]
-		target_group_identifier = aws_vpclattice_target_group.test.id
-	  
-		targets {
-		  id   = aws_lambda_function.test.arn
-			}
-	  }
+resource "aws_vpclattice_register_targets" "test" {
+  depends_on              = [aws_vpclattice_target_group.test]
+  target_group_identifier = aws_vpclattice_target_group.test.id
+
+  targets {
+    id = aws_lambda_function.test.arn
+  }
+}
+
 
 `)
 }
@@ -326,56 +334,59 @@ func testAccRegisterTargets_lambda(rName string) string {
 func testAccRegisterTargetsConfig_alb(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 
+
 resource "aws_vpclattice_target_group" "test" {
-	name = %[1]q
-	type = "ALB"
-  
-	config {
-	  port           = 80
-	  protocol       = "HTTP"
-	  vpc_identifier = aws_vpc.test.id
-	}
-  }
+  name = %[1]q
+  type = "ALB"
 
-  resource "aws_lb" "test" {
-	name               = %[1]q
-	internal           = true
-	load_balancer_type = "application"
-	subnets            =  [aws_subnet.test[0].id, aws_subnet.test[1].id]
-  
-	enable_deletion_protection = false
-  
+  config {
+    port           = 80
+    protocol       = "HTTP"
+    vpc_identifier = aws_vpc.test.id
   }
+}
 
-  resource "aws_lb_listener" "test" {
-	load_balancer_arn = aws_lb.test.arn
-	port              = "80"
-	protocol          = "HTTP"
-	default_action {
-		type = "fixed-response"
-	
-		fixed_response {
-		  content_type = "text/plain"
-		  message_body = "Fixed response content"
-		  status_code  = "200"
-		}
-	  }
+resource "aws_lb" "test" {
+  name               = %[1]q
+  internal           = true
+  load_balancer_type = "application"
+  subnets            = [aws_subnet.test[0].id, aws_subnet.test[1].id]
+
+  enable_deletion_protection = false
+
+}
+
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.arn
+  port              = "80"
+  protocol          = "HTTP"
+  default_action {
+    type = "fixed-response"
+
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Fixed response content"
+      status_code  = "200"
+    }
   }
+}
+
 
 `, rName))
 }
 
 func testAccRegisterTargets_alb(rName string) string {
 	return acctest.ConfigCompose(testAccRegisterTargetsConfig_alb(rName), `
-	resource "aws_vpclattice_register_targets" "test" {
-		depends_on = [aws_lb.test]
-		target_group_identifier = aws_vpclattice_target_group.test.id
-	  
-		targets {
-		  id   = aws_lb.test.arn
-		  port = 80
-			}
-	  }
+resource "aws_vpclattice_register_targets" "test" {
+  depends_on              = [aws_lb.test]
+  target_group_identifier = aws_vpclattice_target_group.test.id
+
+  targets {
+    id   = aws_lb.test.arn
+    port = 80
+  }
+}
+
 
 `)
 }

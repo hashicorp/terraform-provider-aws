@@ -52,7 +52,7 @@ func ResourceRegisterTargets() *schema.Resource {
 			},
 			"targets": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
 				MaxItems: 1,
 				MinItems: 1,
@@ -60,7 +60,7 @@ func ResourceRegisterTargets() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"id": {
 							Type:         schema.TypeString,
-							Optional:     true,
+							Required:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 2048),
 						},
@@ -94,7 +94,7 @@ func resourceRegisterTargetsCreate(ctx context.Context, d *schema.ResourceData, 
 		if len(targets) > 0 {
 			target := targets[0]
 			log.Printf("[INFO] Registering Target %s with Target Group %s", aws.ToString(target.Id), d.Get("target_group_identifier").(string))
-			targetId = *target.Id
+			targetId = aws.ToString(target.Id)
 			in.Targets = targets
 		}
 	}
@@ -151,7 +151,6 @@ func resourceRegisterTargetsRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceRegisterTargetsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
 	targetGroupIdentifier := d.Get("target_group_identifier").(string)
