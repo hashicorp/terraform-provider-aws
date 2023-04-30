@@ -1,0 +1,80 @@
+==> Checking that code complies with gofmt requirements...
+TF_ACC=1 go test ./internal/service/sagemaker/... -v -count 1 -parallel 20 -run='TestAccSageMakerEndpointConfiguration_'  -timeout 180m
+=== RUN   TestAccSageMakerEndpointConfiguration_basic
+=== PAUSE TestAccSageMakerEndpointConfiguration_basic
+=== RUN   TestAccSageMakerEndpointConfiguration_nameGenerated
+=== PAUSE TestAccSageMakerEndpointConfiguration_nameGenerated
+=== RUN   TestAccSageMakerEndpointConfiguration_namePrefix
+=== PAUSE TestAccSageMakerEndpointConfiguration_namePrefix
+=== RUN   TestAccSageMakerEndpointConfiguration_shadowProductionVariants
+=== PAUSE TestAccSageMakerEndpointConfiguration_shadowProductionVariants
+=== RUN   TestAccSageMakerEndpointConfiguration_ProductionVariants_serverless
+=== PAUSE TestAccSageMakerEndpointConfiguration_ProductionVariants_serverless
+=== RUN   TestAccSageMakerEndpointConfiguration_ProductionVariants_initialVariantWeight
+=== PAUSE TestAccSageMakerEndpointConfiguration_ProductionVariants_initialVariantWeight
+=== RUN   TestAccSageMakerEndpointConfiguration_ProductionVariants_acceleratorType
+=== PAUSE TestAccSageMakerEndpointConfiguration_ProductionVariants_acceleratorType
+=== RUN   TestAccSageMakerEndpointConfiguration_ProductionVariants_variantNameGenerated
+=== PAUSE TestAccSageMakerEndpointConfiguration_ProductionVariants_variantNameGenerated
+=== RUN   TestAccSageMakerEndpointConfiguration_kmsKeyID
+=== PAUSE TestAccSageMakerEndpointConfiguration_kmsKeyID
+=== RUN   TestAccSageMakerEndpointConfiguration_tags
+=== PAUSE TestAccSageMakerEndpointConfiguration_tags
+=== RUN   TestAccSageMakerEndpointConfiguration_dataCapture
+=== PAUSE TestAccSageMakerEndpointConfiguration_dataCapture
+=== RUN   TestAccSageMakerEndpointConfiguration_disappears
+=== PAUSE TestAccSageMakerEndpointConfiguration_disappears
+=== RUN   TestAccSageMakerEndpointConfiguration_async
+=== PAUSE TestAccSageMakerEndpointConfiguration_async
+=== RUN   TestAccSageMakerEndpointConfiguration_async_includeInference
+=== PAUSE TestAccSageMakerEndpointConfiguration_async_includeInference
+=== RUN   TestAccSageMakerEndpointConfiguration_async_kms
+=== PAUSE TestAccSageMakerEndpointConfiguration_async_kms
+=== RUN   TestAccSageMakerEndpointConfiguration_Async_notif
+=== PAUSE TestAccSageMakerEndpointConfiguration_Async_notif
+=== RUN   TestAccSageMakerEndpointConfiguration_Async_client
+=== PAUSE TestAccSageMakerEndpointConfiguration_Async_client
+=== RUN   TestAccSageMakerEndpointConfiguration_Async_client_failurePath
+=== PAUSE TestAccSageMakerEndpointConfiguration_Async_client_failurePath
+=== RUN   TestAccSageMakerEndpointConfiguration_upgradeToEnableSSMAccess
+=== PAUSE TestAccSageMakerEndpointConfiguration_upgradeToEnableSSMAccess
+=== CONT  TestAccSageMakerEndpointConfiguration_basic
+=== CONT  TestAccSageMakerEndpointConfiguration_dataCapture
+=== CONT  TestAccSageMakerEndpointConfiguration_Async_notif
+=== CONT  TestAccSageMakerEndpointConfiguration_Async_client_failurePath
+=== CONT  TestAccSageMakerEndpointConfiguration_kmsKeyID
+=== CONT  TestAccSageMakerEndpointConfiguration_upgradeToEnableSSMAccess
+=== CONT  TestAccSageMakerEndpointConfiguration_disappears
+=== CONT  TestAccSageMakerEndpointConfiguration_ProductionVariants_initialVariantWeight
+=== CONT  TestAccSageMakerEndpointConfiguration_ProductionVariants_variantNameGenerated
+=== CONT  TestAccSageMakerEndpointConfiguration_async_includeInference
+=== CONT  TestAccSageMakerEndpointConfiguration_tags
+=== CONT  TestAccSageMakerEndpointConfiguration_async_kms
+=== CONT  TestAccSageMakerEndpointConfiguration_ProductionVariants_serverless
+=== CONT  TestAccSageMakerEndpointConfiguration_ProductionVariants_acceleratorType
+=== CONT  TestAccSageMakerEndpointConfiguration_async
+=== CONT  TestAccSageMakerEndpointConfiguration_Async_client
+=== CONT  TestAccSageMakerEndpointConfiguration_nameGenerated
+=== CONT  TestAccSageMakerEndpointConfiguration_namePrefix
+=== CONT  TestAccSageMakerEndpointConfiguration_shadowProductionVariants
+--- PASS: TestAccSageMakerEndpointConfiguration_async_kms (57.52s)
+--- PASS: TestAccSageMakerEndpointConfiguration_shadowProductionVariants (59.72s)
+--- PASS: TestAccSageMakerEndpointConfiguration_basic (61.30s)
+--- PASS: TestAccSageMakerEndpointConfiguration_Async_client_failurePath (63.65s)
+--- PASS: TestAccSageMakerEndpointConfiguration_nameGenerated (67.82s)
+--- PASS: TestAccSageMakerEndpointConfiguration_async (68.90s)
+--- PASS: TestAccSageMakerEndpointConfiguration_disappears (73.99s)
+--- PASS: TestAccSageMakerEndpointConfiguration_Async_client (75.80s)
+--- PASS: TestAccSageMakerEndpointConfiguration_Async_notif (77.01s)
+--- PASS: TestAccSageMakerEndpointConfiguration_async_includeInference (79.24s)
+--- PASS: TestAccSageMakerEndpointConfiguration_dataCapture (82.27s)
+--- PASS: TestAccSageMakerEndpointConfiguration_ProductionVariants_acceleratorType (82.72s)
+--- PASS: TestAccSageMakerEndpointConfiguration_ProductionVariants_initialVariantWeight (82.82s)
+--- PASS: TestAccSageMakerEndpointConfiguration_ProductionVariants_variantNameGenerated (85.02s)
+--- PASS: TestAccSageMakerEndpointConfiguration_kmsKeyID (86.78s)
+--- PASS: TestAccSageMakerEndpointConfiguration_upgradeToEnableSSMAccess (86.86s)
+--- PASS: TestAccSageMakerEndpointConfiguration_ProductionVariants_serverless (90.10s)
+--- PASS: TestAccSageMakerEndpointConfiguration_namePrefix (90.11s)
+--- PASS: TestAccSageMakerEndpointConfiguration_tags (132.25s)
+PASS
+ok  	github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker	134.719s

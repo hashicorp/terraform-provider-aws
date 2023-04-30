@@ -99,11 +99,13 @@ The following arguments are supported:
 #### output_config
 
 * `s3_output_path` - (Required) The Amazon S3 location to upload inference responses to.
+* `s3_failure_path` - (Optional) The Amazon S3 location to upload failure inference responses to.
 * `kms_key_id` - (Optional) The Amazon Web Services Key Management Service (Amazon Web Services KMS) key that Amazon SageMaker uses to encrypt the asynchronous inference output in Amazon S3.
 * `notification_config` - (Optional) Specifies the configuration for notifications of inference results for asynchronous inference.
 
 ##### notification_config
 
+* `include_inference_response_in` - (Optional) The Amazon SNS topics where you want the inference response to be included. Valid values are `SUCCESS_NOTIFICATION_TOPIC` and `ERROR_NOTIFICATION_TOPIC`.
 * `error_topic` - (Optional) Amazon SNS topic to post a notification to when inference fails. If no topic is provided, no notification is sent on failure.
 * `success_topic` - (Optional) Amazon SNS topic to post a notification to when inference completes successfully. If no topic is provided, no notification is sent on success.
 
