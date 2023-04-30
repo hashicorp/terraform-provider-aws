@@ -163,44 +163,6 @@ func FindDBProxyByName(ctx context.Context, conn *rds.RDS, name string) (*rds.DB
 	return dbProxy, nil
 }
 
-func FindDBSnapshotByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBSnapshot, error) {
-	input := &rds.DescribeDBSnapshotsInput{
-		DBSnapshotIdentifier: aws.String(id),
-	}
-
-	output, err := conn.DescribeDBSnapshotsWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSnapshotNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.DBSnapshots) == 0 || output.DBSnapshots[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.DBSnapshots); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	dbSnapshot := output.DBSnapshots[0]
-
-	// Eventual consistency check.
-	if aws.StringValue(dbSnapshot.DBSnapshotIdentifier) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return dbSnapshot, nil
-}
-
 func FindDBSubnetGroupByName(ctx context.Context, conn *rds.RDS, name string) (*rds.DBSubnetGroup, error) {
 	input := &rds.DescribeDBSubnetGroupsInput{
 		DBSubnetGroupName: aws.String(name),
