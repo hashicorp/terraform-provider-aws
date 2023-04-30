@@ -91,11 +91,12 @@ func resourceRegisterTargetsCreate(ctx context.Context, d *schema.ResourceData, 
 	if v, ok := d.GetOk("targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{}) != nil {
 		targets := expandTargets(v.([]interface{}))
 
-		for _, target := range targets {
+		if len(targets) > 0 {
+			target := targets[0]
 			log.Printf("[INFO] Registering Target %s with Target Group %s", aws.ToString(target.Id), d.Get("target_group_identifier").(string))
 			targetId = *target.Id
+			in.Targets = targets
 		}
-		in.Targets = targets
 	}
 
 	out, err := conn.RegisterTargets(ctx, in)
@@ -141,7 +142,7 @@ func resourceRegisterTargetsRead(ctx context.Context, d *schema.ResourceData, me
 	if err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameRegisterTargets, d.Id(), err)
 	}
-
+	d.Set("target_group_identifier", targetGroupId)
 	if err := d.Set("targets", flattenTargets(out.Items)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting targets: %s", err))
 	}
@@ -195,11 +196,8 @@ func findRegisterTargets(ctx context.Context, conn *vpclattice.Client, targetGro
 		return nil, err
 	}
 
-	if len(out.Items) == 0 {
-		out = nil
-		if out == nil {
-			return nil, tfresource.NewEmptyResultError(in)
-		}
+	if out == nil || out.Items == nil {
+		return nil, tfresource.NewEmptyResultError(in)
 	}
 
 	return out, nil
