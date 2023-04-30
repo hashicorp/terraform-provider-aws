@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -662,6 +663,11 @@ func TestAccEC2LaunchTemplate_cpuOptions(t *testing.T) {
 	resName := "aws_launch_template.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
+	originalCoreCount := 2
+	updatedCoreCount := 3
+	originalThreadsPerCore := 2
+	updatedThreadsPerCore := 1
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -669,9 +675,26 @@ func TestAccEC2LaunchTemplate_cpuOptions(t *testing.T) {
 		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchTemplateConfig_cpuOptions(rName, 4, 2),
+				Config: testAccLaunchTemplateConfig_cpuOptions(rName, ec2.AmdSevSnpSpecificationEnabled, originalCoreCount, originalThreadsPerCore),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resName, &template),
+					resource.TestCheckResourceAttr(resName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationEnabled),
+					resource.TestCheckResourceAttr(resName, "cpu_options.0.core_count", strconv.Itoa(originalCoreCount)),
+					resource.TestCheckResourceAttr(resName, "cpu_options.0.threads_per_core", strconv.Itoa(originalThreadsPerCore)),
+				),
+			},
+			{
+				ResourceName:      resName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLaunchTemplateConfig_cpuOptions(rName, ec2.AmdSevSnpSpecificationDisabled, updatedCoreCount, updatedThreadsPerCore),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resName, &template),
+					resource.TestCheckResourceAttr(resName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationDisabled),
+					resource.TestCheckResourceAttr(resName, "cpu_options.0.core_count", strconv.Itoa(updatedCoreCount)),
+					resource.TestCheckResourceAttr(resName, "cpu_options.0.threads_per_core", strconv.Itoa(updatedThreadsPerCore)),
 				),
 			},
 		},
@@ -2945,6 +2968,23 @@ func TestAccEC2LaunchTemplate_metadataOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.instance_metadata_tags", "enabled"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLaunchTemplateConfig_metadataOptionsNoHTTPEndpoint(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", "enabled"), //Setting any of the values in metadata options will set the http_endpoint to enabled, you will not see it via the Console, but will in the API for any instance made from the template
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "required"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "2"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_protocol_ipv6", "disabled"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.instance_metadata_tags", "enabled"),
+				),
+			},
 		},
 	})
 }
@@ -3531,17 +3571,18 @@ resource "aws_launch_template" "test" {
 `, rName))
 }
 
-func testAccLaunchTemplateConfig_cpuOptions(rName string, coreCount, threadsPerCore int) string {
+func testAccLaunchTemplateConfig_cpuOptions(rName, amdSevSnp string, coreCount, threadsPerCore int) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name = %[1]q
 
   cpu_options {
-    core_count       = %[2]d
-    threads_per_core = %[3]d
+    amd_sev_snp      = %[2]q
+    core_count       = %[3]d
+    threads_per_core = %[4]d
   }
 }
-`, rName, coreCount, threadsPerCore)
+`, rName, amdSevSnp, coreCount, threadsPerCore)
 }
 
 func testAccLaunchTemplateConfig_creditSpecification(rName, instanceType, cpuCredits string) string {
@@ -4087,7 +4128,19 @@ resource "aws_launch_template" "test" {
 }
 `, rName)
 }
+func testAccLaunchTemplateConfig_metadataOptionsNoHTTPEndpoint(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = %[1]q
 
+  metadata_options {
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 2
+    instance_metadata_tags      = "enabled"
+  }
+}
+`, rName)
+}
 func testAccLaunchTemplateConfig_enclaveOptions(rName string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {

@@ -54,12 +54,85 @@ func DataSourceServiceQuota() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"usage_metric": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"metric_dimensions": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"class": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"resource": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"service": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"type": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"metric_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"metric_namespace": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"metric_statistic_recommendation": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"value": {
 				Type:     schema.TypeFloat,
 				Computed: true,
 			},
 		},
 	}
+}
+
+func flattenUsageMetric(usageMetric *servicequotas.MetricInfo) []interface{} {
+	if usageMetric == nil {
+		return []interface{}{}
+	}
+
+	var usageMetrics []interface{}
+	var metricDimensions []interface{}
+
+	if usageMetric.MetricDimensions != nil && usageMetric.MetricDimensions["Service"] != nil {
+		metricDimensions = append(metricDimensions, map[string]interface{}{
+			"service":  usageMetric.MetricDimensions["Service"],
+			"class":    usageMetric.MetricDimensions["Class"],
+			"type":     usageMetric.MetricDimensions["Type"],
+			"resource": usageMetric.MetricDimensions["Resource"],
+		})
+	} else {
+		metricDimensions = append(metricDimensions, map[string]interface{}{})
+	}
+
+	usageMetrics = append(usageMetrics, map[string]interface{}{
+		"metric_name":                     usageMetric.MetricName,
+		"metric_namespace":                usageMetric.MetricNamespace,
+		"metric_statistic_recommendation": usageMetric.MetricStatisticRecommendation,
+		"metric_dimensions":               metricDimensions,
+	})
+
+	return usageMetrics
 }
 
 func dataSourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -99,6 +172,10 @@ func dataSourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("service_code", defaultQuota.ServiceCode)
 	d.Set("service_name", defaultQuota.ServiceName)
 	d.Set("value", defaultQuota.Value)
+
+	if err := d.Set("usage_metric", flattenUsageMetric(defaultQuota.UsageMetric)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting usage_metric for (%s/%s): %s", serviceCode, quotaCode, err)
+	}
 
 	serviceQuota, err := findServiceQuotaByID(ctx, conn, serviceCode, quotaCode)
 	if tfresource.NotFound(err) {

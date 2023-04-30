@@ -4,11 +4,15 @@ package conns
 import (
 	"net/http"
 
+	"github.com/aws/aws-sdk-go-v2/service/account"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
+	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	"github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
+	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
+	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	"github.com/aws/aws-sdk-go-v2/service/healthlake"
@@ -28,14 +32,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
+	"github.com/aws/aws-sdk-go-v2/service/securitylake"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
+	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
-	"github.com/aws/aws-sdk-go/service/account"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/alexaforbusiness"
@@ -70,8 +75,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/aws/aws-sdk-go/service/chime"
 	"github.com/aws/aws-sdk-go/service/chimesdkidentity"
+	"github.com/aws/aws-sdk-go/service/chimesdkmediapipelines"
 	"github.com/aws/aws-sdk-go/service/chimesdkmeetings"
 	"github.com/aws/aws-sdk-go/service/chimesdkmessaging"
+	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
 	"github.com/aws/aws-sdk-go/service/cloud9"
 	"github.com/aws/aws-sdk-go/service/clouddirectory"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
@@ -163,6 +170,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/aws/aws-sdk-go/service/inspector"
+	"github.com/aws/aws-sdk-go/service/internetmonitor"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/aws/aws-sdk-go/service/iot1clickdevicesservice"
 	"github.com/aws/aws-sdk-go/service/iot1clickprojects"
@@ -332,12 +340,13 @@ type AWSClient struct {
 	Partition               string
 	Region                  string
 	ReverseDNSPrefix        string
-	ServicePackages         []ServicePackage
+	ServicePackages         map[string]ServicePackage
 	Session                 *session.Session
 	TerraformVersion        string
 
 	httpClient *http.Client
 
+	dsClient        lazyClient[*directoryservice_sdkv2.Client]
 	ec2Client       lazyClient[*ec2_sdkv2.Client]
 	lambdaClient    lazyClient[*lambda_sdkv2.Client]
 	logsClient      lazyClient[*cloudwatchlogs_sdkv2.Client]
@@ -352,7 +361,7 @@ type AWSClient struct {
 	apigatewaymanagementapiConn      *apigatewaymanagementapi.ApiGatewayManagementApi
 	apigatewayv2Conn                 *apigatewayv2.ApiGatewayV2
 	accessanalyzerConn               *accessanalyzer.AccessAnalyzer
-	accountConn                      *account.Account
+	accountClient                    *account.Client
 	alexaforbusinessConn             *alexaforbusiness.AlexaForBusiness
 	amplifyConn                      *amplify.Amplify
 	amplifybackendConn               *amplifybackend.AmplifyBackend
@@ -382,8 +391,11 @@ type AWSClient struct {
 	curConn                          *costandusagereportservice.CostandUsageReportService
 	chimeConn                        *chime.Chime
 	chimesdkidentityConn             *chimesdkidentity.ChimeSDKIdentity
+	chimesdkmediapipelinesConn       *chimesdkmediapipelines.ChimeSDKMediaPipelines
 	chimesdkmeetingsConn             *chimesdkmeetings.ChimeSDKMeetings
 	chimesdkmessagingConn            *chimesdkmessaging.ChimeSDKMessaging
+	chimesdkvoiceConn                *chimesdkvoice.ChimeSDKVoice
+	cleanroomsClient                 *cleanrooms.Client
 	cloud9Conn                       *cloud9.Cloud9
 	cloudcontrolClient               *cloudcontrol.Client
 	clouddirectoryConn               *clouddirectory.CloudDirectory
@@ -431,6 +443,7 @@ type AWSClient struct {
 	directconnectConn                *directconnect.DirectConnect
 	discoveryConn                    *applicationdiscoveryservice.ApplicationDiscoveryService
 	docdbConn                        *docdb.DocDB
+	docdbelasticClient               *docdbelastic.Client
 	dynamodbConn                     *dynamodb.DynamoDB
 	dynamodbstreamsConn              *dynamodbstreams.DynamoDBStreams
 	ebsConn                          *ebs.EBS
@@ -481,6 +494,7 @@ type AWSClient struct {
 	imagebuilderConn                 *imagebuilder.Imagebuilder
 	inspectorConn                    *inspector.Inspector
 	inspector2Client                 *inspector2.Client
+	internetmonitorConn              *internetmonitor.InternetMonitor
 	iotConn                          *iot.IoT
 	iot1clickdevicesConn             *iot1clickdevicesservice.IoT1ClickDevicesService
 	iot1clickprojectsConn            *iot1clickprojects.IoT1ClickProjects
@@ -621,6 +635,7 @@ type AWSClient struct {
 	schemasConn                      *schemas.Schemas
 	secretsmanagerConn               *secretsmanager.SecretsManager
 	securityhubConn                  *securityhub.SecurityHub
+	securitylakeClient               *securitylake.Client
 	serverlessrepoConn               *serverlessapplicationrepository.ServerlessApplicationRepository
 	servicecatalogConn               *servicecatalog.ServiceCatalog
 	servicecatalogappregistryConn    *appregistry.AppRegistry
@@ -641,6 +656,7 @@ type AWSClient struct {
 	transcribestreamingConn          *transcribestreamingservice.TranscribeStreamingService
 	transferConn                     *transfer.Transfer
 	translateConn                    *translate.Translate
+	vpclatticeClient                 *vpclattice.Client
 	voiceidConn                      *voiceid.VoiceID
 	wafConn                          *waf.WAF
 	wafregionalConn                  *wafregional.WAFRegional
@@ -686,8 +702,8 @@ func (client *AWSClient) AccessAnalyzerConn() *accessanalyzer.AccessAnalyzer {
 	return client.accessanalyzerConn
 }
 
-func (client *AWSClient) AccountConn() *account.Account {
-	return client.accountConn
+func (client *AWSClient) AccountClient() *account.Client {
+	return client.accountClient
 }
 
 func (client *AWSClient) AlexaForBusinessConn() *alexaforbusiness.AlexaForBusiness {
@@ -806,12 +822,24 @@ func (client *AWSClient) ChimeSDKIdentityConn() *chimesdkidentity.ChimeSDKIdenti
 	return client.chimesdkidentityConn
 }
 
+func (client *AWSClient) ChimeSDKMediaPipelinesConn() *chimesdkmediapipelines.ChimeSDKMediaPipelines {
+	return client.chimesdkmediapipelinesConn
+}
+
 func (client *AWSClient) ChimeSDKMeetingsConn() *chimesdkmeetings.ChimeSDKMeetings {
 	return client.chimesdkmeetingsConn
 }
 
 func (client *AWSClient) ChimeSDKMessagingConn() *chimesdkmessaging.ChimeSDKMessaging {
 	return client.chimesdkmessagingConn
+}
+
+func (client *AWSClient) ChimeSDKVoiceConn() *chimesdkvoice.ChimeSDKVoice {
+	return client.chimesdkvoiceConn
+}
+
+func (client *AWSClient) CleanRoomsClient() *cleanrooms.Client {
+	return client.cleanroomsClient
 }
 
 func (client *AWSClient) Cloud9Conn() *cloud9.Cloud9 {
@@ -958,6 +986,10 @@ func (client *AWSClient) DSConn() *directoryservice.DirectoryService {
 	return client.dsConn
 }
 
+func (client *AWSClient) DSClient() *directoryservice_sdkv2.Client {
+	return client.dsClient.Client()
+}
+
 func (client *AWSClient) DataBrewConn() *gluedatabrew.GlueDataBrew {
 	return client.databrewConn
 }
@@ -1000,6 +1032,10 @@ func (client *AWSClient) DiscoveryConn() *applicationdiscoveryservice.Applicatio
 
 func (client *AWSClient) DocDBConn() *docdb.DocDB {
 	return client.docdbConn
+}
+
+func (client *AWSClient) DocDBElasticClient() *docdbelastic.Client {
+	return client.docdbelasticClient
 }
 
 func (client *AWSClient) DynamoDBConn() *dynamodb.DynamoDB {
@@ -1204,6 +1240,10 @@ func (client *AWSClient) InspectorConn() *inspector.Inspector {
 
 func (client *AWSClient) Inspector2Client() *inspector2.Client {
 	return client.inspector2Client
+}
+
+func (client *AWSClient) InternetMonitorConn() *internetmonitor.InternetMonitor {
+	return client.internetmonitorConn
 }
 
 func (client *AWSClient) IoTConn() *iot.IoT {
@@ -1786,6 +1826,10 @@ func (client *AWSClient) SecurityHubConn() *securityhub.SecurityHub {
 	return client.securityhubConn
 }
 
+func (client *AWSClient) SecurityLakeClient() *securitylake.Client {
+	return client.securitylakeClient
+}
+
 func (client *AWSClient) ServerlessRepoConn() *serverlessapplicationrepository.ServerlessApplicationRepository {
 	return client.serverlessrepoConn
 }
@@ -1864,6 +1908,10 @@ func (client *AWSClient) TransferConn() *transfer.Transfer {
 
 func (client *AWSClient) TranslateConn() *translate.Translate {
 	return client.translateConn
+}
+
+func (client *AWSClient) VPCLatticeClient() *vpclattice.Client {
+	return client.vpclatticeClient
 }
 
 func (client *AWSClient) VoiceIDConn() *voiceid.VoiceID {

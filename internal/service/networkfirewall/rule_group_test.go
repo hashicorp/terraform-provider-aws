@@ -937,7 +937,7 @@ func TestAccNetworkFirewallRuleGroup_encryptionConfiguration(t *testing.T) {
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_encryptionConfiguration(rName),
+				Config: testAccRuleGroupConfig_encryptionConfiguration(rName, "ALLOWLIST"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
@@ -957,7 +957,15 @@ func TestAccNetworkFirewallRuleGroup_encryptionConfiguration(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_encryptionConfiguration(rName),
+				Config: testAccRuleGroupConfig_encryptionConfiguration(rName, "ALLOWLIST"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", "CUSTOMER_KMS"),
+				),
+			},
+			{
+				Config: testAccRuleGroupConfig_encryptionConfiguration(rName, "DENYLIST"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
@@ -1708,7 +1716,7 @@ resource "aws_networkfirewall_rule_group" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccRuleGroupConfig_encryptionConfiguration(rName string) string {
+func testAccRuleGroupConfig_encryptionConfiguration(rName, generatedRulesType string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {}
 
@@ -1720,7 +1728,7 @@ resource "aws_networkfirewall_rule_group" "test" {
   rule_group {
     rules_source {
       rules_source_list {
-        generated_rules_type = "ALLOWLIST"
+        generated_rules_type = %[2]q
         target_types         = ["HTTP_HOST"]
         targets              = ["test.example.com"]
       }
@@ -1732,7 +1740,7 @@ resource "aws_networkfirewall_rule_group" "test" {
     type   = "CUSTOMER_KMS"
   }
 }
-`, rName)
+`, rName, generatedRulesType)
 }
 
 // The KMS key resource must stay in state while removing encryption configuration. If not
