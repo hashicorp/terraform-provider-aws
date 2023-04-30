@@ -104,6 +104,7 @@ resource "aws_vpc_peering_connection" "peer" {
 }
 
 # Accepter's side of the connection.
+# Also contains the status of the peering.
 resource "aws_vpc_peering_connection_accepter" "peer" {
   provider = aws.accepter
 
@@ -125,6 +126,8 @@ resource "aws_vpc_peering_connection_options" "requester" {
   requester {
     allow_remote_vpc_dns_resolution = true
   }
+  
+  depends_on = [ aws_vpc_peering_connection_options.accepter, aws_vpc_peering_connection_accepter.peer ]
 }
 
 resource "aws_vpc_peering_connection_options" "accepter" {
@@ -135,6 +138,8 @@ resource "aws_vpc_peering_connection_options" "accepter" {
   accepter {
     allow_remote_vpc_dns_resolution = true
   }
+
+  depends_on = [ aws_vpc_peering_connection_accepter.peer ]
 }
 ```
 
