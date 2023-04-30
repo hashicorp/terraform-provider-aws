@@ -484,11 +484,12 @@ func TestAccAppAutoScalingPolicy_TargetTrack_metricMath(t *testing.T) {
 func testAccPolicyConfig_targetTrackingMetricMath(rName string) string {
 	return acctest.ConfigCompose(testAccPolicyConfig_basic(rName), fmt.Sprintf(`
 resource "aws_appautoscaling_policy" "metric_math_test" {
-  name                   = "%[1]s-tracking"
-  policy_type            = "TargetTrackingScaling"
+  name               = "%[1]s-tracking"
+  policy_type        = "TargetTrackingScaling"
   resource_id        = aws_appautoscaling_target.test.resource_id
   scalable_dimension = aws_appautoscaling_target.test.scalable_dimension
   service_namespace  = aws_appautoscaling_target.test.service_namespace
+
   target_tracking_scaling_policy_configuration {
     customized_metric_specification {
       metrics {
