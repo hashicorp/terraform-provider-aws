@@ -20,40 +20,6 @@ func DataSourceSnapshot() *schema.Resource {
 		ReadWithoutTimeout: dataSourceSnapshotRead,
 
 		Schema: map[string]*schema.Schema{
-			// selection criteria
-			"db_instance_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"db_snapshot_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"snapshot_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"include_shared": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
-			"include_public": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"most_recent": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
-			// Computed values returned
 			"allocated_storage": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -62,9 +28,17 @@ func DataSourceSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"db_instance_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"db_snapshot_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"db_snapshot_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"encrypted": {
 				Type:     schema.TypeBool,
@@ -78,6 +52,16 @@ func DataSourceSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"include_public": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"include_shared": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"iops": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -90,6 +74,11 @@ func DataSourceSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"most_recent": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"option_group_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -97,6 +86,10 @@ func DataSourceSnapshot() *schema.Resource {
 			"port": {
 				Type:     schema.TypeInt,
 				Computed: true,
+			},
+			"snapshot_type": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"source_db_snapshot_identifier": {
 				Type:     schema.TypeString,
