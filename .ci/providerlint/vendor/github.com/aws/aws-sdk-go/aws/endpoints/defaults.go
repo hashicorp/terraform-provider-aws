@@ -19503,6 +19503,40 @@ var awsPartition = partition{
 				},
 			},
 		},
+		"osis": service{
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "ap-northeast-1",
+				}: endpoint{},
+				endpointKey{
+					Region: "ap-southeast-1",
+				}: endpoint{},
+				endpointKey{
+					Region: "ap-southeast-2",
+				}: endpoint{},
+				endpointKey{
+					Region: "eu-central-1",
+				}: endpoint{},
+				endpointKey{
+					Region: "eu-west-1",
+				}: endpoint{},
+				endpointKey{
+					Region: "eu-west-2",
+				}: endpoint{},
+				endpointKey{
+					Region: "us-east-1",
+				}: endpoint{},
+				endpointKey{
+					Region: "us-east-2",
+				}: endpoint{},
+				endpointKey{
+					Region: "us-west-1",
+				}: endpoint{},
+				endpointKey{
+					Region: "us-west-2",
+				}: endpoint{},
+			},
+		},
 		"outposts": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
@@ -28833,6 +28867,14 @@ var awsPartition = partition{
 					Deprecated: boxedTrue,
 				},
 				endpointKey{
+					Region: "fips-il-central-1",
+				}: endpoint{
+					Hostname: "waf-regional-fips.il-central-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "il-central-1",
+					},
+				},
+				endpointKey{
 					Region: "fips-me-central-1",
 				}: endpoint{
 					Hostname: "waf-regional-fips.me-central-1.amazonaws.com",
@@ -29537,6 +29579,14 @@ var awsPartition = partition{
 						Region: "eu-west-3",
 					},
 					Deprecated: boxedTrue,
+				},
+				endpointKey{
+					Region: "fips-il-central-1",
+				}: endpoint{
+					Hostname: "wafv2-fips.il-central-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "il-central-1",
+					},
 				},
 				endpointKey{
 					Region: "fips-me-central-1",
@@ -31253,6 +31303,16 @@ var awscnPartition = partition{
 			},
 		},
 		"license-manager": service{
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "cn-north-1",
+				}: endpoint{},
+				endpointKey{
+					Region: "cn-northwest-1",
+				}: endpoint{},
+			},
+		},
+		"license-manager-linux-subscriptions": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
 					Region: "cn-north-1",
@@ -38030,6 +38090,13 @@ var awsisoPartition = partition{
 				}: endpoint{},
 			},
 		},
+		"athena": service{
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "us-iso-east-1",
+				}: endpoint{},
+			},
+		},
 		"autoscaling": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
@@ -39238,6 +39305,13 @@ var awsisobPartition = partition{
 					SignatureVersions: []string{"s3v4"},
 				},
 			},
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "us-isob-east-1",
+				}: endpoint{},
+			},
+		},
+		"secretsmanager": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
 					Region: "us-isob-east-1",
