@@ -35,6 +35,10 @@ func ResourceUser() *schema.Resource {
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(5 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"access_string": {
 				Type:     schema.TypeString,
@@ -145,6 +149,10 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ElastiCache User (%s): %s", userID, err)
+	}
+
+	if _, err := waitUserCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache User (%s) create: %s", d.Id(), err)
 	}
 
 	d.SetId(aws.StringValue(output.UserId))
@@ -316,9 +324,28 @@ func statusUser(ctx context.Context, conn *elasticache.ElastiCache, id string) r
 
 const (
 	userStatusActive    = "active"
+	userStatusCreating  = "creating"
 	userStatusDeleting  = "deleting"
 	userStatusModifying = "modifying"
 )
+
+func waitUserCreated(ctx context.Context, conn *elasticache.ElastiCache, id string, timeout time.Duration) (*elasticache.User, error) {
+
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{userStatusCreating},
+		Target:  []string{userStatusActive},
+		Refresh: statusUser(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*elasticache.User); ok {
+		return output, err
+	}
+
+	return nil, err
+}
 
 func waitUserUpdated(ctx context.Context, conn *elasticache.ElastiCache, id string) (*elasticache.User, error) {
 	const (
