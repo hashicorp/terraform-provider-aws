@@ -37,6 +37,8 @@ func ResourceUser() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(5 * time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -151,11 +153,11 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "creating ElastiCache User (%s): %s", userID, err)
 	}
 
+	d.SetId(aws.StringValue(output.UserId))
+
 	if _, err := waitUserCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache User (%s) create: %s", d.Id(), err)
 	}
-
-	d.SetId(aws.StringValue(output.UserId))
 
 	// In some partitions, only post-create tagging supported
 	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); input.Tags == nil && len(tags) > 0 {
@@ -245,7 +247,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			return sdkdiag.AppendErrorf(diags, "updating ElastiCache User (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitUserUpdated(ctx, conn, d.Id()); err != nil {
+		if _, err := waitUserUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache User (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -270,7 +272,7 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "deleting ElastiCache User (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitUserDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitUserDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache User (%s) delete: %s", d.Id(), err)
 	}
 
@@ -347,10 +349,8 @@ func waitUserCreated(ctx context.Context, conn *elasticache.ElastiCache, id stri
 	return nil, err
 }
 
-func waitUserUpdated(ctx context.Context, conn *elasticache.ElastiCache, id string) (*elasticache.User, error) {
-	const (
-		timeout = 5 * time.Minute
-	)
+func waitUserUpdated(ctx context.Context, conn *elasticache.ElastiCache, id string, timeout time.Duration) (*elasticache.User, error) {
+
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{userStatusModifying},
 		Target:  []string{userStatusActive},
@@ -367,10 +367,8 @@ func waitUserUpdated(ctx context.Context, conn *elasticache.ElastiCache, id stri
 	return nil, err
 }
 
-func waitUserDeleted(ctx context.Context, conn *elasticache.ElastiCache, id string) (*elasticache.User, error) {
-	const (
-		timeout = 5 * time.Minute
-	)
+func waitUserDeleted(ctx context.Context, conn *elasticache.ElastiCache, id string, timeout time.Duration) (*elasticache.User, error) {
+
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{userStatusDeleting},
 		Target:  []string{},
