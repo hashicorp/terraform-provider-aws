@@ -369,6 +369,62 @@ The following arguments are optional:
 
 * `temporal_filter_settings` - (Optional) Temporal filter settings. See [Temporal Filter Settings](#temporal-filter-settings)
 
+### H265 Settings
+
+* `adaptive_quantization` - (Optional) Enables or disables adaptive quantization.
+* `afd_signaling` - (Optional) Indicates that AFD values will be written into the output stream.
+* `alternative_transfer_function` - (Optional) Whether or not EML should insert an Alternative Transfer Function SEI message.
+* `bitrate` - (Required) Average bitrate in bits/second.
+* `buf_size` - (Optional) Size of buffer in bits.
+* `color_metadata` - (Optional) Includes color space metadata in the output.
+* `color_space_settings` (Optional) Define the color metadata for the output. [H265 Color Space Settings](#h265-color-space-settings) for more details.
+* `filter_settings` - (Optional) Filters to apply to an encode. See [H265 Filter Settings](#h265-filter-settings) for more details.
+* `fixed_afd` - (Optional) Four bit AFD value to write on all frames of video in the output stream.
+* `flicer_aq` - (Optional) Makes adjustments within each frame to reduce flicker on the I-frames.
+* `framerate_denominator` - (Required) Framerate denominator.
+* `framerate_numerator` - (Required) Framerate numerator.
+* `gop_closed_cadence` - (Optional) Frequency of closed GOPs.
+* `gop_size` - (Optional) GOP size in units of either frames of seconds per `gop_size_units`.
+* `gop_size_units` - (Optional) Indicates if the `gop_size` is specified in frames or seconds.
+* `level` - (Optional) H265 level.
+* `look_ahead_rate_control` - (Optional) Amount of lookahead.
+* `max_bitrate` - (Optional) Set the maximum bitrate in order to accommodate expected spikes in the complexity of the video.
+* `min_interval` - (Optional) Min interval.
+* `par_denominator` - (Optional) Pixel Aspect Ratio denominator.
+* `par_numerator` - (Optional) Pixel Aspect Ratio numerator.
+* `profile` - (Optional) H265 profile.
+* `qvbr_quality_level` - (Optional) Controls the target quality for the video encode.
+* `rate_control_mode` - (Optional) Rate control mode.
+* `scan_type` - (Optional) Sets the scan type of the output.
+* `scene_change_detect` - (Optional) Scene change detection.
+* `slices` - (Optional) Number of slices per picture.
+* `tier` - (Optional) Set the H265 tier in the output.
+* `timecode_burnin_settings` - (Optional) Apply a burned in timecode. See [H265 Timecode Burnin Settings](#h265-timecode-burnin-settings) for more details.
+* `timecode_insertion` = (Optional) Determines how timecodes should be inserted into the video elementary stream.
+
+### H265 Color Space Settings
+
+* `color_space_passthrough_settings` - (Optional) Sets the colorspace metadata to be passed through.
+* `dolby_vision81_settings` - (Optional) Set the colorspace to Dolby Vision81.
+* `hdr10_settings` - (Optional) Set the colorspace to be HDR10. See [H265 HDR10 Settings](#h265-hdr10-settings) for more details.
+* `rec601_settings` - (Optional) Set the colorspace to Rec. 601.
+* `rec709_settings` - (Optional) Set the colorspace to Rec. 709.
+
+### H265 HDR10 Settings
+
+* `max_cll` - (Optional) Sets the MaxCLL value for HDR10.
+* `max_fall` - (Optional) Sets the MaxFALL value for HDR10.
+
+### H265 Filter Settings
+
+* `temporal_filter_settings` - (Optional) Temporal filter settings. See [Temporal Filter Settings](#temporal-filter-settings)
+
+### H265 Timecode Burnin Settings
+
+* `timecode_burnin_font_size` - (Optional) Sets the size of the burned in timecode.
+* `timecode_burnin_position` - (Optional) Sets the position of the burned in timecode.
+* `prefix` - (Optional) Set a prefix on the burned in timecode.
+
 ### Temporal Filter Settings
 
 * `post_filter_sharpening` - (Optional) Post filter sharpening.

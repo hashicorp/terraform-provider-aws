@@ -4,12 +4,14 @@ package conns
 import (
 	"net/http"
 
+	"github.com/aws/aws-sdk-go-v2/service/account"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	"github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
+	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
@@ -39,7 +41,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
-	"github.com/aws/aws-sdk-go/service/account"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/alexaforbusiness"
@@ -345,6 +346,7 @@ type AWSClient struct {
 
 	httpClient *http.Client
 
+	dsClient        lazyClient[*directoryservice_sdkv2.Client]
 	ec2Client       lazyClient[*ec2_sdkv2.Client]
 	lambdaClient    lazyClient[*lambda_sdkv2.Client]
 	logsClient      lazyClient[*cloudwatchlogs_sdkv2.Client]
@@ -359,7 +361,7 @@ type AWSClient struct {
 	apigatewaymanagementapiConn      *apigatewaymanagementapi.ApiGatewayManagementApi
 	apigatewayv2Conn                 *apigatewayv2.ApiGatewayV2
 	accessanalyzerConn               *accessanalyzer.AccessAnalyzer
-	accountConn                      *account.Account
+	accountClient                    *account.Client
 	alexaforbusinessConn             *alexaforbusiness.AlexaForBusiness
 	amplifyConn                      *amplify.Amplify
 	amplifybackendConn               *amplifybackend.AmplifyBackend
@@ -700,8 +702,8 @@ func (client *AWSClient) AccessAnalyzerConn() *accessanalyzer.AccessAnalyzer {
 	return client.accessanalyzerConn
 }
 
-func (client *AWSClient) AccountConn() *account.Account {
-	return client.accountConn
+func (client *AWSClient) AccountClient() *account.Client {
+	return client.accountClient
 }
 
 func (client *AWSClient) AlexaForBusinessConn() *alexaforbusiness.AlexaForBusiness {
@@ -982,6 +984,10 @@ func (client *AWSClient) DRSConn() *drs.Drs {
 
 func (client *AWSClient) DSConn() *directoryservice.DirectoryService {
 	return client.dsConn
+}
+
+func (client *AWSClient) DSClient() *directoryservice_sdkv2.Client {
+	return client.dsClient.Client()
 }
 
 func (client *AWSClient) DataBrewConn() *gluedatabrew.GlueDataBrew {
