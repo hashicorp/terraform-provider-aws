@@ -19,8 +19,8 @@ import (
 func TestAccAppAutoScalingTarget_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var target applicationautoscaling.ScalableTarget
-
-	randClusterName := fmt.Sprintf("cluster-%s", sdkacctest.RandString(10))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_appautoscaling_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -29,28 +29,31 @@ func TestAccAppAutoScalingTarget_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetConfig_basic(randClusterName),
+				Config: testAccTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, "aws_appautoscaling_target.bar", &target),
-					resource.TestCheckResourceAttr("aws_appautoscaling_target.bar", "service_namespace", "ecs"),
-					resource.TestCheckResourceAttr("aws_appautoscaling_target.bar", "scalable_dimension", "ecs:service:DesiredCount"),
-					resource.TestCheckResourceAttr("aws_appautoscaling_target.bar", "min_capacity", "1"),
-					resource.TestCheckResourceAttr("aws_appautoscaling_target.bar", "max_capacity", "3"),
+					testAccCheckTargetExists(ctx, resourceName, &target),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "max_capacity", "3"),
+					resource.TestCheckResourceAttr(resourceName, "min_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scalable_dimension", "ecs:service:DesiredCount"),
+					resource.TestCheckResourceAttr(resourceName, "service_namespace", "ecs"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 
 			{
-				Config: testAccTargetConfig_update(randClusterName),
+				Config: testAccTargetConfig_update(resourceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(ctx, "aws_appautoscaling_target.bar", &target),
-					resource.TestCheckResourceAttr("aws_appautoscaling_target.bar", "min_capacity", "2"),
-					resource.TestCheckResourceAttr("aws_appautoscaling_target.bar", "max_capacity", "8"),
+					testAccCheckTargetExists(ctx, resourceName, &target),
+					resource.TestCheckResourceAttr(resourceName, "max_capacity", "8"),
+					resource.TestCheckResourceAttr(resourceName, "min_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
-				ResourceName:      "aws_appautoscaling_target.bar",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccTargetImportStateIdFunc("aws_appautoscaling_target.bar"),
+				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -251,15 +254,14 @@ func testAccCheckTargetExists(ctx context.Context, n string, v *applicationautos
 	}
 }
 
-func testAccTargetConfig_basic(
-	randClusterName string) string {
+func testAccTargetConfig_baseECS(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "foo" {
-  name = "%s"
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
 }
 
-resource "aws_ecs_task_definition" "task" {
-  family = "foobar"
+resource "aws_ecs_task_definition" "test" {
+  family = "testing"
 
   container_definitions = <<EOF
 [
@@ -274,67 +276,40 @@ resource "aws_ecs_task_definition" "task" {
 EOF
 }
 
-resource "aws_ecs_service" "service" {
-  name            = "foobar"
-  cluster         = aws_ecs_cluster.foo.id
-  task_definition = aws_ecs_task_definition.task.arn
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 1
 
   deployment_maximum_percent         = 200
   deployment_minimum_healthy_percent = 50
 }
+`, rName)
+}
 
-resource "aws_appautoscaling_target" "bar" {
+func testAccTargetConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccTargetConfig_baseECS(rName), `
+resource "aws_appautoscaling_target" "test" {
   service_namespace  = "ecs"
-  resource_id        = "service/${aws_ecs_cluster.foo.name}/${aws_ecs_service.service.name}"
+  resource_id        = "service/${aws_ecs_cluster.test.name}/${aws_ecs_service.test.name}"
   scalable_dimension = "ecs:service:DesiredCount"
   min_capacity       = 1
   max_capacity       = 3
 }
-`, randClusterName)
+`)
 }
 
-func testAccTargetConfig_update(
-	randClusterName string) string {
-	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "foo" {
-  name = "%s"
-}
-
-resource "aws_ecs_task_definition" "task" {
-  family = "foobar"
-
-  container_definitions = <<EOF
-[
-    {
-        "name": "busybox",
-        "image": "busybox:latest",
-        "cpu": 10,
-        "memory": 128,
-        "essential": true
+func testAccTargetConfig_update(rName string) string {
+	return acctest.ConfigCompose(testAccTargetConfig_baseECS(rName), `
+    resource "aws_appautoscaling_target" "test" {
+      service_namespace  = "ecs"
+      resource_id        = "service/${aws_ecs_cluster.test.name}/${aws_ecs_service.test.name}"
+      scalable_dimension = "ecs:service:DesiredCount"
+      min_capacity       = 2
+      max_capacity       = 8
     }
-]
-EOF
-}
-
-resource "aws_ecs_service" "service" {
-  name            = "foobar"
-  cluster         = aws_ecs_cluster.foo.id
-  task_definition = aws_ecs_task_definition.task.arn
-  desired_count   = 2
-
-  deployment_maximum_percent         = 200
-  deployment_minimum_healthy_percent = 50
-}
-
-resource "aws_appautoscaling_target" "bar" {
-  service_namespace  = "ecs"
-  resource_id        = "service/${aws_ecs_cluster.foo.name}/${aws_ecs_service.service.name}"
-  scalable_dimension = "ecs:service:DesiredCount"
-  min_capacity       = 2
-  max_capacity       = 8
-}
-`, randClusterName)
+    `)
 }
 
 func testAccTargetConfig_emrCluster(rInt int) string {
