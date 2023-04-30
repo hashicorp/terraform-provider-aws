@@ -1079,7 +1079,7 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
 
       notification_config {
         error_topic                   = aws_sns_topic.test.arn
-		include_inference_response_in = ["SUCCESS_NOTIFICATION_TOPIC", "ERROR_NOTIFICATION_TOPIC"]
+        include_inference_response_in = ["SUCCESS_NOTIFICATION_TOPIC", "ERROR_NOTIFICATION_TOPIC"]
         success_topic                 = aws_sns_topic.test.arn
       }
     }
@@ -1155,7 +1155,7 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
 
     output_config {
       s3_output_path  = "s3://${aws_s3_bucket.test.bucket}/"
-	  s3_failure_path = "s3://${aws_s3_bucket.test.bucket}/"
+      s3_failure_path = "s3://${aws_s3_bucket.test.bucket}/"
       kms_key_id      = aws_kms_key.test.arn
     }
   }
