@@ -51,7 +51,6 @@ The following arguments are required:
 * `resource_arn` - (Required) The ID or Amazon Resource Name (ARN) of the service network or service for which the policy is created.
 * `policy` - (Required) An IAM policy. The policy string in JSON must not contain newlines or blank lines.
 
-
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
