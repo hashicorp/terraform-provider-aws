@@ -41,7 +41,7 @@ func TestAccVPCLatticeAccessLogSubscription_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckAccessLogSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessLogSubscriptionConfig_basic(rName),
+				Config: testAccAccessLogSubscriptionConfig_basicS3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessLogSubscriptionExists(ctx, resourceName, &accesslogsubscription),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", serviceNetworkResourceName, "id"),
@@ -99,7 +99,7 @@ func TestAccVPCLatticeAccessLogSubscription_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckAccessLogSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessLogSubscriptionConfig_basic(rName),
+				Config: testAccAccessLogSubscriptionConfig_basicS3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessLogSubscriptionExists(ctx, resourceName, &accesslogsubscription),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceAccessLogSubscription(), resourceName),
@@ -213,7 +213,7 @@ func testAccCheckAccessLogSubscriptionExists(ctx context.Context, name string, a
 	}
 }
 
-func testAccAccessLogSubscriptionConfig_basic(rName string) string {
+func testAccAccessLogSubscriptionConfig_basicS3(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpclattice_service_network" "test" {
   name = %[1]q
@@ -231,7 +231,7 @@ resource "aws_vpclattice_access_log_subscription" "test" {
 `, rName)
 }
 
-func testAccAccessLogSubscriptionConfig_basicCloudwatch(rName string) string {
+func testAccAccessLogSubscriptionConfig_basicCloudWatch(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpclattice_service_network" "test" {
   name = %[1]q
