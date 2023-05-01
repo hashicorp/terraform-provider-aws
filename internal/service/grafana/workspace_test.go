@@ -32,7 +32,7 @@ func TestAccGrafana_serial(t *testing.T) {
 			"vpc":                      testAccWorkspace_vpc,
 			"configuration":            testAccWorkspace_configuration,
 			"networkAccess":            testAccWorkspace_networkAccess,
-			"grafanaVersion":           testAccWorkspace_grafanaVersion,
+			"version":                  testAccWorkspace_version,
 		},
 		"ApiKey": {
 			"basic": testAccWorkspaceAPIKey_basic,
@@ -502,7 +502,7 @@ func testAccWorkspace_networkAccess(t *testing.T) {
 	})
 }
 
-func testAccWorkspace_grafanaVersion(t *testing.T) {
+func testAccWorkspace_version(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
@@ -514,7 +514,7 @@ func testAccWorkspace_grafanaVersion(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceConfig_grafanaVersion(rName, "9.4"),
+				Config: testAccWorkspaceConfig_version(rName, "9.4"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "grafana_version", "9.4"),
@@ -825,7 +825,7 @@ resource "aws_grafana_workspace" "test" {
 `, configuration))
 }
 
-func testAccWorkspaceConfig_grafanaVersion(rName, version string) string {
+func testAccWorkspaceConfig_version(rName, version string) string {
 	return acctest.ConfigCompose(testAccWorkspaceConfig_base(rName), fmt.Sprintf(`
 resource "aws_grafana_workspace" "test" {
   account_access_type      = "CURRENT_ACCOUNT"
