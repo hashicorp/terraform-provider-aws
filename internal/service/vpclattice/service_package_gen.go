@@ -36,6 +36,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
+			Factory:  ResourceAccessLogSubscription,
+			TypeName: "aws_vpclattice_access_log_subscription",
+			Name:     "Access Log Subscription",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceAuthPolicy,
 			TypeName: "aws_vpclattice_auth_policy",
 		},
