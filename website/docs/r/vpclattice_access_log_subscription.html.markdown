@@ -16,8 +16,8 @@ Terraform resource for managing an AWS VPC Lattice Service Network or Service Ac
 
 ```terraform
 resource "aws_vpclattice_access_log_subscription" "example" {
-	resource_identifier = "aws_vpclattice_service_network.example.id"
-	destination_arn = "aws_s3.bucket.arn"
+  resource_identifier = aws_vpclattice_service_network.example.id
+  destination_arn     = aws_s3.bucket.arn
 }
 ```
 
@@ -25,9 +25,8 @@ resource "aws_vpclattice_access_log_subscription" "example" {
 
 The following arguments are required:
 
-* `resource_identifier` - (Required) The ID or Amazon Resource Identifier (ARN) of the service network or service. You must use the ARN if the resources specified in the operation are in different accounts.
-
 * `destination_arn` - (Required) Amazon Resource Name (ARN) of the log destination.
+* `resource_identifier` - (Required) The ID or Amazon Resource Identifier (ARN) of the service network or service. You must use the ARN if the resources specified in the operation are in different accounts.
 
 ## Attributes Reference
 
@@ -39,17 +38,9 @@ In addition to all arguments above, the following attributes are exported:
 * `resource_arn` - Amazon Resource Name (ARN) of the service network or service.
 * `destination_arn` - Amazon Resource Name (ARN) of the log destination.
 
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
-
 ## Import
 
-VPC Lattice Access Log Subscription can be imported using the `example_id_arg`, e.g.,
+VPC Lattice Access Log Subscription can be imported using the access log subscription ID, e.g.,
 
 ```
 $ terraform import aws_vpclattice_access_log_subscription.example rft-8012925589
