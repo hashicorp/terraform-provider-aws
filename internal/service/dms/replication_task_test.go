@@ -552,7 +552,7 @@ resource "aws_rds_cluster_parameter_group" "test" {
 resource "aws_rds_cluster" "test1" {
   cluster_identifier              = "%[1]s-aurora-cluster-source"
   engine                          = "aurora-mysql"
-  engine_version                  = "5.7.mysql_aurora.2.11.0"
+  engine_version                  = "5.7.mysql_aurora.2.11.2"
   database_name                   = "tftest"
   master_username                 = "tftest"
   master_password                 = "mustbeeightcharaters"
@@ -574,7 +574,7 @@ resource "aws_rds_cluster_instance" "test1" {
 resource "aws_rds_cluster" "test2" {
   cluster_identifier     = "%[1]s-aurora-cluster-target"
   engine                 = "aurora-mysql"
-  engine_version         = "5.7.mysql_aurora.2.11.0"
+  engine_version         = "5.7.mysql_aurora.2.11.2"
   database_name          = "tftest"
   master_username        = "tftest"
   master_password        = "mustbeeightcharaters"
@@ -731,7 +731,7 @@ data "aws_rds_orderable_db_instance" "test" {
   license_model = "general-public-license"
   storage_type  = "aurora"
 
-  preferred_engine_versions  = ["5.7.mysql_aurora.2.11.0", "5.7.mysql_aurora.2.10.3", data.aws_rds_engine_version.default.version]
+  preferred_engine_versions  = ["5.7.mysql_aurora.2.11.2", data.aws_rds_engine_version.default.version]
   preferred_instance_classes = ["db.t2.small"]
 }
 
