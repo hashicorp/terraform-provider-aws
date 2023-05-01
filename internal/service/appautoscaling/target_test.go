@@ -350,14 +350,14 @@ resource "aws_appautoscaling_target" "test" {
 
 func testAccTargetConfig_update(rName string) string {
 	return acctest.ConfigCompose(testAccTargetConfig_baseECS(rName, 2), `
-    resource "aws_appautoscaling_target" "test" {
-      service_namespace  = "ecs"
-      resource_id        = "service/${aws_ecs_cluster.test.name}/${aws_ecs_service.test.name}"
-      scalable_dimension = "ecs:service:DesiredCount"
-      min_capacity       = 2
-      max_capacity       = 8
-    }
-    `)
+resource "aws_appautoscaling_target" "test" {
+  service_namespace  = "ecs"
+  resource_id        = "service/${aws_ecs_cluster.test.name}/${aws_ecs_service.test.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  min_capacity       = 2
+  max_capacity       = 8
+}
+`)
 }
 
 func testAccTargetConfig_tags1(rName, tagKey1, tagValue1 string) string {
