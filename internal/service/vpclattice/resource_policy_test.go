@@ -143,13 +143,14 @@ func testAccCheckResourcePolicyExists(ctx context.Context, name string, resource
 func testAccResourcePolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
 
 resource "aws_vpclattice_service_network" "test" {
   name = %[1]q
 }
 
 resource "aws_vpclattice_resource_policy" "test" {
-  resource_arn		= aws_vpclattice_service_network.test.arn
+  resource_arn = aws_vpclattice_service_network.test.arn
 
   policy = jsonencode({
     Version = "2012-10-17",
@@ -157,7 +158,7 @@ resource "aws_vpclattice_resource_policy" "test" {
       Sid = "test-pol-principals-6"
       Effect = "Allow"
       Principal = {
-        "AWS" = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        "AWS" = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       }
       Action = [
         "vpc-lattice:CreateServiceNetworkVpcAssociation",
