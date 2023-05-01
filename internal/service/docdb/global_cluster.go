@@ -145,13 +145,13 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	output, err := conn.CreateGlobalClusterWithContext(ctx, input)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating DocDB Global Cluster: %w", err))
+		return diag.FromErr(fmt.Errorf("creating DocumentDB Global Cluster: %w", err))
 	}
 
 	d.SetId(aws.StringValue(output.GlobalCluster.GlobalClusterIdentifier))
 
 	if err := waitForGlobalClusterCreation(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for DocDB Global Cluster (%s) availability: %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("waiting for DocumentDB Global Cluster (%s) availability: %w", d.Id(), err))
 	}
 
 	return resourceGlobalClusterRead(ctx, d, meta)
@@ -163,23 +163,23 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 	globalCluster, err := FindGlobalClusterById(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, docdb.ErrCodeGlobalClusterNotFoundFault) {
-		log.Printf("[WARN] DocDB Global Cluster (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] DocumentDB Global Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading DocDB Global Cluster: %w", err))
+		return diag.FromErr(fmt.Errorf("reading DocumentDB Global Cluster: %w", err))
 	}
 
 	if !d.IsNewResource() && globalCluster == nil {
-		log.Printf("[WARN] DocDB Global Cluster (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] DocumentDB Global Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if !d.IsNewResource() && (aws.StringValue(globalCluster.Status) == GlobalClusterStatusDeleting || aws.StringValue(globalCluster.Status) == GlobalClusterStatusDeleted) {
-		log.Printf("[WARN] DocDB Global Cluster (%s) in deleted state (%s), removing from state", d.Id(), aws.StringValue(globalCluster.Status))
+		log.Printf("[WARN] DocumentDB Global Cluster (%s) in deleted state (%s), removing from state", d.Id(), aws.StringValue(globalCluster.Status))
 		d.SetId("")
 		return nil
 	}
@@ -209,7 +209,7 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 		GlobalClusterIdentifier: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Updating DocDB Global Cluster (%s): %s", d.Id(), input)
+	log.Printf("[DEBUG] Updating DocumentDB Global Cluster (%s): %s", d.Id(), input)
 
 	if d.HasChange("engine_version") {
 		if err := resourceGlobalClusterUpgradeEngineVersion(ctx, d, conn); err != nil {
@@ -224,11 +224,11 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error updating DocDB Global Cluster: %w", err))
+		return diag.FromErr(fmt.Errorf("updating DocumentDB Global Cluster: %w", err))
 	}
 
 	if err := waitForGlobalClusterUpdate(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for DocDB Global Cluster (%s) update: %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("waiting for DocumentDB Global Cluster (%s) update: %w", d.Id(), err))
 	}
 
 	return resourceGlobalClusterRead(ctx, d, meta)
@@ -258,19 +258,17 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 			continue
 		}
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error removing DocDB Cluster (%s) from Global Cluster (%s): %w", dbClusterArn, d.Id(), err))
+			return diag.FromErr(fmt.Errorf("removing DocumentDB Cluster (%s) from Global Cluster (%s): %w", dbClusterArn, d.Id(), err))
 		}
 
 		if err := waitForGlobalClusterRemoval(ctx, conn, dbClusterArn, d.Timeout(schema.TimeoutDelete)); err != nil {
-			return diag.FromErr(fmt.Errorf("error waiting for DocDB Cluster (%s) removal from DocDB Global Cluster (%s): %w", dbClusterArn, d.Id(), err))
+			return diag.FromErr(fmt.Errorf("waiting for DocumentDB Cluster (%s) removal from DocumentDB Global Cluster (%s): %w", dbClusterArn, d.Id(), err))
 		}
 	}
 
 	input := &docdb.DeleteGlobalClusterInput{
 		GlobalClusterIdentifier: aws.String(d.Id()),
 	}
-
-	log.Printf("[DEBUG] Deleting DocDB Global Cluster (%s): %s", d.Id(), input)
 
 	// Allow for eventual consistency
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
@@ -296,11 +294,11 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting DocDB Global Cluster: %w", err))
+		return diag.FromErr(fmt.Errorf("deleting DocumentDB Global Cluster: %w", err))
 	}
 
 	if err := WaitForGlobalClusterDeletion(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for DocDB Global Cluster (%s) deletion: %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("waiting for DocumentDB Global Cluster (%s) deletion: %w", d.Id(), err))
 	}
 
 	return nil
@@ -328,7 +326,7 @@ func flattenGlobalClusterMembers(apiObjects []*docdb.GlobalClusterMember) []inte
 // Updating major versions is not supported by documentDB
 // To support minor version upgrades, we will upgrade all cluster members
 func resourceGlobalClusterUpgradeEngineVersion(ctx context.Context, d *schema.ResourceData, conn *docdb.DocDB) error {
-	log.Printf("[DEBUG] Upgrading DocDB Global Cluster (%s) engine version: %s", d.Id(), d.Get("engine_version"))
+	log.Printf("[DEBUG] Upgrading DocumentDB Global Cluster (%s) engine version: %s", d.Id(), d.Get("engine_version"))
 	err := resourceGlobalClusterUpgradeMinorEngineVersion(ctx, d.Get("global_cluster_members").(*schema.Set), d.Get("engine_version").(string), conn, d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return err

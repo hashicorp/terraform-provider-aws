@@ -42,6 +42,7 @@ The following arguments are supported:
 
 * `name` - (Required) Name of the session queue.
 * `timeout_in_seconds` - (Required) Maximum time a game session request can remain in the queue.
+* `custom_event_data` - (Optional) Information to be added to all events that are related to this game session queue.
 * `destinations` - (Optional) List of fleet/alias ARNs used by session queue for placing game sessions.
 * `notification_target` - (Optional) An SNS topic ARN that is set up to receive game session placement notifications.
 * `player_latency_policy` - (Optional) One or more policies used to choose fleet based on player latency. See below.

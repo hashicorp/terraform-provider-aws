@@ -22,10 +22,12 @@ import (
 
 // This "should" be defined by the AWS Go SDK v2, but currently isn't.
 const (
+	AccountEndpointID                    = "account"
 	AuditManagerEndpointID               = "auditmanager"
 	CloudWatchLogsEndpointID             = "logs"
 	ComprehendEndpointID                 = "comprehend"
 	ComputeOptimizerEndpointID           = "computeoptimizer"
+	DSEndpointID                         = "ds"
 	IdentityStoreEndpointID              = "identitystore"
 	Inspector2EndpointID                 = "inspector2"
 	IVSChatEndpointID                    = "ivschat"
@@ -41,7 +43,7 @@ const (
 	SchedulerEndpointID                  = "scheduler"
 	SESV2EndpointID                      = "sesv2"
 	SSMEndpointID                        = "ssm"
-	SSMContactsEndpointId                = "ssm-contacts"
+	SSMContactsEndpointID                = "ssm-contacts"
 	SSMIncidentsEndpointID               = "ssm-incidents"
 	TranscribeEndpointID                 = "transcribe"
 	VPCLatticeEndpointID                 = "vpc-lattice"

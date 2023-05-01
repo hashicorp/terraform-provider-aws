@@ -291,18 +291,16 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(aws.StringValue(outputRaw.(*opsworks.CreateStackOutput).StackId))
 
-	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
-		arn := arn.ARN{
-			Partition: meta.(*conns.AWSClient).Partition,
-			Service:   opsworks.ServiceName,
-			Region:    region,
-			AccountID: meta.(*conns.AWSClient).AccountID,
-			Resource:  fmt.Sprintf("stack/%s/", d.Id()),
-		}.String()
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   opsworks.ServiceName,
+		Region:    region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("stack/%s/", d.Id()),
+	}.String()
 
-		if err := UpdateTags(ctx, conn, arn, nil, tags); err != nil {
-			return sdkdiag.AppendErrorf(diags, "adding OpsWorks Stack (%s) tags: %s", arn, err)
-		}
+	if err := createTags(ctx, conn, arn, GetTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting OpsWorks Stack (%s) tags: %s", arn, err)
 	}
 
 	if aws.StringValue(input.VpcId) != "" && aws.BoolValue(input.UseOpsworksSecurityGroups) {

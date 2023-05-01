@@ -7,6 +7,7 @@ description: |-
 ---
 
 # Data Source: aws_organizations_resource_tags
+
 Get tags attached to the specified AWS Organizations resource.
 
 ## Example Usage
