@@ -3,7 +3,7 @@ subcategory: "VPC Lattice"
 layout: "aws"
 page_title: "AWS: aws_vpclattice_auth_policy"
 description: |-
-Terraform resource for managing an AWS VPC Lattice Auth Policy.
+  Terraform resource for managing an AWS VPC Lattice Auth Policy.
 ---
 
 # Resource: aws_vpclattice_auth_policy
