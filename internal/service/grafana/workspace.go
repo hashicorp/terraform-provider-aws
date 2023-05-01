@@ -90,6 +90,7 @@ func ResourceWorkspace() *schema.Resource {
 			},
 			"grafana_version": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 			"name": {
@@ -209,6 +210,10 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	if v, ok := d.GetOk("name"); ok {
 		input.WorkspaceName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("grafana_version"); ok {
+		input.GrafanaVersion = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("notification_destinations"); ok {
