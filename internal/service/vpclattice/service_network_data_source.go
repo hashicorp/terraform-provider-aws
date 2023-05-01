@@ -71,11 +71,11 @@ const (
 func dataSourceServiceNetworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
-	service_network_identifier := d.Get("service_network_identifier").(string)
+	serviceNetworkID := d.Get("service_network_identifier").(string)
 
-	out, err := findServiceNetworkById(ctx, conn, service_network_identifier)
+	out, err := findServiceNetworkById(ctx, conn, serviceNetworkID)
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, DSNameServiceNetwork, service_network_identifier, err)
+		return create.DiagError(names.VPCLattice, create.ErrActionReading, DSNameServiceNetwork, serviceNetworkID, err)
 	}
 
 	d.SetId(aws.ToString(out.Id))
@@ -90,6 +90,10 @@ func dataSourceServiceNetworkRead(ctx context.Context, d *schema.ResourceData, m
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	tags, err := ListTags(ctx, conn, aws.ToString(out.Arn))
+
+	if err != nil {
+		return create.DiagError(names.VPCLattice, create.ErrActionReading, DSNameServiceNetwork, serviceNetworkID, err)
+	}
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
