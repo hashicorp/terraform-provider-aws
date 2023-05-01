@@ -500,10 +500,12 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 		input.PathName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("product_id"); ok {
-		input.ProductId = aws.String(v.(string))
-	} else if v, ok := d.GetOk("product_name"); ok {
+	// check product_name first. product_id is optional/computed and will always be
+	// set by the time update is called
+	if v, ok := d.GetOk("product_name"); ok {
 		input.ProductName = aws.String(v.(string))
+	} else if v, ok := d.GetOk("product_id"); ok {
+		input.ProductId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("provisioning_artifact_id"); ok {
