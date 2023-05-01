@@ -21,8 +21,8 @@ github.com/apparentlymart/go-textseg/v13 v13.0.0/go.mod h1:ZK2fH7c4NqDTLtiYLvIkE
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310 h1:BUAU3CGlLvorLI26FmByPp2eC2qla6E1Tw+scpcg/to=
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5/go.mod h1:wHh0iHkYZB8zMSxRWpUBQtwG5a7fFgvEO+odwuTv2gs=
-github.com/aws/aws-sdk-go v1.44.252 h1:a8PaCCQsxkeqCkcn7YN/O6C73gS/MOLuBDPjAsb/mv0=
-github.com/aws/aws-sdk-go v1.44.252/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
+github.com/aws/aws-sdk-go v1.44.253 h1:iqDd0okcH4ShfFexz2zzf4VmeDFf6NOMm07pHnEb8iY=
+github.com/aws/aws-sdk-go v1.44.253/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/aws/aws-sdk-go-v2 v1.17.4/go.mod h1:uzbQtefpm44goOPmdKyAlXSNcwlRgF3ePWVW6EtJvvw=
 github.com/aws/aws-sdk-go-v2 v1.18.0 h1:882kkTpSFhdgYRKVZ/VCgf7sd0ru57p2JCxz4/oN5RY=
 github.com/aws/aws-sdk-go-v2 v1.18.0/go.mod h1:uzbQtefpm44goOPmdKyAlXSNcwlRgF3ePWVW6EtJvvw=
@@ -43,6 +43,8 @@ github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.27 h1:vFQlirhuM8lLlpI7im
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.27/go.mod h1:UrHnn3QV/d0pBZ6QBAEQcqFLf8FAzLmoUfPVIueOvoM=
 github.com/aws/aws-sdk-go-v2/internal/ini v1.3.29 h1:J4xhFd6zHhdF9jPP0FQJ6WknzBboGMBNjKOv4iTuw4A=
 github.com/aws/aws-sdk-go-v2/internal/ini v1.3.29/go.mod h1:TwuqRBGzxjQJIwH16/fOZodwXt2Zxa9/cwJC5ke4j7s=
+github.com/aws/aws-sdk-go-v2/service/account v1.10.5 h1:K+Od2Oz2nhQJx3e3Q+ziU11avIlINB0ngfsdc7O2X3M=
+github.com/aws/aws-sdk-go-v2/service/account v1.10.5/go.mod h1:sxLUXrqYXCfOBPBBk0azv+UOoFsnrQ9G1ZcICrb9O+0=
 github.com/aws/aws-sdk-go-v2/service/auditmanager v1.24.6 h1:UNaqp6XOs26fmBNASN9SF23H3DytHaaRQ/hF/BJNnes=
 github.com/aws/aws-sdk-go-v2/service/auditmanager v1.24.6/go.mod h1:HtY67X+mN8oq2UMidOuIcXn+XWFyGYnpTvEoNGQBxc0=
 github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.1.3 h1:naHZ6PN42l4A8y1uICWSn4eILezIax7r6iSaqsL6tYg=
@@ -55,6 +57,8 @@ github.com/aws/aws-sdk-go-v2/service/comprehend v1.24.1 h1:9xO1KwU+O/46RWd71hD/P
 github.com/aws/aws-sdk-go-v2/service/comprehend v1.24.1/go.mod h1:YDZOE9XpbohvywpWpxDCPIEWlpALTsR+o6Ny6UgHXeE=
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.22.3 h1:en+3QBMfCbuCiR2WQs1usrUXRxpk2nO+jLaMCfWBiG0=
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.22.3/go.mod h1:5kTfX+bDwent5HUSiSwMtYSDw57gZ7hkQSv+x2jJmtg=
+github.com/aws/aws-sdk-go-v2/service/directoryservice v1.17.0 h1:C90Pr/krI6FueltX8Hf5Q5bcRHSGMdZtg2ox/Vydo58=
+github.com/aws/aws-sdk-go-v2/service/directoryservice v1.17.0/go.mod h1:tjEH79gyftglvYJMPGSachjqhthFaVYjco94mJ5ANcY=
 github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.1.9 h1:i0EcejgfQnu1FlP80hVSkRK1BN6GrAQBTTDFWb/aT2o=
 github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.1.9/go.mod h1:PjV/8ElvXTf1jbcjaGvUphvb8Sz4/lTP87GFhQrZGbk=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.95.0 h1:onLRCalR9kNt/XnhaQ3yo/IlYf+VPv6uogJkXD43mGM=
@@ -92,8 +96,8 @@ github.com/aws/aws-sdk-go-v2/service/rbin v1.8.10 h1:XDNalvDzQ5Iz+B4ZyvqjGVYHMSK
 github.com/aws/aws-sdk-go-v2/service/rbin v1.8.10/go.mod h1:kdlIXWL9Akk4tj/u9GMnO17ImBEvrhQmb0OnJ7LokQY=
 github.com/aws/aws-sdk-go-v2/service/rds v1.43.2 h1:LIKqdGTb8Yhmr69GDuxTS8LHaWk0C0RqpCWSYjFf2K8=
 github.com/aws/aws-sdk-go-v2/service/rds v1.43.2/go.mod h1:rS6T0DrjdZ5LDr8ZC/J9iZdD1oSbie5reWWzqv5zLOw=
-github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.11 h1:xQVdKur1/96h2NfQhcQXKK5OAd0tUhTToSt0Hxx4C1Y=
-github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.11/go.mod h1:2nZFXAepd6OTyH90JTsgjdgq4K6+jVh/5nXtiEpjHtw=
+github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.12 h1:fAGK3WQDi9tDBdsymv8XENkajlwQymirCv6V2RGfW4A=
+github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.12/go.mod h1:2nZFXAepd6OTyH90JTsgjdgq4K6+jVh/5nXtiEpjHtw=
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.1.10 h1:SBotfHvpw8KOGXL5E64VzlypbsY0GOSrr8m8WombHZA=
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.1.10/go.mod h1:BeRwkhH4kXGCbloxpE5tApOhFa8O8Mn12m5onxV3mEY=
 github.com/aws/aws-sdk-go-v2/service/route53domains v1.14.9 h1:GXvVZfCE47uT2F4vppNNByiJZDj0B77Eoyl8fKkxJA8=
