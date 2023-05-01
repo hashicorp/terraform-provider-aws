@@ -73,6 +73,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceResourcePolicy,
+			TypeName: "aws_vpclattice_resource_policy",
+			Name:     "Resource Policy",
+		},
+		{
 			Factory:  ResourceService,
 			TypeName: "aws_vpclattice_service",
 			Name:     "Service",
