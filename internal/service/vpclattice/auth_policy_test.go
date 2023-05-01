@@ -151,33 +151,32 @@ func testAccCheckAuthPolicyNotRecreated(before, after *vpclattice.GetAuthPolicyO
 
 func testAccAuthPolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-	data "aws_partition" "current" {}
+data "aws_partition" "current" {}
 
-	data "aws_caller_identity" "current" {}
+data "aws_caller_identity" "current" {}
 
-	resource "aws_vpclattice_service" "test" {
-		name               = %[1]q
-		auth_type          = "AWS_IAM"
-		custom_domain_name = "example.com"
-	  }
-
-	resource "aws_vpclattice_auth_policy" "test" {
- 	 resource_identifier			= aws_vpclattice_service.test.arn
-        policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "*"
-        Effect = "Allow"
-        Principal = "*"
-        Resource = "*"
-		Condition = {
-                StringNotEqualsIgnoreCase = {
-                    "aws:PrincipalType" = "anonymous"
-		}
-      }
+resource "aws_vpclattice_service" "test" {
+  name               = %[1]q
+  auth_type          = "AWS_IAM"
+  custom_domain_name = "example.com"
 }
-    ]
+
+resource "aws_vpclattice_auth_policy" "test" {
+  resource_identifier			= aws_vpclattice_service.test.arn
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "*"
+      Effect = "Allow"
+      Principal = "*"
+      Resource = "*"
+      Condition = {
+        StringNotEqualsIgnoreCase = {
+          "aws:PrincipalType" = "anonymous"
+        }
+      }
+    }]
   })
 }
 `, rName)
