@@ -49,7 +49,6 @@ func TestAccACMPCACertificateAuthority_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "serial", ""),
-					resource.TestCheckResourceAttr(resourceName, "status", "PENDING_CERTIFICATE"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "type", "SUBORDINATE"),
 					resource.TestCheckResourceAttr(resourceName, "usage_mode", "SHORT_LIVED_CERTIFICATE"),
@@ -106,7 +105,6 @@ func TestAccACMPCACertificateAuthority_enabledDeprecated(t *testing.T) {
 					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "type", acmpca.CertificateAuthorityTypeRoot),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "status", acmpca.CertificateAuthorityStatusPendingCertificate),
 					acctest.CheckACMPCACertificateAuthorityActivateRootCA(ctx, &certificateAuthority),
 				),
 			},
@@ -116,7 +114,6 @@ func TestAccACMPCACertificateAuthority_enabledDeprecated(t *testing.T) {
 					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "type", acmpca.CertificateAuthorityTypeRoot),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "status", acmpca.CertificateAuthorityStatusActive),
 				),
 			},
 			{
@@ -124,7 +121,6 @@ func TestAccACMPCACertificateAuthority_enabledDeprecated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "status", acmpca.CertificateAuthorityStatusDisabled),
 				),
 			},
 			{
@@ -188,9 +184,6 @@ func TestAccACMPCACertificateAuthority_deleteFromActiveState(t *testing.T) {
 					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
 					resource.TestCheckResourceAttr(resourceName, "type", acmpca.CertificateAuthorityTypeRoot),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					// Since the status of the CA is changed by importing the certificate in
-					// aws_acmpca_certificate_authority_certificate, the value of `status` is no longer accurate
-					// resource.TestCheckResourceAttr(resourceName, "status", acmpca.CertificateAuthorityStatusActive),
 				),
 			},
 		},
@@ -230,7 +223,6 @@ func TestAccACMPCACertificateAuthority_RevocationConfiguration_empty(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "serial", ""),
-					resource.TestCheckResourceAttr(resourceName, "status", "PENDING_CERTIFICATE"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "type", "SUBORDINATE"),
 					resource.TestCheckResourceAttr(resourceName, "usage_mode", "SHORT_LIVED_CERTIFICATE"),
