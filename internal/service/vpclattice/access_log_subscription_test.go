@@ -231,6 +231,7 @@ resource "aws_vpclattice_access_log_subscription" "test" {
 `, rName)
 }
 
+/*
 func testAccAccessLogSubscriptionConfig_basicCloudWatch(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpclattice_service_network" "test" {
@@ -293,6 +294,7 @@ resource "aws_vpclattice_access_log_subscription" "test" {
 }
 `, rName)
 }
+*/
 
 func testAccAccessLogSubscriptionConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
