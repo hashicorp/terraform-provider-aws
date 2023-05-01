@@ -376,7 +376,7 @@ resource "aws_dynamodb_table" "test" {
 
 resource "aws_appautoscaling_target" "test" {
   service_namespace  = "dynamodb"
-  resource_id        = "table/${aws_dynamodb_table.dynamodb_table_test.name}"
+  resource_id        = "table/${aws_dynamodb_table.test.name}"
   scalable_dimension = "dynamodb:table:ReadCapacityUnits"
   min_capacity       = 2
   max_capacity       = 15
@@ -404,7 +404,7 @@ resource "aws_dynamodb_table" "test" {
 
 resource "aws_appautoscaling_target" "test" {
   service_namespace  = "dynamodb"
-  resource_id        = "table/${aws_dynamodb_table.dynamodb_table_test.name}"
+  resource_id        = "table/${aws_dynamodb_table.test.name}"
   scalable_dimension = "dynamodb:table:ReadCapacityUnits"
   min_capacity       = 2
   max_capacity       = 15
@@ -415,6 +415,64 @@ resource "aws_appautoscaling_target" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccTargetConfig_spotFleetRequest(rName, validUntil string) string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"), fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "spotfleet.amazonaws.com",
+          "ec2.amazonaws.com"
+        ]
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole"
+}
+
+resource "aws_spot_fleet_request" "test" {
+  iam_fleet_role                      = aws_iam_role.test.arn
+  spot_price                          = "0.005"
+  target_capacity                     = 2
+  valid_until                         = %[2]q
+  terminate_instances_with_expiration = true
+
+  launch_specification {
+    instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+
+    tags = {
+      Name = %[1]q
+    }
+  }
+}
+
+resource "aws_appautoscaling_target" "test" {
+  service_namespace  = "ec2"
+  resource_id        = "spot-fleet-request/${aws_spot_fleet_request.test.id}"
+  scalable_dimension = "ec2:spot-fleet-request:TargetCapacity"
+  min_capacity       = 1
+  max_capacity       = 3
+}
+`, rName, validUntil))
 }
 
 func testAccTargetConfig_emrCluster(rName string) string {
@@ -681,64 +739,6 @@ resource "aws_appautoscaling_target" "test" {
 `, rName))
 }
 
-func testAccTargetConfig_spotFleetRequest(rName, validUntil string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"), fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "spotfleet.amazonaws.com",
-          "ec2.amazonaws.com"
-        ]
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole"
-}
-
-resource "aws_spot_fleet_request" "test" {
-  iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.005"
-  target_capacity                     = 2
-  valid_until                         = %[2]q
-  terminate_instances_with_expiration = true
-
-  launch_specification {
-    instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-
-    tags = {
-      Name = %[1]q
-    }
-  }
-}
-
-resource "aws_appautoscaling_target" "test" {
-  service_namespace  = "ec2"
-  resource_id        = "spot-fleet-request/${aws_spot_fleet_request.test.id}"
-  scalable_dimension = "ec2:spot-fleet-request:TargetCapacity"
-  min_capacity       = 1
-  max_capacity       = 3
-}
-`, rName, validUntil))
-}
-
 func testAccTargetConfig_multiple(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
@@ -787,7 +787,7 @@ resource "aws_dynamodb_table" "test" {
 
 resource "aws_appautoscaling_target" "test" {
   service_namespace  = "dynamodb"
-  resource_id        = "table/${aws_dynamodb_table.dynamodb_table_test.name}"
+  resource_id        = "table/${aws_dynamodb_table.test.name}"
   scalable_dimension = "dynamodb:table:ReadCapacityUnits"
   min_capacity       = 2
   max_capacity       = 15
