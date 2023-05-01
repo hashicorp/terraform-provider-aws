@@ -58,7 +58,7 @@ func waitWorkgroupAvailable(ctx context.Context, conn *redshiftserverless.Redshi
 			redshiftserverless.WorkgroupStatusAvailable,
 		},
 		Refresh: statusWorkgroup(ctx, conn, name),
-		Timeout: 10 * time.Minute,
+		Timeout: wait,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -78,7 +78,7 @@ func waitWorkgroupDeleted(ctx context.Context, conn *redshiftserverless.Redshift
 		},
 		Target:  []string{},
 		Refresh: statusWorkgroup(ctx, conn, name),
-		Timeout: 10 * time.Minute,
+		Timeout: wait,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
