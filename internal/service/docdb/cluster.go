@@ -178,6 +178,11 @@ func ResourceCluster() *schema.Resource {
 			"snapshot_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// allow snapshot_idenfitier to be removed without forcing re-creation
+					return new == ""
+				},
 			},
 
 			"port": {

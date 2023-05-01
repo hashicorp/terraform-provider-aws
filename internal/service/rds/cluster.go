@@ -474,6 +474,11 @@ func ResourceCluster() *schema.Resource {
 					// cluster which is not joined to the provided global cluster).
 					"global_cluster_identifier",
 				},
+				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// allow snapshot_idenfitier to be removed without forcing re-creation
+					return new == ""
+				},
 			},
 			"source_region": {
 				Type:     schema.TypeString,
