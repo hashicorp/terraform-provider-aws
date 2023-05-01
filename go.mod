@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230201104953-d1d05f4e2bfb
-	github.com/aws/aws-sdk-go v1.44.252
+	github.com/aws/aws-sdk-go v1.44.253
 	github.com/aws/aws-sdk-go-v2 v1.18.0
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.3
 	github.com/aws/aws-sdk-go-v2/service/account v1.10.5
@@ -30,7 +30,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.2.5
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.8.10
 	github.com/aws/aws-sdk-go-v2/service/rds v1.43.2
-	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.11
+	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.12
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.1.10
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.14.9
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.31.4
