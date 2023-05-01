@@ -954,18 +954,6 @@ func deleteReplicationGroup(ctx context.Context, replicationGroupID string, conn
 	return err
 }
 
-func flattenNodeGroupsToClusterMode(nodeGroups []*elasticache.NodeGroup) []map[string]interface{} {
-	if len(nodeGroups) == 0 {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"num_node_groups":         len(nodeGroups),
-		"replicas_per_node_group": (len(nodeGroups[0].NodeGroupMembers) - 1),
-	}
-	return []map[string]interface{}{m}
-}
-
 func modifyReplicationGroupShardConfiguration(ctx context.Context, conn *elasticache.ElastiCache, d *schema.ResourceData) error {
 	if d.HasChange("num_node_groups") {
 		err := modifyReplicationGroupShardConfigurationNumNodeGroups(ctx, conn, d, "num_node_groups")
