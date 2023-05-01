@@ -25,13 +25,13 @@ func DataSourceAuthPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"state": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 			"resource_identifier": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"state": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 		},
 	}
@@ -42,20 +42,19 @@ const (
 )
 
 func dataSourceAuthPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
-	resourceId := d.Get("resource_identifier").(string)
+	resourceID := d.Get("resource_identifier").(string)
+	out, err := findAuthPolicy(ctx, conn, resourceID)
 
-	out, err := findAuthPolicy(ctx, conn, resourceId)
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, DSNameAuthPolicy, resourceId, err)
+		return create.DiagError(names.VPCLattice, create.ErrActionReading, DSNameAuthPolicy, resourceID, err)
 	}
 
-	d.SetId(resourceId)
+	d.SetId(resourceID)
 
 	d.Set("policy", out.Policy)
-	d.Set("resource_identifier", resourceId)
+	d.Set("resource_identifier", resourceID)
 
 	// TIP: Setting a JSON string to avoid errorneous diffs.
 	p, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.ToString(out.Policy))
