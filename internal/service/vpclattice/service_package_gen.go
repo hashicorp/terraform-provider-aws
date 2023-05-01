@@ -36,6 +36,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
+			Factory:  ResourceAuthPolicy,
+			TypeName: "aws_vpclattice_auth_policy",
+		},
+		{
 			Factory:  ResourceListener,
 			TypeName: "aws_vpclattice_listener",
 			Name:     "Listener",
