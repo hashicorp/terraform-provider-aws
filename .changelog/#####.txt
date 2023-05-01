@@ -1,0 +1,3 @@
+```release-note:note
+resource/aws_spot_fleet_request: The `instance_interruption_behaviour` argument has been deprecated and will be removed in a future version. Use the new `instance_interruption_behavior` argument instead
+```

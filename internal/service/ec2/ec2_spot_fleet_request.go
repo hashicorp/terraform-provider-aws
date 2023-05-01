@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -87,12 +88,21 @@ func ResourceSpotFleetRequest() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"instance_interruption_behavior": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Default:       ec2.InstanceInterruptionBehaviorTerminate,
+				ForceNew:      true,
+				ValidateFunc:  validation.StringInSlice(ec2.InstanceInterruptionBehavior_Values(), false),
+				ConflictsWith: []string{"instance_interruption_behaviour"},
+			},
 			"instance_interruption_behaviour": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      ec2.InstanceInterruptionBehaviorTerminate,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(ec2.InstanceInterruptionBehavior_Values(), false),
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ValidateFunc:  validation.StringInSlice(ec2.InstanceInterruptionBehavior_Values(), false),
+				Deprecated:    `use 'instance_interruption_behavior' instead`,
+				ConflictsWith: []string{"instance_interruption_behavior"},
 			},
 			"instance_pools_to_use_count": {
 				Type:     schema.TypeInt,
@@ -857,7 +867,19 @@ func ResourceSpotFleetRequest() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.All(
+			func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+				if d.Id() == "" {
+					if v, ok := d.GetOk("spot_maintenance_strategies"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil && d.Get("fleet_type").(string) != ec2.FleetTypeMaintain {
+						// InvalidSpotFleetConfig: SpotMaintenanceStrategies option is only available with the spot fleet type maintain.
+						return fmt.Errorf("`spot_maintenance_strategies` can only be specified for `fleet_type` = %q", ec2.FleetTypeMaintain)
+					}
+				}
+
+				return nil
+			},
+			verify.SetTagsDiff,
+		),
 	}
 }
 
@@ -865,34 +887,15 @@ func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	_, launchSpecificationOk := d.GetOk("launch_specification")
-
-	// http://docs.aws.amazon.com/sdk-for-go/api/service/ec2.html#type-SpotFleetRequestConfigData
 	spotFleetConfig := &ec2.SpotFleetRequestConfigData{
 		ClientToken:                      aws.String(id.UniqueId()),
 		IamFleetRole:                     aws.String(d.Get("iam_fleet_role").(string)),
-		InstanceInterruptionBehavior:     aws.String(d.Get("instance_interruption_behaviour").(string)),
+		OnDemandTargetCapacity:           aws.Int64(int64(d.Get("on_demand_target_capacity").(int))),
 		ReplaceUnhealthyInstances:        aws.Bool(d.Get("replace_unhealthy_instances").(bool)),
 		TagSpecifications:                getTagSpecificationsIn(ctx, ec2.ResourceTypeSpotFleetRequest),
 		TargetCapacity:                   aws.Int64(int64(d.Get("target_capacity").(int))),
 		TerminateInstancesWithExpiration: aws.Bool(d.Get("terminate_instances_with_expiration").(bool)),
 		Type:                             aws.String(d.Get("fleet_type").(string)),
-	}
-
-	if launchSpecificationOk {
-		launchSpecs, err := buildSpotFleetLaunchSpecifications(ctx, d, meta)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating EC2 Spot Fleet Request: %s", err)
-		}
-		spotFleetConfig.LaunchSpecifications = launchSpecs
-	}
-
-	if v, ok := d.GetOk("launch_template_config"); ok && v.(*schema.Set).Len() > 0 {
-		spotFleetConfig.LaunchTemplateConfigs = expandLaunchTemplateConfigs(v.(*schema.Set).List())
-	}
-
-	if v, ok := d.GetOk("excess_capacity_termination_policy"); ok {
-		spotFleetConfig.ExcessCapacityTerminationPolicy = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("allocation_strategy"); ok {
@@ -901,46 +904,32 @@ func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData,
 		spotFleetConfig.AllocationStrategy = aws.String(ec2.AllocationStrategyLowestPrice)
 	}
 
+	if v, ok := d.GetOk("excess_capacity_termination_policy"); ok {
+		spotFleetConfig.ExcessCapacityTerminationPolicy = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("instance_interruption_behaviour"); ok {
+		spotFleetConfig.InstanceInterruptionBehavior = aws.String(v.(string))
+	} else if v, ok := d.GetOk("instance_interruption_behavior"); ok {
+		spotFleetConfig.InstanceInterruptionBehavior = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("instance_pools_to_use_count"); ok && v.(int) != 1 {
 		spotFleetConfig.InstancePoolsToUseCount = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("spot_maintenance_strategies"); ok {
-		spotFleetConfig.SpotMaintenanceStrategies = expandSpotMaintenanceStrategies(v.([]interface{}))
-	}
+	if _, ok := d.GetOk("launch_specification"); ok {
+		launchSpecs, err := buildSpotFleetLaunchSpecifications(ctx, d, meta)
 
-	// InvalidSpotFleetConfig: SpotMaintenanceStrategies option is only available with the spot fleet type maintain.
-	if d.Get("fleet_type").(string) != ec2.FleetTypeMaintain {
-		if spotFleetConfig.SpotMaintenanceStrategies != nil {
-			log.Printf("[WARN] Spot Fleet (%s) has an invalid configuration and can not be requested. Capacity Rebalance maintenance strategies can only be specified for spot fleets of type maintain.", spotFleetConfig)
-			return diags
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
+
+		spotFleetConfig.LaunchSpecifications = launchSpecs
 	}
 
-	if v, ok := d.GetOk("spot_price"); ok {
-		spotFleetConfig.SpotPrice = aws.String(v.(string))
-	}
-
-	spotFleetConfig.OnDemandTargetCapacity = aws.Int64(int64(d.Get("on_demand_target_capacity").(int)))
-
-	if v, ok := d.GetOk("on_demand_allocation_strategy"); ok {
-		spotFleetConfig.OnDemandAllocationStrategy = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("on_demand_max_total_price"); ok {
-		spotFleetConfig.OnDemandMaxTotalPrice = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("valid_from"); ok {
-		v, _ := time.Parse(time.RFC3339, v.(string))
-
-		spotFleetConfig.ValidFrom = aws.Time(v)
-	}
-
-	if v, ok := d.GetOk("valid_until"); ok {
-		v, _ := time.Parse(time.RFC3339, v.(string))
-
-		spotFleetConfig.ValidUntil = aws.Time(v)
+	if v, ok := d.GetOk("launch_template_config"); ok && v.(*schema.Set).Len() > 0 {
+		spotFleetConfig.LaunchTemplateConfigs = expandLaunchTemplateConfigs(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("load_balancers"); ok && v.(*schema.Set).Len() > 0 {
@@ -958,6 +947,26 @@ func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
+	if v, ok := d.GetOk("on_demand_allocation_strategy"); ok {
+		spotFleetConfig.OnDemandAllocationStrategy = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("on_demand_max_total_price"); ok {
+		spotFleetConfig.OnDemandMaxTotalPrice = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("spot_maintenance_strategies"); ok {
+		spotFleetConfig.SpotMaintenanceStrategies = expandSpotMaintenanceStrategies(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("spot_price"); ok {
+		spotFleetConfig.SpotPrice = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("target_capacity_unit_type"); ok {
+		spotFleetConfig.TargetCapacityUnitType = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("target_group_arns"); ok && v.(*schema.Set).Len() > 0 {
 		var targetGroups []*ec2.TargetGroup
 		for _, v := range v.(*schema.Set).List() {
@@ -973,16 +982,20 @@ func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if v, ok := d.GetOk("target_capacity_unit_type"); ok {
-		spotFleetConfig.SetTargetCapacityUnitType(v.(string))
+	if v, ok := d.GetOk("valid_from"); ok {
+		v, _ := time.Parse(time.RFC3339, v.(string))
+		spotFleetConfig.ValidFrom = aws.Time(v)
 	}
 
-	// http://docs.aws.amazon.com/sdk-for-go/api/service/ec2.html#type-RequestSpotFleetInput
+	if v, ok := d.GetOk("valid_until"); ok {
+		v, _ := time.Parse(time.RFC3339, v.(string))
+		spotFleetConfig.ValidUntil = aws.Time(v)
+	}
+
 	input := &ec2.RequestSpotFleetInput{
 		SpotFleetRequestConfig: spotFleetConfig,
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Spot Fleet Request: %s", input)
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.RequestSpotFleetWithContext(ctx, input)
@@ -1053,7 +1066,11 @@ func resourceSpotFleetRequestRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.Set("replace_unhealthy_instances", config.ReplaceUnhealthyInstances)
-	d.Set("instance_interruption_behaviour", config.InstanceInterruptionBehavior)
+	if _, ok := d.GetOk("instance_interruption_behaviour"); ok {
+		d.Set("instance_interruption_behaviour", config.InstanceInterruptionBehavior)
+	} else {
+		d.Set("instance_interruption_behavior", config.InstanceInterruptionBehavior)
+	}
 	d.Set("fleet_type", config.Type)
 	d.Set("launch_specification", launchSpec)
 
