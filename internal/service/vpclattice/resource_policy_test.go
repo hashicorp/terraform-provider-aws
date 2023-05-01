@@ -144,17 +144,16 @@ func testAccResourcePolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
-
 resource "aws_vpclattice_service_network" "test" {
   name = %[1]q
 }
 
 resource "aws_vpclattice_resource_policy" "test" {
- 	 	resource_arn		= aws_vpclattice_service_network.test.arn
-        policy = jsonencode({
-  Version = "2012-10-17",
-  Statement = [
-    {
+  resource_arn		= aws_vpclattice_service_network.test.arn
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
       Sid = "test-pol-principals-6"
       Effect = "Allow"
       Principal = {
@@ -165,10 +164,9 @@ resource "aws_vpclattice_resource_policy" "test" {
         "vpc-lattice:CreateServiceNetworkServiceAssociation",
         "vpc-lattice:GetServiceNetwork"
       ]
-      Resource ="${aws_vpclattice_service_network.test.arn}"
-    }
-  ]
-})
+      Resource =aws_vpclattice_service_network.test.arn
+    }]
+  })
 }
 `, rName)
 }
