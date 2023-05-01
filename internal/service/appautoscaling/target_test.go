@@ -42,7 +42,7 @@ func TestAccAppAutoScalingTarget_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccTargetConfig_update(resourceName),
+				Config: testAccTargetConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &target),
 					resource.TestCheckResourceAttr(resourceName, "max_capacity", "8"),
@@ -254,7 +254,7 @@ func testAccCheckTargetExists(ctx context.Context, n string, v *applicationautos
 	}
 }
 
-func testAccTargetConfig_baseECS(rName string) string {
+func testAccTargetConfig_baseECS(rName string, serviceDesiredCount int) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -280,16 +280,16 @@ resource "aws_ecs_service" "test" {
   name            = %[1]q
   cluster         = aws_ecs_cluster.test.id
   task_definition = aws_ecs_task_definition.test.arn
-  desired_count   = 1
+  desired_count   = %[2]d
 
   deployment_maximum_percent         = 200
   deployment_minimum_healthy_percent = 50
 }
-`, rName)
+`, rName, serviceDesiredCount)
 }
 
 func testAccTargetConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccTargetConfig_baseECS(rName), `
+	return acctest.ConfigCompose(testAccTargetConfig_baseECS(rName, 1), `
 resource "aws_appautoscaling_target" "test" {
   service_namespace  = "ecs"
   resource_id        = "service/${aws_ecs_cluster.test.name}/${aws_ecs_service.test.name}"
@@ -301,7 +301,7 @@ resource "aws_appautoscaling_target" "test" {
 }
 
 func testAccTargetConfig_update(rName string) string {
-	return acctest.ConfigCompose(testAccTargetConfig_baseECS(rName), `
+	return acctest.ConfigCompose(testAccTargetConfig_baseECS(rName, 2), `
     resource "aws_appautoscaling_target" "test" {
       service_namespace  = "ecs"
       resource_id        = "service/${aws_ecs_cluster.test.name}/${aws_ecs_service.test.name}"
