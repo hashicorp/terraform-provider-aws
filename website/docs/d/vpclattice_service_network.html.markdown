@@ -31,7 +31,7 @@ The following arguments are required:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the Service Network.
-* `auth_type` - Authentication type for the service network. Either `NONE` or `AWS_IAM`. 
+* `auth_type` - Authentication type for the service network. Either `NONE` or `AWS_IAM`.
 * `created_at` - Date and time the service network was created.
 * `id` - ID of the service network.
 * `last_updated_at` - Date and time the service network was last updated.
