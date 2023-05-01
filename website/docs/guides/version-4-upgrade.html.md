@@ -3528,30 +3528,6 @@ For example, the following will import an S3 object into state, assuming the con
 
 ~> **CAUTION:** We do not recommend modifying the state file manually. If you do, you can make it unusable. However, if you accept that risk, some community members have upgraded to the new resource by searching and replacing `"type": "aws_s3_bucket_object",` with `"type": "aws_s3_object",` in the state file, and then running `terraform apply -refresh-only`.
 
-## Resource: aws_spot_instance_request
-
-### instance_interruption_behaviour Argument removal
-
-Switch your Terraform configuration from the `instance_interruption_behaviour` attribute to the `instance_interruption_behavior` attribute instead.
-
-For example, given this previous configuration:
-
-```terraform
-resource "aws_spot_instance_request" "example" {
-  # ... other configuration ...
-  instance_interruption_behaviour = "hibernate"
-}
-```
-
-An updated configuration:
-
-```terraform
-resource "aws_spot_instance_request" "example" {
-  # ... other configuration ...
-  instance_interruption_behavior =  "hibernate"
-}
-```
-
 ## EC2-Classic Resource and Data Source Support
 
 While an upgrade to this major version will not directly impact EC2-Classic resources configured with Terraform,
