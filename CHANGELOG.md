@@ -8,6 +8,7 @@ BREAKING CHANGES:
 FEATURES:
 
 * **New Data Source:** `aws_dms_replication_instance` ([#15406](https://github.com/hashicorp/terraform-provider-aws/issues/15406))
+* **New Data Source:** `aws_vpclattice_auth_policy` ([#30898](https://github.com/hashicorp/terraform-provider-aws/issues/30898))
 * **New Resource:** `aws_account_primary_contact` ([#26123](https://github.com/hashicorp/terraform-provider-aws/issues/26123))
 * **New Resource:** `aws_directory_service_trust` ([#31037](https://github.com/hashicorp/terraform-provider-aws/issues/31037))
 * **New Resource:** `aws_vpclattice_access_log_subscription` ([#30896](https://github.com/hashicorp/terraform-provider-aws/issues/30896))
@@ -37,6 +38,7 @@ BUG FIXES:
 * resource/aws_inspector2_enabler: Correctly supports multiple accounts ([#31038](https://github.com/hashicorp/terraform-provider-aws/issues/31038))
 * resource/aws_inspector2_enabler: No longer calls `Disable` API for status checking ([#31038](https://github.com/hashicorp/terraform-provider-aws/issues/31038))
 * resource/aws_rds_cluster_instance: Consider `delete-precheck` a valid pending state for resource deletion ([#31047](https://github.com/hashicorp/terraform-provider-aws/issues/31047))
+* resource/aws_servicecatalog_provisioned_product: Fix `product_name` update handling ([#31094](https://github.com/hashicorp/terraform-provider-aws/issues/31094))
 
 ## 4.65.0 (April 27, 2023)
 
