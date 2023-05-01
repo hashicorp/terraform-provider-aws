@@ -72,7 +72,7 @@ resource "aws_vpclattice_auth_policy" "test" {
         StringNotEqualsIgnoreCase = {
           "aws:PrincipalType" = "anonymous"
         }
-	  }
+      }
     }]
   })
 }
