@@ -48,6 +48,7 @@ func (lo LoggerOpts) ShouldOmit(msg *string, fieldMaps ...map[string]interface{}
 //
 // Note that the given input is changed-in-place by this method.
 func (lo LoggerOpts) ApplyMask(msg *string, fieldMaps ...map[string]interface{}) {
+	// Replace any log field value with the corresponding field key equal to the configured strings
 	if len(lo.MaskFieldValuesWithFieldKeys) > 0 {
 		for _, k := range lo.MaskFieldValuesWithFieldKeys {
 			for _, f := range fieldMaps {
@@ -60,16 +61,44 @@ func (lo LoggerOpts) ApplyMask(msg *string, fieldMaps ...map[string]interface{})
 		}
 	}
 
-	// Replace any part of the log message matching any of the configured regexp,
-	// with a masking replacement string
+	// Replace any part of any log field matching any of the configured regexp
+	if len(lo.MaskAllFieldValuesRegexes) > 0 {
+		for _, r := range lo.MaskAllFieldValuesRegexes {
+			for _, f := range fieldMaps {
+				for fk, fv := range f {
+					// Can apply the regexp replacement, only if the field value is indeed a string
+					fvStr, ok := fv.(string)
+					if ok {
+						f[fk] = r.ReplaceAllString(fvStr, logMaskingReplacementString)
+					}
+				}
+			}
+		}
+	}
+
+	// Replace any part of any log field matching any of the configured strings
+	if len(lo.MaskAllFieldValuesStrings) > 0 {
+		for _, s := range lo.MaskAllFieldValuesStrings {
+			for _, f := range fieldMaps {
+				for fk, fv := range f {
+					// Can apply the regexp replacement, only if the field value is indeed a string
+					fvStr, ok := fv.(string)
+					if ok {
+						f[fk] = strings.ReplaceAll(fvStr, s, logMaskingReplacementString)
+					}
+				}
+			}
+		}
+	}
+
+	// Replace any part of the log message matching any of the configured regexp
 	if len(lo.MaskMessageRegexes) > 0 {
 		for _, r := range lo.MaskMessageRegexes {
 			*msg = r.ReplaceAllString(*msg, logMaskingReplacementString)
 		}
 	}
 
-	// Replace any part of the log message equal to any of the configured strings,
-	// with a masking replacement string
+	// Replace any part of the log message equal to any of the configured strings
 	if len(lo.MaskMessageStrings) > 0 {
 		for _, s := range lo.MaskMessageStrings {
 			*msg = strings.ReplaceAll(*msg, s, logMaskingReplacementString)

@@ -10,7 +10,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccConnectRoutingProfileDataSource_routingProfileID(t *testing.T) {
+func testAccRoutingProfileDataSource_routingProfileID(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -19,7 +20,7 @@ func TestAccConnectRoutingProfileDataSource_routingProfileID(t *testing.T) {
 	datasourceName := "data.aws_connect_routing_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -62,7 +63,8 @@ func TestAccConnectRoutingProfileDataSource_routingProfileID(t *testing.T) {
 	})
 }
 
-func TestAccConnectRoutingProfileDataSource_name(t *testing.T) {
+func testAccRoutingProfileDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -71,7 +73,7 @@ func TestAccConnectRoutingProfileDataSource_name(t *testing.T) {
 	datasourceName := "data.aws_connect_routing_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{

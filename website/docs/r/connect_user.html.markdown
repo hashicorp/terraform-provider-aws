@@ -147,7 +147,7 @@ The following arguments are supported:
 * `routing_profile_id` - (Required) The identifier of the routing profile for the user.
 * `security_profile_ids` - (Required) A list of identifiers for the security profiles for the user. Specify a minimum of 1 and maximum of 10 security profile ids. For more information, see [Best Practices for Security Profiles](https://docs.aws.amazon.com/connect/latest/adminguide/security-profile-best-practices.html) in the Amazon Connect Administrator Guide.
 * `tags` - (Optional) Tags to apply to the user. If configured with a provider
-[`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+[`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 A `identity_info` block supports the following arguments:
 
@@ -169,7 +169,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The Amazon Resource Name (ARN) of the user.
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the user
 separated by a colon (`:`).
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `user_id` - The identifier for the user.
 
 ## Import

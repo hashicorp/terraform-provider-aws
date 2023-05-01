@@ -1,9 +1,11 @@
 package cloudtrail
 
-import "time"
+import (
+	"time"
+)
 
 const (
-	resTrail = "Trail"
+	ResNameTrail = "Trail"
 
 	resourceTypeDynamoDBTable  = "AWS::DynamoDB::Table"
 	resourceTypeLambdaFunction = "AWS::Lambda::Function"

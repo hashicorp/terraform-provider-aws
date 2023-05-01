@@ -22,14 +22,14 @@ data "aws_redshift_subnet_group" "example" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the cluster subnet group for which information is requested.
+* `name` - (Required) Name of the cluster subnet group for which information is requested.
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - Amazon Resource Name (ARN) of the Redshift Subnet Group name.
-* `description` - The description of the Redshift Subnet group.
-* `id` - The Redshift Subnet group Name.
+* `arn` - ARN of the Redshift Subnet Group name.
+* `description` - Description of the Redshift Subnet group.
+* `id` - Redshift Subnet group Name.
 * `subnet_ids` - An array of VPC subnet IDs.
-* `tags` - The tags associated to the Subnet Group
+* `tags` - Tags associated to the Subnet Group

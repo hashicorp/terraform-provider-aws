@@ -1,24 +1,23 @@
 package sts
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/service/sts"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindCallerIdentity(conn *sts.STS) (*sts.GetCallerIdentityOutput, error) {
+func FindCallerIdentity(ctx context.Context, conn *sts.STS) (*sts.GetCallerIdentityOutput, error) {
 	input := &sts.GetCallerIdentityInput{}
 
-	output, err := conn.GetCallerIdentity(input)
+	output, err := conn.GetCallerIdentityWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
 	}
 
 	if output == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output, nil

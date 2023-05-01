@@ -39,12 +39,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - Identifier of the association.
 
-`aws_servicecatalog_product_portfolio_association` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `3 minutes`)
-- `read` - (Default `10 minutes`)
-- `delete` - (Default `3 minutes`)
+- `create` - (Default `3m`)
+- `read` - (Default `10m`)
+- `delete` - (Default `3m`)
 
 ## Import
 

@@ -1,0 +1,107 @@
+{{- range .Services }}
+{{- if not .FilePrefix }}
+  - id: {{ .LowerAlias }}-in-func-name
+    languages:
+      - go
+    message: Do not use "{{ .ServiceAlias }}" in func name inside {{ .ProviderPackage }} package
+    paths:
+      include:
+        - internal/service/{{ .ProviderPackage }}
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i){{ .ServiceAlias }}"
+            {{- if eq .ServiceAlias "Deploy" }}
+            - pattern-not-regex: Deployment(Group|Config|Style)
+            {{- end }}
+            {{- if eq .ServiceAlias "CE" }}
+            - pattern-not-regex: ource
+            - pattern-not-regex: ServicePackage
+            {{- end }}
+            {{- if eq .ServiceAlias "Connect" }}
+            - pattern-not-regex: .*uickConnect.*
+            {{- end }}
+            {{- if eq .ServiceAlias "CloudTrail" }}
+            - pattern-not-regex: ^testAccCloudTrailConfig_.*
+            {{- end }}
+            {{- if eq .ServiceAlias "Pipes" }}
+            - pattern-not-regex: ^.+Pipe[sS].*$
+            {{- end }}
+            {{- if eq .ServiceAlias "RAM" }}
+            - pattern-not-regex: Framework
+            {{- end }}
+            {{- if eq .ServiceAlias "SSM" }}
+            - pattern-not-regex: ^testAccSSMDefaultPatchBaseline_.+
+            - pattern-not-regex: ^testAccSSMPatchBaseline_.+
+            {{- end }}
+            {{- if eq .ServiceAlias "WAF" }}
+            - pattern-not-regex: ^testAccWAFRateBasedRule.+
+            {{- end }}
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+{{- end }}
+{{- if .MainAlias }}
+  - id: {{ .LowerAlias }}-in-test-name
+    languages:
+      - go
+    message: Include "{{ .ServiceAlias }}" in test name
+    paths:
+      include:
+        - internal/service/{{ .ProviderPackage }}/{{ .FilePrefix }}*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAcc{{ .ServiceAlias }}"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+{{- end }}
+{{- if not .FilePrefix }}
+  - id: {{ .LowerAlias }}-in-const-name
+    languages:
+      - go
+    message: Do not use "{{ .ServiceAlias }}" in const name inside {{ .ProviderPackage }} package
+    paths:
+      include:
+        - internal/service/{{ .ProviderPackage }}
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i){{ .ServiceAlias }}"
+            {{- if eq .ServiceAlias "Connect" }}
+            - pattern-not-regex: .*uickConnect.*
+            {{- end }}
+            {{- if eq .ServiceAlias "Pipes" }}
+            - pattern-not-regex: ^pipeS.*
+            {{- end }}
+    severity: WARNING
+  - id: {{ .LowerAlias }}-in-var-name
+    languages:
+      - go
+    message: Do not use "{{ .ServiceAlias }}" in var name inside {{ .ProviderPackage }} package
+    paths:
+      include:
+        - internal/service/{{ .ProviderPackage }}
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i){{ .ServiceAlias }}"
+            {{- if eq .ServiceAlias "CE" }}
+            - pattern-not-regex: ServicePackage
+            {{- end }}
+            {{- if eq .ServiceAlias "Connect" }}
+            - pattern-not-regex: .*uickConnect.*
+            {{- end }}
+            {{- if eq .ServiceAlias "Pipes" }}
+            - pattern-not-regex: ^pipeS.*
+            {{- end }}
+    severity: WARNING
+{{- end }}
+{{- end }}

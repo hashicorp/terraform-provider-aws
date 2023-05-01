@@ -1,5 +1,5 @@
 ---
-subcategory: "DS (Directory Service)"
+subcategory: "Directory Service"
 layout: "aws"
 page_title: "AWS: aws_directory_service_shared_directory"
 description: |-
@@ -58,6 +58,12 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - Identifier of the shared directory.
 * `shared_directory_id` - Identifier of the directory that is stored in the directory consumer account that corresponds to the shared directory in the owner account.
+
+## Timeouts
+
+`aws_directory_service_shared_directory` provides the following [Timeouts](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts) configuration options:
+
+- `delete` - (Default `60 minutes`) Used for shared directory deletion
 
 ## Import
 

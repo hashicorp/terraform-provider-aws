@@ -5,6 +5,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// @SDKResource("aws_opsworks_mysql_layer", name="MySQL Layer")
+// @Tags(identifierAttribute="arn")
 func ResourceMySQLLayer() *schema.Resource {
 	layerType := &opsworksLayerType{
 		TypeName:         opsworks.LayerTypeDbMaster,
@@ -24,5 +26,5 @@ func ResourceMySQLLayer() *schema.Resource {
 		},
 	}
 
-	return layerType.SchemaResource()
+	return layerType.resourceSchema()
 }

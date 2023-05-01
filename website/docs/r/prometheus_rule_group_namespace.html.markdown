@@ -34,7 +34,7 @@ EOF
 The following arguments are supported:
 
 * `name` - (Required) The name of the rule group namespace
-* `workspace_id` - (Required) The id of the prometheus workspace the rule group namespace should be linked to
+* `workspace_id` - (Required) ID of the prometheus workspace the rule group namespace should be linked to
 * `data` - (Required) the rule group namespace data that you want to be applied. See more [in AWS Docs](https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-Ruler.html).
 
 ## Attributes Reference

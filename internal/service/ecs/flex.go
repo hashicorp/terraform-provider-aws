@@ -158,10 +158,6 @@ func flattenTaskSetLoadBalancers(list []*ecs.LoadBalancer) []map[string]interfac
 // Expand for an array of service registries and
 // returns ecs.ServiceRegistry compatible objects for an ECS TaskSet
 func expandServiceRegistries(l []interface{}) []*ecs.ServiceRegistry {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
 	result := make([]*ecs.ServiceRegistry, 0, len(l))
 
 	for _, v := range l {

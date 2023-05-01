@@ -59,12 +59,12 @@ The following arguments are supported:
 * `account_id` - (Optional) The AWS account ID for the owner of the buckets for which you want to create a Multi-Region Access Point. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `details` - (Required) A configuration block containing details about the Multi-Region Access Point. See [Details Configuration Block](#details-configuration) below for more details
 
-### Timeouts
+## Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60 minutes`) Used when creating the Multi-Region Access Point.
-* `delete` - (Default `15 minutes`) Used when deleting the Multi-Region Access Point.
+* `create` - (Default `60m`)
+* `delete` - (Default `15m`)
 
 ### Details Configuration
 
@@ -103,7 +103,6 @@ In addition to all arguments above, the following attributes are exported:
 
 * `alias` - The alias for the Multi-Region Access Point.
 * `arn` - Amazon Resource Name (ARN) of the Multi-Region Access Point.
-* `alias` - The alias for the Multi-Region Access Point.
 * `domain_name` - The DNS domain name of the S3 Multi-Region Access Point in the format _`alias`_.accesspoint.s3-global.amazonaws.com. For more information, see the documentation on [Multi-Region Access Point Requests](https://docs.aws.amazon.com/AmazonS3/latest/userguide/MultiRegionAccessPointRequests.html).
 * `id` - The AWS account ID and access point name separated by a colon (`:`).
 * `status` - The current status of the Multi-Region Access Point. One of: `READY`, `INCONSISTENT_ACROSS_REGIONS`, `CREATING`, `PARTIALLY_CREATED`, `PARTIALLY_DELETED`, `DELETING`.
