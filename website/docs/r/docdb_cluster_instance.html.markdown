@@ -1,19 +1,19 @@
 ---
-subcategory: "DocDB (DocumentDB)"
+subcategory: "DocumentDB"
 layout: "aws"
 page_title: "AWS: aws_docdb_cluster_instance"
 description: |-
-  Provides an DocDB Cluster Resource Instance
+  Provides an DocumentDB Cluster Resource Instance
 ---
 
 # Resource: aws_docdb_cluster_instance
 
-Provides an DocDB Cluster Resource Instance. A Cluster Instance Resource defines
-attributes that are specific to a single instance in a [DocDB Cluster][1].
+Provides an DocumentDB Cluster Resource Instance. A Cluster Instance Resource defines
+attributes that are specific to a single instance in a [DocumentDB Cluster][1].
 
-You do not designate a primary and subsequent replicas. Instead, you simply add DocDB
-Instances and DocDB manages the replication. You can use the [count][3]
-meta-parameter to make multiple instances and join them all to the same DocDB
+You do not designate a primary and subsequent replicas. Instead, you simply add DocumentDB
+Instances and DocumentDB manages the replication. You can use the [count][3]
+meta-parameter to make multiple instances and join them all to the same DocumentDB
 Cluster, or you may specify different Cluster Instance resources with various
 `instance_class` sizes.
 
@@ -48,11 +48,12 @@ The following arguments are supported:
 * `availability_zone` - (Optional, Computed) The EC2 Availability Zone that the DB instance is created in. See [docs](https://docs.aws.amazon.com/documentdb/latest/developerguide/API_CreateDBInstance.html) about the details.
 * `cluster_identifier` - (Required) The identifier of the [`aws_docdb_cluster`](/docs/providers/aws/r/docdb_cluster.html) in which to launch this instance.
 * `enable_performance_insights` - (Optional) A value that indicates whether to enable Performance Insights for the DB Instance. Default `false`. See [docs] (https://docs.aws.amazon.com/documentdb/latest/developerguide/performance-insights.html) about the details.
-* `engine` - (Optional) The name of the database engine to be used for the DocDB instance. Defaults to `docdb`. Valid Values: `docdb`.
-* `identifier` - (Optional, Forces new resource) The identifier for the DocDB instance, if omitted, Terraform will assign a random, unique identifier.
+* `engine` - (Optional) The name of the database engine to be used for the DocumentDB instance. Defaults to `docdb`. Valid Values: `docdb`.
+* `identifier` - (Optional, Forces new resource) The identifier for the DocumentDB instance, if omitted, Terraform will assign a random, unique identifier.
 * `identifier_prefix` - (Optional, Forces new resource) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifier`.
-* `instance_class` - (Required) The instance class to use. For details on CPU and memory, see [Scaling for DocDB Instances][2]. DocDB currently
-  supports the below instance classes. Please see [AWS Documentation][4] for complete details.
+* `instance_class` - (Required) The instance class to use. For details on CPU and memory, see [Scaling for DocumentDB Instances][2].
+  DocumentDB currently supports the below instance classes.
+  Please see [AWS Documentation][4] for complete details.
     - db.r5.large
     - db.r5.xlarge
     - db.r5.2xlarge
@@ -106,7 +107,7 @@ the time required to take snapshots
 
 ## Import
 
-DocDB Cluster Instances can be imported using the `identifier`, e.g.,
+DocumentDB Cluster Instances can be imported using the `identifier`, e.g.,
 
 ```
 $ terraform import aws_docdb_cluster_instance.prod_instance_1 aurora-cluster-instance-1

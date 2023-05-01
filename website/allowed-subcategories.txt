@@ -52,6 +52,7 @@ CloudTrail
 CloudWatch
 CloudWatch Application Insights
 CloudWatch Evidently
+CloudWatch Internet Monitor
 CloudWatch Logs
 CloudWatch Observability Access Manager
 CloudWatch RUM
@@ -92,8 +93,8 @@ DevOps Guru
 Device Farm
 Direct Connect
 Directory Service
-DocDB (DocumentDB)
-DocDB (DocumentDB) Elastic
+DocumentDB
+DocumentDB Elastic
 DynamoDB
 DynamoDB Accelerator (DAX)
 DynamoDB Streams

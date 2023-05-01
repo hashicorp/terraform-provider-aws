@@ -479,6 +479,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	deploymentController := expandDeploymentController(d.Get("deployment_controller").([]interface{}))
 	deploymentMinimumHealthyPercent := d.Get("deployment_minimum_healthy_percent").(int)
+	name := d.Get("name").(string)
 	schedulingStrategy := d.Get("scheduling_strategy").(string)
 	input := ecs.CreateServiceInput{
 		CapacityProviderStrategy: expandCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set)),
@@ -489,7 +490,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		EnableExecuteCommand:     aws.Bool(d.Get("enable_execute_command").(bool)),
 		NetworkConfiguration:     expandNetworkConfiguration(d.Get("network_configuration").([]interface{})),
 		SchedulingStrategy:       aws.String(schedulingStrategy),
-		ServiceName:              aws.String(d.Get("name").(string)),
+		ServiceName:              aws.String(name),
 		Tags:                     GetTagsIn(ctx),
 	}
 
@@ -541,7 +542,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		ps, err := expandPlacementStrategy(v.([]interface{}))
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating ECS Service (%s): %s", d.Get("name").(string), err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input.PlacementStrategy = ps
@@ -551,7 +552,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		pc, err := expandPlacementConstraints(v.List())
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating ECS Service (%s): %s", d.Get("name").(string), err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input.PlacementConstraints = pc
@@ -600,28 +601,24 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
 	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] failed creating ECS Service (%s) with tags: %s. Trying create without tags.", d.Get("name").(string), err)
+		log.Printf("[WARN] failed creating ECS Service (%s) with tags: %s. Trying create without tags.", name, err)
 		input.Tags = nil
 
 		output, err = serviceCreateWithRetry(ctx, conn, input)
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating ECS Service (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating ECS Service (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.Service.ServiceArn))
 
-	cluster := d.Get("cluster").(string)
-
+	fn := waitServiceActive
 	if d.Get("wait_for_steady_state").(bool) {
-		if _, err := waitServiceStable(ctx, conn, d.Id(), cluster, d.Timeout(schema.TimeoutCreate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for ECS service (%s) to reach steady state after creation: %s", d.Id(), err)
-		}
-	} else {
-		if _, err := waitServiceActive(ctx, conn, d.Id(), cluster, d.Timeout(schema.TimeoutCreate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for ECS service (%s) to become active after creation: %s", d.Id(), err)
-		}
+		fn = waitServiceStable
+	}
+	if _, err := fn(ctx, conn, d.Id(), d.Get("cluster").(string), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for ECS Service (%s) create: %s", d.Id(), err)
 	}
 
 	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
@@ -732,7 +729,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 		if service.DeploymentConfiguration.DeploymentCircuitBreaker != nil {
 			if err := d.Set("deployment_circuit_breaker", []interface{}{flattenDeploymentCircuitBreaker(service.DeploymentConfiguration.DeploymentCircuitBreaker)}); err != nil {
-				return sdkdiag.AppendErrorf(diags, "setting deployment_circuit_break: %s", err)
+				return sdkdiag.AppendErrorf(diags, "setting deployment_circuit_breaker: %s", err)
 			}
 		} else {
 			d.Set("deployment_circuit_breaker", nil)
@@ -740,11 +737,13 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err := d.Set("deployment_controller", flattenDeploymentController(service.DeploymentController)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting deployment_controller for (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting deployment_controller: %s", err)
 	}
 
 	if service.LoadBalancers != nil {
-		d.Set("load_balancer", flattenLoadBalancers(service.LoadBalancers))
+		if err := d.Set("load_balancer", flattenLoadBalancers(service.LoadBalancers)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting load_balancer: %s", err)
+		}
 	}
 
 	if err := d.Set("capacity_provider_strategy", flattenCapacityProviderStrategy(service.CapacityProviderStrategy)); err != nil {
@@ -756,11 +755,11 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err := d.Set("placement_constraints", flattenServicePlacementConstraints(service.PlacementConstraints)); err != nil {
-		log.Printf("[ERR] Error setting placement_constraints for (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting placement_constraints: %s", err)
 	}
 
 	if err := d.Set("network_configuration", flattenNetworkConfiguration(service.NetworkConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting network_configuration for (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
 
 	// if err := d.Set("service_connect_configuration", flattenServiceConnectConfiguration(service.ServiceConnectConfiguration)); err != nil {
@@ -768,7 +767,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	// }
 
 	if err := d.Set("service_registries", flattenServiceRegistries(service.ServiceRegistries)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting service_registries for (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting service_registries: %s", err)
 	}
 
 	SetTagsOut(ctx, service.Tags)
@@ -831,7 +830,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				ps, err := expandPlacementStrategy(v.([]interface{}))
 
 				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "updating ECS Service (%s): %s", d.Get("name").(string), err)
+					return sdkdiag.AppendFromErr(diags, err)
 				}
 
 				input.PlacementStrategy = ps
@@ -847,7 +846,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				pc, err := expandPlacementConstraints(v.List())
 
 				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "updating ECS Service (%s): %s", d.Get("name").(string), err)
+					return sdkdiag.AppendFromErr(diags, err)
 				}
 
 				input.PlacementConstraints = pc
@@ -932,15 +931,12 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return sdkdiag.AppendErrorf(diags, "updating ECS Service (%s): %s", d.Id(), err)
 		}
 
-		cluster := d.Get("cluster").(string)
+		fn := waitServiceActive
 		if d.Get("wait_for_steady_state").(bool) {
-			if _, err := waitServiceStable(ctx, conn, d.Id(), cluster, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for ECS service (%s) to reach steady state after update: %s", d.Id(), err)
-			}
-		} else {
-			if _, err := waitServiceActive(ctx, conn, d.Id(), cluster, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for ECS service (%s) to become active after update: %s", d.Id(), err)
-			}
+			fn = waitServiceStable
+		}
+		if _, err := fn(ctx, conn, d.Id(), d.Get("cluster").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for ECS Service (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -952,11 +948,13 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).ECSConn()
 
 	service, err := FindServiceNoTagsByID(ctx, conn, d.Id(), d.Get("cluster").(string))
+
 	if tfresource.NotFound(err) {
 		return diags
 	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "retrieving ECS Service (%s) for deletion: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ECS Service (%s): %s", d.Id(), err)
 	}
 
 	if aws.StringValue(service.Status) == serviceStatusInactive {
@@ -965,14 +963,14 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	// Drain the ECS service
 	if aws.StringValue(service.Status) != serviceStatusDraining && aws.StringValue(service.SchedulingStrategy) != ecs.SchedulingStrategyDaemon {
-		log.Printf("[DEBUG] Draining ECS Service (%s)", d.Id())
-		_, err = conn.UpdateServiceWithContext(ctx, &ecs.UpdateServiceInput{
+		_, err := conn.UpdateServiceWithContext(ctx, &ecs.UpdateServiceInput{
 			Service:      aws.String(d.Id()),
 			Cluster:      aws.String(d.Get("cluster").(string)),
 			DesiredCount: aws.Int64(0),
 		})
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "deleting ECS Service (%s): draining service: %s", d.Get("name").(string), err)
+			return sdkdiag.AppendErrorf(diags, "draining ECS Service (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -980,7 +978,7 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 		Service: aws.String(d.Id()),
 		Cluster: aws.String(d.Get("cluster").(string)),
 	}
-	// Wait until the ECS service is drained
+	log.Printf("[DEBUG] Deleting ECS Service: %s", d.Id())
 	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
 		_, err := conn.DeleteServiceWithContext(ctx, &input)
 
@@ -1008,7 +1006,7 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err := waitServiceInactive(ctx, conn, d.Id(), d.Get("cluster").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting ECS Service (%s): waiting for completion: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for ECS Service (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags

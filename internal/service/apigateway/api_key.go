@@ -69,7 +69,7 @@ func ResourceAPIKey() *schema.Resource {
 				Computed:     true,
 				ForceNew:     true,
 				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(30, 128),
+				ValidateFunc: validation.StringLenBetween(20, 128),
 			},
 			"arn": {
 				Type:     schema.TypeString,
