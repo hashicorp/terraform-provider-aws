@@ -129,10 +129,10 @@ func ResourceService() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "1024",
-							ValidateFunc: validation.StringMatch(regexp.MustCompile(`1024|2048|(1|2) vCPU`), ""),
+							ValidateFunc: validation.StringMatch(regexp.MustCompile(`256|512|1024|2048|4096|(0.25|0.5|1|2|4) vCPU`), ""),
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								// App Runner API always returns the amount in multiples of 1024 units
-								return (old == "1024" && new == "1 vCPU") || (old == "2048" && new == "2 vCPU")
+								return (old == "256" && new == "0.25 vCPU") || (old == "512" && new == "0.5 vCPU") || (old == "1024" && new == "1 vCPU") || (old == "2048" && new == "2 vCPU") || (old == "4096" && new == "4 vCPU")
 							},
 						},
 						"instance_role_arn": {
@@ -144,10 +144,10 @@ func ResourceService() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "2048",
-							ValidateFunc: validation.StringMatch(regexp.MustCompile(`2048|3072|4096|(2|3|4) GB`), ""),
+							ValidateFunc: validation.StringMatch(regexp.MustCompile(`512|1024|2048|3072|4096|6144|8192|10240|12288|(0.5|1|2|3|4|6|8|10|12) GB`), ""),
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								// App Runner API always returns the amount in MB
-								return (old == "2048" && new == "2 GB") || (old == "3072" && new == "3 GB") || (old == "4096" && new == "4 GB")
+								return (old == "512" && new == "0.5 GB") || (old == "1024" && new == "1 GB") || (old == "2048" && new == "2 GB") || (old == "3072" && new == "3 GB") || (old == "4096" && new == "4 GB") || (old == "6144" && new == "6 GB") || (old == "8192" && new == "8 GB") || (old == "10240" && new == "10 GB") || (old == "12288" && new == "12 GB")
 							},
 						},
 					},
