@@ -216,17 +216,17 @@ func testAccCheckAccessLogSubscriptionExists(ctx context.Context, name string, a
 func testAccAccessLogSubscriptionConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpclattice_service_network" "test" {
-	name = %[1]q
+  name = %[1]q
 }
 
 resource "aws_s3_bucket" "test" {
-	bucket = %[1]q
-	force_destroy = true
+  bucket        = %[1]q
+  force_destroy = true
 }
 
 resource "aws_vpclattice_access_log_subscription" "test" {
-  resource_identifier             = aws_vpclattice_service_network.test.id
-  destination_arn                = aws_s3_bucket.test.arn
+  resource_identifier = aws_vpclattice_service_network.test.id
+  destination_arn     = aws_s3_bucket.test.arn
 }
 `, rName)
 }
@@ -242,8 +242,8 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_vpclattice_access_log_subscription" "test" {
-  resource_identifier             = aws_vpclattice_service_network.test.id
-  destination_arn                = aws_cloudwatch_log_group.test.arn
+  resource_identifier = aws_vpclattice_service_network.test.id
+  destination_arn     = aws_cloudwatch_log_group.test.arn
 }
 `, rName)
 }
@@ -251,47 +251,45 @@ resource "aws_vpclattice_access_log_subscription" "test" {
 func testAccAccessLogSubscriptionConfig_basicKinesis(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpclattice_service_network" "test" {
-	name = %[1]q
+  name = %[1]q
 }
 
 resource "aws_s3_bucket" "test" {
-	bucket = %[1]q
-	force_destroy = true
-  }
+  bucket        = %[1]q
+  force_destroy = true
+}
 
-  resource "aws_iam_role" "test" {
-	name = %[1]q
+resource "aws_iam_role" "test" {
+  name = %[1]q
 
-	assume_role_policy = <<EOF
-  {
-	"Version": "2012-10-17",
-	"Statement": [
-	  {
-		"Action": "sts:AssumeRole",
-		"Principal": {
-		  "Service": "firehose.amazonaws.com"
-		},
-		"Effect": "Allow",
-		"Sid": ""
-	  }
-	]
-  }
-  EOF
-  }
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "firehose.amazonaws.com"
+    },
+    "Effect": "Allow",
+    "Sid": ""
+  }]
+}
+EOF
+}
 
-  resource "aws_kinesis_firehose_delivery_stream" "test" {
-	destination = "extended_s3"
-	name        = %[1]q
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  destination = "extended_s3"
+  name        = %[1]q
 
-	extended_s3_configuration {
-	  role_arn   = aws_iam_role.test.arn
-	  bucket_arn = aws_s3_bucket.test.arn
-	}
+  extended_s3_configuration {
+    role_arn   = aws_iam_role.test.arn
+    bucket_arn = aws_s3_bucket.test.arn
   }
+}
 
 resource "aws_vpclattice_access_log_subscription" "test" {
-  resource_identifier             = aws_vpclattice_service_network.test.id
-  destination_arn                = aws_kinesis_firehose_delivery_stream.test.arn
+  resource_identifier = aws_vpclattice_service_network.test.id
+  destination_arn     = aws_kinesis_firehose_delivery_stream.test.arn
 }
 `, rName)
 }
@@ -299,21 +297,21 @@ resource "aws_vpclattice_access_log_subscription" "test" {
 func testAccAccessLogSubscriptionConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpclattice_service_network" "test" {
-	name = %[1]q
+  name = %[1]q
 }
 
 resource "aws_s3_bucket" "test" {
-	bucket = %[1]q
-	force_destroy = true
+  bucket        = %[1]q
+  force_destroy = true
 }
 
 resource "aws_vpclattice_access_log_subscription" "test" {
-	resource_identifier             = aws_vpclattice_service_network.test.id
-	destination_arn                = aws_s3_bucket.test.arn
+  resource_identifier = aws_vpclattice_service_network.test.id
+  destination_arn     = aws_s3_bucket.test.arn
 
-	tags = {
-		%[2]q = %[3]q
-	}
+  tags = {
+    %[2]q = %[3]q
+  }
 }
 `, rName, tagKey1, tagValue1)
 }
@@ -321,22 +319,22 @@ resource "aws_vpclattice_access_log_subscription" "test" {
 func testAccAccessLogSubscriptionConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpclattice_service_network" "test" {
-	name = %[1]q
+  name = %[1]q
 }
 
 resource "aws_s3_bucket" "test" {
-	bucket = %[1]q
-	force_destroy = true
+  bucket        = %[1]q
+  force_destroy = true
 }
 
 resource "aws_vpclattice_access_log_subscription" "test" {
-	resource_identifier             = aws_vpclattice_service_network.test.id
-	destination_arn                = aws_s3_bucket.test.arn
+  resource_identifier = aws_vpclattice_service_network.test.id
+  destination_arn     = aws_s3_bucket.test.arn
 
-	tags = {
-		%[2]q = %[3]q
-		%[4]q = %[5]q
-	}
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
