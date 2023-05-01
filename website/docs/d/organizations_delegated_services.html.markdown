@@ -18,13 +18,12 @@ data "aws_organizations_delegated_services" "example" {
 }
 ```
 
-
 ## Argument Reference
 
-* `account_id` - (Required) The account ID number of a delegated administrator account in the organization.
+* `account_id` - (Required) Account ID number of a delegated administrator account in the organization.
 
 ## Attributes Reference
 
-* `delegated_services` - The services for which the account is a delegated administrator, which have the following attributes:
+* `delegated_services` - Services for which the account is a delegated administrator, which have the following attributes:
     * `delegation_enabled_date` - The date that the account became a delegated administrator for this service.
     * `service_principal` - The name of an AWS service that can request an operation for the specified service.

@@ -7,13 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
+	"github.com/aws/aws-sdk-go/service/directoryservice/directoryserviceiface"
 )
 
-func describeDirectoriesPages(conn *directoryservice.DirectoryService, input *directoryservice.DescribeDirectoriesInput, fn func(*directoryservice.DescribeDirectoriesOutput, bool) bool) error {
-	return describeDirectoriesPagesWithContext(context.Background(), conn, input, fn)
-}
-
-func describeDirectoriesPagesWithContext(ctx context.Context, conn *directoryservice.DirectoryService, input *directoryservice.DescribeDirectoriesInput, fn func(*directoryservice.DescribeDirectoriesOutput, bool) bool) error {
+func describeDirectoriesPages(ctx context.Context, conn directoryserviceiface.DirectoryServiceAPI, input *directoryservice.DescribeDirectoriesInput, fn func(*directoryservice.DescribeDirectoriesOutput, bool) bool) error {
 	for {
 		output, err := conn.DescribeDirectoriesWithContext(ctx, input)
 		if err != nil {
@@ -29,11 +26,7 @@ func describeDirectoriesPagesWithContext(ctx context.Context, conn *directoryser
 	}
 	return nil
 }
-func describeRegionsPages(conn *directoryservice.DirectoryService, input *directoryservice.DescribeRegionsInput, fn func(*directoryservice.DescribeRegionsOutput, bool) bool) error {
-	return describeRegionsPagesWithContext(context.Background(), conn, input, fn)
-}
-
-func describeRegionsPagesWithContext(ctx context.Context, conn *directoryservice.DirectoryService, input *directoryservice.DescribeRegionsInput, fn func(*directoryservice.DescribeRegionsOutput, bool) bool) error {
+func describeRegionsPages(ctx context.Context, conn directoryserviceiface.DirectoryServiceAPI, input *directoryservice.DescribeRegionsInput, fn func(*directoryservice.DescribeRegionsOutput, bool) bool) error {
 	for {
 		output, err := conn.DescribeRegionsWithContext(ctx, input)
 		if err != nil {

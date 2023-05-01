@@ -37,7 +37,6 @@ data "aws_resourcegroupstaggingapi_resources" "test" {
 }
 ```
 
-
 ## Argument Reference
 
 The following arguments are supported:
@@ -45,7 +44,7 @@ The following arguments are supported:
 * `exclude_compliant_resources` - (Optional) Specifies whether to exclude resources that are compliant with the tag policy. You can use this parameter only if the `include_compliance_details` argument is also set to `true`.
 * `include_compliance_details` - (Optional) Specifies whether to include details regarding the compliance with the effective tag policy.
 * `tag_filter` - (Optional) Specifies a list of Tag Filters (keys and values) to restrict the output to only those resources that have the specified tag and, if included, the specified value. See [Tag Filter](#tag-filter) below. Conflicts with `resource_arn_list`.
-* `resource_type_filters` - (Optional) The constraints on the resources that you want returned. The format of each resource type is `service:resourceType`. For example, specifying a resource type of `ec2` returns all Amazon EC2 resources (which includes EC2 instances). Specifying a resource type of `ec2:instance` returns only EC2 instances.
+* `resource_type_filters` - (Optional) Constraints on the resources that you want returned. The format of each resource type is `service:resourceType`. For example, specifying a resource type of `ec2` returns all Amazon EC2 resources (which includes EC2 instances). Specifying a resource type of `ec2:instance` returns only EC2 instances.
 * `resource_arn_list` - (Optional) Specifies a list of ARNs of resources for which you want to retrieve tag data. Conflicts with `filter`.
 
 ### Tag Filter
@@ -56,7 +55,7 @@ If you do specify `tag_filter`, the response returns only those resources that a
 If you don't specify a `tag_filter`, the response includes all resources that were ever associated with tags. Resources that currently don't have associated tags are shown with an empty tag set.
 
 * `key` - (Required) One part of a key-value pair that makes up a tag.
-* `values` - (Optional) The optional part of a key-value pair that make up a tag.
+* `values` - (Optional) Optional part of a key-value pair that make up a tag.
 
 ## Attributes Reference
 

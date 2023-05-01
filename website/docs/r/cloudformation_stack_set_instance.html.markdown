@@ -96,18 +96,18 @@ The following arguments are supported:
 
 The `deployment_targets` configuration block supports the following arguments:
 
-*`organizational_unit_ids` - (Optional) The organization root ID or organizational unit (OU) IDs to which StackSets deploys.
+* `organizational_unit_ids` - (Optional) The organization root ID or organizational unit (OU) IDs to which StackSets deploys.
 
 ### `operation_preferences` Argument Reference
 
 The `operation_preferences` configuration block supports the following arguments:
 
-*`failure_tolerance_count` - (Optional) The number of accounts, per Region, for which this operation can fail before AWS CloudFormation stops the operation in that Region.
-*`failure_tolerance_percentage` - (Optional) The percentage of accounts, per Region, for which this stack operation can fail before AWS CloudFormation stops the operation in that Region.
-*`max_concurrent_count` - (Optional) The maximum number of accounts in which to perform this operation at one time.
-*`max_concurrent_percentage` - (Optional) The maximum percentage of accounts in which to perform this operation at one time.
-*`region_concurrency_type` - (Optional) The concurrency type of deploying StackSets operations in Regions, could be in parallel or one Region at a time.
-*`region_order` - (Optional) The order of the Regions in where you want to perform the stack operation.
+* `failure_tolerance_count` - (Optional) The number of accounts, per Region, for which this operation can fail before AWS CloudFormation stops the operation in that Region.
+* `failure_tolerance_percentage` - (Optional) The percentage of accounts, per Region, for which this stack operation can fail before AWS CloudFormation stops the operation in that Region.
+* `max_concurrent_count` - (Optional) The maximum number of accounts in which to perform this operation at one time.
+* `max_concurrent_percentage` - (Optional) The maximum percentage of accounts in which to perform this operation at one time.
+* `region_concurrency_type` - (Optional) The concurrency type of deploying StackSets operations in Regions, could be in parallel or one Region at a time. Valid values are `SEQUENTIAL` and `PARALLEL`.
+* `region_order` - (Optional) The order of the Regions in where you want to perform the stack operation.
 
 ## Attributes Reference
 
@@ -119,7 +119,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `30m`)
 * `update` - (Default `30m`)

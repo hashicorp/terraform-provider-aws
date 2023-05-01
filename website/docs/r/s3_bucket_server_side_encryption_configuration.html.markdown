@@ -23,7 +23,7 @@ resource "aws_s3_bucket" "mybucket" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "example" {
-  bucket = aws_s3_bucket.mybucket.bucket
+  bucket = aws_s3_bucket.mybucket.id
 
   rule {
     apply_server_side_encryption_by_default {
@@ -38,23 +38,23 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "example" {
 
 The following arguments are supported:
 
-* `bucket` - (Required, Forces new resource) The name of the bucket.
-* `expected_bucket_owner` - (Optional, Forces new resource) The account ID of the expected bucket owner.
-* `rule` - (Required) Set of server-side encryption configuration rules. [documented below](#rule). Currently, only a single rule is supported.
+* `bucket` - (Required, Forces new resource) ID (name) of the bucket.
+* `expected_bucket_owner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
+* `rule` - (Required) Set of server-side encryption configuration rules. [See below](#rule). Currently, only a single rule is supported.
 
 ### rule
 
 The `rule` configuration block supports the following arguments:
 
-* `apply_server_side_encryption_by_default` - (Optional) A single object for setting server-side encryption by default [documented below](#apply_server_side_encryption_by_default)
+* `apply_server_side_encryption_by_default` - (Optional) Single object for setting server-side encryption by default. [See below](#apply_server_side_encryption_by_default).
 * `bucket_key_enabled` - (Optional) Whether or not to use [Amazon S3 Bucket Keys](https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-key.html) for SSE-KMS.
 
 ### apply_server_side_encryption_by_default
 
 The `apply_server_side_encryption_by_default` configuration block supports the following arguments:
 
-* `sse_algorithm` - (Required) The server-side encryption algorithm to use. Valid values are `AES256` and `aws:kms`
-* `kms_master_key_id` - (Optional) The AWS KMS master key ID used for the SSE-KMS encryption. This can only be used when you set the value of `sse_algorithm` as `aws:kms`. The default `aws/s3` AWS KMS master key is used if this element is absent while the `sse_algorithm` is `aws:kms`.
+* `sse_algorithm` - (Required) Server-side encryption algorithm to use. Valid values are `AES256` and `aws:kms`
+* `kms_master_key_id` - (Optional) AWS KMS master key ID used for the SSE-KMS encryption. This can only be used when you set the value of `sse_algorithm` as `aws:kms`. The default `aws/s3` AWS KMS master key is used if this element is absent while the `sse_algorithm` is `aws:kms`.
 
 ## Attributes Reference
 

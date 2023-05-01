@@ -28,6 +28,6 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) of the connector.
-* `description` - A summary description of the connector.
-* `version` - The current version of the connector.
+* `arn` - ARN of the connector.
+* `description` - Summary description of the connector.
+* `version` - Current version of the connector.

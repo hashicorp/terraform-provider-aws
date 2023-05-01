@@ -4,7 +4,6 @@
 package connect
 
 import (
-	"context"
 	"fmt"
 	"log"
 
@@ -24,15 +23,16 @@ func init() {
 }
 
 func sweepInstance(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).ConnectConn
-	ctx := context.Background()
+	conn := client.(*conns.AWSClient).ConnectConn()
+
 	var errs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	// MaxResults:  Maximum value of 10. https://docs.aws.amazon.com/connect/latest/APIReference/API_ListInstances.html
 	input := &connect.ListInstancesInput{MaxResults: aws.Int64(ListInstancesMaxResults)}
@@ -64,7 +64,7 @@ func sweepInstance(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing Connect Instances: %w", err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Connect Instances for %s: %w", region, err))
 	}
 

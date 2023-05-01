@@ -67,7 +67,6 @@ In addition to all arguments above, the following attributes are exported:
 You can find more technical documentation about DHCP Options Set in the
 official [AWS User Guide](https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_DHCP_Options.html).
 
-
 ## Import
 
 VPC DHCP Options can be imported using the `dhcp options id`, e.g.,

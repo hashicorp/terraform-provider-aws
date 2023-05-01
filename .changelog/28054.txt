@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_efs_file_system: Add support for `elastic` `throughput_mode` argument
+```
+
+```release-note:enhancement
+resource/aws_efs_file_system: Add support for `AFTER_1_DAY` `lifecycle_policy.transition_to_ia` argument
+```

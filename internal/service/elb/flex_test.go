@@ -10,6 +10,8 @@ import (
 )
 
 func TestExpandListeners(t *testing.T) {
+	t.Parallel()
+
 	expanded := []interface{}{
 		map[string]interface{}{
 			"instance_port":     8000,
@@ -48,6 +50,8 @@ func TestExpandListeners(t *testing.T) {
 // this test should produce an error from expandlisteners on an invalid
 // combination
 func TestExpandListeners_invalid(t *testing.T) {
+	t.Parallel()
+
 	expanded := []interface{}{
 		map[string]interface{}{
 			"instance_port":      8000,
@@ -60,7 +64,7 @@ func TestExpandListeners_invalid(t *testing.T) {
 	_, err := ExpandListeners(expanded)
 	if err != nil {
 		// Check the error we got
-		if !strings.Contains(err.Error(), "ssl_certificate_id may be set only when protocol") {
+		if !strings.Contains(err.Error(), `"ssl_certificate_id" may be set only when "protocol"`) {
 			t.Fatalf("Got error in TestExpandListeners_invalid, but not what we expected: %s", err)
 		}
 	}
@@ -71,6 +75,8 @@ func TestExpandListeners_invalid(t *testing.T) {
 }
 
 func TestFlattenHealthCheck(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Input  *elb.HealthCheck
 		Output []map[string]interface{}
@@ -104,6 +110,7 @@ func TestFlattenHealthCheck(t *testing.T) {
 }
 
 func TestExpandInstanceString(t *testing.T) {
+	t.Parallel()
 
 	expected := []*elb.Instance{
 		{InstanceId: aws.String("test-one")},
@@ -123,6 +130,8 @@ func TestExpandInstanceString(t *testing.T) {
 }
 
 func TestExpandPolicyAttributes(t *testing.T) {
+	t.Parallel()
+
 	expanded := []interface{}{
 		map[string]interface{}{
 			"name":  "Protocol-TLSv1",
@@ -157,6 +166,8 @@ func TestExpandPolicyAttributes(t *testing.T) {
 }
 
 func TestExpandPolicyAttributes_empty(t *testing.T) {
+	t.Parallel()
+
 	var expanded []interface{}
 
 	attributes := ExpandPolicyAttributes(expanded)
@@ -167,6 +178,8 @@ func TestExpandPolicyAttributes_empty(t *testing.T) {
 }
 
 func TestExpandPolicyAttributes_invalid(t *testing.T) {
+	t.Parallel()
+
 	expanded := []interface{}{
 		map[string]interface{}{
 			"name":  "Protocol-TLSv1.2",
@@ -189,6 +202,8 @@ func TestExpandPolicyAttributes_invalid(t *testing.T) {
 }
 
 func TestFlattenPolicyAttributes(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Input  []*elb.PolicyAttributeDescription
 		Output []interface{}

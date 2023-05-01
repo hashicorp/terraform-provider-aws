@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_security_group: Do not pass `from_port` or `to_port` values to the AWS API if a `rule`'s `protocol` value is `-1` or `all`
+```
+
+```release-note:bug
+resource/aws_security_group: Return an error if a `rule`'s `protocol` value is `all` and `from_port` or `to_port` are not `0`
+```
