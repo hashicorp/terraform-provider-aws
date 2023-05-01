@@ -448,6 +448,99 @@ func TestAccAppAutoScalingPolicy_ResourceID_forceNew(t *testing.T) {
 	})
 }
 
+func TestAccAppAutoScalingPolicy_TargetTrack_metricMath(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy applicationautoscaling.ScalingPolicy
+	appAutoscalingTargetResourceName := "aws_appautoscaling_target.test"
+	resourceName := "aws_appautoscaling_policy.metric_math_test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_targetTrackingMetricMath(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_id", appAutoscalingTargetResourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", appAutoscalingTargetResourceName, "scalable_dimension"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", appAutoscalingTargetResourceName, "service_namespace"),
+					resource.TestCheckResourceAttr(resourceName, "target_tracking_scaling_policy_configuration.0.target_value", "12.3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccPolicyConfig_targetTrackingMetricMath(rName string) string {
+	return acctest.ConfigCompose(testAccPolicyConfig_basic(rName), fmt.Sprintf(`
+resource "aws_appautoscaling_policy" "metric_math_test" {
+  name               = "%[1]s-tracking"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.test.resource_id
+  scalable_dimension = aws_appautoscaling_target.test.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.test.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    customized_metric_specification {
+      metrics {
+        id          = "m1"
+        expression  = "TIME_SERIES(20)"
+        return_data = false
+      }
+      metrics {
+        id = "m2"
+        metric_stat {
+          metric {
+            namespace   = "foo"
+            metric_name = "bar"
+          }
+          unit = "Percent"
+          stat = "Sum"
+        }
+        return_data = false
+      }
+      metrics {
+        id = "m3"
+        metric_stat {
+          metric {
+            namespace   = "foo"
+            metric_name = "bar"
+            dimensions {
+              name  = "x"
+              value = "y"
+            }
+            dimensions {
+              name  = "y"
+              value = "x"
+            }
+          }
+          unit = "Percent"
+          stat = "Sum"
+        }
+        return_data = false
+      }
+      metrics {
+        id          = "e1"
+        expression  = "m1 + m2 + m3"
+        return_data = true
+      }
+    }
+    target_value = 12.3
+  }
+}
+`, rName))
+}
+
 func testAccCheckPolicyExists(ctx context.Context, n string, policy *applicationautoscaling.ScalingPolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

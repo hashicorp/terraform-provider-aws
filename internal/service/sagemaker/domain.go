@@ -222,6 +222,25 @@ func ResourceDomain() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"model_register_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"cross_account_model_register_role_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"status": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.FeatureStatus_Values(), false),
+												},
+											},
+										},
+									},
 									"time_series_forecasting_settings": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -367,6 +386,26 @@ func ResourceDomain() *schema.Resource {
 												},
 											},
 										},
+									},
+								},
+							},
+						},
+						"r_studio_server_pro_app_settings": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"access_status": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(sagemaker.RStudioServerProAccessStatus_Values(), false),
+									},
+									"user_group": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      sagemaker.RStudioServerProUserGroupRStudioUser,
+										ValidateFunc: validation.StringInSlice(sagemaker.RStudioServerProUserGroup_Values(), false),
 									},
 								},
 							},
@@ -520,6 +559,57 @@ func ResourceDomain() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(sagemaker.ExecutionRoleIdentityConfig_Values(), false),
+						},
+						"r_studio_server_pro_domain_settings": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"default_resource_spec": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"instance_type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
+												},
+												"lifecycle_config_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_version_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+											},
+										},
+									},
+									"domain_execution_role_arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"r_studio_connect_url": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"r_studio_package_manager_url": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
 						},
 						"security_group_ids": {
 							Type:     schema.TypeSet,
@@ -765,6 +855,38 @@ func expandDomainSettings(l []interface{}) *sagemaker.DomainSettings {
 		config.SecurityGroupIds = flex.ExpandStringSet(v)
 	}
 
+	if v, ok := m["r_studio_server_pro_domain_settings"].([]interface{}); ok && len(v) > 0 {
+		config.RStudioServerProDomainSettings = expandRStudioServerProDomainSettings(v)
+	}
+
+	return config
+}
+
+func expandRStudioServerProDomainSettings(l []interface{}) *sagemaker.RStudioServerProDomainSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.RStudioServerProDomainSettings{}
+
+	if v, ok := m["domain_execution_role_arn"].(string); ok && v != "" {
+		config.DomainExecutionRoleArn = aws.String(v)
+	}
+
+	if v, ok := m["r_studio_connect_url"].(string); ok && v != "" {
+		config.RStudioConnectUrl = aws.String(v)
+	}
+
+	if v, ok := m["r_studio_packageManager_url"].(string); ok && v != "" {
+		config.RStudioPackageManagerUrl = aws.String(v)
+	}
+
+	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
+		config.DefaultResourceSpec = expandDomainDefaultResourceSpec(v)
+	}
+
 	return config
 }
 
@@ -839,6 +961,30 @@ func expandDomainDefaultUserSettings(l []interface{}) *sagemaker.UserSettings {
 
 	if v, ok := m["tensor_board_app_settings"].([]interface{}); ok && len(v) > 0 {
 		config.TensorBoardAppSettings = expandDomainTensorBoardAppSettings(v)
+	}
+
+	if v, ok := m["r_studio_server_pro_app_settings"].([]interface{}); ok && len(v) > 0 {
+		config.RStudioServerProAppSettings = expandRStudioServerProAppSettings(v)
+	}
+
+	return config
+}
+
+func expandRStudioServerProAppSettings(l []interface{}) *sagemaker.RStudioServerProAppSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.RStudioServerProAppSettings{}
+
+	if v, ok := m["access_status"].(string); ok && v != "" {
+		config.AccessStatus = aws.String(v)
+	}
+
+	if v, ok := m["user_group"].(string); ok && v != "" {
+		config.UserGroup = aws.String(v)
 	}
 
 	return config
@@ -986,7 +1132,28 @@ func expandCanvasAppSettings(l []interface{}) *sagemaker.CanvasAppSettings {
 	m := l[0].(map[string]interface{})
 
 	config := &sagemaker.CanvasAppSettings{
+		ModelRegisterSettings:         expandModelRegisterSettings(m["model_register_settings"].([]interface{})),
 		TimeSeriesForecastingSettings: expandTimeSeriesForecastingSettings(m["time_series_forecasting_settings"].([]interface{})),
+	}
+
+	return config
+}
+
+func expandModelRegisterSettings(l []interface{}) *sagemaker.ModelRegisterSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.ModelRegisterSettings{}
+
+	if v, ok := m["model_register_settings"].(string); ok && v != "" {
+		config.CrossAccountModelRegisterRoleArn = aws.String(v)
+	}
+
+	if v, ok := m["status"].(string); ok && v != "" {
+		config.Status = aws.String(v)
 	}
 
 	return config
@@ -1070,6 +1237,28 @@ func flattenDomainDefaultUserSettings(config *sagemaker.UserSettings) []map[stri
 
 	if config.TensorBoardAppSettings != nil {
 		m["tensor_board_app_settings"] = flattenDomainTensorBoardAppSettings(config.TensorBoardAppSettings)
+	}
+
+	if config.RStudioServerProAppSettings != nil {
+		m["r_studio_server_pro_app_settings"] = flattenRStudioServerProAppSettings(config.RStudioServerProAppSettings)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenRStudioServerProAppSettings(config *sagemaker.RStudioServerProAppSettings) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.AccessStatus != nil {
+		m["access_status"] = aws.StringValue(config.AccessStatus)
+	}
+
+	if config.UserGroup != nil {
+		m["user_group"] = aws.StringValue(config.UserGroup)
 	}
 
 	return []map[string]interface{}{m}
@@ -1204,6 +1393,20 @@ func flattenCanvasAppSettings(config *sagemaker.CanvasAppSettings) []map[string]
 
 	m := map[string]interface{}{
 		"time_series_forecasting_settings": flattenTimeSeriesForecastingSettings(config.TimeSeriesForecastingSettings),
+		"model_register_settings":          flattenModelRegisterSettings(config.ModelRegisterSettings),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenModelRegisterSettings(config *sagemaker.ModelRegisterSettings) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"cross_account_model_register_role_arn": aws.StringValue(config.CrossAccountModelRegisterRoleArn),
+		"status":                                aws.StringValue(config.Status),
 	}
 
 	return []map[string]interface{}{m}
@@ -1228,8 +1431,24 @@ func flattenDomainSettings(config *sagemaker.DomainSettings) []map[string]interf
 	}
 
 	m := map[string]interface{}{
-		"execution_role_identity_config": aws.StringValue(config.ExecutionRoleIdentityConfig),
-		"security_group_ids":             flex.FlattenStringSet(config.SecurityGroupIds),
+		"execution_role_identity_config":      aws.StringValue(config.ExecutionRoleIdentityConfig),
+		"r_studio_server_pro_domain_settings": flattenRStudioServerProDomainSettings(config.RStudioServerProDomainSettings),
+		"security_group_ids":                  flex.FlattenStringSet(config.SecurityGroupIds),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenRStudioServerProDomainSettings(config *sagemaker.RStudioServerProDomainSettings) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"r_studio_connect_url":         aws.StringValue(config.RStudioConnectUrl),
+		"domain_execution_role_arn":    aws.StringValue(config.DomainExecutionRoleArn),
+		"r_studio_package_manager_url": aws.StringValue(config.RStudioPackageManagerUrl),
+		"default_resource_spec":        flattenDomainDefaultResourceSpec(config.DefaultResourceSpec),
 	}
 
 	return []map[string]interface{}{m}

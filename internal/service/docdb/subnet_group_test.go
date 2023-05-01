@@ -178,7 +178,7 @@ func testAccCheckSubnetGroupDestroy(ctx context.Context) resource.TestCheckFunc 
 			if err == nil {
 				if len(resp.DBSubnetGroups) != 0 &&
 					aws.StringValue(resp.DBSubnetGroups[0].DBSubnetGroupName) == rs.Primary.ID {
-					return fmt.Errorf("DocDB Subnet Group %s still exists", rs.Primary.ID)
+					return fmt.Errorf("DocumentDB Subnet Group %s still exists", rs.Primary.ID)
 				}
 			}
 

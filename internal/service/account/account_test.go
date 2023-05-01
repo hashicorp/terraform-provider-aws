@@ -15,6 +15,9 @@ func TestAccAccount_serial(t *testing.T) {
 			"disappears": testAccAlternateContact_disappears,
 			"AccountID":  testAccAlternateContact_accountID,
 		},
+		"PrimaryContact": {
+			"basic": testAccPrimaryContact_basic,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)
