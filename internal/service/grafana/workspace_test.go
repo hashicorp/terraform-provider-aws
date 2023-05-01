@@ -32,6 +32,7 @@ func TestAccGrafana_serial(t *testing.T) {
 			"vpc":                      testAccWorkspace_vpc,
 			"configuration":            testAccWorkspace_configuration,
 			"networkAccess":            testAccWorkspace_networkAccess,
+			"grafanaVersion":           testAccWorkspace_grafanaVersion,
 		},
 		"ApiKey": {
 			"basic": testAccWorkspaceAPIKey_basic,
@@ -501,6 +502,33 @@ func testAccWorkspace_networkAccess(t *testing.T) {
 	})
 }
 
+func testAccWorkspace_grafanaVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_grafana_workspace.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkspaceConfig_grafanaVersion(rName, "9.4"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkspaceExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "grafana_version", "9.4"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckWorkspaceExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -795,4 +823,16 @@ resource "aws_grafana_workspace" "test" {
   configuration            = %[1]q
 }
 `, configuration))
+}
+
+func testAccWorkspaceConfig_grafanaVersion(rName, version string) string {
+	return acctest.ConfigCompose(testAccWorkspaceConfig_base(rName), fmt.Sprintf(`
+resource "aws_grafana_workspace" "test" {
+  account_access_type      = "CURRENT_ACCOUNT"
+  authentication_providers = ["SAML"]
+  permission_type          = "SERVICE_MANAGED"
+  role_arn                 = aws_iam_role.test.arn
+  grafana_version          = %[1]q
+}
+`, version))
 }
