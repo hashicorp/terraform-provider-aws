@@ -124,6 +124,10 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"amd_sev_snp": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"core_count": {
 							Type:     schema.TypeInt,
 							Computed: true,
@@ -827,11 +831,11 @@ func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("name", lt.LaunchTemplateName)
 
 	if err := flattenResponseLaunchTemplateData(ctx, conn, d, ltv.LaunchTemplateData); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 Launch Template (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if err := d.Set("tags", KeyValueTags(ctx, lt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 Launch Template (%s): setting tags: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "settings tags: %s", err)
 	}
 
 	return diags

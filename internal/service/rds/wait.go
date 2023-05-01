@@ -215,6 +215,7 @@ func waitDBClusterInstanceDeleted(ctx context.Context, conn *rds.RDS, id string,
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			InstanceStatusConfiguringLogExports,
+			InstanceStatusDeletePreCheck,
 			InstanceStatusDeleting,
 			InstanceStatusModifying,
 		},
