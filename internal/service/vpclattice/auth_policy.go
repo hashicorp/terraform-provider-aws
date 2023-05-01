@@ -106,8 +106,6 @@ func resourceAuthPolicyRead(ctx context.Context, d *schema.ResourceData, meta in
 		return nil
 	}
 
-	log.Printf("Reading policy created at line 109")
-
 	if err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameAuthPolicy, d.Id(), err)
 	}
@@ -116,8 +114,6 @@ func resourceAuthPolicyRead(ctx context.Context, d *schema.ResourceData, meta in
 		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameAuthPolicy, d.Id(), err)
 	}
 
-	log.Printf("setting policy resource_identifier:")
-	log.Printf(resourceId)
 	d.Set("resource_identifier", resourceId)
 
 	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.ToString(policy.Policy))
@@ -132,11 +128,9 @@ func resourceAuthPolicyRead(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceAuthPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
-	log.Printf("[INFO] Deleting VPCLattice AuthPolicy %s", d.Id())
-
+	log.Printf("[INFO] Deleting VPCLattice AuthPolicy: %s", d.Id())
 	_, err := conn.DeleteAuthPolicy(ctx, &vpclattice.DeleteAuthPolicyInput{
 		ResourceIdentifier: aws.String(d.Id()),
 	})

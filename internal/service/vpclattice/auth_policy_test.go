@@ -139,16 +139,6 @@ func testAccCheckAuthPolicyExists(ctx context.Context, name string, authpolicy *
 	}
 }
 
-func testAccCheckAuthPolicyNotRecreated(before, after *vpclattice.GetAuthPolicyOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.Policy), aws.ToString(after.Policy); before != after {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingNotRecreated, tfvpclattice.ResNameAuthPolicy, aws.ToString(&before), errors.New("recreated"))
-		}
-
-		return nil
-	}
-}
-
 func testAccAuthPolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -162,7 +152,7 @@ resource "aws_vpclattice_service" "test" {
 }
 
 resource "aws_vpclattice_auth_policy" "test" {
-  resource_identifier			= aws_vpclattice_service.test.arn
+  resource_identifier = aws_vpclattice_service.test.arn
 
   policy = jsonencode({
     Version = "2012-10-17"
