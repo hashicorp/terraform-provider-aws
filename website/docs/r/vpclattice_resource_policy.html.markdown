@@ -51,6 +51,10 @@ The following arguments are required:
 * `resource_arn` - (Required) The ID or Amazon Resource Name (ARN) of the service network or service for which the policy is created.
 * `policy` - (Required) An IAM policy. The policy string in JSON must not contain newlines or blank lines.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 VPC Lattice Resource Policy can be imported using the `resource_arn`, e.g.,
