@@ -27,8 +27,6 @@ func TestAccVPCLatticeAccessLogSubscription_basic(t *testing.T) {
 	resourceName := "aws_vpclattice_access_log_subscription.test"
 	serviceNetworkResourceName := "aws_vpclattice_service_network.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	// cloudWatchLogGroupName := "aws_cloudwatch_log_group.test"
-	// kinesisDeliveryStreamName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -48,7 +46,6 @@ func TestAccVPCLatticeAccessLogSubscription_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", s3BucketResourceName, "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", names.VPCLatticeEndpointID, regexp.MustCompile(`accesslogsubscription/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
 			},
 			{
@@ -56,28 +53,6 @@ func TestAccVPCLatticeAccessLogSubscription_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-			// {
-			// 	Config: testAccAccessLogSubscriptionConfig_basicCloudwatch(rName),
-			// 	Check: resource.ComposeTestCheckFunc(
-			// 		testAccCheckAccessLogSubscriptionExists(ctx, resourceName, &accesslogsubscription),
-			// 		resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", serviceNetworkResourceName, "id"),
-			// 		resource.TestCheckResourceAttrPair(resourceName, "destination_arn", cloudWatchLogGroupName, "arn"),
-			// 		acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile(`accesslogsubscription/.+$`)),
-			// 		resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-			// 		resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
-			// 	),
-			// },
-			// {
-			// 	Config: testAccAccessLogSubscriptionConfig_basicKinesis(rName),
-			// 	Check: resource.ComposeTestCheckFunc(
-			// 		testAccCheckAccessLogSubscriptionExists(ctx, resourceName, &accesslogsubscription),
-			// 		resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", serviceNetworkResourceName, "id"),
-			// 		resource.TestCheckResourceAttrPair(resourceName, "destination_arn", kinesisDeliveryStreamName, "arn"),
-			// 		acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile(`accesslogsubscription/.+$`)),
-			// 		resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-			// 		resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
-			// 	),
-			// },
 		},
 	})
 }
@@ -230,71 +205,6 @@ resource "aws_vpclattice_access_log_subscription" "test" {
 }
 `, rName)
 }
-
-/*
-func testAccAccessLogSubscriptionConfig_basicCloudWatch(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpclattice_service_network" "test" {
-  name = %[1]q
-}
-
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
-resource "aws_vpclattice_access_log_subscription" "test" {
-  resource_identifier = aws_vpclattice_service_network.test.id
-  destination_arn     = aws_cloudwatch_log_group.test.arn
-}
-`, rName)
-}
-
-func testAccAccessLogSubscriptionConfig_basicKinesis(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpclattice_service_network" "test" {
-  name = %[1]q
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  force_destroy = true
-}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Action": "sts:AssumeRole",
-    "Principal": {
-      "Service": "firehose.amazonaws.com"
-    },
-    "Effect": "Allow",
-    "Sid": ""
-  }]
-}
-EOF
-}
-
-resource "aws_kinesis_firehose_delivery_stream" "test" {
-  destination = "extended_s3"
-  name        = %[1]q
-
-  extended_s3_configuration {
-    role_arn   = aws_iam_role.test.arn
-    bucket_arn = aws_s3_bucket.test.arn
-  }
-}
-
-resource "aws_vpclattice_access_log_subscription" "test" {
-  resource_identifier = aws_vpclattice_service_network.test.id
-  destination_arn     = aws_kinesis_firehose_delivery_stream.test.arn
-}
-`, rName)
-}
-*/
 
 func testAccAccessLogSubscriptionConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`

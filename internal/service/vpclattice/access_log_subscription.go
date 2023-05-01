@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
@@ -21,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpclattice_access_log_subscription")
+// @SDKResource("aws_vpclattice_access_log_subscription", name="Access Log Subscription")
 // @Tags(identifierAttribute="arn")
 func ResourceAccessLogSubscription() *schema.Resource {
 	return &schema.Resource{
@@ -34,16 +33,16 @@ func ResourceAccessLogSubscription() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Minute),
-			Update: schema.DefaultTimeout(30 * time.Minute),
-			Delete: schema.DefaultTimeout(30 * time.Minute),
-		},
-
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"destination_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"resource_arn": {
 				Type:     schema.TypeString,
@@ -53,12 +52,6 @@ func ResourceAccessLogSubscription() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-			},
-			"destination_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -76,24 +69,28 @@ func resourceAccessLogSubscriptionCreate(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
 	in := &vpclattice.CreateAccessLogSubscriptionInput{
+		ClientToken:        aws.String(id.UniqueId()),
 		DestinationArn:     aws.String(d.Get("destination_arn").(string)),
 		ResourceIdentifier: aws.String(d.Get("resource_identifier").(string)),
-		ClientToken:        aws.String(id.UniqueId()),
 		Tags:               GetTagsIn(ctx),
 	}
 
 	out, err := conn.CreateAccessLogSubscription(ctx, in)
+
 	if err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameAccessLogSubscription, d.Get("destination_arn").(string), err)
 	}
 
 	d.SetId(aws.ToString(out.Id))
+
 	return resourceAccessLogSubscriptionRead(ctx, d, meta)
 }
 
 func resourceAccessLogSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+
 	out, err := findAccessLogSubscriptionByID(ctx, conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPCLattice AccessLogSubscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -104,10 +101,10 @@ func resourceAccessLogSubscriptionRead(ctx context.Context, d *schema.ResourceDa
 		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameAccessLogSubscription, d.Id(), err)
 	}
 
-	d.Set("resource_identifier", out.ResourceId)
+	d.Set("arn", out.Arn)
 	d.Set("destination_arn", out.DestinationArn)
 	d.Set("resource_arn", out.ResourceArn)
-	d.Set("arn", out.Arn)
+	d.Set("resource_identifier", out.ResourceId)
 
 	return nil
 }
@@ -121,7 +118,6 @@ func resourceAccessLogSubscriptionDelete(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
 	log.Printf("[INFO] Deleting VPCLattice AccessLogSubscription %s", d.Id())
-
 	_, err := conn.DeleteAccessLogSubscription(ctx, &vpclattice.DeleteAccessLogSubscriptionInput{
 		AccessLogSubscriptionIdentifier: aws.String(d.Id()),
 	})
@@ -134,6 +130,7 @@ func resourceAccessLogSubscriptionDelete(ctx context.Context, d *schema.Resource
 
 		return create.DiagError(names.VPCLattice, create.ErrActionDeleting, ResNameAccessLogSubscription, d.Id(), err)
 	}
+
 	return nil
 }
 

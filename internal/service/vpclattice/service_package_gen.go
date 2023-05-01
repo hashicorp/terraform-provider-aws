@@ -38,6 +38,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceAccessLogSubscription,
 			TypeName: "aws_vpclattice_access_log_subscription",
+			Name:     "Access Log Subscription",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "arn",
 			},
