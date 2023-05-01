@@ -20,10 +20,7 @@ func TestAccAPIGatewayRestAPIDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					testAccRestAPIConfig_name(rName),
-					testAccRestAPIDataSourceConfig_name(),
-				),
+				Config: testAccRestAPIDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
@@ -53,10 +50,7 @@ func TestAccAPIGatewayRestAPIDataSource_Endpoint_vpcEndpointIDs(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					testAccRestAPIConfig_vpcEndpointIDs1(rName),
-					testAccRestAPIDataSourceConfig_name(),
-				),
+				Config: testAccRestAPIDataSourceConfig_Endpoint_vpcEndpointIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
@@ -76,10 +70,24 @@ func TestAccAPIGatewayRestAPIDataSource_Endpoint_vpcEndpointIDs(t *testing.T) {
 	})
 }
 
-func testAccRestAPIDataSourceConfig_name() string {
-	return `
+func testAccRestAPIDataSourceConfig_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccRestAPIConfig_name(rName),
+		`
 data "aws_api_gateway_rest_api" "test" {
   name = aws_api_gateway_rest_api.test.name
 }
-`
+`,
+	)
+}
+
+func testAccRestAPIDataSourceConfig_Endpoint_vpcEndpointIDs(rName string) string {
+	return acctest.ConfigCompose(
+		testAccRestAPIConfig_vpcEndpointIDs1(rName),
+		`
+data "aws_api_gateway_rest_api" "test" {
+  name = aws_api_gateway_rest_api.test.name
+}
+`,
+	)
 }
