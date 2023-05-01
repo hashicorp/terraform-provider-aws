@@ -81,26 +81,27 @@ func TestAccVPCLatticeServiceNetworkDataSource_tags(t *testing.T) {
 func testAccServiceNetworkDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`  
 resource "aws_vpclattice_service_network" "test" {
-	name = %[1]q
+  name = %[1]q
 }
 
 data "aws_vpclattice_service_network" "test" {
-	service_network_identifier = aws_vpclattice_service_network.test.id
+  service_network_identifier = aws_vpclattice_service_network.test.id
 }
 `, rName)
 }
 
-func testAccServiceNetworkDataSourceConfig_tags(rName string, tag_key string, tag_value string) string {
+func testAccServiceNetworkDataSourceConfig_tags(rName string, tagKey string, tagValue string) string {
 	return fmt.Sprintf(`
 resource "aws_vpclattice_service_network" "test_tags" {
-	name = %[1]q
-	tags = {
-		%[2]q = %[3]q
-	}
+  name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+  }
 }
 
 data "aws_vpclattice_service_network" "test_tags" {
-	service_network_identifier = aws_vpclattice_service_network.test_tags.id
+  service_network_identifier = aws_vpclattice_service_network.test_tags.id
 }
-`, rName, tag_key, tag_value)
+`, rName, tagKey, tagValue)
 }
