@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
@@ -25,7 +24,6 @@ import (
 // @SDKResource("aws_vpclattice_resource_policy", name="Resource Policy")
 func ResourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
-
 		CreateWithoutTimeout: resourceResourcePolicyPut,
 		ReadWithoutTimeout:   resourceResourcePolicyRead,
 		UpdateWithoutTimeout: resourceResourcePolicyPut,
@@ -33,12 +31,6 @@ func ResourceResourcePolicy() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Minute),
-			Update: schema.DefaultTimeout(30 * time.Minute),
-			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -81,9 +73,8 @@ func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta
 		Policy:      aws.String(policy),
 	}
 
-	log.Printf("[DEBUG] Putting VPC Lattice Resource Policy for resource: %s", resourceArn)
-
 	_, err = conn.PutResourcePolicy(ctx, in)
+
 	if err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameResourcePolicy, d.Get("policy").(string), err)
 	}
@@ -95,9 +86,8 @@ func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
-	resourceArn := d.Id()
 
-	log.Printf("[DEBUG] Reading VPC Lattice Resource Policy for resource: %s", resourceArn)
+	resourceArn := d.Id()
 
 	policy, err := findResourcePolicyByID(ctx, conn, resourceArn)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -130,8 +120,7 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
-	log.Printf("[INFO] Deleting VPCLattice ResourcePolicy %s", d.Id())
-
+	log.Printf("[INFO] Deleting VPCLattice ResourcePolicy: %s", d.Id())
 	_, err := conn.DeleteResourcePolicy(ctx, &vpclattice.DeleteResourcePolicyInput{
 		ResourceArn: aws.String(d.Id()),
 	})

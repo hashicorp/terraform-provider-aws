@@ -51,17 +51,9 @@ The following arguments are required:
 * `resource_arn` - (Required) The ID or Amazon Resource Name (ARN) of the service network or service for which the policy is created.
 * `policy` - (Required) An IAM policy. The policy string in JSON must not contain newlines or blank lines.
 
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
-
 ## Import
 
-VPC Lattice Resource Policy can be imported using the `example_id_arg`, e.g.,
+VPC Lattice Resource Policy can be imported using the `resource_arn`, e.g.,
 
 ```
 $ terraform import aws_vpclattice_resource_policy.example rft-8012925589
