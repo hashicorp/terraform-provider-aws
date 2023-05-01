@@ -16,7 +16,7 @@ Terraform data source for managing an AWS VPC Lattice Auth Policy.
 
 ```terraform
 data "aws_vpclattice_auth_policy" "test" {
-	resource_identifier = aws_vpclattice_auth_policy.test.resource_identifier
+  resource_identifier = aws_vpclattice_auth_policy.test.resource_identifier
 }
 ```
 
