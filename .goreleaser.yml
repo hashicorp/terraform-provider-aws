@@ -1,0 +1,80 @@
+archives:
+  - files:
+      # Ensure only built binary is archived
+      - 'none*'
+    format: zip
+    name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+    rlcp: true
+before:
+  hooks:
+    - 'go mod download'
+builds:
+  -
+    # Binary naming only required for Terraform CLI 0.12
+    binary: '{{ .ProjectName }}_v{{ .Version }}_x5'
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    goos:
+      - darwin
+      - freebsd
+      - linux
+      - openbsd
+      - windows
+    goarch:
+      - '386'
+      - amd64
+      - arm
+      - arm64
+    ignore:
+      - goarch: arm
+        goos: windows
+      - goarch: arm64
+        goos: freebsd
+      - goarch: arm64
+        goos: windows
+      - goarch: arm64
+        goos: openbsd
+    ldflags:
+      - -s -w -X 'github.com/hashicorp/terraform-provider-aws/version.ProviderVersion={{ .Version }}'
+    mod_timestamp: '{{ .CommitTimestamp }}'
+checksum:
+  algorithm: sha256
+  extra_files:
+    - glob: 'terraform-registry-manifest.json'
+      name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
+  name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
+publishers:
+  - checksum: true
+    # Terraform CLI 0.10 - 0.11 perform discovery via HTTP headers on releases.hashicorp.com
+    # For providers which have existed since those CLI versions, exclude
+    # discovery by setting the protocol version headers to 5.
+    env:
+      - HC_RELEASES_HOST={{ .Env.HC_RELEASES_HOST }}
+      - HC_RELEASES_KEY={{ .Env.HC_RELEASES_KEY }}
+    cmd: |
+      hc-releases upload -product {{ .ProjectName }} -version {{ .Version }} -file={{ .ArtifactPath }}={{ .ArtifactName }} -header=x-terraform-protocol-version=5 -header=x-terraform-protocol-versions=5.0
+    extra_files:
+      - glob: 'terraform-registry-manifest.json'
+        name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
+    name: upload
+    signature: true
+release:
+  extra_files:
+    - glob: 'terraform-registry-manifest.json'
+      name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
+  ids:
+    - none
+signs:
+  - args: ["sign", "--dearmor", "--file", "${artifact}", "--out", "${signature}"]
+    artifacts: checksum
+    cmd: signore
+    signature: ${artifact}.sig
+  - args: ["sign", "--dearmor", "--file", "${artifact}", "--out", "${signature}"]
+    artifacts: checksum
+    cmd: signore
+    id: key-id
+    signature: ${artifact}.72D7468F.sig
+snapshot:
+  name_template: "{{ .Tag }}-next"

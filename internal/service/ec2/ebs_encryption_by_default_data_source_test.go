@@ -1,6 +1,7 @@
 package ec2_test
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"testing"
@@ -14,24 +15,25 @@ import (
 )
 
 func TestAccEC2EBSEncryptionByDefaultDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSEncryptionByDefaultDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSEncryptionByDefaultDataSource("data.aws_ebs_encryption_by_default.current"),
+					testAccCheckEBSEncryptionByDefaultDataSource(ctx, "data.aws_ebs_encryption_by_default.current"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckEBSEncryptionByDefaultDataSource(n string) resource.TestCheckFunc {
+func testAccCheckEBSEncryptionByDefaultDataSource(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -42,7 +44,7 @@ func testAccCheckEBSEncryptionByDefaultDataSource(n string) resource.TestCheckFu
 			return fmt.Errorf("No ID is set")
 		}
 
-		actual, err := conn.GetEbsEncryptionByDefault(&ec2.GetEbsEncryptionByDefaultInput{})
+		actual, err := conn.GetEbsEncryptionByDefaultWithContext(ctx, &ec2.GetEbsEncryptionByDefaultInput{})
 		if err != nil {
 			return fmt.Errorf("Error reading default EBS encryption toggle: %q", err)
 		}

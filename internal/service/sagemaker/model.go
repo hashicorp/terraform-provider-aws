@@ -1,31 +1,37 @@
 package sagemaker
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_sagemaker_model", name="Model")
+// @Tags(identifierAttribute="arn")
 func ResourceModel() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceModelCreate,
-		Read:   resourceModelRead,
-		Update: resourceModelUpdate,
-		Delete: resourceModelDelete,
+		CreateWithoutTimeout: resourceModelCreate,
+		ReadWithoutTimeout:   resourceModelRead,
+		UpdateWithoutTimeout: resourceModelUpdate,
+		DeleteWithoutTimeout: resourceModelDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -208,8 +214,8 @@ func ResourceModel() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_config": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -238,20 +244,20 @@ func ResourceModel() *schema.Resource {
 	}
 }
 
-func resourceModelCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	var name string
 	if v, ok := d.GetOk("name"); ok {
 		name = v.(string)
 	} else {
-		name = resource.UniqueId()
+		name = id.UniqueId()
 	}
 
 	createOpts := &sagemaker.CreateModelInput{
 		ModelName: aws.String(name),
+		Tags:      GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("primary_container"); ok {
@@ -264,10 +270,6 @@ func resourceModelCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("execution_role_arn"); ok {
 		createOpts.ExecutionRoleArn = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		createOpts.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("vpc_config"); ok {
@@ -283,16 +285,16 @@ func resourceModelCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] SageMaker model create config: %#v", *createOpts)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
-		return conn.CreateModel(createOpts)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
+		return conn.CreateModelWithContext(ctx, createOpts)
 	}, "ValidationException")
 
 	if err != nil {
-		return fmt.Errorf("creating SageMaker model: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker model: %s", err)
 	}
 	d.SetId(name)
 
-	return resourceModelRead(d, meta)
+	return append(diags, resourceModelRead(ctx, d, meta)...)
 }
 
 func expandVPCConfigRequest(l []interface{}) *sagemaker.VpcConfig {
@@ -308,23 +310,22 @@ func expandVPCConfigRequest(l []interface{}) *sagemaker.VpcConfig {
 	}
 }
 
-func resourceModelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	request := &sagemaker.DescribeModelInput{
 		ModelName: aws.String(d.Id()),
 	}
 
-	model, err := conn.DescribeModel(request)
+	model, err := conn.DescribeModelWithContext(ctx, request)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, "ValidationException") {
 			log.Printf("[INFO] unable to find the sagemaker model resource and therefore it is removed from the state: %s", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return fmt.Errorf("reading SageMaker model %s: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker model %s: %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(model.ModelArn)
@@ -334,38 +335,22 @@ func resourceModelRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("enable_network_isolation", model.EnableNetworkIsolation)
 
 	if err := d.Set("primary_container", flattenContainer(model.PrimaryContainer)); err != nil {
-		return fmt.Errorf("setting primary_container: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting primary_container: %s", err)
 	}
 
 	if err := d.Set("container", flattenContainers(model.Containers)); err != nil {
-		return fmt.Errorf("setting container: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting container: %s", err)
 	}
 
 	if err := d.Set("vpc_config", flattenVPCConfigResponse(model.VpcConfig)); err != nil {
-		return fmt.Errorf("setting vpc_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
 
 	if err := d.Set("inference_execution_config", flattenModelInferenceExecutionConfig(model.InferenceExecutionConfig)); err != nil {
-		return fmt.Errorf("setting inference_execution_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting inference_execution_config: %s", err)
 	}
 
-	tags, err := ListTags(conn, arn)
-	if err != nil {
-		return fmt.Errorf("listing tags for SageMaker Model (%s): %w", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
 func flattenVPCConfigResponse(vpcConfig *sagemaker.VpcConfig) []map[string]interface{} {
@@ -381,46 +366,41 @@ func flattenVPCConfigResponse(vpcConfig *sagemaker.VpcConfig) []map[string]inter
 	return []map[string]interface{}{m}
 }
 
-func resourceModelUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceModelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	// Tags only.
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating SageMaker Model (%s) tags: %w", d.Id(), err)
-		}
-	}
-
-	return resourceModelRead(d, meta)
+	return append(diags, resourceModelRead(ctx, d, meta)...)
 }
 
-func resourceModelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceModelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	deleteOpts := &sagemaker.DeleteModelInput{
 		ModelName: aws.String(d.Id()),
 	}
 	log.Printf("[INFO] Deleting SageMaker model: %s", d.Id())
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteModel(deleteOpts)
+	err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
+		_, err := conn.DeleteModelWithContext(ctx, deleteOpts)
 		if err == nil {
 			return nil
 		}
 
 		if tfawserr.ErrCodeEquals(err, "ResourceNotFound") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
-		return resource.NonRetryableError(err)
+		return retry.NonRetryableError(err)
 	})
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteModel(deleteOpts)
+		_, err = conn.DeleteModelWithContext(ctx, deleteOpts)
 	}
 	if err != nil {
-		return fmt.Errorf("Error deleting sagemaker model: %w", err)
+		return sdkdiag.AppendErrorf(diags, "deleting sagemaker model: %s", err)
 	}
-	return nil
+	return diags
 }
 
 func expandContainer(m map[string]interface{}) *sagemaker.ContainerDefinition {

@@ -11,12 +11,13 @@ import (
 )
 
 func TestAccECSServiceDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ecs_service.test"
 	resourceName := "aws_ecs_service.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -29,6 +30,7 @@ func TestAccECSServiceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "scheduling_strategy", dataSourceName, "scheduling_strategy"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "service_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "task_definition", dataSourceName, "task_definition"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags", dataSourceName, "tags"),
 				),
 			},
 		},
@@ -63,6 +65,9 @@ resource "aws_ecs_service" "test" {
   cluster         = aws_ecs_cluster.test.id
   task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 1
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_ecs_service" "test" {

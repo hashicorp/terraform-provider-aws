@@ -1,0 +1,19 @@
+```release-note:enhancement
+data-source/aws_cloudtrail_service_account: Add service account ID for `ap-southeast-4` AWS Region
+```
+
+```release-note:enhancement
+data-source/aws_elb_hosted_zone_id: Add hosted zone ID for `ap-southeast-4` AWS Region
+```
+
+```release-note:enhancement
+data-source/aws_lb_hosted_zone_id: Add hosted zone IDs for `ap-southeast-4` AWS Region
+```
+
+```release-note:enhancement
+data-source/aws_s3_bucket: Add hosted zone ID for `ap-southeast-4` AWS Region
+```
+
+```release-note:enhancement
+data-source/aws_s3_bucket: Add hosted zone ID for `ap-south-2` AWS Region
+```

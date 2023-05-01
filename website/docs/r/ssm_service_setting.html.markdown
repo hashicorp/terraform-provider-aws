@@ -14,8 +14,8 @@ This setting defines how a user interacts with or uses a service or a feature of
 
 ```terraform
 resource "aws_ssm_service_setting" "test_setting" {
-  service_id    = "arn:aws:ssm:us-east-1:123456789012:servicesetting/ssm/parameter-store/high-throughput-enabled"
-  service_value = "true"
+  setting_id    = "arn:aws:ssm:us-east-1:123456789012:servicesetting/ssm/parameter-store/high-throughput-enabled"
+  setting_value = "true"
 }
 ```
 
@@ -23,8 +23,8 @@ resource "aws_ssm_service_setting" "test_setting" {
 
 The following arguments are supported:
 
-* `service_id` - (Required) ID of the service setting.
-* `service_value` - (Required) Value of the service setting.
+* `setting_id` - (Required) ID of the service setting.
+* `setting_value` - (Required) Value of the service setting.
 
 ## Attributes Reference
 

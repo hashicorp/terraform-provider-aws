@@ -10,15 +10,18 @@ import (
 	"github.com/aws/aws-sdk-go/service/emrcontainers"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_emrcontainers_virtual_cluster", name="Virtual Cluster")
+// @Tags(identifierAttribute="arn")
 func ResourceVirtualCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVirtualClusterCreate,
@@ -27,7 +30,7 @@ func ResourceVirtualCluster() *schema.Resource {
 		DeleteWithoutTimeout: resourceVirtualClusterDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -96,8 +99,8 @@ func ResourceVirtualCluster() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`[.\-_/#A-Za-z0-9]+`), "must contain only alphanumeric, hyphen, underscore, dot and # characters"),
 				),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -105,24 +108,18 @@ func ResourceVirtualCluster() *schema.Resource {
 }
 
 func resourceVirtualClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EMRContainersConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).EMRContainersConn()
 
 	name := d.Get("name").(string)
 	input := &emrcontainers.CreateVirtualClusterInput{
 		Name: aws.String(name),
+		Tags: GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("container_provider"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.ContainerProvider = expandContainerProvider(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[INFO] Creating EMR Containers Virtual Cluster: %s", input)
 	output, err := conn.CreateVirtualClusterWithContext(ctx, input)
 
 	if err != nil {
@@ -135,9 +132,7 @@ func resourceVirtualClusterCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EMRContainersConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EMRContainersConn()
 
 	vc, err := FindVirtualClusterByID(ctx, conn, d.Id())
 
@@ -161,36 +156,18 @@ func resourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, met
 	}
 	d.Set("name", vc.Name)
 
-	tags := KeyValueTags(vc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, vc.Tags)
 
 	return nil
 }
 
 func resourceVirtualClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EMRContainersConn
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating EMR Containers Virtual Cluster (%s) tags: %s", d.Id(), err)
-		}
-	}
-
+	// Tags only.
 	return resourceVirtualClusterRead(ctx, d, meta)
 }
 
 func resourceVirtualClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EMRContainersConn
+	conn := meta.(*conns.AWSClient).EMRContainersConn()
 
 	log.Printf("[INFO] Deleting EMR Containers Virtual Cluster: %s", d.Id())
 	_, err := conn.DeleteVirtualClusterWithContext(ctx, &emrcontainers.DeleteVirtualClusterInput{
@@ -316,7 +293,7 @@ func findVirtualCluster(ctx context.Context, conn *emrcontainers.EMRContainers, 
 	output, err := conn.DescribeVirtualClusterWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, emrcontainers.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -345,7 +322,7 @@ func FindVirtualClusterByID(ctx context.Context, conn *emrcontainers.EMRContaine
 	}
 
 	if state := aws.StringValue(output.State); state == emrcontainers.VirtualClusterStateTerminated {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     state,
 			LastRequest: input,
 		}
@@ -354,7 +331,7 @@ func FindVirtualClusterByID(ctx context.Context, conn *emrcontainers.EMRContaine
 	return output, nil
 }
 
-func statusVirtualCluster(ctx context.Context, conn *emrcontainers.EMRContainers, id string) resource.StateRefreshFunc {
+func statusVirtualCluster(ctx context.Context, conn *emrcontainers.EMRContainers, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindVirtualClusterByID(ctx, conn, id)
 
@@ -371,7 +348,7 @@ func statusVirtualCluster(ctx context.Context, conn *emrcontainers.EMRContainers
 }
 
 func waitVirtualClusterDeleted(ctx context.Context, conn *emrcontainers.EMRContainers, id string, timeout time.Duration) (*emrcontainers.VirtualCluster, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{emrcontainers.VirtualClusterStateTerminating},
 		Target:  []string{},
 		Refresh: statusVirtualCluster(ctx, conn, id),

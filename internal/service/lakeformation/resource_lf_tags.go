@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lakeformation"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,14 +24,15 @@ import (
 )
 
 const (
-	resourceLFTags = "Resource LF Tags"
+	ResNameLFTags = "Resource LF Tags"
 )
 
+// @SDKResource("aws_lakeformation_resource_lf_tags")
 func ResourceResourceLFTags() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceResourceLFTagsCreate,
-		ReadContext:   resourceResourceLFTagsRead,
-		DeleteContext: resourceResourceLFTagsDelete,
+		CreateWithoutTimeout: resourceResourceLFTagsCreate,
+		ReadWithoutTimeout:   resourceResourceLFTagsRead,
+		DeleteWithoutTimeout: resourceResourceLFTagsDelete,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(20 * time.Minute),
@@ -222,7 +223,7 @@ func ResourceResourceLFTags() *schema.Resource {
 }
 
 func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 
 	input := &lakeformation.AddLFTagsToResourceInput{
 		Resource: &lakeformation.Resource{},
@@ -249,28 +250,28 @@ func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	var output *lakeformation.AddLFTagsToResourceOutput
-	err := resource.Retry(IAMPropagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, IAMPropagationTimeout, func() *retry.RetryError {
 		var err error
-		output, err = conn.AddLFTagsToResource(input)
+		output, err = conn.AddLFTagsToResourceWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeConcurrentModificationException) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not authorized") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = conn.AddLFTagsToResource(input)
+		output, err = conn.AddLFTagsToResourceWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return names.DiagError(names.LakeFormation, names.ErrActionCreating, resourceLFTags, input.String(), err)
+		return create.DiagError(names.LakeFormation, create.ErrActionCreating, ResNameLFTags, input.String(), err)
 	}
 
 	diags := diag.Diagnostics{}
@@ -281,11 +282,11 @@ func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, m
 				continue
 			}
 
-			diags = names.AddWarning(
+			diags = create.AddWarning(
 				diags,
 				names.LakeFormation,
-				names.ErrActionCreating,
-				resourceLFTags,
+				create.ErrActionCreating,
+				ResNameLFTags,
 				fmt.Sprintf("catalog id:%s, tag key:%s, values:%+v", aws.StringValue(v.LFTag.CatalogId), aws.StringValue(v.LFTag.TagKey), aws.StringValueSlice(v.LFTag.TagValues)),
 				awserr.New(aws.StringValue(v.Error.ErrorCode), aws.StringValue(v.Error.ErrorMessage), nil),
 			)
@@ -295,7 +296,7 @@ func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, m
 			return append(diags,
 				diag.Diagnostic{
 					Severity: diag.Error,
-					Summary:  names.ProblemStandardMessage(names.LakeFormation, names.ErrActionCreating, resourceLFTags, "", fmt.Errorf("attempted to add %d tags, %d failures", len(input.LFTags), len(diags))),
+					Summary:  create.ProblemStandardMessage(names.LakeFormation, create.ErrActionCreating, ResNameLFTags, "", fmt.Errorf("attempted to add %d tags, %d failures", len(input.LFTags), len(diags))),
 				},
 			)
 		}
@@ -307,7 +308,7 @@ func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 
 	input := &lakeformation.GetResourceLFTagsInput{
 		Resource:           &lakeformation.Resource{},
@@ -330,15 +331,15 @@ func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, met
 		input.Resource.TableWithColumns = expandTableColumnsResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	output, err := conn.GetResourceLFTags(input)
+	output, err := conn.GetResourceLFTagsWithContext(ctx, input)
 
 	if err != nil {
-		return names.DiagError(names.LakeFormation, names.ErrActionReading, resourceLFTags, d.Id(), err)
+		return create.DiagError(names.LakeFormation, create.ErrActionReading, ResNameLFTags, d.Id(), err)
 	}
 
 	if len(output.LFTagOnDatabase) > 0 {
 		if err := d.Set("lf_tag", flattenLFTagPairs(output.LFTagOnDatabase)); err != nil {
-			return names.DiagError(names.LakeFormation, names.ErrActionSetting, resourceLFTags, d.Id(), err)
+			return create.DiagError(names.LakeFormation, create.ErrActionSetting, ResNameLFTags, d.Id(), err)
 		}
 	}
 
@@ -349,14 +350,14 @@ func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, met
 			}
 
 			if err := d.Set("lf_tag", flattenLFTagPairs(v.LFTags)); err != nil {
-				return names.DiagError(names.LakeFormation, names.ErrActionSetting, resourceLFTags, d.Id(), err)
+				return create.DiagError(names.LakeFormation, create.ErrActionSetting, ResNameLFTags, d.Id(), err)
 			}
 		}
 	}
 
 	if len(output.LFTagsOnTable) > 0 {
 		if err := d.Set("lf_tag", flattenLFTagPairs(output.LFTagsOnTable)); err != nil {
-			return names.DiagError(names.LakeFormation, names.ErrActionSetting, resourceLFTags, d.Id(), err)
+			return create.DiagError(names.LakeFormation, create.ErrActionSetting, ResNameLFTags, d.Id(), err)
 		}
 	}
 
@@ -364,7 +365,7 @@ func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceResourceLFTagsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 
 	input := &lakeformation.RemoveLFTagsFromResourceInput{
 		Resource: &lakeformation.Resource{},
@@ -396,28 +397,28 @@ func resourceResourceLFTagsDelete(ctx context.Context, d *schema.ResourceData, m
 		return nil
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
 		var err error
-		_, err = conn.RemoveLFTagsFromResource(input)
+		_, err = conn.RemoveLFTagsFromResourceWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeConcurrentModificationException) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not authorized") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(fmt.Errorf("unable to revoke Lake Formation Permissions: %w", err))
+			return retry.NonRetryableError(fmt.Errorf("unable to revoke Lake Formation Permissions: %w", err))
 		}
 		return nil
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.RemoveLFTagsFromResource(input)
+		_, err = conn.RemoveLFTagsFromResourceWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return names.DiagError(names.LakeFormation, names.ErrActionDeleting, resourceLFTags, d.Id(), err)
+		return create.DiagError(names.LakeFormation, create.ErrActionDeleting, ResNameLFTags, d.Id(), err)
 	}
 
 	return nil

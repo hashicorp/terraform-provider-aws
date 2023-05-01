@@ -20,7 +20,7 @@ data "aws_qldb_ledger" "example" {
 
 ## Argument Reference
 
-* `name` - (Required) The friendly name of the ledger to match.
+* `name` - (Required) Friendly name of the ledger to match.
 
 ## Attributes Reference
 

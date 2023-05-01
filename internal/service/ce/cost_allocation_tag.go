@@ -9,16 +9,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ce_cost_allocation_tag")
 func ResourceCostAllocationTag() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceCostAllocationTagUpdate,
-		ReadContext:   resourceCostAllocationTagRead,
-		UpdateContext: resourceCostAllocationTagUpdate,
-		DeleteContext: resourceCostAllocationTagDelete,
+		CreateWithoutTimeout: resourceCostAllocationTagUpdate,
+		ReadWithoutTimeout:   resourceCostAllocationTagRead,
+		UpdateWithoutTimeout: resourceCostAllocationTagUpdate,
+		DeleteWithoutTimeout: resourceCostAllocationTagDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -42,18 +44,18 @@ func ResourceCostAllocationTag() *schema.Resource {
 }
 
 func resourceCostAllocationTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn
+	conn := meta.(*conns.AWSClient).CEConn()
 
 	costAllocTag, err := FindCostAllocationTagByKey(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		names.LogNotFoundRemoveState(names.CE, names.ErrActionReading, ResCostAllocationTag, d.Id())
+		create.LogNotFoundRemoveState(names.CE, create.ErrActionReading, ResNameCostAllocationTag, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.DiagError(names.CE, names.ErrActionReading, ResCostAllocationTag, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionReading, ResNameCostAllocationTag, d.Id(), err)
 	}
 
 	d.Set("tag_key", costAllocTag.TagKey)
@@ -78,7 +80,7 @@ func resourceCostAllocationTagDelete(ctx context.Context, d *schema.ResourceData
 }
 
 func updateTagStatus(ctx context.Context, d *schema.ResourceData, meta interface{}, delete bool) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn
+	conn := meta.(*conns.AWSClient).CEConn()
 
 	key := d.Get("tag_key").(string)
 	tagStatus := &costexplorer.CostAllocationTagStatusEntry{
@@ -97,7 +99,7 @@ func updateTagStatus(ctx context.Context, d *schema.ResourceData, meta interface
 	_, err := conn.UpdateCostAllocationTagsStatusWithContext(ctx, input)
 
 	if err != nil {
-		return names.DiagError(names.CE, names.ErrActionUpdating, ResCostAllocationTag, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionUpdating, ResNameCostAllocationTag, d.Id(), err)
 	}
 
 	return nil

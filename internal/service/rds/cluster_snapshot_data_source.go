@@ -1,26 +1,28 @@
 package rds
 
 import (
-	"errors"
-	"fmt"
+	"context"
 	"log"
 	"sort"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_db_cluster_snapshot")
 func DataSourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceClusterSnapshotRead,
+		ReadWithoutTimeout: dataSourceClusterSnapshotRead,
 
 		Schema: map[string]*schema.Schema{
-			//selection criteria
+			// selection criteria
 			"db_cluster_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -53,7 +55,7 @@ func DataSourceClusterSnapshot() *schema.Resource {
 				Default:  false,
 			},
 
-			//Computed values returned
+			// Computed values returned
 			"allocated_storage": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -112,15 +114,16 @@ func DataSourceClusterSnapshot() *schema.Resource {
 	}
 }
 
-func dataSourceClusterSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterIdentifier, clusterIdentifierOk := d.GetOk("db_cluster_identifier")
 	snapshotIdentifier, snapshotIdentifierOk := d.GetOk("db_cluster_snapshot_identifier")
 
 	if !clusterIdentifierOk && !snapshotIdentifierOk {
-		return errors.New("One of db_cluster_snapshot_identifier or db_cluster_identifier must be assigned")
+		return sdkdiag.AppendErrorf(diags, "One of db_cluster_snapshot_identifier or db_cluster_identifier must be assigned")
 	}
 
 	params := &rds.DescribeDBClusterSnapshotsInput{
@@ -138,13 +141,13 @@ func dataSourceClusterSnapshotRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	log.Printf("[DEBUG] Reading DB Cluster Snapshot: %s", params)
-	resp, err := conn.DescribeDBClusterSnapshots(params)
+	resp, err := conn.DescribeDBClusterSnapshotsWithContext(ctx, params)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster Snapshot (%s): %s", d.Id(), err)
 	}
 
 	if len(resp.DBClusterSnapshots) < 1 {
-		return errors.New("Your query returned no results. Please change your search criteria and try again.")
+		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
 	}
 
 	var snapshot *rds.DBClusterSnapshot
@@ -154,7 +157,7 @@ func dataSourceClusterSnapshotRead(d *schema.ResourceData, meta interface{}) err
 		if recent {
 			snapshot = mostRecentClusterSnapshot(resp.DBClusterSnapshots)
 		} else {
-			return errors.New("Your query returned more than one result. Please try a more specific search criteria.")
+			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria.")
 		}
 	} else {
 		snapshot = resp.DBClusterSnapshots[0]
@@ -163,7 +166,7 @@ func dataSourceClusterSnapshotRead(d *schema.ResourceData, meta interface{}) err
 	d.SetId(aws.StringValue(snapshot.DBClusterSnapshotIdentifier))
 	d.Set("allocated_storage", snapshot.AllocatedStorage)
 	if err := d.Set("availability_zones", flex.FlattenStringList(snapshot.AvailabilityZones)); err != nil {
-		return fmt.Errorf("error setting availability_zones: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting availability_zones: %s", err)
 	}
 	d.Set("db_cluster_identifier", snapshot.DBClusterIdentifier)
 	d.Set("db_cluster_snapshot_arn", snapshot.DBClusterSnapshotArn)
@@ -182,17 +185,16 @@ func dataSourceClusterSnapshotRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("storage_encrypted", snapshot.StorageEncrypted)
 	d.Set("vpc_id", snapshot.VpcId)
 
-	tags, err := ListTags(conn, d.Get("db_cluster_snapshot_arn").(string))
-
+	tags, err := ListTags(ctx, conn, d.Get("db_cluster_snapshot_arn").(string))
 	if err != nil {
-		return fmt.Errorf("error listing tags for RDS DB Cluster Snapshot (%s): %w", d.Get("db_cluster_snapshot_arn").(string), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for RDS DB Cluster Snapshot (%s): %s", d.Get("db_cluster_snapshot_arn").(string), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 type rdsClusterSnapshotSort []*rds.DBClusterSnapshot
