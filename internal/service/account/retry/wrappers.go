@@ -29,23 +29,35 @@ func (f PredicateFunc[T]) Invoke(t T, err error) (bool, error) {
 	return f(t, err)
 }
 
-// defaultPredicate short-circuits a retry loop if the operation returns any error.
-func defaultPredicate[T any](t T, err error) (bool, error) {
-	return err != nil, err
-}
-
 type operation[T any] struct {
-	op        Op[T]
-	predicate Predicate[T]
+	op                Op[T]
+	predicate         Predicate[T]
+	transformRunError func(error) error
 }
 
 // Operation returns a new wrapper on top of the specified function.
 func Operation[T any](op OpFunc[T]) operation[T] {
-	return operation[T]{op: op, predicate: PredicateFunc[T](defaultPredicate[T])}
+	return operation[T]{
+		op: op,
+		// The default predicate short-circuits a retry loop if the operation returns any error.
+		predicate: PredicateFunc[T](func(t T, err error) (bool, error) {
+			return err != nil, err
+		}),
+		// The default error transformer does nothing.
+		transformRunError: func(err error) error { return err },
+	}
+}
+
+func (o operation[T]) withPredicate(predicate Predicate[T]) operation[T] {
+	return operation[T]{op: o.op, predicate: predicate, transformRunError: o.transformRunError}
+}
+
+func (o operation[T]) withTransformRunError(f func(error) error) operation[T] {
+	return operation[T]{op: o.op, predicate: o.predicate, transformRunError: f}
 }
 
 func (o operation[T]) If(predicate PredicateFunc[T]) operation[T] {
-	return operation[T]{op: o.op, predicate: predicate}
+	return o.withPredicate(predicate)
 }
 
 // UntilFoundN retries an operation if it returns a retry.NotFoundError.
@@ -76,38 +88,10 @@ func (o operation[T]) UntilFoundN(continuousTargetOccurence int) operation[T] {
 		return false, err
 	}
 
-	return operation[T]{op: o.op, predicate: PredicateFunc[T](predicate)}
+	return o.If(predicate)
 }
 
-// Run retries an operation until the timeout elapses or predicate indicates otherwise.
-func (o operation[T]) Run(ctx context.Context, timeout time.Duration) (T, error) {
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
-	for r := Begin(); r.Continue(ctx); {
-		t, err := o.op.Invoke(ctx)
-
-		if retry, err := o.predicate.Invoke(t, err); !retry {
-			return t, err
-		}
-	}
-
-	var t T
-	return t, ctx.Err()
-}
-
-type transformErrorOperation[T any] struct {
-	inner     operation[T]
-	transform func(error) error
-}
-
-func (o transformErrorOperation[T]) Run(ctx context.Context, timeout time.Duration) (T, error) {
-	t, err := o.inner.Run(ctx, timeout)
-
-	return t, o.transform(err)
-}
-
-func (o operation[T]) UntilNotFound() transformErrorOperation[T] {
+func (o operation[T]) UntilNotFound() operation[T] {
 	predicate := func(_ T, err error) (bool, error) {
 		if err == nil {
 			return true, nil
@@ -128,5 +112,22 @@ func (o operation[T]) UntilNotFound() transformErrorOperation[T] {
 		return err
 	}
 
-	return transformErrorOperation[T]{inner: operation[T]{op: o.op, predicate: PredicateFunc[T](predicate)}, transform: transform}
+	return o.If(predicate).withTransformRunError(transform)
+}
+
+// Run retries an operation until the timeout elapses or predicate indicates otherwise.
+func (o operation[T]) Run(ctx context.Context, timeout time.Duration) (T, error) {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	for r := Begin(); r.Continue(ctx); {
+		t, err := o.op.Invoke(ctx)
+
+		if retry, err := o.predicate.Invoke(t, err); !retry {
+			return t, err
+		}
+	}
+
+	var t T
+	return t, o.transformRunError(ctx.Err())
 }
