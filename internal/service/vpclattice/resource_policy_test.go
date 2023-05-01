@@ -153,7 +153,7 @@ resource "aws_vpclattice_resource_policy" "test" {
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [{
-      Sid = "test-pol-principals-6"
+      Sid    = "test-pol-principals-6"
       Effect = "Allow"
       Principal = {
         "AWS" = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
@@ -163,7 +163,7 @@ resource "aws_vpclattice_resource_policy" "test" {
         "vpc-lattice:CreateServiceNetworkServiceAssociation",
         "vpc-lattice:GetServiceNetwork"
       ]
-      Resource =aws_vpclattice_service_network.test.arn
+      Resource = aws_vpclattice_service_network.test.arn
     }]
   })
 }
