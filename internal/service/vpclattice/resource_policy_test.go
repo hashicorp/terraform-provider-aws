@@ -107,7 +107,6 @@ func testAccCheckResourcePolicyDestroy(ctx context.Context) resource.TestCheckFu
 			if policy != nil {
 				return create.Error(names.VPCLattice, create.ErrActionCheckingDestroyed, tfvpclattice.ResNameResourcePolicy, rs.Primary.ID, errors.New("Resource Policy not destroyed"))
 			}
-
 		}
 
 		return nil
