@@ -73,7 +73,6 @@ const (
 )
 
 func resourceAccessLogSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
 	in := &vpclattice.CreateAccessLogSubscriptionInput{
@@ -119,7 +118,6 @@ func resourceAccessLogSubscriptionUpdate(ctx context.Context, d *schema.Resource
 }
 
 func resourceAccessLogSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
 	log.Printf("[INFO] Deleting VPCLattice AccessLogSubscription %s", d.Id())
