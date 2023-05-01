@@ -75,9 +75,9 @@ project {
             text("env.EC2_SECURITY_GROUP_RULES_PER_GROUP_LIMIT", securityGroupRulesPerGroup)
         }
 
-        val branchName = DslContext.getParameter("branch_name", "")
-        if (branchName != "") {
-            text("BRANCH_NAME", branchName, display = ParameterDisplay.HIDDEN)
+        val brancRef = DslContext.getParameter("branch_name", "")
+        if (brancRef != "") {
+            text("BRANCH_NAME", brancRef, display = ParameterDisplay.HIDDEN)
         }
 
         if (tfAccAssumeRoleArn != "") {
@@ -472,11 +472,13 @@ object Sweeper : BuildType({
         }
 
         if (notifier != null) {
+            val branchRef = DslContext.getParameter("branch_name", "")
             notifications {
                 notifierSettings = slackNotifier {
                     connection = notifier.connectionID
                     sendTo = notifier.destination
                     messageFormat = verboseMessageFormat {
+                        addBranch = branchRef != "refs/heads/main"
                         addStatusText = true
                     }
                 }
