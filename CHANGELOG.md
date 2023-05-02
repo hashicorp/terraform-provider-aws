@@ -1,18 +1,37 @@
 ## 4.66.0 (Unreleased)
 
+BREAKING CHANGES:
+
+* resource/aws_instance: The `cpu_core_count` argument is deprecated in favor of the `cpu_options` block. The `cpu_options` block can set `core_count` ([#31035](https://github.com/hashicorp/terraform-provider-aws/issues/31035))
+* resource/aws_instance: The `cpu_threads_per_core` argument is deprecated in favor of the `cpu_options` block. The `cpu_options` block can set `threads_per_core` ([#31035](https://github.com/hashicorp/terraform-provider-aws/issues/31035))
+
 FEATURES:
 
 * **New Data Source:** `aws_dms_replication_instance` ([#15406](https://github.com/hashicorp/terraform-provider-aws/issues/15406))
+* **New Data Source:** `aws_vpclattice_auth_policy` ([#30898](https://github.com/hashicorp/terraform-provider-aws/issues/30898))
+* **New Data Source:** `aws_vpclattice_service_network` ([#30904](https://github.com/hashicorp/terraform-provider-aws/issues/30904))
+* **New Resource:** `aws_account_primary_contact` ([#26123](https://github.com/hashicorp/terraform-provider-aws/issues/26123))
 * **New Resource:** `aws_directory_service_trust` ([#31037](https://github.com/hashicorp/terraform-provider-aws/issues/31037))
+* **New Resource:** `aws_vpclattice_access_log_subscription` ([#30896](https://github.com/hashicorp/terraform-provider-aws/issues/30896))
+* **New Resource:** `aws_vpclattice_auth_policy` ([#30891](https://github.com/hashicorp/terraform-provider-aws/issues/30891))
+* **New Resource:** `aws_vpclattice_resource_policy` ([#30900](https://github.com/hashicorp/terraform-provider-aws/issues/30900))
 
 ENHANCEMENTS:
 
+* datasource/aws_launch_template: Add `amd_sev_snp` attribute ([#31035](https://github.com/hashicorp/terraform-provider-aws/issues/31035))
+* resource/aws_appautoscaling_policy: Add `metrics` to the `target_tracking_scaling_policy_configuration.customized_metric_specification` configuration block in support of [metric math](https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-target-tracking-metric-math.html) ([#30172](https://github.com/hashicorp/terraform-provider-aws/issues/30172))
+* resource/aws_appautoscaling_target: Add `arn` attribute ([#30172](https://github.com/hashicorp/terraform-provider-aws/issues/30172))
+* resource/aws_appautoscaling_target: Add `tags` argument and `tags_all` attribute to support resource tagging ([#30172](https://github.com/hashicorp/terraform-provider-aws/issues/30172))
 * resource/aws_directory_service_conditional_forwarder: Add plan time validation for `remote_domain_name` ([#31037](https://github.com/hashicorp/terraform-provider-aws/issues/31037))
 * resource/aws_directory_service_directory: Correct plan time validation for `remote_domain_name` ([#31037](https://github.com/hashicorp/terraform-provider-aws/issues/31037))
+* resource/aws_instance: Add `amd_sev_snp` argument ([#31035](https://github.com/hashicorp/terraform-provider-aws/issues/31035))
+* resource/aws_instance: Add `cpu_options` argument ([#31035](https://github.com/hashicorp/terraform-provider-aws/issues/31035))
 * resource/aws_lambda_function: Add support for `java17` `runtime` value ([#31027](https://github.com/hashicorp/terraform-provider-aws/issues/31027))
 * resource/aws_lambda_layer_version: Add support for `java17` `compatible_runtimes` value ([#31028](https://github.com/hashicorp/terraform-provider-aws/issues/31028))
+* resource/aws_launch_template: Add `amd_sev_snp` argument ([#31035](https://github.com/hashicorp/terraform-provider-aws/issues/31035))
 * resource/aws_medialive_channel: Added H265 support. ([#30908](https://github.com/hashicorp/terraform-provider-aws/issues/30908))
 * resource/aws_sagemaker_domain: Add `domain_settings.r_studio_server_pro_domain_settings`, `default_user_settings.canvas_app_settings.model_register_settings`, and `default_user_settings.r_studio_server_pro_app_settings` arguments ([#31031](https://github.com/hashicorp/terraform-provider-aws/issues/31031))
+* resource/aws_servicecatalog_provisioning_artifact: Add `provisioning_artifact_id` attribute ([#31086](https://github.com/hashicorp/terraform-provider-aws/issues/31086))
 
 BUG FIXES:
 
@@ -21,6 +40,7 @@ BUG FIXES:
 * resource/aws_inspector2_enabler: Correctly supports multiple accounts ([#31038](https://github.com/hashicorp/terraform-provider-aws/issues/31038))
 * resource/aws_inspector2_enabler: No longer calls `Disable` API for status checking ([#31038](https://github.com/hashicorp/terraform-provider-aws/issues/31038))
 * resource/aws_rds_cluster_instance: Consider `delete-precheck` a valid pending state for resource deletion ([#31047](https://github.com/hashicorp/terraform-provider-aws/issues/31047))
+* resource/aws_servicecatalog_provisioned_product: Fix `product_name` update handling ([#31094](https://github.com/hashicorp/terraform-provider-aws/issues/31094))
 
 ## 4.65.0 (April 27, 2023)
 
