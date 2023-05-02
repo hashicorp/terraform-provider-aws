@@ -178,6 +178,9 @@ data "aws_networkfirewall_firewall_policy" "test" {
 
 func testAccFirewallPolicyDataSourceConfig_withOverriddenManagedRuleGroup(rName string) string {
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_networkfirewall_firewall_policy" "test" {
   name = %[1]q
 
@@ -185,9 +188,10 @@ resource "aws_networkfirewall_firewall_policy" "test" {
     stateless_default_actions          = ["aws:forward_to_sfe"]
     stateless_fragment_default_actions = ["aws:forward_to_sfe"]
 
-    # Managed rule group required for override block
+    # Managed rule group required for override block.
     stateful_rule_group_reference {
-      resource_arn = "arn:aws:network-firewall:eu-west-1:aws-managed:stateful-rulegroup/MalwareDomainsActionOrder"
+      resource_arn = "arn:${data.aws_partition.current.partition}:network-firewall:${data.aws_region.current.name}:aws-managed:stateful-rulegroup/MalwareDomainsActionOrder"
+
       override {
         action = "DROP_TO_ALERT"
       }
