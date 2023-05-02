@@ -7,13 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
+	"github.com/aws/aws-sdk-go/service/eventbridge/eventbridgeiface"
 )
 
-func listEventBusesPages(conn *eventbridge.EventBridge, input *eventbridge.ListEventBusesInput, fn func(*eventbridge.ListEventBusesOutput, bool) bool) error {
-	return listEventBusesPagesWithContext(context.Background(), conn, input, fn)
-}
-
-func listEventBusesPagesWithContext(ctx context.Context, conn *eventbridge.EventBridge, input *eventbridge.ListEventBusesInput, fn func(*eventbridge.ListEventBusesOutput, bool) bool) error {
+func listEventBusesPages(ctx context.Context, conn eventbridgeiface.EventBridgeAPI, input *eventbridge.ListEventBusesInput, fn func(*eventbridge.ListEventBusesOutput, bool) bool) error {
 	for {
 		output, err := conn.ListEventBusesWithContext(ctx, input)
 		if err != nil {
@@ -29,11 +26,7 @@ func listEventBusesPagesWithContext(ctx context.Context, conn *eventbridge.Event
 	}
 	return nil
 }
-func listRulesPages(conn *eventbridge.EventBridge, input *eventbridge.ListRulesInput, fn func(*eventbridge.ListRulesOutput, bool) bool) error {
-	return listRulesPagesWithContext(context.Background(), conn, input, fn)
-}
-
-func listRulesPagesWithContext(ctx context.Context, conn *eventbridge.EventBridge, input *eventbridge.ListRulesInput, fn func(*eventbridge.ListRulesOutput, bool) bool) error {
+func listRulesPages(ctx context.Context, conn eventbridgeiface.EventBridgeAPI, input *eventbridge.ListRulesInput, fn func(*eventbridge.ListRulesOutput, bool) bool) error {
 	for {
 		output, err := conn.ListRulesWithContext(ctx, input)
 		if err != nil {
@@ -49,11 +42,7 @@ func listRulesPagesWithContext(ctx context.Context, conn *eventbridge.EventBridg
 	}
 	return nil
 }
-func listTargetsByRulePages(conn *eventbridge.EventBridge, input *eventbridge.ListTargetsByRuleInput, fn func(*eventbridge.ListTargetsByRuleOutput, bool) bool) error {
-	return listTargetsByRulePagesWithContext(context.Background(), conn, input, fn)
-}
-
-func listTargetsByRulePagesWithContext(ctx context.Context, conn *eventbridge.EventBridge, input *eventbridge.ListTargetsByRuleInput, fn func(*eventbridge.ListTargetsByRuleOutput, bool) bool) error {
+func listTargetsByRulePages(ctx context.Context, conn eventbridgeiface.EventBridgeAPI, input *eventbridge.ListTargetsByRuleInput, fn func(*eventbridge.ListTargetsByRuleOutput, bool) bool) error {
 	for {
 		output, err := conn.ListTargetsByRuleWithContext(ctx, input)
 		if err != nil {

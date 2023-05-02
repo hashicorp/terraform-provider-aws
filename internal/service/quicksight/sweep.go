@@ -4,7 +4,6 @@
 package quicksight
 
 import (
-	"context"
 	"fmt"
 	"log"
 
@@ -24,6 +23,7 @@ func init() {
 }
 
 func sweepsDataSource(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -34,7 +34,6 @@ func sweepsDataSource(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
-	ctx := context.Background()
 	awsAccountId := client.(*conns.AWSClient).AccountID
 
 	input := &quicksight.ListDataSourcesInput{
@@ -67,7 +66,7 @@ func sweepsDataSource(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing QuickSigth Data Sources: %w", err))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping QuickSight Data Sources for %s: %w", region, err))
 	}
 

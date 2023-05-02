@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccAppConfigConfigurationProfilesDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	appName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -18,12 +19,12 @@ func TestAccAppConfigConfigurationProfilesDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(appconfig.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, appconfig.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationProfileDestroy,
+		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationProfilesDataSourceConfig_basic(appName, rName1, rName2),

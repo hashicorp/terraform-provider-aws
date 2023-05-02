@@ -2,11 +2,10 @@ package scheduler
 
 import (
 	"context"
-	"errors"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/scheduler/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -15,20 +14,14 @@ const (
 )
 
 func retryWhenIAMNotPropagated[T any](ctx context.Context, f func() (T, error)) (T, error) {
-	v, err := tfresource.RetryWhenContext(
+	v, err := tfresource.RetryWhen(
 		ctx,
 		iamPropagationTimeout,
 		func() (interface{}, error) {
 			return f()
 		},
 		func(err error) (bool, error) {
-			var ex *types.ValidationException
-
-			if !errors.As(err, &ex) {
-				return false, err
-			}
-
-			if strings.Contains(ex.ErrorMessage(), "The execution role you provide must allow AWS EventBridge Scheduler to assume the role.") {
+			if errs.IsAErrorMessageContains[*types.ValidationException](err, "The execution role you provide must allow AWS EventBridge Scheduler to assume the role.") {
 				return true, err
 			}
 

@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,8 +19,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_eks_cluster", name="Cluster")
+// @Tags(identifierAttribute="arn")
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
@@ -29,7 +32,7 @@ func ResourceCluster() *schema.Resource {
 		DeleteWithoutTimeout: resourceClusterDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -224,8 +227,8 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"version": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -287,16 +290,15 @@ func ResourceCluster() *schema.Resource {
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-	name := d.Get("name").(string)
 
+	name := d.Get("name").(string)
 	input := &eks.CreateClusterInput{
 		EncryptionConfig:   expandEncryptionConfig(d.Get("encryption_config").([]interface{})),
 		Logging:            expandLogging(d.Get("enabled_cluster_log_types").(*schema.Set)),
 		Name:               aws.String(name),
 		ResourcesVpcConfig: expandVPCConfigRequestForCreate(d.Get("vpc_config").([]interface{})),
 		RoleArn:            aws.String(d.Get("role_arn").(string)),
+		Tags:               GetTagsIn(ctx),
 	}
 
 	if _, ok := d.GetOk("kubernetes_network_config"); ok {
@@ -311,11 +313,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.Version = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	outputRaw, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateClusterWithContext(ctx, input)
 		},
@@ -363,8 +361,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	cluster, err := FindClusterByName(ctx, conn, d.Id())
 
@@ -412,16 +408,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("setting vpc_config: %s", err)
 	}
 
-	tags := KeyValueTags(cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, cluster.Tags)
 
 	return nil
 }
@@ -518,14 +505,6 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating EKS Cluster (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return resourceClusterRead(ctx, d, meta)
 }
 
@@ -540,17 +519,17 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	// If a cluster is scaling up due to load a delete request will fail
 	// This is a temporary workaround until EKS supports multiple parallel mutating operations
-	err := tfresource.RetryContext(context.Background(), clusterDeleteRetryTimeout, func() *resource.RetryError {
+	err := tfresource.Retry(ctx, clusterDeleteRetryTimeout, func() *retry.RetryError {
 		var err error
 
 		_, err = conn.DeleteClusterWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, eks.ErrCodeResourceInUseException, "in progress") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -591,7 +570,7 @@ func FindClusterByName(ctx context.Context, conn *eks.EKS, name string) (*eks.Cl
 	// Sometimes the EKS API returns the ResourceNotFound error in this form:
 	// ClientException: No cluster found for name: tf-acc-test-0o1f8
 	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, eks.ErrCodeClientException, "No cluster found for name:") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -617,7 +596,7 @@ func findClusterUpdateByTwoPartKey(ctx context.Context, conn *eks.EKS, name, id 
 	output, err := conn.DescribeUpdateWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -634,7 +613,7 @@ func findClusterUpdateByTwoPartKey(ctx context.Context, conn *eks.EKS, name, id 
 	return output.Update, nil
 }
 
-func statusCluster(ctx context.Context, conn *eks.EKS, name string) resource.StateRefreshFunc {
+func statusCluster(ctx context.Context, conn *eks.EKS, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindClusterByName(ctx, conn, name)
 
@@ -650,7 +629,7 @@ func statusCluster(ctx context.Context, conn *eks.EKS, name string) resource.Sta
 	}
 }
 
-func statusClusterUpdate(ctx context.Context, conn *eks.EKS, name, id string) resource.StateRefreshFunc {
+func statusClusterUpdate(ctx context.Context, conn *eks.EKS, name, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findClusterUpdateByTwoPartKey(ctx, conn, name, id)
 
@@ -667,7 +646,7 @@ func statusClusterUpdate(ctx context.Context, conn *eks.EKS, name, id string) re
 }
 
 func waitClusterCreated(ctx context.Context, conn *eks.EKS, name string, timeout time.Duration) (*eks.Cluster, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{eks.ClusterStatusPending, eks.ClusterStatusCreating},
 		Target:  []string{eks.ClusterStatusActive},
 		Refresh: statusCluster(ctx, conn, name),
@@ -684,7 +663,7 @@ func waitClusterCreated(ctx context.Context, conn *eks.EKS, name string, timeout
 }
 
 func waitClusterDeleted(ctx context.Context, conn *eks.EKS, name string, timeout time.Duration) (*eks.Cluster, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{eks.ClusterStatusActive, eks.ClusterStatusDeleting},
 		Target:  []string{},
 		Refresh: statusCluster(ctx, conn, name),
@@ -701,7 +680,7 @@ func waitClusterDeleted(ctx context.Context, conn *eks.EKS, name string, timeout
 }
 
 func waitClusterUpdateSuccessful(ctx context.Context, conn *eks.EKS, name, id string, timeout time.Duration) (*eks.Update, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{eks.UpdateStatusInProgress},
 		Target:  []string{eks.UpdateStatusSuccessful},
 		Refresh: statusClusterUpdate(ctx, conn, name, id),

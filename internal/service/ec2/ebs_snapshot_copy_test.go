@@ -13,20 +13,21 @@ import (
 )
 
 func TestAccEC2EBSSnapshotCopy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var snapshot ec2.Snapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ebs_snapshot_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEBSSnapshotDestroy,
+		CheckDestroy:             testAccCheckEBSSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSSnapshotCopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotExists(resourceName, &snapshot),
+					testAccCheckSnapshotExists(ctx, resourceName, &snapshot),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -36,21 +37,22 @@ func TestAccEC2EBSSnapshotCopy_basic(t *testing.T) {
 }
 
 func TestAccEC2EBSSnapshotCopy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var snapshot ec2.Snapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ebs_snapshot_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEBSSnapshotDestroy,
+		CheckDestroy:             testAccCheckEBSSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSSnapshotCopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotExists(resourceName, &snapshot),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceEBSSnapshotCopy(), resourceName),
+					testAccCheckSnapshotExists(ctx, resourceName, &snapshot),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceEBSSnapshotCopy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -59,20 +61,21 @@ func TestAccEC2EBSSnapshotCopy_disappears(t *testing.T) {
 }
 
 func TestAccEC2EBSSnapshotCopy_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var snapshot ec2.Snapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ebs_snapshot_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEBSSnapshotDestroy,
+		CheckDestroy:             testAccCheckEBSSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSSnapshotCopyConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotExists(resourceName, &snapshot),
+					testAccCheckSnapshotExists(ctx, resourceName, &snapshot),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -80,7 +83,7 @@ func TestAccEC2EBSSnapshotCopy_tags(t *testing.T) {
 			{
 				Config: testAccEBSSnapshotCopyConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotExists(resourceName, &snapshot),
+					testAccCheckSnapshotExists(ctx, resourceName, &snapshot),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -89,7 +92,7 @@ func TestAccEC2EBSSnapshotCopy_tags(t *testing.T) {
 			{
 				Config: testAccEBSSnapshotCopyConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotExists(resourceName, &snapshot),
+					testAccCheckSnapshotExists(ctx, resourceName, &snapshot),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -99,20 +102,21 @@ func TestAccEC2EBSSnapshotCopy_tags(t *testing.T) {
 }
 
 func TestAccEC2EBSSnapshotCopy_withDescription(t *testing.T) {
+	ctx := acctest.Context(t)
 	var snapshot ec2.Snapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ebs_snapshot_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEBSSnapshotDestroy,
+		CheckDestroy:             testAccCheckEBSSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSSnapshotCopyConfig_description(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotExists(resourceName, &snapshot),
+					testAccCheckSnapshotExists(ctx, resourceName, &snapshot),
 					resource.TestCheckResourceAttr(resourceName, "description", "Copy Snapshot Acceptance Test"),
 				),
 			},
@@ -121,23 +125,24 @@ func TestAccEC2EBSSnapshotCopy_withDescription(t *testing.T) {
 }
 
 func TestAccEC2EBSSnapshotCopy_withRegions(t *testing.T) {
+	ctx := acctest.Context(t)
 	var snapshot ec2.Snapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ebs_snapshot_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccCheckEBSSnapshotDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckEBSSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSSnapshotCopyConfig_regions(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotExists(resourceName, &snapshot),
+					testAccCheckSnapshotExists(ctx, resourceName, &snapshot),
 				),
 			},
 		},
@@ -145,21 +150,22 @@ func TestAccEC2EBSSnapshotCopy_withRegions(t *testing.T) {
 }
 
 func TestAccEC2EBSSnapshotCopy_withKMS(t *testing.T) {
+	ctx := acctest.Context(t)
 	var snapshot ec2.Snapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_ebs_snapshot_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEBSSnapshotDestroy,
+		CheckDestroy:             testAccCheckEBSSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSSnapshotCopyConfig_kms(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotExists(resourceName, &snapshot),
+					testAccCheckSnapshotExists(ctx, resourceName, &snapshot),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
 				),
 			},
@@ -168,20 +174,21 @@ func TestAccEC2EBSSnapshotCopy_withKMS(t *testing.T) {
 }
 
 func TestAccEC2EBSSnapshotCopy_storageTier(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v ec2.Snapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ebs_snapshot_copy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEBSSnapshotDestroy,
+		CheckDestroy:             testAccCheckEBSSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSSnapshotCopyConfig_storageTier(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotExists(resourceName, &v),
+					testAccCheckSnapshotExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "storage_tier", "archive"),
 				),
 			},

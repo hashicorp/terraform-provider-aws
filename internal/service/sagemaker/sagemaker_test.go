@@ -23,6 +23,8 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 // SageMaker UserProfile and App depend on the Domain resources and as such are also part of the serialized test suite.
 // SageMaker Workteam tests must also be serialized
 func TestAccSageMaker_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"App": {
 			"basic":                 testAccApp_basic,
@@ -56,9 +58,9 @@ func TestAccSageMaker_serial(t *testing.T) {
 		"FlowDefinition": {
 			"basic":                          testAccFlowDefinition_basic,
 			"disappears":                     testAccFlowDefinition_disappears,
+			"tags":                           testAccFlowDefinition_tags,
 			"HumanLoopConfigPublicWorkforce": testAccFlowDefinition_humanLoopConfig_publicWorkforce,
 			"HumanLoopRequestSource":         testAccFlowDefinition_humanLoopRequestSource,
-			"Tags":                           testAccFlowDefinition_tags,
 		},
 		"Space": {
 			"basic":                    testAccSpace_basic,
@@ -89,25 +91,15 @@ func TestAccSageMaker_serial(t *testing.T) {
 		},
 		"Workteam": {
 			"disappears":         testAccWorkteam_disappears,
+			"tags":               testAccWorkteam_tags,
 			"CognitoConfig":      testAccWorkteam_cognitoConfig,
 			"NotificationConfig": testAccWorkteam_notificationConfig,
 			"OidcConfig":         testAccWorkteam_oidcConfig,
-			"Tags":               testAccWorkteam_tags,
 		},
 		"Servicecatalog": {
 			"basic": testAccServicecatalogPortfolioStatus_basic,
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }

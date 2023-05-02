@@ -45,6 +45,7 @@ The following arguments are supported:
 * `tags` - (Optional) Metadata that you can assign to help organize the plans you create. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Rule Arguments
+
 For **rule** the following attributes are supported:
 
 * `rule_name` - (Required) An display name for a backup rule.
@@ -58,18 +59,21 @@ For **rule** the following attributes are supported:
 * `copy_action` - (Optional) Configuration block(s) with copy operation settings. Detailed below.
 
 ### Lifecycle Arguments
+
 For **lifecycle** the following attributes are supported:
 
 * `cold_storage_after` - (Optional) Specifies the number of days after creation that a recovery point is moved to cold storage.
 * `delete_after` - (Optional) Specifies the number of days after creation that a recovery point is deleted. Must be 90 days greater than `cold_storage_after`.
 
 ### Copy Action Arguments
+
 For **copy_action** the following attributes are supported:
 
 * `lifecycle` - (Optional) The lifecycle defines when a protected resource is copied over to a backup vault and when it expires.  Fields documented above.
 * `destination_vault_arn` - (Required) An Amazon Resource Name (ARN) that uniquely identifies the destination backup vault for the copied backup.
 
 ### Advanced Backup Setting Arguments
+
 For `advanced_backup_setting` the following attibutes are supported:
 
 * `backup_options` - (Required) Specifies the backup option for a selected resource. This option is only available for Windows VSS backup jobs. Set to `{ WindowsVSS = "enabled" }` to enable Windows VSS backup option and create a VSS Windows backup.

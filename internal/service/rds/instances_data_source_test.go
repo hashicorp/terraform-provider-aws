@@ -11,21 +11,22 @@ import (
 )
 
 func TestAccRDSInstancesDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbInstance rds.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_db_instances.test"
 	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstancesDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &dbInstance),
+					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(dataSourceName, "instance_arns.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_arns.0", resourceName, "arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "instance_identifiers.#", "1"),

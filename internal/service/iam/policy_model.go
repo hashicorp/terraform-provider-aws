@@ -3,8 +3,12 @@ package iam
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"sort"
 	"strconv"
+
+	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/jmespath/go-jmespath"
 )
 
 const (
@@ -226,4 +230,58 @@ func policyDecodeConfigStringList(lI []interface{}) interface{} {
 	}
 	sort.Sort(sort.Reverse(sort.StringSlice(ret)))
 	return ret
+}
+
+// PolicyHasValidAWSPrincipals validates that the Principals in an IAM Policy are valid
+// Assumes that non-"AWS" Principals are valid
+// The value can be a single string or a slice of strings
+// Valid strings are either an ARN or an AWS account ID
+func PolicyHasValidAWSPrincipals(policy string) (bool, error) { // nosemgrep:ci.aws-in-func-name
+	var policyData any
+	err := json.Unmarshal([]byte(policy), &policyData)
+	if err != nil {
+		return false, fmt.Errorf("parsing policy: %w", err)
+	}
+
+	result, err := jmespath.Search("Statement[*].Principal.AWS", policyData)
+	if err != nil {
+		return false, fmt.Errorf("parsing policy: %w", err)
+	}
+
+	principals, ok := result.([]any)
+	if !ok {
+		return false, fmt.Errorf(`parsing policy: unexpected result: (%[1]T) "%[1]v"`, result)
+	}
+
+	for _, principal := range principals {
+		switch x := principal.(type) {
+		case string:
+			if !isValidPolicyAWSPrincipal(x) {
+				return false, nil
+			}
+		case []string:
+			for _, s := range x {
+				if !isValidPolicyAWSPrincipal(s) {
+					return false, nil
+				}
+			}
+		}
+	}
+
+	return true, nil
+}
+
+// isValidPolicyAWSPrincipal returns true if a string is a valid AWS Princial for an IAM Policy document
+// That is: either an ARN, an AWS account ID, or `*`
+func isValidPolicyAWSPrincipal(principal string) bool { // nosemgrep:ci.aws-in-func-name
+	if principal == "*" {
+		return true
+	}
+	if arn.IsARN(principal) {
+		return true
+	}
+	if regexp.MustCompile(`^\d{12}$`).MatchString(principal) {
+		return true
+	}
+	return false
 }

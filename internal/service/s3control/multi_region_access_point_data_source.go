@@ -13,7 +13,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func DataSourceMultiRegionAccessPoint() *schema.Resource {
+// @SDKDataSource("aws_s3control_multi_region_access_point")
+func dataSourceMultiRegionAccessPoint() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceMultiRegionAccessPointBlockRead,
 
@@ -105,7 +106,7 @@ func dataSourceMultiRegionAccessPointBlockRead(ctx context.Context, d *schema.Re
 	}
 	name := d.Get("name").(string)
 
-	accessPoint, err := FindMultiRegionAccessPointByAccountIDAndName(conn, accountID, name)
+	accessPoint, err := FindMultiRegionAccessPointByTwoPartKey(ctx, conn, accountID, name)
 
 	if err != nil {
 		return diag.Errorf("reading S3 Multi Region Access Point (%s): %s", name, err)

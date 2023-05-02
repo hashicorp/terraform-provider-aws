@@ -11,6 +11,7 @@ description: |-
 Provides a DMS (Data Migration Service) replication instance resource. DMS replication instances can be created, updated, deleted, and imported.
 
 ## Example Usage
+
 Create required roles and then create a DMS instance, setting the depends_on to the required role policy attachments.
 
 ```terraform
@@ -138,7 +139,7 @@ In addition to all arguments above, the following attributes are exported:
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `30m`)
+- `create` - (Default `40m`)
 - `update` - (Default `30m`)
 - `delete` - (Default `30m`)
 

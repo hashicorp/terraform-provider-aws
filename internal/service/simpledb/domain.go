@@ -14,20 +14,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	_sp.registerFrameworkResourceFactory(newResourceDomain)
-}
-
-// newResourceDomain instantiates a new Resource for the aws_simpledb_domain resource.
+// @FrameworkResource
 func newResourceDomain(context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceDomain{}, nil
+	r := &resourceDomain{}
+	r.SetMigratedFromPluginSDK(true)
+
+	return r, nil
 }
 
 type resourceDomain struct {
@@ -176,7 +175,7 @@ func FindDomainByName(ctx context.Context, conn *simpledb.SimpleDB, name string)
 	output, err := conn.DomainMetadataWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, simpledb.ErrCodeNoSuchDomain) {
-		return nil, &sdkresource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

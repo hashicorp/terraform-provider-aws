@@ -1,9 +1,9 @@
 ---
-subcategory: "DocDB (DocumentDB)"
+subcategory: "DocumentDB"
 layout: "aws"
 page_title: "AWS: aws_docdb_global_cluster"
 description: |-
-  Manages a DocDB Global Cluster
+  Manages a DocumentDB Global Cluster
 ---
 
 # Resource: aws_docdb_global_cluster
@@ -45,13 +45,11 @@ resource "aws_docdb_cluster" "primary" {
 }
 
 resource "aws_docdb_cluster_instance" "primary" {
-  provider             = aws.primary
-  engine               = aws_docdb_global_cluster.example.engine
-  engine_version       = aws_docdb_global_cluster.example.engine_version
-  identifier           = "test-primary-cluster-instance"
-  cluster_identifier   = aws_docdb_cluster.primary.id
-  instance_class       = "db.r5.large"
-  db_subnet_group_name = "default"
+  provider           = aws.primary
+  engine             = aws_docdb_global_cluster.example.engine
+  identifier         = "test-primary-cluster-instance"
+  cluster_identifier = aws_docdb_cluster.primary.id
+  instance_class     = "db.r5.large"
 }
 
 resource "aws_docdb_cluster" "secondary" {
@@ -64,13 +62,11 @@ resource "aws_docdb_cluster" "secondary" {
 }
 
 resource "aws_docdb_cluster_instance" "secondary" {
-  provider             = aws.secondary
-  engine               = aws_docdb_global_cluster.example.engine
-  engine_version       = aws_docdb_global_cluster.example.engine_version
-  identifier           = "test-secondary-cluster-instance"
-  cluster_identifier   = aws_docdb_cluster.secondary.id
-  instance_class       = "db.r5.large"
-  db_subnet_group_name = "default"
+  provider           = aws.secondary
+  engine             = aws_docdb_global_cluster.example.engine
+  identifier         = "test-secondary-cluster-instance"
+  cluster_identifier = aws_docdb_cluster.secondary.id
+  instance_class     = "db.r5.large"
 
   depends_on = [
     aws_docdb_cluster_instance.primary
@@ -122,7 +118,7 @@ In addition to all arguments above, the following attributes are exported:
     * `db_cluster_arn` - Amazon Resource Name (ARN) of member DB Cluster.
     * `is_writer` - Whether the member is the primary DB Cluster.
 * `global_cluster_resource_id` - AWS Region-unique, immutable identifier for the global database cluster. This identifier is found in AWS CloudTrail log entries whenever the AWS KMS key for the DB cluster is accessed.
-* `id` - DocDB Global Cluster.
+* `id` - DocumentDB Global Cluster ID.
 
 ## Timeouts
 

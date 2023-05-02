@@ -22,6 +22,7 @@ func init() {
 }
 
 func sweepCompositeAlarms(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -32,7 +33,7 @@ func sweepCompositeAlarms(region string) error {
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeAlarmsPages(input, func(page *cloudwatch.DescribeAlarmsOutput, lastPage bool) bool {
+	err = conn.DescribeAlarmsPagesWithContext(ctx, input, func(page *cloudwatch.DescribeAlarmsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -57,7 +58,7 @@ func sweepCompositeAlarms(region string) error {
 		return fmt.Errorf("error listing CloudWatch Composite Alarms (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudWatch Composite Alarms (%s): %w", region, err)

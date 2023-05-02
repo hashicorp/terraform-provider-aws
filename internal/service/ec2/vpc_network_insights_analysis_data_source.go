@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_ec2_network_insights_analysis")
 func DataSourceNetworkInsightsAnalysis() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceNetworkInsightsAnalysisRead,
@@ -130,7 +131,7 @@ func dataSourceNetworkInsightsAnalysisRead(ctx context.Context, d *schema.Resour
 	d.Set("status_message", output.StatusMessage)
 	d.Set("warning_message", output.WarningMessage)
 
-	if err := d.Set("tags", KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("setting tags: %s", err)
 	}
 

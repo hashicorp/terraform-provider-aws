@@ -347,7 +347,7 @@ func fieldToMatchBaseSchema() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"all_query_arguments": emptySchema(),
-			"body":                emptySchema(),
+			"body":                bodySchema(),
 			"cookies":             cookiesSchema(),
 			"headers":             headersSchema(),
 			"json_body":           jsonBodySchema(),
@@ -549,6 +549,44 @@ func captchaConfigSchema() *schema.Schema {
 	}
 }
 
+func outerCaptchaConfigSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"immunity_time_property": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"immunity_time": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func challengeConfigSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"custom_request_handling": customRequestHandlingSchema(),
+			},
+		},
+	}
+}
+
 func countConfigSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
@@ -721,6 +759,19 @@ func cookiesMatchPatternSchema() *schema.Schema {
 	}
 }
 
+func bodySchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"oversize_handling": oversizeHandlingOptionalSchema(wafv2.OversizeHandlingContinue),
+			},
+		},
+	}
+}
+
 func oversizeHandlingOptionalSchema(defaultValue string) *schema.Schema {
 	return &schema.Schema{
 		Type:         schema.TypeString,
@@ -828,8 +879,9 @@ func managedRuleGroupStatementSchema(level int) *schema.Schema {
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 128),
 				},
-				"rule_action_override": ruleActionOverrideSchema(),
-				"scope_down_statement": scopeDownStatementSchema(level - 1),
+				"rule_action_override":       ruleActionOverrideSchema(),
+				"managed_rule_group_configs": managedRuleGroupConfigSchema(),
+				"scope_down_statement":       scopeDownStatementSchema(level - 1),
 				"vendor_name": {
 					Type:         schema.TypeString,
 					Required:     true,
@@ -929,6 +981,97 @@ func ruleActionOverrideSchema() *schema.Schema {
 	}
 }
 
+func managedRuleGroupConfigSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"aws_managed_rules_bot_control_rule_set": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"inspection_level": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringInSlice(wafv2.InspectionLevel_Values(), false),
+							},
+						},
+					},
+				},
+				"aws_managed_rules_atp_rule_set": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"login_path": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 256),
+									validation.StringMatch(regexp.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+								),
+							},
+							"request_inspection":  managedRuleGroupConfigATPRequestInspectionSchema(),
+							"response_inspection": managedRuleGroupConfigATPResponseInspectionSchema(),
+						},
+					},
+				},
+				"login_path": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 256),
+						validation.StringMatch(regexp.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+					),
+				},
+				"password_field": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"identifier": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 512),
+									validation.StringMatch(regexp.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+								),
+							},
+						},
+					},
+				},
+				"payload_type": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.PayloadType_Values(), false),
+				},
+				"username_field": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"identifier": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 512),
+									validation.StringMatch(regexp.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+								),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func actionToUseSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
@@ -958,6 +1101,161 @@ func ruleGroupReferenceStatementSchema() *schema.Schema {
 					ValidateFunc: verify.ValidARN,
 				},
 				"excluded_rule": excludedRuleSchema(),
+			},
+		},
+	}
+}
+
+func managedRuleGroupConfigATPRequestInspectionSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"password_field": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"identifier": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 512),
+									validation.StringMatch(regexp.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+								),
+							},
+						},
+					},
+				},
+				"payload_type": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.PayloadType_Values(), false),
+				},
+				"username_field": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"identifier": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 512),
+									validation.StringMatch(regexp.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+								),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func managedRuleGroupConfigATPResponseInspectionSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"body_contains": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"failure_strings": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"success_strings": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+						},
+					},
+				},
+				"header": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"failure_values": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								// TODO: ValidateFunc: length > 0
+							},
+							"name": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 256),
+							},
+							"success_values": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								// TODO: ValidateFunc: length > 0
+							},
+						},
+					},
+				},
+				"json": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"failure_values": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								// TODO: ValidateFunc: length > 0
+							},
+							"identifier": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 256),
+							},
+							"success_values": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								// TODO: ValidateFunc: length > 0
+							},
+						},
+					},
+				},
+				"status_code": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"failure_codes": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeInt},
+								// TODO: ValidateFunc: length > 0
+							},
+							"success_codes": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeInt},
+								// TODO: ValidateFunc: length > 0
+							},
+						},
+					},
+				},
 			},
 		},
 	}

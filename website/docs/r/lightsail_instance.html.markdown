@@ -16,14 +16,49 @@ for more information.
 
 ## Example Usage
 
+### Basic Usage
+
 ```terraform
 # Create a new GitLab Lightsail Instance
 resource "aws_lightsail_instance" "gitlab_test" {
   name              = "custom_gitlab"
   availability_zone = "us-east-1b"
-  blueprint_id      = "string"
-  bundle_id         = "string"
+  blueprint_id      = "amazon_linux_2"
+  bundle_id         = "nano_1_0"
   key_pair_name     = "some_key_name"
+  tags = {
+    foo = "bar"
+  }
+}
+```
+
+### Example With User Data
+
+Lightsail user data is handled differently than ec2 user data. Lightsail user data only accepts a single lined string. The below example shows installing apache and creating the index page.
+
+```terraform
+resource "aws_lightsail_instance" "custom" {
+  name              = "custom"
+  availability_zone = "us-east-1b"
+  blueprint_id      = "amazon_linux_2"
+  bundle_id         = "nano_1_0"
+  user_data         = "sudo yum install -y httpd && sudo systemctl start httpd && sudo systemctl enable httpd && echo '<h1>Deployed via Terraform</h1>' | sudo tee /var/www/html/index.html"
+}
+```
+
+### Enable Auto Snapshots
+
+```terraform
+resource "aws_lightsail_instance" "test" {
+  name              = "custom_instance"
+  availability_zone = "us-east-1b"
+  blueprint_id      = "amazon_linux_2"
+  bundle_id         = "nano_1_0"
+  add_on {
+    type          = "AutoSnapshot"
+    snapshot_time = "06:00"
+    status        = "Enabled"
+  }
   tags = {
     foo = "bar"
   }
@@ -41,11 +76,21 @@ instance (see list below)
 * `bundle_id` - (Required) The bundle of specification information (see list below)
 * `key_pair_name` - (Optional) The name of your key pair. Created in the
 Lightsail console (cannot use `aws_key_pair` at this time)
-* `user_data` - (Optional) launch script to configure server with additional user data
+* `user_data` - (Optional) Single lined launch script as a string to configure server with additional user data
 * `ip_address_type` - (Optional) The IP address type of the Lightsail Instance. Valid Values: `dualstack` | `ipv4`.
+* `add_on` - (Optional) The add on configuration for the instance. [Detailed below](#add_on).
 * `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
+### `add_on`
+
+Defines the add on configuration for the instance. The `add_on` configuration block supports the following arguments:
+
+* `type` - (Required) The add-on type. There is currently only one valid type `AutoSnapshot`.
+* `snapshot_time` - (Required) The daily time when an automatic snapshot will be created. Must be in HH:00 format, and in an hourly increment and specified in Coordinated Universal Time (UTC). The snapshot will be automatically created between the time specified and up to 45 minutes after.
+* `status` - (Required) The status of the add on. Valid Values: `Enabled`, `Disabled`.
+
 ## Availability Zones
+
 Lightsail currently supports the following Availability Zones (e.g., `us-east-1a`):
 
 - `ap-northeast-1{a,c,d}`
@@ -118,5 +163,5 @@ In addition to all arguments above, the following attributes are exported:
 Lightsail Instances can be imported using their name, e.g.,
 
 ```
-$ terraform import aws_lightsail_instance.gitlab_test 'custom gitlab'
+$ terraform import aws_lightsail_instance.gitlab_test 'custom_gitlab'
 ```

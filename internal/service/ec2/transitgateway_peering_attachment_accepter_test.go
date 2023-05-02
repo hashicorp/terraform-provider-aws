@@ -13,6 +13,7 @@ import (
 )
 
 func testAccTransitGatewayPeeringAttachmentAccepter_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
 	resourceName := "aws_ec2_transit_gateway_peering_attachment_accepter.test"
 	peeringAttachmentName := "aws_ec2_transit_gateway_peering_attachment.test"
@@ -22,18 +23,18 @@ func testAccTransitGatewayPeeringAttachmentAccepter_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
-			testAccPreCheckTransitGateway(t)
+			testAccPreCheckTransitGateway(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccCheckTransitGatewayPeeringAttachmentDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckTransitGatewayPeeringAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayPeeringAttachmentAccepterConfig_sameAccount(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayPeeringAttachmentExists(resourceName, &transitGatewayPeeringAttachment),
+					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, resourceName, &transitGatewayPeeringAttachment),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_account_id", transitGatewayResourceNamePeer, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "peer_region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_transit_gateway_id", transitGatewayResourceNamePeer, "id"),
@@ -52,25 +53,26 @@ func testAccTransitGatewayPeeringAttachmentAccepter_basic(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayPeeringAttachmentAccepter_Tags(t *testing.T) {
+func testAccTransitGatewayPeeringAttachmentAccepter_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
 	resourceName := "aws_ec2_transit_gateway_peering_attachment_accepter.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
-			testAccPreCheckTransitGateway(t)
+			testAccPreCheckTransitGateway(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccCheckTransitGatewayPeeringAttachmentDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckTransitGatewayPeeringAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayPeeringAttachmentAccepterConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayPeeringAttachmentExists(resourceName, &transitGatewayPeeringAttachment),
+					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, resourceName, &transitGatewayPeeringAttachment),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -84,7 +86,7 @@ func testAccTransitGatewayPeeringAttachmentAccepter_Tags(t *testing.T) {
 			{
 				Config: testAccTransitGatewayPeeringAttachmentAccepterConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayPeeringAttachmentExists(resourceName, &transitGatewayPeeringAttachment),
+					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, resourceName, &transitGatewayPeeringAttachment),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -93,7 +95,7 @@ func testAccTransitGatewayPeeringAttachmentAccepter_Tags(t *testing.T) {
 			{
 				Config: testAccTransitGatewayPeeringAttachmentAccepterConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayPeeringAttachmentExists(resourceName, &transitGatewayPeeringAttachment),
+					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, resourceName, &transitGatewayPeeringAttachment),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -103,6 +105,7 @@ func testAccTransitGatewayPeeringAttachmentAccepter_Tags(t *testing.T) {
 }
 
 func testAccTransitGatewayPeeringAttachmentAccepter_differentAccount(t *testing.T) {
+	ctx := acctest.Context(t)
 	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
 	resourceName := "aws_ec2_transit_gateway_peering_attachment_accepter.test"
 	peeringAttachmentName := "aws_ec2_transit_gateway_peering_attachment.test"
@@ -112,18 +115,18 @@ func testAccTransitGatewayPeeringAttachmentAccepter_differentAccount(t *testing.
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
-			testAccPreCheckTransitGateway(t)
+			testAccPreCheckTransitGateway(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccCheckTransitGatewayPeeringAttachmentDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckTransitGatewayPeeringAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayPeeringAttachmentAccepterConfig_differentAccount(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayPeeringAttachmentExists(resourceName, &transitGatewayPeeringAttachment),
+					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, resourceName, &transitGatewayPeeringAttachment),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_account_id", transitGatewayResourceNamePeer, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "peer_region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_transit_gateway_id", transitGatewayResourceNamePeer, "id"),

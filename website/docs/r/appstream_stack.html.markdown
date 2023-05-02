@@ -33,11 +33,23 @@ resource "aws_appstream_stack" "example" {
     permission = "ENABLED"
   }
   user_settings {
+    action     = "DOMAIN_PASSWORD_SIGNIN"
+    permission = "ENABLED"
+  }
+  user_settings {
+    action     = "DOMAIN_SMART_CARD_SIGNIN"
+    permission = "DISABLED"
+  }
+  user_settings {
+    action     = "FILE_DOWNLOAD"
+    permission = "ENABLED"
+  }
+  user_settings {
     action     = "FILE_UPLOAD"
     permission = "ENABLED"
   }
   user_settings {
-    action     = "FILE_DOWNLOAD"
+    action     = "PRINTING_TO_LOCAL_DEVICE"
     permission = "ENABLED"
   }
 
@@ -71,8 +83,10 @@ The following arguments are optional:
 * `redirect_url` - (Optional) URL that users are redirected to after their streaming session ends.
 * `storage_connectors` - (Optional) Configuration block for the storage connectors to enable.
   See [`storage_connectors`](#storage_connectors) below.
-* `user_settings` - (Optional) Configuration block for the actions that are enabled or disabled for users during their streaming sessions. By default, these actions are enabled.
+* `user_settings` - (Optional) Configuration block for the actions that are enabled or disabled for users during their streaming sessions. If not provided, these settings are configured automatically by AWS. If provided, the terraform configuration should include a block for each configurable action.
   See [`user_settings`](#user_settings) below.
+* `streaming_experience_settings` - (Optional) The streaming protocol you want your stack to prefer. This can be UDP or TCP. Currently, UDP is only supported in the Windows native client.
+  See [`streaming_experience_settings`](#streaming_experience_settings) below.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `access_endpoints`
@@ -101,6 +115,11 @@ The following arguments are optional:
   Valid values are `CLIPBOARD_COPY_FROM_LOCAL_DEVICE`,  `CLIPBOARD_COPY_TO_LOCAL_DEVICE`, `FILE_UPLOAD`, `FILE_DOWNLOAD`, `PRINTING_TO_LOCAL_DEVICE`, `DOMAIN_PASSWORD_SIGNIN`, or `DOMAIN_SMART_CARD_SIGNIN`.
 * `permission` - (Required) Whether the action is enabled or disabled.
   Valid values are `ENABLED` or `DISABLED`.
+
+### `streaming_experience_settings`
+
+* `preferred_protocol` - (Optional) The preferred protocol that you want to use while streaming your application.
+  Valid values are `TCP` and `UDP`.
 
 ## Attributes Reference
 

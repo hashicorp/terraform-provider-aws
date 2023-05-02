@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/s3control"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -11,21 +12,21 @@ import (
 )
 
 func TestAccS3ControlMultiRegionAccessPointDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_s3control_multi_region_access_point.test"
 	dataSourceName := "data.aws_s3control_multi_region_access_point.test"
-
 	bucket1Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bucket2Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	if acctest.Partition() == "aws-us-gov" {
-		t.Skip("S3 Multi-Region Access Point is not supported in GovCloud partition")
-	}
-
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMultiRegionAccessPointDataSourceConfig_basic(bucket1Name, bucket2Name, rName),

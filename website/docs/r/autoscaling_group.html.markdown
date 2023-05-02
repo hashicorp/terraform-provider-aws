@@ -49,11 +49,9 @@ resource "aws_autoscaling_group" "bar" {
     heartbeat_timeout    = 2000
     lifecycle_transition = "autoscaling:EC2_INSTANCE_LAUNCHING"
 
-    notification_metadata = <<EOF
-{
-  "foo": "bar"
-}
-EOF
+    notification_metadata = jsonencode({
+      foo = "bar"
+    })
 
     notification_target_arn = "arn:aws:sqs:us-east-1:444455556666:queue1*"
     role_arn                = "arn:aws:iam::123456789012:role/S3Access"
@@ -260,7 +258,7 @@ resource "aws_autoscaling_group" "example" {
 }
 ```
 
-### Interpolated tags
+### Dynamic tagging
 
 ```terraform
 variable "extra_tags" {
@@ -278,28 +276,32 @@ variable "extra_tags" {
   ]
 }
 
-resource "aws_autoscaling_group" "bar" {
+resource "aws_autoscaling_group" "test" {
   name                 = "foobar3-terraform-test"
   max_size             = 5
   min_size             = 2
   launch_configuration = aws_launch_configuration.foobar.name
   vpc_zone_identifier  = [aws_subnet.example1.id, aws_subnet.example2.id]
 
-  tags = concat(
-    [
-      {
-        "key"                 = "interpolation1"
-        "value"               = "value3"
-        "propagate_at_launch" = true
-      },
-      {
-        "key"                 = "interpolation2"
-        "value"               = "value4"
-        "propagate_at_launch" = true
-      },
-    ],
-    var.extra_tags,
-  )
+  tag {
+    key                 = "explicit1"
+    value               = "value1"
+    propagate_at_launch = true
+  }
+  tag {
+    key                 = "explicit2"
+    value               = "value2"
+    propagate_at_launch = true
+  }
+
+  dynamic "tag" {
+    for_each = var.extra_tags
+    content {
+      key                 = tag.value.key
+      propagate_at_launch = tag.value.propagate_at_launch
+      value               = tag.value.value
+    }
+  }
 }
 ```
 
@@ -385,7 +387,7 @@ The following arguments are supported:
 * `max_size` - (Required) Maximum size of the Auto Scaling Group.
 * `min_size` - (Required) Minimum size of the Auto Scaling Group.
     (See also [Waiting for Capacity](#waiting-for-capacity) below.)
-* `availability_zones` - (Optional) List of one or more availability zones for the group. Used for EC2-Classic, attaching a network interface via id from a launch template and default subnets when not specified with `vpc_zone_identifier` argument. Conflicts with `vpc_zone_identifier`.
+* `availability_zones` - (Optional) A list of Availability Zones where instances in the Auto Scaling group can be created. Used for launching into the default VPC subnet in each Availability Zone when not using the `vpc_zone_identifier` attribute, or for attaching a network interface when an existing network interface ID is specified in a launch template. Conflicts with `vpc_zone_identifier`.
 * `capacity_rebalance` - (Optional) Whether capacity rebalance is enabled. Otherwise, capacity rebalance is disabled.
 * `context` - (Optional) Reserved.
 * `default_cooldown` - (Optional) Amount of time, in seconds, after a scaling activity completes before another scaling activity can start.
@@ -405,6 +407,7 @@ The following arguments are supported:
 * `desired_capacity` - (Optional) Number of Amazon EC2 instances that
     should be running in the group. (See also [Waiting for
     Capacity](#waiting-for-capacity) below.)
+* `desired_capacity_type` - (Optional) The unit of measurement for the value specified for `desired_capacity`. Supported for attribute-based instance type selection only. Valid values: `"units"`, `"vcpu"`, `"memory-mib"`.
 * `force_delete` - (Optional) Allows deleting the Auto Scaling Group without waiting
    for all instances in the pool to terminate.  You can force an Auto Scaling Group to delete
    even if it's in the process of scaling a resource. Normally, Terraform
@@ -417,8 +420,7 @@ The following arguments are supported:
 * `termination_policies` (Optional) List of policies to decide how the instances in the Auto Scaling Group should be terminated. The allowed values are `OldestInstance`, `NewestInstance`, `OldestLaunchConfiguration`, `ClosestToNextInstanceHour`, `OldestLaunchTemplate`, `AllocationStrategy`, `Default`. Additionally, the ARN of a Lambda function can be specified for custom termination policies.
 * `suspended_processes` - (Optional) List of processes to suspend for the Auto Scaling Group. The allowed values are `Launch`, `Terminate`, `HealthCheck`, `ReplaceUnhealthy`, `AZRebalance`, `AlarmNotification`, `ScheduledActions`, `AddToLoadBalancer`, `InstanceRefresh`.
 Note that if you suspend either the `Launch` or `Terminate` process types, it can prevent your Auto Scaling Group from functioning properly.
-* `tag` (Optional) Configuration block(s) containing resource tags. Conflicts with `tags`. See [Tag](#tag-and-tags) below for more details.
-* `tags` (Optional, **Deprecated** use `tag` instead) Set of maps containing resource tags. Conflicts with `tag`. See [Tags](#tag-and-tags) below for more details.
+* `tag` (Optional) Configuration block(s) containing resource tags. See [Tag](#tag) below for more details.
 * `placement_group` (Optional) Name of the placement group into which you'll launch your instances, if any.
 * `metrics_granularity` - (Optional) Granularity to associate with the metrics to collect. The only valid value is `1Minute`. Default is `1Minute`.
 * `enabled_metrics` - (Optional) List of metrics to collect. The allowed values are defined by the [underlying AWS API](https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_EnableMetricsCollection.html).
@@ -468,7 +470,7 @@ The top-level `launch_template` block supports the following:
 
 This configuration block supports the following:
 
-* `on_demand_allocation_strategy` - (Optional) Strategy to use when launching on-demand instances. Valid values: `prioritized`. Default: `prioritized`.
+* `on_demand_allocation_strategy` - (Optional) Strategy to use when launching on-demand instances. Valid values: `prioritized`, `lowest-price`. Default: `prioritized`.
 * `on_demand_base_capacity` - (Optional) Absolute minimum amount of desired capacity that must be fulfilled by on-demand instances. Default: `0`.
 * `on_demand_percentage_above_base_capacity` - (Optional) Percentage split between on-demand and Spot instances above the base on-demand capacity. Default: `100`.
 * `spot_allocation_strategy` - (Optional) How to allocate capacity across the Spot pools. Valid values: `lowest-price`, `capacity-optimized`, `capacity-optimized-prioritized`, and `price-capacity-optimized`. Default: `lowest-price`.
@@ -545,6 +547,10 @@ This configuration block supports the following:
       * inference
     ```
 
+* `allowed_instance_types` - (Optional) List of instance types to apply your specified attributes against. All other instance types are ignored, even if they match your specified attributes. You can use strings with one or more wild cards, represented by an asterisk (\*), to allow an instance type, size, or generation. The following are examples: `m5.8xlarge`, `c5*.*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are allowing the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are allowing all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is all instance types.
+
+    ~> **NOTE:** If you specify `allowed_instance_types`, you can't specify `excluded_instance_types`.
+
 * `bare_metal` - (Optional) Indicate whether bare metal instace types should be `included`, `excluded`, or `required`. Default is `excluded`.
 * `baseline_ebs_bandwidth_mbps` - (Optional) Block describing the minimum and maximum baseline EBS bandwidth, in Mbps. Default is no minimum or maximum.
     * `min` - (Optional) Minimum.
@@ -561,7 +567,10 @@ This configuration block supports the following:
       * intel
     ```
 
-* `excluded_instance_types` - (Optional) List of instance types to exclude. You can use strings with one or more wild cards, represented by an asterisk (\*). The following are examples: `c5*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are excluding the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are excluding all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is no excluded instance types.
+* `excluded_instance_types` - (Optional) List of instance types to exclude. You can use strings with one or more wild cards, represented by an asterisk (\*), to exclude an instance type, size, or generation. The following are examples: `m5.8xlarge`, `c5*.*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are excluding the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are excluding all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is no excluded instance types.
+
+    ~> **NOTE:** If you specify `excluded_instance_types`, you can't specify `allowed_instance_types`.
+
 * `instance_generations` - (Optional) List of instance generation names. Default is any generation.
 
     ```
@@ -585,6 +594,9 @@ This configuration block supports the following:
 * `memory_mib` - (Required) Block describing the minimum and maximum amount of memory (MiB). Default is no maximum.
     * `min` - (Required) Minimum.
     * `max` - (Optional) Maximum.
+* `network_bandwidth_gbps` - (Optional) Block describing the minimum and maximum amount of network bandwidth, in gigabits per second (Gbps). Default is no minimum or maximum.
+    * `min` - (Optional) Minimum.
+    * `max` - (Optional) Maximum.
 * `network_interface_count` - (Optional) Block describing the minimum and maximum number of network interfaces. Default is no minimum or maximum.
     * `min` - (Optional) Minimum.
     * `max` - (Optional) Maximum.
@@ -602,7 +614,7 @@ This configuration block supports the following:
     * `min` - (Required) Minimum.
     * `max` - (Optional) Maximum.
 
-### tag and tags
+### tag
 
 The `tag` attribute accepts exactly one tag declaration with the following fields:
 
@@ -611,10 +623,7 @@ The `tag` attribute accepts exactly one tag declaration with the following field
 * `propagate_at_launch` - (Required) Enables propagation of the tag to
    Amazon EC2 instances launched via this ASG
 
-To declare multiple tags additional `tag` blocks can be specified.
-Alternatively the `tags` attributes can be used, which accepts a list of maps containing the above field names as keys and their respective values.
-This allows the construction of dynamic lists of tags which is not possible using the single `tag` attribute.
-`tag` and `tags` are mutually exclusive, only one of them can be specified.
+To declare multiple tags, additional `tag` blocks can be specified.
 
 ~> **NOTE:** Other AWS APIs may automatically add special tags to their associated Auto Scaling Group for management purposes, such as ECS Capacity Providers adding the `AmazonECSManaged` tag. These generally should be included in the configuration so Terraform does not attempt to remove them and so if the `min_size` was greater than zero on creation, that these tag(s) are applied to any initial EC2 Instances in the Auto Scaling Group. If these tag(s) were missing in the Auto Scaling Group configuration on creation, affected EC2 Instances missing the tags may require manual intervention of adding the tags to ensure they work properly with the other AWS service.
 
@@ -629,6 +638,7 @@ This configuration block supports the following:
     * `instance_warmup` - (Optional) Number of seconds until a newly launched instance is configured and ready to use. Default behavior is to use the Auto Scaling Group's health check grace period.
     * `min_healthy_percentage` - (Optional) Amount of capacity in the Auto Scaling group that must remain healthy during an instance refresh to allow the operation to continue, as a percentage of the desired capacity of the Auto Scaling group. Defaults to `90`.
     * `skip_matching` - (Optional) Replace instances that already have your desired configuration. Defaults to `false`.
+    * `auto_rollback` - (Optional) Automatically rollback if instance refresh fails. Defaults to `false`.
 * `triggers` - (Optional) Set of additional property names that will trigger an Instance Refresh. A refresh will always be triggered by a change in any of `launch_configuration`, `launch_template`, or `mixed_instances_policy`.
 
 ~> **NOTE:** A refresh is started when any of the following Auto Scaling Group properties change: `launch_configuration`, `launch_template`, `mixed_instances_policy`. Additional properties can be specified in the `triggers` property of `instance_refresh`.

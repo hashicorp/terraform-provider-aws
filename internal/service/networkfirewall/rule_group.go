@@ -2,16 +2,16 @@ package networkfirewall
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,8 +19,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_networkfirewall_rule_group", name="Rule Group")
+// @Tags(identifierAttribute="id")
 func ResourceRuleGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleGroupCreate,
@@ -68,17 +71,9 @@ func ResourceRuleGroup() *schema.Resource {
 									"ip_set_references": {
 										Type:     schema.TypeSet,
 										Optional: true,
+										MaxItems: 5,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"key": {
-													Type:     schema.TypeString,
-													Required: true,
-													ValidateFunc: validation.All(
-														validation.StringLenBetween(1, 32),
-														validation.StringMatch(regexp.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
-														validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_]+$`), "must contain only alphanumeric and underscore characters"),
-													),
-												},
 												"ip_set_reference": {
 													Type:     schema.TypeList,
 													Required: true,
@@ -91,6 +86,15 @@ func ResourceRuleGroup() *schema.Resource {
 															},
 														},
 													},
+												},
+												"key": {
+													Type:     schema.TypeString,
+													Required: true,
+													ValidateFunc: validation.All(
+														validation.StringLenBetween(1, 32),
+														validation.StringMatch(regexp.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+														validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_]+$`), "must contain only alphanumeric and underscore characters"),
+													),
 												},
 											},
 										},
@@ -427,8 +431,8 @@ func ResourceRuleGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -453,41 +457,35 @@ func ResourceRuleGroup() *schema.Resource {
 
 func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-	name := d.Get("name").(string)
 
+	name := d.Get("name").(string)
 	input := &networkfirewall.CreateRuleGroupInput{
 		Capacity:      aws.Int64(int64(d.Get("capacity").(int))),
 		RuleGroupName: aws.String(name),
+		Tags:          GetTagsIn(ctx),
 		Type:          aws.String(d.Get("type").(string)),
 	}
+
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("encryption_configuration"); ok {
 		input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]interface{}))
 	}
-	if v, ok := d.GetOk("rule_group"); ok {
-		if vRaw := v.([]interface{}); len(vRaw) > 0 && vRaw[0] != nil {
-			input.RuleGroup = expandRuleGroup(vRaw)
-		}
+
+	if v, ok := d.GetOk("rule_group"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.RuleGroup = expandRuleGroup(v.([]interface{})[0].(map[string]interface{}))
 	}
+
 	if v, ok := d.GetOk("rules"); ok {
 		input.Rules = aws.String(v.(string))
 	}
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating NetworkFirewall Rule Group %s", name)
 
 	output, err := conn.CreateRuleGroupWithContext(ctx, input)
+
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating NetworkFirewall Rule Group %s: %w", name, err))
-	}
-	if output == nil || output.RuleGroupResponse == nil {
-		return diag.FromErr(fmt.Errorf("error creating NetworkFirewall Rule Group (%s): empty output", name))
+		return diag.Errorf("creating NetworkFirewall Rule Group (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.RuleGroupResponse.RuleGroupArn))
@@ -497,78 +495,53 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	log.Printf("[DEBUG] Reading NetworkFirewall Rule Group %s", d.Id())
+	output, err := FindRuleGroupByARN(ctx, conn, d.Id())
 
-	output, err := FindRuleGroup(ctx, conn, d.Id())
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
+	if err == nil && output.RuleGroup == nil {
+		err = tfresource.NewEmptyResultError(d.Id())
+	}
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] NetworkFirewall Rule Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
+
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading NetworkFirewall Rule Group (%s): %w", d.Id(), err))
+		return diag.Errorf("reading NetworkFirewall Rule Group (%s): %s", d.Id(), err)
 	}
 
-	if output == nil {
-		return diag.FromErr(fmt.Errorf("error reading NetworkFirewall Rule Group (%s): empty output", d.Id()))
+	response := output.RuleGroupResponse
+	d.Set("arn", response.RuleGroupArn)
+	d.Set("capacity", response.Capacity)
+	d.Set("description", response.Description)
+	d.Set("encryption_configuration", flattenEncryptionConfiguration(response.EncryptionConfiguration))
+	d.Set("name", response.RuleGroupName)
+	if err := d.Set("rule_group", flattenRuleGroup(output.RuleGroup)); err != nil {
+		return diag.Errorf("setting rule_group: %s", err)
 	}
-	if output.RuleGroupResponse == nil {
-		return diag.FromErr(fmt.Errorf("error reading NetworkFirewall Rule Group (%s): empty output.RuleGroupResponse", d.Id()))
-	}
-	if output.RuleGroup == nil {
-		return diag.FromErr(fmt.Errorf("error reading NetworkFirewall Rule Group (%s): empty output.RuleGroup", d.Id()))
-	}
-
-	resp := output.RuleGroupResponse
-	ruleGroup := output.RuleGroup
-
-	d.Set("arn", resp.RuleGroupArn)
-	d.Set("capacity", resp.Capacity)
-	d.Set("description", resp.Description)
-	d.Set("encryption_configuration", flattenEncryptionConfiguration(resp.EncryptionConfiguration))
-	d.Set("name", resp.RuleGroupName)
-	d.Set("type", resp.Type)
+	d.Set("type", response.Type)
 	d.Set("update_token", output.UpdateToken)
 
-	if err := d.Set("rule_group", flattenRuleGroup(ruleGroup)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting rule_group: %w", err))
-	}
-
-	tags := KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
-	}
+	SetTagsOut(ctx, response.Tags)
 
 	return nil
 }
 
 func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
-	arn := d.Id()
-
-	log.Printf("[DEBUG] Updating NetworkFirewall Rule Group %s", arn)
 
 	if d.HasChanges("description", "encryption_configuration", "rule_group", "rules", "type") {
-		// Provide updated object with the currently configured fields
 		input := &networkfirewall.UpdateRuleGroupInput{
-			RuleGroupArn: aws.String(arn),
-			Type:         aws.String(d.Get("type").(string)),
-			UpdateToken:  aws.String(d.Get("update_token").(string)),
+			EncryptionConfiguration: expandEncryptionConfiguration(d.Get("encryption_configuration").([]interface{})),
+			RuleGroupArn:            aws.String(d.Id()),
+			Type:                    aws.String(d.Get("type").(string)),
+			UpdateToken:             aws.String(d.Get("update_token").(string)),
 		}
+
 		if v, ok := d.GetOk("description"); ok {
 			input.Description = aws.String(v.(string))
-		}
-		if d.HasChange("encryption_configuration") {
-			input.EncryptionConfiguration = expandEncryptionConfiguration(d.Get("encryption_configuration").([]interface{}))
 		}
 
 		// Network Firewall UpdateRuleGroup API method only allows one of Rules or RuleGroup
@@ -578,7 +551,9 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		if d.HasChange("rules") {
 			input.Rules = aws.String(d.Get("rules").(string))
 		} else if d.HasChange("rule_group") {
-			input.RuleGroup = expandRuleGroup(d.Get("rule_group").([]interface{}))
+			if v, ok := d.GetOk("rule_group"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.RuleGroup = expandRuleGroup(v.([]interface{})[0].(map[string]interface{}))
+			}
 		}
 
 		// If neither "rules" or "rule_group" are set at this point, neither have changed but
@@ -587,23 +562,15 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		if input.Rules == nil && input.RuleGroup == nil {
 			if v, ok := d.GetOk("rules"); ok {
 				input.Rules = aws.String(v.(string))
-			} else if v, ok := d.GetOk("rule_group"); ok {
-				if vRaw := v.([]interface{}); len(vRaw) > 0 && vRaw[0] != nil {
-					input.RuleGroup = expandRuleGroup(vRaw)
-				}
+			} else if v, ok := d.GetOk("rule_group"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.RuleGroup = expandRuleGroup(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
 
 		_, err := conn.UpdateRuleGroupWithContext(ctx, input)
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error updating NetworkFirewall Rule Group (%s): %w", arn, err))
-		}
-	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating NetworkFirewall Rule Group (%s) tags: %w", arn, err))
+		if err != nil {
+			return diag.Errorf("updating NetworkFirewall Rule Group (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -611,42 +578,89 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	const (
+		timeout = 10 * time.Minute
+	)
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
 
 	log.Printf("[DEBUG] Deleting NetworkFirewall Rule Group: %s", d.Id())
-	input := &networkfirewall.DeleteRuleGroupInput{
-		RuleGroupArn: aws.String(d.Id()),
-	}
-	err := resource.RetryContext(ctx, ruleGroupDeleteTimeout, func() *resource.RetryError {
-		_, err := conn.DeleteRuleGroupWithContext(ctx, input)
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, networkfirewall.ErrCodeInvalidOperationException, "Unable to delete the object because it is still in use") {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, timeout, func() (interface{}, error) {
+		return conn.DeleteRuleGroupWithContext(ctx, &networkfirewall.DeleteRuleGroupInput{
+			RuleGroupArn: aws.String(d.Id()),
+		})
+	}, networkfirewall.ErrCodeInvalidOperationException, "Unable to delete the object because it is still in use")
 
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteRuleGroupWithContext(ctx, input)
+	if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
+		return nil
 	}
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-		return diag.FromErr(fmt.Errorf("error deleting NetworkFirewall Rule Group (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting NetworkFirewall Rule Group (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitRuleGroupDeleted(ctx, conn, d.Id()); err != nil {
-		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-		return diag.FromErr(fmt.Errorf("error waiting for NetworkFirewall Rule Group (%s) to delete: %w", d.Id(), err))
+	if _, err := waitRuleGroupDeleted(ctx, conn, d.Id(), timeout); err != nil {
+		return diag.Errorf("waiting for NetworkFirewall Rule Group (%s) delete : %s", d.Id(), err)
 	}
 
 	return nil
+}
+
+func FindRuleGroupByARN(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.DescribeRuleGroupOutput, error) {
+	input := &networkfirewall.DescribeRuleGroupInput{
+		RuleGroupArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeRuleGroupWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.RuleGroupResponse == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func statusRuleGroup(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindRuleGroupByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output.RuleGroup, aws.StringValue(output.RuleGroupResponse.RuleGroupStatus), nil
+	}
+}
+
+func waitRuleGroupDeleted(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string, timeout time.Duration) (*networkfirewall.RuleGroup, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{networkfirewall.ResourceStatusDeleting},
+		Target:  []string{},
+		Refresh: statusRuleGroup(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*networkfirewall.RuleGroup); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func expandStatefulRuleHeader(l []interface{}) *networkfirewall.Header {
@@ -755,14 +769,11 @@ func expandStatefulRules(l []interface{}) []*networkfirewall.StatefulRule {
 	return rules
 }
 
-func expandRuleGroup(l []interface{}) *networkfirewall.RuleGroup {
-	if len(l) == 0 || l[0] == nil {
+func expandRuleGroup(tfMap map[string]interface{}) *networkfirewall.RuleGroup {
+	if tfMap == nil {
 		return nil
 	}
-	tfMap, ok := l[0].(map[string]interface{})
-	if !ok {
-		return nil
-	}
+
 	ruleGroup := &networkfirewall.RuleGroup{}
 	if tfList, ok := tfMap["reference_sets"].([]interface{}); ok && len(tfList) > 0 && tfList[0] != nil {
 		referenceSets := &networkfirewall.ReferenceSets{}
