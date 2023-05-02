@@ -77,9 +77,8 @@ func TestAccVPCLatticeTargetGroupAttachment_ip(t *testing.T) {
 func TestAccVPCLatticeTargetGroupAttachment_lambda(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_vpclattice_register_targets.test"
-	lambdaName := "aws_lambda_function.test"
-	targetGroupResourceName := "aws_vpclattice_target_group.test"
+	resourceName := "aws_vpclattice_target_group_attachment.test"
+	lambdaResourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -92,17 +91,13 @@ func TestAccVPCLatticeTargetGroupAttachment_lambda(t *testing.T) {
 		CheckDestroy:             testAccCheckRegisterTargetsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegisterTargets_lambda(rName),
+				Config: testAccTargetGroupAttachmentConfig_lambda(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetsExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.forward.0.target_groups.0.target_group_identifier", targetGroupResourceName, "target_group_identifier"),
-					resource.TestCheckResourceAttrPair(resourceName, "targets.0.id", lambdaName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.id", lambdaResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.port", "0"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -203,61 +198,49 @@ resource "aws_vpclattice_target_group_attachment" "test" {
 `, rName))
 }
 
-func testAccRegisterTargetsConfig_lambda(rName string) string {
+func testAccTargetGroupAttachmentConfig_lambda(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_vpclattice_target_group" "test" {
-  depends_on = [aws_lambda_function.test]
-  name       = %[1]q
-  type       = "LAMBDA"
-
+  name = %[1]q
+  type = "LAMBDA"
 }
 
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambda.zip"
   function_name = %[1]q
   role          = aws_iam_role.test.arn
-  handler       = "lambda_elb.lambda_handler"
+  handler       = "test.handler"
   runtime       = "python3.7"
 }
 
-
-
 resource "aws_iam_role" "test" {
+  name = %[1]q
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.${data.aws_partition.current.dns_suffix}"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "lambda.${data.aws_partition.current.dns_suffix}"
+    },
+    "Effect": "Allow",
+    "Sid": ""
+  }]
 }
-	EOF
-
-}
-`, rName)
+EOF
 }
 
-func testAccRegisterTargets_lambda(rName string) string {
-	return acctest.ConfigCompose(testAccRegisterTargetsConfig_lambda(rName), `
-resource "aws_vpclattice_register_targets" "test" {
-  depends_on              = [aws_vpclattice_target_group.test]
+resource "aws_vpclattice_target_group_attachment" "test" {
   target_group_identifier = aws_vpclattice_target_group.test.id
 
-  targets {
+  target {
     id = aws_lambda_function.test.arn
   }
 }
-
-
-`)
+`, rName)
 }
 
 func testAccRegisterTargetsConfig_alb(rName string) string {
