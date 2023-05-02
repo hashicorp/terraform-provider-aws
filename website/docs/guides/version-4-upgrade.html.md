@@ -72,7 +72,6 @@ Upgrade topics:
 - [Resource: aws_fsx_ontap_storage_virtual_machine](#resource-aws_fsx_ontap_storage_virtual_machine)
 - [Resource: aws_lb_target_group](#resource-aws_lb_target_group)
 - [Resource: aws_s3_bucket_object](#resource-aws_s3_bucket_object)
-- [Resource: aws_spot_instance_request](#resource-aws_spot_instance_request)
 
 <!-- /TOC -->
 
