@@ -24,16 +24,15 @@ func ResourceBus() *schema.Resource {
 		ReadWithoutTimeout:   resourceBusRead,
 		UpdateWithoutTimeout: resourceBusUpdate,
 		DeleteWithoutTimeout: resourceBusDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validCustomEventBusName,
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"event_source_name": {
 				Type:         schema.TypeString,
@@ -41,9 +40,11 @@ func ResourceBus() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validSourceName,
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validCustomEventBusName,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
