@@ -43,7 +43,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.26.5
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.0.4
 	github.com/aws/smithy-go v1.13.5
-	github.com/beevik/etree v1.1.0
+	github.com/beevik/etree v1.1.3
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.20.0
 	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.25
