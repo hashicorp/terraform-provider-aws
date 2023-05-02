@@ -1181,7 +1181,7 @@ func expandBodyContains(tfList []interface{}) *wafv2.ResponseInspectionBodyConta
 	m := tfList[0].(map[string]interface{})
 	out := wafv2.ResponseInspectionBodyContains{
 		FailureStrings: flex.ExpandStringSet(m["failure_strings"].(*schema.Set)),
-		SuccessStrings: flex.ExpandStringSet(m["success_strings"].(*schema.Set)),
+		SuccessStrings: flex.ExpandStringSet(m["succeed_strings"].(*schema.Set)),
 	}
 
 	return &out
@@ -1196,7 +1196,7 @@ func expandHeader(tfList []interface{}) *wafv2.ResponseInspectionHeader {
 	out := wafv2.ResponseInspectionHeader{
 		Name:          aws.String(m["name"].(string)),
 		FailureValues: flex.ExpandStringSet(m["failure_values"].(*schema.Set)),
-		SuccessValues: flex.ExpandStringSet(m["success_values"].(*schema.Set)),
+		SuccessValues: flex.ExpandStringSet(m["succeed_values"].(*schema.Set)),
 	}
 
 	return &out
@@ -1211,7 +1211,7 @@ func expandResponseInspectionJSON(tfList []interface{}) *wafv2.ResponseInspectio
 	out := wafv2.ResponseInspectionJson{
 		FailureValues: flex.ExpandStringSet(m["failure_values"].(*schema.Set)),
 		Identifier:    aws.String(m["identifier"].(string)),
-		SuccessValues: flex.ExpandStringSet(m["success_values"].(*schema.Set)),
+		SuccessValues: flex.ExpandStringSet(m["succeed_values"].(*schema.Set)),
 	}
 
 	return &out
