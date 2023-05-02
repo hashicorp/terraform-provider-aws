@@ -1869,3 +1869,389 @@ func flattenSpacing(apiObject *quicksight.Spacing) []interface{} {
 
 	return []interface{}{tfMap}
 }
+
+func flattenLayouts(apiObject []*quicksight.Layout) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{
+			"configuration": flattenLayoutConfiguration(config.Configuration),
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenLayoutConfiguration(apiObject *quicksight.LayoutConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.FreeFormLayout != nil {
+		tfMap["free_form_layout"] = flattenFreeFormLayoutConfiguration(apiObject.FreeFormLayout)
+	}
+	if apiObject.GridLayout != nil {
+		tfMap["grid_layout"] = flattenGridLayoutConfiguration(apiObject.GridLayout)
+	}
+	if apiObject.SectionBasedLayout != nil {
+		tfMap["section_based_layout"] = flattenSectionBasedLayoutConfiguration(apiObject.SectionBasedLayout)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenFreeFormLayoutConfiguration(apiObject *quicksight.FreeFormLayoutConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CanvasSizeOptions != nil {
+		tfMap["canvas_size_options"] = flattenFreeFormLayoutCanvasSizeOptions(apiObject.CanvasSizeOptions)
+	}
+	if apiObject.Elements != nil {
+		tfMap["elements"] = flattenFreeFormLayoutElement(apiObject.Elements)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenFreeFormLayoutElement(apiObject []*quicksight.FreeFormLayoutElement) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{
+			"element_id":      aws.StringValue(config.ElementId),
+			"element_type":    aws.StringValue(config.ElementType),
+			"height":          aws.StringValue(config.Height),
+			"width":           aws.StringValue(config.Width),
+			"x_axis_location": aws.StringValue(config.XAxisLocation),
+			"y_axis_location": aws.StringValue(config.YAxisLocation),
+		}
+		if config.BackgroundStyle != nil {
+			tfMap["background_style"] = flattenFreeFormLayoutElementBackgroundStyle(config.BackgroundStyle)
+		}
+		if config.BorderStyle != nil {
+			tfMap["border_style"] = flattenFreeFormLayoutElementBorderStyle(config.BorderStyle)
+		}
+		if config.LoadingAnimation != nil {
+			tfMap["loading_animation"] = flattenLoadingAnimation(config.LoadingAnimation)
+		}
+		if config.RenderingRules != nil {
+			tfMap["rendering_rules"] = flattenSheetElementRenderingRule(config.RenderingRules)
+		}
+		if config.SelectedBorderStyle != nil {
+			tfMap["selected_border_style"] = flattenFreeFormLayoutElementBorderStyle(config.SelectedBorderStyle)
+		}
+		if config.Visibility != nil {
+			tfMap["visibility"] = aws.StringValue(config.Visibility)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenFreeFormLayoutElementBackgroundStyle(apiObject *quicksight.FreeFormLayoutElementBackgroundStyle) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Color != nil {
+		tfMap["color"] = aws.StringValue(apiObject.Color)
+	}
+	if apiObject.Visibility != nil {
+		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenFreeFormLayoutElementBorderStyle(apiObject *quicksight.FreeFormLayoutElementBorderStyle) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Color != nil {
+		tfMap["color"] = aws.StringValue(apiObject.Color)
+	}
+	if apiObject.Visibility != nil {
+		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenLoadingAnimation(apiObject *quicksight.LoadingAnimation) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Visibility != nil {
+		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenSheetElementRenderingRule(apiObject []*quicksight.SheetElementRenderingRule) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if config.ConfigurationOverrides != nil {
+			tfMap["configuration_overrides"] = flattenSheetElementConfigurationOverrides(config.ConfigurationOverrides)
+		}
+		if config.Expression != nil {
+			tfMap["expression"] = aws.StringValue(config.Expression)
+		}
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenSheetElementConfigurationOverrides(apiObject *quicksight.SheetElementConfigurationOverrides) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Visibility != nil {
+		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenGridLayoutConfiguration(apiObject *quicksight.GridLayoutConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CanvasSizeOptions != nil {
+		tfMap["canvas_size_options"] = flattenGridLayoutCanvasSizeOptions(apiObject.CanvasSizeOptions)
+	}
+	if apiObject.Elements != nil {
+		tfMap["elements"] = flattenGridLayoutElement(apiObject.Elements)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenGridLayoutElement(apiObject []*quicksight.GridLayoutElement) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{
+			"column_span":  aws.Int64Value(config.ColumnSpan),
+			"element_id":   aws.StringValue(config.ElementId),
+			"element_type": aws.StringValue(config.ElementType),
+			"row_span":     aws.Int64Value(config.RowSpan),
+		}
+		if config.ColumnIndex != nil {
+			tfMap["column_index"] = aws.Int64Value(config.ColumnIndex)
+		}
+		if config.RowIndex != nil {
+			tfMap["row_index"] = aws.Int64Value(config.RowIndex)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenSectionBasedLayoutConfiguration(apiObject *quicksight.SectionBasedLayoutConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.BodySections != nil {
+		tfMap["body_sections"] = flattenBodySectionConfiguration(apiObject.BodySections)
+	}
+	if apiObject.CanvasSizeOptions != nil {
+		tfMap["canvas_size_options"] = flattenSectionBasedLayoutCanvasSizeOptions(apiObject.CanvasSizeOptions)
+	}
+	if apiObject.FooterSections != nil {
+		tfMap["footer_sections"] = flattenHeaderFooterSectionConfiguration(apiObject.FooterSections)
+	}
+	if apiObject.HeaderSections != nil {
+		tfMap["header_sections"] = flattenHeaderFooterSectionConfiguration(apiObject.HeaderSections)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenBodySectionConfiguration(apiObject []*quicksight.BodySectionConfiguration) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{
+			"content":    flattenBodySectionContent(config.Content),
+			"section_id": aws.StringValue(config.SectionId),
+		}
+		if config.PageBreakConfiguration != nil {
+			tfMap["page_break_configuration"] = flattenSectionPageBreakConfiguration(config.PageBreakConfiguration)
+		}
+		if config.Style != nil {
+			tfMap["style"] = flattenSectionStyle(config.Style)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenBodySectionContent(apiObject *quicksight.BodySectionContent) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Layout != nil {
+		tfMap["layout"] = flattenSectionLayoutConfiguration(apiObject.Layout)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenSectionLayoutConfiguration(apiObject *quicksight.SectionLayoutConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.FreeFormLayout != nil {
+		tfMap["free_form_layout"] = flattenFreeFormSectionLayoutConfiguration(apiObject.FreeFormLayout)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenFreeFormSectionLayoutConfiguration(apiObject *quicksight.FreeFormSectionLayoutConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Elements != nil {
+		tfMap["free_form_layout"] = flattenFreeFormLayoutElement(apiObject.Elements)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenSectionPageBreakConfiguration(apiObject *quicksight.SectionPageBreakConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.After != nil {
+		tfMap["after"] = flattenSectionAfterPageBreak(apiObject.After)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenSectionAfterPageBreak(apiObject *quicksight.SectionAfterPageBreak) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Status != nil {
+		tfMap["status"] = aws.StringValue(apiObject.Status)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenSectionStyle(apiObject *quicksight.SectionStyle) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Height != nil {
+		tfMap["height"] = aws.StringValue(apiObject.Height)
+	}
+	if apiObject.Padding != nil {
+		tfMap["padding"] = flattenSpacing(apiObject.Padding)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenHeaderFooterSectionConfiguration(apiObject []*quicksight.HeaderFooterSectionConfiguration) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{
+			"section_id": aws.StringValue(config.SectionId),
+		}
+		if config.Layout != nil {
+			tfMap["layout"] = flattenSectionLayoutConfiguration(config.Layout)
+		}
+		if config.Style != nil {
+			tfMap["style"] = flattenSectionStyle(config.Style)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}

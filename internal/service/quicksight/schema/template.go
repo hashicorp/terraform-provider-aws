@@ -1410,25 +1410,6 @@ func flattenSheetDefinitions(apiObject []*quicksight.SheetDefinition) []interfac
 	return tfList
 }
 
-func flattenLayouts(apiObject []*quicksight.Layout) []interface{} {
-	if len(apiObject) == 0 {
-		return nil
-	}
-
-	var tfList []interface{}
-	for _, config := range apiObject {
-		if config == nil {
-			continue
-		}
-
-		tfMap := map[string]interface{}{}
-		// TODO
-		tfList = append(tfList, tfMap)
-	}
-
-	return tfList
-}
-
 func flattenParameterControls(apiObject []*quicksight.ParameterControl) []interface{} {
 	if len(apiObject) == 0 {
 		return nil
