@@ -508,11 +508,11 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 		input.ProductId = aws.String(v.(string))
 	}
 
+	// check provisioning_artifact_name first. provisioning_artrifact_id is optional/computed
+	// and will always be set by the time update is called
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/26271
-	if d.HasChange("provisioning_artifact_name") {
-		if v, ok := d.GetOk("provisioning_artifact_name"); ok {
-			input.ProvisioningArtifactName = aws.String(v.(string))
-		}
+	if v, ok := d.GetOk("provisioning_artifact_name"); ok {
+		input.ProvisioningArtifactName = aws.String(v.(string))
 	} else if v, ok := d.GetOk("provisioning_artifact_id"); ok {
 		input.ProvisioningArtifactId = aws.String(v.(string))
 	}
