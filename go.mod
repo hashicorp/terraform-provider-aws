@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230201104953-d1d05f4e2bfb
-	github.com/aws/aws-sdk-go v1.44.253
+	github.com/aws/aws-sdk-go v1.44.254
 	github.com/aws/aws-sdk-go-v2 v1.18.0
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.3
 	github.com/aws/aws-sdk-go-v2/service/account v1.10.5
@@ -13,7 +13,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.10
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.20.10
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.24.1
-	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.22.3
+	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.17.0
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.1.9
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.95.0
@@ -43,7 +43,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.26.5
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.0.4
 	github.com/aws/smithy-go v1.13.5
-	github.com/beevik/etree v1.1.0
+	github.com/beevik/etree v1.1.3
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.20.0
 	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.25
