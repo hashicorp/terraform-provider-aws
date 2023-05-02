@@ -518,6 +518,9 @@ service/inspector:
 service/inspector2:
   - 'internal/service/inspector2/**/*'
   - 'website/**/inspector2_*'
+service/internetmonitor:
+  - 'internal/service/internetmonitor/**/*'
+  - 'website/**/internetmonitor_*'
 service/iot:
   - 'internal/service/iot/**/*'
   - 'website/**/iot_*'

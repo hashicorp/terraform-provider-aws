@@ -117,8 +117,10 @@ func FindServiceByID(ctx context.Context, conn *ecs.ECS, id, cluster string) (*e
 
 func FindServiceNoTagsByID(ctx context.Context, conn *ecs.ECS, id, cluster string) (*ecs.Service, error) {
 	input := &ecs.DescribeServicesInput{
-		Cluster:  aws.String(cluster),
 		Services: aws.StringSlice([]string{id}),
+	}
+	if cluster != "" {
+		input.Cluster = aws.String(cluster)
 	}
 
 	return FindService(ctx, conn, input)
