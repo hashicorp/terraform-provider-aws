@@ -314,9 +314,7 @@ func (r tagsInterceptor) create(ctx context.Context, request resource.CreateRequ
 		}
 
 		// Merge the resource's configured tags with any provider configured default_tags.
-		tags := tftags.New(ctx, planTags)
-		tagsInContext.ConfiguredTagCount = len(tags)
-		tags = tagsInContext.DefaultConfig.MergeTags(tags)
+		tags := tagsInContext.DefaultConfig.MergeTags(tftags.New(ctx, planTags))
 		// Remove system tags.
 		tags = tags.IgnoreSystem(inContext.ServicePackageName)
 
@@ -477,9 +475,7 @@ func (r tagsInterceptor) update(ctx context.Context, request resource.UpdateRequ
 		}
 
 		// Merge the resource's configured tags with any provider configured default_tags.
-		tags := tftags.New(ctx, planTags)
-		tagsInContext.ConfiguredTagCount = len(tags)
-		tags = tagsInContext.DefaultConfig.MergeTags(tags)
+		tags := tagsInContext.DefaultConfig.MergeTags(tftags.New(ctx, planTags))
 		// Remove system tags.
 		tags = tags.IgnoreSystem(inContext.ServicePackageName)
 
