@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -97,44 +98,42 @@ func ResourceCompositeAlarm() *schema.Resource {
 
 func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudWatchConn()
-	name := d.Get("alarm_name").(string)
 
+	name := d.Get("alarm_name").(string)
 	input := expandPutCompositeAlarmInput(ctx, d)
 
-	_, err := conn.PutCompositeAlarmWithContext(ctx, &input)
+	_, err := conn.PutCompositeAlarmWithContext(ctx, input)
 
-	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] failed creating CloudWatch Composite Alarm (%s) with tags: %s. Trying create without tags.", name, err)
+	// Some partitions (e.g. ISO) may not support tag-on-create.
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		input.Tags = nil
 
-		_, err = conn.PutCompositeAlarmWithContext(ctx, &input)
+		_, err = conn.PutCompositeAlarmWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return diag.Errorf("failed creating CloudWatch Composite Alarm (%s): %s", name, err)
+		return diag.Errorf("creating CloudWatch Composite Alarm (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
-	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
-	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); input.Tags == nil && len(tags) > 0 {
-		alarm, err := FindCompositeAlarmByName(ctx, conn, name)
+	// For partitions not supporting tag-on-create, attempt tag after create.
+	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+		alarm, err := FindCompositeAlarmByName(ctx, conn, d.Id())
 
 		if err != nil {
-			return diag.Errorf("error reading CloudWatch Composite Alarm (%s): %s", name, err)
+			return diag.Errorf("reading CloudWatch Composite Alarm (%s): %s", d.Id(), err)
 		}
 
-		err = UpdateTags(ctx, conn, aws.StringValue(alarm.AlarmArn), nil, tags)
+		err = createTags(ctx, conn, aws.StringValue(alarm.AlarmArn), tags)
 
-		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-			log.Printf("[WARN] failed adding tags after create for CloudWatch Composite Alarm (%s): %s", d.Id(), err)
+		// If default tags only, continue. Otherwise, error.
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 			return resourceCompositeAlarmRead(ctx, d, meta)
 		}
 
 		if err != nil {
-			return diag.Errorf("failed adding tags after create for CloudWatch Composite Alarm (%s): %s", d.Id(), err)
+			return diag.Errorf("setting CloudWatch Composite Alarm (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -195,7 +194,7 @@ func resourceCompositeAlarmUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	input := expandPutCompositeAlarmInput(ctx, d)
 
-	_, err := conn.PutCompositeAlarmWithContext(ctx, &input)
+	_, err := conn.PutCompositeAlarmWithContext(ctx, input)
 	if err != nil {
 		return diag.Errorf("error updating CloudWatch Composite Alarm (%s): %s", name, err)
 	}
@@ -222,35 +221,35 @@ func resourceCompositeAlarmDelete(ctx context.Context, d *schema.ResourceData, m
 	return nil
 }
 
-func expandPutCompositeAlarmInput(ctx context.Context, d *schema.ResourceData) cloudwatch.PutCompositeAlarmInput {
-	out := cloudwatch.PutCompositeAlarmInput{
+func expandPutCompositeAlarmInput(ctx context.Context, d *schema.ResourceData) *cloudwatch.PutCompositeAlarmInput {
+	apiObject := &cloudwatch.PutCompositeAlarmInput{
 		ActionsEnabled: aws.Bool(d.Get("actions_enabled").(bool)),
 		Tags:           GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("alarm_actions"); ok {
-		out.AlarmActions = flex.ExpandStringSet(v.(*schema.Set))
+		apiObject.AlarmActions = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("alarm_description"); ok {
-		out.AlarmDescription = aws.String(v.(string))
+		apiObject.AlarmDescription = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("alarm_name"); ok {
-		out.AlarmName = aws.String(v.(string))
+		apiObject.AlarmName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("alarm_rule"); ok {
-		out.AlarmRule = aws.String(v.(string))
+		apiObject.AlarmRule = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("insufficient_data_actions"); ok {
-		out.InsufficientDataActions = flex.ExpandStringSet(v.(*schema.Set))
+		apiObject.InsufficientDataActions = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("ok_actions"); ok {
-		out.OKActions = flex.ExpandStringSet(v.(*schema.Set))
+		apiObject.OKActions = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	return out
+	return apiObject
 }
