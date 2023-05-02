@@ -70,7 +70,7 @@ resource "aws_db_instance" "default" {
 # Lookup the available instance classes for the custom engine for the region being operated in
 data "aws_rds_orderable_db_instance" "custom-oracle" {
   engine                     = "custom-oracle-ee" # CEV engine to be used
-  engine_version             = "19.c.ee.002" # CEV engine version to be used
+  engine_version             = "19.c.ee.002"      # CEV engine version to be used
   license_model              = "bring-your-own-license"
   storage_type               = "gp3"
   preferred_instance_classes = ["db.r5.24xlarge","db.r5.16xlarge","db.r5.12xlarge"]
@@ -83,7 +83,7 @@ data "aws_kms_key" "by_id" {
 
 resource "aws_db_instance" "default" {
   allocated_storage           = 50
-  auto_minor_version_upgrade  = false # Custom for Oracle not support minor version upgrades
+  auto_minor_version_upgrade  = false                         # Custom for Oracle not support minor version upgrades
   custom_iam_instance_profile = "AWSRDSCustomInstanceProfile" # Instance profile is required for Custom for Oracle. See: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/custom-setup-orcl.html#custom-setup-orcl.iam-vpc
   backup_retention_period     = 7
   db_subnet_group_name        = local.db_subnet_group_name
@@ -118,7 +118,6 @@ resource "aws_db_instance" "test-replica" {
   skip_final_snapshot         = true
   storage_encrypted           = true
 
-
   timeouts {
     create = "3h"
     delete = "3h"
@@ -126,7 +125,6 @@ resource "aws_db_instance" "test-replica" {
   }
 }
 ```
-
 
 ### Storage Autoscaling
 
