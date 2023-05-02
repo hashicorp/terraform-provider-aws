@@ -17,19 +17,26 @@ val sweeperRegions = DslContext.getParameter("sweeper_regions")
 val awsAccountID = DslContext.getParameter("aws_account.account_id")
 val acctestParallelism = DslContext.getParameter("acctest_parallelism", "")
 val tfAccAssumeRoleArn = DslContext.getParameter("tf_acc_assume_role_arn", "")
-val awsAlternateAccountID = DslContext.getParameter("aws_alternate_account.account_id", "")
-val awsAlternateAccessKeyID = DslContext.getParameter("aws_alternate_account.access_key_id", "")
-val awsAlternateSecretAccessKey = DslContext.getParameter("aws_alternate_account.secret_access_key", "")
+val awsAlternateAccountID = DslContext.getParameter("aws_alt_account.account_id", "")
 val tfLog = DslContext.getParameter("tf_log", "")
 
 // Legacy User credentials
 val legacyAWSAccessKeyID = DslContext.getParameter("aws_account.legacy_access_key_id", "")
 val legacyAWSSecretAccessKey = DslContext.getParameter("aws_account.legacy_secret_access_key", "")
 
+// Legacy Alternate User credentials
+val legacyAWSAlternateAccessKeyID = DslContext.getParameter("aws_alt_account.legacy_access_key_id", "")
+val legacyAWSAlternateSecretAccessKey = DslContext.getParameter("aws_alt_account.legacy_secret_access_key", "")
+
 // Assume Role credentials
 val awsAccessKeyID = DslContext.getParameter("aws_account.access_key_id", "")
 val awsSecretAccessKey = DslContext.getParameter("aws_account.secret_access_key", "")
 val accTestRoleARN = DslContext.getParameter("aws_account.role_arn", "")
+
+// Alternate Assume Role credentials
+val alternateAWSAccessKeyID = DslContext.getParameter("aws_alt_account.access_key_id", "")
+val alternateAWSSecretAccessKey = DslContext.getParameter("aws_alt_account.secret_access_key", "")
+val alternateAccTestRoleARN = DslContext.getParameter("aws_alt_account.role_arn", "")
 
 project {
     if (DslContext.getParameter("build_full", "true").toBoolean()) {
@@ -53,12 +60,6 @@ project {
         text("env.AWS_ACCOUNT_ID", awsAccountID, display = ParameterDisplay.HIDDEN, allowEmpty = false)
         text("env.AWS_DEFAULT_REGION", defaultRegion, allowEmpty = false)
         text("env.TF_LOG", tfLog)
-
-        if (awsAlternateAccountID != "" || awsAlternateAccessKeyID != "" || awsAlternateSecretAccessKey != "") {
-            text("env.AWS_ALTERNATE_ACCOUNT_ID", awsAlternateAccountID, display = ParameterDisplay.HIDDEN)
-            password("env.AWS_ALTERNATE_ACCESS_KEY_ID", awsAlternateAccessKeyID, display = ParameterDisplay.HIDDEN)
-            password("env.AWS_ALTERNATE_SECRET_ACCESS_KEY", awsAlternateSecretAccessKey, display = ParameterDisplay.HIDDEN)
-        }
 
         if (alternateRegion != "") {
             text("env.AWS_ALTERNATE_REGION", alternateRegion)
@@ -90,6 +91,13 @@ project {
             password("env.AWS_SECRET_ACCESS_KEY", legacyAWSSecretAccessKey, display = ParameterDisplay.HIDDEN)
         }
 
+        // Legacy Alternate User credentials
+        if (awsAlternateAccountID != "" || legacyAWSAlternateAccessKeyID != "" || legacyAWSAlternateSecretAccessKey != "") {
+            text("env.AWS_ALTERNATE_ACCOUNT_ID", awsAlternateAccountID, display = ParameterDisplay.HIDDEN)
+            password("env.AWS_ALTERNATE_ACCESS_KEY_ID", legacyAWSAlternateAccessKeyID, display = ParameterDisplay.HIDDEN)
+            password("env.AWS_ALTERNATE_SECRET_ACCESS_KEY", legacyAWSAlternateSecretAccessKey, display = ParameterDisplay.HIDDEN)
+        }
+
         // Assume Role credentials
         if (awsAccessKeyID != "") {
             password("AWS_ACCESS_KEY_ID", awsAccessKeyID, display = ParameterDisplay.HIDDEN)
@@ -98,6 +106,19 @@ project {
             password("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey, display = ParameterDisplay.HIDDEN)
         }
         text("ACCTEST_ROLE_ARN", accTestRoleARN, display = ParameterDisplay.HIDDEN)
+
+        // Alternate Assume Role credentials
+        if (awsAlternateAccountID != "") {
+            if (awsAccessKeyID != "") {
+                password("AWS_ALTERNATE_ACCESS_KEY_ID", alternateAWSAccessKeyID, display = ParameterDisplay.HIDDEN)
+            }
+            if (awsSecretAccessKey != "") {
+                password("AWS_ALTERNATE_SECRET_ACCESS_KEY", alternateAWSSecretAccessKey, display = ParameterDisplay.HIDDEN)
+            }
+            if (alternateAccTestRoleARN != "") {
+                text("ACCTEST_ALTERNATE_ROLE_ARN", alternateAccTestRoleARN, display = ParameterDisplay.HIDDEN)
+            }
+        }
 
         // Define this parameter even when not set to allow individual builds to set the value
         text("env.TF_ACC_TERRAFORM_VERSION", DslContext.getParameter("terraform_version", ""))
@@ -141,7 +162,7 @@ object PullRequest : BuildType({
             type = "JetBrains.SharedResources"
             param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} readLock")
         }
-        val alternateAccountLockId = DslContext.getParameter("aws_alternate_account.lock_id", "")
+        val alternateAccountLockId = DslContext.getParameter("aws_alt_account.lock_id", "")
         if (alternateAccountLockId != "") {
             feature {
                 type = "JetBrains.SharedResources"
@@ -217,7 +238,7 @@ object FullBuild : BuildType({
             type = "JetBrains.SharedResources"
             param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} writeLock")
         }
-        val alternateAccountLockId = DslContext.getParameter("aws_alternate_account.lock_id", "")
+        val alternateAccountLockId = DslContext.getParameter("aws_alt_account.lock_id", "")
         if (alternateAccountLockId != "") {
             feature {
                 type = "JetBrains.SharedResources"
