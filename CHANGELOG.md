@@ -15,6 +15,7 @@ FEATURES:
 * **New Resource:** `aws_vpclattice_access_log_subscription` ([#30896](https://github.com/hashicorp/terraform-provider-aws/issues/30896))
 * **New Resource:** `aws_vpclattice_auth_policy` ([#30891](https://github.com/hashicorp/terraform-provider-aws/issues/30891))
 * **New Resource:** `aws_vpclattice_resource_policy` ([#30900](https://github.com/hashicorp/terraform-provider-aws/issues/30900))
+* **New Resource:** `aws_vpclattice_target_group_attachment` ([#31039](https://github.com/hashicorp/terraform-provider-aws/issues/31039))
 
 ENHANCEMENTS:
 
@@ -35,6 +36,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_connect_routing_profile: Remove the limit on the maximum number of queues that can be associated with a routing profile. Batch processing is now done when there are more than 10 queues associated or disassociated at a time. ([#30895](https://github.com/hashicorp/terraform-provider-aws/issues/30895))
 * resource/aws_db_instance: Consider `delete-precheck` a valid pending state for resource deletion ([#31047](https://github.com/hashicorp/terraform-provider-aws/issues/31047))
 * resource/aws_inspector2_enabler: Correctly supports `LAMBDA` resource scanning ([#31038](https://github.com/hashicorp/terraform-provider-aws/issues/31038))
 * resource/aws_inspector2_enabler: Correctly supports multiple accounts ([#31038](https://github.com/hashicorp/terraform-provider-aws/issues/31038))
