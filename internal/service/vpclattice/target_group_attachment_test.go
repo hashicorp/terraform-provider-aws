@@ -106,9 +106,8 @@ func TestAccVPCLatticeTargetGroupAttachment_lambda(t *testing.T) {
 func TestAccVPCLatticeTargetGroupAttachment_alb(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_vpclattice_register_targets.test"
-	albName := "aws_lb.test"
-	targetGroupResourceName := "aws_vpclattice_target_group.test"
+	resourceName := "aws_vpclattice_target_group_attachment.test"
+	albResourceName := "aws_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -121,17 +120,13 @@ func TestAccVPCLatticeTargetGroupAttachment_alb(t *testing.T) {
 		CheckDestroy:             testAccCheckRegisterTargetsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegisterTargets_alb(rName),
+				Config: testAccTargetGroupAttachmentConfig_alb(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetsExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.forward.0.target_groups.0.target_group_identifier", targetGroupResourceName, "target_group_identifier"),
-					resource.TestCheckResourceAttrPair(resourceName, "targets.0.id", albName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.id", albResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.port", "80"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -243,10 +238,8 @@ resource "aws_vpclattice_target_group_attachment" "test" {
 `, rName)
 }
 
-func testAccRegisterTargetsConfig_alb(rName string) string {
+func testAccTargetGroupAttachmentConfig_alb(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
-
-
 resource "aws_vpclattice_target_group" "test" {
   name = %[1]q
   type = "ALB"
@@ -262,16 +255,16 @@ resource "aws_lb" "test" {
   name               = %[1]q
   internal           = true
   load_balancer_type = "application"
-  subnets            = [aws_subnet.test[0].id, aws_subnet.test[1].id]
+  subnets            = aws_subnet.test[*].id
 
   enable_deletion_protection = false
-
 }
 
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.arn
   port              = "80"
   protocol          = "HTTP"
+
   default_action {
     type = "fixed-response"
 
@@ -283,24 +276,15 @@ resource "aws_lb_listener" "test" {
   }
 }
 
-
-`, rName))
-}
-
-func testAccRegisterTargets_alb(rName string) string {
-	return acctest.ConfigCompose(testAccRegisterTargetsConfig_alb(rName), `
-resource "aws_vpclattice_register_targets" "test" {
-  depends_on              = [aws_lb.test]
+resource "aws_vpclattice_target_group_attachment" "test" {
   target_group_identifier = aws_vpclattice_target_group.test.id
 
-  targets {
+  target {
     id   = aws_lb.test.arn
     port = 80
   }
 }
-
-
-`)
+`, rName))
 }
 
 func testAccCheckTargetsExists(ctx context.Context, n string) resource.TestCheckFunc {
