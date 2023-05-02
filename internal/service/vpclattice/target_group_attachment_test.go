@@ -19,8 +19,8 @@ import (
 func TestAccVPCLatticeTargetGroupAttachment_instance(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_vpclattice_register_targets.test"
-	instanceId := "aws_instance.test_instance"
+	resourceName := "aws_vpclattice_target_group_attachment.test"
+	instanceResourceName := "aws_instance.test"
 	targetGroupResourceName := "aws_vpclattice_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -34,12 +34,12 @@ func TestAccVPCLatticeTargetGroupAttachment_instance(t *testing.T) {
 		CheckDestroy:             testAccCheckRegisterTargetsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegisterTargets_instance(rName),
+				Config: testAccRegisterTargetsConfig_instance(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.forward.0.target_groups.0.target_group_identifier", targetGroupResourceName, "target_group_identifier"),
-					resource.TestCheckResourceAttrPair(resourceName, "targets.0.id", instanceId, "id"),
-					resource.TestCheckResourceAttr(resourceName, "targets.0.port", "80"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.id", instanceResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.port", "80"),
 				),
 			},
 		},
@@ -145,34 +145,16 @@ func TestAccVPCLatticeTargetGroupAttachment_alb(t *testing.T) {
 }
 
 func testAccRegisterTargetsConfig_instance(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
-
-
-data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-}
-
-resource "aws_instance" "test_instance" {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t3.large"
+  instance_type = "t2.small"
   subnet_id     = aws_subnet.test[0].id
 }
 
 resource "aws_vpclattice_target_group" "test" {
-  depends_on = [aws_instance.test_instance]
-  name       = %[1]q
-  type       = "INSTANCE"
+  name = %[1]q
+  type = "INSTANCE"
 
   config {
     port           = 80
@@ -180,23 +162,15 @@ resource "aws_vpclattice_target_group" "test" {
     vpc_identifier = aws_vpc.test.id
   }
 }
-`, rName))
-}
 
-func testAccRegisterTargets_instance(rName string) string {
-	return acctest.ConfigCompose(testAccRegisterTargetsConfig_instance(rName), `
-resource "aws_vpclattice_register_targets" "test" {
-  depends_on              = [aws_vpclattice_target_group.test]
+resource "aws_vpclattice_target_group_attachment" "test" {
   target_group_identifier = aws_vpclattice_target_group.test.id
 
-  targets {
-    id   = aws_instance.test_instance.id
-    port = 80
+  target {
+    id = aws_instance.test.id
   }
 }
-
-
-`)
+`, rName))
 }
 
 func testAccRegisterTargetsConfig_ipAddress(rName string) string {
@@ -386,7 +360,7 @@ func testAccCheckTargetsExists(ctx context.Context, n string) resource.TestCheck
 
 		var err error
 		var port int
-		if v, ok := rs.Primary.Attributes["targets.0.port"]; ok {
+		if v, ok := rs.Primary.Attributes["target.0.port"]; ok {
 			port, err = strconv.Atoi(v)
 
 			if err != nil {
@@ -396,7 +370,7 @@ func testAccCheckTargetsExists(ctx context.Context, n string) resource.TestCheck
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
 
-		_, err = tfvpclattice.FindTargetByThreePartKey(ctx, conn, rs.Primary.Attributes["target_group_identifier"], rs.Primary.Attributes["targets.0.id"], port)
+		_, err = tfvpclattice.FindTargetByThreePartKey(ctx, conn, rs.Primary.Attributes["target_group_identifier"], rs.Primary.Attributes["target.0.id"], port)
 
 		return err
 	}
@@ -413,7 +387,7 @@ func testAccCheckRegisterTargetsDestroy(ctx context.Context) resource.TestCheckF
 
 			var err error
 			var port int
-			if v, ok := rs.Primary.Attributes["targets.0.port"]; ok {
+			if v, ok := rs.Primary.Attributes["target.0.port"]; ok {
 				port, err = strconv.Atoi(v)
 
 				if err != nil {
@@ -421,7 +395,7 @@ func testAccCheckRegisterTargetsDestroy(ctx context.Context) resource.TestCheckF
 				}
 			}
 
-			_, err = tfvpclattice.FindTargetByThreePartKey(ctx, conn, rs.Primary.Attributes["target_group_identifier"], rs.Primary.Attributes["targets.0.id"], port)
+			_, err = tfvpclattice.FindTargetByThreePartKey(ctx, conn, rs.Primary.Attributes["target_group_identifier"], rs.Primary.Attributes["target.0.id"], port)
 
 			if tfresource.NotFound(err) {
 				continue

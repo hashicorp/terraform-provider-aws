@@ -51,6 +51,7 @@ func resourceTargetGroupAttachment() *schema.Resource {
 						"port": {
 							Type:         schema.TypeInt,
 							Optional:     true,
+							Computed:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.IsPortNumber,
 						},
