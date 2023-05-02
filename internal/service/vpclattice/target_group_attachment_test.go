@@ -132,6 +132,32 @@ func TestAccVPCLatticeTargetGroupAttachment_alb(t *testing.T) {
 	})
 }
 
+func TestAccVPCLatticeTargetGroupAttachment_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_target_group_attachment.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRegisterTargetsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupAttachmentConfig_instance(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetsExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceTargetGroupAttachment(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccTargetGroupAttachmentConfig_baseInstance(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_instance" "test" {
