@@ -32,14 +32,37 @@ func ResourceMetricAlarm() *schema.Resource {
 		ReadWithoutTimeout:   resourceMetricAlarmRead,
 		UpdateWithoutTimeout: resourceMetricAlarmUpdate,
 		DeleteWithoutTimeout: resourceMetricAlarmDelete,
-		SchemaVersion:        1,
-		MigrateState:         MetricAlarmMigrateState,
+
+		SchemaVersion: 1,
+		MigrateState:  MetricAlarmMigrateState,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
+			"actions_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+			"alarm_actions": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.Any(
+						verify.ValidARN,
+						validEC2AutomateARN,
+					),
+				},
+				Set: schema.HashString,
+			},
+			"alarm_description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 1024),
+			},
 			"alarm_name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -55,10 +78,49 @@ func ResourceMetricAlarm() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(cloudwatch.ComparisonOperator_Values(), false),
 			},
+			"datapoints_to_alarm": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntAtLeast(1),
+			},
+			"dimensions": {
+				Type:          schema.TypeMap,
+				Optional:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"metric_query"},
+			},
+			"evaluate_low_sample_count_percentiles": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(lowSampleCountPercentiles_Values(), true),
+			},
 			"evaluation_periods": {
 				Type:         schema.TypeInt,
 				Required:     true,
 				ValidateFunc: validation.IntAtLeast(1),
+			},
+			"extended_statistic": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"statistic", "metric_query"},
+				ValidateFunc: validation.StringMatch(
+					// doesn't catch: PR with %-values provided, TM/WM/PR/TC/TS with no values provided
+					regexp.MustCompile(`^((p|(tm)|(wm)|(tc)|(ts))((\d{1,2}(\.\d{1,2})?)|(100))|(IQM)|(((TM)|(WM)|(PR)|(TC)|(TS)))\((\d+(\.\d+)?%?)?:(\d+(\.\d+)?%?)?\))$`),
+					"invalid statistic, see: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html",
+				),
+			},
+			"insufficient_data_actions": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 5,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.Any(
+						verify.ValidARN,
+						validEC2AutomateARN,
+					),
+				},
 			},
 			"metric_name": {
 				Type:          schema.TypeString,
@@ -168,6 +230,18 @@ func ResourceMetricAlarm() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`[^:].*`), "must not contain colon characters"),
 				),
 			},
+			"ok_actions": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 5,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.Any(
+						verify.ValidARN,
+						validEC2AutomateARN,
+					),
+				},
+			},
 			"period": {
 				Type:          schema.TypeInt,
 				Optional:      true,
@@ -183,6 +257,8 @@ func ResourceMetricAlarm() *schema.Resource {
 				ConflictsWith: []string{"extended_statistic", "metric_query"},
 				ValidateFunc:  validation.StringInSlice(cloudwatch.Statistic_Values(), false),
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"threshold": {
 				Type:          schema.TypeFloat,
 				Optional:      true,
@@ -194,93 +270,17 @@ func ResourceMetricAlarm() *schema.Resource {
 				ConflictsWith: []string{"threshold"},
 				ValidateFunc:  validation.StringLenBetween(1, 255),
 			},
-			"actions_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"alarm_actions": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.Any(
-						verify.ValidARN,
-						validEC2AutomateARN,
-					),
-				},
-				Set: schema.HashString,
-			},
-			"alarm_description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-			"datapoints_to_alarm": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntAtLeast(1),
-			},
-			"dimensions": {
-				Type:          schema.TypeMap,
-				Optional:      true,
-				ConflictsWith: []string{"metric_query"},
-				Elem:          &schema.Schema{Type: schema.TypeString},
-			},
-			"insufficient_data_actions": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 5,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.Any(
-						verify.ValidARN,
-						validEC2AutomateARN,
-					),
-				},
-			},
-			"ok_actions": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 5,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.Any(
-						verify.ValidARN,
-						validEC2AutomateARN,
-					),
-				},
-			},
-			"unit": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(cloudwatch.StandardUnit_Values(), false),
-			},
-			"extended_statistic": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"statistic", "metric_query"},
-				ValidateFunc: validation.StringMatch(
-					// doesn't catch: PR with %-values provided, TM/WM/PR/TC/TS with no values provided
-					regexp.MustCompile(`^((p|(tm)|(wm)|(tc)|(ts))((\d{1,2}(\.\d{1,2})?)|(100))|(IQM)|(((TM)|(WM)|(PR)|(TC)|(TS)))\((\d+(\.\d+)?%?)?:(\d+(\.\d+)?%?)?\))$`),
-					"invalid statistic, see: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html",
-				),
-			},
 			"treat_missing_data": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      missingDataMissing,
 				ValidateFunc: validation.StringInSlice(missingData_Values(), true),
 			},
-			"evaluate_low_sample_count_percentiles": {
+			"unit": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(lowSampleCountPercentiles_Values(), true),
+				ValidateFunc: validation.StringInSlice(cloudwatch.StandardUnit_Values(), false),
 			},
-
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
