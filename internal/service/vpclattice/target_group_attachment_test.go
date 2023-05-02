@@ -21,7 +21,6 @@ func TestAccVPCLatticeTargetGroupAttachment_instance(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_target_group_attachment.test"
 	instanceResourceName := "aws_instance.test"
-	targetGroupResourceName := "aws_vpclattice_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -34,10 +33,10 @@ func TestAccVPCLatticeTargetGroupAttachment_instance(t *testing.T) {
 		CheckDestroy:             testAccCheckRegisterTargetsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegisterTargetsConfig_instance(rName),
+				Config: testAccTargetGroupAttachmentConfig_instance(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetsExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.forward.0.target_groups.0.target_group_identifier", targetGroupResourceName, "target_group_identifier"),
+					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "target.0.id", instanceResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.port", "80"),
 				),
@@ -49,9 +48,8 @@ func TestAccVPCLatticeTargetGroupAttachment_instance(t *testing.T) {
 func TestAccVPCLatticeTargetGroupAttachment_ip(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_vpclattice_register_targets.test"
-	instanceIP := "aws_instance.test_ip"
-	targetGroupResourceName := "aws_vpclattice_target_group.test"
+	resourceName := "aws_vpclattice_target_group_attachment.test"
+	instanceResourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -64,12 +62,12 @@ func TestAccVPCLatticeTargetGroupAttachment_ip(t *testing.T) {
 		CheckDestroy:             testAccCheckRegisterTargetsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegisterTargets_ip(rName),
+				Config: testAccTargetGroupAttachmentConfig_ip(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetsExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.forward.0.target_groups.0.target_group_identifier", targetGroupResourceName, "target_group_identifier"),
-					resource.TestCheckResourceAttrPair(resourceName, "targets.0.id", instanceIP, "private_ip"),
-					resource.TestCheckResourceAttr(resourceName, "targets.0.port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.id", instanceResourceName, "private_ip"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.port", "8080"),
 				),
 			},
 		},
@@ -144,14 +142,22 @@ func TestAccVPCLatticeTargetGroupAttachment_alb(t *testing.T) {
 	})
 }
 
-func testAccRegisterTargetsConfig_instance(rName string) string {
+func testAccTargetGroupAttachmentConfig_baseInstance(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.small"
   subnet_id     = aws_subnet.test[0].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }
 
+func testAccTargetGroupAttachmentConfig_instance(rName string) string {
+	return acctest.ConfigCompose(testAccTargetGroupAttachmentConfig_baseInstance(rName), fmt.Sprintf(`
 resource "aws_vpclattice_target_group" "test" {
   name = %[1]q
   type = "INSTANCE"
@@ -173,35 +179,11 @@ resource "aws_vpclattice_target_group_attachment" "test" {
 `, rName))
 }
 
-func testAccRegisterTargetsConfig_ipAddress(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
-
-
-data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-}
-
-resource "aws_instance" "test_ip" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t3.large"
-  subnet_id     = aws_subnet.test[0].id
-}
-
+func testAccTargetGroupAttachmentConfig_ip(rName string) string {
+	return acctest.ConfigCompose(testAccTargetGroupAttachmentConfig_baseInstance(rName), fmt.Sprintf(`
 resource "aws_vpclattice_target_group" "test" {
-  depends_on = [aws_instance.test_ip]
-  name       = %[1]q
-  type       = "IP"
+  name = %[1]q
+  type = "IP"
 
   config {
     port           = 80
@@ -209,25 +191,16 @@ resource "aws_vpclattice_target_group" "test" {
     vpc_identifier = aws_vpc.test.id
   }
 }
-`, rName))
-}
 
-func testAccRegisterTargets_ip(rName string) string {
-	return acctest.ConfigCompose(testAccRegisterTargetsConfig_ipAddress(rName), `
-
-
-resource "aws_vpclattice_register_targets" "test" {
-  depends_on              = [aws_vpclattice_target_group.test]
+resource "aws_vpclattice_target_group_attachment" "test" {
   target_group_identifier = aws_vpclattice_target_group.test.id
 
-  targets {
-    id   = aws_instance.test_ip.private_ip
-    port = 80
+  target {
+    id   = aws_instance.test.private_ip
+    port = 8080
   }
 }
-
-
-`)
+`, rName))
 }
 
 func testAccRegisterTargetsConfig_lambda(rName string) string {
