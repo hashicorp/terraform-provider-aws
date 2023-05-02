@@ -73,7 +73,7 @@ data "aws_rds_orderable_db_instance" "custom-oracle" {
   engine_version             = "19.c.ee.002"      # CEV engine version to be used
   license_model              = "bring-your-own-license"
   storage_type               = "gp3"
-  preferred_instance_classes = ["db.r5.24xlarge","db.r5.16xlarge","db.r5.12xlarge"]
+  preferred_instance_classes = ["db.r5.24xlarge", "db.r5.16xlarge", "db.r5.12xlarge"]
 }
 
 # The RDS instance resource requires an ARN. Look up the ARN of the KMS key associated with the CEV.
