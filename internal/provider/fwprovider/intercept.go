@@ -9,13 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	fwtypes "github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -396,6 +395,11 @@ func (r tagsInterceptor) read(ctx context.Context, request resource.ReadRequest,
 					err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
 				}
 
+				// ISO partitions may not support tagging, giving error.
+				if errs.IsUnsupportedOperationInPartitionError(meta.Partition, err) {
+					return ctx, diags
+				}
+
 				if err != nil {
 					diags.AddError(fmt.Sprintf("listing tags for %s %s (%s)", serviceName, resourceName, identifier), err.Error())
 
@@ -514,13 +518,8 @@ func (r tagsInterceptor) update(ctx context.Context, request resource.UpdateRequ
 					err = v.UpdateTags(ctx, meta, identifier, r.tags.ResourceType, oldTagsAll, newTagsAll)
 				}
 
-				if verify.ErrorISOUnsupported(meta.Partition, err) {
-					// ISO partitions may not support tagging, giving error
-					tflog.Warn(ctx, "failed updating tags for resource", map[string]interface{}{
-						r.tags.IdentifierAttribute: identifier,
-						"error":                    err.Error(),
-					})
-
+				// ISO partitions may not support tagging, giving error.
+				if errs.IsUnsupportedOperationInPartitionError(meta.Partition, err) {
 					return ctx, diags
 				}
 

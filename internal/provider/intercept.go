@@ -4,16 +4,15 @@ import (
 	"context"
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -251,13 +250,8 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 						err = v.UpdateTags(ctx, meta, identifier, r.tags.ResourceType, o, n)
 					}
 
-					if verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
-						// ISO partitions may not support tagging, giving error
-						tflog.Warn(ctx, "failed updating tags for resource", map[string]interface{}{
-							r.tags.IdentifierAttribute: identifier,
-							"error":                    err.Error(),
-						})
-
+					// ISO partitions may not support tagging, giving error.
+					if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
 						return ctx, diags
 					}
 
@@ -303,12 +297,8 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 						err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
 					}
 
-					if verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
-						// ISO partitions may not support tagging, giving error
-						tflog.Warn(ctx, "failed listing tags for resource", map[string]interface{}{
-							r.tags.IdentifierAttribute: d.Id(),
-							"error":                    err.Error(),
-						})
+					// ISO partitions may not support tagging, giving error.
+					if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
 						return ctx, diags
 					}
 
