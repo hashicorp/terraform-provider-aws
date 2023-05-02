@@ -2,7 +2,6 @@ package cloudwatch
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -11,10 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -56,7 +55,6 @@ func ResourceMetricAlarm() *schema.Resource {
 						validEC2AutomateARN,
 					),
 				},
-				Set: schema.HashString,
 			},
 			"alarm_description": {
 				Type:         schema.TypeString,
@@ -368,73 +366,50 @@ func resourceMetricAlarmRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudWatchConn()
 
-	resp, err := FindMetricAlarmByName(ctx, conn, d.Id())
+	alarm, err := FindMetricAlarmByName(ctx, conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		create.LogNotFoundRemoveState(names.CloudWatch, create.ErrActionReading, ResNameMetricAlarm, d.Id())
+		log.Printf("[WARN] CloudWatch Metric Alarm %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.CloudWatch, create.ErrActionReading, ResNameMetricAlarm, d.Id(), err)
+		return diag.Errorf("reading CloudWatch Metric Alarm (%s): %s", d.Id(), err)
 	}
 
-	if !d.IsNewResource() && resp == nil {
-		create.LogNotFoundRemoveState(names.CloudWatch, create.ErrActionReading, ResNameMetricAlarm, d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	if resp == nil {
-		return create.DiagError(names.CloudWatch, create.ErrActionReading, ResNameMetricAlarm, d.Id(), errors.New("not found after create"))
-	}
-
-	log.Printf("[DEBUG] Reading CloudWatch Metric Alarm: %s", d.Id())
-
-	d.Set("actions_enabled", resp.ActionsEnabled)
-
-	if err := d.Set("alarm_actions", flex.FlattenStringSet(resp.AlarmActions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting Alarm Actions: %s", err)
-	}
-	arn := aws.StringValue(resp.AlarmArn)
-	d.Set("alarm_description", resp.AlarmDescription)
-	d.Set("alarm_name", resp.AlarmName)
-	d.Set("arn", arn)
-	d.Set("comparison_operator", resp.ComparisonOperator)
-	d.Set("datapoints_to_alarm", resp.DatapointsToAlarm)
-	if err := d.Set("dimensions", flattenMetricAlarmDimensions(resp.Dimensions)); err != nil {
+	d.Set("actions_enabled", alarm.ActionsEnabled)
+	d.Set("alarm_actions", aws.StringValueSlice(alarm.AlarmActions))
+	d.Set("alarm_description", alarm.AlarmDescription)
+	d.Set("alarm_name", alarm.AlarmName)
+	d.Set("arn", alarm.AlarmArn)
+	d.Set("comparison_operator", alarm.ComparisonOperator)
+	d.Set("datapoints_to_alarm", alarm.DatapointsToAlarm)
+	if err := d.Set("dimensions", flattenMetricAlarmDimensions(alarm.Dimensions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting dimensions: %s", err)
 	}
-	d.Set("evaluation_periods", resp.EvaluationPeriods)
-
-	if err := d.Set("insufficient_data_actions", flex.FlattenStringSet(resp.InsufficientDataActions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting Insufficient Data Actions: %s", err)
-	}
-	d.Set("metric_name", resp.MetricName)
-	d.Set("namespace", resp.Namespace)
-
-	if resp.Metrics != nil && len(resp.Metrics) > 0 {
-		if err := d.Set("metric_query", flattenMetricAlarmMetrics(resp.Metrics)); err != nil {
+	d.Set("evaluate_low_sample_count_percentiles", alarm.EvaluateLowSampleCountPercentile)
+	d.Set("evaluation_periods", alarm.EvaluationPeriods)
+	d.Set("extended_statistic", alarm.ExtendedStatistic)
+	d.Set("insufficient_data_actions", aws.StringValueSlice(alarm.InsufficientDataActions))
+	d.Set("metric_name", alarm.MetricName)
+	if len(alarm.Metrics) > 0 {
+		if err := d.Set("metric_query", flattenMetricAlarmMetrics(alarm.Metrics)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting metric_query: %s", err)
 		}
 	}
-
-	if err := d.Set("ok_actions", flex.FlattenStringSet(resp.OKActions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting OK Actions: %s", err)
-	}
-
-	d.Set("period", resp.Period)
-	d.Set("statistic", resp.Statistic)
-	d.Set("threshold", resp.Threshold)
-	d.Set("threshold_metric_id", resp.ThresholdMetricId)
-	d.Set("unit", resp.Unit)
-	d.Set("extended_statistic", resp.ExtendedStatistic)
-	if resp.TreatMissingData != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
-		d.Set("treat_missing_data", resp.TreatMissingData)
+	d.Set("namespace", alarm.Namespace)
+	d.Set("ok_actions", aws.StringValueSlice(alarm.OKActions))
+	d.Set("period", alarm.Period)
+	d.Set("statistic", alarm.Statistic)
+	d.Set("threshold", alarm.Threshold)
+	d.Set("threshold_metric_id", alarm.ThresholdMetricId)
+	if alarm.TreatMissingData != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
+		d.Set("treat_missing_data", alarm.TreatMissingData)
 	} else {
 		d.Set("treat_missing_data", missingDataMissing)
 	}
-	d.Set("evaluate_low_sample_count_percentiles", resp.EvaluateLowSampleCountPercentile)
+	d.Set("unit", alarm.Unit)
 
 	return diags
 }
@@ -472,6 +447,36 @@ func resourceMetricAlarmDelete(ctx context.Context, d *schema.ResourceData, meta
 	log.Println("[INFO] CloudWatch Metric Alarm deleted")
 
 	return diags
+}
+
+func FindMetricAlarmByName(ctx context.Context, conn *cloudwatch.CloudWatch, name string) (*cloudwatch.MetricAlarm, error) {
+	input := &cloudwatch.DescribeAlarmsInput{
+		AlarmNames: aws.StringSlice([]string{name}),
+		AlarmTypes: aws.StringSlice([]string{cloudwatch.AlarmTypeMetricAlarm}),
+	}
+
+	output, err := conn.DescribeAlarmsWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, cloudwatch.ErrCodeResourceNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.MetricAlarms) == 0 || output.MetricAlarms[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.MetricAlarms); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.MetricAlarms[0], nil
 }
 
 func getPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) cloudwatch.PutMetricAlarmInput {

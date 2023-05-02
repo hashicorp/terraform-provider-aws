@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -14,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccCloudWatchMetricAlarm_basic(t *testing.T) {
@@ -640,22 +640,26 @@ func TestAccCloudWatchMetricAlarm_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckMetricAlarmExists(ctx context.Context, n string, alarm *cloudwatch.MetricAlarm) resource.TestCheckFunc {
+func testAccCheckMetricAlarmExists(ctx context.Context, n string, v *cloudwatch.MetricAlarm) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No CloudWatch Metric Alarm ID is set")
+		}
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
-		resp, err := tfcloudwatch.FindMetricAlarmByName(ctx, conn, rs.Primary.ID)
+
+		output, err := tfcloudwatch.FindMetricAlarmByName(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if resp == nil {
-			return fmt.Errorf("Alarm not found")
-		}
-		*alarm = *resp
+
+		*v = *output
 
 		return nil
 	}
@@ -670,12 +674,17 @@ func testAccCheckMetricAlarmDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			resp, err := tfcloudwatch.FindMetricAlarmByName(ctx, conn, rs.Primary.ID)
-			if err == nil {
-				if resp != nil && aws.StringValue(resp.AlarmName) == rs.Primary.ID {
-					return fmt.Errorf("Alarm Still Exists: %s", rs.Primary.ID)
-				}
+			_, err := tfcloudwatch.FindMetricAlarmByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("CloudWatch Metric Alarm %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -685,7 +694,7 @@ func testAccCheckMetricAlarmDestroy(ctx context.Context) resource.TestCheckFunc 
 func testAccMetricAlarmConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
-  alarm_name                = "%s"
+  alarm_name                = %[1]q
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = 2
   metric_name               = "CPUUtilization"
@@ -697,7 +706,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   insufficient_data_actions = []
 
   dimensions = {
-    InstanceId = "i-abc123"
+    InstanceId = "i-abcc1234"
   }
 }
 `, rName)
