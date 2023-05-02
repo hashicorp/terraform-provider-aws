@@ -1044,10 +1044,9 @@ func FlattenTemplateDefinition(apiObject *quicksight.TemplateVersionDefinition) 
 	if apiObject.ParameterDeclarations != nil {
 		tfMap["parameters_declarations"] = flattenParameterDeclarations(apiObject.ParameterDeclarations)
 	}
-	// TODO
-	//if apiObject.Sheets != nil {
-	//	tfMap["sheets"] = flattenSheetDefinitions(apiObject.Sheets)
-	//}
+	if apiObject.Sheets != nil {
+		tfMap["sheets"] = flattenSheetDefinitions(apiObject.Sheets)
+	}
 
 	return []interface{}{tfMap}
 }
@@ -1355,6 +1354,151 @@ func flattenParameterDeclarations(apiObject []*quicksight.ParameterDeclaration) 
 		if config.StringParameterDeclaration != nil {
 			tfMap["string_parameter_declaration"] = flattenStringParameterDeclaration(config.StringParameterDeclaration)
 		}
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenSheetDefinitions(apiObject []*quicksight.SheetDefinition) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{
+			"sheet_id": aws.StringValue(config.SheetId),
+		}
+		if config.ContentType != nil {
+			tfMap["content_type"] = aws.StringValue(config.ContentType)
+		}
+		if config.Description != nil {
+			tfMap["description"] = aws.StringValue(config.Description)
+		}
+		if config.FilterControls != nil {
+			tfMap["filter_controls"] = flattenFilterControls(config.FilterControls)
+		}
+		if config.Layouts != nil {
+			tfMap["layouts"] = flattenLayouts(config.Layouts)
+		}
+		if config.Name != nil {
+			tfMap["name"] = aws.StringValue(config.Name)
+		}
+		if config.ParameterControls != nil {
+			tfMap["parameter_controls"] = flattenParameterControls(config.ParameterControls)
+		}
+		if config.SheetControlLayouts != nil {
+			tfMap["sheet_control_layouts"] = flattenSheetControlLayouts(config.SheetControlLayouts)
+		}
+		if config.TextBoxes != nil {
+			tfMap["text_boxes"] = flattenTextBoxes(config.TextBoxes)
+		}
+		if config.Title != nil {
+			tfMap["title"] = aws.StringValue(config.Title)
+		}
+		if config.Visuals != nil {
+			tfMap["visuals"] = flattenVisuals(config.Visuals)
+		}
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenLayouts(apiObject []*quicksight.Layout) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		// TODO
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenParameterControls(apiObject []*quicksight.ParameterControl) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		// TODO
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenSheetControlLayouts(apiObject []*quicksight.SheetControlLayout) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		// TODO
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenTextBoxes(apiObject []*quicksight.SheetTextBox) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		// TODO
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenVisuals(apiObject []*quicksight.Visual) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		// TODO
 		tfList = append(tfList, tfMap)
 	}
 
