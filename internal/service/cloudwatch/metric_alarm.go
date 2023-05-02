@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -318,44 +319,42 @@ func resourceMetricAlarmCreate(ctx context.Context, d *schema.ResourceData, meta
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CloudWatch Metric Alarm (%s): %s", d.Get("alarm_name").(string), err)
 	}
-	input := getPutMetricAlarmInput(ctx, d)
 
-	log.Printf("[DEBUG] Creating CloudWatch Metric Alarm: %#v", input)
-	_, err = conn.PutMetricAlarmWithContext(ctx, &input)
+	name := d.Get("alarm_name").(string)
+	input := expandPutMetricAlarmInput(ctx, d)
 
-	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] failed creating CloudWatch Metric Alarm (%s) with tags: %s. Trying create without tags.", d.Get("alarm_name").(string), err)
+	_, err = conn.PutMetricAlarmWithContext(ctx, input)
+
+	// Some partitions (e.g. ISO) may not support tag-on-create.
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		input.Tags = nil
 
-		_, err = conn.PutMetricAlarmWithContext(ctx, &input)
+		_, err = conn.PutMetricAlarmWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating CloudWatch Metric Alarm (%s): %s", d.Get("alarm_name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudWatch Metric Alarm (%s): %s", name, err)
 	}
 
-	d.SetId(d.Get("alarm_name").(string))
-	log.Println("[INFO] CloudWatch Metric Alarm created")
+	d.SetId(name)
 
-	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
-	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); input.Tags == nil && len(tags) > 0 {
-		resp, err := FindMetricAlarmByName(ctx, conn, d.Id())
+	// For partitions not supporting tag-on-create, attempt tag after create.
+	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+		alarm, err := FindMetricAlarmByName(ctx, conn, d.Id())
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "while finding metric alarm (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "reading CloudWatch Metric Alarm (%s): %s", d.Id(), err)
 		}
 
-		err = UpdateTags(ctx, conn, aws.StringValue(resp.AlarmArn), nil, tags)
+		err = createTags(ctx, conn, aws.StringValue(alarm.AlarmArn), tags)
 
-		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-			log.Printf("[WARN] failed adding tags after create for CloudWatch Metric Alarm (%s): %s", d.Id(), err)
+		// If default tags only, continue. Otherwise, error.
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 			return append(diags, resourceMetricAlarmRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "adding tags after create for CloudWatch Metric Alarm (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting CloudWatch Metric Alarm (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -417,14 +416,16 @@ func resourceMetricAlarmRead(ctx context.Context, d *schema.ResourceData, meta i
 func resourceMetricAlarmUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudWatchConn()
-	params := getPutMetricAlarmInput(ctx, d)
 
-	log.Printf("[DEBUG] Updating CloudWatch Metric Alarm: %#v", params)
-	_, err := conn.PutMetricAlarmWithContext(ctx, &params)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Updating metric alarm failed: %s", err)
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := expandPutMetricAlarmInput(ctx, d)
+
+		_, err := conn.PutMetricAlarmWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating CloudWatch Metric Alarm (%s): %s", d.Id(), err)
+		}
 	}
-	log.Println("[INFO] CloudWatch Metric Alarm updated")
 
 	return append(diags, resourceMetricAlarmRead(ctx, d, meta)...)
 }
@@ -432,19 +433,19 @@ func resourceMetricAlarmUpdate(ctx context.Context, d *schema.ResourceData, meta
 func resourceMetricAlarmDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudWatchConn()
-	params := cloudwatch.DeleteAlarmsInput{
-		AlarmNames: []*string{aws.String(d.Id())},
-	}
 
 	log.Printf("[INFO] Deleting CloudWatch Metric Alarm: %s", d.Id())
+	_, err := conn.DeleteAlarmsWithContext(ctx, &cloudwatch.DeleteAlarmsInput{
+		AlarmNames: aws.StringSlice([]string{d.Id()}),
+	})
 
-	if _, err := conn.DeleteAlarmsWithContext(ctx, &params); err != nil {
-		if tfawserr.ErrCodeEquals(err, cloudwatch.ErrCodeResourceNotFoundException) {
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "Error deleting CloudWatch Metric Alarm: %s", err)
+	if tfawserr.ErrCodeEquals(err, cloudwatch.ErrCodeResourceNotFoundException) {
+		return diags
 	}
-	log.Println("[INFO] CloudWatch Metric Alarm deleted")
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Metric Alarm (%s): %s", d.Id(), err)
+	}
 
 	return diags
 }
@@ -479,8 +480,8 @@ func FindMetricAlarmByName(ctx context.Context, conn *cloudwatch.CloudWatch, nam
 	return output.MetricAlarms[0], nil
 }
 
-func getPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) cloudwatch.PutMetricAlarmInput {
-	input := cloudwatch.PutMetricAlarmInput{
+func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *cloudwatch.PutMetricAlarmInput {
+	apiObject := &cloudwatch.PutMetricAlarmInput{
 		AlarmName:          aws.String(d.Get("alarm_name").(string)),
 		ComparisonOperator: aws.String(d.Get("comparison_operator").(string)),
 		EvaluationPeriods:  aws.Int64(int64(d.Get("evaluation_periods").(int))),
@@ -489,71 +490,72 @@ func getPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) cloudwa
 	}
 
 	if v := d.Get("actions_enabled"); v != nil {
-		input.ActionsEnabled = aws.Bool(v.(bool))
-	}
-
-	if v, ok := d.GetOk("alarm_description"); ok {
-		input.AlarmDescription = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("datapoints_to_alarm"); ok {
-		input.DatapointsToAlarm = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("metric_name"); ok {
-		input.MetricName = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("namespace"); ok {
-		input.Namespace = aws.String(v.(string))
-	}
-	if v, ok := d.GetOk("period"); ok {
-		input.Period = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("unit"); ok {
-		input.Unit = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("statistic"); ok {
-		input.Statistic = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("extended_statistic"); ok {
-		input.ExtendedStatistic = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("evaluate_low_sample_count_percentiles"); ok {
-		input.EvaluateLowSampleCountPercentile = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("threshold_metric_id"); ok {
-		input.ThresholdMetricId = aws.String(v.(string))
-	} else {
-		input.Threshold = aws.Float64(d.Get("threshold").(float64))
+		apiObject.ActionsEnabled = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("alarm_actions"); ok {
-		input.AlarmActions = flex.ExpandStringSet(v.(*schema.Set))
+		apiObject.AlarmActions = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("insufficient_data_actions"); ok {
-		input.InsufficientDataActions = flex.ExpandStringSet(v.(*schema.Set))
+	if v, ok := d.GetOk("alarm_description"); ok {
+		apiObject.AlarmDescription = aws.String(v.(string))
 	}
 
-	if v := d.Get("metric_query"); v != nil {
-		input.Metrics = expandMetricAlarmMetrics(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("ok_actions"); ok {
-		input.OKActions = flex.ExpandStringSet(v.(*schema.Set))
+	if v, ok := d.GetOk("datapoints_to_alarm"); ok {
+		apiObject.DatapointsToAlarm = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("dimensions"); ok {
-		input.Dimensions = expandMetricAlarmDimensions(v.(map[string]interface{}))
+		apiObject.Dimensions = expandMetricAlarmDimensions(v.(map[string]interface{}))
 	}
 
-	return input
+	if v, ok := d.GetOk("evaluate_low_sample_count_percentiles"); ok {
+		apiObject.EvaluateLowSampleCountPercentile = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("extended_statistic"); ok {
+		apiObject.ExtendedStatistic = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("insufficient_data_actions"); ok {
+		apiObject.InsufficientDataActions = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("metric_name"); ok {
+		apiObject.MetricName = aws.String(v.(string))
+	}
+
+	if v := d.Get("metric_query"); v != nil {
+		apiObject.Metrics = expandMetricAlarmMetrics(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("namespace"); ok {
+		apiObject.Namespace = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("ok_actions"); ok {
+		apiObject.OKActions = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("period"); ok {
+		apiObject.Period = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("statistic"); ok {
+		apiObject.Statistic = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("threshold_metric_id"); ok {
+		apiObject.ThresholdMetricId = aws.String(v.(string))
+	} else {
+		apiObject.Threshold = aws.Float64(d.Get("threshold").(float64))
+	}
+
+	if v, ok := d.GetOk("unit"); ok {
+		apiObject.Unit = aws.String(v.(string))
+	}
+
+	return apiObject
 }
 
 func flattenMetricAlarmDimensions(dims []*cloudwatch.Dimension) map[string]interface{} {
