@@ -217,7 +217,9 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 		switch why {
 		case Create, Update:
 			// Merge the resource's configured tags with any provider configured default_tags.
-			tags := tagsInContext.DefaultConfig.MergeTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})))
+			tags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))
+			tagsInContext.ConfiguredTagCount = len(tags)
+			tags = tagsInContext.DefaultConfig.MergeTags(tags)
 			// Remove system tags.
 			tags = tags.IgnoreSystem(inContext.ServicePackageName)
 

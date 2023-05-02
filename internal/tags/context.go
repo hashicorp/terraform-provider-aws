@@ -14,6 +14,8 @@ type InContext struct {
 	TagsIn types.Option[KeyValueTags]
 	// TagsOut holds tags returned from AWS, including any ignored or system tags.
 	TagsOut types.Option[KeyValueTags]
+	// ConfiguredTagCount is the number of tags explictly configured for the resource.
+	ConfiguredTagCount int
 }
 
 // NewContext returns a Context enhanced with tagging information.
