@@ -235,8 +235,9 @@ across different markets and instance types. Conflicts with `launch_template_con
 * `terminate_instances_on_delete` - (Optional) Indicates whether running Spot
   instances should be terminated when the resource is deleted (and the Spot fleet request cancelled).
   If no value is specified, the value of the `terminate_instances_with_expiration` argument is used.
-* `instance_interruption_behavior` - (Optional) Indicates whether a Spot instance stops or terminates when it is interrupted. Default is `terminate`.
-* `instance_interruption_behaviour` - (Optional, **Deprecated** use the `instance_interruption_behavior` argument instead) Indicates whether a Spot instance stops or terminates when it is interrupted. Default is `terminate`.
+* `instance_interruption_behaviour` - (Optional) Indicates whether a Spot
+  instance stops or terminates when it is interrupted. Default is
+  `terminate`.
 * `fleet_type` - (Optional) The type of fleet request. Indicates whether the Spot Fleet only requests the target
   capacity or also attempts to maintain it. Default is `maintain`.
 * `valid_until` - (Optional) The end date and time of the request, in UTC [RFC3339](https://tools.ietf.org/html/rfc3339#section-5.8) format(for example, YYYY-MM-DDTHH:MM:SSZ). At this point, no new Spot instance requests are placed or enabled to fulfill the request.
