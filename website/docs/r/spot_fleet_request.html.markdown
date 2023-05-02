@@ -11,6 +11,9 @@ description: |-
 Provides an EC2 Spot Fleet Request resource. This allows a fleet of Spot
 instances to be requested on the Spot market.
 
+~> **NOTE [AWS strongly discourages](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-best-practices.html#which-spot-request-method-to-use) the use of the legacy APIs called by this resource.
+We recommend using the [EC2 Fleet](ec2_fleet.html) or [Auto Scaling Group](autoscaling_group.html) resources instead.
+
 ## Example Usage
 
 ### Using launch specifications
