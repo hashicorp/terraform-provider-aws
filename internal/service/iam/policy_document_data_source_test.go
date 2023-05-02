@@ -804,7 +804,6 @@ var testAccPolicyDocumentSourceListExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "foo:ActionOne"
     },
@@ -819,7 +818,6 @@ var testAccPolicyDocumentSourceListExpectedJSON = `{
       "Action": "foo:ActionTwo"
     },
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "bar:ActionTwo"
     }
@@ -961,7 +959,6 @@ var testAccPolicyDocumentOverrideExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "ec2:*",
       "Resource": "*"
@@ -1021,7 +1018,6 @@ var testAccPolicyDocumentOverrideListExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "foo:ActionOne"
     },
@@ -1065,7 +1061,6 @@ var testAccPolicyDocumentNoStatementMergeExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "ec2:DescribeAccountAttributes",
       "Resource": "*"
@@ -1154,13 +1149,11 @@ var testAccPolicyDocumentDuplicateBlankSidExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "ec2:DescribeAccountAttributes",
       "Resource": "*"
     },
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "s3:GetObject",
       "Resource": "*"
@@ -1183,7 +1176,6 @@ const testAccPolicyDocumentVersion20081017ExpectedJSONDataSourceConfig = `{
   "Version": "2008-10-17",
   "Statement": [
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "ec2:*",
       "Resource": "*"
