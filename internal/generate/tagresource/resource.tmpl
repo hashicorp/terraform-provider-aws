@@ -45,7 +45,7 @@ func ResourceTag() *schema.Resource {
 	}
 }
 
-func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { {{ if not (eq .ServicePackage "ec2") }}// nosemgrep:calling-UpdateTags-in-resource-create{{- end }}
+func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { {{ if not (eq .ServicePackage "ec2") }}// nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create{{- end }}
 	conn := meta.(*conns.AWSClient).{{ .AWSServiceUpper }}Conn()
 
 	identifier := d.Get("{{ .IDAttribName }}").(string)
