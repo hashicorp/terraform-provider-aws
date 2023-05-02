@@ -244,7 +244,7 @@ func ResourceRegisteredDomain() *schema.Resource {
 	}
 }
 
-func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
 	conn := meta.(*conns.AWSClient).Route53DomainsClient()
 
 	domainName := d.Get("domain_name").(string)
