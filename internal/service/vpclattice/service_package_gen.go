@@ -73,11 +73,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceRegisterTargets,
-			TypeName: "aws_vpclattice_register_targets",
-			Name:     "Register Targets",
-		},
-		{
 			Factory:  ResourceResourcePolicy,
 			TypeName: "aws_vpclattice_resource_policy",
 			Name:     "Resource Policy",
@@ -121,6 +116,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "arn",
 			},
+		},
+		{
+			Factory:  resourceTargetGroupAttachment,
+			TypeName: "aws_vpclattice_target_group_attachment",
+			Name:     "Target Group Attachment",
 		},
 	}
 }

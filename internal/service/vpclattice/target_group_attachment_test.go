@@ -2,27 +2,22 @@ package vpclattice_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
-	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccVPCLatticeRegisterTargets_instance(t *testing.T) {
+func TestAccVPCLatticeTargetGroupAttachment_instance(t *testing.T) {
 	ctx := acctest.Context(t)
-	var targets vpclattice.ListTargetsOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_register_targets.test"
 	instanceId := "aws_instance.test_instance"
@@ -41,24 +36,18 @@ func TestAccVPCLatticeRegisterTargets_instance(t *testing.T) {
 			{
 				Config: testAccRegisterTargets_instance(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetsExists(ctx, resourceName, &targets),
+					testAccCheckTargetsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.forward.0.target_groups.0.target_group_identifier", targetGroupResourceName, "target_group_identifier"),
 					resource.TestCheckResourceAttrPair(resourceName, "targets.0.id", instanceId, "id"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.port", "80"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
 		},
 	})
 }
 
-func TestAccVPCLatticeRegisterTargets_ip(t *testing.T) {
+func TestAccVPCLatticeTargetGroupAttachment_ip(t *testing.T) {
 	ctx := acctest.Context(t)
-	var targets vpclattice.ListTargetsOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_register_targets.test"
 	instanceIP := "aws_instance.test_ip"
@@ -77,24 +66,18 @@ func TestAccVPCLatticeRegisterTargets_ip(t *testing.T) {
 			{
 				Config: testAccRegisterTargets_ip(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetsExists(ctx, resourceName, &targets),
+					testAccCheckTargetsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.forward.0.target_groups.0.target_group_identifier", targetGroupResourceName, "target_group_identifier"),
 					resource.TestCheckResourceAttrPair(resourceName, "targets.0.id", instanceIP, "private_ip"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.port", "80"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
 		},
 	})
 }
 
-func TestAccVPCLatticeRegisterTargets_lambda(t *testing.T) {
+func TestAccVPCLatticeTargetGroupAttachment_lambda(t *testing.T) {
 	ctx := acctest.Context(t)
-	var targets vpclattice.ListTargetsOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_register_targets.test"
 	lambdaName := "aws_lambda_function.test"
@@ -113,7 +96,7 @@ func TestAccVPCLatticeRegisterTargets_lambda(t *testing.T) {
 			{
 				Config: testAccRegisterTargets_lambda(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetsExists(ctx, resourceName, &targets),
+					testAccCheckTargetsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.forward.0.target_groups.0.target_group_identifier", targetGroupResourceName, "target_group_identifier"),
 					resource.TestCheckResourceAttrPair(resourceName, "targets.0.id", lambdaName, "arn"),
 				),
@@ -127,9 +110,8 @@ func TestAccVPCLatticeRegisterTargets_lambda(t *testing.T) {
 	})
 }
 
-func TestAccVPCLatticeRegisterTargets_alb(t *testing.T) {
+func TestAccVPCLatticeTargetGroupAttachment_alb(t *testing.T) {
 	ctx := acctest.Context(t)
-	var targets vpclattice.ListTargetsOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_register_targets.test"
 	albName := "aws_lb.test"
@@ -148,7 +130,7 @@ func TestAccVPCLatticeRegisterTargets_alb(t *testing.T) {
 			{
 				Config: testAccRegisterTargets_alb(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetsExists(ctx, resourceName, &targets),
+					testAccCheckTargetsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.forward.0.target_groups.0.target_group_identifier", targetGroupResourceName, "target_group_identifier"),
 					resource.TestCheckResourceAttrPair(resourceName, "targets.0.id", albName, "arn"),
 				),
@@ -391,53 +373,32 @@ resource "aws_vpclattice_register_targets" "test" {
 `)
 }
 
-func testAccCheckTargetsExists(ctx context.Context, name string, targets *vpclattice.ListTargetsOutput) resource.TestCheckFunc {
+func testAccCheckTargetsExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameRegisterTargets, name, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameRegisterTargets, name, errors.New("not set"))
+			return fmt.Errorf("No VPC Lattice Target Group Attachment ID is set")
 		}
 
-		targetGroupIdentifier := rs.Primary.Attributes["target_group_identifier"]
-		targetID := rs.Primary.Attributes["targets.0.id"]
-		portStr, hasPort := rs.Primary.Attributes["targets.0.port"]
-		port, _ := strconv.Atoi(portStr)
-		hasValidPort := hasPort && port > 0
+		var err error
+		var port int
+		if v, ok := rs.Primary.Attributes["targets.0.port"]; ok {
+			port, err = strconv.Atoi(v)
 
-		if targetID == "" {
-			return fmt.Errorf("Error: target ID is empty")
-		}
-
-		target := types.Target{
-			Id: aws.String(targetID),
-		}
-
-		if hasValidPort {
-			portStr := rs.Primary.Attributes["targets.0.port"]
-			port, err := strconv.Atoi(portStr)
 			if err != nil {
-				return fmt.Errorf("Error parsing target port: %s", err)
+				return err
 			}
-			target.Port = aws.Int32(int32(port))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
-		resp, err := conn.ListTargets(ctx, &vpclattice.ListTargetsInput{
-			TargetGroupIdentifier: aws.String(targetGroupIdentifier),
-			Targets:               []types.Target{target},
-		})
 
-		if err != nil {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameRegisterTargets, rs.Primary.ID, err)
-		}
+		_, err = tfvpclattice.FindTargetByThreePartKey(ctx, conn, rs.Primary.Attributes["target_group_identifier"], rs.Primary.Attributes["targets.0.id"], port)
 
-		*targets = *resp
-
-		return nil
+		return err
 	}
 }
 
@@ -450,39 +411,27 @@ func testAccCheckRegisterTargetsDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			targetGroupIdentifier := rs.Primary.Attributes["target_group_identifier"]
-			targetID := rs.Primary.Attributes["targets.0.id"]
-			portStr, hasPort := rs.Primary.Attributes["targets.0.port"]
-			port, _ := strconv.Atoi(portStr)
-			hasValidPort := hasPort && port > 0
+			var err error
+			var port int
+			if v, ok := rs.Primary.Attributes["targets.0.port"]; ok {
+				port, err = strconv.Atoi(v)
 
-			target := types.Target{
-				Id: aws.String(targetID),
-			}
-
-			if hasValidPort {
-				portStr := rs.Primary.Attributes["targets.0.port"]
-				port, err := strconv.Atoi(portStr)
 				if err != nil {
-					return fmt.Errorf("Error parsing target port: %s", err)
+					return err
 				}
-				target.Port = aws.Int32(int32(port))
 			}
 
-			_, err := conn.ListTargets(ctx, &vpclattice.ListTargetsInput{
-				TargetGroupIdentifier: aws.String(targetGroupIdentifier),
-				Targets:               []types.Target{target},
-			})
+			_, err = tfvpclattice.FindTargetByThreePartKey(ctx, conn, rs.Primary.Attributes["target_group_identifier"], rs.Primary.Attributes["targets.0.id"], port)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
 
 			if err != nil {
-				var nfe *types.ResourceNotFoundException
-				if errors.As(err, &nfe) {
-					return nil
-				}
 				return err
 			}
 
-			return create.Error(names.VPCLattice, create.ErrActionCheckingDestroyed, tfvpclattice.ResNameRegisterTargets, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("VPC Lattice Target Group Attachment %s still exists", rs.Primary.ID)
 		}
 
 		return nil
