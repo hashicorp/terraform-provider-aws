@@ -137,14 +137,14 @@ func s3ConfigurationSchema() *schema.Schema {
 					ValidateFunc: verify.ValidARN,
 				},
 
-				"buffer_size": {
+				"buffering_size": {
 					Type:         schema.TypeInt,
 					Optional:     true,
 					Default:      5,
 					ValidateFunc: validation.IntAtLeast(1),
 				},
 
-				"buffer_interval": {
+				"buffering_interval": {
 					Type:         schema.TypeInt,
 					Optional:     true,
 					Default:      300,
@@ -357,8 +357,8 @@ func flattenExtendedS3Configuration(description *firehose.ExtendedS3DestinationD
 	}
 
 	if description.BufferingHints != nil {
-		m["buffer_interval"] = int(aws.Int64Value(description.BufferingHints.IntervalInSeconds))
-		m["buffer_size"] = int(aws.Int64Value(description.BufferingHints.SizeInMBs))
+		m["buffering_interval"] = int(aws.Int64Value(description.BufferingHints.IntervalInSeconds))
+		m["buffering_size"] = int(aws.Int64Value(description.BufferingHints.SizeInMBs))
 	}
 
 	if description.EncryptionConfiguration != nil && description.EncryptionConfiguration.KMSEncryptionConfig != nil {
@@ -433,8 +433,8 @@ func flattenS3Configuration(description *firehose.S3DestinationDescription) []ma
 	}
 
 	if description.BufferingHints != nil {
-		m["buffer_interval"] = int(aws.Int64Value(description.BufferingHints.IntervalInSeconds))
-		m["buffer_size"] = int(aws.Int64Value(description.BufferingHints.SizeInMBs))
+		m["buffering_interval"] = int(aws.Int64Value(description.BufferingHints.IntervalInSeconds))
+		m["buffering_size"] = int(aws.Int64Value(description.BufferingHints.SizeInMBs))
 	}
 
 	if description.EncryptionConfiguration != nil && description.EncryptionConfiguration.KMSEncryptionConfig != nil {
@@ -1026,13 +1026,13 @@ func ResourceDeliveryStream() *schema.Resource {
 							ValidateFunc: verify.ValidARN,
 						},
 
-						"buffer_size": {
+						"buffering_size": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Default:  5,
 						},
 
-						"buffer_interval": {
+						"buffering_interval": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Default:  300,
@@ -1786,8 +1786,8 @@ func createS3Config(d *schema.ResourceData) *firehose.S3DestinationConfiguration
 		BucketARN: aws.String(s3["bucket_arn"].(string)),
 		RoleARN:   aws.String(s3["role_arn"].(string)),
 		BufferingHints: &firehose.BufferingHints{
-			IntervalInSeconds: aws.Int64(int64(s3["buffer_interval"].(int))),
-			SizeInMBs:         aws.Int64(int64(s3["buffer_size"].(int))),
+			IntervalInSeconds: aws.Int64(int64(s3["buffering_interval"].(int))),
+			SizeInMBs:         aws.Int64(int64(s3["buffering_size"].(int))),
 		},
 		Prefix:                  extractPrefixConfiguration(s3),
 		CompressionFormat:       aws.String(s3["compression_format"].(string)),
@@ -1817,8 +1817,8 @@ func expandS3BackupConfig(d map[string]interface{}) *firehose.S3DestinationConfi
 		BucketARN: aws.String(s3["bucket_arn"].(string)),
 		RoleARN:   aws.String(s3["role_arn"].(string)),
 		BufferingHints: &firehose.BufferingHints{
-			IntervalInSeconds: aws.Int64(int64(s3["buffer_interval"].(int))),
-			SizeInMBs:         aws.Int64(int64(s3["buffer_size"].(int))),
+			IntervalInSeconds: aws.Int64(int64(s3["buffering_interval"].(int))),
+			SizeInMBs:         aws.Int64(int64(s3["buffering_size"].(int))),
 		},
 		Prefix:                  extractPrefixConfiguration(s3),
 		CompressionFormat:       aws.String(s3["compression_format"].(string)),
@@ -1843,8 +1843,8 @@ func createExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 		BucketARN: aws.String(s3["bucket_arn"].(string)),
 		RoleARN:   aws.String(s3["role_arn"].(string)),
 		BufferingHints: &firehose.BufferingHints{
-			IntervalInSeconds: aws.Int64(int64(s3["buffer_interval"].(int))),
-			SizeInMBs:         aws.Int64(int64(s3["buffer_size"].(int))),
+			IntervalInSeconds: aws.Int64(int64(s3["buffering_interval"].(int))),
+			SizeInMBs:         aws.Int64(int64(s3["buffering_size"].(int))),
 		},
 		Prefix:                            extractPrefixConfiguration(s3),
 		CompressionFormat:                 aws.String(s3["compression_format"].(string)),
@@ -1883,8 +1883,8 @@ func updateS3Config(d *schema.ResourceData) *firehose.S3DestinationUpdate {
 		BucketARN: aws.String(s3["bucket_arn"].(string)),
 		RoleARN:   aws.String(s3["role_arn"].(string)),
 		BufferingHints: &firehose.BufferingHints{
-			IntervalInSeconds: aws.Int64((int64)(s3["buffer_interval"].(int))),
-			SizeInMBs:         aws.Int64((int64)(s3["buffer_size"].(int))),
+			IntervalInSeconds: aws.Int64((int64)(s3["buffering_interval"].(int))),
+			SizeInMBs:         aws.Int64((int64)(s3["buffering_size"].(int))),
 		},
 		ErrorOutputPrefix:        aws.String(s3["error_output_prefix"].(string)),
 		Prefix:                   extractPrefixConfiguration(s3),
@@ -1912,8 +1912,8 @@ func updateS3BackupConfig(d map[string]interface{}) *firehose.S3DestinationUpdat
 		BucketARN: aws.String(s3["bucket_arn"].(string)),
 		RoleARN:   aws.String(s3["role_arn"].(string)),
 		BufferingHints: &firehose.BufferingHints{
-			IntervalInSeconds: aws.Int64((int64)(s3["buffer_interval"].(int))),
-			SizeInMBs:         aws.Int64((int64)(s3["buffer_size"].(int))),
+			IntervalInSeconds: aws.Int64((int64)(s3["buffering_interval"].(int))),
+			SizeInMBs:         aws.Int64((int64)(s3["buffering_size"].(int))),
 		},
 		ErrorOutputPrefix:        aws.String(s3["error_output_prefix"].(string)),
 		Prefix:                   extractPrefixConfiguration(s3),
@@ -1936,8 +1936,8 @@ func updateExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 		BucketARN: aws.String(s3["bucket_arn"].(string)),
 		RoleARN:   aws.String(s3["role_arn"].(string)),
 		BufferingHints: &firehose.BufferingHints{
-			IntervalInSeconds: aws.Int64((int64)(s3["buffer_interval"].(int))),
-			SizeInMBs:         aws.Int64((int64)(s3["buffer_size"].(int))),
+			IntervalInSeconds: aws.Int64((int64)(s3["buffering_interval"].(int))),
+			SizeInMBs:         aws.Int64((int64)(s3["buffering_size"].(int))),
 		},
 		ErrorOutputPrefix:                 aws.String(s3["error_output_prefix"].(string)),
 		Prefix:                            extractPrefixConfiguration(s3),
