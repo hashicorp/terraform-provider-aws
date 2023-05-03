@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_connect_routing_profile: Remove the limit on the maximum number of queues that can be associated with a routing profile. Batch processing is now done when there are more than 10 queues associated or disassociated at a time.
+```

@@ -5,7 +5,7 @@ on:
       - labeled
 env:
   DESTINATION_COLUMN_ID: 'MDEzOlByb2plY3RDb2x1bW4xMjE0MzAxNw=='
-  GH_TOKEN: ${{ github.token }}
+  GH_TOKEN: ${{ secrets.ORGSCOPED_GITHUB_TOKEN }}
 jobs:
   tag-created:
     if: ${{ github.event.label.name == 'partner' }}
