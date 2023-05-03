@@ -956,8 +956,8 @@ func TestAccFirehoseDeliveryStream_Splunk_ErrorOutputPrefix(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_splunkErrorOutputPrefix(rName, "prefix1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "s3_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "s3_configuration.0.error_output_prefix", "prefix1"),
+					resource.TestCheckResourceAttr(resourceName, "splunk_configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "splunk_configuration.0.s3_configuration.0.error_output_prefix", "prefix1"),
 				),
 			},
 			{
@@ -969,8 +969,8 @@ func TestAccFirehoseDeliveryStream_Splunk_ErrorOutputPrefix(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_splunkErrorOutputPrefix(rName, "prefix2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "s3_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "s3_configuration.0.error_output_prefix", "prefix2"),
+					resource.TestCheckResourceAttr(resourceName, "splunk_configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "splunk_configuration.0.s3_configuration.0.error_output_prefix", "prefix2"),
 				),
 			},
 			{
@@ -982,8 +982,8 @@ func TestAccFirehoseDeliveryStream_Splunk_ErrorOutputPrefix(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_splunkErrorOutputPrefix(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "s3_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "s3_configuration.0.error_output_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "splunk_configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "splunk_configuration.0.s3_configuration.0.error_output_prefix", ""),
 				),
 			},
 		},
@@ -1063,8 +1063,8 @@ func TestAccFirehoseDeliveryStream_HTTPEndpoint_ErrorOutputPrefix(t *testing.T) 
 				Config: testAccDeliveryStreamConfig_httpEndpointErrorOutputPrefix(rName, "prefix1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "s3_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "s3_configuration.0.error_output_prefix", "prefix1"),
+					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.0.s3_configuration.0.error_output_prefix", "prefix1"),
 				),
 			},
 			{
@@ -1076,8 +1076,8 @@ func TestAccFirehoseDeliveryStream_HTTPEndpoint_ErrorOutputPrefix(t *testing.T) 
 				Config: testAccDeliveryStreamConfig_httpEndpointErrorOutputPrefix(rName, "prefix2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "s3_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "s3_configuration.0.error_output_prefix", "prefix2"),
+					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.0.s3_configuration.0.error_output_prefix", "prefix2"),
 				),
 			},
 			{
@@ -1089,8 +1089,8 @@ func TestAccFirehoseDeliveryStream_HTTPEndpoint_ErrorOutputPrefix(t *testing.T) 
 				Config: testAccDeliveryStreamConfig_httpEndpointErrorOutputPrefix(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "s3_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "s3_configuration.0.error_output_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.0.s3_configuration.0.error_output_prefix", ""),
 				),
 			},
 		},
@@ -1321,8 +1321,8 @@ func TestAccFirehoseDeliveryStream_Elasticsearch_ErrorOutputPrefix(t *testing.T)
 				Config: testAccDeliveryStreamConfig_elasticsearchErrorOutputPrefix(rName, "prefix1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "s3_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "s3_configuration.0.error_output_prefix", "prefix1"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.s3_configuration.0.error_output_prefix", "prefix1"),
 				),
 			},
 			{
@@ -1334,8 +1334,8 @@ func TestAccFirehoseDeliveryStream_Elasticsearch_ErrorOutputPrefix(t *testing.T)
 				Config: testAccDeliveryStreamConfig_elasticsearchErrorOutputPrefix(rName, "prefix2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "s3_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "s3_configuration.0.error_output_prefix", "prefix2"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.s3_configuration.0.error_output_prefix", "prefix2"),
 				),
 			},
 			{
@@ -1347,8 +1347,8 @@ func TestAccFirehoseDeliveryStream_Elasticsearch_ErrorOutputPrefix(t *testing.T)
 				Config: testAccDeliveryStreamConfig_elasticsearchErrorOutputPrefix(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "s3_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "s3_configuration.0.error_output_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.s3_configuration.0.error_output_prefix", ""),
 				),
 			},
 		},
@@ -1558,8 +1558,8 @@ func TestAccFirehoseDeliveryStream_Opensearch_ErrorOutputPrefix(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_opensearchErrorOutputPrefix(rName, "prefix1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "s3_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "s3_configuration.0.error_output_prefix", "prefix1"),
+					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.s3_configuration.0.error_output_prefix", "prefix1"),
 				),
 			},
 			{
@@ -1571,8 +1571,8 @@ func TestAccFirehoseDeliveryStream_Opensearch_ErrorOutputPrefix(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_opensearchErrorOutputPrefix(rName, "prefix2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "s3_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "s3_configuration.0.error_output_prefix", "prefix2"),
+					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.s3_configuration.0.error_output_prefix", "prefix2"),
 				),
 			},
 			{
@@ -1584,8 +1584,8 @@ func TestAccFirehoseDeliveryStream_Opensearch_ErrorOutputPrefix(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_opensearchErrorOutputPrefix(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "s3_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "s3_configuration.0.error_output_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.s3_configuration.0.error_output_prefix", ""),
 				),
 			},
 		},
@@ -3346,16 +3346,16 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   name        = %[1]q
   destination = "elasticsearch"
 
-  s3_configuration {
-    role_arn   = aws_iam_role.firehose.arn
-    bucket_arn = aws_s3_bucket.bucket.arn
-  }
-
   elasticsearch_configuration {
     domain_arn = aws_elasticsearch_domain.test_cluster.arn
     role_arn   = aws_iam_role.firehose.arn
     index_name = "test"
     type_name  = "test"
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
   }
 }
 `, rName))
@@ -3369,17 +3369,17 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   name        = %[1]q
   destination = "elasticsearch"
 
-  s3_configuration {
-    role_arn            = aws_iam_role.firehose.arn
-    bucket_arn          = aws_s3_bucket.bucket.arn
-    error_output_prefix = %[2]q
-  }
-
   elasticsearch_configuration {
     domain_arn = aws_elasticsearch_domain.test_cluster.arn
     role_arn   = aws_iam_role.firehose.arn
     index_name = "test"
     type_name  = "test"
+
+  s3_configuration {
+    role_arn            = aws_iam_role.firehose.arn
+    bucket_arn          = aws_s3_bucket.bucket.arn
+    error_output_prefix = %[2]q
+  }
   }
 }
 `, rName, errorOutputPrefix))
@@ -3393,16 +3393,16 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   name        = %[1]q
   destination = "elasticsearch"
 
-  s3_configuration {
-    role_arn   = aws_iam_role.firehose.arn
-    bucket_arn = aws_s3_bucket.bucket.arn
-  }
-
   elasticsearch_configuration {
     domain_arn = aws_elasticsearch_domain.test_cluster.arn
     role_arn   = aws_iam_role.firehose.arn
     index_name = "test"
     type_name  = "test"
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
 
     vpc_config {
       subnet_ids         = aws_subnet.test[*].id
@@ -3425,17 +3425,17 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   name        = %[1]q
   destination = "elasticsearch"
 
-  s3_configuration {
-    role_arn   = aws_iam_role.firehose.arn
-    bucket_arn = aws_s3_bucket.bucket.arn
-  }
-
   elasticsearch_configuration {
     domain_arn         = aws_elasticsearch_domain.test_cluster.arn
     role_arn           = aws_iam_role.firehose.arn
     index_name         = "test"
     type_name          = "test"
     buffering_interval = 500
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
 
     processing_configuration {
       enabled = false
@@ -3473,17 +3473,17 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   name        = %[1]q
   destination = "elasticsearch"
 
-  s3_configuration {
-    role_arn   = aws_iam_role.firehose.arn
-    bucket_arn = aws_s3_bucket.bucket.arn
-  }
-
   elasticsearch_configuration {
     domain_arn         = aws_elasticsearch_domain.test_cluster.arn
     role_arn           = aws_iam_role.firehose.arn
     index_name         = "test"
     type_name          = "test"
     buffering_interval = 500
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
 
     vpc_config {
       subnet_ids         = aws_subnet.test[*].id
@@ -3521,16 +3521,16 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   name        = %[1]q
   destination = "elasticsearch"
 
-  s3_configuration {
-    role_arn   = aws_iam_role.firehose.arn
-    bucket_arn = aws_s3_bucket.bucket.arn
-  }
-
   elasticsearch_configuration {
     cluster_endpoint = "https://${aws_elasticsearch_domain.test_cluster.endpoint}"
     role_arn         = aws_iam_role.firehose.arn
     index_name       = "test"
     type_name        = "test"
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
   }
 }`, rName))
 }
@@ -3546,17 +3546,17 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   name        = %[1]q
   destination = "elasticsearch"
 
-  s3_configuration {
-    role_arn   = aws_iam_role.firehose.arn
-    bucket_arn = aws_s3_bucket.bucket.arn
-  }
-
   elasticsearch_configuration {
     cluster_endpoint   = "https://${aws_elasticsearch_domain.test_cluster.endpoint}"
     role_arn           = aws_iam_role.firehose.arn
     index_name         = "test"
     type_name          = "test"
     buffering_interval = 500
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
 
     processing_configuration {
       enabled = false
@@ -3706,15 +3706,15 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   name        = %[1]q
   destination = "opensearch"
 
-  s3_configuration {
-    role_arn   = aws_iam_role.firehose.arn
-    bucket_arn = aws_s3_bucket.bucket.arn
-  }
-
   opensearch_configuration {
     domain_arn = aws_opensearch_domain.test_cluster.arn
     role_arn   = aws_iam_role.firehose.arn
     index_name = "test"
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
   }
 }
 `, rName))
@@ -3728,15 +3728,15 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   name        = %[1]q
   destination = "opensearch"
 
-  s3_configuration {
-    role_arn   = aws_iam_role.firehose.arn
-    bucket_arn = aws_s3_bucket.bucket.arn
-  }
-
   opensearch_configuration {
     cluster_endpoint = "https://${aws_opensearch_domain.test_cluster.endpoint}"
     role_arn         = aws_iam_role.firehose.arn
     index_name       = "test"
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
   }
 }`, rName))
 }
@@ -3752,16 +3752,16 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   name        = %[1]q
   destination = "opensearch"
 
-  s3_configuration {
-    role_arn   = aws_iam_role.firehose.arn
-    bucket_arn = aws_s3_bucket.bucket.arn
-  }
-
   opensearch_configuration {
     cluster_endpoint   = "https://${aws_opensearch_domain.test_cluster.endpoint}"
     role_arn           = aws_iam_role.firehose.arn
     index_name         = "test"
     buffering_interval = 500
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
 
     processing_configuration {
       enabled = false
@@ -3795,16 +3795,16 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   name        = %[1]q
   destination = "opensearch"
 
+  opensearch_configuration {
+    domain_arn = aws_opensearch_domain.test_cluster.arn
+    role_arn   = aws_iam_role.firehose.arn
+    index_name = "test"
+
   s3_configuration {
     role_arn            = aws_iam_role.firehose.arn
     bucket_arn          = aws_s3_bucket.bucket.arn
     error_output_prefix = %[2]q
   }
-
-  opensearch_configuration {
-    domain_arn = aws_opensearch_domain.test_cluster.arn
-    role_arn   = aws_iam_role.firehose.arn
-    index_name = "test"
   }
 }
 `, rName, errorOutputPrefix))
@@ -3818,15 +3818,15 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   name        = %[1]q
   destination = "opensearch"
 
-  s3_configuration {
-    role_arn   = aws_iam_role.firehose.arn
-    bucket_arn = aws_s3_bucket.bucket.arn
-  }
-
   opensearch_configuration {
     domain_arn = aws_opensearch_domain.test_cluster.arn
     role_arn   = aws_iam_role.firehose.arn
     index_name = "test"
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
 
     vpc_config {
       subnet_ids         = aws_subnet.test[*].id
@@ -3849,16 +3849,16 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   name        = %[1]q
   destination = "opensearch"
 
-  s3_configuration {
-    role_arn   = aws_iam_role.firehose.arn
-    bucket_arn = aws_s3_bucket.bucket.arn
-  }
-
   opensearch_configuration {
     domain_arn         = aws_opensearch_domain.test_cluster.arn
     role_arn           = aws_iam_role.firehose.arn
     index_name         = "test"
     buffering_interval = 500
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
 
     processing_configuration {
       enabled = false
@@ -3896,16 +3896,16 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   name        = %[1]q
   destination = "opensearch"
 
-  s3_configuration {
-    role_arn   = aws_iam_role.firehose.arn
-    bucket_arn = aws_s3_bucket.bucket.arn
-  }
-
   opensearch_configuration {
     domain_arn         = aws_opensearch_domain.test_cluster.arn
     role_arn           = aws_iam_role.firehose.arn
     index_name         = "test"
     buffering_interval = 500
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
 
     vpc_config {
       subnet_ids         = aws_subnet.test[*].id

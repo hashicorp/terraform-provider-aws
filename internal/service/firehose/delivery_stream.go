@@ -124,65 +124,78 @@ func requestConfigurationSchema() *schema.Schema {
 	}
 }
 
+func s3BackupConfigurationSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		MaxItems: 1,
+		Optional: true,
+		Elem:     s3ConfigurationElem(),
+	}
+}
+
 func s3ConfigurationSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		MaxItems: 1,
 		Required: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"bucket_arn": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: verify.ValidARN,
-				},
+		Elem:     s3ConfigurationElem(),
+	}
+}
 
-				"buffering_size": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					Default:      5,
-					ValidateFunc: validation.IntAtLeast(1),
-				},
-
-				"buffering_interval": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					Default:      300,
-					ValidateFunc: validation.IntAtLeast(60),
-				},
-
-				"compression_format": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Default:      firehose.CompressionFormatUncompressed,
-					ValidateFunc: validation.StringInSlice(firehose.CompressionFormat_Values(), false),
-				},
-
-				"error_output_prefix": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.StringLenBetween(0, 1024),
-				},
-
-				"kms_key_arn": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ValidateFunc: verify.ValidARN,
-				},
-
-				"role_arn": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: verify.ValidARN,
-				},
-
-				"prefix": {
-					Type:     schema.TypeString,
-					Optional: true,
-				},
-
-				"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
+func s3ConfigurationElem() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"bucket_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: verify.ValidARN,
 			},
+
+			"buffering_size": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      5,
+				ValidateFunc: validation.IntAtLeast(1),
+			},
+
+			"buffering_interval": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      300,
+				ValidateFunc: validation.IntAtLeast(60),
+			},
+
+			"compression_format": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      firehose.CompressionFormatUncompressed,
+				ValidateFunc: validation.StringInSlice(firehose.CompressionFormat_Values(), false),
+			},
+
+			"error_output_prefix": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 1024),
+			},
+
+			"kms_key_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+
+			"role_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+
+			"prefix": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
+			"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
 		},
 	}
 }
@@ -1301,7 +1314,7 @@ func ResourceDeliveryStream() *schema.Resource {
 							ValidateFunc: validation.StringInSlice(firehose.S3BackupMode_Values(), false),
 						},
 
-						"s3_backup_configuration": s3ConfigurationSchema(),
+						"s3_backup_configuration": s3BackupConfigurationSchema(),
 
 						"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
 
@@ -1368,7 +1381,7 @@ func ResourceDeliveryStream() *schema.Resource {
 							ValidateFunc: validation.StringInSlice(firehose.S3BackupMode_Values(), false),
 						},
 
-						"s3_backup_configuration": s3ConfigurationSchema(),
+						"s3_backup_configuration": s3BackupConfigurationSchema(),
 
 						"s3_configuration": s3ConfigurationSchema(),
 
@@ -2960,28 +2973,12 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func validateSchema(d *schema.ResourceData) error {
-	_, s3Exists := d.GetOk("s3_configuration")
 	_, extendedS3Exists := d.GetOk("extended_s3_configuration")
 
 	if d.Get("destination").(string) == destinationTypeExtendedS3 {
 		if !extendedS3Exists {
 			return fmt.Errorf(
-				"When destination is 'extended_s3', extended_s3_configuration is required",
-			)
-		} else if s3Exists {
-			return fmt.Errorf(
-				"When destination is 'extended_s3', s3_configuration must not be set",
-			)
-		}
-	} else {
-		if !s3Exists {
-			return fmt.Errorf(
-				"When destination is %s, s3_configuration is required",
-				d.Get("destination").(string),
-			)
-		} else if extendedS3Exists {
-			return fmt.Errorf(
-				"extended_s3_configuration can only be used when destination is 'extended_s3'",
+				"when destination is 'extended_s3', extended_s3_configuration is required",
 			)
 		}
 	}
