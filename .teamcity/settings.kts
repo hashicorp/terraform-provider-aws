@@ -29,14 +29,14 @@ val legacyAWSAlternateAccessKeyID = DslContext.getParameter("aws_alt_account.leg
 val legacyAWSAlternateSecretAccessKey = DslContext.getParameter("aws_alt_account.legacy_secret_access_key", "")
 
 // Assume Role credentials
-val awsAccessKeyID = DslContext.getParameter("aws_account.access_key_id", "")
-val awsSecretAccessKey = DslContext.getParameter("aws_account.secret_access_key", "")
 val accTestRoleARN = DslContext.getParameter("aws_account.role_arn", "")
+val awsAccessKeyID = if (accTestRoleARN != "") { DslContext.getParameter("aws_account.access_key_id") } else { "" }
+val awsSecretAccessKey = if (accTestRoleARN != "") { DslContext.getParameter("aws_account.secret_access_key") } else { "" }
 
 // Alternate Assume Role credentials
-val alternateAWSAccessKeyID = DslContext.getParameter("aws_alt_account.access_key_id", "")
-val alternateAWSSecretAccessKey = DslContext.getParameter("aws_alt_account.secret_access_key", "")
 val alternateAccTestRoleARN = DslContext.getParameter("aws_alt_account.role_arn", "")
+val alternateAWSAccessKeyID = if (alternateAccTestRoleARN != "") { DslContext.getParameter("aws_alt_account.access_key_id") } else { "" }
+val alternateAWSSecretAccessKey = if (alternateAccTestRoleARN != "") { DslContext.getParameter("aws_alt_account.secret_access_key") } else { "" }
 
 project {
     if (DslContext.getParameter("build_full", "true").toBoolean()) {
