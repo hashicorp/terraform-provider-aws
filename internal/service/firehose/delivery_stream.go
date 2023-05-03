@@ -1883,8 +1883,8 @@ func createExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 	return configuration
 }
 
-func updateS3Config(d *schema.ResourceData) *firehose.S3DestinationUpdate {
-	s3 := d.Get("s3_configuration").([]interface{})[0].(map[string]interface{})
+func updateS3Config(tfList []interface{}) *firehose.S3DestinationUpdate {
+	s3 := tfList[0].(map[string]interface{})
 
 	configuration := &firehose.S3DestinationUpdate{
 		BucketARN: aws.String(s3["bucket_arn"].(string)),
@@ -2324,7 +2324,7 @@ func createRedshiftConfig(d *schema.ResourceData) (*firehose.RedshiftDestination
 	return configuration, nil
 }
 
-func updateRedshiftConfig(d *schema.ResourceData, s3Update *firehose.S3DestinationUpdate) (*firehose.RedshiftDestinationUpdate, error) {
+func updateRedshiftConfig(d *schema.ResourceData) (*firehose.RedshiftDestinationUpdate, error) {
 	redshiftRaw, ok := d.GetOk("redshift_configuration")
 	if !ok {
 		return nil, elasticsearchDestinationRequiredParamErr("redshift_configuration", destinationTypeRedshift)
@@ -2340,8 +2340,14 @@ func updateRedshiftConfig(d *schema.ResourceData, s3Update *firehose.S3Destinati
 		Username:       aws.String(redshift["username"].(string)),
 		RoleARN:        aws.String(redshift["role_arn"].(string)),
 		CopyCommand:    extractCopyCommandConfiguration(redshift),
-		S3Update:       s3Update,
 	}
+
+	s3Config := updateS3Config(redshift["s3_configuration"].([]interface{}))
+	// Redshift does not currently support ErrorOutputPrefix,
+	// which is set to the empty string within "updateS3Config",
+	// thus we must remove it here to avoid an InvalidArgumentException.
+	s3Config.ErrorOutputPrefix = nil
+	configuration.S3Update = s3Config
 
 	if _, ok := redshift["cloudwatch_logging_options"]; ok {
 		configuration.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(redshift)
@@ -2415,7 +2421,7 @@ func createElasticsearchConfig(d *schema.ResourceData) (*firehose.ElasticsearchD
 	return config, nil
 }
 
-func updateElasticsearchConfig(d *schema.ResourceData, s3Update *firehose.S3DestinationUpdate) (*firehose.ElasticsearchDestinationUpdate, error) {
+func updateElasticsearchConfig(d *schema.ResourceData) (*firehose.ElasticsearchDestinationUpdate, error) {
 	esConfig, ok := d.GetOk("elasticsearch_configuration")
 	if !ok {
 		return nil, elasticsearchDestinationRequiredParamErr("elasticsearch_configuration", destinationTypeElasticsearch)
@@ -2430,7 +2436,7 @@ func updateElasticsearchConfig(d *schema.ResourceData, s3Update *firehose.S3Dest
 		RetryOptions:   extractElasticsearchRetryOptions(es),
 		RoleARN:        aws.String(es["role_arn"].(string)),
 		TypeName:       aws.String(es["type_name"].(string)),
-		S3Update:       s3Update,
+		S3Update:       updateS3Config(es["s3_configuration"].([]interface{})),
 	}
 
 	if v, ok := es["domain_arn"]; ok && v.(string) != "" {
@@ -2504,7 +2510,7 @@ func createOpensearchConfig(d *schema.ResourceData) (*firehose.Amazonopensearchs
 	return config, nil
 }
 
-func updateOpensearchConfig(d *schema.ResourceData, s3Update *firehose.S3DestinationUpdate) (*firehose.AmazonopensearchserviceDestinationUpdate, error) {
+func updateOpensearchConfig(d *schema.ResourceData) (*firehose.AmazonopensearchserviceDestinationUpdate, error) {
 	esConfig, ok := d.GetOk("opensearch_configuration")
 	if !ok {
 		return nil, elasticsearchDestinationRequiredParamErr("elasticsearch_configuration", destinationTypeOpensearch)
@@ -2519,7 +2525,7 @@ func updateOpensearchConfig(d *schema.ResourceData, s3Update *firehose.S3Destina
 		RetryOptions:   extractOpensearchRetryOptions(es),
 		RoleARN:        aws.String(es["role_arn"].(string)),
 		TypeName:       aws.String(es["type_name"].(string)),
-		S3Update:       s3Update,
+		S3Update:       updateS3Config(es["s3_configuration"].([]interface{})),
 	}
 
 	if v, ok := es["domain_arn"]; ok && v.(string) != "" {
@@ -2577,7 +2583,7 @@ func createSplunkConfig(d *schema.ResourceData) (*firehose.SplunkDestinationConf
 	return configuration, nil
 }
 
-func updateSplunkConfig(d *schema.ResourceData, s3Update *firehose.S3DestinationUpdate) (*firehose.SplunkDestinationUpdate, error) {
+func updateSplunkConfig(d *schema.ResourceData) (*firehose.SplunkDestinationUpdate, error) {
 	splunkRaw, ok := d.GetOk("splunk_configuration")
 	if !ok {
 		return nil, elasticsearchDestinationRequiredParamErr("splunk_configuration", destinationTypeSplunk)
@@ -2592,7 +2598,7 @@ func updateSplunkConfig(d *schema.ResourceData, s3Update *firehose.S3Destination
 		HECEndpoint:                       aws.String(splunk["hec_endpoint"].(string)),
 		HECAcknowledgmentTimeoutInSeconds: aws.Int64(int64(splunk["hec_acknowledgment_timeout"].(int))),
 		RetryOptions:                      extractSplunkRetryOptions(splunk),
-		S3Update:                          s3Update,
+		S3Update:                          updateS3Config(splunk["s3_configuration"].([]interface{})),
 	}
 
 	if _, ok := splunk["processing_configuration"]; ok {
@@ -2654,7 +2660,7 @@ func createHTTPEndpointConfig(d *schema.ResourceData) (*firehose.HttpEndpointDes
 	return configuration, nil
 }
 
-func updateHTTPEndpointConfig(d *schema.ResourceData, s3Update *firehose.S3DestinationUpdate) (*firehose.HttpEndpointDestinationUpdate, error) {
+func updateHTTPEndpointConfig(d *schema.ResourceData) (*firehose.HttpEndpointDestinationUpdate, error) {
 	HttpEndpointRaw, ok := d.GetOk("http_endpoint_configuration")
 	if !ok {
 		return nil, elasticsearchDestinationRequiredParamErr("http_endpoint_configuration", destinationTypeHTTPEndpoint)
@@ -2666,7 +2672,7 @@ func updateHTTPEndpointConfig(d *schema.ResourceData, s3Update *firehose.S3Desti
 	configuration := &firehose.HttpEndpointDestinationUpdate{
 		RetryOptions: extractHTTPEndpointRetryOptions(HttpEndpoint),
 		RoleARN:      aws.String(HttpEndpoint["role_arn"].(string)),
-		S3Update:     s3Update,
+		S3Update:     updateS3Config(HttpEndpoint["s3_configuration"].([]interface{})),
 	}
 
 	configuration.EndpointConfiguration = extractHTTPEndpointConfiguration(HttpEndpoint)
@@ -3020,42 +3026,32 @@ func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, m
 			extendedS3Config := updateExtendedS3Config(d)
 			updateInput.ExtendedS3DestinationUpdate = extendedS3Config
 		} else {
-			s3Config := updateS3Config(d)
-
-			if d.Get("destination").(string) == destinationTypeS3 {
-				updateInput.S3DestinationUpdate = s3Config
-			} else if d.Get("destination").(string) == destinationTypeElasticsearch {
-				esUpdate, err := updateElasticsearchConfig(d, s3Config)
+			if d.Get("destination").(string) == destinationTypeElasticsearch {
+				esUpdate, err := updateElasticsearchConfig(d)
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 				}
 				updateInput.ElasticsearchDestinationUpdate = esUpdate
 			} else if d.Get("destination").(string) == destinationTypeOpensearch {
-				esUpdate, err := updateOpensearchConfig(d, s3Config)
+				esUpdate, err := updateOpensearchConfig(d)
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 				}
 				updateInput.AmazonopensearchserviceDestinationUpdate = esUpdate
 			} else if d.Get("destination").(string) == destinationTypeRedshift {
-				// Redshift does not currently support ErrorOutputPrefix,
-				// which is set to the empty string within "updateS3Config",
-				// thus we must remove it here to avoid an InvalidArgumentException.
-				if s3Config != nil {
-					s3Config.ErrorOutputPrefix = nil
-				}
-				rc, err := updateRedshiftConfig(d, s3Config)
+				rc, err := updateRedshiftConfig(d)
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 				}
 				updateInput.RedshiftDestinationUpdate = rc
 			} else if d.Get("destination").(string) == destinationTypeSplunk {
-				rc, err := updateSplunkConfig(d, s3Config)
+				rc, err := updateSplunkConfig(d)
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 				}
 				updateInput.SplunkDestinationUpdate = rc
 			} else if d.Get("destination").(string) == destinationTypeHTTPEndpoint {
-				rc, err := updateHTTPEndpointConfig(d, s3Config)
+				rc, err := updateHTTPEndpointConfig(d)
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 				}
