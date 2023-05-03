@@ -1359,3 +1359,343 @@ func expandDataColors(tfList []interface{}) []*quicksight.DataColor {
 
 	return colors
 }
+
+func flattenVisuals(apiObject []*quicksight.Visual) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if config.BarChartVisual != nil {
+			tfMap["bar_chart_visual"] = flattenBarChartVisual(config.BarChartVisual)
+		}
+		if config.BoxPlotVisual != nil {
+			tfMap["box_plot_visual"] = flattenBoxPlotVisual(config.BoxPlotVisual)
+		}
+		if config.ComboChartVisual != nil {
+			tfMap["combo_chart_visual"] = flattenComboChartVisual(config.ComboChartVisual)
+		}
+		if config.CustomContentVisual != nil {
+			tfMap["custom_content_visual"] = flattenCustomContentVisual(config.CustomContentVisual)
+		}
+		if config.EmptyVisual != nil {
+			tfMap["empty_visual"] = flattenEmptyVisual(config.EmptyVisual)
+		}
+		if config.FilledMapVisual != nil {
+			tfMap["filled_map_visual"] = flattenFilledMapVisual(config.FilledMapVisual)
+		}
+		if config.FunnelChartVisual != nil {
+			tfMap["funnel_chart_visual"] = flattenFunnelChartVisual(config.FunnelChartVisual)
+		}
+		if config.GaugeChartVisual != nil {
+			tfMap["gauge_chart_visual"] = flattenGaugeChartVisual(config.GaugeChartVisual)
+		}
+		if config.GeospatialMapVisual != nil {
+			tfMap["geospatial_map_visual"] = flattenGeospatialMapVisual(config.GeospatialMapVisual)
+		}
+		if config.HeatMapVisual != nil {
+			tfMap["heat_map_visual"] = flattenHeatMapVisual(config.HeatMapVisual)
+		}
+		if config.HistogramVisual != nil {
+			tfMap["histogram_visual"] = flattenHistogramVisual(config.HistogramVisual)
+		}
+		if config.InsightVisual != nil {
+			tfMap["insight_visual"] = flattenInsightVisual(config.InsightVisual)
+		}
+		if config.KPIVisual != nil {
+			tfMap["kpi_visual"] = flattenKPIVisual(config.KPIVisual)
+		}
+		if config.LineChartVisual != nil {
+			tfMap["line_chart_visual"] = flattenLineChartVisual(config.LineChartVisual)
+		}
+		if config.PieChartVisual != nil {
+			tfMap["pie_chart_visual"] = flattenPieChartVisual(config.PieChartVisual)
+		}
+		if config.PivotTableVisual != nil {
+			tfMap["pivot_table_visual"] = flattenPivotTableVisual(config.PivotTableVisual)
+		}
+		if config.RadarChartVisual != nil {
+			tfMap["radar_chart_visual"] = flattenRadarChartVisual(config.RadarChartVisual)
+		}
+		if config.SankeyDiagramVisual != nil {
+			tfMap["sankey_diagram_visual"] = flattenSankeyDiagramVisual(config.SankeyDiagramVisual)
+		}
+		if config.ScatterPlotVisual != nil {
+			tfMap["scatter_plot_visual"] = flattenScatterPlotVisual(config.ScatterPlotVisual)
+		}
+		if config.TableVisual != nil {
+			tfMap["table_visual"] = flattenTableVisual(config.TableVisual)
+		}
+		if config.TreeMapVisual != nil {
+			tfMap["tree_map_visual"] = flattenTreeMapVisual(config.TreeMapVisual)
+		}
+		if config.WaterfallVisual != nil {
+			tfMap["waterfall_visual"] = flattenWaterfallVisual(config.WaterfallVisual)
+		}
+		if config.WordCloudVisual != nil {
+			tfMap["word_cloud_visual"] = flattenWordCloudVisual(config.WordCloudVisual)
+		}
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenBarChartVisual(apiObject *quicksight.BarChartVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	// TODO
+
+	return []interface{}{tfMap}
+}
+
+func flattenBoxPlotVisual(apiObject *quicksight.BoxPlotVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	// TODO
+
+	return []interface{}{tfMap}
+}
+
+func flattenComboChartVisual(apiObject *quicksight.ComboChartVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	// TODO
+
+	return []interface{}{tfMap}
+}
+
+func flattenCustomContentVisual(apiObject *quicksight.CustomContentVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	// TODO
+
+	return []interface{}{tfMap}
+}
+
+func flattenEmptyVisual(apiObject *quicksight.EmptyVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	// TODO
+
+	return []interface{}{tfMap}
+}
+
+func flattenFilledMapVisual(apiObject *quicksight.FilledMapVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	// TODO
+
+	return []interface{}{tfMap}
+}
+
+func flattenFunnelChartVisual(apiObject *quicksight.FunnelChartVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	// TODO
+
+	return []interface{}{tfMap}
+}
+
+func flattenGaugeChartVisual(apiObject *quicksight.GaugeChartVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	// TODO
+
+	return []interface{}{tfMap}
+}
+
+func flattenGeospatialMapVisual(apiObject *quicksight.GeospatialMapVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	// TODO
+
+	return []interface{}{tfMap}
+}
+
+func flattenHeatMapVisual(apiObject *quicksight.HeatMapVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	// TODO
+
+	return []interface{}{tfMap}
+}
+
+func flattenHistogramVisual(apiObject *quicksight.HistogramVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	// TODO
+
+	return []interface{}{tfMap}
+}
+
+func flattenInsightVisual(apiObject *quicksight.InsightVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	// TODO
+
+	return []interface{}{tfMap}
+}
+
+func flattenKPIVisual(apiObject *quicksight.KPIVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	// TODO
+
+	return []interface{}{tfMap}
+}
+
+func flattenLineChartVisual(apiObject *quicksight.LineChartVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	// TODO
+
+	return []interface{}{tfMap}
+}
+
+func flattenPieChartVisual(apiObject *quicksight.PieChartVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	// TODO
+
+	return []interface{}{tfMap}
+}
+
+func flattenPivotTableVisual(apiObject *quicksight.PivotTableVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	// TODO
+
+	return []interface{}{tfMap}
+}
+
+func flattenRadarChartVisual(apiObject *quicksight.RadarChartVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	// TODO
+
+	return []interface{}{tfMap}
+}
+
+func flattenSankeyDiagramVisual(apiObject *quicksight.SankeyDiagramVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	// TODO
+
+	return []interface{}{tfMap}
+}
+
+func flattenScatterPlotVisual(apiObject *quicksight.ScatterPlotVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	// TODO
+
+	return []interface{}{tfMap}
+}
+
+func flattenTableVisual(apiObject *quicksight.TableVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	// TODO
+
+	return []interface{}{tfMap}
+}
+
+func flattenTreeMapVisual(apiObject *quicksight.TreeMapVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	// TODO
+
+	return []interface{}{tfMap}
+}
+
+func flattenWaterfallVisual(apiObject *quicksight.WaterfallVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	// TODO
+
+	return []interface{}{tfMap}
+}
+
+func flattenWordCloudVisual(apiObject *quicksight.WordCloudVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	// TODO
+
+	return []interface{}{tfMap}
+}
