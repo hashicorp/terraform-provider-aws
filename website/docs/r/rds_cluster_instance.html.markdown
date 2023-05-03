@@ -53,38 +53,28 @@ the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/referenc
 
 The following arguments are supported:
 
-* `identifier` - (Optional, Forces new resource) Identifier for the RDS instance, if omitted, Terraform will assign a random, unique identifier.
-* `identifier_prefix` - (Optional, Forces new resource) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifier`.
-* `cluster_identifier` - (Required, Forces new resource) Identifier of the [`aws_rds_cluster`](/docs/providers/aws/r/rds_cluster.html) in which to launch this instance.
-* `engine` - (Required, Forces new resource) Name of the database engine to be used for the RDS instance. Valid Values: `aurora-mysql`, `aurora-postgresql`, `mysql`, `postgres`.
-For information on the difference between the available Aurora MySQL engines
-see [Comparison between Aurora MySQL 1 and Aurora MySQL 2](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraMySQL.Updates.20180206.html)
-in the Amazon RDS User Guide.
-* `engine_version` - (Optional) Database engine version.
-* `instance_class` - (Required) Instance class to use. For details on CPU
-and memory, see [Scaling Aurora DB Instances][4]. Aurora uses `db.*` instance classes/types. Please see [AWS Documentation][7] for currently available instance classes and complete details.
-* `publicly_accessible` - (Optional) Bool to control if instance is publicly accessible.
-Default `false`. See the documentation on [Creating DB Instances][6] for more
-details on controlling this property.
-* `db_subnet_group_name` - (Required if `publicly_accessible = false`, Optional otherwise, Forces new resource) DB subnet group to associate with this DB instance. **NOTE:** This must match the `db_subnet_group_name` of the attached [`aws_rds_cluster`](/docs/providers/aws/r/rds_cluster.html).
-* `db_parameter_group_name` - (Optional) Name of the DB parameter group to associate with this instance.
-* `apply_immediately` - (Optional) Specifies whether any database modifications
-     are applied immediately, or during the next maintenance window. Default is`false`.
-* `monitoring_role_arn` - (Optional) ARN for the IAM role that permits RDS to send
-enhanced monitoring metrics to CloudWatch Logs. You can find more information on the [AWS Documentation](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.html)
-what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
-* `monitoring_interval` - (Optional) Interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB instance. To disable collecting Enhanced Monitoring metrics, specify 0. The default is 0. Valid Values: 0, 1, 5, 10, 15, 30, 60.
-* `promotion_tier` - (Optional) Default 0. Failover Priority setting on instance level. The reader who has lower tier has higher priority to get promoted to writer.
-* `availability_zone` - (Optional, Computed, Forces new resource) EC2 Availability Zone that the DB instance is created in. See [docs](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html) about the details.
-* `preferred_backup_window` - (Optional) Daily time range during which automated backups are created if automated backups are enabled. Eg: "04:00-09:00". **NOTE:** If `preferred_backup_window` is set at the cluster level, this argument **must** be omitted.
-* `preferred_maintenance_window` - (Optional) Window to perform maintenance in.
-  Syntax: "ddd:hh24:mi-ddd:hh24:mi". Eg: "Mon:00:00-Mon:03:00".
+* `apply_immediately` - (Optional) Specifies whether any database modifications are applied immediately, or during the next maintenance window. Default is`false`.
 * `auto_minor_version_upgrade` - (Optional) Indicates that minor engine upgrades will be applied automatically to the DB instance during the maintenance window. Default `true`.
+* `availability_zone` - (Optional, Computed, Forces new resource) EC2 Availability Zone that the DB instance is created in. See [docs](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html) about the details.
+* `ca_cert_identifier` - (Optional) Identifier of the CA certificate for the DB instance.
+* `cluster_identifier` - (Required, Forces new resource) Identifier of the [`aws_rds_cluster`](/docs/providers/aws/r/rds_cluster.html) in which to launch this instance.
+* `copy_tags_to_snapshot` – (Optional, boolean) Indicates whether to copy all of the user-defined tags from the DB instance to snapshots of the DB instance. Default `false`.
+* `db_parameter_group_name` - (Optional) Name of the DB parameter group to associate with this instance.
+* `db_subnet_group_name` - (Required if `publicly_accessible = false`, Optional otherwise, Forces new resource) DB subnet group to associate with this DB instance. **NOTE:** This must match the `db_subnet_group_name` of the attached [`aws_rds_cluster`](/docs/providers/aws/r/rds_cluster.html).
+* `engine_version` - (Optional) Database engine version.
+* `engine` - (Required, Forces new resource) Name of the database engine to be used for the RDS instance. Valid Values: `aurora-mysql`, `aurora-postgresql`, `mysql`, `postgres`.
+* `identifier_prefix` - (Optional, Forces new resource) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifier`.
+* `identifier` - (Optional, Forces new resource) Identifier for the RDS instance, if omitted, Terraform will assign a random, unique identifier.
+* `instance_class` - (Required) Instance class to use. For details on CPU and memory, see [Scaling Aurora DB Instances][4]. Aurora uses `db.*` instance classes/types. Please see [AWS Documentation][7] for currently available instance classes and complete details.
+* `monitoring_interval` - (Optional) Interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB instance. To disable collecting Enhanced Monitoring metrics, specify 0. The default is 0. Valid Values: 0, 1, 5, 10, 15, 30, 60.
+* `monitoring_role_arn` - (Optional) ARN for the IAM role that permits RDS to send enhanced monitoring metrics to CloudWatch Logs. You can find more information on the [AWS Documentation](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.html) what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
 * `performance_insights_enabled` - (Optional) Specifies whether Performance Insights is enabled or not.
 * `performance_insights_kms_key_id` - (Optional) ARN for the KMS key to encrypt Performance Insights data. When specifying `performance_insights_kms_key_id`, `performance_insights_enabled` needs to be set to true.
 * `performance_insights_retention_period` - (Optional) Amount of time in days to retain Performance Insights data. Valid values are `7`, `731` (2 years) or a multiple of `31`. When specifying `performance_insights_retention_period`, `performance_insights_enabled` needs to be set to true. Defaults to '7'.
-* `copy_tags_to_snapshot` – (Optional, boolean) Indicates whether to copy all of the user-defined tags from the DB instance to snapshots of the DB instance. Default `false`.
-* `ca_cert_identifier` - (Optional) Identifier of the CA certificate for the DB instance.
+* `preferred_backup_window` - (Optional) Daily time range during which automated backups are created if automated backups are enabled. Eg: "04:00-09:00". **NOTE:** If `preferred_backup_window` is set at the cluster level, this argument **must** be omitted.
+* `preferred_maintenance_window` - (Optional) Window to perform maintenance in. Syntax: "ddd:hh24:mi-ddd:hh24:mi". Eg: "Mon:00:00-Mon:03:00".
+* `promotion_tier` - (Optional) Default 0. Failover Priority setting on instance level. The reader who has lower tier has higher priority to get promoted to writer.
+* `publicly_accessible` - (Optional) Bool to control if instance is publicly accessible. Default `false`. See the documentation on [Creating DB Instances][6] for more details on controlling this property.
 * `tags` - (Optional) Map of tags to assign to the instance. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
