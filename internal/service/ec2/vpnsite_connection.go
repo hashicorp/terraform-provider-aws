@@ -636,11 +636,12 @@ func ResourceVPNConnection() *schema.Resource {
 
 // https://docs.aws.amazon.com/vpn/latest/s2svpn/VPNTunnels.html.
 var (
-	defaultVPNTunnelOptionsDPDTimeoutAction           = vpnTunnelOptionsDPDTimeoutActionClear
-	defaultVPNTunnelOptionsDPDTimeoutSeconds          = 30
-	defaultVPNTunnelOptionsIKEVersions                = []string{vpnTunnelOptionsIKEVersion1, vpnTunnelOptionsIKEVersion2}
-	defaultVPNTunnelOptionsPhase1DHGroupNumbers       = []int{2, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}
-	defaultVPNTunnelOptionsPhase1EncryptionAlgorithms = []string{
+	defaultVPNTunnelOptionsDPDTimeoutAction             = vpnTunnelOptionsDPDTimeoutActionClear
+	defaultVPNTunnelOptionsDPDTimeoutSeconds            = 30
+	defaultVPNTunnelOptionsEnableTunnelLifecycleControl = false
+	defaultVPNTunnelOptionsIKEVersions                  = []string{vpnTunnelOptionsIKEVersion1, vpnTunnelOptionsIKEVersion2}
+	defaultVPNTunnelOptionsPhase1DHGroupNumbers         = []int{2, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}
+	defaultVPNTunnelOptionsPhase1EncryptionAlgorithms   = []string{
 		vpnTunnelOptionsPhase1EncryptionAlgorithmAES128,
 		vpnTunnelOptionsPhase1EncryptionAlgorithmAES256,
 		vpnTunnelOptionsPhase1EncryptionAlgorithmAES128_GCM_16,
@@ -666,12 +667,11 @@ var (
 		vpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_384,
 		vpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_512,
 	}
-	defaultVPNTunnelOptionsPhase2LifetimeSeconds        = 3600
-	defaultVPNTunnelOptionsRekeyFuzzPercentage          = 100
-	defaultVPNTunnelOptionsRekeyMarginTimeSeconds       = 540
-	defaultVPNTunnelOptionsReplayWindowSize             = 1024
-	defaultVPNTunnelOptionsStartupAction                = vpnTunnelOptionsStartupActionAdd
-	defaultVPNTunnelOptionsEnableTunnelLifecycleControl = false
+	defaultVPNTunnelOptionsPhase2LifetimeSeconds  = 3600
+	defaultVPNTunnelOptionsRekeyFuzzPercentage    = 100
+	defaultVPNTunnelOptionsRekeyMarginTimeSeconds = 540
+	defaultVPNTunnelOptionsReplayWindowSize       = 1024
+	defaultVPNTunnelOptionsStartupAction          = vpnTunnelOptionsStartupActionAdd
 )
 
 func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -1019,6 +1019,10 @@ func expandVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix string) 
 		apiObject.DPDTimeoutSeconds = aws.Int64(int64(v.(int)))
 	}
 
+	if v, ok := d.GetOk(prefix + "enable_tunnel_lifecycle_control"); ok {
+		apiObject.EnableTunnelLifecycleControl = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk(prefix + "ike_versions"); ok {
 		for _, v := range v.(*schema.Set).List() {
 			apiObject.IKEVersions = append(apiObject.IKEVersions, &ec2.IKEVersionsRequestListValue{Value: aws.String(v.(string))})
@@ -1099,10 +1103,6 @@ func expandVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix string) 
 
 	if v, ok := d.GetOk(prefix + "inside_ipv6_cidr"); ok {
 		apiObject.TunnelInsideIpv6Cidr = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk(prefix + "enable_tunnel_lifecycle_control"); ok {
-		apiObject.EnableTunnelLifecycleControl = aws.Bool(v.(bool))
 	}
 
 	return apiObject
@@ -1370,6 +1370,7 @@ func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject *ec2.T
 
 	d.Set(prefix+"dpd_timeout_action", apiObject.DpdTimeoutAction)
 	d.Set(prefix+"dpd_timeout_seconds", apiObject.DpdTimeoutSeconds)
+	d.Set(prefix+"enable_tunnel_lifecycle_control", apiObject.EnableTunnelLifecycleControl)
 
 	for _, v := range apiObject.IkeVersions {
 		s = append(s, v.Value)
@@ -1422,14 +1423,12 @@ func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject *ec2.T
 	d.Set(prefix+"phase2_integrity_algorithms", aws.StringValueSlice(s))
 
 	d.Set(prefix+"phase2_lifetime_seconds", apiObject.Phase2LifetimeSeconds)
-
 	d.Set(prefix+"rekey_fuzz_percentage", apiObject.RekeyFuzzPercentage)
 	d.Set(prefix+"rekey_margin_time_seconds", apiObject.RekeyMarginTimeSeconds)
 	d.Set(prefix+"replay_window_size", apiObject.ReplayWindowSize)
 	d.Set(prefix+"startup_action", apiObject.StartupAction)
 	d.Set(prefix+"inside_cidr", apiObject.TunnelInsideCidr)
 	d.Set(prefix+"inside_ipv6_cidr", apiObject.TunnelInsideIpv6Cidr)
-	d.Set(prefix+"enable_tunnel_lifecycle_control", apiObject.EnableTunnelLifecycleControl)
 
 	return nil
 }
