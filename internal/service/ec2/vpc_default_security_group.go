@@ -77,7 +77,7 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 	}
 }
 
-func resourceDefaultSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDefaultSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeSecurityGroupsInput{
