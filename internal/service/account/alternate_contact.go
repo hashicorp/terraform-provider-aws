@@ -104,9 +104,12 @@ func resourceAlternateContactCreate(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(id)
 
-	_, err = retry.UntilFoundN(ctx, d.Timeout(schema.TimeoutCreate), func() (*types.AlternateContact, error) {
+	const (
+		inARow = 2
+	)
+	_, err = retry.Operation(func(ctx context.Context) (*types.AlternateContact, error) {
 		return FindAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
-	}, 2) //nolint:gomnd
+	}).UntilFoundN(inARow).Run(ctx, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return diag.Errorf("waiting for Account Alternate Contact (%s) create: %s", d.Id(), err)
@@ -178,20 +181,17 @@ func resourceAlternateContactUpdate(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("updating Account Alternate Contact (%s): %s", d.Id(), err)
 	}
 
-	_, err = retry.If(ctx, d.Timeout(schema.TimeoutUpdate),
-		func() (*types.AlternateContact, error) {
-			return FindAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
-		},
-		func(v *types.AlternateContact, err error) (bool, error) {
-			if err != nil {
-				return false, err
-			}
+	_, err = retry.Operation(func(ctx context.Context) (*types.AlternateContact, error) {
+		return FindAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
+	}).If(func(v *types.AlternateContact, err error) (bool, error) {
+		if err != nil {
+			return false, err
+		}
 
-			equal := email == aws.ToString(v.EmailAddress) && name == aws.ToString(v.Name) && phone == aws.ToString(v.PhoneNumber) && title == aws.ToString(v.Title)
+		equal := email == aws.ToString(v.EmailAddress) && name == aws.ToString(v.Name) && phone == aws.ToString(v.PhoneNumber) && title == aws.ToString(v.Title)
 
-			return !equal, nil
-		},
-	)
+		return !equal, nil
+	}).Run(ctx, d.Timeout(schema.TimeoutUpdate))
 
 	if err != nil {
 		return diag.Errorf("waiting for Account Alternate Contact (%s) update: %s", d.Id(), err)
@@ -227,9 +227,9 @@ func resourceAlternateContactDelete(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("deleting Account Alternate Contact (%s): %s", d.Id(), err)
 	}
 
-	_, err = retry.UntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (*types.AlternateContact, error) {
+	_, err = retry.Operation(func(ctx context.Context) (*types.AlternateContact, error) {
 		return FindAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
-	})
+	}).UntilNotFound().Run(ctx, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return diag.Errorf("waiting for Account Alternate Contact (%s) delete: %s", d.Id(), err)
