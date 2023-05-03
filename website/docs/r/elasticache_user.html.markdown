@@ -79,6 +79,14 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the created ElastiCache User.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `5m`)
+- `update` - (Default `5m`)
+- `delete` - (Default `5m`)
+
 ## Import
 
 ElastiCache users can be imported using the `user_id`, e.g.,
