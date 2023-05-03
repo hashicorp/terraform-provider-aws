@@ -60,6 +60,12 @@ EOF
 
 	# shellcheck disable=2157 # This isn't a constant string, it's a TeamCity variable substitution
 	if [[ -n "%ACCTEST_ALTERNATE_ROLE_ARN%" ]]; then
+    echo "assuming role %ACCTEST_ALTERNATE_ROLE_ARN% for acctests"
+
+    echo "AWS_ALTERNATE_ACCESS_KEY_ID: $(echo "%AWS_ALTERNATE_ACCESS_KEY_ID%" | sed -E "s/^.+(.{4})/****\1/")"
+    echo "AWS_ALTERNATE_SECRET_ACCESS_KEY: $(echo "%AWS_ALTERNATE_SECRET_ACCESS_KEY%" | sed -E "s/^(.{4}).+(.{4})/\1****\2/")"
+    echo "ACCTEST_ALTERNATE_ROLE_ARN: %ACCTEST_ALTERNATE_ROLE_ARN%"
+
 		cat <<EOF >>"${conf}"
 [profile alternate]
 role_arn       = %ACCTEST_ALTERNATE_ROLE_ARN%
