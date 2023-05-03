@@ -185,7 +185,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
       buffering_interval = 400
       compression_format = "GZIP"
     }
-    
+
     s3_backup_configuration {
       role_arn           = aws_iam_role.firehose_role.arn
       bucket_arn         = aws_s3_bucket.bucket.arn
@@ -221,7 +221,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
       buffering_interval = 400
       compression_format = "GZIP"
     }
-    
+
     processing_configuration {
       enabled = "true"
 
@@ -312,7 +312,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
       role_arn   = aws_iam_role.firehose.arn
       bucket_arn = aws_s3_bucket.bucket.arn
     }
-    
+
     vpc_config {
       subnet_ids         = [aws_subnet.first.id, aws_subnet.second.id]
       security_group_ids = [aws_security_group.first.id]
@@ -345,7 +345,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
       buffering_interval = 400
       compression_format = "GZIP"
     }
-    
+
     processing_configuration {
       enabled = "true"
 
@@ -438,7 +438,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
       role_arn   = aws_iam_role.firehose.arn
       bucket_arn = aws_s3_bucket.bucket.arn
     }
-    
+
     vpc_config {
       subnet_ids         = [aws_subnet.first.id, aws_subnet.second.id]
       security_group_ids = [aws_security_group.first.id]
@@ -496,7 +496,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
       buffering_interval = 400
       compression_format = "GZIP"
     }
-    
+
     request_configuration {
       content_encoding = "GZIP"
 
