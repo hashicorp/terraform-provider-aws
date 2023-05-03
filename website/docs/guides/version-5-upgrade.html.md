@@ -17,6 +17,7 @@ Upgrade topics:
 <!-- TOC depthFrom:2 depthTo:2 -->
 
 - [Provider Version Configuration](#provider-version-configuration)
+- [Data Source: aws_redshift_service_account](#data-source-aws_redshift_service_account)
 
 <!-- /TOC -->
 
@@ -68,6 +69,11 @@ provider "aws" {
   # Configuration options
 }
 ```
+
+## Data Source: aws_redshift_service_account
+
+[AWS document](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions) that [a service principal name](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html#principal-services) be used instead of AWS account ID in any relevant IAM policy.
+The [`aws_redshift_service_account`](/docs/providers/aws/d/redshift_service_account.html) data source should now be considered deprecated and will be removed in a future version.
 
 ## EC2-Classic Retirement
 
