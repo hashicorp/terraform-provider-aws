@@ -986,3 +986,181 @@ func flattenStringValueWhenUnsetConfiguration(apiObject *quicksight.StringValueW
 
 	return []interface{}{tfMap}
 }
+
+func flattenParameterControls(apiObject []*quicksight.ParameterControl) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if config.DateTimePicker != nil {
+			tfMap["date_time_picker"] = flattenParameterDateTimePickerControl(config.DateTimePicker)
+		}
+		if config.Dropdown != nil {
+			tfMap["dropdown"] = flattenParameterDropDownControl(config.Dropdown)
+		}
+		if config.List != nil {
+			tfMap["list"] = flattenParameterListControl(config.List)
+		}
+		if config.Slider != nil {
+			tfMap["slider"] = flattenParameterSliderControl(config.Slider)
+		}
+		if config.TextArea != nil {
+			tfMap["text_area"] = flattenParameterTextAreaControl(config.TextArea)
+		}
+		if config.TextField != nil {
+			tfMap["text_field"] = flattenParameterTextFieldControl(config.TextField)
+		}
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenParameterDateTimePickerControl(apiObject *quicksight.ParameterDateTimePickerControl) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"parameter_control_id":  aws.StringValue(apiObject.ParameterControlId),
+		"source_parameter_name": aws.StringValue(apiObject.SourceParameterName),
+		"title":                 aws.StringValue(apiObject.Title),
+	}
+	if apiObject.DisplayOptions != nil {
+		tfMap["display_options"] = flattenDateTimePickerControlDisplayOptions(apiObject.DisplayOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenParameterDropDownControl(apiObject *quicksight.ParameterDropDownControl) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"parameter_control_id":  aws.StringValue(apiObject.ParameterControlId),
+		"source_parameter_name": aws.StringValue(apiObject.SourceParameterName),
+		"title":                 aws.StringValue(apiObject.Title),
+	}
+	if apiObject.CascadingControlConfiguration != nil {
+		tfMap["cascading_control_configuration"] = flattenCascadingControlConfiguration(apiObject.CascadingControlConfiguration)
+	}
+	if apiObject.DisplayOptions != nil {
+		tfMap["display_options"] = flattenDropDownControlDisplayOptions(apiObject.DisplayOptions)
+	}
+	if apiObject.SelectableValues != nil {
+		tfMap["selectable_values"] = flattenParameterSelectableValues(apiObject.SelectableValues)
+	}
+	if apiObject.Type != nil {
+		tfMap["type"] = aws.StringValue(apiObject.Type)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenParameterSelectableValues(apiObject *quicksight.ParameterSelectableValues) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.LinkToDataSetColumn != nil {
+		tfMap["link_to_data_set_column"] = flattenColumnIdentifier(apiObject.LinkToDataSetColumn)
+	}
+	if apiObject.Values != nil {
+		tfMap["values"] = flex.FlattenStringList(apiObject.Values)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenParameterListControl(apiObject *quicksight.ParameterListControl) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"parameter_control_id":  aws.StringValue(apiObject.ParameterControlId),
+		"source_parameter_name": aws.StringValue(apiObject.SourceParameterName),
+		"title":                 aws.StringValue(apiObject.Title),
+	}
+	if apiObject.CascadingControlConfiguration != nil {
+		tfMap["cacading_control_configuration"] = flattenCascadingControlConfiguration(apiObject.CascadingControlConfiguration)
+	}
+	if apiObject.DisplayOptions != nil {
+		tfMap["display_options"] = flattenListControlDisplayOptions(apiObject.DisplayOptions)
+	}
+	if apiObject.SelectableValues != nil {
+		tfMap["selectable_values"] = flattenParameterSelectableValues(apiObject.SelectableValues)
+	}
+	if apiObject.Type != nil {
+		tfMap["type"] = aws.StringValue(apiObject.Type)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenParameterSliderControl(apiObject *quicksight.ParameterSliderControl) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"parameter_control_id":  aws.StringValue(apiObject.ParameterControlId),
+		"source_parameter_name": aws.StringValue(apiObject.SourceParameterName),
+		"title":                 aws.StringValue(apiObject.Title),
+		"maximum_value":         aws.Float64Value(apiObject.MaximumValue),
+		"minimum_value":         aws.Float64Value(apiObject.MinimumValue),
+		"step_size":             aws.Float64Value(apiObject.StepSize),
+	}
+	if apiObject.DisplayOptions != nil {
+		tfMap["display_options"] = flattenSliderControlDisplayOptions(apiObject.DisplayOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenParameterTextAreaControl(apiObject *quicksight.ParameterTextAreaControl) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"parameter_control_id":  aws.StringValue(apiObject.ParameterControlId),
+		"source_parameter_name": aws.StringValue(apiObject.SourceParameterName),
+		"title":                 aws.StringValue(apiObject.Title),
+	}
+	if apiObject.Delimiter != nil {
+		tfMap["delimiter"] = aws.StringValue(apiObject.Delimiter)
+	}
+	if apiObject.DisplayOptions != nil {
+		tfMap["display_options"] = flattenTextAreaControlDisplayOptions(apiObject.DisplayOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenParameterTextFieldControl(apiObject *quicksight.ParameterTextFieldControl) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"parameter_control_id":  aws.StringValue(apiObject.ParameterControlId),
+		"source_parameter_name": aws.StringValue(apiObject.SourceParameterName),
+		"title":                 aws.StringValue(apiObject.Title),
+	}
+	if apiObject.DisplayOptions != nil {
+		tfMap["display_options"] = flattenTextFieldControlDisplayOptions(apiObject.DisplayOptions)
+	}
+
+	return []interface{}{tfMap}
+}
