@@ -2657,8 +2657,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   s3_configuration {
     role_arn           = aws_iam_role.firehose.arn
     bucket_arn         = aws_s3_bucket.bucket.arn
-    buffer_size        = 10
-    buffer_interval    = 400
+    buffering_size     = 10
+    buffering_interval = 400
     compression_format = "GZIP"
   }
 }
@@ -2765,8 +2765,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   extended_s3_configuration {
     bucket_arn = aws_s3_bucket.bucket.arn
     # InvalidArgumentException: BufferingHints.SizeInMBs must be at least 64 when data format conversion is enabled.
-    buffer_size = 128
-    role_arn    = aws_iam_role.firehose.arn
+    buffering_size = 128
+    role_arn       = aws_iam_role.firehose.arn
 
     data_format_conversion_configuration {
       enabled = %[2]t
@@ -2831,8 +2831,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   extended_s3_configuration {
     bucket_arn = aws_s3_bucket.bucket.arn
     # InvalidArgumentException: BufferingHints.SizeInMBs must be at least 64 when data format conversion is enabled.
-    buffer_size = 128
-    role_arn    = aws_iam_role.firehose.arn
+    buffering_size = 128
+    role_arn       = aws_iam_role.firehose.arn
 
     data_format_conversion_configuration {
       input_format_configuration {
@@ -2909,8 +2909,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   extended_s3_configuration {
     bucket_arn = aws_s3_bucket.bucket.arn
     # InvalidArgumentException: BufferingHints.SizeInMBs must be at least 64 when data format conversion is enabled.
-    buffer_size = 128
-    role_arn    = aws_iam_role.firehose.arn
+    buffering_size = 128
+    role_arn       = aws_iam_role.firehose.arn
 
     data_format_conversion_configuration {
       input_format_configuration {
@@ -2973,8 +2973,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   extended_s3_configuration {
     bucket_arn = aws_s3_bucket.bucket.arn
     # InvalidArgumentException: BufferingHints.SizeInMBs must be at least 64 when data format conversion is enabled.
-    buffer_size = 128
-    role_arn    = aws_iam_role.firehose.arn
+    buffering_size = 128
+    role_arn       = aws_iam_role.firehose.arn
 
     data_format_conversion_configuration {
       input_format_configuration {
@@ -3037,8 +3037,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   extended_s3_configuration {
     bucket_arn = aws_s3_bucket.bucket.arn
     # InvalidArgumentException: BufferingHints.SizeInMBs must be at least 64 when data format conversion is enabled.
-    buffer_size = 128
-    role_arn    = aws_iam_role.firehose.arn
+    buffering_size = 128
+    role_arn       = aws_iam_role.firehose.arn
 
     data_format_conversion_configuration {
       input_format_configuration {
@@ -3182,7 +3182,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     bucket_arn          = aws_s3_bucket.bucket.arn
     prefix              = "custom-prefix/customerId=!{partitionKeyFromLambda:customerId}/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/"
     error_output_prefix = "prefix1"
-    buffer_size         = 64
+    buffering_size      = 64
 
     dynamic_partitioning_configuration {
       enabled        = true
@@ -3237,7 +3237,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     role_arn            = aws_iam_role.firehose.arn
     bucket_arn          = aws_s3_bucket.bucket.arn
     error_output_prefix = "prefix1"
-    buffer_size         = 64
+    buffering_size      = 64
   }
 }
 `, rName))
@@ -3278,8 +3278,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
       }
     }
 
-    buffer_size        = 10
-    buffer_interval    = 400
+    buffering_size     = 10
+    buffering_interval = 400
     compression_format = "GZIP"
     s3_backup_mode     = "Enabled"
 
@@ -3305,8 +3305,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   extended_s3_configuration {
     role_arn           = aws_iam_role.firehose.arn
     bucket_arn         = aws_s3_bucket.bucket.arn
-    buffer_size        = 10
-    buffer_interval    = 400
+    buffering_size     = 10
+    buffering_interval = 400
     compression_format = "GZIP"
     s3_backup_mode     = "Enabled"
 
@@ -3379,8 +3379,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   s3_configuration {
     role_arn           = aws_iam_role.firehose.arn
     bucket_arn         = aws_s3_bucket.bucket.arn
-    buffer_size        = 10
-    buffer_interval    = 400
+    buffering_size     = 10
+    buffering_interval = 400
     compression_format = "GZIP"
   }
 
@@ -3458,8 +3458,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   s3_configuration {
     role_arn           = aws_iam_role.firehose.arn
     bucket_arn         = aws_s3_bucket.bucket.arn
-    buffer_size        = 10
-    buffer_interval    = 400
+    buffering_size     = 10
+    buffering_interval = 400
     compression_format = "GZIP"
   }
 
@@ -3601,8 +3601,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   s3_configuration {
     role_arn           = aws_iam_role.firehose.arn
     bucket_arn         = aws_s3_bucket.bucket.arn
-    buffer_size        = 10
-    buffer_interval    = 400
+    buffering_size     = 10
+    buffering_interval = 400
     compression_format = "GZIP"
   }
 
@@ -4426,8 +4426,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   extended_s3_configuration {
     role_arn           = aws_iam_role.firehose.arn
     prefix             = "tracking/autocomplete_stream/"
-    buffer_interval    = 300
-    buffer_size        = 5
+    buffering_interval = 300
+    buffering_size     = 5
     compression_format = "GZIP"
     bucket_arn         = aws_s3_bucket.bucket.arn
   }
