@@ -2463,7 +2463,7 @@ resource "aws_vpn_connection" "test" {
   tunnel2_preshared_key                   = %[24]q
   tunnel2_dpd_timeout_action              = %[25]q
   tunnel2_dpd_timeout_seconds             = %[26]d
-  tunnel1_enable_tunnel_lifecycle_control = %[27]t
+  tunnel2_enable_tunnel_lifecycle_control = %[27]t
   tunnel2_ike_versions                    = [%[28]s]
   tunnel2_phase1_dh_group_numbers         = [%[29]s]
   tunnel2_phase1_encryption_algorithms    = [%[30]s]
