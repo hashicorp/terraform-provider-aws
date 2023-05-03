@@ -88,6 +88,15 @@ func ResourceEndpointConfiguration() *schema.Resource {
 													ForceNew:     true,
 													ValidateFunc: verify.ValidARN,
 												},
+												"include_inference_response_in": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													ForceNew: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: validation.StringInSlice(sagemaker.AsyncNotificationTopicTypes_Values(), false),
+													},
+												},
 												"success_topic": {
 													Type:         schema.TypeString,
 													Optional:     true,
@@ -96,6 +105,15 @@ func ResourceEndpointConfiguration() *schema.Resource {
 												},
 											},
 										},
+									},
+									"s3_failure_path": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+										ValidateFunc: validation.All(
+											validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+											validation.StringLenBetween(1, 512),
+										),
 									},
 									"s3_output_path": {
 										Type:     schema.TypeString,
@@ -848,6 +866,10 @@ func expandEndpointConfigOutputConfig(configured []interface{}) *sagemaker.Async
 		c.KmsKeyId = aws.String(v)
 	}
 
+	if v, ok := m["s3_failure_path"].(string); ok && v != "" {
+		c.S3FailurePath = aws.String(v)
+	}
+
 	if v, ok := m["notification_config"].([]interface{}); ok && len(v) > 0 {
 		c.NotificationConfig = expandEndpointConfigNotificationConfig(v)
 	}
@@ -870,6 +892,10 @@ func expandEndpointConfigNotificationConfig(configured []interface{}) *sagemaker
 
 	if v, ok := m["success_topic"].(string); ok && v != "" {
 		c.SuccessTopic = aws.String(v)
+	}
+
+	if v, ok := m["include_inference_response_in"].(*schema.Set); ok && v.Len() > 0 {
+		c.IncludeInferenceResponseIn = flex.ExpandStringSet(v)
 	}
 
 	return c
@@ -964,6 +990,10 @@ func flattenEndpointConfigOutputConfig(config *sagemaker.AsyncInferenceOutputCon
 		cfg["notification_config"] = flattenEndpointConfigNotificationConfig(config.NotificationConfig)
 	}
 
+	if config.S3FailurePath != nil {
+		cfg["s3_failure_path"] = aws.StringValue(config.S3FailurePath)
+	}
+
 	return []map[string]interface{}{cfg}
 }
 
@@ -980,6 +1010,10 @@ func flattenEndpointConfigNotificationConfig(config *sagemaker.AsyncInferenceNot
 
 	if config.SuccessTopic != nil {
 		cfg["success_topic"] = aws.StringValue(config.SuccessTopic)
+	}
+
+	if config.IncludeInferenceResponseIn != nil {
+		cfg["include_inference_response_in"] = flex.FlattenStringSet(config.IncludeInferenceResponseIn)
 	}
 
 	return []map[string]interface{}{cfg}
