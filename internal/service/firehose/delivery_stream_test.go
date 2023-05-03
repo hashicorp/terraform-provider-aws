@@ -3352,10 +3352,10 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     index_name = "test"
     type_name  = "test"
 
-  s3_configuration {
-    role_arn   = aws_iam_role.firehose.arn
-    bucket_arn = aws_s3_bucket.bucket.arn
-  }
+    s3_configuration {
+      role_arn   = aws_iam_role.firehose.arn
+      bucket_arn = aws_s3_bucket.bucket.arn
+    }
   }
 }
 `, rName))
@@ -3375,11 +3375,11 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     index_name = "test"
     type_name  = "test"
 
-  s3_configuration {
-    role_arn            = aws_iam_role.firehose.arn
-    bucket_arn          = aws_s3_bucket.bucket.arn
-    error_output_prefix = %[2]q
-  }
+    s3_configuration {
+      role_arn            = aws_iam_role.firehose.arn
+      bucket_arn          = aws_s3_bucket.bucket.arn
+      error_output_prefix = %[2]q
+    }
   }
 }
 `, rName, errorOutputPrefix))
@@ -3399,10 +3399,10 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     index_name = "test"
     type_name  = "test"
 
-  s3_configuration {
-    role_arn   = aws_iam_role.firehose.arn
-    bucket_arn = aws_s3_bucket.bucket.arn
-  }
+    s3_configuration {
+      role_arn   = aws_iam_role.firehose.arn
+      bucket_arn = aws_s3_bucket.bucket.arn
+    }
 
     vpc_config {
       subnet_ids         = aws_subnet.test[*].id
@@ -3432,10 +3432,10 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     type_name          = "test"
     buffering_interval = 500
 
-  s3_configuration {
-    role_arn   = aws_iam_role.firehose.arn
-    bucket_arn = aws_s3_bucket.bucket.arn
-  }
+    s3_configuration {
+      role_arn   = aws_iam_role.firehose.arn
+      bucket_arn = aws_s3_bucket.bucket.arn
+    }
 
     processing_configuration {
       enabled = false
@@ -3480,10 +3480,10 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     type_name          = "test"
     buffering_interval = 500
 
-  s3_configuration {
-    role_arn   = aws_iam_role.firehose.arn
-    bucket_arn = aws_s3_bucket.bucket.arn
-  }
+    s3_configuration {
+      role_arn   = aws_iam_role.firehose.arn
+      bucket_arn = aws_s3_bucket.bucket.arn
+    }
 
     vpc_config {
       subnet_ids         = aws_subnet.test[*].id
@@ -3527,10 +3527,10 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     index_name       = "test"
     type_name        = "test"
 
-  s3_configuration {
-    role_arn   = aws_iam_role.firehose.arn
-    bucket_arn = aws_s3_bucket.bucket.arn
-  }
+    s3_configuration {
+      role_arn   = aws_iam_role.firehose.arn
+      bucket_arn = aws_s3_bucket.bucket.arn
+    }
   }
 }`, rName))
 }
@@ -3553,10 +3553,10 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     type_name          = "test"
     buffering_interval = 500
 
-  s3_configuration {
-    role_arn   = aws_iam_role.firehose.arn
-    bucket_arn = aws_s3_bucket.bucket.arn
-  }
+    s3_configuration {
+      role_arn   = aws_iam_role.firehose.arn
+      bucket_arn = aws_s3_bucket.bucket.arn
+    }
 
     processing_configuration {
       enabled = false
@@ -3711,10 +3711,10 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     role_arn   = aws_iam_role.firehose.arn
     index_name = "test"
 
-  s3_configuration {
-    role_arn   = aws_iam_role.firehose.arn
-    bucket_arn = aws_s3_bucket.bucket.arn
-  }
+    s3_configuration {
+      role_arn   = aws_iam_role.firehose.arn
+      bucket_arn = aws_s3_bucket.bucket.arn
+    }
   }
 }
 `, rName))
@@ -3733,10 +3733,10 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     role_arn         = aws_iam_role.firehose.arn
     index_name       = "test"
 
-  s3_configuration {
-    role_arn   = aws_iam_role.firehose.arn
-    bucket_arn = aws_s3_bucket.bucket.arn
-  }
+    s3_configuration {
+      role_arn   = aws_iam_role.firehose.arn
+      bucket_arn = aws_s3_bucket.bucket.arn
+    }
   }
 }`, rName))
 }
@@ -3758,10 +3758,10 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     index_name         = "test"
     buffering_interval = 500
 
-  s3_configuration {
-    role_arn   = aws_iam_role.firehose.arn
-    bucket_arn = aws_s3_bucket.bucket.arn
-  }
+    s3_configuration {
+      role_arn   = aws_iam_role.firehose.arn
+      bucket_arn = aws_s3_bucket.bucket.arn
+    }
 
     processing_configuration {
       enabled = false
@@ -3800,11 +3800,11 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     role_arn   = aws_iam_role.firehose.arn
     index_name = "test"
 
-  s3_configuration {
-    role_arn            = aws_iam_role.firehose.arn
-    bucket_arn          = aws_s3_bucket.bucket.arn
-    error_output_prefix = %[2]q
-  }
+    s3_configuration {
+      role_arn            = aws_iam_role.firehose.arn
+      bucket_arn          = aws_s3_bucket.bucket.arn
+      error_output_prefix = %[2]q
+    }
   }
 }
 `, rName, errorOutputPrefix))
@@ -3823,10 +3823,10 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     role_arn   = aws_iam_role.firehose.arn
     index_name = "test"
 
-  s3_configuration {
-    role_arn   = aws_iam_role.firehose.arn
-    bucket_arn = aws_s3_bucket.bucket.arn
-  }
+    s3_configuration {
+      role_arn   = aws_iam_role.firehose.arn
+      bucket_arn = aws_s3_bucket.bucket.arn
+    }
 
     vpc_config {
       subnet_ids         = aws_subnet.test[*].id
@@ -3855,10 +3855,10 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     index_name         = "test"
     buffering_interval = 500
 
-  s3_configuration {
-    role_arn   = aws_iam_role.firehose.arn
-    bucket_arn = aws_s3_bucket.bucket.arn
-  }
+    s3_configuration {
+      role_arn   = aws_iam_role.firehose.arn
+      bucket_arn = aws_s3_bucket.bucket.arn
+    }
 
     processing_configuration {
       enabled = false
@@ -3902,10 +3902,10 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     index_name         = "test"
     buffering_interval = 500
 
-  s3_configuration {
-    role_arn   = aws_iam_role.firehose.arn
-    bucket_arn = aws_s3_bucket.bucket.arn
-  }
+    s3_configuration {
+      role_arn   = aws_iam_role.firehose.arn
+      bucket_arn = aws_s3_bucket.bucket.arn
+    }
 
     vpc_config {
       subnet_ids         = aws_subnet.test[*].id
