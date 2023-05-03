@@ -43,7 +43,6 @@ func TestAccAPIGatewayRestAPI_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "false"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexp.MustCompile(`[a-z0-9]+`)),
-					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "-1"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
 					resource.TestMatchResourceAttr(resourceName, "root_resource_id", regexp.MustCompile(`[a-z0-9]+`)),
@@ -1036,10 +1035,10 @@ func TestAccAPIGatewayRestAPI_minimumCompressionSize(t *testing.T) {
 		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRestAPIConfig_minimumCompressionSize(rName, 0),
+				Config: testAccRestAPIConfig_minimumCompressionSize(rName, "1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "0"),
+					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "1"),
 				),
 			},
 			{
@@ -1049,14 +1048,14 @@ func TestAccAPIGatewayRestAPI_minimumCompressionSize(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 			{
-				Config: testAccRestAPIConfig_minimumCompressionSize(rName, -1),
+				Config: testAccRestAPIConfig_minimumCompressionSize(rName, "-1"), // -1 removes existing values
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "-1"),
+					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", ""),
 				),
 			},
 			{
-				Config: testAccRestAPIConfig_minimumCompressionSize(rName, 5242880),
+				Config: testAccRestAPIConfig_minimumCompressionSize(rName, "5242880"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "5242880"),
@@ -1079,7 +1078,7 @@ func TestAccAPIGatewayRestAPI_MinimumCompressionSize_overrideBody(t *testing.T) 
 		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName, 1, 5242880),
+				Config: testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName, "1", 5242880),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "1"),
@@ -1093,7 +1092,7 @@ func TestAccAPIGatewayRestAPI_MinimumCompressionSize_overrideBody(t *testing.T) 
 			},
 			// Verify updated minimum compression size still overrides
 			{
-				Config: testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName, 2, 5242880),
+				Config: testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName, "2", 5242880),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "2"),
@@ -1101,7 +1100,7 @@ func TestAccAPIGatewayRestAPI_MinimumCompressionSize_overrideBody(t *testing.T) 
 			},
 			// Verify updated body minimum compression size is still overridden
 			{
-				Config: testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName, 2, 1048576),
+				Config: testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName, "2", 1048576),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "2"),
@@ -1129,8 +1128,6 @@ func TestAccAPIGatewayRestAPI_MinimumCompressionSize_setByBody(t *testing.T) {
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "1048576"),
 				),
-				// TODO: The attribute type must be changed to NullableTypeInt so it can be Computed properly.
-				ExpectNonEmptyPlan: true,
 			},
 			{
 				ResourceName:            resourceName,
@@ -1218,7 +1215,7 @@ func TestAccAPIGatewayRestAPI_FailOnWarnings(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 			// Verify invalid body fails update, when fail_on_warnings is true
 			{
@@ -2414,20 +2411,20 @@ resource "aws_api_gateway_rest_api" "test" {
 `, rName, bodyDescription)
 }
 
-func testAccRestAPIConfig_minimumCompressionSize(rName string, minimumCompressionSize int) string {
+func testAccRestAPIConfig_minimumCompressionSize(rName string, minimumCompressionSize string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  minimum_compression_size = %[2]d
   name                     = %[1]q
+  minimum_compression_size = %[2]q
 }
 `, rName, minimumCompressionSize)
 }
 
-func testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName string, minimumCompressionSize int, bodyMinimumCompressionSize int) string {
+func testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName string, minimumCompressionSize string, bodyMinimumCompressionSize int) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  minimum_compression_size = %[2]d
   name                     = %[1]q
+  minimum_compression_size = %[2]q
 
   body = jsonencode({
     swagger = "2.0"

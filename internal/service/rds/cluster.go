@@ -174,9 +174,8 @@ func ResourceCluster() *schema.Resource {
 			},
 			"engine": {
 				Type:         schema.TypeString,
-				Optional:     true,
+				Required:     true,
 				ForceNew:     true,
-				Default:      ClusterEngineAurora,
 				ValidateFunc: validClusterEngine(),
 			},
 			"engine_mode": {
@@ -473,6 +472,11 @@ func ResourceCluster() *schema.Resource {
 					// to prevent an apply with unexpected results (ie. a regional
 					// cluster which is not joined to the provided global cluster).
 					"global_cluster_identifier",
+				},
+				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// allow snapshot_idenfitier to be removed without forcing re-creation
+					return new == ""
 				},
 			},
 			"source_region": {

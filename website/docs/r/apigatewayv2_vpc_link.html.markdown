@@ -19,7 +19,7 @@ To enable private integration for REST APIs, use the Amazon API Gateway Version 
 resource "aws_apigatewayv2_vpc_link" "example" {
   name               = "example"
   security_group_ids = [data.aws_security_group.example.id]
-  subnet_ids         = data.aws_subnet_ids.example.ids
+  subnet_ids         = data.aws_subnets.example.ids
 
   tags = {
     Usage = "example"

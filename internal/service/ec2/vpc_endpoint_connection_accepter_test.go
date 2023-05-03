@@ -187,14 +187,17 @@ resource "aws_subnet" "test_alternate3" {
   }
 }
 
-data "aws_subnet_ids" "alternate_intersect" {
+data "aws_subnets" "alternate_intersect" {
   provider = "awsalternate"
-
-  vpc_id = aws_vpc.test_alternate.id
 
   filter {
     name   = "availabilityZone"
     values = aws_vpc_endpoint_service.test.availability_zones
+  }
+
+  filter {
+    name   = "vpc-id"
+    values = [aws_vpc.test_alternate.id]
   }
 }
 
@@ -246,7 +249,7 @@ resource "aws_vpc_endpoint" "test" {
 
   vpc_id              = aws_vpc.test_alternate.id
   service_name        = aws_vpc_endpoint_service.test.service_name
-  subnet_ids          = data.aws_subnet_ids.alternate_intersect.ids
+  subnet_ids          = data.aws_subnets.alternate_intersect.ids
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = false
 

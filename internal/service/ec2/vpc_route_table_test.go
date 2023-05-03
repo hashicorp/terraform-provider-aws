@@ -178,7 +178,7 @@ func TestAccVPCRouteTable_ipv4ToInstance(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr, "instance_id", instanceResourceName, "id"),
+					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr, "network_interface_id", instanceResourceName, "primary_network_interface_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -296,7 +296,7 @@ func TestAccVPCRouteTable_requireRouteDestination(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCRouteTableConfig_noDestination(rName),
-				ExpectError: regexp.MustCompile("error creating route: one of `cidr_block"),
+				ExpectError: regexp.MustCompile("creating route: one of `cidr_block"),
 			},
 		},
 	})
@@ -314,7 +314,7 @@ func TestAccVPCRouteTable_requireRouteTarget(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCRouteTableConfig_noTarget(rName),
-				ExpectError: regexp.MustCompile(`error creating route: one of .*\begress_only_gateway_id\b`),
+				ExpectError: regexp.MustCompile(`creating route: one of .*\begress_only_gateway_id\b`),
 			},
 		},
 	})
@@ -867,40 +867,6 @@ func TestAccVPCRouteTable_vpcMultipleCIDRs(t *testing.T) {
 	})
 }
 
-func TestAccVPCRouteTable_vpcClassicLink(t *testing.T) {
-	ctx := acctest.Context(t)
-	var routeTable ec2.RouteTable
-	resourceName := "aws_route_table.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVPCRouteTableConfig_classicLink(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
-					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "route.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccVPCRouteTable_gatewayVPCEndpoint(t *testing.T) {
 	ctx := acctest.Context(t)
 	var routeTable ec2.RouteTable
@@ -963,9 +929,9 @@ func TestAccVPCRouteTable_multipleRoutes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCRouteTableConfig_multiples(rName,
-					"cidr_block", destinationCidr1, "gateway_id", igwResourceName,
-					"cidr_block", destinationCidr2, "instance_id", instanceResourceName,
-					"ipv6_cidr_block", destinationCidr4, "egress_only_gateway_id", eoigwResourceName),
+					"cidr_block", destinationCidr1, "gateway_id", fmt.Sprintf(`%s.%s`, igwResourceName, "id"),
+					"cidr_block", destinationCidr2, "network_interface_id", fmt.Sprintf(`%s.%s`, instanceResourceName, "primary_network_interface_id"),
+					"ipv6_cidr_block", destinationCidr4, "egress_only_gateway_id", fmt.Sprintf(`%s.%s`, eoigwResourceName, "id")),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 5),
@@ -974,7 +940,7 @@ func TestAccVPCRouteTable_multipleRoutes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "3"),
 					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr1, "gateway_id", igwResourceName, "id"),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr2, "instance_id", instanceResourceName, "id"),
+					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr2, "network_interface_id", instanceResourceName, "primary_network_interface_id"),
 					testAccCheckRouteTableRoute(resourceName, "ipv6_cidr_block", destinationCidr4, "egress_only_gateway_id", eoigwResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
@@ -982,9 +948,9 @@ func TestAccVPCRouteTable_multipleRoutes(t *testing.T) {
 			},
 			{
 				Config: testAccVPCRouteTableConfig_multiples(rName,
-					"cidr_block", destinationCidr1, "vpc_peering_connection_id", pcxResourceName,
-					"cidr_block", destinationCidr3, "instance_id", instanceResourceName,
-					"ipv6_cidr_block", destinationCidr4, "egress_only_gateway_id", eoigwResourceName),
+					"cidr_block", destinationCidr1, "vpc_peering_connection_id", fmt.Sprintf(`%s.%s`, pcxResourceName, "id"),
+					"cidr_block", destinationCidr3, "network_interface_id", fmt.Sprintf(`%s.%s`, instanceResourceName, "primary_network_interface_id"),
+					"ipv6_cidr_block", destinationCidr4, "egress_only_gateway_id", fmt.Sprintf(`%s.%s`, eoigwResourceName, "id")),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 5),
@@ -993,7 +959,7 @@ func TestAccVPCRouteTable_multipleRoutes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "3"),
 					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr1, "vpc_peering_connection_id", pcxResourceName, "id"),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr3, "instance_id", instanceResourceName, "id"),
+					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr3, "network_interface_id", instanceResourceName, "primary_network_interface_id"),
 					testAccCheckRouteTableRoute(resourceName, "ipv6_cidr_block", destinationCidr4, "egress_only_gateway_id", eoigwResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
@@ -1001,9 +967,9 @@ func TestAccVPCRouteTable_multipleRoutes(t *testing.T) {
 			},
 			{
 				Config: testAccVPCRouteTableConfig_multiples(rName,
-					"ipv6_cidr_block", destinationCidr4, "vpc_peering_connection_id", pcxResourceName,
-					"cidr_block", destinationCidr3, "gateway_id", igwResourceName,
-					"cidr_block", destinationCidr2, "instance_id", instanceResourceName),
+					"ipv6_cidr_block", destinationCidr4, "vpc_peering_connection_id", fmt.Sprintf(`%s.%s`, pcxResourceName, "id"),
+					"cidr_block", destinationCidr3, "gateway_id", fmt.Sprintf(`%s.%s`, igwResourceName, "id"),
+					"cidr_block", destinationCidr2, "network_interface_id", fmt.Sprintf(`%s.%s`, instanceResourceName, "primary_network_interface_id")),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 5),
@@ -1013,7 +979,7 @@ func TestAccVPCRouteTable_multipleRoutes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "route.#", "3"),
 					testAccCheckRouteTableRoute(resourceName, "ipv6_cidr_block", destinationCidr4, "vpc_peering_connection_id", pcxResourceName, "id"),
 					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr3, "gateway_id", igwResourceName, "id"),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr2, "instance_id", instanceResourceName, "id"),
+					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr2, "network_interface_id", instanceResourceName, "primary_network_interface_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -1379,8 +1345,8 @@ resource "aws_route_table" "test" {
   vpc_id = aws_vpc.test.id
 
   route {
-    cidr_block  = %[2]q
-    instance_id = aws_instance.test.id
+    cidr_block           = %[2]q
+    network_interface_id = aws_instance.test.primary_network_interface_id
   }
 
   tags = {
@@ -1523,7 +1489,7 @@ resource "aws_route_table" "test" {
   vpc_id = aws_vpc.test.id
 
   route {
-    instance_id = aws_instance.test.id
+    network_interface_id = aws_instance.test.primary_network_interface_id
   }
 
   tags = {
@@ -2082,27 +2048,6 @@ resource "aws_route_table" "test" {
 `, rName)
 }
 
-func testAccVPCRouteTableConfig_classicLink(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block         = "10.1.0.0/16"
-  enable_classiclink = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_route_table" "test" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName)
-}
-
 func testAccVPCRouteTableConfig_gatewayEndpoint(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
@@ -2209,19 +2154,19 @@ locals {
       destination_attr  = %[2]q
       destination_value = %[3]q
       target_attr       = %[4]q
-      target_value      = %[5]s.id
+      target_value      = %[5]s
     },
     {
       destination_attr  = %[6]q
       destination_value = %[7]q
       target_attr       = %[8]q
-      target_value      = %[9]s.id
+      target_value      = %[9]s
     },
     {
       destination_attr  = %[10]q
       destination_value = %[11]q
       target_attr       = %[12]q
-      target_value      = %[13]s.id
+      target_value      = %[13]s
     }
   ]
 }
@@ -2240,7 +2185,6 @@ resource "aws_route_table" "test" {
       carrier_gateway_id        = (route.value["target_attr"] == "carrier_gateway_id") ? route.value["target_value"] : null
       egress_only_gateway_id    = (route.value["target_attr"] == "egress_only_gateway_id") ? route.value["target_value"] : null
       gateway_id                = (route.value["target_attr"] == "gateway_id") ? route.value["target_value"] : null
-      instance_id               = (route.value["target_attr"] == "instance_id") ? route.value["target_value"] : null
       local_gateway_id          = (route.value["target_attr"] == "local_gateway_id") ? route.value["target_value"] : null
       nat_gateway_id            = (route.value["target_attr"] == "nat_gateway_id") ? route.value["target_value"] : null
       network_interface_id      = (route.value["target_attr"] == "network_interface_id") ? route.value["target_value"] : null

@@ -1,16 +1,16 @@
 ---
-subcategory: "Inspector V2"
+subcategory: "Inspector"
 layout: "aws"
 page_title: "AWS: aws_inspector2_organization_configuration"
 description: |-
-  Terraform resource for managing an AWS Inspector V2 Organization Configuration.
+  Terraform resource for managing an Amazon Inspector Organization Configuration.
 ---
 
 # Resource: aws_inspector2_organization_configuration
 
-Terraform resource for managing an AWS Inspector V2 Organization Configuration.
+Terraform resource for managing an Amazon Inspector Organization Configuration.
 
-~> **NOTE:** In order for this resource to work, the account you use must be an Inspector V2 Delegated Admin Account.
+~> **NOTE:** In order for this resource to work, the account you use must be an Inspector Delegated Admin Account.
 
 ~> **NOTE:** When this resource is deleted, EC2, ECR and Lambda scans will no longer be automatically enabled for new members of your Amazon Inspector organization.
 

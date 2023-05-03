@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
+	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	"github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
@@ -76,6 +77,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/chimesdkmediapipelines"
 	"github.com/aws/aws-sdk-go/service/chimesdkmeetings"
 	"github.com/aws/aws-sdk-go/service/chimesdkmessaging"
+	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
 	"github.com/aws/aws-sdk-go/service/cloud9"
 	"github.com/aws/aws-sdk-go/service/clouddirectory"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
@@ -167,6 +169,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/aws/aws-sdk-go/service/inspector"
+	"github.com/aws/aws-sdk-go/service/internetmonitor"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/aws/aws-sdk-go/service/iot1clickdevicesservice"
 	"github.com/aws/aws-sdk-go/service/iot1clickprojects"
@@ -389,6 +392,8 @@ type AWSClient struct {
 	chimesdkmediapipelinesConn       *chimesdkmediapipelines.ChimeSDKMediaPipelines
 	chimesdkmeetingsConn             *chimesdkmeetings.ChimeSDKMeetings
 	chimesdkmessagingConn            *chimesdkmessaging.ChimeSDKMessaging
+	chimesdkvoiceConn                *chimesdkvoice.ChimeSDKVoice
+	cleanroomsClient                 *cleanrooms.Client
 	cloud9Conn                       *cloud9.Cloud9
 	cloudcontrolClient               *cloudcontrol.Client
 	clouddirectoryConn               *clouddirectory.CloudDirectory
@@ -487,6 +492,7 @@ type AWSClient struct {
 	imagebuilderConn                 *imagebuilder.Imagebuilder
 	inspectorConn                    *inspector.Inspector
 	inspector2Client                 *inspector2.Client
+	internetmonitorConn              *internetmonitor.InternetMonitor
 	iotConn                          *iot.IoT
 	iot1clickdevicesConn             *iot1clickdevicesservice.IoT1ClickDevicesService
 	iot1clickprojectsConn            *iot1clickprojects.IoT1ClickProjects
@@ -824,6 +830,14 @@ func (client *AWSClient) ChimeSDKMeetingsConn() *chimesdkmeetings.ChimeSDKMeetin
 
 func (client *AWSClient) ChimeSDKMessagingConn() *chimesdkmessaging.ChimeSDKMessaging {
 	return client.chimesdkmessagingConn
+}
+
+func (client *AWSClient) ChimeSDKVoiceConn() *chimesdkvoice.ChimeSDKVoice {
+	return client.chimesdkvoiceConn
+}
+
+func (client *AWSClient) CleanRoomsClient() *cleanrooms.Client {
+	return client.cleanroomsClient
 }
 
 func (client *AWSClient) Cloud9Conn() *cloud9.Cloud9 {
@@ -1220,6 +1234,10 @@ func (client *AWSClient) InspectorConn() *inspector.Inspector {
 
 func (client *AWSClient) Inspector2Client() *inspector2.Client {
 	return client.inspector2Client
+}
+
+func (client *AWSClient) InternetMonitorConn() *internetmonitor.InternetMonitor {
+	return client.internetmonitorConn
 }
 
 func (client *AWSClient) IoTConn() *iot.IoT {

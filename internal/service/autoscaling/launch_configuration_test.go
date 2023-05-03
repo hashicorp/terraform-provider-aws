@@ -54,8 +54,6 @@ func TestAccAutoScalingLaunchConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spot_price", ""),
 					resource.TestCheckNoResourceAttr(resourceName, "user_data"),
 					resource.TestCheckNoResourceAttr(resourceName, "user_data_base64"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_classic_link_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_classic_link_security_groups.#", "0"),
 				),
 			},
 			{

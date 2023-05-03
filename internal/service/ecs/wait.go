@@ -63,7 +63,7 @@ func waitCapacityProviderUpdated(ctx context.Context, conn *ecs.ECS, arn string)
 }
 
 // waitServiceStable waits for an ECS Service to reach the status "ACTIVE" and have all desired tasks running. Does not return tags.
-func waitServiceStable(ctx context.Context, conn *ecs.ECS, id, cluster string, timeout time.Duration) (*ecs.Service, error) { //nolint:unparam
+func waitServiceStable(ctx context.Context, conn *ecs.ECS, id, cluster string, timeout time.Duration) (*ecs.Service, error) {
 	input := &ecs.DescribeServicesInput{
 		Services: aws.StringSlice([]string{id}),
 	}
@@ -112,7 +112,7 @@ func waitServiceInactive(ctx context.Context, conn *ecs.ECS, id, cluster string,
 }
 
 // waitServiceActive waits for an ECS Service to reach the status "ACTIVE". Does not return tags.
-func waitServiceActive(ctx context.Context, conn *ecs.ECS, id, cluster string, timeout time.Duration) (*ecs.Service, error) { //nolint:unparam
+func waitServiceActive(ctx context.Context, conn *ecs.ECS, id, cluster string, timeout time.Duration) (*ecs.Service, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{serviceStatusInactive, serviceStatusDraining},
 		Target:  []string{serviceStatusActive},

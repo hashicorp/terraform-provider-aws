@@ -10,6 +10,7 @@ description: |-
 
 Terraform resource for managing an Amazon File Cache cache.
 See the [Create File Cache](https://docs.aws.amazon.com/fsx/latest/APIReference/API_CreateFileCache.html) for more information.
+
 ## Example Usage
 
 ```terraform

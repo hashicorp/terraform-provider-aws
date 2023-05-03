@@ -107,7 +107,6 @@ const (
 )
 
 const (
-	ClusterEngineAurora           = "aurora"
 	ClusterEngineAuroraMySQL      = "aurora-mysql"
 	ClusterEngineAuroraPostgreSQL = "aurora-postgresql"
 	ClusterEngineMySQL            = "mysql"
@@ -116,7 +115,6 @@ const (
 
 func ClusterEngine_Values() []string {
 	return []string{
-		ClusterEngineAurora,
 		ClusterEngineAuroraMySQL,
 		ClusterEngineAuroraPostgreSQL,
 		ClusterEngineMySQL,

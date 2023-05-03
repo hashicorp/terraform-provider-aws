@@ -125,6 +125,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceParameterGroup,
 			TypeName: "aws_db_parameter_group",
+			Name:     "DB Parameter Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceProxy,
@@ -149,14 +153,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceProxyTarget,
 			TypeName: "aws_db_proxy_target",
-		},
-		{
-			Factory:  ResourceSecurityGroup,
-			TypeName: "aws_db_security_group",
-			Name:     "DB Security Group",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
-			},
 		},
 		{
 			Factory:  ResourceSnapshot,

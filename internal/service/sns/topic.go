@@ -280,7 +280,12 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(aws.StringValue(output.TopicArn))
 
-	err = putTopicAttributes(ctx, conn, d.Id(), attributes)
+	// Retry for eventual consistency; if ABAC is in use, this takes some time
+	// usually about 10s, presumably for tags really to be there, and we get a
+	// permissions error.
+	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		return nil, putTopicAttributes(ctx, conn, d.Id(), attributes)
+	}, sns.ErrCodeAuthorizationErrorException, "no identity-based policy allows")
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -12,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -45,7 +47,7 @@ func DataSourceRestAPI() *schema.Resource {
 				Computed: true,
 			},
 			"minimum_compression_size": {
-				Type:     schema.TypeInt,
+				Type:     nullable.TypeNullableInt,
 				Computed: true,
 			},
 			"binary_media_types": {
@@ -126,9 +128,9 @@ func dataSourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("binary_media_types", match.BinaryMediaTypes)
 
 	if match.MinimumCompressionSize == nil {
-		d.Set("minimum_compression_size", -1)
+		d.Set("minimum_compression_size", nil)
 	} else {
-		d.Set("minimum_compression_size", match.MinimumCompressionSize)
+		d.Set("minimum_compression_size", strconv.FormatInt(aws.Int64Value(match.MinimumCompressionSize), 10))
 	}
 
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(match.EndpointConfiguration)); err != nil {

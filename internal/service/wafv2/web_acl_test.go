@@ -42,21 +42,23 @@ func TestAccWAFV2WebACL_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLConfig_basic(webACLName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
-					resource.TestCheckResourceAttr(resourceName, "description", webACLName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "captcha_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "description", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "token_domains.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -2035,11 +2037,15 @@ func TestAccWAFV2WebACL_Custom_requestHandling(t *testing.T) {
 						"action.0.captcha.0.custom_request_handling.0.insert_header.1.value": "test-value-2",
 						"action.0.count.#": "0",
 						"priority":         "1",
+						"captcha_config.#": "1",
+						"captcha_config.0.immunity_time_property.0.immunity_time": "240",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "captcha_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "captcha_config.0.immunity_time_property.0.immunity_time", "120"),
 				),
 			},
 			{
@@ -2322,6 +2328,52 @@ func TestAccWAFV2WebACL_Operators_maxNested(t *testing.T) {
 						"statement.0.and_statement.0.statement.1.geo_match_statement.#":                                                                          "1",
 						"statement.0.and_statement.0.statement.1.geo_match_statement.0.country_codes.0":                                                          "NL",
 					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACL_tokenDomains(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v wafv2.WebACL
+	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domain1 := "mywebsite.com"
+	domain2 := "myotherwebsite.com"
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_tokenDomains(webACLName, domain1, domain2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "description", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "token_domains.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "token_domains.*", domain1),
+					resource.TestCheckTypeSetElemAttr(resourceName, "token_domains.*", domain2),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -2951,12 +3003,24 @@ resource "aws_wafv2_web_acl" "test" {
       metric_name                = "friendly-rule-metric-name"
       sampled_requests_enabled   = false
     }
+
+    captcha_config {
+      immunity_time_property {
+        immunity_time = 240
+      }
+    }
   }
 
   visibility_config {
     cloudwatch_metrics_enabled = false
     metric_name                = "friendly-metric-name"
     sampled_requests_enabled   = false
+  }
+
+  captcha_config {
+    immunity_time_property {
+      immunity_time = 120
+    }
   }
 }
 `, name, firstHeader, secondHeader)
@@ -4549,4 +4613,25 @@ resource "aws_wafv2_web_acl" "test" {
   }
 }
 `, name)
+}
+
+func testAccWebACLConfig_tokenDomains(name, domain1, domain2 string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  token_domains = [%[2]q, %[3]q]
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name, domain1, domain2)
 }

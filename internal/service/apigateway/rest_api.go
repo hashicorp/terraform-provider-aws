@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -116,10 +117,14 @@ func ResourceRestAPI() *schema.Resource {
 				Optional: true,
 			},
 			"minimum_compression_size": {
-				Type:         schema.TypeInt,
+				Type:         nullable.TypeNullableInt,
 				Optional:     true,
-				Default:      -1,
-				ValidateFunc: validation.IntBetween(-1, 10485760),
+				Computed:     true,
+				ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(-1, 10485760),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// suppress null trigger when value is already null
+					return old == "" && new == "-1"
+				},
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -196,8 +201,12 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.EndpointConfiguration = expandEndpointConfiguration(v.([]interface{}))
 	}
 
-	if minimumCompressionSize := d.Get("minimum_compression_size").(int); minimumCompressionSize > -1 {
-		input.MinimumCompressionSize = aws.Int64(int64(minimumCompressionSize))
+	if v, ok := d.GetOk("minimum_compression_size"); ok && v.(string) != "" && v.(string) != "-1" {
+		mcs, err := strconv.Atoi(v.(string))
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "converting minimum_compression_size (%s): %s", v, err)
+		}
+		input.MinimumCompressionSize = aws.Int64(int64(mcs))
 	}
 
 	if v, ok := d.GetOk("policy"); ok {
@@ -326,9 +335,9 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}.String()
 	d.Set("execution_arn", executionARN)
 	if api.MinimumCompressionSize == nil {
-		d.Set("minimum_compression_size", -1)
+		d.Set("minimum_compression_size", nil)
 	} else {
-		d.Set("minimum_compression_size", api.MinimumCompressionSize)
+		d.Set("minimum_compression_size", strconv.FormatInt(aws.Int64Value(api.MinimumCompressionSize), 10))
 	}
 	d.Set("name", api.Name)
 
@@ -470,15 +479,15 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("minimum_compression_size") {
-			minimumCompressionSize := d.Get("minimum_compression_size").(int)
-			var value string
-			if minimumCompressionSize > -1 {
-				value = strconv.Itoa(minimumCompressionSize)
+			v := d.Get("minimum_compression_size").(string)
+			value := aws.String(v)
+			if v == "-1" {
+				value = nil
 			}
 			operations = append(operations, &apigateway.PatchOperation{
 				Op:    aws.String(apigateway.OpReplace),
 				Path:  aws.String("/minimumCompressionSize"),
-				Value: aws.String(value),
+				Value: value,
 			})
 		}
 
@@ -683,11 +692,15 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 		}
 	}
 
-	if v := d.Get("minimum_compression_size").(int); v > -1 && int64(v) != aws.Int64Value(output.MinimumCompressionSize) {
+	if v, ok := d.GetOk("minimum_compression_size"); ok && v.(string) != strconv.FormatInt(aws.Int64Value(output.MinimumCompressionSize), 10) {
+		value := aws.String(v.(string))
+		if v.(string) == "-1" {
+			value = nil
+		}
 		operations = append(operations, &apigateway.PatchOperation{
 			Op:    aws.String(apigateway.OpReplace),
 			Path:  aws.String("/minimumCompressionSize"),
-			Value: aws.String(strconv.Itoa(v)),
+			Value: value,
 		})
 	}
 

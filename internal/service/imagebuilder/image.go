@@ -141,6 +141,23 @@ func ResourceImage() *schema.Resource {
 								},
 							},
 						},
+						"containers": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"image_uris": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"region": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -319,6 +336,10 @@ func flattenOutputResources(apiObject *imagebuilder.OutputResources) map[string]
 		tfMap["amis"] = flattenAMIs(v)
 	}
 
+	if v := apiObject.Containers; v != nil {
+		tfMap["containers"] = flattenContainers(v)
+	}
+
 	return tfMap
 }
 
@@ -365,6 +386,42 @@ func flattenAMIs(apiObjects []*imagebuilder.Ami) []interface{} {
 		}
 
 		tfList = append(tfList, flattenAMI(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenContainer(apiObject *imagebuilder.Container) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ImageUris; v != nil {
+		tfMap["image_uris"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.Region; v != nil {
+		tfMap["region"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenContainers(apiObjects []*imagebuilder.Container) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenContainer(apiObject))
 	}
 
 	return tfList
