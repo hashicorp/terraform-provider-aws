@@ -107,7 +107,7 @@ resource "aws_kinesis_firehose_delivery_stream" "extended_s3_stream" {
     role_arn   = aws_iam_role.firehose_role.arn
     bucket_arn = aws_s3_bucket.bucket.arn
 
-    buffer_size = 64
+    buffering_size = 64
 
     # https://docs.aws.amazon.com/firehose/latest/dev/dynamic-partitioning.html
     dynamic_partitioning_configuration {
@@ -212,8 +212,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   s3_configuration {
     role_arn           = aws_iam_role.firehose_role.arn
     bucket_arn         = aws_s3_bucket.bucket.arn
-    buffer_size        = 10
-    buffer_interval    = 400
+    buffering_size     = 10
+    buffering_interval = 400
     compression_format = "GZIP"
   }
 
@@ -230,8 +230,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     s3_backup_configuration {
       role_arn           = aws_iam_role.firehose_role.arn
       bucket_arn         = aws_s3_bucket.bucket.arn
-      buffer_size        = 15
-      buffer_interval    = 300
+      buffering_size     = 15
+      buffering_interval = 300
       compression_format = "GZIP"
     }
   }
@@ -252,8 +252,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   s3_configuration {
     role_arn           = aws_iam_role.firehose_role.arn
     bucket_arn         = aws_s3_bucket.bucket.arn
-    buffer_size        = 10
-    buffer_interval    = 400
+    buffering_size     = 10
+    buffering_interval = 400
     compression_format = "GZIP"
   }
 
@@ -375,8 +375,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   s3_configuration {
     role_arn           = aws_iam_role.firehose_role.arn
     bucket_arn         = aws_s3_bucket.bucket.arn
-    buffer_size        = 10
-    buffer_interval    = 400
+    buffering_size     = 10
+    buffering_interval = 400
     compression_format = "GZIP"
   }
 
@@ -495,8 +495,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   s3_configuration {
     role_arn           = aws_iam_role.firehose.arn
     bucket_arn         = aws_s3_bucket.bucket.arn
-    buffer_size        = 10
-    buffer_interval    = 400
+    buffering_size     = 10
+    buffering_interval = 400
     compression_format = "GZIP"
   }
 
@@ -520,8 +520,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   s3_configuration {
     role_arn           = aws_iam_role.firehose.arn
     bucket_arn         = aws_s3_bucket.bucket.arn
-    buffer_size        = 10
-    buffer_interval    = 400
+    buffering_size     = 10
+    buffering_interval = 400
     compression_format = "GZIP"
   }
 
@@ -590,9 +590,9 @@ The `s3_configuration` object supports the following:
 * `role_arn` - (Required) The ARN of the AWS credentials.
 * `bucket_arn` - (Required) The ARN of the S3 bucket
 * `prefix` - (Optional) The "YYYY/MM/DD/HH" time format prefix is automatically used for delivered S3 files. You can specify an extra prefix to be added in front of the time format prefix. Note that if the prefix ends with a slash, it appears as a folder in the S3 bucket
-* `buffer_size` - (Optional) Buffer incoming data to the specified size, in MBs, before delivering it to the destination. The default value is 5.
+* `buffering_size` - (Optional) Buffer incoming data to the specified size, in MBs, before delivering it to the destination. The default value is 5.
                                 We recommend setting SizeInMBs to a value greater than the amount of data you typically ingest into the delivery stream in 10 seconds. For example, if you typically ingest data at 1 MB/sec set SizeInMBs to be 10 MB or higher.
-* `buffer_interval` - (Optional) Buffer incoming data for the specified period of time, in seconds, before delivering it to the destination. The default value is 300.
+* `buffering_interval` - (Optional) Buffer incoming data for the specified period of time, in seconds, before delivering it to the destination. The default value is 300.
 * `compression_format` - (Optional) The compression format. If no value is specified, the default is `UNCOMPRESSED`. Other supported values are `GZIP`, `ZIP`, `Snappy`, & `HADOOP_SNAPPY`.
 * `error_output_prefix` - (Optional) Prefix added to failed records before writing them to S3. Not currently supported for `redshift` destination. This prefix appears immediately following the bucket name. For information about how to specify this prefix, see [Custom Prefixes for Amazon S3 Objects](https://docs.aws.amazon.com/firehose/latest/dev/s3-prefixes.html).
 * `kms_key_arn` - (Optional) Specifies the KMS key ARN the stream will use to encrypt data. If not set, no encryption will
@@ -729,7 +729,7 @@ resource "aws_kinesis_firehose_delivery_stream" "example" {
   # ... other configuration ...
   extended_s3_configuration {
     # Must be at least 64
-    buffer_size = 128
+    buffering_size = 128
 
     # ... other configuration ...
     data_format_conversion_configuration {
