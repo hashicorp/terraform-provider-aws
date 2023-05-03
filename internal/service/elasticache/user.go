@@ -30,9 +30,11 @@ func ResourceUser() *schema.Resource {
 		ReadWithoutTimeout:   resourceUserRead,
 		UpdateWithoutTimeout: resourceUserUpdate,
 		DeleteWithoutTimeout: resourceUserDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{
@@ -332,7 +334,6 @@ const (
 )
 
 func waitUserCreated(ctx context.Context, conn *elasticache.ElastiCache, id string, timeout time.Duration) (*elasticache.User, error) {
-
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{userStatusCreating},
 		Target:  []string{userStatusActive},
@@ -350,7 +351,6 @@ func waitUserCreated(ctx context.Context, conn *elasticache.ElastiCache, id stri
 }
 
 func waitUserUpdated(ctx context.Context, conn *elasticache.ElastiCache, id string, timeout time.Duration) (*elasticache.User, error) {
-
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{userStatusModifying},
 		Target:  []string{userStatusActive},
@@ -368,7 +368,6 @@ func waitUserUpdated(ctx context.Context, conn *elasticache.ElastiCache, id stri
 }
 
 func waitUserDeleted(ctx context.Context, conn *elasticache.ElastiCache, id string, timeout time.Duration) (*elasticache.User, error) {
-
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{userStatusDeleting},
 		Target:  []string{},
