@@ -2255,3 +2255,36 @@ func flattenHeaderFooterSectionConfiguration(apiObject []*quicksight.HeaderFoote
 
 	return tfList
 }
+
+func flattenSheetControlLayouts(apiObject []*quicksight.SheetControlLayout) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{
+			"configuration": flattenSheetControlLayoutConfiguration(config.Configuration),
+		}
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenSheetControlLayoutConfiguration(apiObject *quicksight.SheetControlLayoutConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.GridLayout != nil {
+		tfMap["grid_layout"] = flattenGridLayoutConfiguration(apiObject.GridLayout)
+	}
+
+	return []interface{}{tfMap}
+}
