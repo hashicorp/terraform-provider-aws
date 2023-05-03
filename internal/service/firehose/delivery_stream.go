@@ -1319,12 +1319,24 @@ func ResourceDeliveryStream() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
+
 						"cluster_jdbcurl": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 
-						"username": {
+						"copy_options": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
+						"data_table_columns": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
+						"data_table_name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -1336,6 +1348,13 @@ func ResourceDeliveryStream() *schema.Resource {
 						},
 
 						"processing_configuration": processingConfigurationSchema(),
+
+						"retry_duration": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      3600,
+							ValidateFunc: validation.IntBetween(0, 7200),
+						},
 
 						"role_arn": {
 							Type:         schema.TypeString,
@@ -1354,29 +1373,10 @@ func ResourceDeliveryStream() *schema.Resource {
 
 						"s3_configuration": s3ConfigurationSchema(),
 
-						"retry_duration": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      3600,
-							ValidateFunc: validation.IntBetween(0, 7200),
-						},
-
-						"copy_options": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-
-						"data_table_columns": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-
-						"data_table_name": {
+						"username": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-
-						"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
 					},
 				},
 			},
@@ -1401,6 +1401,14 @@ func ResourceDeliveryStream() *schema.Resource {
 							ValidateFunc: validation.IntBetween(1, 100),
 						},
 
+						"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
+
+						"cluster_endpoint": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"elasticsearch_configuration.0.domain_arn"},
+						},
+
 						"domain_arn": {
 							Type:          schema.TypeString,
 							Optional:      true,
@@ -1419,6 +1427,8 @@ func ResourceDeliveryStream() *schema.Resource {
 							Default:      firehose.ElasticsearchIndexRotationPeriodOneDay,
 							ValidateFunc: validation.StringInSlice(firehose.ElasticsearchIndexRotationPeriod_Values(), false),
 						},
+
+						"processing_configuration": processingConfigurationSchema(),
 
 						"retry_duration": {
 							Type:         schema.TypeInt,
@@ -1480,15 +1490,6 @@ func ResourceDeliveryStream() *schema.Resource {
 									},
 								},
 							},
-						},
-
-						"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
-
-						"processing_configuration": processingConfigurationSchema(),
-						"cluster_endpoint": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ConflictsWith: []string{"elasticsearch_configuration.0.domain_arn"},
 						},
 					},
 				},
