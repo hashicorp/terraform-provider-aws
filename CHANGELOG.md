@@ -25,6 +25,7 @@ ENHANCEMENTS:
 * resource/aws_appautoscaling_target: Add `tags` argument and `tags_all` attribute to support resource tagging ([#30172](https://github.com/hashicorp/terraform-provider-aws/issues/30172))
 * resource/aws_directory_service_conditional_forwarder: Add plan time validation for `remote_domain_name` ([#31037](https://github.com/hashicorp/terraform-provider-aws/issues/31037))
 * resource/aws_directory_service_directory: Correct plan time validation for `remote_domain_name` ([#31037](https://github.com/hashicorp/terraform-provider-aws/issues/31037))
+* resource/aws_grafana_workspace: Make `grafana_version` optional so that its value can be specified in configuration ([#31083](https://github.com/hashicorp/terraform-provider-aws/issues/31083))
 * resource/aws_instance: Add `amd_sev_snp` argument ([#31035](https://github.com/hashicorp/terraform-provider-aws/issues/31035))
 * resource/aws_instance: Add `cpu_options` argument ([#31035](https://github.com/hashicorp/terraform-provider-aws/issues/31035))
 * resource/aws_lambda_function: Add support for `java17` `runtime` value ([#31027](https://github.com/hashicorp/terraform-provider-aws/issues/31027))
