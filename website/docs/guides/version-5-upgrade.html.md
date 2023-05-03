@@ -18,6 +18,7 @@ Upgrade topics:
 
 - [Provider Version Configuration](#provider-version-configuration)
 - [Data Source: aws_redshift_service_account](#data-source-aws_redshift_service_account)
+- [Resource: aws_acmpca_certificate_authority](#resource-aws_acmpca_certificate_authority)
 
 <!-- /TOC -->
 
@@ -69,6 +70,10 @@ provider "aws" {
   # Configuration options
 }
 ```
+
+## Resource: aws_acmpca_certificate_authority
+
+The `status` attribute is superfluous and sometimes incorrect. It has been removed.
 
 ## Data Source: aws_redshift_service_account
 
