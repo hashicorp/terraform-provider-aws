@@ -996,10 +996,9 @@ func ResourceDeliveryStream() *schema.Resource {
 			},
 
 			"extended_s3_configuration": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				ConflictsWith: []string{"s3_configuration"},
-				MaxItems:      1,
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"bucket_arn": {
