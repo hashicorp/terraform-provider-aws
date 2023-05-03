@@ -1421,8 +1421,12 @@ func flattenTextBoxes(apiObject []*quicksight.SheetTextBox) []interface{} {
 			continue
 		}
 
-		tfMap := map[string]interface{}{}
-		// TODO
+		tfMap := map[string]interface{}{
+			"sheet_text_box_id": aws.StringValue(config.SheetTextBoxId),
+		}
+		if config.Content != nil {
+			tfMap["content"] = aws.StringValue(config.Content)
+		}
 		tfList = append(tfList, tfMap)
 	}
 
