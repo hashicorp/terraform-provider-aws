@@ -70,4 +70,21 @@ provider "aws" {
 
 ## EC2-Classic Retirement
 
-Blah.
+Following the retirement of EC2-Classic a number of resources and attributes have been removed.
+
+* The `aws_db_security_group` resource has been removed
+* The `aws_elasticache_security_group` resource has been removed
+* The `aws_redshift_security_group` resource has been removed
+* The [`aws_db_instance`](/docs/providers/aws/r/db_instance.html) resource's `security_group_names` argument has been removed
+* The [`aws_elasticache_cluster`](/docs/providers/aws/r/elasticache_cluster.html) resource's `security_group_names` argument has been removed
+* The [`aws_redshift_cluster`](/docs/providers/aws/r/redshift_cluster.html) resource's `cluster_security_groups` argument has been removed
+* The [`aws_launch_configuration`](/docs/providers/aws/r/launch_configuration.html) resource's `vpc_classic_link_id` and `vpc_classic_link_security_groups` arguments have been removed
+* The [`aws_vpc`](/docs/providers/aws/r/vpc.html) resource's `enable_classiclink` and `enable_classiclink_dns_support` arguments have been removed
+* The [`aws_default_vpc`](/docs/providers/aws/r/default_vpc.html) resource's `enable_classiclink` and `enable_classiclink_dns_support` arguments have been removed
+* The [`aws_vpc_peering_connection`](/docs/providers/aws/r/vpc_peering_connection.html) resource's `allow_classic_link_to_remote_vpc` and `allow_vpc_to_remote_classic_link` arguments have been removed
+* The [`aws_vpc_peering_connection_accepter`](/docs/providers/aws/r/vpc_peering_connection_accepter.html) resource's `allow_classic_link_to_remote_vpc` and `allow_vpc_to_remote_classic_link` arguments have been removed
+* The [`aws_vpc_peering_connection_options`](/docs/providers/aws/r/vpc_peering_connection_options.html) resource's `allow_classic_link_to_remote_vpc` and `allow_vpc_to_remote_classic_link` arguments have been removed
+* The [`aws_db_instance`](/docs/providers/aws/d/db_instance.html) data source's `db_security_groups` attribute has been removed
+* The [`aws_elasticache_cluster`](/docs/providers/aws/d/elasticache_cluster.html) data source's `security_group_names` attribute has been removed
+* The [`aws_redshift_cluster`](/docs/providers/aws/d/redshift_cluster.html) data source's `cluster_security_groups` attribute has been removed
+* The [`aws_launch_configuration`](/docs/providers/aws/d/launch_configuration.html) data source's `vpc_classic_link_id` and `vpc_classic_link_security_groups` attributes have been removed
