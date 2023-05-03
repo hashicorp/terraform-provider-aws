@@ -21,6 +21,8 @@ See [Changes to Authentication](#changes-to-authentication) for more details.
 
 ~> **NOTE:** Version 4.0.0 of the AWS Provider will be the last major version to support [EC2-Classic resources](#ec2-classic-resource-and-data-source-support) as AWS plans to fully retire EC2-Classic Networking. See the [AWS News Blog](https://aws.amazon.com/blogs/aws/ec2-classic-is-retiring-heres-how-to-prepare/) for additional details.
 
+~> **NOTE:** Version 4.0.0 of the AWS Provider will be the last major version to support [Macie Classic resources](#macie-classic-resource-support) as AWS plans to fully retire Macie Classic. See the [Amazone Macie Classic FAQs](https://aws.amazon.com/macie/classic-faqs/) for additional details.
+
 Upgrade topics:
 
 <!-- TOC depthFrom:2 depthTo:2 -->
@@ -80,6 +82,7 @@ Additional Topics:
 <!-- TOC depthFrom:2 depthTo:2 -->
 
 - [EC2-Classic resource and data source support](#ec2-classic-resource-and-data-source-support)
+- [Macie Classic resource support](#macie-classic-resource-support)
 
 <!-- /TOC -->
 
@@ -3544,3 +3547,10 @@ be compatible with EC2-Classic as AWS completes their EC2-Classic networking ret
 * [ElastiCache clusters](/docs/providers/aws/r/elasticache_cluster.html)
 * [Spot Requests](/docs/providers/aws/r/spot_instance_request.html)
 * [Capacity Reservations](/docs/providers/aws/r/ec2_capacity_reservation.html)
+
+## Macie Classic Resource Support
+
+These resources should be considered deprecated and will be removed in version 5.0.0.
+
+* [Account Associations](/docs/providers/aws/r/macie_member_account_association.html)
+* [S3 Bucket Associations](/docs/providers/aws/r/macie_s3_bucket_association.html)
