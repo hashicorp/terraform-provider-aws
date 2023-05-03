@@ -44,6 +44,7 @@ The following arguments are supported:
 * `location_uri` - (Optional) Location of the database (for example, an HDFS path).
 * `name` - (Required) Name of the database. The acceptable characters are lowercase letters, numbers, and the underscore character.
 * `parameters` - (Optional) List of key-value pairs that define parameters and properties of the database.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `target_database` - (Optional) Configuration block for a target database for resource linking. See [`target_database`](#target_database) below.
 
 ### target_database
@@ -65,7 +66,8 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the Glue Catalog Database.
-* `id` - Catalog ID and name of the database
+* `id` - Catalog ID and name of the database.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
