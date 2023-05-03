@@ -19,13 +19,24 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_autoscaling_group: Add `max_instance_lifetime` attribute ([#31067](https://github.com/hashicorp/terraform-provider-aws/issues/31067))
+* data-source/aws_autoscaling_group: Add `mixed_instances_policy` attribute ([#31067](https://github.com/hashicorp/terraform-provider-aws/issues/31067))
+* data-source/aws_autoscaling_group: Add `predicted_capacity` attribute ([#31067](https://github.com/hashicorp/terraform-provider-aws/issues/31067))
+* data-source/aws_autoscaling_group: Add `suspended_processes` attribute ([#31067](https://github.com/hashicorp/terraform-provider-aws/issues/31067))
+* data-source/aws_autoscaling_group: Add `tag` attribute ([#31067](https://github.com/hashicorp/terraform-provider-aws/issues/31067))
+* data-source/aws_autoscaling_group: Add `warm_pool_size` attribute ([#31067](https://github.com/hashicorp/terraform-provider-aws/issues/31067))
+* data-source/aws_autoscaling_group: Add `warm_pool` attribute ([#31067](https://github.com/hashicorp/terraform-provider-aws/issues/31067))
 * datasource/aws_launch_template: Add `amd_sev_snp` attribute ([#31035](https://github.com/hashicorp/terraform-provider-aws/issues/31035))
 * resource/aws_appautoscaling_policy: Add `metrics` to the `target_tracking_scaling_policy_configuration.customized_metric_specification` configuration block in support of [metric math](https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-target-tracking-metric-math.html) ([#30172](https://github.com/hashicorp/terraform-provider-aws/issues/30172))
 * resource/aws_appautoscaling_target: Add `arn` attribute ([#30172](https://github.com/hashicorp/terraform-provider-aws/issues/30172))
 * resource/aws_appautoscaling_target: Add `tags` argument and `tags_all` attribute to support resource tagging ([#30172](https://github.com/hashicorp/terraform-provider-aws/issues/30172))
+* resource/aws_autoscaling_group: Add `predicted_capacity` attribute ([#31067](https://github.com/hashicorp/terraform-provider-aws/issues/31067))
+* resource/aws_autoscaling_group: Add `warm_pool_size` attribute ([#31067](https://github.com/hashicorp/terraform-provider-aws/issues/31067))
 * resource/aws_directory_service_conditional_forwarder: Add plan time validation for `remote_domain_name` ([#31037](https://github.com/hashicorp/terraform-provider-aws/issues/31037))
 * resource/aws_directory_service_directory: Correct plan time validation for `remote_domain_name` ([#31037](https://github.com/hashicorp/terraform-provider-aws/issues/31037))
 * resource/aws_elasticache_user: Add support for defining custom timeouts ([#31076](https://github.com/hashicorp/terraform-provider-aws/issues/31076))
+* resource/aws_fsx_lustre_file_system: Add `root_squash_configuration` argument ([#31073](https://github.com/hashicorp/terraform-provider-aws/issues/31073))
+* resource/aws_glue_catalog_database: Add tagging support ([#31071](https://github.com/hashicorp/terraform-provider-aws/issues/31071))
 * resource/aws_grafana_workspace: Make `grafana_version` optional so that its value can be specified in configuration ([#31083](https://github.com/hashicorp/terraform-provider-aws/issues/31083))
 * resource/aws_instance: Add `amd_sev_snp` argument ([#31035](https://github.com/hashicorp/terraform-provider-aws/issues/31035))
 * resource/aws_instance: Add `cpu_options` argument ([#31035](https://github.com/hashicorp/terraform-provider-aws/issues/31035))
@@ -34,8 +45,11 @@ ENHANCEMENTS:
 * resource/aws_launch_template: Add `amd_sev_snp` argument ([#31035](https://github.com/hashicorp/terraform-provider-aws/issues/31035))
 * resource/aws_medialive_channel: Added H265 support. ([#30908](https://github.com/hashicorp/terraform-provider-aws/issues/30908))
 * resource/aws_sagemaker_domain: Add `domain_settings.r_studio_server_pro_domain_settings`, `default_user_settings.canvas_app_settings.model_register_settings`, and `default_user_settings.r_studio_server_pro_app_settings` arguments ([#31031](https://github.com/hashicorp/terraform-provider-aws/issues/31031))
+* resource/aws_sagemaker_endpoint_configuration: Add `async_inference_config.output_config.notification_config.include_inference_response_in` and `async_inference_config.output_config.s3_failure_path` arguments ([#31070](https://github.com/hashicorp/terraform-provider-aws/issues/31070))
+* resource/aws_sagemaker_user_profile: Add `user_settings.canvas_app_settings.model_register_settings` and `user_settings.r_studio_server_pro_app_settings` arguments ([#31072](https://github.com/hashicorp/terraform-provider-aws/issues/31072))
 * resource/aws_servicecatalog_provisioning_artifact: Add `provisioning_artifact_id` attribute ([#31086](https://github.com/hashicorp/terraform-provider-aws/issues/31086))
 * resource/aws_sfn_state_machine: Add configurable timeouts ([#31097](https://github.com/hashicorp/terraform-provider-aws/issues/31097))
+* resource/aws_spot_fleet_request: Add 'aws_spot_fleet_request.context' argument ([#30918](https://github.com/hashicorp/terraform-provider-aws/issues/30918))
 
 BUG FIXES:
 
