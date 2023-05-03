@@ -25,6 +25,7 @@ Additional Topics:
 <!-- TOC depthFrom:2 depthTo:2 -->
 
 - [EC2-Classic Retirement](#ec2-classic-retirement)
+- [Macie Classic Retirement](#macie-classic-retirement)
 
 <!-- /TOC -->
 
@@ -88,3 +89,10 @@ Following the retirement of EC2-Classic a number of resources and attributes hav
 * The [`aws_elasticache_cluster`](/docs/providers/aws/d/elasticache_cluster.html) data source's `security_group_names` attribute has been removed
 * The [`aws_redshift_cluster`](/docs/providers/aws/d/redshift_cluster.html) data source's `cluster_security_groups` attribute has been removed
 * The [`aws_launch_configuration`](/docs/providers/aws/d/launch_configuration.html) data source's `vpc_classic_link_id` and `vpc_classic_link_security_groups` attributes have been removed
+
+## Macie Classic Retirement
+
+Following the retirement of Amazon Macie Classic a couple of resources have been removed.
+
+* The `aws_macie_member_account_association` resource has been removed
+* The `aws_macie_s3_bucket_association` resource has been removed
