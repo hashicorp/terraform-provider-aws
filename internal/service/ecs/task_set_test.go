@@ -368,7 +368,7 @@ func TestAccECSTaskSet_withServiceRegistries(t *testing.T) {
 	})
 }
 
-func TestAccECSTaskSet_Tags(t *testing.T) {
+func TestAccECSTaskSet_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_set.test"
