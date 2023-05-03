@@ -535,6 +535,7 @@ This configuration block supports the following:
 * `accelerator_total_memory_mib` - (Optional) Block describing the minimum and maximum total memory of the accelerators. Default is no minimum or maximum.
     * `min` - (Optional) Minimum.
     * `max` - (Optional) Maximum.
+
 * `accelerator_types` - (Optional) List of accelerator types. Default is any accelerator type.
 
     ```
@@ -653,10 +654,10 @@ This configuration block supports the following:
 
 This configuration block supports the following:
 
-* `pool_state` - (Optional) Sets the instance state to transition to after the lifecycle hooks finish. Valid values are: Stopped (default), Running or Hibernated.
-* `min_size` - (Optional) Minimum number of instances to maintain in the warm pool. This helps you to ensure that there is always a certain number of warmed instances available to handle traffic spikes. Defaults to 0 if not specified.
 * `instance_reuse_policy` - (Optional) Whether instances in the Auto Scaling group can be returned to the warm pool on scale in. The default is to terminate instances in the Auto Scaling group when the group scales in.
 * `max_group_prepared_capacity` - (Optional) Total maximum number of instances that are allowed to be in the warm pool or in any state except Terminated for the Auto Scaling group.
+* `min_size` - (Optional) Minimum number of instances to maintain in the warm pool. This helps you to ensure that there is always a certain number of warmed instances available to handle traffic spikes. Defaults to 0 if not specified.
+* `pool_state` - (Optional) Sets the instance state to transition to after the lifecycle hooks finish. Valid values are: Stopped (default), Running or Hibernated.
 
 ##### instance_reuse_policy
 
@@ -680,7 +681,9 @@ In addition to all arguments above, the following attributes are exported:
 * `health_check_type` - "EC2" or "ELB". Controls how health checking is done.
 * `desired_capacity` -The number of Amazon EC2 instances that should be running in the group.
 * `launch_configuration` - The launch configuration of the Auto Scaling Group
+* `predicted_capacity` - Predicted capacity of the group.
 * `vpc_zone_identifier` (Optional) - The VPC zone identifier
+* `warm_pool_size` - Current size of the warm pool.
 
 ~> **NOTE:** When using `ELB` as the `health_check_type`, `health_check_grace_period` is required.
 
