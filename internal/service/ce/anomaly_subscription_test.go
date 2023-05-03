@@ -55,36 +55,6 @@ func TestAccCEAnomalySubscription_basic(t *testing.T) {
 	})
 }
 
-func TestAccCEAnomalySubscription_thresholdExpression(t *testing.T) {
-	ctx := acctest.Context(t)
-	var subscription costexplorer.AnomalySubscription
-	resourceName := "aws_ce_anomaly_subscription.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
-	address := acctest.RandomEmailAddress(domain)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAnomalySubscriptionDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, costexplorer.EndpointsID),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAnomalySubscriptionConfig_thresholdExpression(rName, address),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccCEAnomalySubscription_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subscription costexplorer.AnomalySubscription
@@ -399,26 +369,6 @@ resource "aws_ce_anomaly_subscription" "test" {
     type    = "EMAIL"
     address = %[2]q
   }
-}
-`, rName, address))
-}
-
-func testAccAnomalySubscriptionConfig_thresholdExpression(rName string, address string) string {
-	return acctest.ConfigCompose(
-		testAccAnomalySubscriptionConfigBase(rName),
-		fmt.Sprintf(`
-resource "aws_ce_anomaly_subscription" "test" {
-  name      = %[1]q
-  frequency = "DAILY"
-
-  monitor_arn_list = [
-    aws_ce_anomaly_monitor.test.arn,
-  ]
-
-  subscriber {
-    type    = "EMAIL"
-    address = %[2]q
-  }
 
   threshold_expression {
     dimension {
@@ -465,9 +415,18 @@ resource "aws_ce_anomaly_subscription" "test" {
     aws_ce_anomaly_monitor.test.arn,
     aws_ce_anomaly_monitor.test2.arn,
   ]
+
   subscriber {
     type    = "EMAIL"
     address = %[3]q
+  }
+
+  threshold_expression {
+    dimension {
+      key           = "ANOMALY_TOTAL_IMPACT_ABSOLUTE"
+      values        = ["100.0"]
+      match_options = ["GREATER_THAN_OR_EQUAL"]
+    }
   }
 }
 `, rName, rName2, address))
@@ -489,6 +448,14 @@ resource "aws_ce_anomaly_subscription" "test" {
     type    = "EMAIL"
     address = %[3]q
   }
+
+  threshold_expression {
+    dimension {
+      key           = "ANOMALY_TOTAL_IMPACT_ABSOLUTE"
+      values        = ["100.0"]
+      match_options = ["GREATER_THAN_OR_EQUAL"]
+    }
+  }
 }
 `, rName, rFrequency, address))
 }
@@ -509,9 +476,18 @@ resource "aws_ce_anomaly_subscription" "test" {
     type    = "EMAIL"
     address = %[2]q
   }
+
   subscriber {
     type    = "EMAIL"
     address = %[3]q
+  }
+
+  threshold_expression {
+    dimension {
+      key           = "ANOMALY_TOTAL_IMPACT_ABSOLUTE"
+      values        = ["100.0"]
+      match_options = ["GREATER_THAN_OR_EQUAL"]
+    }
   }
 }
 `, rName, address1, address2))
@@ -605,6 +581,14 @@ resource "aws_ce_anomaly_subscription" "test" {
     address = aws_sns_topic.test.arn
   }
 
+  threshold_expression {
+    dimension {
+      key           = "ANOMALY_TOTAL_IMPACT_ABSOLUTE"
+      values        = ["100.0"]
+      match_options = ["GREATER_THAN_OR_EQUAL"]
+    }
+  }
+
   depends_on = [
     aws_sns_topic_policy.test,
   ]
@@ -629,6 +613,14 @@ resource "aws_ce_anomaly_subscription" "test" {
     address = %[4]q
   }
 
+  threshold_expression {
+    dimension {
+      key           = "ANOMALY_TOTAL_IMPACT_ABSOLUTE"
+      values        = ["100.0"]
+      match_options = ["GREATER_THAN_OR_EQUAL"]
+    }
+  }
+
   tags = {
     %[2]q = %[3]q
   }
@@ -651,6 +643,14 @@ resource "aws_ce_anomaly_subscription" "test" {
   subscriber {
     type    = "EMAIL"
     address = %[6]q
+  }
+
+  threshold_expression {
+    dimension {
+      key           = "ANOMALY_TOTAL_IMPACT_ABSOLUTE"
+      values        = ["100.0"]
+      match_options = ["GREATER_THAN_OR_EQUAL"]
+    }
   }
 
   tags = {
