@@ -603,3 +603,256 @@ func expandCustomActionURLOperation(tfList []interface{}) *quicksight.CustomActi
 
 	return action
 }
+
+func flattenVisualCustomAction(apiObject []*quicksight.VisualCustomAction) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{
+			"custom_action_id": aws.StringValue(config.CustomActionId),
+			"name":             aws.StringValue(config.Name),
+			"status":           aws.StringValue(config.Status),
+			"trigger":          aws.StringValue(config.Trigger),
+		}
+		if config.ActionOperations != nil {
+			tfMap["action_operations"] = flattenVisualCustomActionOperation(config.ActionOperations)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenVisualCustomActionOperation(apiObject []*quicksight.VisualCustomActionOperation) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if config.FilterOperation != nil {
+			tfMap["filter_operation"] = flattenCustomActionFilterOperation(config.FilterOperation)
+		}
+		if config.NavigationOperation != nil {
+			tfMap["navigation_operation"] = flattenCustomActionNavigationOperation(config.NavigationOperation)
+		}
+		if config.SetParametersOperation != nil {
+			tfMap["set_parameters_operation"] = flattenCustomActionSetParametersOperation(config.SetParametersOperation)
+		}
+		if config.URLOperation != nil {
+			tfMap["url_operation"] = flattenCustomActionURLOperation(config.URLOperation)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenCustomActionFilterOperation(apiObject *quicksight.CustomActionFilterOperation) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.SelectedFieldsConfiguration != nil {
+		tfMap["selected_fields_configuration"] = flattenFilterOperationSelectedFieldsConfiguration(apiObject.SelectedFieldsConfiguration)
+	}
+	if apiObject.TargetVisualsConfiguration != nil {
+		tfMap["target_visuals_configuration"] = flattenFilterOperationTargetVisualsConfiguration(apiObject.TargetVisualsConfiguration)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenFilterOperationSelectedFieldsConfiguration(apiObject *quicksight.FilterOperationSelectedFieldsConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.SelectedFields != nil {
+		tfMap["selected_fields"] = flex.FlattenStringList(apiObject.SelectedFields)
+	}
+	if apiObject.SelectedFieldOptions != nil {
+		tfMap["selected_field_option"] = aws.StringValue(apiObject.SelectedFieldOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenFilterOperationTargetVisualsConfiguration(apiObject *quicksight.FilterOperationTargetVisualsConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.SameSheetTargetVisualConfiguration != nil {
+		tfMap["same_sheet_target_visual_configuration"] = flattenSameSheetTargetVisualConfiguration(apiObject.SameSheetTargetVisualConfiguration)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenSameSheetTargetVisualConfiguration(apiObject *quicksight.SameSheetTargetVisualConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.TargetVisualOptions != nil {
+		tfMap["target_visual_option"] = aws.StringValue(apiObject.TargetVisualOptions)
+	}
+	if apiObject.TargetVisuals != nil {
+		tfMap["target_visuals"] = flex.FlattenStringList(apiObject.TargetVisuals)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenCustomActionNavigationOperation(apiObject *quicksight.CustomActionNavigationOperation) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.LocalNavigationConfiguration != nil {
+		tfMap["local_navigation_configuration"] = flattenLocalNavigationConfiguration(apiObject.LocalNavigationConfiguration)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenLocalNavigationConfiguration(apiObject *quicksight.LocalNavigationConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"target_sheet_id": aws.StringValue(apiObject.TargetSheetId),
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenCustomActionSetParametersOperation(apiObject *quicksight.CustomActionSetParametersOperation) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"parameter_value_configurations": flattenSetParameterValueConfiguration(apiObject.ParameterValueConfigurations),
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenSetParameterValueConfiguration(apiObject []*quicksight.SetParameterValueConfiguration) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{
+			"destination_parameter_name": aws.StringValue(config.DestinationParameterName),
+		}
+		if config.Value != nil {
+			tfMap["value"] = flattenDestinationParameterValueConfiguration(config.Value)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenDestinationParameterValueConfiguration(apiObject *quicksight.DestinationParameterValueConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CustomValuesConfiguration != nil {
+		tfMap["custom_values_configuration"] = flattenCustomValuesConfiguration(apiObject.CustomValuesConfiguration)
+	}
+	if apiObject.SelectAllValueOptions != nil {
+		tfMap["select_all_value_options"] = aws.StringValue(apiObject.SelectAllValueOptions)
+	}
+	if apiObject.SourceField != nil {
+		tfMap["source_field"] = aws.StringValue(apiObject.SourceField)
+	}
+	if apiObject.SourceParameterName != nil {
+		tfMap["source_parameter_name"] = aws.StringValue(apiObject.SourceParameterName)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenCustomValuesConfiguration(apiObject *quicksight.CustomValuesConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CustomValues != nil {
+		tfMap["custom_values"] = flattenCustomParameterValues(apiObject.CustomValues)
+	}
+	if apiObject.IncludeNullValue != nil {
+		tfMap["include_null_value"] = aws.BoolValue(apiObject.IncludeNullValue)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenCustomParameterValues(apiObject *quicksight.CustomParameterValues) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.DateTimeValues != nil {
+		tfMap["date_time_values"] = flex.FlattenTimeStringList(apiObject.DateTimeValues, time.RFC3339)
+	}
+	if apiObject.DecimalValues != nil {
+		tfMap["decimal_values"] = flex.FlattenFloat64List(apiObject.DecimalValues)
+	}
+	if apiObject.IntegerValues != nil {
+		tfMap["integer_values"] = flex.FlattenInt64List(apiObject.IntegerValues)
+	}
+	if apiObject.StringValues != nil {
+		tfMap["string_values"] = flex.FlattenStringList(apiObject.StringValues)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenCustomActionURLOperation(apiObject *quicksight.CustomActionURLOperation) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"url_target":   aws.StringValue(apiObject.URLTarget),
+		"url_template": aws.StringValue(apiObject.URLTemplate),
+	}
+
+	return []interface{}{tfMap}
+}

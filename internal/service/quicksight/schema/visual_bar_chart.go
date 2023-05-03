@@ -267,3 +267,269 @@ func expandBarChartSortConfiguration(tfList []interface{}) *quicksight.BarChartS
 
 	return config
 }
+
+func flattenBarChartVisual(apiObject *quicksight.BarChartVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"visual_id": aws.StringValue(apiObject.VisualId),
+	}
+	if apiObject.Actions != nil {
+		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
+	}
+	if apiObject.ChartConfiguration != nil {
+		tfMap["chart_configuration"] = flattenBarChartConfiguration(apiObject.ChartConfiguration)
+	}
+	if apiObject.ColumnHierarchies != nil {
+		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+	}
+	if apiObject.Subtitle != nil {
+		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
+	}
+	if apiObject.Title != nil {
+		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenBarChartConfiguration(apiObject *quicksight.BarChartConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.BarsArrangement != nil {
+		tfMap["bars_arrangement"] = aws.StringValue(apiObject.BarsArrangement)
+	}
+	if apiObject.CategoryAxis != nil {
+		tfMap["category_axis"] = flattenAxisDisplayOptions(apiObject.CategoryAxis)
+	}
+	if apiObject.CategoryLabelOptions != nil {
+		tfMap["category_label_options"] = flattenChartAxisLabelOptions(apiObject.CategoryLabelOptions)
+	}
+	if apiObject.ColorLabelOptions != nil {
+		tfMap["color_label_options"] = flattenChartAxisLabelOptions(apiObject.ColorLabelOptions)
+	}
+	if apiObject.ContributionAnalysisDefaults != nil {
+		tfMap["contribution_analysis_defaults"] = flattenContributionAnalysisDefault(apiObject.ContributionAnalysisDefaults)
+	}
+	if apiObject.DataLabels != nil {
+		tfMap["data_labels"] = flattenDataLabelOptions(apiObject.DataLabels)
+	}
+	if apiObject.FieldWells != nil {
+		tfMap["field_wells"] = flattenBarChartFieldWells(apiObject.FieldWells)
+	}
+	if apiObject.Legend != nil {
+		tfMap["legend"] = flattenLegendOptions(apiObject.Legend)
+	}
+	if apiObject.Orientation != nil {
+		tfMap["orientation"] = aws.StringValue(apiObject.Orientation)
+	}
+	if apiObject.ReferenceLines != nil {
+		tfMap["reference_lines"] = flattenReferenceLine(apiObject.ReferenceLines)
+	}
+	if apiObject.SmallMultiplesOptions != nil {
+		tfMap["small_multiples_options"] = flattenSmallMultiplesOptions(apiObject.SmallMultiplesOptions)
+	}
+	if apiObject.SortConfiguration != nil {
+		tfMap["sort_configuration"] = flattenBarChartSortConfiguration(apiObject.SortConfiguration)
+	}
+	if apiObject.Tooltip != nil {
+		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)
+	}
+	if apiObject.ValueAxis != nil {
+		tfMap["value_axis"] = flattenAxisDisplayOptions(apiObject.ValueAxis)
+	}
+	if apiObject.ValueLabelOptions != nil {
+		tfMap["value_label_options"] = flattenChartAxisLabelOptions(apiObject.ValueLabelOptions)
+	}
+	if apiObject.VisualPalette != nil {
+		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenBarChartFieldWells(apiObject *quicksight.BarChartFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.BarChartAggregatedFieldWells != nil {
+		tfMap["bar_chart_aggregated_field_wells"] = flattenBarChartAggregatedFieldWells(apiObject.BarChartAggregatedFieldWells)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenBarChartAggregatedFieldWells(apiObject *quicksight.BarChartAggregatedFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Category != nil {
+		tfMap["category"] = flattenDimensionField(apiObject.Category)
+	}
+	if apiObject.Colors != nil {
+		tfMap["colors"] = flattenDimensionField(apiObject.Colors)
+	}
+	if apiObject.SmallMultiples != nil {
+		tfMap["small_multiples"] = flattenDimensionField(apiObject.SmallMultiples)
+	}
+	if apiObject.Values != nil {
+		tfMap["values"] = flattenMeasureField(apiObject.Values)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenBarChartSortConfiguration(apiObject *quicksight.BarChartSortConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CategoryItemsLimit != nil {
+		tfMap["category_items_limit"] = flattenItemsLimitConfiguration(apiObject.CategoryItemsLimit)
+	}
+	if apiObject.CategorySort != nil {
+		tfMap["category_sort"] = flattenFieldSortOptions(apiObject.CategorySort)
+	}
+	if apiObject.ColorItemsLimit != nil {
+		tfMap["color_items_limit"] = flattenItemsLimitConfiguration(apiObject.ColorItemsLimit)
+	}
+	if apiObject.ColorSort != nil {
+		tfMap["color_sort"] = flattenFieldSortOptions(apiObject.ColorSort)
+	}
+	if apiObject.SmallMultiplesLimitConfiguration != nil {
+		tfMap["small_multiples_limit_configuration"] = flattenItemsLimitConfiguration(apiObject.SmallMultiplesLimitConfiguration)
+	}
+	if apiObject.SmallMultiplesSort != nil {
+		tfMap["small_multiples_sort"] = flattenFieldSortOptions(apiObject.SmallMultiplesSort)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenItemsLimitConfiguration(apiObject *quicksight.ItemsLimitConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ItemsLimit != nil {
+		tfMap["items_limit"] = aws.Int64Value(apiObject.ItemsLimit)
+	}
+	if apiObject.OtherCategories != nil {
+		tfMap["other_categories"] = aws.StringValue(apiObject.OtherCategories)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenFieldSortOptions(apiObject []*quicksight.FieldSortOptions) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if config.ColumnSort != nil {
+			tfMap["column_sort"] = flattenColumnSort(config.ColumnSort)
+		}
+		if config.FieldSort != nil {
+			tfMap["field_sort"] = flattenFieldSort(config.FieldSort)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenColumnSort(apiObject *quicksight.ColumnSort) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Direction != nil {
+		tfMap["direction"] = aws.StringValue(apiObject.Direction)
+	}
+	if apiObject.SortBy != nil {
+		tfMap["sort_by"] = flattenColumnIdentifier(apiObject.SortBy)
+	}
+	if apiObject.AggregationFunction != nil {
+		tfMap["aggregation_function"] = flattenAggregationFunction(apiObject.AggregationFunction)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenFieldSort(apiObject *quicksight.FieldSort) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Direction != nil {
+		tfMap["direction"] = aws.StringValue(apiObject.Direction)
+	}
+	if apiObject.FieldId != nil {
+		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenColumnHierarchy(apiObject []*quicksight.ColumnHierarchy) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		//TODO
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenVisualSubtitleLabelOptions(apiObject *quicksight.VisualSubtitleLabelOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	// TODO
+
+	return []interface{}{tfMap}
+}
+
+func flattenVisualTitleLabelOptions(apiObject *quicksight.VisualTitleLabelOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	// TODO
+
+	return []interface{}{tfMap}
+}

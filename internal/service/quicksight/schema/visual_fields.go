@@ -449,3 +449,213 @@ func expandNumericalMeasureField(tfList []interface{}) *quicksight.NumericalMeas
 
 	return field
 }
+
+func flattenDimensionField(apiObject []*quicksight.DimensionField) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if config.CategoricalDimensionField != nil {
+			tfMap["categorical_dimension_field"] = flattenCategoricalDimensionField(config.CategoricalDimensionField)
+		}
+		if config.DateDimensionField != nil {
+			tfMap["date_dimension_field"] = flattenDateDimensionField(config.DateDimensionField)
+		}
+		if config.NumericalDimensionField != nil {
+			tfMap["numerical_dimension_field"] = flattenNumericalDimensionField(config.NumericalDimensionField)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenCategoricalDimensionField(apiObject *quicksight.CategoricalDimensionField) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Column != nil {
+		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+	}
+	if apiObject.FieldId != nil {
+		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
+	}
+	if apiObject.FormatConfiguration != nil {
+		tfMap["format_configuration"] = flattenStringFormatConfiguration(apiObject.FormatConfiguration)
+	}
+	if apiObject.HierarchyId != nil {
+		tfMap["hierarchy_id"] = aws.StringValue(apiObject.HierarchyId)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenDateDimensionField(apiObject *quicksight.DateDimensionField) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Column != nil {
+		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+	}
+	if apiObject.DateGranularity != nil {
+		tfMap["date_granularity"] = aws.StringValue(apiObject.DateGranularity)
+	}
+	if apiObject.FieldId != nil {
+		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
+	}
+	if apiObject.FormatConfiguration != nil {
+		tfMap["format_configuration"] = flattenDateTimeFormatConfiguration(apiObject.FormatConfiguration)
+	}
+	if apiObject.HierarchyId != nil {
+		tfMap["hierarchy_id"] = aws.StringValue(apiObject.HierarchyId)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenNumericalDimensionField(apiObject *quicksight.NumericalDimensionField) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Column != nil {
+		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+	}
+	if apiObject.FieldId != nil {
+		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
+	}
+	if apiObject.FormatConfiguration != nil {
+		tfMap["format_configuration"] = flattenNumberFormatConfiguration(apiObject.FormatConfiguration)
+	}
+	if apiObject.HierarchyId != nil {
+		tfMap["hierarchy_id"] = aws.StringValue(apiObject.HierarchyId)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenMeasureField(apiObject []*quicksight.MeasureField) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if config.CalculatedMeasureField != nil {
+			tfMap["calculated_measure_field"] = flattenCalculatedMeasureField(config.CalculatedMeasureField)
+		}
+		if config.CategoricalMeasureField != nil {
+			tfMap["categorical_measure_field"] = flattenCategoricalMeasureField(config.CategoricalMeasureField)
+		}
+		if config.DateMeasureField != nil {
+			tfMap["date_measure_field"] = flattenDateMeasureField(config.DateMeasureField)
+		}
+		if config.NumericalMeasureField != nil {
+			tfMap["numerical_measure_field"] = flattenNumericalMeasureField(config.NumericalMeasureField)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenCalculatedMeasureField(apiObject *quicksight.CalculatedMeasureField) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.FieldId != nil {
+		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
+	}
+	if apiObject.Expression != nil {
+		tfMap["expression"] = aws.StringValue(apiObject.Expression)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenCategoricalMeasureField(apiObject *quicksight.CategoricalMeasureField) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.AggregationFunction != nil {
+		tfMap["aggregation_function"] = aws.StringValue(apiObject.AggregationFunction)
+	}
+	if apiObject.Column != nil {
+		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+	}
+	if apiObject.FieldId != nil {
+		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
+	}
+	if apiObject.FormatConfiguration != nil {
+		tfMap["format_configuration"] = flattenStringFormatConfiguration(apiObject.FormatConfiguration)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenDateMeasureField(apiObject *quicksight.DateMeasureField) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.AggregationFunction != nil {
+		tfMap["aggregation_function"] = aws.StringValue(apiObject.AggregationFunction)
+	}
+	if apiObject.Column != nil {
+		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+	}
+	if apiObject.FieldId != nil {
+		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
+	}
+	if apiObject.FormatConfiguration != nil {
+		tfMap["format_configuration"] = flattenDateTimeFormatConfiguration(apiObject.FormatConfiguration)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenNumericalMeasureField(apiObject *quicksight.NumericalMeasureField) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.AggregationFunction != nil {
+		tfMap["aggregation_function"] = flattenNumericalAggregationFunction(apiObject.AggregationFunction)
+	}
+	if apiObject.Column != nil {
+		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+	}
+	if apiObject.FieldId != nil {
+		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
+	}
+	if apiObject.FormatConfiguration != nil {
+		tfMap["format_configuration"] = flattenNumberFormatConfiguration(apiObject.FormatConfiguration)
+	}
+
+	return []interface{}{tfMap}
+}

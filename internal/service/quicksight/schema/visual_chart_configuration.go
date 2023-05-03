@@ -1193,3 +1193,559 @@ func expandItemsLimitConfiguration(tfList []interface{}) *quicksight.ItemsLimitC
 
 	return config
 }
+
+func flattenAxisDisplayOptions(apiObject *quicksight.AxisDisplayOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.AxisLineVisibility != nil {
+		tfMap["axis_line_visibility"] = aws.StringValue(apiObject.AxisLineVisibility)
+	}
+	if apiObject.AxisOffset != nil {
+		tfMap["axis_offset"] = aws.StringValue(apiObject.AxisOffset)
+	}
+	if apiObject.DataOptions != nil {
+		tfMap["data_options"] = flattenAxisDataOptions(apiObject.DataOptions)
+	}
+	if apiObject.GridLineVisibility != nil {
+		tfMap["grid_line_visibility"] = aws.StringValue(apiObject.GridLineVisibility)
+	}
+	if apiObject.ScrollbarOptions != nil {
+		tfMap["scrollbar_options"] = flattenScrollBarOptions(apiObject.ScrollbarOptions)
+	}
+	if apiObject.TickLabelOptions != nil {
+		tfMap["tick_label_options"] = flattenAxisTickLabelOptions(apiObject.TickLabelOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenAxisDataOptions(apiObject *quicksight.AxisDataOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.DateAxisOptions != nil {
+		tfMap["date_axis_options"] = flattenDateAxisOptions(apiObject.DateAxisOptions)
+	}
+	if apiObject.NumericAxisOptions != nil {
+		tfMap["numeric_axis_options"] = flattenNumericAxisOptions(apiObject.NumericAxisOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenDateAxisOptions(apiObject *quicksight.DateAxisOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.MissingDateVisibility != nil {
+		tfMap["missing_date_visibility"] = aws.StringValue(apiObject.MissingDateVisibility)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenNumericAxisOptions(apiObject *quicksight.NumericAxisOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Range != nil {
+		tfMap["range"] = flattenAxisDisplayRange(apiObject.Range)
+	}
+	if apiObject.Scale != nil {
+		tfMap["scale"] = flattenAxisScale(apiObject.Scale)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenAxisDisplayRange(apiObject *quicksight.AxisDisplayRange) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.DataDriven != nil {
+		tfMap["data_driven"] = flattenAxisDisplayDataDrivenRange(apiObject.DataDriven)
+	}
+	if apiObject.MinMax != nil {
+		tfMap["min_max"] = flattenAxisDisplayMinMaxRange(apiObject.MinMax)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenAxisDisplayDataDrivenRange(apiObject *quicksight.AxisDisplayDataDrivenRange) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	// For future extensions
+	tfMap := map[string]interface{}{}
+
+	return []interface{}{tfMap}
+}
+
+func flattenAxisDisplayMinMaxRange(apiObject *quicksight.AxisDisplayMinMaxRange) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Maximum != nil {
+		tfMap["maximum"] = aws.Float64Value(apiObject.Maximum)
+	}
+	if apiObject.Minimum != nil {
+		tfMap["minimum"] = aws.Float64Value(apiObject.Minimum)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenAxisScale(apiObject *quicksight.AxisScale) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Linear != nil {
+		tfMap["linear"] = flattenAxisLinearScale(apiObject.Linear)
+	}
+	if apiObject.Logarithmic != nil {
+		tfMap["logarithmic"] = flattenAxisLogarithmicScale(apiObject.Logarithmic)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenAxisLinearScale(apiObject *quicksight.AxisLinearScale) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.StepCount != nil {
+		tfMap["step_count"] = aws.Int64Value(apiObject.StepCount)
+	}
+	if apiObject.StepSize != nil {
+		tfMap["step_size"] = aws.Float64Value(apiObject.StepSize)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenAxisLogarithmicScale(apiObject *quicksight.AxisLogarithmicScale) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Base != nil {
+		tfMap["base"] = aws.Float64Value(apiObject.Base)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenScrollBarOptions(apiObject *quicksight.ScrollBarOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Visibility != nil {
+		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
+	}
+	if apiObject.VisibleRange != nil {
+		tfMap["visibile_range"] = flattenVisibleRangeOptions(apiObject.VisibleRange)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenVisibleRangeOptions(apiObject *quicksight.VisibleRangeOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.PercentRange != nil {
+		tfMap["percent_range"] = flattenPercentVisibleRange(apiObject.PercentRange)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenPercentVisibleRange(apiObject *quicksight.PercentVisibleRange) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.From != nil {
+		tfMap["from"] = aws.Float64Value(apiObject.From)
+	}
+	if apiObject.To != nil {
+		tfMap["to"] = aws.Float64Value(apiObject.To)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenAxisTickLabelOptions(apiObject *quicksight.AxisTickLabelOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.LabelOptions != nil {
+		tfMap["label_options"] = flattenLabelOptions(apiObject.LabelOptions)
+	}
+	if apiObject.RotationAngle != nil {
+		tfMap["rotation_angle"] = aws.Float64Value(apiObject.RotationAngle)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenChartAxisLabelOptions(apiObject *quicksight.ChartAxisLabelOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.AxisLabelOptions != nil {
+		tfMap["axis_label_options"] = flattenAxisLabelOptions(apiObject.AxisLabelOptions)
+	}
+	if apiObject.SortIconVisibility != nil {
+		tfMap["sort_icon_visibility"] = aws.StringValue(apiObject.SortIconVisibility)
+	}
+	if apiObject.Visibility != nil {
+		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenAxisLabelOptions(apiObject []*quicksight.AxisLabelOptions) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if config.ApplyTo != nil {
+			tfMap["apply_to"] = flattenAxisLabelReferenceOptions(config.ApplyTo)
+		}
+		if config.CustomLabel != nil {
+			tfMap["custom_label"] = aws.StringValue(config.CustomLabel)
+		}
+		if config.FontConfiguration != nil {
+			tfMap["font_configuration"] = flattenFontConfiguration(config.FontConfiguration)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenAxisLabelReferenceOptions(apiObject *quicksight.AxisLabelReferenceOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.FieldId != nil {
+		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
+	}
+	if apiObject.Column != nil {
+		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenContributionAnalysisDefault(apiObject []*quicksight.ContributionAnalysisDefault) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{
+			"measure_field_id": aws.StringValue(config.MeasureFieldId),
+		}
+		if config.ContributorDimensions != nil {
+			tfMap["contribution_dimensions"] = flattenColumnIdentifiers(config.ContributorDimensions)
+
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenColumnIdentifiers(apiObject []*quicksight.ColumnIdentifier) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{
+			"column_name":         aws.StringValue(config.ColumnName),
+			"data_set_identifier": aws.StringValue(config.DataSetIdentifier),
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenReferenceLine(apiObject []*quicksight.ReferenceLine) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if config.DataConfiguration != nil {
+			tfMap["data_configuration"] = flattenReferenceLineDataConfiguration(config.DataConfiguration)
+		}
+		if config.LabelConfiguration != nil {
+			tfMap["label_configuration"] = flattenReferenceLineLabelConfiguration(config.LabelConfiguration)
+		}
+		if config.Status != nil {
+			tfMap["status"] = aws.StringValue(config.Status)
+		}
+		if config.StyleConfiguration != nil {
+			tfMap["style_configuration"] = flattenReferenceLineStyleConfiguration(config.StyleConfiguration)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenReferenceLineDataConfiguration(apiObject *quicksight.ReferenceLineDataConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.AxisBinding != nil {
+		tfMap["axis_binding"] = aws.StringValue(apiObject.AxisBinding)
+	}
+	if apiObject.DynamicConfiguration != nil {
+		tfMap["dynamic_configuration"] = flattenReferenceLineDynamicDataConfiguration(apiObject.DynamicConfiguration)
+	}
+	if apiObject.StaticConfiguration != nil {
+		tfMap["static_configuration"] = flattenReferenceLineStaticDataConfiguration(apiObject.StaticConfiguration)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenReferenceLineDynamicDataConfiguration(apiObject *quicksight.ReferenceLineDynamicDataConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Calculation != nil {
+		tfMap["calculation"] = flattenNumericalAggregationFunction(apiObject.Calculation)
+	}
+	if apiObject.Column != nil {
+		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+	}
+	if apiObject.MeasureAggregationFunction != nil {
+		tfMap["measure_aggregation_function"] = flattenAggregationFunction(apiObject.MeasureAggregationFunction)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenReferenceLineStaticDataConfiguration(apiObject *quicksight.ReferenceLineStaticDataConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"value": aws.Float64Value(apiObject.Value),
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenReferenceLineLabelConfiguration(apiObject *quicksight.ReferenceLineLabelConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CustomLabelConfiguration != nil {
+		tfMap["custom_label_configuration"] = flattenReferenceLineCustomLabelConfiguration(apiObject.CustomLabelConfiguration)
+	}
+	if apiObject.FontColor != nil {
+		tfMap["font_color"] = aws.StringValue(apiObject.FontColor)
+	}
+	if apiObject.FontConfiguration != nil {
+		tfMap["font_configuration"] = flattenFontConfiguration(apiObject.FontConfiguration)
+	}
+	if apiObject.HorizontalPosition != nil {
+		tfMap["horizontal_position"] = aws.StringValue(apiObject.HorizontalPosition)
+	}
+	if apiObject.ValueLabelConfiguration != nil {
+		tfMap["value_label_configuration"] = flattenReferenceLineValueLabelConfiguration(apiObject.ValueLabelConfiguration)
+	}
+	if apiObject.VerticalPosition != nil {
+		tfMap["vertical_position"] = aws.StringValue(apiObject.VerticalPosition)
+	}
+
+	return []interface{}{tfMap}
+}
+func flattenReferenceLineCustomLabelConfiguration(apiObject *quicksight.ReferenceLineCustomLabelConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"custom_label": aws.StringValue(apiObject.CustomLabel),
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenReferenceLineValueLabelConfiguration(apiObject *quicksight.ReferenceLineValueLabelConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.FormatConfiguration != nil {
+		tfMap["format_configuration"] = flattenNumericFormatConfiguration(apiObject.FormatConfiguration)
+	}
+	if apiObject.RelativePosition != nil {
+		tfMap["relative_position"] = aws.StringValue(apiObject.RelativePosition)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenReferenceLineStyleConfiguration(apiObject *quicksight.ReferenceLineStyleConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Color != nil {
+		tfMap["color"] = aws.StringValue(apiObject.Color)
+	}
+	if apiObject.Pattern != nil {
+		tfMap["pattern"] = aws.StringValue(apiObject.Pattern)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenSmallMultiplesOptions(apiObject *quicksight.SmallMultiplesOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.MaxVisibleColumns != nil {
+		tfMap["max_visible_columns"] = aws.Int64Value(apiObject.MaxVisibleColumns)
+	}
+	if apiObject.MaxVisibleRows != nil {
+		tfMap["max_visible_rows"] = aws.Int64Value(apiObject.MaxVisibleRows)
+	}
+	if apiObject.PanelConfiguration != nil {
+		tfMap["panel_configuration"] = flattenPanelConfiguration(apiObject.PanelConfiguration)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenPanelConfiguration(apiObject *quicksight.PanelConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.BackgroundColor != nil {
+		tfMap["background_color"] = aws.StringValue(apiObject.BackgroundColor)
+	}
+	if apiObject.BackgroundVisibility != nil {
+		tfMap["background_visibility"] = aws.StringValue(apiObject.BackgroundVisibility)
+	}
+	if apiObject.BorderColor != nil {
+		tfMap["border_color"] = aws.StringValue(apiObject.BorderColor)
+	}
+	if apiObject.BorderStyle != nil {
+		tfMap["border_style"] = aws.StringValue(apiObject.BorderStyle)
+	}
+	if apiObject.BorderThickness != nil {
+		tfMap["border_thickness"] = aws.StringValue(apiObject.BorderThickness)
+	}
+	if apiObject.BorderVisibility != nil {
+		tfMap["border_visibility"] = aws.StringValue(apiObject.BorderVisibility)
+	}
+	if apiObject.GutterSpacing != nil {
+		tfMap["gutter_spacing"] = aws.StringValue(apiObject.GutterSpacing)
+	}
+	if apiObject.Title != nil {
+		tfMap["title"] = flattenPanelTitleOptions(apiObject.Title)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenPanelTitleOptions(apiObject *quicksight.PanelTitleOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.FontConfiguration != nil {
+		tfMap["font_configuration"] = flattenFontConfiguration(apiObject.FontConfiguration)
+	}
+	if apiObject.HorizontalTextAlignment != nil {
+		tfMap["horizontal_text_alignment"] = aws.StringValue(apiObject.HorizontalTextAlignment)
+	}
+	if apiObject.Visibility != nil {
+		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
+	}
+
+	return []interface{}{tfMap}
+}
