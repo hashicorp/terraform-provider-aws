@@ -33,14 +33,18 @@ ENHANCEMENTS:
 * resource/aws_medialive_channel: Added H265 support. ([#30908](https://github.com/hashicorp/terraform-provider-aws/issues/30908))
 * resource/aws_sagemaker_domain: Add `domain_settings.r_studio_server_pro_domain_settings`, `default_user_settings.canvas_app_settings.model_register_settings`, and `default_user_settings.r_studio_server_pro_app_settings` arguments ([#31031](https://github.com/hashicorp/terraform-provider-aws/issues/31031))
 * resource/aws_servicecatalog_provisioning_artifact: Add `provisioning_artifact_id` attribute ([#31086](https://github.com/hashicorp/terraform-provider-aws/issues/31086))
+* resource/aws_sfn_state_machine: Add configurable timeouts ([#31097](https://github.com/hashicorp/terraform-provider-aws/issues/31097))
 
 BUG FIXES:
 
+* data-source/aws_nat_gateway: Guarantee that all attributes are set when the NAT Gateway is associated with a single address ([#31118](https://github.com/hashicorp/terraform-provider-aws/issues/31118))
+* data-source/aws_networkfirewall_firewall_policy: Add `firewall_policy.stateful_rule_group_reference.override` attribute, fixing `setting firewall_policy: Invalid address to set` error ([#31089](https://github.com/hashicorp/terraform-provider-aws/issues/31089))
 * resource/aws_connect_routing_profile: Remove the limit on the maximum number of queues that can be associated with a routing profile. Batch processing is now done when there are more than 10 queues associated or disassociated at a time. ([#30895](https://github.com/hashicorp/terraform-provider-aws/issues/30895))
 * resource/aws_db_instance: Consider `delete-precheck` a valid pending state for resource deletion ([#31047](https://github.com/hashicorp/terraform-provider-aws/issues/31047))
 * resource/aws_inspector2_enabler: Correctly supports `LAMBDA` resource scanning ([#31038](https://github.com/hashicorp/terraform-provider-aws/issues/31038))
 * resource/aws_inspector2_enabler: Correctly supports multiple accounts ([#31038](https://github.com/hashicorp/terraform-provider-aws/issues/31038))
 * resource/aws_inspector2_enabler: No longer calls `Disable` API for status checking ([#31038](https://github.com/hashicorp/terraform-provider-aws/issues/31038))
+* resource/aws_nat_gateway: Guarantee that all attributes are set when the NAT Gateway is associated with a single address ([#31118](https://github.com/hashicorp/terraform-provider-aws/issues/31118))
 * resource/aws_rds_cluster_instance: Consider `delete-precheck` a valid pending state for resource deletion ([#31047](https://github.com/hashicorp/terraform-provider-aws/issues/31047))
 * resource/aws_servicecatalog_provisioned_product: Changes in the provisioning_artifact_name attribute are now reflected correctly in AWS ([#26371](https://github.com/hashicorp/terraform-provider-aws/issues/26371))
 * resource/aws_servicecatalog_provisioned_product: Fix `product_name` update handling ([#31094](https://github.com/hashicorp/terraform-provider-aws/issues/31094))
