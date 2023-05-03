@@ -316,10 +316,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_subnet",
 		},
 		{
-			Factory:  DataSourceSubnetIDs,
-			TypeName: "aws_subnet_ids",
-		},
-		{
 			Factory:  DataSourceSubnets,
 			TypeName: "aws_subnets",
 		},
