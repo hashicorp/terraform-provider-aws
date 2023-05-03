@@ -20,6 +20,7 @@ Upgrade topics:
 - [Data Source: aws_redshift_service_account](#data-source-aws_redshift_service_account)
 - [Data Source: aws_subnet_ids](#data-source-aws_subnet_ids)
 - [Resource: aws_acmpca_certificate_authority](#resource-aws_acmpca_certificate_authority)
+- [Resource: aws_ce_anomaly_subscription](#resource-aws_ce_anomaly_subscription)
 
 <!-- /TOC -->
 
@@ -75,6 +76,10 @@ provider "aws" {
 ## Resource: aws_acmpca_certificate_authority
 
 The `status` attribute is superfluous and sometimes incorrect. It has been removed.
+
+## Resource: aws_ce_anomaly_subscription
+
+The `threshold` attribute has been removed.
 
 ## Data Source: aws_redshift_service_account
 
