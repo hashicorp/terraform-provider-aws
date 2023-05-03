@@ -1641,6 +1641,13 @@ func ResourceDeliveryStream() *schema.Resource {
 							Required: true,
 						},
 
+						"retry_duration": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      3600,
+							ValidateFunc: validation.IntBetween(0, 7200),
+						},
+
 						"s3_backup_mode": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -1652,13 +1659,6 @@ func ResourceDeliveryStream() *schema.Resource {
 						},
 
 						"s3_configuration": s3ConfigurationSchema(),
-
-						"retry_duration": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      3600,
-							ValidateFunc: validation.IntBetween(0, 7200),
-						},
 
 						"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
 
@@ -1697,6 +1697,13 @@ func ResourceDeliveryStream() *schema.Resource {
 							Sensitive:    true,
 						},
 
+						"retry_duration": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      300,
+							ValidateFunc: validation.IntBetween(0, 7200),
+						},
+
 						"role_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -1711,13 +1718,6 @@ func ResourceDeliveryStream() *schema.Resource {
 						},
 
 						"s3_configuration": s3ConfigurationSchema(),
-
-						"retry_duration": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      300,
-							ValidateFunc: validation.IntBetween(0, 7200),
-						},
 
 						"buffering_interval": {
 							Type:         schema.TypeInt,
