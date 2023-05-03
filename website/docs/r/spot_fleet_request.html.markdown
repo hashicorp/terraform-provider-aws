@@ -155,8 +155,11 @@ resource "aws_spot_fleet_request" "example" {
 ### Using multiple launch configurations
 
 ```terraform
-data "aws_subnet_ids" "example" {
-  vpc_id = var.vpc_id
+data "aws_subnets" "example" {
+  filter {
+    name   = "vpc-id"
+    values = [var.vpc_id]
+  }
 }
 
 resource "aws_launch_template" "foo" {

@@ -122,8 +122,11 @@ data "aws_vpc" "selected" {
   }
 }
 
-data "aws_subnet_ids" "selected" {
-  vpc_id = data.aws_vpc.selected.id
+data "aws_subnets" "selected" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.selected.id]
+  }
 
   tags = {
     Tier = "private"
@@ -165,8 +168,8 @@ resource "aws_elasticsearch_domain" "es" {
 
   vpc_options {
     subnet_ids = [
-      data.aws_subnet_ids.selected.ids[0],
-      data.aws_subnet_ids.selected.ids[1],
+      data.aws_subnets.selected.ids[0],
+      data.aws_subnets.selected.ids[1],
     ]
 
     security_group_ids = [aws_security_group.es.id]
