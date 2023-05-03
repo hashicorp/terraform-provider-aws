@@ -261,6 +261,7 @@ func flattenElasticsearchConfiguration(description *firehose.ElasticsearchDestin
 		"type_name":                  aws.StringValue(description.TypeName),
 		"index_name":                 aws.StringValue(description.IndexName),
 		"s3_backup_mode":             aws.StringValue(description.S3BackupMode),
+		"s3_configuration":           flattenS3Configuration(description.S3DestinationDescription),
 		"index_rotation_period":      aws.StringValue(description.IndexRotationPeriod),
 		"vpc_config":                 flattenVPCConfiguration(description.VpcConfigurationDescription),
 		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, aws.StringValue(description.RoleARN)),
@@ -297,6 +298,7 @@ func flattenOpensearchConfiguration(description *firehose.Amazonopensearchservic
 		"type_name":                  aws.StringValue(description.TypeName),
 		"index_name":                 aws.StringValue(description.IndexName),
 		"s3_backup_mode":             aws.StringValue(description.S3BackupMode),
+		"s3_configuration":           flattenS3Configuration(description.S3DestinationDescription),
 		"index_rotation_period":      aws.StringValue(description.IndexRotationPeriod),
 		"vpc_config":                 flattenVPCConfiguration(description.VpcConfigurationDescription),
 		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, aws.StringValue(description.RoleARN)),
@@ -381,6 +383,7 @@ func flattenRedshiftConfiguration(description *firehose.RedshiftDestinationDescr
 		"role_arn":                   aws.StringValue(description.RoleARN),
 		"s3_backup_configuration":    flattenS3Configuration(description.S3BackupDescription),
 		"s3_backup_mode":             aws.StringValue(description.S3BackupMode),
+		"s3_configuration":           flattenS3Configuration(description.S3DestinationDescription),
 		"username":                   aws.StringValue(description.Username),
 	}
 
@@ -409,6 +412,7 @@ func flattenSplunkConfiguration(description *firehose.SplunkDestinationDescripti
 		"hec_token":                  aws.StringValue(description.HECToken),
 		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, ""),
 		"s3_backup_mode":             aws.StringValue(description.S3BackupMode),
+		"s3_configuration":           flattenS3Configuration(description.S3DestinationDescription),
 	}
 
 	if description.RetryOptions != nil {
@@ -808,46 +812,26 @@ func flattenDeliveryStream(d *schema.ResourceData, s *firehose.DeliveryStreamDes
 			if err := d.Set("redshift_configuration", flattenRedshiftConfiguration(destination.RedshiftDestinationDescription, configuredPassword)); err != nil {
 				return fmt.Errorf("setting redshift_configuration: %s", err)
 			}
-			if err := d.Set("s3_configuration", flattenS3Configuration(destination.RedshiftDestinationDescription.S3DestinationDescription)); err != nil {
-				return fmt.Errorf("setting s3_configuration: %s", err)
-			}
 		} else if destination.ElasticsearchDestinationDescription != nil {
 			d.Set("destination", destinationTypeElasticsearch)
 			if err := d.Set("elasticsearch_configuration", flattenElasticsearchConfiguration(destination.ElasticsearchDestinationDescription)); err != nil {
 				return fmt.Errorf("setting elasticsearch_configuration: %s", err)
-			}
-			if err := d.Set("s3_configuration", flattenS3Configuration(destination.ElasticsearchDestinationDescription.S3DestinationDescription)); err != nil {
-				return fmt.Errorf("setting s3_configuration: %s", err)
 			}
 		} else if destination.AmazonopensearchserviceDestinationDescription != nil {
 			d.Set("destination", destinationTypeOpensearch)
 			if err := d.Set("opensearch_configuration", flattenOpensearchConfiguration(destination.AmazonopensearchserviceDestinationDescription)); err != nil {
 				return fmt.Errorf("setting opensearch_configuration: %s", err)
 			}
-			if err := d.Set("s3_configuration", flattenS3Configuration(destination.AmazonopensearchserviceDestinationDescription.S3DestinationDescription)); err != nil {
-				return fmt.Errorf("setting s3_configuration: %s", err)
-			}
 		} else if destination.SplunkDestinationDescription != nil {
 			d.Set("destination", destinationTypeSplunk)
 			if err := d.Set("splunk_configuration", flattenSplunkConfiguration(destination.SplunkDestinationDescription)); err != nil {
 				return fmt.Errorf("setting splunk_configuration: %s", err)
-			}
-			if err := d.Set("s3_configuration", flattenS3Configuration(destination.SplunkDestinationDescription.S3DestinationDescription)); err != nil {
-				return fmt.Errorf("setting s3_configuration: %s", err)
 			}
 		} else if destination.HttpEndpointDestinationDescription != nil {
 			d.Set("destination", destinationTypeHTTPEndpoint)
 			configuredAccessKey := d.Get("http_endpoint_configuration.0.access_key").(string)
 			if err := d.Set("http_endpoint_configuration", flattenHTTPEndpointConfiguration(destination.HttpEndpointDestinationDescription, configuredAccessKey)); err != nil {
 				return fmt.Errorf("setting http_endpoint_configuration: %s", err)
-			}
-			if err := d.Set("s3_configuration", flattenS3Configuration(destination.HttpEndpointDestinationDescription.S3DestinationDescription)); err != nil {
-				return fmt.Errorf("setting s3_configuration: %s", err)
-			}
-		} else if d.Get("destination").(string) == destinationTypeS3 {
-			d.Set("destination", destinationTypeS3)
-			if err := d.Set("s3_configuration", flattenS3Configuration(destination.S3DestinationDescription)); err != nil {
-				return fmt.Errorf("setting s3_configuration: %s", err)
 			}
 		} else {
 			d.Set("destination", destinationTypeExtendedS3)
@@ -871,6 +855,7 @@ func flattenHTTPEndpointConfiguration(description *firehose.HttpEndpointDestinat
 		"name":                       aws.StringValue(description.EndpointConfiguration.Name),
 		"role_arn":                   aws.StringValue(description.RoleARN),
 		"s3_backup_mode":             aws.StringValue(description.S3BackupMode),
+		"s3_configuration":           flattenS3Configuration(description.S3DestinationDescription),
 		"request_configuration":      flattenRequestConfiguration(description.RequestConfiguration),
 		"cloudwatch_logging_options": flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
 		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, aws.StringValue(description.RoleARN)),
