@@ -2,12 +2,16 @@ package redshiftdata
 
 import (
 	"context"
+	"errors"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshiftdataapiservice"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -165,14 +169,90 @@ func resourceStatementRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("secret_arn", sub.SecretArn)
 	d.Set("database", d.Get("database").(string))
 	d.Set("db_user", d.Get("db_user").(string))
-	d.Set("sql", sub.QueryString)
-	d.Set("workgroup_name", sub.WorkgroupName)
-
 	if err := d.Set("parameters", flattenParameters(sub.QueryParameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
 	}
+	d.Set("sql", sub.QueryString)
+	d.Set("workgroup_name", sub.WorkgroupName)
 
 	return diags
+}
+
+// FindStatementByID will only find full statement info for statements created recently.
+// For statements that AWS thinks are expired, FindStatementByID will just return a bare bones DescribeStatementOutput w/ only the Id present.
+func FindStatementByID(ctx context.Context, conn *redshiftdataapiservice.RedshiftDataAPIService, id string) (*redshiftdataapiservice.DescribeStatementOutput, error) {
+	input := &redshiftdataapiservice.DescribeStatementInput{
+		Id: aws.String(id),
+	}
+
+	output, err := conn.DescribeStatementWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, redshiftdataapiservice.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if tfawserr.ErrCodeEquals(err, redshiftdataapiservice.ErrCodeValidationException) && strings.Contains(err.Error(), "expired") {
+		return &redshiftdataapiservice.DescribeStatementOutput{
+			Id:     aws.String(id),
+			Status: aws.String("EXPIRED"),
+		}, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func statusStatement(ctx context.Context, conn *redshiftdataapiservice.RedshiftDataAPIService, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindStatementByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitStatementFinished(ctx context.Context, conn *redshiftdataapiservice.RedshiftDataAPIService, id string, timeout time.Duration) (*redshiftdataapiservice.DescribeStatementOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			redshiftdataapiservice.StatusStringPicked,
+			redshiftdataapiservice.StatusStringStarted,
+			redshiftdataapiservice.StatusStringSubmitted,
+		},
+		Target:     []string{redshiftdataapiservice.StatusStringFinished},
+		Refresh:    statusStatement(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*redshiftdataapiservice.DescribeStatementOutput); ok {
+		if status := aws.StringValue(output.Status); status == redshiftdataapiservice.StatusStringFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.Error)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
 }
 
 func expandParameter(tfMap map[string]interface{}) *redshiftdataapiservice.SqlParameter {

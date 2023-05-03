@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/rds"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -233,7 +234,7 @@ func TestAccRDSInstance_identifierGenerated(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "identifier"),
-					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", resource.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -971,10 +972,10 @@ func TestAccRDSInstance_password(t *testing.T) {
 				ExpectError: regexp.MustCompile(`MasterUserPassword is not a valid password because it is shorter than 8 characters`),
 			},
 			{
-				Config: testAccInstanceConfig_password(rName, "valid-password"),
+				Config: testAccInstanceConfig_password(rName, "valid-password-1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "password", "valid-password"),
+					resource.TestCheckResourceAttr(resourceName, "password", "valid-password-1"),
 				),
 			},
 			{
@@ -988,9 +989,17 @@ func TestAccRDSInstance_password(t *testing.T) {
 					"skip_final_snapshot",
 				},
 			},
+			{
+				Config: testAccInstanceConfig_password(rName, "valid-password-2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "password", "valid-password-2"),
+				),
+			},
 		},
 	})
 }
+
 func TestAccRDSInstance_ManagedMasterPassword_managed(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v rds.DBInstance
@@ -1238,7 +1247,7 @@ func TestAccRDSInstance_ReplicateSourceDB_nameGenerated(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "identifier"),
-					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", resource.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -2161,12 +2170,34 @@ func TestAccRDSInstance_ReplicateSourceDB_replicaMode(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_ReplicateSourceDB_replicaMode(rName),
+				Config: testAccInstanceConfig_ReplicateSourceDB_replicaMode(rName, rds.ReplicaModeMounted),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "replica_mode", "mounted"),
+					resource.TestCheckResourceAttr(resourceName, "replica_mode", rds.ReplicaModeMounted),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"manage_master_user_password",
+					"skip_final_snapshot",
+					"delete_automated_backups",
+				},
+			},
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDB_replicaMode(rName, rds.ReplicaModeOpenReadOnly),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
+					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "replica_mode", rds.ReplicaModeOpenReadOnly),
 				),
 			},
 		},
@@ -2365,7 +2396,7 @@ func TestAccRDSInstance_SnapshotIdentifier_nameGenerated(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "identifier"),
-					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", resource.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -5515,13 +5546,11 @@ func testAccCheckInstanceDestroyWithFinalSnapshot(ctx context.Context) resource.
 
 			finalSnapshotID := rs.Primary.Attributes["final_snapshot_identifier"]
 			output, err := tfrds.FindDBSnapshotByID(ctx, conn, finalSnapshotID)
-
 			if err != nil {
 				return err
 			}
 
 			tags, err := tfrds.ListTags(ctx, conn, aws.StringValue(output.DBSnapshotArn))
-
 			if err != nil {
 				return err
 			}
@@ -5635,7 +5664,6 @@ func testAccCheckInstanceExists(ctx context.Context, n string, v *rds.DBInstance
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 		output, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
@@ -7860,7 +7888,7 @@ resource "aws_db_instance" "test" {
 // When testing needs to distinguish a second region and second account in the same region
 // e.g. cross-region functionality with RAM shared subnets
 func testAccAlternateAccountAndAlternateRegionProviderConfig() string {
-	//lintignore:AT004
+	// lintignore:AT004
 	return fmt.Sprintf(`
 provider "awsalternateaccountalternateregion" {
   access_key = %[1]q
@@ -8590,7 +8618,7 @@ resource "aws_db_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_ReplicateSourceDB_replicaMode(rName string) string {
+func testAccInstanceConfig_ReplicateSourceDB_replicaMode(rName, replicaMode string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "oracle-ee"
@@ -8621,11 +8649,11 @@ resource "aws_db_instance" "source" {
 resource "aws_db_instance" "test" {
   identifier          = %[2]q
   instance_class      = aws_db_instance.source.instance_class
-  replica_mode        = "mounted"
+  replica_mode        = %[3]q
   replicate_source_db = aws_db_instance.source.id
   skip_final_snapshot = true
 }
-`, oraclePreferredInstanceClasses, rName)
+`, oraclePreferredInstanceClasses, rName, replicaMode)
 }
 
 func testAccInstanceConfig_ReplicateSourceDB_ParameterGroupTwoStep_setup(rName string) string {

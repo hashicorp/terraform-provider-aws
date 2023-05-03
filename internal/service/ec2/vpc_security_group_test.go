@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -792,106 +793,6 @@ func TestExpandIPPerms_AllProtocol(t *testing.T) {
 	}
 }
 
-func TestExpandIPPerms_nonVPC(t *testing.T) {
-	t.Parallel()
-
-	hash := schema.HashString
-
-	expanded := []interface{}{
-		map[string]interface{}{
-			"protocol":    "icmp",
-			"from_port":   1,
-			"to_port":     -1,
-			"cidr_blocks": []interface{}{"0.0.0.0/0"},
-			"security_groups": schema.NewSet(hash, []interface{}{
-				"sg-11111",
-				"foo/sg-22222",
-			}),
-		},
-		map[string]interface{}{
-			"protocol":  "icmp",
-			"from_port": 1,
-			"to_port":   -1,
-			"self":      true,
-		},
-	}
-	group := &ec2.SecurityGroup{
-		GroupName: aws.String("foo"),
-	}
-	perms, err := tfec2.ExpandIPPerms(group, expanded)
-	if err != nil {
-		t.Fatalf("error expanding perms: %v", err)
-	}
-
-	expected := []ec2.IpPermission{
-		{
-			IpProtocol: aws.String("icmp"),
-			FromPort:   aws.Int64(1),
-			ToPort:     aws.Int64(int64(-1)),
-			IpRanges:   []*ec2.IpRange{{CidrIp: aws.String("0.0.0.0/0")}},
-			UserIdGroupPairs: []*ec2.UserIdGroupPair{
-				{
-					GroupName: aws.String("sg-22222"),
-				},
-				{
-					GroupName: aws.String("sg-11111"),
-				},
-			},
-		},
-		{
-			IpProtocol: aws.String("icmp"),
-			FromPort:   aws.Int64(1),
-			ToPort:     aws.Int64(int64(-1)),
-			UserIdGroupPairs: []*ec2.UserIdGroupPair{
-				{
-					GroupName: aws.String("foo"),
-				},
-			},
-		},
-	}
-
-	exp := expected[0]
-	perm := perms[0]
-
-	if aws.Int64Value(exp.FromPort) != aws.Int64Value(perm.FromPort) {
-		t.Fatalf(
-			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			aws.Int64Value(perm.FromPort),
-			aws.Int64Value(exp.FromPort))
-	}
-
-	if aws.StringValue(exp.IpRanges[0].CidrIp) != aws.StringValue(perm.IpRanges[0].CidrIp) {
-		t.Fatalf(
-			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			aws.StringValue(perm.IpRanges[0].CidrIp),
-			aws.StringValue(exp.IpRanges[0].CidrIp))
-	}
-
-	if aws.StringValue(exp.UserIdGroupPairs[0].GroupName) != aws.StringValue(perm.UserIdGroupPairs[0].GroupName) {
-		t.Fatalf(
-			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			aws.StringValue(perm.UserIdGroupPairs[0].GroupName),
-			aws.StringValue(exp.UserIdGroupPairs[0].GroupName))
-	}
-
-	if aws.StringValue(exp.UserIdGroupPairs[1].GroupName) != aws.StringValue(perm.UserIdGroupPairs[1].GroupName) {
-		t.Fatalf(
-			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			aws.StringValue(perm.UserIdGroupPairs[1].GroupName),
-			aws.StringValue(exp.UserIdGroupPairs[1].GroupName))
-	}
-
-	exp = expected[1]
-	perm = perms[1]
-
-	if aws.StringValue(exp.UserIdGroupPairs[0].GroupName) != aws.StringValue(perm.UserIdGroupPairs[0].GroupName) {
-		t.Fatalf(
-			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			aws.StringValue(perm.UserIdGroupPairs[0].GroupName),
-			aws.StringValue(exp.UserIdGroupPairs[0].GroupName))
-	}
-}
-
 func TestFlattenSecurityGroups(t *testing.T) {
 	t.Parallel()
 
@@ -914,8 +815,6 @@ func TestFlattenSecurityGroups(t *testing.T) {
 				},
 			},
 		},
-		// include the owner id, but keep it consitent with the same account. Tests
-		// EC2 classic situation
 		{
 			ownerId: aws.String("user1234"),
 			pairs: []*ec2.UserIdGroupPair{
@@ -930,28 +829,6 @@ func TestFlattenSecurityGroups(t *testing.T) {
 				},
 			},
 		},
-
-		// include the owner id, but from a different account. This is reflects
-		// EC2 Classic when referring to groups by name
-		{
-			ownerId: aws.String("user1234"),
-			pairs: []*ec2.UserIdGroupPair{
-				{
-					GroupId:   aws.String("sg-12345"),
-					GroupName: aws.String("somegroup"), // GroupName is only included in Classic
-					UserId:    aws.String("user4321"),
-				},
-			},
-			expected: []*tfec2.GroupIdentifier{
-				{
-					GroupId:   aws.String("sg-12345"),
-					GroupName: aws.String("user4321/somegroup"),
-				},
-			},
-		},
-
-		// include the owner id, but from a different account. This reflects in
-		// EC2 VPC when referring to groups by id
 		{
 			ownerId: aws.String("user1234"),
 			pairs: []*ec2.UserIdGroupPair{
@@ -1109,7 +986,7 @@ func TestAccVPCSecurityGroup_nameGenerated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", resource.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
 				),
 			},
 			{

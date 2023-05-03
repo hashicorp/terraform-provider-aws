@@ -13,7 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -123,7 +124,7 @@ func ResourceHealthCheck() *schema.Resource {
 				// reference_name. This limits the length of the resource argument to 27.
 				//
 				// Example generated suffix: -terraform-20190122200019880700000001
-				ValidateFunc: validation.StringLenBetween(0, (64 - resource.UniqueIDSuffixLength - 11)),
+				ValidateFunc: validation.StringLenBetween(0, (64 - id.UniqueIDSuffixLength - 11)),
 			},
 			"regions": {
 				Type:     schema.TypeSet,
@@ -271,7 +272,7 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 		healthCheckConfig.Regions = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	callerRef := resource.UniqueId()
+	callerRef := id.UniqueId()
 	if v, ok := d.GetOk("reference_name"); ok {
 		callerRef = fmt.Sprintf("%s-%s", v.(string), callerRef)
 	}
@@ -289,7 +290,7 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(aws.StringValue(output.HealthCheck.Id))
 
-	if err := UpdateTags(ctx, conn, d.Id(), route53.TagResourceTypeHealthcheck, nil, KeyValueTags(ctx, GetTagsIn(ctx))); err != nil {
+	if err := createTags(ctx, conn, d.Id(), route53.TagResourceTypeHealthcheck, GetTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Route53 Health Check (%s) tags: %s", d.Id(), err)
 	}
 
@@ -452,7 +453,7 @@ func FindHealthCheckByID(ctx context.Context, conn *route53.Route53, id string) 
 	output, err := conn.GetHealthCheckWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHealthCheck) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

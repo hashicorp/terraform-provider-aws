@@ -32,6 +32,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ce"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/chime"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/chimesdkmediapipelines"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/chimesdkvoice"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/cleanrooms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloud9"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudcontrol"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
@@ -66,6 +69,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dlm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/docdbelastic"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ds"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -102,6 +106,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/inspector"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/inspector2"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/internetmonitor"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iotanalytics"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iotevents"
@@ -123,7 +128,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/location"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/logs"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/macie"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconvert"
@@ -172,6 +176,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/securitylake"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/serverlessrepo"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
@@ -185,6 +190,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmcontacts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmincidents"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
@@ -194,6 +200,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreamwrite"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
@@ -231,6 +238,9 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		budgets.ServicePackage,
 		ce.ServicePackage,
 		chime.ServicePackage,
+		chimesdkmediapipelines.ServicePackage,
+		chimesdkvoice.ServicePackage,
+		cleanrooms.ServicePackage,
 		cloud9.ServicePackage,
 		cloudcontrol.ServicePackage,
 		cloudformation.ServicePackage,
@@ -265,6 +275,7 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		dlm.ServicePackage,
 		dms.ServicePackage,
 		docdb.ServicePackage,
+		docdbelastic.ServicePackage,
 		ds.ServicePackage,
 		dynamodb.ServicePackage,
 		ec2.ServicePackage,
@@ -301,6 +312,7 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		imagebuilder.ServicePackage,
 		inspector.ServicePackage,
 		inspector2.ServicePackage,
+		internetmonitor.ServicePackage,
 		iot.ServicePackage,
 		iotanalytics.ServicePackage,
 		iotevents.ServicePackage,
@@ -322,7 +334,6 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		lightsail.ServicePackage,
 		location.ServicePackage,
 		logs.ServicePackage,
-		macie.ServicePackage,
 		macie2.ServicePackage,
 		mediaconnect.ServicePackage,
 		mediaconvert.ServicePackage,
@@ -371,6 +382,7 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		schemas.ServicePackage,
 		secretsmanager.ServicePackage,
 		securityhub.ServicePackage,
+		securitylake.ServicePackage,
 		serverlessrepo.ServicePackage,
 		servicecatalog.ServicePackage,
 		servicediscovery.ServicePackage,
@@ -384,6 +396,7 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		sns.ServicePackage,
 		sqs.ServicePackage,
 		ssm.ServicePackage,
+		ssmcontacts.ServicePackage,
 		ssmincidents.ServicePackage,
 		ssoadmin.ServicePackage,
 		storagegateway.ServicePackage,
@@ -393,6 +406,7 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		timestreamwrite.ServicePackage,
 		transcribe.ServicePackage,
 		transfer.ServicePackage,
+		vpclattice.ServicePackage,
 		waf.ServicePackage,
 		wafregional.ServicePackage,
 		wafv2.ServicePackage,

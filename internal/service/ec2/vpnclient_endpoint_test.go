@@ -80,7 +80,7 @@ func TestAccClientVPNEndpoint_serial(t *testing.T) {
 			tc := tc
 			t.Run(fmt.Sprintf("%s_%s", group, name), func(t *testing.T) {
 				t.Cleanup(func() {
-					if os.Getenv(resource.TestEnvVar) != "" {
+					if os.Getenv(resource.EnvTfAcc) != "" {
 						testAccEc2ClientVpnEndpointSemaphore.Notify()
 					}
 				})

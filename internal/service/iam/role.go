@@ -15,7 +15,8 @@ import (
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -31,7 +32,7 @@ import (
 
 const (
 	roleNameMaxLen       = 64
-	roleNamePrefixMaxLen = roleNameMaxLen - resource.UniqueIDSuffixLength
+	roleNamePrefixMaxLen = roleNameMaxLen - id.UniqueIDSuffixLength
 )
 
 // @SDKResource("aws_iam_role", name="Role")
@@ -158,6 +159,22 @@ func ResourceRole() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
+			},
+			"role_last_used": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"region": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"last_used_date": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -308,6 +325,10 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	inlinePolicies, err := readRoleInlinePolicies(ctx, aws.StringValue(role.RoleName), meta)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading inline policies for IAM role %s, error: %s", d.Id(), err)
+	}
+
+	if err := d.Set("role_last_used", flattenRoleLastUsed(role.RoleLastUsed)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting role_last_used: %s", err)
 	}
 
 	var configPoliciesList []*iam.PutRolePolicyInput
@@ -559,14 +580,14 @@ func DeleteRole(ctx context.Context, conn *iam.IAM, roleName string, forceDetach
 	deleteRoleInput := &iam.DeleteRoleInput{
 		RoleName: aws.String(roleName),
 	}
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err := conn.DeleteRoleWithContext(ctx, deleteRoleInput)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, iam.ErrCodeDeleteConflictException) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -710,6 +731,21 @@ func deleteRoleInlinePolicies(ctx context.Context, conn *iam.IAM, roleName strin
 	}
 
 	return nil
+}
+
+func flattenRoleLastUsed(apiObject *iam.RoleLastUsed) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"region": aws.StringValue(apiObject.Region),
+	}
+
+	if apiObject.LastUsedDate != nil {
+		tfMap["last_used_date"] = apiObject.LastUsedDate.Format(time.RFC3339)
+	}
+	return []interface{}{tfMap}
 }
 
 func flattenRoleInlinePolicy(apiObject *iam.PutRolePolicyInput) map[string]interface{} {

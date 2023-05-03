@@ -299,52 +299,6 @@ func TestAccIAMPolicyDocumentDataSource_overridePolicyDocumentValidJSON(t *testi
 	})
 }
 
-func TestAccIAMPolicyDocumentDataSource_overrideJSONValidJSON(t *testing.T) {
-	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccPolicyDocumentDataSourceConfig_overrideJSON_invalidJSON,
-				ExpectError: regexp.MustCompile(`"override_json" contains an invalid JSON: unexpected end of JSON input`),
-			},
-			{
-				Config: testAccPolicyDocumentDataSourceConfig_overrideJSON_emptyString,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "json",
-						testAccPolicyDocumentExpectedJSONNoStatement,
-					),
-				),
-			},
-		},
-	})
-}
-
-func TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON(t *testing.T) {
-	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccPolicyDocumentDataSourceConfig_sourceJSON_invalidJSON,
-				ExpectError: regexp.MustCompile(`"source_json" contains an invalid JSON: unexpected end of JSON input`),
-			},
-			{
-				Config: testAccPolicyDocumentDataSourceConfig_sourceJSON_emptyString,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "json",
-						testAccPolicyDocumentExpectedJSONNoStatement,
-					),
-				),
-			},
-		},
-	})
-}
-
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/10777
 func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_stringAndSlice(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -544,7 +498,6 @@ func testAccPolicyDocumentExpectedJSON() string {
       "Resource": "arn:%[1]s:s3:::*"
     },
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "s3:ListBucket",
       "Resource": "arn:%[1]s:s3:::foo",
@@ -562,7 +515,6 @@ func testAccPolicyDocumentExpectedJSON() string {
       }
     },
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "s3:*",
       "Resource": [
@@ -574,13 +526,11 @@ func testAccPolicyDocumentExpectedJSON() string {
       }
     },
     {
-      "Sid": "",
       "Effect": "Deny",
       "NotAction": "s3:*",
       "NotResource": "arn:%[1]s:s3:::*"
     },
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "kinesis:*",
       "Principal": {
@@ -588,7 +538,6 @@ func testAccPolicyDocumentExpectedJSON() string {
       }
     },
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "firehose:*",
       "Principal": "*"
@@ -624,7 +573,6 @@ const testAccPolicyDocumentConfig_SingleConditionValue_ExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "",
       "Effect": "Deny",
       "Action": "elasticfilesystem:*",
       "Resource": "*",
@@ -730,7 +678,7 @@ data "aws_iam_policy_document" "test" {
 }
 
 data "aws_iam_policy_document" "test_source" {
-  source_json = data.aws_iam_policy_document.test.json
+  source_policy_documents = [data.aws_iam_policy_document.test.json]
 
   statement {
     sid       = "SourceJSONTest1"
@@ -755,7 +703,6 @@ func testAccPolicyDocumentSourceExpectedJSON() string {
       "Resource": "arn:%[1]s:s3:::*"
     },
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "s3:ListBucket",
       "Resource": "arn:%[1]s:s3:::foo",
@@ -772,7 +719,6 @@ func testAccPolicyDocumentSourceExpectedJSON() string {
       }
     },
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "s3:*",
       "Resource": [
@@ -787,13 +733,11 @@ func testAccPolicyDocumentSourceExpectedJSON() string {
       }
     },
     {
-      "Sid": "",
       "Effect": "Deny",
       "NotAction": "s3:*",
       "NotResource": "arn:%[1]s:s3:::*"
     },
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "kinesis:*",
       "Principal": {
@@ -801,7 +745,6 @@ func testAccPolicyDocumentSourceExpectedJSON() string {
       }
     },
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "firehose:*",
       "Principal": "*"
@@ -861,7 +804,6 @@ var testAccPolicyDocumentSourceListExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "foo:ActionOne"
     },
@@ -876,7 +818,6 @@ var testAccPolicyDocumentSourceListExpectedJSON = `{
       "Action": "foo:ActionTwo"
     },
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "bar:ActionTwo"
     }
@@ -885,7 +826,7 @@ var testAccPolicyDocumentSourceListExpectedJSON = `{
 
 var testAccPolicyDocumentDataSourceConfig_blankDeprecated = `
 data "aws_iam_policy_document" "test_source_blank" {
-  source_json = ""
+  source_policy_documents = [""]
 
   statement {
     sid       = "SourceJSONTest2"
@@ -917,7 +858,7 @@ data "aws_iam_policy_document" "test_source" {
 }
 
 data "aws_iam_policy_document" "test_source_conflicting" {
-  source_json = data.aws_iam_policy_document.test_source.json
+  source_policy_documents = [data.aws_iam_policy_document.test_source.json]
 
   statement {
     sid       = "SourceJSONTestConflicting"
@@ -994,7 +935,7 @@ data "aws_iam_policy_document" "override" {
 }
 
 data "aws_iam_policy_document" "test_override" {
-  override_json = data.aws_iam_policy_document.override.json
+  override_policy_documents = [data.aws_iam_policy_document.override.json]
 
   statement {
     actions   = ["ec2:*"]
@@ -1018,7 +959,6 @@ var testAccPolicyDocumentOverrideExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "ec2:*",
       "Resource": "*"
@@ -1078,7 +1018,6 @@ var testAccPolicyDocumentOverrideListExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "foo:ActionOne"
     },
@@ -1113,8 +1052,8 @@ data "aws_iam_policy_document" "override" {
 }
 
 data "aws_iam_policy_document" "yak_politik" {
-  source_json   = data.aws_iam_policy_document.source.json
-  override_json = data.aws_iam_policy_document.override.json
+  source_policy_documents   = [data.aws_iam_policy_document.source.json]
+  override_policy_documents = [data.aws_iam_policy_document.override.json]
 }
 `
 
@@ -1122,7 +1061,6 @@ var testAccPolicyDocumentNoStatementMergeExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "ec2:DescribeAccountAttributes",
       "Resource": "*"
@@ -1154,8 +1092,8 @@ data "aws_iam_policy_document" "override" {
 }
 
 data "aws_iam_policy_document" "yak_politik" {
-  source_json   = data.aws_iam_policy_document.source.json
-  override_json = data.aws_iam_policy_document.override.json
+  source_policy_documents   = [data.aws_iam_policy_document.source.json]
+  override_policy_documents = [data.aws_iam_policy_document.override.json]
 }
 `
 
@@ -1211,13 +1149,11 @@ var testAccPolicyDocumentDuplicateBlankSidExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "ec2:DescribeAccountAttributes",
       "Resource": "*"
     },
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "s3:GetObject",
       "Resource": "*"
@@ -1240,7 +1176,6 @@ const testAccPolicyDocumentVersion20081017ExpectedJSONDataSourceConfig = `{
   "Version": "2008-10-17",
   "Statement": [
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "ec2:*",
       "Resource": "*"
@@ -1537,29 +1472,5 @@ data "aws_iam_policy_document" "test" {
 var testAccPolicyDocumentDataSourceConfig_overridePolicyDocument_invalidJSON = `
 data "aws_iam_policy_document" "test" {
   override_policy_documents = ["{"]
-}
-`
-
-var testAccPolicyDocumentDataSourceConfig_overrideJSON_emptyString = `
-data "aws_iam_policy_document" "test" {
-  override_json = ""
-}
-`
-
-var testAccPolicyDocumentDataSourceConfig_overrideJSON_invalidJSON = `
-data "aws_iam_policy_document" "test" {
-  override_json = "{"
-}
-`
-
-var testAccPolicyDocumentDataSourceConfig_sourceJSON_emptyString = `
-data "aws_iam_policy_document" "test" {
-  source_json = ""
-}
-`
-
-var testAccPolicyDocumentDataSourceConfig_sourceJSON_invalidJSON = `
-data "aws_iam_policy_document" "test" {
-  source_json = "{"
 }
 `

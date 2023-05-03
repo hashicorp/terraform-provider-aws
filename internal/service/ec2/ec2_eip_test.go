@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -654,14 +653,7 @@ func testAccCheckEIPExists(ctx context.Context, n string, v *ec2.Address) resour
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-		var err error
-		var output *ec2.Address
-
-		if strings.HasPrefix(rs.Primary.ID, "eipalloc-") {
-			output, err = tfec2.FindEIPByAllocationID(ctx, conn, rs.Primary.ID)
-		} else {
-			output, err = tfec2.FindEIPByPublicIP(ctx, conn, rs.Primary.ID)
-		}
+		output, err := tfec2.FindEIPByAllocationID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -682,13 +674,7 @@ func testAccCheckEIPDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			var err error
-
-			if strings.HasPrefix(rs.Primary.ID, "eipalloc-") {
-				_, err = tfec2.FindEIPByAllocationID(ctx, conn, rs.Primary.ID)
-			} else {
-				_, err = tfec2.FindEIPByPublicIP(ctx, conn, rs.Primary.ID)
-			}
+			_, err := tfec2.FindEIPByAllocationID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue

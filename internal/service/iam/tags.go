@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Custom IAM tag service update functions using the same format as generated code.
@@ -21,7 +22,7 @@ func roleUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	if removedTags := oldTags.Removed(newTags).IgnoreSystem(names.IAM); len(removedTags) > 0 {
 		input := &iam.UntagRoleInput{
 			RoleName: aws.String(identifier),
 			TagKeys:  aws.StringSlice(removedTags.Keys()),
@@ -34,10 +35,10 @@ func roleUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagRoleInput{
 			RoleName: aws.String(identifier),
-			Tags:     Tags(updatedTags.IgnoreAWS()),
+			Tags:     Tags(updatedTags),
 		}
 
 		_, err := conn.TagRoleWithContext(ctx, input)
@@ -56,7 +57,7 @@ func userUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	if removedTags := oldTags.Removed(newTags).IgnoreSystem(names.IAM); len(removedTags) > 0 {
 		input := &iam.UntagUserInput{
 			UserName: aws.String(identifier),
 			TagKeys:  aws.StringSlice(removedTags.Keys()),
@@ -69,10 +70,10 @@ func userUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagUserInput{
 			UserName: aws.String(identifier),
-			Tags:     Tags(updatedTags.IgnoreAWS()),
+			Tags:     Tags(updatedTags),
 		}
 
 		_, err := conn.TagUserWithContext(ctx, input)
@@ -91,7 +92,7 @@ func instanceProfileUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identi
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	if removedTags := oldTags.Removed(newTags).IgnoreSystem(names.IAM); len(removedTags) > 0 {
 		input := &iam.UntagInstanceProfileInput{
 			InstanceProfileName: aws.String(identifier),
 			TagKeys:             aws.StringSlice(removedTags.Keys()),
@@ -104,10 +105,10 @@ func instanceProfileUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identi
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagInstanceProfileInput{
 			InstanceProfileName: aws.String(identifier),
-			Tags:                Tags(updatedTags.IgnoreAWS()),
+			Tags:                Tags(updatedTags),
 		}
 
 		_, err := conn.TagInstanceProfileWithContext(ctx, input)
@@ -126,7 +127,7 @@ func openIDConnectProviderUpdateTags(ctx context.Context, conn iamiface.IAMAPI, 
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	if removedTags := oldTags.Removed(newTags).IgnoreSystem(names.IAM); len(removedTags) > 0 {
 		input := &iam.UntagOpenIDConnectProviderInput{
 			OpenIDConnectProviderArn: aws.String(identifier),
 			TagKeys:                  aws.StringSlice(removedTags.Keys()),
@@ -139,10 +140,10 @@ func openIDConnectProviderUpdateTags(ctx context.Context, conn iamiface.IAMAPI, 
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagOpenIDConnectProviderInput{
 			OpenIDConnectProviderArn: aws.String(identifier),
-			Tags:                     Tags(updatedTags.IgnoreAWS()),
+			Tags:                     Tags(updatedTags),
 		}
 
 		_, err := conn.TagOpenIDConnectProviderWithContext(ctx, input)
@@ -161,7 +162,7 @@ func policyUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier stri
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	if removedTags := oldTags.Removed(newTags).IgnoreSystem(names.IAM); len(removedTags) > 0 {
 		input := &iam.UntagPolicyInput{
 			PolicyArn: aws.String(identifier),
 			TagKeys:   aws.StringSlice(removedTags.Keys()),
@@ -174,10 +175,10 @@ func policyUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier stri
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagPolicyInput{
 			PolicyArn: aws.String(identifier),
-			Tags:      Tags(updatedTags.IgnoreAWS()),
+			Tags:      Tags(updatedTags),
 		}
 
 		_, err := conn.TagPolicyWithContext(ctx, input)
@@ -196,7 +197,7 @@ func samlProviderUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifie
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	if removedTags := oldTags.Removed(newTags).IgnoreSystem(names.IAM); len(removedTags) > 0 {
 		input := &iam.UntagSAMLProviderInput{
 			SAMLProviderArn: aws.String(identifier),
 			TagKeys:         aws.StringSlice(removedTags.Keys()),
@@ -209,10 +210,10 @@ func samlProviderUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifie
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagSAMLProviderInput{
 			SAMLProviderArn: aws.String(identifier),
-			Tags:            Tags(updatedTags.IgnoreAWS()),
+			Tags:            Tags(updatedTags),
 		}
 
 		_, err := conn.TagSAMLProviderWithContext(ctx, input)
@@ -231,7 +232,7 @@ func serverCertificateUpdateTags(ctx context.Context, conn iamiface.IAMAPI, iden
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	if removedTags := oldTags.Removed(newTags).IgnoreSystem(names.IAM); len(removedTags) > 0 {
 		input := &iam.UntagServerCertificateInput{
 			ServerCertificateName: aws.String(identifier),
 			TagKeys:               aws.StringSlice(removedTags.Keys()),
@@ -244,10 +245,10 @@ func serverCertificateUpdateTags(ctx context.Context, conn iamiface.IAMAPI, iden
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagServerCertificateInput{
 			ServerCertificateName: aws.String(identifier),
-			Tags:                  Tags(updatedTags.IgnoreAWS()),
+			Tags:                  Tags(updatedTags),
 		}
 
 		_, err := conn.TagServerCertificateWithContext(ctx, input)
@@ -266,7 +267,7 @@ func virtualMFAUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier 
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	if removedTags := oldTags.Removed(newTags).IgnoreSystem(names.IAM); len(removedTags) > 0 {
 		input := &iam.UntagMFADeviceInput{
 			SerialNumber: aws.String(identifier),
 			TagKeys:      aws.StringSlice(removedTags.Keys()),
@@ -279,10 +280,10 @@ func virtualMFAUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier 
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagMFADeviceInput{
 			SerialNumber: aws.String(identifier),
-			Tags:         Tags(updatedTags.IgnoreAWS()),
+			Tags:         Tags(updatedTags),
 		}
 
 		_, err := conn.TagMFADeviceWithContext(ctx, input)

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -292,7 +293,7 @@ func testAccClusterInstanceDisappears(ctx context.Context, v *docdb.DBInstance) 
 		if _, err := conn.DeleteDBInstanceWithContext(ctx, opts); err != nil {
 			return err
 		}
-		return resource.RetryContext(ctx, 40*time.Minute, func() *resource.RetryError {
+		return retry.RetryContext(ctx, 40*time.Minute, func() *retry.RetryError {
 			opts := &docdb.DescribeDBInstancesInput{
 				DBInstanceIdentifier: v.DBInstanceIdentifier,
 			}
@@ -301,10 +302,10 @@ func testAccClusterInstanceDisappears(ctx context.Context, v *docdb.DBInstance) 
 				if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBInstanceNotFoundFault) {
 					return nil
 				}
-				return resource.NonRetryableError(
+				return retry.NonRetryableError(
 					fmt.Errorf("Error retrieving DB Instances: %s", err))
 			}
-			return resource.RetryableError(fmt.Errorf(
+			return retry.RetryableError(fmt.Errorf(
 				"Waiting for instance to be deleted: %v", v.DBInstanceIdentifier))
 		})
 	}

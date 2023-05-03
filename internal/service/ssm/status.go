@@ -5,11 +5,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusAssociation(ctx context.Context, conn *ssm.SSM, id string) resource.StateRefreshFunc {
+func statusAssociation(ctx context.Context, conn *ssm.SSM, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindAssociationById(ctx, conn, id)
 
@@ -31,7 +31,7 @@ func statusAssociation(ctx context.Context, conn *ssm.SSM, id string) resource.S
 	}
 }
 
-func statusServiceSetting(ctx context.Context, conn *ssm.SSM, id string) resource.StateRefreshFunc {
+func statusServiceSetting(ctx context.Context, conn *ssm.SSM, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindServiceSettingByID(ctx, conn, id)
 

@@ -22,6 +22,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
+			Factory:  DataSourceConfigurationSet,
+			TypeName: "aws_sesv2_configuration_set",
+		},
+		{
 			Factory:  DataSourceDedicatedIPPool,
 			TypeName: "aws_sesv2_dedicated_ip_pool",
 		},
@@ -33,6 +37,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceConfigurationSet,
 			TypeName: "aws_sesv2_configuration_set",
+			Name:     "Configuration Set",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceConfigurationSetEventDestination,
@@ -41,6 +49,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceContactList,
 			TypeName: "aws_sesv2_contact_list",
+			Name:     "Contact List",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceDedicatedIPAssignment,
@@ -49,10 +61,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDedicatedIPPool,
 			TypeName: "aws_sesv2_dedicated_ip_pool",
+			Name:     "Dedicated IP Pool",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceEmailIdentity,
 			TypeName: "aws_sesv2_email_identity",
+			Name:     "Email Identity",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceEmailIdentityFeedbackAttributes,

@@ -3,7 +3,6 @@ package ec2_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -164,14 +163,7 @@ func testAccCheckEIPAssociationExists(ctx context.Context, n string, v *ec2.Addr
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-		var err error
-		var output *ec2.Address
-
-		if strings.HasPrefix(rs.Primary.ID, "eipassoc-") {
-			output, err = tfec2.FindEIPByAssociationID(ctx, conn, rs.Primary.ID)
-		} else {
-			output, err = tfec2.FindEIPByPublicIP(ctx, conn, rs.Primary.ID)
-		}
+		output, err := tfec2.FindEIPByAssociationID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -192,13 +184,7 @@ func testAccCheckEIPAssociationDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			var err error
-
-			if strings.HasPrefix(rs.Primary.ID, "eipassoc-") {
-				_, err = tfec2.FindEIPByAssociationID(ctx, conn, rs.Primary.ID)
-			} else {
-				_, err = tfec2.FindEIPByPublicIP(ctx, conn, rs.Primary.ID)
-			}
+			_, err := tfec2.FindEIPByAssociationID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue

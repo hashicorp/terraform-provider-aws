@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -555,7 +555,7 @@ func FindDocumentByName(ctx context.Context, conn *ssm.SSM, name string) (*ssm.D
 	output, err := conn.DescribeDocumentWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, ssm.ErrCodeInvalidDocument, "does not exist") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -572,7 +572,7 @@ func FindDocumentByName(ctx context.Context, conn *ssm.SSM, name string) (*ssm.D
 	return output.Document, nil
 }
 
-func statusDocument(ctx context.Context, conn *ssm.SSM, name string) resource.StateRefreshFunc {
+func statusDocument(ctx context.Context, conn *ssm.SSM, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDocumentByName(ctx, conn, name)
 
@@ -592,7 +592,7 @@ func waitDocumentActive(ctx context.Context, conn *ssm.SSM, name string) (*ssm.D
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{ssm.DocumentStatusCreating, ssm.DocumentStatusUpdating},
 		Target:  []string{ssm.DocumentStatusActive},
 		Refresh: statusDocument(ctx, conn, name),
@@ -614,7 +614,7 @@ func waitDocumentDeleted(ctx context.Context, conn *ssm.SSM, name string) (*ssm.
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{ssm.DocumentStatusDeleting},
 		Target:  []string{},
 		Refresh: statusDocument(ctx, conn, name),

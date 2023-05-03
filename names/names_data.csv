@@ -39,8 +39,11 @@ ce,ce,costexplorer,costexplorer,,ce,,costexplorer,CE,CostExplorer,,1,,,aws_ce_,,
 ,,,,,,,,,,,,,,,,,Chatbot,AWS,x,,,,No SDK support
 chime,chime,chime,chime,,chime,,,Chime,Chime,,1,,,aws_chime_,,chime_,Chime,Amazon,,,,,
 chime-sdk-identity,chimesdkidentity,chimesdkidentity,chimesdkidentity,,chimesdkidentity,,,ChimeSDKIdentity,ChimeSDKIdentity,,1,,,aws_chimesdkidentity_,,chimesdkidentity_,Chime SDK Identity,Amazon,,,,,
+chime-sdk-mediapipelines,chimesdkmediapipelines,chimesdkmediapipelines,chimesdkmediapipelines,,chimesdkmediapipelines,,,ChimeSDKMediaPipelines,ChimeSDKMediaPipelines,,1,,,aws_chimesdkmediapipelines_,,chimesdkmediapipelines_,Chime SDK Media Pipelines,Amazon,,,,,
 chime-sdk-meetings,chimesdkmeetings,chimesdkmeetings,chimesdkmeetings,,chimesdkmeetings,,,ChimeSDKMeetings,ChimeSDKMeetings,,1,,,aws_chimesdkmeetings_,,chimesdkmeetings_,Chime SDK Meetings,Amazon,,,,,
 chime-sdk-messaging,chimesdkmessaging,chimesdkmessaging,chimesdkmessaging,,chimesdkmessaging,,,ChimeSDKMessaging,ChimeSDKMessaging,,1,,,aws_chimesdkmessaging_,,chimesdkmessaging_,Chime SDK Messaging,Amazon,,,,,
+chime-sdk-voice,chimesdkvoice,chimesdkvoice,chimesdkvoice,,chimesdkvoice,,,ChimeSDKVoice,ChimeSDKVoice,,1,,,aws_chimesdkvoice_,,chimesdkvoice_,Chime SDK Voice,Amazon,,,,,
+cleanrooms,cleanrooms,cleanrooms,cleanrooms,,cleanrooms,,,CleanRooms,CleanRooms,,,2,,aws_cleanrooms_,,cleanrooms_,Clean Rooms,AWS,,,,,
 ,,,,,,,,,,,,,,,,,CLI (Command Line Interface),AWS,x,,,,No SDK support
 configure,configure,,,,,,,,,,,,,,,,CLI Configure options,AWS,x,,,,CLI only
 ddb,ddb,,,,,,,,,,,,,,,,CLI High-level DynamoDB commands,AWS,x,,,,Part of DynamoDB
@@ -64,6 +67,7 @@ cloudtrail,cloudtrail,cloudtrail,cloudtrail,,cloudtrail,,,CloudTrail,CloudTrail,
 cloudwatch,cloudwatch,cloudwatch,cloudwatch,,cloudwatch,,,CloudWatch,CloudWatch,,1,,aws_cloudwatch_(?!(event_|log_|query_)),aws_cloudwatch_,,cloudwatch_dashboard;cloudwatch_metric_;cloudwatch_composite_,CloudWatch,Amazon,,,,,
 application-insights,applicationinsights,applicationinsights,applicationinsights,,applicationinsights,,,ApplicationInsights,ApplicationInsights,,1,,,aws_applicationinsights_,,applicationinsights_,CloudWatch Application Insights,Amazon,,,,,
 evidently,evidently,cloudwatchevidently,evidently,,evidently,,cloudwatchevidently,Evidently,CloudWatchEvidently,,1,,,aws_evidently_,,evidently_,CloudWatch Evidently,Amazon,,,,,
+internetmonitor,internetmonitor,internetmonitor,internetmonitor,,internetmonitor,,,InternetMonitor,InternetMonitor,,1,,,aws_internetmonitor_,,internetmonitor_,CloudWatch Internet Monitor,Amazon,,,,,
 logs,logs,cloudwatchlogs,cloudwatchlogs,,logs,,cloudwatchlog;cloudwatchlogs,Logs,CloudWatchLogs,,1,2,aws_cloudwatch_(log_|query_),aws_logs_,,cloudwatch_log_;cloudwatch_query_,CloudWatch Logs,Amazon,,,,,
 rum,rum,cloudwatchrum,rum,,rum,,cloudwatchrum,RUM,CloudWatchRUM,,1,,,aws_rum_,,rum_,CloudWatch RUM,Amazon,,,,,
 synthetics,synthetics,synthetics,synthetics,,synthetics,,,Synthetics,Synthetics,,1,,,aws_synthetics_,,synthetics_,CloudWatch Synthetics,Amazon,,,,,
@@ -109,7 +113,8 @@ devops-guru,devopsguru,devopsguru,devopsguru,,devopsguru,,,DevOpsGuru,DevOpsGuru
 directconnect,directconnect,directconnect,directconnect,,directconnect,,,DirectConnect,DirectConnect,,1,,aws_dx_,aws_directconnect_,,dx_,Direct Connect,AWS,,,,,
 dlm,dlm,dlm,dlm,,dlm,,,DLM,DLM,,1,,,aws_dlm_,,dlm_,DLM (Data Lifecycle Manager),Amazon,,,,,
 dms,dms,databasemigrationservice,databasemigrationservice,,dms,,databasemigration;databasemigrationservice,DMS,DatabaseMigrationService,,1,,,aws_dms_,,dms_,DMS (Database Migration),AWS,,,,,
-docdb,docdb,docdb,docdb,,docdb,,,DocDB,DocDB,,1,,,aws_docdb_,,docdb_,DocDB (DocumentDB),Amazon,,,,,
+docdb,docdb,docdb,docdb,,docdb,,,DocDB,DocDB,,1,,,aws_docdb_,,docdb_,DocumentDB,Amazon,,,,,
+docdb-elastic,docdbelastic,docdbelastic,docdbelastic,,docdbelastic,,,DocDBElastic,DocDBElastic,,,2,,aws_docdbelastic_,,docdbelastic_,DocumentDB Elastic,Amazon,,,,,
 drs,drs,drs,drs,,drs,,,DRS,Drs,,1,,,aws_drs_,,drs_,DRS (Elastic Disaster Recovery),AWS,,,,,
 ds,ds,directoryservice,directoryservice,,ds,,directoryservice,DS,DirectoryService,,1,,aws_directory_service_,aws_ds_,,directory_service_,Directory Service,AWS,,,,,
 dynamodb,dynamodb,dynamodb,dynamodb,,dynamodb,,,DynamoDB,DynamoDB,,1,,,aws_dynamodb_,,dynamodb_,DynamoDB,Amazon,,,AWS_DYNAMODB_ENDPOINT,TF_AWS_DYNAMODB_ENDPOINT,
@@ -167,8 +172,8 @@ healthlake,healthlake,healthlake,healthlake,,healthlake,,,HealthLake,HealthLake,
 honeycode,honeycode,honeycode,honeycode,,honeycode,,,Honeycode,Honeycode,,1,,,aws_honeycode_,,honeycode_,Honeycode,Amazon,,,,,
 iam,iam,iam,iam,,iam,,,IAM,IAM,,1,,,aws_iam_,,iam_,IAM (Identity & Access Management),AWS,,,AWS_IAM_ENDPOINT,TF_AWS_IAM_ENDPOINT,
 accessanalyzer,accessanalyzer,accessanalyzer,accessanalyzer,,accessanalyzer,,,AccessAnalyzer,AccessAnalyzer,,1,,,aws_accessanalyzer_,,accessanalyzer_,IAM Access Analyzer,AWS,,,,,
-inspector,inspector,inspector,inspector,,inspector,,,Inspector,Inspector,,1,,,aws_inspector_,,inspector_,Inspector,Amazon,,,,,
-inspector2,inspector2,inspector2,inspector2,,inspector2,,inspectorv2,Inspector2,Inspector2,,,2,,aws_inspector2_,,inspector2_,Inspector V2,Amazon,,,,,
+inspector,inspector,inspector,inspector,,inspector,,,Inspector,Inspector,,1,,,aws_inspector_,,inspector_,Inspector Classic,Amazon,,,,,
+inspector2,inspector2,inspector2,inspector2,,inspector2,,inspectorv2,Inspector2,Inspector2,,,2,,aws_inspector2_,,inspector2_,Inspector,Amazon,,,,,
 iot1click-devices,iot1clickdevices,iot1clickdevicesservice,iot1clickdevicesservice,,iot1clickdevices,,iot1clickdevicesservice,IoT1ClickDevices,IoT1ClickDevicesService,,1,,,aws_iot1clickdevices_,,iot1clickdevices_,IoT 1-Click Devices,AWS,,,,,
 iot1click-projects,iot1clickprojects,iot1clickprojects,iot1clickprojects,,iot1clickprojects,,,IoT1ClickProjects,IoT1ClickProjects,,1,,,aws_iot1clickprojects_,,iot1clickprojects_,IoT 1-Click Projects,AWS,,,,,
 iotanalytics,iotanalytics,iotanalytics,iotanalytics,,iotanalytics,,,IoTAnalytics,IoTAnalytics,,1,,,aws_iotanalytics_,,iotanalytics_,IoT Analytics,AWS,,,,,
@@ -313,6 +318,7 @@ sdb,sdb,simpledb,,simpledb,sdb,,sdb,SimpleDB,SimpleDB,,1,,aws_simpledb_,aws_sdb_
 scheduler,scheduler,scheduler,scheduler,,scheduler,,,Scheduler,Scheduler,,,2,,aws_scheduler_,,scheduler_,EventBridge Scheduler,Amazon,,,,,
 secretsmanager,secretsmanager,secretsmanager,secretsmanager,,secretsmanager,,,SecretsManager,SecretsManager,,1,,,aws_secretsmanager_,,secretsmanager_,Secrets Manager,AWS,,,,,
 securityhub,securityhub,securityhub,securityhub,,securityhub,,,SecurityHub,SecurityHub,,1,,,aws_securityhub_,,securityhub_,Security Hub,AWS,,,,,
+securitylake,securitylake,securitylake,securitylake,,securitylake,,,SecurityLake,SecurityLake,,,2,,aws_securitylake_,,securitylake_,Security Lake,Amazon,,,,,
 serverlessrepo,serverlessrepo,serverlessapplicationrepository,serverlessapplicationrepository,,serverlessrepo,,serverlessapprepo;serverlessapplicationrepository,ServerlessRepo,ServerlessApplicationRepository,,1,,aws_serverlessapplicationrepository_,aws_serverlessrepo_,,serverlessapplicationrepository_,Serverless Application Repository,AWS,,,,,
 servicecatalog,servicecatalog,servicecatalog,servicecatalog,,servicecatalog,,,ServiceCatalog,ServiceCatalog,,1,,,aws_servicecatalog_,,servicecatalog_,Service Catalog,AWS,,,,,
 servicecatalog-appregistry,servicecatalogappregistry,appregistry,servicecatalogappregistry,,servicecatalogappregistry,,appregistry,ServiceCatalogAppRegistry,AppRegistry,,1,,,aws_servicecatalogappregistry_,,servicecatalogappregistry_,Service Catalog AppRegistry,AWS,,,,,
@@ -328,7 +334,7 @@ snowball,snowball,snowball,snowball,,snowball,,,Snowball,Snowball,,1,,,aws_snowb
 sns,sns,sns,sns,,sns,,,SNS,SNS,,1,,,aws_sns_,,sns_,SNS (Simple Notification),Amazon,,,,,
 sqs,sqs,sqs,sqs,,sqs,,,SQS,SQS,,1,,,aws_sqs_,,sqs_,SQS (Simple Queue),Amazon,,,,,
 ssm,ssm,ssm,ssm,,ssm,,,SSM,SSM,,1,2,,aws_ssm_,,ssm_,SSM (Systems Manager),AWS,,,,,
-ssm-contacts,ssmcontacts,ssmcontacts,ssmcontacts,,ssmcontacts,,,SSMContacts,SSMContacts,,,2,,aws_ssmcontacts_,,ssmcontacts_,SSM Incident Manager Contacts,AWS,,,,,
+ssm-contacts,ssmcontacts,ssmcontacts,ssmcontacts,,ssmcontacts,,,SSMContacts,SSMContacts,,,2,,aws_ssmcontacts_,,ssmcontacts_,SSM Contacts,AWS,,,,,
 ssm-incidents,ssmincidents,ssmincidents,ssmincidents,,ssmincidents,,,SSMIncidents,SSMIncidents,,,2,,aws_ssmincidents_,,ssmincidents_,SSM Incident Manager Incidents,AWS,,,,,
 sso,sso,sso,sso,,sso,,,SSO,SSO,,1,,,aws_sso_,,sso_,SSO (Single Sign-On),AWS,,,,,
 sso-admin,ssoadmin,ssoadmin,ssoadmin,,ssoadmin,,,SSOAdmin,SSOAdmin,,1,,,aws_ssoadmin_,,ssoadmin_,SSO Admin,AWS,,,,,
@@ -353,6 +359,7 @@ translate,translate,translate,translate,,translate,,,Translate,Translate,,1,,,aw
 ,,,,,,,,,,,,,,,,,Trusted Advisor,AWS,x,,,,Part of Support
 ,,,,,verifiedaccess,ec2,,VerifiedAccess,,,,,aws_verifiedaccess,aws_verifiedaccess_,verifiedaccess_,verifiedaccess,Verified Access,AWS,x,x,,,Part of EC2
 ,,,,,vpc,ec2,,VPC,,,,,aws_((default_)?(network_acl|route_table|security_group|subnet|vpc(?!_ipam))|ec2_(managed|network|subnet|traffic)|egress_only_internet|flow_log|internet_gateway|main_route_table_association|nat_gateway|network_interface|prefix_list|route\b),aws_vpc_,vpc_,default_network_;default_route_;default_security_;default_subnet;default_vpc;ec2_managed_;ec2_network_;ec2_subnet_;ec2_traffic_;egress_only_;flow_log;internet_gateway;main_route_;nat_;network_;prefix_list;route_;route\.;security_group;subnet;vpc_dhcp_;vpc_endpoint;vpc_ipv;vpc_network_performance;vpc_peering_;vpc_security_group_;vpc\.;vpcs\.,VPC (Virtual Private Cloud),Amazon,x,x,,,Part of EC2
+vpc-lattice,vpclattice,vpclattice,vpclattice,,vpclattice,,,VPCLattice,VPCLattice,,,2,,aws_vpclattice_,,vpclattice_,VPC Lattice,Amazon,,,,,
 ,,,,,ipam,ec2,,IPAM,,,,,aws_vpc_ipam,aws_ipam_,ipam_,vpc_ipam,VPC IPAM (IP Address Manager),Amazon,x,x,,,Part of EC2
 ,,,,,vpnclient,ec2,,ClientVPN,,,,,aws_ec2_client_vpn,aws_vpnclient_,vpnclient_,ec2_client_vpn_,VPN (Client),AWS,x,x,,,Part of EC2
 ,,,,,vpnsite,ec2,,SiteVPN,,,,,aws_(customer_gateway|vpn_),aws_vpnsite_,vpnsite_,customer_gateway;vpn_,VPN (Site-to-Site),AWS,x,x,,,Part of EC2

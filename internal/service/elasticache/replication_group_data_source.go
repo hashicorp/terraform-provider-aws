@@ -24,11 +24,6 @@ func DataSourceReplicationGroup() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validateReplicationGroupID,
 			},
-			"replication_group_description": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "Use description instead",
-			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -68,11 +63,6 @@ func DataSourceReplicationGroup() *schema.Resource {
 			"num_node_groups": {
 				Type:     schema.TypeInt,
 				Computed: true,
-			},
-			"number_cache_clusters": {
-				Type:       schema.TypeInt,
-				Computed:   true,
-				Deprecated: "Use num_cache_clusters instead",
 			},
 			"member_clusters": {
 				Type:     schema.TypeSet,
@@ -140,7 +130,6 @@ func dataSourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(aws.StringValue(rg.ReplicationGroupId))
 	d.Set("description", rg.Description)
-	d.Set("replication_group_description", rg.Description)
 	d.Set("arn", rg.ARN)
 	d.Set("auth_token_enabled", rg.AuthTokenEnabled)
 
@@ -178,7 +167,6 @@ func dataSourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.Set("num_cache_clusters", len(rg.MemberClusters))
-	d.Set("number_cache_clusters", len(rg.MemberClusters))
 	if err := d.Set("member_clusters", flex.FlattenStringList(rg.MemberClusters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting member_clusters: %s", err)
 	}

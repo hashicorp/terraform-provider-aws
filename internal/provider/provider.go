@@ -279,7 +279,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			// bootstrapContext is run on all wrapped methods before any interceptors.
 			bootstrapContext := func(ctx context.Context, meta any) context.Context {
-				ctx = conns.NewContext(ctx, servicePackageName, v.Name)
+				ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
 				if v, ok := meta.(*conns.AWSClient); ok {
 					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig, v.IgnoreTagsConfig)
 				}
@@ -330,7 +330,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			// bootstrapContext is run on all wrapped methods before any interceptors.
 			bootstrapContext := func(ctx context.Context, meta any) context.Context {
-				ctx = conns.NewContext(ctx, servicePackageName, v.Name)
+				ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
 				if v, ok := meta.(*conns.AWSClient); ok {
 					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig, v.IgnoreTagsConfig)
 				}
@@ -362,9 +362,13 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				}
 
 				interceptors = append(interceptors, interceptorItem{
-					when:        Before | After,
-					why:         Create | Read | Update,
-					interceptor: tagsInterceptor{tags: v.Tags},
+					when: Before | After | Finally,
+					why:  Create | Read | Update,
+					interceptor: tagsInterceptor{
+						tags:       v.Tags,
+						updateFunc: tagsUpdateFunc,
+						readFunc:   tagsReadFunc,
+					},
 				})
 			}
 

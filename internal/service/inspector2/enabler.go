@@ -13,7 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -72,7 +73,7 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	in := &inspector2.EnableInput{
 		AccountIds:    flex.ExpandStringValueSet(d.Get("account_ids").(*schema.Set)),
 		ResourceTypes: flex.ExpandStringyValueSet[types.ResourceScanType](d.Get("resource_types").(*schema.Set)),
-		ClientToken:   aws.String(resource.UniqueId()),
+		ClientToken:   aws.String(id.UniqueId()),
 	}
 
 	id := EnablerID(in.AccountIds, flex.ExpandStringValueSet(d.Get("resource_types").(*schema.Set)))
@@ -150,7 +151,7 @@ const (
 )
 
 func waitEnabled(ctx context.Context, conn *inspector2.Client, id string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   append(enum.Slice(types.StatusEnabling, types.StatusDisabled), StatusDisabledEnabled, StatusInProgress),
 		Target:                    enum.Slice(types.StatusEnabled),
 		Refresh:                   statusEnable(ctx, conn, id),
@@ -165,7 +166,7 @@ func waitEnabled(ctx context.Context, conn *inspector2.Client, id string, timeou
 }
 
 func waitDisabled(ctx context.Context, conn *inspector2.Client, id string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: append(enum.Slice(types.StatusDisabling, types.StatusEnabled), StatusDisabledEnabled, StatusInProgress),
 		Target:  enum.Slice(types.StatusDisabled),
 		Refresh: statusEnable(ctx, conn, id),
@@ -177,7 +178,7 @@ func waitDisabled(ctx context.Context, conn *inspector2.Client, id string, timeo
 	return err
 }
 
-func statusEnable(ctx context.Context, conn *inspector2.Client, id string) resource.StateRefreshFunc {
+func statusEnable(ctx context.Context, conn *inspector2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		st, err := FindAccountStatuses(ctx, conn, id)
 

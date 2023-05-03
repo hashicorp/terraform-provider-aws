@@ -29,6 +29,8 @@ func testAccAccount_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", "true"),
+					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", "SECURITY_CONTROL"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", "true"),
 				),
 			},
 			{
@@ -78,6 +80,38 @@ func testAccAccount_enableDefaultStandardsFalse(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", "false"),
+				),
+			},
+		},
+	})
+}
+
+func testAccAccount_full(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_securityhub_account.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccountConfig_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", "true"),
+					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", "SECURITY_CONTROL"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", "true"),
+				),
+			},
+			{
+				Config: testAccAccountConfig_full,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", "false"),
+					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", "STANDARD_CONTROL"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", "false"),
 				),
 			},
 		},
@@ -167,5 +201,13 @@ resource "aws_securityhub_account" "test" {}
 const testAccAccountConfig_enableDefaultStandardsFalse = `
 resource "aws_securityhub_account" "test" {
   enable_default_standards = false
+}
+`
+
+const testAccAccountConfig_full = `
+resource "aws_securityhub_account" "test" {
+  enable_default_standards  = false
+  control_finding_generator = "STANDARD_CONTROL"
+  auto_enable_controls      = false
 }
 `
