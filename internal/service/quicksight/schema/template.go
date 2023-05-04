@@ -85,8 +85,13 @@ func DefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"sheet_id":              idSchema(),
-							"content_type":          stringSchema(false, validation.StringInSlice(quicksight.SheetContentType_Values(), false)),
+							"sheet_id": idSchema(),
+							"content_type": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringInSlice(quicksight.SheetContentType_Values(), false),
+							},
 							"description":           stringSchema(false, validation.StringLenBetween(1, 1024)),
 							"filter_controls":       filterControlsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterControl.html
 							"layouts":               layoutSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Layout.html

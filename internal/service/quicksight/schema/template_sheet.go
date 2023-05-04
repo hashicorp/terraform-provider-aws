@@ -194,6 +194,7 @@ func layoutSchema() *schema.Schema {
 	return &schema.Schema{ // // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Layout.html
 		Type:     schema.TypeList,
 		Optional: true,
+		Computed: true,
 		MinItems: 1,
 		MaxItems: 1,
 		Elem: &schema.Resource{
