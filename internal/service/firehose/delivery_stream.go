@@ -26,7 +26,6 @@ import (
 )
 
 const (
-	destinationTypeS3            = "s3"
 	destinationTypeExtendedS3    = "extended_s3"
 	destinationTypeElasticsearch = "elasticsearch"
 	destinationTypeOpensearch    = "opensearch"
