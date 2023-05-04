@@ -14,7 +14,8 @@ import (
 // @SDKDataSource("aws_appintegrations_event_integration", name="Event Integration")
 func DataSourceEventIntegration() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceEventIntegrationRead,
+		ReadWithoutTimeout: dataSourceEventIntegrationRead,
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
