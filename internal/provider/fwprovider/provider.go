@@ -97,11 +97,6 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 				Optional:    true,
 				Description: "List of paths to shared config files. If not set, defaults to [~/.aws/config].",
 			},
-			"shared_credentials_file": schema.StringAttribute{
-				Optional:           true,
-				Description:        "The path to the shared credentials file. If not set, defaults to ~/.aws/credentials.",
-				DeprecationMessage: "Use shared_credentials_files instead.",
-			},
 			"shared_credentials_files": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,

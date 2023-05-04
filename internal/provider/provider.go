@@ -163,19 +163,11 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Description: "List of paths to shared config files. If not set, defaults to [~/.aws/config].",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
-			"shared_credentials_file": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Deprecated:    "Use shared_credentials_files instead.",
-				ConflictsWith: []string{"shared_credentials_files"},
-				Description:   "The path to the shared credentials file. If not set, defaults to ~/.aws/credentials.",
-			},
 			"shared_credentials_files": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				ConflictsWith: []string{"shared_credentials_file"},
-				Description:   "List of paths to shared credentials files. If not set, defaults to [~/.aws/credentials].",
-				Elem:          &schema.Schema{Type: schema.TypeString},
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "List of paths to shared credentials files. If not set, defaults to [~/.aws/credentials].",
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"skip_credentials_validation": {
 				Type:     schema.TypeBool,
@@ -490,9 +482,7 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		config.MaxRetries = v.(int)
 	}
 
-	if v, ok := d.GetOk("shared_credentials_file"); ok {
-		config.SharedCredentialsFiles = []string{v.(string)}
-	} else if v, ok := d.GetOk("shared_credentials_files"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("shared_credentials_files"); ok && len(v.([]interface{})) > 0 {
 		config.SharedCredentialsFiles = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
