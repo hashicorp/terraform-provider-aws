@@ -259,3 +259,145 @@ func expandComboChartSortConfiguration(tfList []interface{}) *quicksight.ComboCh
 
 	return config
 }
+
+func flattenComboChartVisual(apiObject *quicksight.ComboChartVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"visual_id": aws.StringValue(apiObject.VisualId),
+	}
+	if apiObject.Actions != nil {
+		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
+	}
+	if apiObject.ChartConfiguration != nil {
+		tfMap["chart_configuration"] = flattenComboChartConfiguration(apiObject.ChartConfiguration)
+	}
+	if apiObject.ColumnHierarchies != nil {
+		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+	}
+	if apiObject.Subtitle != nil {
+		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
+	}
+	if apiObject.Title != nil {
+		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenComboChartConfiguration(apiObject *quicksight.ComboChartConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.BarDataLabels != nil {
+		tfMap["bar_data_labels"] = flattenDataLabelOptions(apiObject.BarDataLabels)
+	}
+	if apiObject.BarsArrangement != nil {
+		tfMap["bars_arrangement"] = aws.StringValue(apiObject.BarsArrangement)
+	}
+	if apiObject.CategoryAxis != nil {
+		tfMap["category_axis"] = flattenAxisDisplayOptions(apiObject.CategoryAxis)
+	}
+	if apiObject.CategoryLabelOptions != nil {
+		tfMap["category_label_options"] = flattenChartAxisLabelOptions(apiObject.CategoryLabelOptions)
+	}
+	if apiObject.ColorLabelOptions != nil {
+		tfMap["color_label_options"] = flattenChartAxisLabelOptions(apiObject.ColorLabelOptions)
+	}
+	if apiObject.FieldWells != nil {
+		tfMap["field_wells"] = flattenComboChartFieldWells(apiObject.FieldWells)
+	}
+	if apiObject.Legend != nil {
+		tfMap["legend"] = flattenLegendOptions(apiObject.Legend)
+	}
+	if apiObject.LineDataLabels != nil {
+		tfMap["line_data_labels"] = flattenDataLabelOptions(apiObject.LineDataLabels)
+	}
+	if apiObject.PrimaryYAxisDisplayOptions != nil {
+		tfMap["primary_y_axis_display_options"] = flattenAxisDisplayOptions(apiObject.PrimaryYAxisDisplayOptions)
+	}
+	if apiObject.PrimaryYAxisLabelOptions != nil {
+		tfMap["primary_y_axis_label_options"] = flattenChartAxisLabelOptions(apiObject.PrimaryYAxisLabelOptions)
+	}
+	if apiObject.ReferenceLines != nil {
+		tfMap["reference_lines"] = flattenReferenceLine(apiObject.ReferenceLines)
+	}
+	if apiObject.SecondaryYAxisDisplayOptions != nil {
+		tfMap["secondary_y_axis_display_options"] = flattenAxisDisplayOptions(apiObject.SecondaryYAxisDisplayOptions)
+	}
+	if apiObject.SecondaryYAxisLabelOptions != nil {
+		tfMap["secondary_y_axis_label_options"] = flattenChartAxisLabelOptions(apiObject.SecondaryYAxisLabelOptions)
+	}
+	if apiObject.SortConfiguration != nil {
+		tfMap["sort_configuration"] = flattenComboChartSortConfiguration(apiObject.SortConfiguration)
+	}
+	if apiObject.Tooltip != nil {
+		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)
+	}
+	if apiObject.VisualPalette != nil {
+		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenComboChartFieldWells(apiObject *quicksight.ComboChartFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ComboChartAggregatedFieldWells != nil {
+		tfMap["combo_chart_aggregated_field_wells"] = flattenComboChartAggregatedFieldWells(apiObject.ComboChartAggregatedFieldWells)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenComboChartAggregatedFieldWells(apiObject *quicksight.ComboChartAggregatedFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.BarValues != nil {
+		tfMap["bar_values"] = flattenMeasureField(apiObject.BarValues)
+	}
+	if apiObject.Category != nil {
+		tfMap["category"] = flattenDimensionField(apiObject.Category)
+	}
+	if apiObject.Colors != nil {
+		tfMap["colors"] = flattenDimensionField(apiObject.Colors)
+	}
+	if apiObject.LineValues != nil {
+		tfMap["line_values"] = flattenMeasureField(apiObject.LineValues)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenComboChartSortConfiguration(apiObject *quicksight.ComboChartSortConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CategoryItemsLimit != nil {
+		tfMap["category_items_limit"] = flattenItemsLimitConfiguration(apiObject.CategoryItemsLimit)
+	}
+	if apiObject.CategorySort != nil {
+		tfMap["category_sort"] = flattenFieldSortOptions(apiObject.CategorySort)
+	}
+	if apiObject.ColorItemsLimit != nil {
+		tfMap["color_items_limit"] = flattenItemsLimitConfiguration(apiObject.ColorItemsLimit)
+	}
+	if apiObject.ColorSort != nil {
+		tfMap["color_sort"] = flattenFieldSortOptions(apiObject.ColorSort)
+	}
+
+	return []interface{}{tfMap}
+}
