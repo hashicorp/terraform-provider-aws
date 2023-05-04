@@ -398,3 +398,92 @@ func expandTextConditionalFormat(tfList []interface{}) *quicksight.TextCondition
 
 	return options
 }
+
+func flattenConditionalFormattingColor(apiObject *quicksight.ConditionalFormattingColor) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Gradient != nil {
+		tfMap["gradient"] = flattenConditionalFormattingGradientColor(apiObject.Gradient)
+	}
+	if apiObject.Solid != nil {
+		tfMap["solid"] = flattenConditionalFormattingSolidColor(apiObject.Solid)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenConditionalFormattingGradientColor(apiObject *quicksight.ConditionalFormattingGradientColor) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Color != nil {
+		tfMap["color"] = flattenGradientColor(apiObject.Color)
+	}
+	if apiObject.Expression != nil {
+		tfMap["expression"] = aws.StringValue(apiObject.Expression)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenGradientColor(apiObject *quicksight.GradientColor) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Stops != nil {
+		tfMap["stops"] = flattenGradientStop(apiObject.Stops)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenGradientStop(apiObject []*quicksight.GradientStop) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if config.GradientOffset != nil {
+			tfMap["gradient_offset"] = aws.Float64Value(config.GradientOffset)
+		}
+		if config.Color != nil {
+			tfMap["color"] = aws.StringValue(config.Color)
+		}
+		if config.DataValue != nil {
+			tfMap["data_value"] = aws.Float64Value(config.DataValue)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenConditionalFormattingSolidColor(apiObject *quicksight.ConditionalFormattingSolidColor) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Color != nil {
+		tfMap["color"] = aws.StringValue(apiObject.Color)
+	}
+	if apiObject.Expression != nil {
+		tfMap["expression"] = aws.StringValue(apiObject.Expression)
+	}
+
+	return []interface{}{tfMap}
+}

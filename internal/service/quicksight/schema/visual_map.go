@@ -133,3 +133,54 @@ func expandGeospatialCoordinateBounds(tfList []interface{}) *quicksight.Geospati
 
 	return config
 }
+
+func flattenGeospatialMapStyleOptions(apiObject *quicksight.GeospatialMapStyleOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.BaseMapStyle != nil {
+		tfMap["base_map_style"] = aws.StringValue(apiObject.BaseMapStyle)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenGeospatialWindowOptions(apiObject *quicksight.GeospatialWindowOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Bounds != nil {
+		tfMap["bounds"] = flattenGeospatialCoordinateBounds(apiObject.Bounds)
+	}
+	if apiObject.MapZoomMode != nil {
+		tfMap["map_zoom_mode"] = aws.StringValue(apiObject.MapZoomMode)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenGeospatialCoordinateBounds(apiObject *quicksight.GeospatialCoordinateBounds) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.East != nil {
+		tfMap["east"] = aws.Float64Value(apiObject.East)
+	}
+	if apiObject.North != nil {
+		tfMap["north"] = aws.Float64Value(apiObject.North)
+	}
+	if apiObject.South != nil {
+		tfMap["south"] = aws.Float64Value(apiObject.South)
+	}
+	if apiObject.West != nil {
+		tfMap["west"] = aws.Float64Value(apiObject.West)
+	}
+
+	return []interface{}{tfMap}
+}
