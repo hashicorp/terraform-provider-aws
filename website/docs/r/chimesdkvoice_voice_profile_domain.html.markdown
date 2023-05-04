@@ -15,15 +15,15 @@ Terraform resource for managing an AWS Chime SDK Voice Profile Domain.
 ### Basic Usage
 
 ```terraform
-resource "aws_kms_key" "test" {
+resource "aws_kms_key" "example" {
   description             = "KMS Key for Voice Profile Domain"
   deletion_window_in_days = 7
 }
 
-resource "aws_chimesdkvoice_voice_profile_domain" "test" {
+resource "aws_chimesdkvoice_voice_profile_domain" "example" {
   name = "ExampleVoiceProfileDomain"
   server_side_encryption_configuration {
-    kms_key_arn = aws_kms_key.test.arn
+    kms_key_arn = aws_kms_key.example.arn
   }
   description = "My Voice Profile Domain"
   tags = {
@@ -58,3 +58,11 @@ In addition to all arguments above, the following attributes are exported:
 * `create` - (Default `30s`)
 * `update` - (Default `30s`)
 * `delete` - (Default `30s`)
+
+## Import
+
+AWS Chime SDK Voice Profile Domain can be imported using the `id`, e.g.,
+
+```
+$ terraform import aws_chimesdkvoice_voice_profile_domain.example abcdef123456
+```
