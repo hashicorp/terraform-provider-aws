@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -29,6 +30,7 @@ func ResourceCapacityProvider() *schema.Resource {
 		ReadWithoutTimeout:   resourceCapacityProviderRead,
 		UpdateWithoutTimeout: resourceCapacityProviderUpdate,
 		DeleteWithoutTimeout: resourceCapacityProviderDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceCapacityProviderImport,
 		},
@@ -125,9 +127,8 @@ func resourceCapacityProviderCreate(ctx context.Context, d *schema.ResourceData,
 
 	output, err := conn.CreateCapacityProviderWithContext(ctx, &input)
 
-	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] ECS tagging failed creating Capacity Provider (%s) with tags: %s. Trying create without tags.", name, err)
+	// Some partitions (e.g. ISO) may not support tag-on-create.
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		input.Tags = nil
 
 		output, err = conn.CreateCapacityProviderWithContext(ctx, &input)
@@ -139,18 +140,17 @@ func resourceCapacityProviderCreate(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(aws.StringValue(output.CapacityProvider.CapacityProviderArn))
 
-	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
-	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); input.Tags == nil && len(tags) > 0 {
-		err := UpdateTags(ctx, conn, d.Id(), nil, tags)
+	// For partitions not supporting tag-on-create, attempt tag after create.
+	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+		err := createTags(ctx, conn, d.Id(), tags)
 
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-			// If default tags only, log and continue. Otherwise, error.
-			log.Printf("[WARN] ECS tagging failed adding tags after create for Capacity Provider (%s): %s", d.Id(), err)
+		// If default tags only, continue. Otherwise, error.
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 			return append(diags, resourceCapacityProviderRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "ECS tagging failed adding tags after create for Capacity Provider (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting ECS Capacity Provider (%s) tags: %s", d.Id(), err)
 		}
 	}
 

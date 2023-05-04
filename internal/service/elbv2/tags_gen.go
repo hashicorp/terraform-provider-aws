@@ -95,6 +95,15 @@ func SetTagsOut(ctx context.Context, tags []*elbv2.Tag) {
 	}
 }
 
+// createTags creates elbv2 service tags for new resources.
+func createTags(ctx context.Context, conn elbv2iface.ELBV2API, identifier string, tags []*elbv2.Tag) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return UpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+}
+
 // UpdateTags updates elbv2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.

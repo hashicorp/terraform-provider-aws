@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/attrmap"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -218,16 +219,14 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	input.Attributes = aws.StringMap(attributes)
 
-	log.Printf("[DEBUG] Creating SQS Queue: %s", input)
 	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, queueCreatedTimeout, func() (interface{}, error) {
 		return conn.CreateQueueWithContext(ctx, input)
 	}, sqs.ErrCodeQueueDeletedRecently)
 
-	// Some partitions may not support tag-on-create
-	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] failed creating SQS Queue (%s) with tags: %s. Trying create without tags.", name, err)
-
+	// Some partitions (e.g. ISO) may not support tag-on-create.
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		input.Tags = nil
+
 		outputRaw, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, queueCreatedTimeout, func() (interface{}, error) {
 			return conn.CreateQueueWithContext(ctx, input)
 		}, sqs.ErrCodeQueueDeletedRecently)
@@ -239,24 +238,21 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(aws.StringValue(outputRaw.(*sqs.CreateQueueOutput).QueueUrl))
 
-	err = waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes)
-
-	if err != nil {
+	if err := waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes); err != nil {
 		return diag.Errorf("waiting for SQS Queue (%s) attributes create: %s", d.Id(), err)
 	}
 
-	// Only post-create tagging supported in some partitions
-	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); input.Tags == nil && len(tags) > 0 {
-		err := UpdateTags(ctx, conn, d.Id(), nil, tags)
+	// For partitions not supporting tag-on-create, attempt tag after create.
+	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+		err := createTags(ctx, conn, d.Id(), tags)
 
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-			// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
-			log.Printf("[WARN] failed adding tags after create for SQS Queue (%s): %s", d.Id(), err)
+		// If default tags only, continue. Otherwise, error.
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 			return resourceQueueRead(ctx, d, meta)
 		}
 
 		if err != nil {
-			return diag.Errorf("adding tags after create to SQS Queue (%s): %s", d.Id(), err)
+			return diag.Errorf("setting SQS Queue (%s) tags: %s", d.Id(), err)
 		}
 	}
 

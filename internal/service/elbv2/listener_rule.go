@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -46,6 +47,7 @@ func ResourceListenerRule() *schema.Resource {
 		ReadWithoutTimeout:   resourceListenerRuleRead,
 		UpdateWithoutTimeout: resourceListenerRuleUpdate,
 		DeleteWithoutTimeout: resourceListenerRuleDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -495,10 +497,10 @@ func suppressIfActionTypeNot(t string) schema.SchemaDiffSuppressFunc {
 func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Conn()
-	listenerArn := d.Get("listener_arn").(string)
 
+	listenerARN := d.Get("listener_arn").(string)
 	input := &elbv2.CreateRuleInput{
-		ListenerArn: aws.String(listenerArn),
+		ListenerArn: aws.String(listenerARN),
 		Tags:        GetTagsIn(ctx),
 	}
 
@@ -506,41 +508,40 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 
 	input.Actions, err = expandLbListenerActions(d.Get("action").([]interface{}))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating LB Listener Rule for Listener (%s): %s", listenerArn, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input.Conditions, err = lbListenerRuleConditions(d.Get("condition").(*schema.Set).List())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating LB Listener Rule for Listener (%s): %s", listenerArn, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	resp, err := retryListenerRuleCreate(ctx, conn, d, input, listenerArn)
+	output, err := retryListenerRuleCreate(ctx, conn, d, input, listenerARN)
 
-	// Some partitions may not support tag-on-create
-	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] ELBv2 Listener Rule (%s) create failed (%s) with tags. Trying create without tags.", listenerArn, err)
+	// Some partitions (e.g. ISO) may not support tag-on-create.
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		input.Tags = nil
-		resp, err = retryListenerRuleCreate(ctx, conn, d, input, listenerArn)
+
+		output, err = retryListenerRuleCreate(ctx, conn, d, input, listenerARN)
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating LB Listener Rule: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating ELBv2 Listener Rule: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.Rules[0].RuleArn))
+	d.SetId(aws.StringValue(output.Rules[0].RuleArn))
 
 	// Post-create tagging supported in some partitions
-	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); input.Tags == nil && len(tags) > 0 {
-		err := UpdateTags(ctx, conn, d.Id(), nil, tags)
+	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+		err := createTags(ctx, conn, d.Id(), tags)
 
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-			// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
-			log.Printf("[WARN] error adding tags after create for ELBv2 Listener Rule (%s): %s", d.Id(), err)
+		// If default tags only, continue. Otherwise, error.
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 			return append(diags, resourceListenerRuleRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating ELBv2 Listener Rule (%s) tags: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting ELBv2 Listener Rule (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -774,53 +775,55 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Conn()
 
-	if d.HasChange("priority") {
-		params := &elbv2.SetRulePrioritiesInput{
-			RulePriorities: []*elbv2.RulePriorityPair{
-				{
-					RuleArn:  aws.String(d.Id()),
-					Priority: aws.Int64(int64(d.Get("priority").(int))),
+	if d.HasChangesExcept("tags", "tags_all") {
+		if d.HasChange("priority") {
+			params := &elbv2.SetRulePrioritiesInput{
+				RulePriorities: []*elbv2.RulePriorityPair{
+					{
+						RuleArn:  aws.String(d.Id()),
+						Priority: aws.Int64(int64(d.Get("priority").(int))),
+					},
 				},
-			},
+			}
+
+			_, err := conn.SetRulePrioritiesWithContext(ctx, params)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating ELB v2 Listener Rule (%s): setting priority: %s", d.Id(), err)
+			}
 		}
 
-		_, err := conn.SetRulePrioritiesWithContext(ctx, params)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating ELB v2 Listener Rule (%s): setting priority: %s", d.Id(), err)
-		}
-	}
-
-	requestUpdate := false
-	params := &elbv2.ModifyRuleInput{
-		RuleArn: aws.String(d.Id()),
-	}
-
-	if d.HasChange("action") {
-		var err error
-		params.Actions, err = expandLbListenerActions(d.Get("action").([]interface{}))
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "modifying LB Listener Rule (%s) action: %s", d.Id(), err)
-		}
-		requestUpdate = true
-	}
-
-	if d.HasChange("condition") {
-		var err error
-		params.Conditions, err = lbListenerRuleConditions(d.Get("condition").(*schema.Set).List())
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "modifying LB Listener Rule (%s) condition: %s", d.Id(), err)
-		}
-		requestUpdate = true
-	}
-
-	if requestUpdate {
-		resp, err := conn.ModifyRuleWithContext(ctx, params)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "modifying LB Listener Rule: %s", err)
+		requestUpdate := false
+		input := &elbv2.ModifyRuleInput{
+			RuleArn: aws.String(d.Id()),
 		}
 
-		if len(resp.Rules) == 0 {
-			return sdkdiag.AppendErrorf(diags, "modifying creating LB Listener Rule: no rules returned in response")
+		if d.HasChange("action") {
+			var err error
+			input.Actions, err = expandLbListenerActions(d.Get("action").([]interface{}))
+			if err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+			requestUpdate = true
+		}
+
+		if d.HasChange("condition") {
+			var err error
+			input.Conditions, err = lbListenerRuleConditions(d.Get("condition").(*schema.Set).List())
+			if err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+			requestUpdate = true
+		}
+
+		if requestUpdate {
+			resp, err := conn.ModifyRuleWithContext(ctx, input)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "modifying LB Listener Rule: %s", err)
+			}
+
+			if len(resp.Rules) == 0 {
+				return sdkdiag.AppendErrorf(diags, "modifying creating LB Listener Rule: no rules returned in response")
+			}
 		}
 	}
 

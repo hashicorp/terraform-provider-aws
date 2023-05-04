@@ -95,6 +95,15 @@ func SetTagsOut(ctx context.Context, tags []*cloudwatch.Tag) {
 	}
 }
 
+// createTags creates cloudwatch service tags for new resources.
+func createTags(ctx context.Context, conn cloudwatchiface.CloudWatchAPI, identifier string, tags []*cloudwatch.Tag) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return UpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+}
+
 // UpdateTags updates cloudwatch service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.

@@ -45,7 +45,7 @@ func ResourceTag() *schema.Resource {
 	}
 }
 
-func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
 	conn := meta.(*conns.AWSClient).ECSConn()
 
 	identifier := d.Get("resource_arn").(string)

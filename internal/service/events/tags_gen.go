@@ -95,6 +95,15 @@ func SetTagsOut(ctx context.Context, tags []*eventbridge.Tag) {
 	}
 }
 
+// createTags creates events service tags for new resources.
+func createTags(ctx context.Context, conn eventbridgeiface.EventBridgeAPI, identifier string, tags []*eventbridge.Tag) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return UpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+}
+
 // UpdateTags updates events service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
