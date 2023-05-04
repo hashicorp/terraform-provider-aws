@@ -11,18 +11,19 @@ import (
 )
 
 func TestAccFirehoseDeliveryStreamDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_kinesis_firehose_delivery_stream.test"
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeliveryStreamBasicDataSourceConfig(rName),
+				Config: testAccDeliveryStreamDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "name", rName),
@@ -32,7 +33,7 @@ func TestAccFirehoseDeliveryStreamDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccDeliveryStreamBasicDataSourceConfig(rName string) string {
+func testAccDeliveryStreamDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 

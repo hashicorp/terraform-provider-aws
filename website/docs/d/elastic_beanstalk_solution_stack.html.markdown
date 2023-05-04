@@ -25,7 +25,7 @@ data "aws_elastic_beanstalk_solution_stack" "multi_docker" {
 * `most_recent` - (Optional) If more than one result is returned, use the most
 recent solution stack.
 
-* `name_regex` - A regex string to apply to the solution stack list returned
+* `name_regex` - Regex string to apply to the solution stack list returned
 by AWS. See [Elastic Beanstalk Supported Platforms][beanstalk-platforms] from
 AWS documentation for reference solution stack names.
 
@@ -35,6 +35,6 @@ a single solution stack, or use `most_recent` to choose the most recent one.
 
 ## Attributes Reference
 
-* `name` - The name of the solution stack.
+* `name` - Name of the solution stack.
 
 [beanstalk-platforms]: http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/concepts.platforms.html "AWS Elastic Beanstalk Supported Platforms documentation"

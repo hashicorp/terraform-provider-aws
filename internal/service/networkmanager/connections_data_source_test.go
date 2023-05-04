@@ -11,17 +11,18 @@ import (
 )
 
 func TestAccNetworkManagerConnectionsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceAllName := "data.aws_networkmanager_connections.all"
 	dataSourceByTagsName := "data.aws_networkmanager_connections.by_tags"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionsDataSourceConfig(rName),
+				Config: testAccConnectionsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceAllName, "ids.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceByTagsName, "ids.#", "1"),
@@ -31,7 +32,7 @@ func TestAccNetworkManagerConnectionsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccConnectionsDataSourceConfig(rName string) string {
+func testAccConnectionsDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
   description = %[1]q

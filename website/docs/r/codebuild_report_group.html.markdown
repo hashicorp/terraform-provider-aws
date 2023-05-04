@@ -15,27 +15,24 @@ Provides a CodeBuild Report Groups Resource.
 ```terraform
 data "aws_caller_identity" "current" {}
 
+data "aws_iam_policy_document" "example" {
+  statement {
+    sid    = "Enable IAM User Permissions"
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+
+    actions   = ["kms:*"]
+    resources = ["*"]
+  }
+}
 resource "aws_kms_key" "example" {
   description             = "my test kms key"
   deletion_window_in_days = 7
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "kms-tf-1",
-  "Statement": [
-    {
-      "Sid": "Enable IAM User Permissions",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-      },
-      "Action": "kms:*",
-      "Resource": "*"
-    }
-  ]
-}
-POLICY
+  policy                  = data.aws_iam_policy_document.example.json
 }
 
 resource "aws_s3_bucket" "example" {
@@ -68,7 +65,7 @@ The following arguments are supported:
 * `type` - (Required) The type of the Report Group. Valid value are `TEST` and `CODE_COVERAGE`.
 * `export_config` - (Required) Information about the destination where the raw data of this Report Group is exported. see [Export Config](#export-config) documented below.
 * `delete_reports` - (Optional) If `true`, deletes any reports that belong to a report group before deleting the report group. If `false`, you must delete any reports in the report group before deleting it. Default value is `false`.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Export Config
 
@@ -91,7 +88,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The ARN of Report Group.
 * `arn` - The ARN of Report Group.
 * `created` - The date and time this Report Group was created.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

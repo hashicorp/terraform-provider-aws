@@ -11,18 +11,19 @@ import (
 )
 
 func TestAccImageBuilderInfrastructureConfigurationsDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_imagebuilder_infrastructure_configurations.test"
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckInfrastructureConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInfrastructureConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigInfrastructureConfigurations_filter(rName),
+				Config: testAccInfrastructureConfigurationsDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "names.#", "1"),
@@ -34,7 +35,7 @@ func TestAccImageBuilderInfrastructureConfigurationsDataSource_filter(t *testing
 	})
 }
 
-func testAccConfigInfrastructureConfigurations_filter(rName string) string {
+func testAccInfrastructureConfigurationsDataSourceConfig_filter(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_instance_profile" "test" {
   name = %[1]q

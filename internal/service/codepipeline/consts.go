@@ -1,10 +1,12 @@
 package codepipeline
 
-import "time"
+import (
+	"time"
+)
 
 const (
-	ResWebhook      = "Webhook"
-	ResCodePipeline = "Pipeline"
+	ResNameWebhook  = "Webhook"
+	ResNamePipeline = "Pipeline"
 )
 
 const (

@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccEventIntegrationDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_appintegrations_event_integration.test"
 	datasourceName := "data.aws_appintegrations_event_integration.test"
@@ -24,21 +25,21 @@ func TestAccEventIntegrationDataSource_name(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(appintegrationsservice.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, appintegrationsservice.EndpointsID)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventIntegrationDataSourceConfig_Name(rName, sourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(datasourceName, "eventbridge_bus", resourceName, "eventbridge_bus"),
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "event_filter.#", resourceName, "event_filter.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "event_filter.0.source", resourceName, "event_filter.0.source"),
+					resource.TestCheckResourceAttrPair(datasourceName, "eventbridge_bus", resourceName, "eventbridge_bus"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Key1", resourceName, "tags.Key1"),
 				),
@@ -47,7 +48,7 @@ func TestAccEventIntegrationDataSource_name(t *testing.T) {
 	})
 }
 
-func testAccEventIntegrationBaseDataSourceConfig(rName, sourceName string) string {
+func testAccEventIntegrationDataSourceConfig_base(rName, sourceName string) string {
 	return fmt.Sprintf(`
 resource "aws_appintegrations_event_integration" "test" {
   name            = %[1]q
@@ -66,9 +67,7 @@ resource "aws_appintegrations_event_integration" "test" {
 }
 
 func testAccEventIntegrationDataSourceConfig_Name(rName, sourceName string) string {
-	return acctest.ConfigCompose(
-		testAccEventIntegrationBaseDataSourceConfig(rName, sourceName),
-		`
+	return acctest.ConfigCompose(testAccEventIntegrationDataSourceConfig_base(rName, sourceName), `
 data "aws_appintegrations_event_integration" "test" {
   name = aws_appintegrations_event_integration.test.name
 }

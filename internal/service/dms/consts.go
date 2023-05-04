@@ -20,6 +20,7 @@ const (
 	engineNameAuroraPostgresqlServerless = "aurora-postgresql-serverless"
 	engineNameAuroraServerless           = "aurora-serverless"
 	engineNameAzuredb                    = "azuredb"
+	engineNameAzureSQLManagedInstance    = "azure-sql-managed-instance"
 	engineNameDB2                        = "db2"
 	engineNameTransfer                   = "dms-transfer"
 	engineNameDocDB                      = "docdb"
@@ -48,6 +49,7 @@ func engineName_Values() []string {
 		engineNameAuroraPostgresqlServerless,
 		engineNameAuroraServerless,
 		engineNameAzuredb,
+		engineNameAzureSQLManagedInstance,
 		engineNameDB2,
 		engineNameTransfer,
 		engineNameDocDB,
@@ -106,13 +108,13 @@ func s3SettingsCompressionType_Values() []string {
 }
 
 const (
-	s3SettingsEncryptionModeSseKMS = "SSE_KMS"
-	s3SettingsEncryptionModeSseS3  = "SSE_S3"
+	encryptionModeSseKMS = "SSE_KMS"
+	encryptionModeSseS3  = "SSE_S3"
 )
 
-func s3SettingsEncryptionMode_Values() []string {
+func encryptionMode_Values() []string {
 	return []string{
-		s3SettingsEncryptionModeSseKMS,
-		s3SettingsEncryptionModeSseS3,
+		encryptionModeSseKMS,
+		encryptionModeSseS3,
 	}
 }

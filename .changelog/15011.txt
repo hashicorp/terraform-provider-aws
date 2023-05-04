@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_security_group: Additional plan-time validation for `name` and `name_prefix`
+```

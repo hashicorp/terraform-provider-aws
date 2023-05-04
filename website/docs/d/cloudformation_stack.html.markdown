@@ -33,19 +33,19 @@ resource "aws_instance" "web" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the stack
+* `name` - (Required) Name of the stack
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `capabilities` - A list of capabilities
+* `capabilities` - List of capabilities
 * `description` - Description of the stack
 * `disable_rollback` - Whether the rollback of the stack is disabled when stack creation fails
-* `notification_arns` - A list of SNS topic ARNs to publish stack related events
-* `outputs` - A map of outputs from the stack.
-* `parameters` - A map of parameters that specify input parameters for the stack.
-* `tags` - A map of tags associated with this stack.
+* `notification_arns` - List of SNS topic ARNs to publish stack related events
+* `outputs` - Map of outputs from the stack.
+* `parameters` - Map of parameters that specify input parameters for the stack.
+* `tags` - Map of tags associated with this stack.
 * `template_body` - Structure containing the template body.
-* `iam_role_arn` - The ARN of the IAM role used to create the stack.
-* `timeout_in_minutes` - The amount of time that can pass before the stack status becomes `CREATE_FAILED`
+* `iam_role_arn` - ARN of the IAM role used to create the stack.
+* `timeout_in_minutes` - Amount of time that can pass before the stack status becomes `CREATE_FAILED`

@@ -11,16 +11,17 @@ import (
 )
 
 func TestAccSSMParameterDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "data.aws_ssm_parameter.test"
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckParameterDataSourceConfig(name, "false"),
+				Config: testAccParameterDataSourceConfig_basic(name, "false"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_ssm_parameter.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
@@ -31,7 +32,7 @@ func TestAccSSMParameterDataSource_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCheckParameterDataSourceConfig(name, "true"),
+				Config: testAccParameterDataSourceConfig_basic(name, "true"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_ssm_parameter.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
@@ -45,16 +46,17 @@ func TestAccSSMParameterDataSource_basic(t *testing.T) {
 }
 
 func TestAccSSMParameterDataSource_fullPath(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "data.aws_ssm_parameter.test"
 	name := sdkacctest.RandomWithPrefix("/tf-acc-test/tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckParameterDataSourceConfig(name, "false"),
+				Config: testAccParameterDataSourceConfig_basic(name, "false"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_ssm_parameter.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
@@ -67,7 +69,7 @@ func TestAccSSMParameterDataSource_fullPath(t *testing.T) {
 	})
 }
 
-func testAccCheckParameterDataSourceConfig(name string, withDecryption string) string {
+func testAccParameterDataSourceConfig_basic(name string, withDecryption string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
   name  = "%s"

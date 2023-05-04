@@ -11,17 +11,18 @@ import (
 )
 
 func TestAccIAMInstanceProfilesDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_iam_instance_profiles.test"
 	resourceName := "aws_iam_instance_profile.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceProfilesDataSourceConfig(rName),
+				Config: testAccInstanceProfilesDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "arns.#", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "paths.#", "1"),
@@ -35,7 +36,7 @@ func TestAccIAMInstanceProfilesDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccInstanceProfilesDataSourceConfig(rName string) string {
+func testAccInstanceProfilesDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name               = %[1]q

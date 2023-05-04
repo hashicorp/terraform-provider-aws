@@ -1,6 +1,7 @@
 package elb_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,15 +16,16 @@ import (
 )
 
 func TestAccELBProxyProtocolPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	lbName := fmt.Sprintf("tf-test-lb-%s", sdkacctest.RandString(5))
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProxyProtocolPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProxyProtocolPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProxyProtocolPolicyConfig(lbName),
+				Config: testAccProxyProtocolPolicyConfig_basic(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"aws_proxy_protocol_policy.smtp", "load_balancer", lbName),
@@ -33,7 +35,7 @@ func TestAccELBProxyProtocolPolicy_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccProxyProtocolPolicyConfigUpdate(lbName),
+				Config: testAccProxyProtocolPolicyConfig_update(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_proxy_protocol_policy.smtp", "load_balancer", lbName),
 					resource.TestCheckResourceAttr("aws_proxy_protocol_policy.smtp", "instance_ports.#", "2"),
@@ -45,33 +47,35 @@ func TestAccELBProxyProtocolPolicy_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckProxyProtocolPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+func testAccCheckProxyProtocolPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_placement_group" {
-			continue
-		}
-
-		req := &elb.DescribeLoadBalancersInput{
-			LoadBalancerNames: []*string{
-				aws.String(rs.Primary.Attributes["load_balancer"])},
-		}
-		_, err := conn.DescribeLoadBalancers(req)
-		if err != nil {
-			// Verify the error is what we want
-			if tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_placement_group" {
 				continue
 			}
-			return err
-		}
 
-		return fmt.Errorf("still exists")
+			req := &elb.DescribeLoadBalancersInput{
+				LoadBalancerNames: []*string{
+					aws.String(rs.Primary.Attributes["load_balancer"])},
+			}
+			_, err := conn.DescribeLoadBalancersWithContext(ctx, req)
+			if err != nil {
+				// Verify the error is what we want
+				if tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
+					continue
+				}
+				return err
+			}
+
+			return fmt.Errorf("still exists")
+		}
+		return nil
 	}
-	return nil
 }
 
-func testAccProxyProtocolPolicyConfig(rName string) string {
+func testAccProxyProtocolPolicyConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elb" "lb" {
   name               = "%s"
@@ -99,7 +103,7 @@ resource "aws_proxy_protocol_policy" "smtp" {
 `, rName))
 }
 
-func testAccProxyProtocolPolicyConfigUpdate(rName string) string {
+func testAccProxyProtocolPolicyConfig_update(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elb" "lb" {
   name               = "%s"

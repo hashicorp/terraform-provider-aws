@@ -17,20 +17,21 @@ import (
 )
 
 func TestAccQLDBStream_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v qldb.JournalKinesisStreamDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_qldb_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, qldb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, qldb.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, qldb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStreamConfig(rName),
+				Config: testAccStreamConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStreamExists(resourceName, &v),
+					testAccCheckStreamExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "qldb", regexp.MustCompile(`stream/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "exclusive_end_time", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "inclusive_start_time"),
@@ -48,21 +49,22 @@ func TestAccQLDBStream_basic(t *testing.T) {
 }
 
 func TestAccQLDBStream_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v qldb.JournalKinesisStreamDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_qldb_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, qldb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, qldb.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, qldb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStreamConfig(rName),
+				Config: testAccStreamConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStreamExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfqldb.ResourceStream(), resourceName),
+					testAccCheckStreamExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfqldb.ResourceStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -71,37 +73,38 @@ func TestAccQLDBStream_disappears(t *testing.T) {
 }
 
 func TestAccQLDBStream_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v qldb.JournalKinesisStreamDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_qldb_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, qldb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, qldb.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, qldb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStreamConfigTags1(rName, "key1", "value1"),
+				Config: testAccStreamConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStreamExists(resourceName, &v),
+					testAccCheckStreamExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
-				Config: testAccStreamConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccStreamConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStreamExists(resourceName, &v),
+					testAccCheckStreamExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccStreamConfigTags1(rName, "key2", "value2"),
+				Config: testAccStreamConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStreamExists(resourceName, &v),
+					testAccCheckStreamExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -111,20 +114,21 @@ func TestAccQLDBStream_tags(t *testing.T) {
 }
 
 func TestAccQLDBStream_withEndTime(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v qldb.JournalKinesisStreamDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_qldb_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, qldb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, qldb.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, qldb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStreamEndTimeConfig(rName),
+				Config: testAccStreamConfig_endTime(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStreamExists(resourceName, &v),
+					testAccCheckStreamExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "exclusive_end_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "inclusive_start_time"),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_configuration.#", "1"),
@@ -136,7 +140,7 @@ func TestAccQLDBStream_withEndTime(t *testing.T) {
 	})
 }
 
-func testAccCheckStreamExists(n string, v *qldb.JournalKinesisStreamDescription) resource.TestCheckFunc {
+func testAccCheckStreamExists(ctx context.Context, n string, v *qldb.JournalKinesisStreamDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -147,9 +151,9 @@ func testAccCheckStreamExists(n string, v *qldb.JournalKinesisStreamDescription)
 			return fmt.Errorf("No QLDB Stream ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QLDBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QLDBConn()
 
-		output, err := tfqldb.FindStream(context.TODO(), conn, rs.Primary.Attributes["ledger_name"], rs.Primary.ID)
+		output, err := tfqldb.FindStream(ctx, conn, rs.Primary.Attributes["ledger_name"], rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -161,28 +165,30 @@ func testAccCheckStreamExists(n string, v *qldb.JournalKinesisStreamDescription)
 	}
 }
 
-func testAccCheckStreamDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).QLDBConn
+func testAccCheckStreamDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QLDBConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_qldb_stream" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_qldb_stream" {
+				continue
+			}
+
+			_, err := tfqldb.FindStream(ctx, conn, rs.Primary.Attributes["ledger_name"], rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("QLDB Stream %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfqldb.FindStream(context.TODO(), conn, rs.Primary.Attributes["ledger_name"], rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("QLDB Stream %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccStreamBaseConfig(rName string) string {
@@ -233,7 +239,7 @@ resource "aws_iam_role" "test" {
 `, rName)
 }
 
-func testAccStreamConfig(rName string) string {
+func testAccStreamConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccStreamBaseConfig(rName), fmt.Sprintf(`
 resource "aws_qldb_stream" "test" {
   stream_name          = %[1]q
@@ -248,7 +254,7 @@ resource "aws_qldb_stream" "test" {
 `, rName))
 }
 
-func testAccStreamEndTimeConfig(rName string) string {
+func testAccStreamConfig_endTime(rName string) string {
 	return acctest.ConfigCompose(testAccStreamBaseConfig(rName), fmt.Sprintf(`
 resource "aws_qldb_stream" "test" {
   stream_name          = %[1]q
@@ -265,7 +271,7 @@ resource "aws_qldb_stream" "test" {
 `, rName))
 }
 
-func testAccStreamConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccStreamConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccStreamBaseConfig(rName), fmt.Sprintf(`
 resource "aws_qldb_stream" "test" {
   stream_name          = %[1]q
@@ -284,7 +290,7 @@ resource "aws_qldb_stream" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccStreamConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccStreamConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccStreamBaseConfig(rName), fmt.Sprintf(`
 resource "aws_qldb_stream" "test" {
   stream_name          = %[1]q

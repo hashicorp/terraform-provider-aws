@@ -22,7 +22,7 @@ data aws_workspaces_image example {
 
 The following arguments are supported:
 
-* `image_id` – (Required) The ID of the image.
+* `image_id` – (Required) ID of the image.
 
 ## Attributes Reference
 

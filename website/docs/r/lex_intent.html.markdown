@@ -240,15 +240,6 @@ Attributes are documented under [message](#message). Must contain between 1 and 
 slot values into the response card. For more information, see
 [Example: Using a Response Card](https://docs.aws.amazon.com/lex/latest/dg/ex-resp-card.html). Must be less than or equal to 50000 characters in length.
 
-### Timeouts
-
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
-
-* `create` - (Defaults to 1 min) Used when creating the intent
-* `update` - (Defaults to 1 min) Used when updating the intent
-* `delete` - (Defaults to 5 mins) Used when deleting the intent
-
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -259,6 +250,14 @@ included as an argument because the resource will add it automatically when upda
 * `created_date` - The date when the intent version was created.
 * `last_updated_date` - The date when the $LATEST version of this intent was updated.
 * `version` - The version of the bot.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `1m`)
+* `update` - (Default `1m`)
+* `delete` - (Default `5m`)
 
 ## Import
 

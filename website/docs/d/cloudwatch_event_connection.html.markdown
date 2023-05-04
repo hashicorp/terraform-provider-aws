@@ -12,7 +12,6 @@ Use this data source to retrieve information about an EventBridge connection.
 
 ~> **Note:** EventBridge was formerly known as CloudWatch Events. The functionality is identical.
 
-
 ## Example Usage
 
 ```terraform
@@ -23,16 +22,16 @@ data "aws_cloudwatch_event_connection" "test" {
 
 ## Argument Reference
 
-* `name` - The name of the connection.
+* `name` - Name of the connection.
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `name` - The name of the connection.
+* `name` - Name of the connection.
 
-* `arn` - The ARN (Amazon Resource Name) for the connection.
+* `arn` - ARN (Amazon Resource Name) for the connection.
 
-* `secret_arn` - The ARN (Amazon Resource Name) for the secret created from the authorization parameters specified for the connection.
+* `secret_arn` - ARN (Amazon Resource Name) for the secret created from the authorization parameters specified for the connection.
 
-* `authorization_type` - The type of authorization to use to connect. One of `API_KEY`,`BASIC`,`OAUTH_CLIENT_CREDENTIALS`.
+* `authorization_type` - Type of authorization to use to connect. One of `API_KEY`,`BASIC`,`OAUTH_CLIENT_CREDENTIALS`.

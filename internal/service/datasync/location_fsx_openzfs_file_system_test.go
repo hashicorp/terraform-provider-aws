@@ -1,6 +1,7 @@
 package datasync_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -16,24 +17,25 @@ import (
 )
 
 func TestAccDataSyncLocationFSxOpenZFSFileSystem_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var locationFsxOpenZfs1 datasync.DescribeLocationFsxOpenZfsOutput
 	resourceName := "aws_datasync_location_fsx_openzfs_file_system.test"
 	fsResourceName := "aws_fsx_openzfs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(fsx.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, fsx.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLocationFSxOpenZFSDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationFSxOpenZFSDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationFSxOpenZFSConfig(),
+				Config: testAccLocationFSxOpenZFSFileSystemConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationFSxOpenZFSExists(resourceName, &locationFsxOpenZfs1),
+					testAccCheckLocationFSxOpenZFSExists(ctx, resourceName, &locationFsxOpenZfs1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "fsx_filesystem_arn", fsResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/fsx/"),
@@ -53,25 +55,26 @@ func TestAccDataSyncLocationFSxOpenZFSFileSystem_basic(t *testing.T) {
 }
 
 func TestAccDataSyncLocationFSxOpenZFSFileSystem_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var locationFsxOpenZfs1 datasync.DescribeLocationFsxOpenZfsOutput
 	resourceName := "aws_datasync_location_fsx_openzfs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(fsx.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, fsx.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLocationFSxOpenZFSDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationFSxOpenZFSDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationFSxOpenZFSConfig(),
+				Config: testAccLocationFSxOpenZFSFileSystemConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationFSxOpenZFSExists(resourceName, &locationFsxOpenZfs1),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceLocationFSxOpenZFSFileSystem(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceLocationFSxOpenZFSFileSystem(), resourceName),
+					testAccCheckLocationFSxOpenZFSExists(ctx, resourceName, &locationFsxOpenZfs1),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationFSxOpenZFSFileSystem(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationFSxOpenZFSFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -80,23 +83,24 @@ func TestAccDataSyncLocationFSxOpenZFSFileSystem_disappears(t *testing.T) {
 }
 
 func TestAccDataSyncLocationFSxOpenZFSFileSystem_subdirectory(t *testing.T) {
+	ctx := acctest.Context(t)
 	var locationFsxOpenZfs1 datasync.DescribeLocationFsxOpenZfsOutput
 	resourceName := "aws_datasync_location_fsx_openzfs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(fsx.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, fsx.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLocationFSxOpenZFSDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationFSxOpenZFSDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationFSxOpenZFSSubdirectoryConfig("/fsx/subdirectory1/"),
+				Config: testAccLocationFSxOpenZFSFileSystemConfig_subdirectory("/fsx/subdirectory1/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationFSxOpenZFSExists(resourceName, &locationFsxOpenZfs1),
+					testAccCheckLocationFSxOpenZFSExists(ctx, resourceName, &locationFsxOpenZfs1),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/fsx/subdirectory1/"),
 				),
 			},
@@ -111,23 +115,24 @@ func TestAccDataSyncLocationFSxOpenZFSFileSystem_subdirectory(t *testing.T) {
 }
 
 func TestAccDataSyncLocationFSxOpenZFSFileSystem_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var locationFsxOpenZfs1 datasync.DescribeLocationFsxOpenZfsOutput
 	resourceName := "aws_datasync_location_fsx_openzfs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(fsx.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, fsx.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLocationFSxOpenZFSDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationFSxOpenZFSDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationFSxOpenZFSTags1Config("key1", "value1"),
+				Config: testAccLocationFSxOpenZFSFileSystemConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationFSxOpenZFSExists(resourceName, &locationFsxOpenZfs1),
+					testAccCheckLocationFSxOpenZFSExists(ctx, resourceName, &locationFsxOpenZfs1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -139,18 +144,18 @@ func TestAccDataSyncLocationFSxOpenZFSFileSystem_tags(t *testing.T) {
 				ImportStateIdFunc: testAccLocationFSxOpenZFSImportStateID(resourceName),
 			},
 			{
-				Config: testAccLocationFSxOpenZFSTags2Config("key1", "value1updated", "key2", "value2"),
+				Config: testAccLocationFSxOpenZFSFileSystemConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationFSxOpenZFSExists(resourceName, &locationFsxOpenZfs1),
+					testAccCheckLocationFSxOpenZFSExists(ctx, resourceName, &locationFsxOpenZfs1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccLocationFSxOpenZFSTags1Config("key1", "value1"),
+				Config: testAccLocationFSxOpenZFSFileSystemConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationFSxOpenZFSExists(resourceName, &locationFsxOpenZfs1),
+					testAccCheckLocationFSxOpenZFSExists(ctx, resourceName, &locationFsxOpenZfs1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -159,39 +164,41 @@ func TestAccDataSyncLocationFSxOpenZFSFileSystem_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckLocationFSxOpenZFSDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
+func testAccCheckLocationFSxOpenZFSDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_datasync_location_fsx_openzfs_file_system" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_datasync_location_fsx_openzfs_file_system" {
+				continue
+			}
+
+			_, err := tfdatasync.FindFSxOpenZFSLocationByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("DataSync Task %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfdatasync.FindFsxOpenZfsLocationByARN(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("DataSync Task %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckLocationFSxOpenZFSExists(resourceName string, locationFsxOpenZfs *datasync.DescribeLocationFsxOpenZfsOutput) resource.TestCheckFunc {
+func testAccCheckLocationFSxOpenZFSExists(ctx context.Context, resourceName string, locationFsxOpenZfs *datasync.DescribeLocationFsxOpenZfsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
-		output, err := tfdatasync.FindFsxOpenZfsLocationByARN(conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
+		output, err := tfdatasync.FindFSxOpenZFSLocationByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -218,7 +225,7 @@ func testAccLocationFSxOpenZFSImportStateID(resourceName string) resource.Import
 	}
 }
 
-func testAccLocationFSxOpenZFSConfig() string {
+func testAccLocationFSxOpenZFSFileSystemConfig_basic() string {
 	return acctest.ConfigCompose(testAccFSxOpenZfsFileSystemBaseConfig(), `
 resource "aws_datasync_location_fsx_openzfs_file_system" "test" {
   fsx_filesystem_arn  = aws_fsx_openzfs_file_system.test.arn
@@ -235,7 +242,7 @@ resource "aws_datasync_location_fsx_openzfs_file_system" "test" {
 `)
 }
 
-func testAccLocationFSxOpenZFSSubdirectoryConfig(subdirectory string) string {
+func testAccLocationFSxOpenZFSFileSystemConfig_subdirectory(subdirectory string) string {
 	return acctest.ConfigCompose(testAccFSxOpenZfsFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_datasync_location_fsx_openzfs_file_system" "test" {
   fsx_filesystem_arn  = aws_fsx_openzfs_file_system.test.arn
@@ -253,7 +260,7 @@ resource "aws_datasync_location_fsx_openzfs_file_system" "test" {
 `, subdirectory))
 }
 
-func testAccLocationFSxOpenZFSTags1Config(key1, value1 string) string {
+func testAccLocationFSxOpenZFSFileSystemConfig_tags1(key1, value1 string) string {
 	return acctest.ConfigCompose(testAccFSxOpenZfsFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_datasync_location_fsx_openzfs_file_system" "test" {
   fsx_filesystem_arn  = aws_fsx_openzfs_file_system.test.arn
@@ -274,7 +281,7 @@ resource "aws_datasync_location_fsx_openzfs_file_system" "test" {
 `, key1, value1))
 }
 
-func testAccLocationFSxOpenZFSTags2Config(key1, value1, key2, value2 string) string {
+func testAccLocationFSxOpenZFSFileSystemConfig_tags2(key1, value1, key2, value2 string) string {
 	return acctest.ConfigCompose(testAccFSxOpenZfsFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_datasync_location_fsx_openzfs_file_system" "test" {
   fsx_filesystem_arn  = aws_fsx_openzfs_file_system.test.arn
