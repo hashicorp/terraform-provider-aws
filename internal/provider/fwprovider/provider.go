@@ -147,11 +147,6 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 							Optional:    true,
 							Description: "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
 						},
-						"duration_seconds": schema.Int64Attribute{
-							Optional:           true,
-							Description:        "The duration, in seconds, of the role session.",
-							DeprecationMessage: "Use assume_role.duration instead",
-						},
 						"external_id": schema.StringAttribute{
 							Optional:    true,
 							Description: "A unique identifier that might be required when you assume a role in another account.",

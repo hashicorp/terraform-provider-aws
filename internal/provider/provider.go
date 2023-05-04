@@ -521,19 +521,10 @@ func assumeRoleSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"duration": {
-					Type:          schema.TypeString,
-					Optional:      true,
-					Description:   "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
-					ValidateFunc:  validAssumeRoleDuration,
-					ConflictsWith: []string{"assume_role.0.duration_seconds"},
-				},
-				"duration_seconds": {
-					Type:          schema.TypeInt,
-					Optional:      true,
-					Deprecated:    "Use assume_role.duration instead",
-					Description:   "The duration, in seconds, of the role session.",
-					ValidateFunc:  validation.IntBetween(900, 43200),
-					ConflictsWith: []string{"assume_role.0.duration"},
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
+					ValidateFunc: validAssumeRoleDuration,
 				},
 				"external_id": {
 					Type:        schema.TypeString,
@@ -681,8 +672,6 @@ func expandAssumeRole(_ context.Context, tfMap map[string]interface{}) *awsbase.
 	if v, ok := tfMap["duration"].(string); ok && v != "" {
 		duration, _ := time.ParseDuration(v)
 		assumeRole.Duration = duration
-	} else if v, ok := tfMap["duration_seconds"].(int); ok && v != 0 {
-		assumeRole.Duration = time.Duration(v) * time.Second
 	}
 
 	if v, ok := tfMap["external_id"].(string); ok && v != "" {
@@ -730,8 +719,6 @@ func expandAssumeRoleWithWebIdentity(_ context.Context, tfMap map[string]interfa
 	if v, ok := tfMap["duration"].(string); ok && v != "" {
 		duration, _ := time.ParseDuration(v)
 		assumeRole.Duration = duration
-	} else if v, ok := tfMap["duration_seconds"].(int); ok && v != 0 {
-		assumeRole.Duration = time.Duration(v) * time.Second
 	}
 
 	if v, ok := tfMap["policy"].(string); ok && v != "" {
