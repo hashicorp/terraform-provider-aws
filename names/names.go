@@ -22,7 +22,7 @@ import (
 
 // This "should" be defined by the AWS Go SDK v2, but currently isn't.
 const (
-	AccessAnalyzerEndpointID             = "accessanalyzer"
+	AccessAnalyzerEndpointID             = "access-analyzer"
 	AccountEndpointID                    = "account"
 	AuditManagerEndpointID               = "auditmanager"
 	CloudWatchLogsEndpointID             = "logs"
