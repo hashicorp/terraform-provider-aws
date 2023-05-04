@@ -112,6 +112,7 @@ func ResourceParameter() *schema.Resource {
 				Sensitive:    true,
 				Computed:     true,
 				ExactlyOneOf: []string{"insecure_value", "value"},
+				ValidateFunc: validation.StringLenBetween(0, 4096),				
 			},
 			"version": {
 				Type:     schema.TypeInt,
