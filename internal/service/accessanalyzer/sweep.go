@@ -37,7 +37,7 @@ func sweepAnalyzers(region string) error {
 		}
 
 		for _, analyzer := range page.Analyzers {
-			r := ResourceAnalyzer()
+			r := resourceAnalyzer()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(analyzer.Name))
 
@@ -48,18 +48,18 @@ func sweepAnalyzers(region string) error {
 	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Access Analyzer Analyzer sweep for %s: %s", region, err)
+		log.Printf("[WARN] Skipping IAM Access Analyzer Analyzer sweep for %s: %s", region, err)
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error listing Access Analyzer Analyzers (%s): %w", region, err)
+		return fmt.Errorf("error listing IAM Access Analyzer Analyzers (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
-		return fmt.Errorf("error sweeping Access Analyzer Analyzers (%s): %w", region, err)
+		return fmt.Errorf("error sweeping IAM Access Analyzer Analyzers (%s): %w", region, err)
 	}
 
 	return nil
