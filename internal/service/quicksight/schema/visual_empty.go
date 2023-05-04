@@ -47,3 +47,19 @@ func expandEmptyVisual(tfList []interface{}) *quicksight.EmptyVisual {
 
 	return visual
 }
+
+func flattenEmptyVisual(apiObject *quicksight.EmptyVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"data_set_identifier": aws.StringValue(apiObject.DataSetIdentifier),
+		"visual_id":           aws.StringValue(apiObject.VisualId),
+	}
+	if apiObject.Actions != nil {
+		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
+	}
+
+	return []interface{}{tfMap}
+}

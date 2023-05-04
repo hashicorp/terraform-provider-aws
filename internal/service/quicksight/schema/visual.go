@@ -1449,17 +1449,6 @@ func flattenVisuals(apiObject []*quicksight.Visual) []interface{} {
 	return tfList
 }
 
-func flattenEmptyVisual(apiObject *quicksight.EmptyVisual) []interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-	// TODO
-
-	return []interface{}{tfMap}
-}
-
 func flattenFilledMapVisual(apiObject *quicksight.FilledMapVisual) []interface{} {
 	if apiObject == nil {
 		return nil
