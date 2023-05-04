@@ -57,22 +57,42 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceAddon,
 			TypeName: "aws_eks_addon",
+			Name:     "Add-On",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceCluster,
 			TypeName: "aws_eks_cluster",
+			Name:     "Cluster",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceFargateProfile,
 			TypeName: "aws_eks_fargate_profile",
+			Name:     "Fargate Profile",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceIdentityProviderConfig,
 			TypeName: "aws_eks_identity_provider_config",
+			Name:     "Identity Provider Config",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceNodeGroup,
 			TypeName: "aws_eks_node_group",
+			Name:     "Node Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }

@@ -27,7 +27,8 @@ const (
 	ResNameExperimentTemplate = "Experiment Template"
 )
 
-// @SDKResource("aws_fis_experiment_template")
+// @SDKResource("aws_fis_experiment_template", name="Experiment Template")
+// @Tags
 func ResourceExperimentTemplate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceExperimentTemplateCreate,
@@ -225,16 +226,14 @@ func ResourceExperimentTemplate() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchemaForceNew(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchemaForceNew(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceExperimentTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).FISClient()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &fis.CreateExperimentTemplateInput{
 		Actions:        expandExperimentTemplateActions(d.Get("action").(*schema.Set)),
@@ -242,10 +241,7 @@ func resourceExperimentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 		Description:    aws.String(d.Get("description").(string)),
 		RoleArn:        aws.String(d.Get("role_arn").(string)),
 		StopConditions: expandExperimentTemplateStopConditions(d.Get("stop_condition").(*schema.Set)),
-	}
-
-	if len(Tags(tags.IgnoreAWS())) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
+		Tags:           GetTagsIn(ctx),
 	}
 
 	targets, err := expandExperimentTemplateTargets(d.Get("target").(*schema.Set))
@@ -266,8 +262,6 @@ func resourceExperimentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceExperimentTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).FISClient()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &fis.GetExperimentTemplateInput{Id: aws.String(d.Id())}
 	out, err := conn.GetExperimentTemplate(ctx, input)
@@ -310,16 +304,7 @@ func resourceExperimentTemplateRead(ctx context.Context, d *schema.ResourceData,
 		return create.DiagSettingError(names.FIS, ResNameExperimentTemplate, d.Id(), "target", err)
 	}
 
-	tags := KeyValueTags(ctx, experimentTemplate.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagSettingError(names.FIS, ResNameExperimentTemplate, d.Id(), "tags", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagSettingError(names.FIS, ResNameExperimentTemplate, d.Id(), "tags_all", err)
-	}
+	SetTagsOut(ctx, experimentTemplate.Tags)
 
 	return nil
 }
@@ -817,12 +802,14 @@ func validExperimentTemplateStopConditionSource() schema.SchemaValidateFunc {
 
 func validExperimentTemplateActionTargetKey() schema.SchemaValidateFunc {
 	allowedStopConditionSources := []string{
+		"Cluster",
 		"Clusters",
 		"DBInstances",
 		"Instances",
-		"SpotInstances",
 		"Nodegroups",
 		"Roles",
+		"SpotInstances",
+		"Subnets",
 	}
 
 	return validation.All(

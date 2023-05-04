@@ -26,7 +26,7 @@ func resourceObjectLambdaAccessPointPolicy() *schema.Resource {
 		DeleteWithoutTimeout: resourceObjectLambdaAccessPointPolicyDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{

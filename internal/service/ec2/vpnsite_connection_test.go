@@ -19,23 +19,24 @@ import (
 )
 
 type TunnelOptions struct {
-	psk                        string
-	tunnelCidr                 string
-	dpdTimeoutAction           string
-	dpdTimeoutSeconds          int
-	ikeVersions                string
-	phase1DhGroupNumbers       string
-	phase1EncryptionAlgorithms string
-	phase1IntegrityAlgorithms  string
-	phase1LifetimeSeconds      int
-	phase2DhGroupNumbers       string
-	phase2EncryptionAlgorithms string
-	phase2IntegrityAlgorithms  string
-	phase2LifetimeSeconds      int
-	rekeyFuzzPercentage        int
-	rekeyMarginTimeSeconds     int
-	replayWindowSize           int
-	startupAction              string
+	psk                          string
+	tunnelCidr                   string
+	dpdTimeoutAction             string
+	dpdTimeoutSeconds            int
+	enableTunnelLifecycleControl bool
+	ikeVersions                  string
+	phase1DhGroupNumbers         string
+	phase1EncryptionAlgorithms   string
+	phase1IntegrityAlgorithms    string
+	phase1LifetimeSeconds        int
+	phase2DhGroupNumbers         string
+	phase2EncryptionAlgorithms   string
+	phase2IntegrityAlgorithms    string
+	phase2LifetimeSeconds        int
+	rekeyFuzzPercentage          int
+	rekeyMarginTimeSeconds       int
+	replayWindowSize             int
+	startupAction                string
 }
 
 func TestXmlConfigToTunnelInfo(t *testing.T) {
@@ -519,43 +520,45 @@ func TestAccSiteVPNConnection_tunnelOptions(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	tunnel1 := TunnelOptions{
-		psk:                        "12345678",
-		tunnelCidr:                 "169.254.8.0/30",
-		dpdTimeoutAction:           "clear",
-		dpdTimeoutSeconds:          30,
-		ikeVersions:                "\"ikev1\", \"ikev2\"",
-		phase1DhGroupNumbers:       "2, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24",
-		phase1EncryptionAlgorithms: "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
-		phase1IntegrityAlgorithms:  "\"SHA1\", \"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
-		phase1LifetimeSeconds:      28800,
-		phase2DhGroupNumbers:       "2, 5, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24",
-		phase2EncryptionAlgorithms: "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
-		phase2IntegrityAlgorithms:  "\"SHA1\", \"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
-		phase2LifetimeSeconds:      3600,
-		rekeyFuzzPercentage:        100,
-		rekeyMarginTimeSeconds:     540,
-		replayWindowSize:           1024,
-		startupAction:              "add",
+		psk:                          "12345678",
+		tunnelCidr:                   "169.254.8.0/30",
+		dpdTimeoutAction:             "clear",
+		dpdTimeoutSeconds:            30,
+		enableTunnelLifecycleControl: false,
+		ikeVersions:                  "\"ikev1\", \"ikev2\"",
+		phase1DhGroupNumbers:         "2, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24",
+		phase1EncryptionAlgorithms:   "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
+		phase1IntegrityAlgorithms:    "\"SHA1\", \"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
+		phase1LifetimeSeconds:        28800,
+		phase2DhGroupNumbers:         "2, 5, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24",
+		phase2EncryptionAlgorithms:   "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
+		phase2IntegrityAlgorithms:    "\"SHA1\", \"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
+		phase2LifetimeSeconds:        3600,
+		rekeyFuzzPercentage:          100,
+		rekeyMarginTimeSeconds:       540,
+		replayWindowSize:             1024,
+		startupAction:                "add",
 	}
 
 	tunnel2 := TunnelOptions{
-		psk:                        "abcdefgh",
-		tunnelCidr:                 "169.254.9.0/30",
-		dpdTimeoutAction:           "clear",
-		dpdTimeoutSeconds:          30,
-		ikeVersions:                "\"ikev1\", \"ikev2\"",
-		phase1DhGroupNumbers:       "2, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24",
-		phase1EncryptionAlgorithms: "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
-		phase1IntegrityAlgorithms:  "\"SHA1\", \"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
-		phase1LifetimeSeconds:      28800,
-		phase2DhGroupNumbers:       "2, 5, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24",
-		phase2EncryptionAlgorithms: "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
-		phase2IntegrityAlgorithms:  "\"SHA1\", \"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
-		phase2LifetimeSeconds:      3600,
-		rekeyFuzzPercentage:        100,
-		rekeyMarginTimeSeconds:     540,
-		replayWindowSize:           1024,
-		startupAction:              "add",
+		psk:                          "abcdefgh",
+		tunnelCidr:                   "169.254.9.0/30",
+		dpdTimeoutAction:             "clear",
+		dpdTimeoutSeconds:            30,
+		enableTunnelLifecycleControl: false,
+		ikeVersions:                  "\"ikev1\", \"ikev2\"",
+		phase1DhGroupNumbers:         "2, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24",
+		phase1EncryptionAlgorithms:   "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
+		phase1IntegrityAlgorithms:    "\"SHA1\", \"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
+		phase1LifetimeSeconds:        28800,
+		phase2DhGroupNumbers:         "2, 5, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24",
+		phase2EncryptionAlgorithms:   "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
+		phase2IntegrityAlgorithms:    "\"SHA1\", \"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
+		phase2LifetimeSeconds:        3600,
+		rekeyFuzzPercentage:          100,
+		rekeyMarginTimeSeconds:       540,
+		replayWindowSize:             1024,
+		startupAction:                "add",
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -651,43 +654,45 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 	var vpn1, vpn2, vpn3, vpn4, vpn5 ec2.VpnConnection
 
 	tunnel1 := TunnelOptions{
-		psk:                        "12345678",
-		tunnelCidr:                 "169.254.8.0/30",
-		dpdTimeoutAction:           "clear",
-		dpdTimeoutSeconds:          30,
-		ikeVersions:                "\"ikev1\", \"ikev2\"",
-		phase1DhGroupNumbers:       "14, 15, 16, 17, 18, 19, 20, 21",
-		phase1EncryptionAlgorithms: "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
-		phase1IntegrityAlgorithms:  "\"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
-		phase1LifetimeSeconds:      28800,
-		phase2DhGroupNumbers:       "2, 5, 22, 23, 24",
-		phase2EncryptionAlgorithms: "\"AES128\", \"AES128-GCM-16\"",
-		phase2IntegrityAlgorithms:  "\"SHA1\", \"SHA2-256\"",
-		phase2LifetimeSeconds:      3600,
-		rekeyFuzzPercentage:        100,
-		rekeyMarginTimeSeconds:     540,
-		replayWindowSize:           1024,
-		startupAction:              "add",
+		psk:                          "12345678",
+		tunnelCidr:                   "169.254.8.0/30",
+		dpdTimeoutAction:             "clear",
+		dpdTimeoutSeconds:            30,
+		enableTunnelLifecycleControl: false,
+		ikeVersions:                  "\"ikev1\", \"ikev2\"",
+		phase1DhGroupNumbers:         "14, 15, 16, 17, 18, 19, 20, 21",
+		phase1EncryptionAlgorithms:   "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
+		phase1IntegrityAlgorithms:    "\"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
+		phase1LifetimeSeconds:        28800,
+		phase2DhGroupNumbers:         "2, 5, 22, 23, 24",
+		phase2EncryptionAlgorithms:   "\"AES128\", \"AES128-GCM-16\"",
+		phase2IntegrityAlgorithms:    "\"SHA1\", \"SHA2-256\"",
+		phase2LifetimeSeconds:        3600,
+		rekeyFuzzPercentage:          100,
+		rekeyMarginTimeSeconds:       540,
+		replayWindowSize:             1024,
+		startupAction:                "add",
 	}
 
 	tunnel2 := TunnelOptions{
-		psk:                        "abcdefgh",
-		tunnelCidr:                 "169.254.9.0/30",
-		dpdTimeoutAction:           "none",
-		dpdTimeoutSeconds:          45,
-		ikeVersions:                "\"ikev2\"",
-		phase1DhGroupNumbers:       "18, 19, 20, 21, 22, 23, 24",
-		phase1EncryptionAlgorithms: "\"AES128\", \"AES256\"",
-		phase1IntegrityAlgorithms:  "\"SHA2-384\", \"SHA2-512\"",
-		phase1LifetimeSeconds:      1800,
-		phase2DhGroupNumbers:       "15, 16, 17, 18, 19, 20, 21, 22",
-		phase2EncryptionAlgorithms: "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
-		phase2IntegrityAlgorithms:  "\"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
-		phase2LifetimeSeconds:      1200,
-		rekeyFuzzPercentage:        90,
-		rekeyMarginTimeSeconds:     360,
-		replayWindowSize:           512,
-		startupAction:              "start",
+		psk:                          "abcdefgh",
+		tunnelCidr:                   "169.254.9.0/30",
+		dpdTimeoutAction:             "none",
+		dpdTimeoutSeconds:            45,
+		enableTunnelLifecycleControl: true,
+		ikeVersions:                  "\"ikev2\"",
+		phase1DhGroupNumbers:         "18, 19, 20, 21, 22, 23, 24",
+		phase1EncryptionAlgorithms:   "\"AES128\", \"AES256\"",
+		phase1IntegrityAlgorithms:    "\"SHA2-384\", \"SHA2-512\"",
+		phase1LifetimeSeconds:        1800,
+		phase2DhGroupNumbers:         "15, 16, 17, 18, 19, 20, 21, 22",
+		phase2EncryptionAlgorithms:   "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
+		phase2IntegrityAlgorithms:    "\"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
+		phase2LifetimeSeconds:        1200,
+		rekeyFuzzPercentage:          90,
+		rekeyMarginTimeSeconds:       360,
+		replayWindowSize:             512,
+		startupAction:                "start",
 	}
 
 	// inside_cidr can't be updated in-place.
@@ -713,6 +718,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_cgw_inside_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_action", "clear"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_seconds", "30"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_enable_tunnel_lifecycle_control", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_ike_versions.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_ike_versions.*", "ikev1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_ike_versions.*", "ikev2"),
@@ -762,6 +768,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_cgw_inside_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_action", "none"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_seconds", "45"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_enable_tunnel_lifecycle_control", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_ike_versions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_ike_versions.*", "ikev2"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_cidr", "169.254.9.0/30"),
@@ -820,6 +827,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_cgw_inside_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_action", "none"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_seconds", "45"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_enable_tunnel_lifecycle_control", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_ike_versions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_ike_versions.*", "ikev2"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_cidr", "169.254.8.0/30"),
@@ -870,6 +878,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_cgw_inside_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_action", "none"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_seconds", "45"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_enable_tunnel_lifecycle_control", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_ike_versions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_ike_versions.*", "ikev2"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_cidr", "169.254.9.0/30"),
@@ -927,6 +936,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_cgw_inside_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_action", "none"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_seconds", "45"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_enable_tunnel_lifecycle_control", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_ike_versions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_ike_versions.*", "ikev2"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_cidr", "169.254.8.0/30"),
@@ -977,6 +987,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_cgw_inside_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_action", "clear"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_seconds", "30"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_enable_tunnel_lifecycle_control", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_ike_versions.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_ike_versions.*", "ikev1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_ike_versions.*", "ikev2"),
@@ -1034,6 +1045,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_cgw_inside_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_action", "clear"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_seconds", "30"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_enable_tunnel_lifecycle_control", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_ike_versions.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_ike_versions.*", "ikev1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel1_ike_versions.*", "ikev2"),
@@ -1083,6 +1095,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_cgw_inside_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_action", "none"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_seconds", "45"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_enable_tunnel_lifecycle_control", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_ike_versions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "tunnel2_ike_versions.*", "ikev2"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_cidr", "169.254.9.0/30"),
@@ -1142,6 +1155,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_cgw_inside_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_action", "clear"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_dpd_timeout_seconds", "30"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_enable_tunnel_lifecycle_control", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_ike_versions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_cidr", "169.254.8.0/30"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_ipv6_cidr", ""),
@@ -1165,6 +1179,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_cgw_inside_address"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_action", "clear"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_dpd_timeout_seconds", "30"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_enable_tunnel_lifecycle_control", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_ike_versions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_cidr", "169.254.9.0/30"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_ipv6_cidr", ""),
@@ -2425,41 +2440,43 @@ resource "aws_vpn_connection" "test" {
   local_ipv4_network_cidr  = %[3]q
   remote_ipv4_network_cidr = %[4]q
 
-  tunnel1_inside_cidr                  = %[5]q
-  tunnel1_preshared_key                = %[6]q
-  tunnel1_dpd_timeout_action           = %[7]q
-  tunnel1_dpd_timeout_seconds          = %[8]d
-  tunnel1_ike_versions                 = [%[9]s]
-  tunnel1_phase1_dh_group_numbers      = [%[10]s]
-  tunnel1_phase1_encryption_algorithms = [%[11]s]
-  tunnel1_phase1_integrity_algorithms  = [%[12]s]
-  tunnel1_phase1_lifetime_seconds      = %[13]d
-  tunnel1_phase2_dh_group_numbers      = [%[14]s]
-  tunnel1_phase2_encryption_algorithms = [%[15]s]
-  tunnel1_phase2_integrity_algorithms  = [%[16]s]
-  tunnel1_phase2_lifetime_seconds      = %[17]d
-  tunnel1_rekey_fuzz_percentage        = %[18]d
-  tunnel1_rekey_margin_time_seconds    = %[19]d
-  tunnel1_replay_window_size           = %[20]d
-  tunnel1_startup_action               = %[21]q
+  tunnel1_inside_cidr                     = %[5]q
+  tunnel1_preshared_key                   = %[6]q
+  tunnel1_dpd_timeout_action              = %[7]q
+  tunnel1_dpd_timeout_seconds             = %[8]d
+  tunnel1_enable_tunnel_lifecycle_control = %[9]t
+  tunnel1_ike_versions                    = [%[10]s]
+  tunnel1_phase1_dh_group_numbers         = [%[11]s]
+  tunnel1_phase1_encryption_algorithms    = [%[12]s]
+  tunnel1_phase1_integrity_algorithms     = [%[13]s]
+  tunnel1_phase1_lifetime_seconds         = %[14]d
+  tunnel1_phase2_dh_group_numbers         = [%[15]s]
+  tunnel1_phase2_encryption_algorithms    = [%[16]s]
+  tunnel1_phase2_integrity_algorithms     = [%[17]s]
+  tunnel1_phase2_lifetime_seconds         = %[18]d
+  tunnel1_rekey_fuzz_percentage           = %[19]d
+  tunnel1_rekey_margin_time_seconds       = %[20]d
+  tunnel1_replay_window_size              = %[21]d
+  tunnel1_startup_action                  = %[22]q
 
-  tunnel2_inside_cidr                  = %[22]q
-  tunnel2_preshared_key                = %[23]q
-  tunnel2_dpd_timeout_action           = %[24]q
-  tunnel2_dpd_timeout_seconds          = %[25]d
-  tunnel2_ike_versions                 = [%[26]s]
-  tunnel2_phase1_dh_group_numbers      = [%[27]s]
-  tunnel2_phase1_encryption_algorithms = [%[28]s]
-  tunnel2_phase1_integrity_algorithms  = [%[29]s]
-  tunnel2_phase1_lifetime_seconds      = %[30]d
-  tunnel2_phase2_dh_group_numbers      = [%[31]s]
-  tunnel2_phase2_encryption_algorithms = [%[32]s]
-  tunnel2_phase2_integrity_algorithms  = [%[33]s]
-  tunnel2_phase2_lifetime_seconds      = %[34]d
-  tunnel2_rekey_fuzz_percentage        = %[35]d
-  tunnel2_rekey_margin_time_seconds    = %[36]d
-  tunnel2_replay_window_size           = %[37]d
-  tunnel2_startup_action               = %[38]q
+  tunnel2_inside_cidr                     = %[23]q
+  tunnel2_preshared_key                   = %[24]q
+  tunnel2_dpd_timeout_action              = %[25]q
+  tunnel2_dpd_timeout_seconds             = %[26]d
+  tunnel2_enable_tunnel_lifecycle_control = %[27]t
+  tunnel2_ike_versions                    = [%[28]s]
+  tunnel2_phase1_dh_group_numbers         = [%[29]s]
+  tunnel2_phase1_encryption_algorithms    = [%[30]s]
+  tunnel2_phase1_integrity_algorithms     = [%[31]s]
+  tunnel2_phase1_lifetime_seconds         = %[32]d
+  tunnel2_phase2_dh_group_numbers         = [%[33]s]
+  tunnel2_phase2_encryption_algorithms    = [%[34]s]
+  tunnel2_phase2_integrity_algorithms     = [%[35]s]
+  tunnel2_phase2_lifetime_seconds         = %[36]d
+  tunnel2_rekey_fuzz_percentage           = %[37]d
+  tunnel2_rekey_margin_time_seconds       = %[38]d
+  tunnel2_replay_window_size              = %[39]d
+  tunnel2_startup_action                  = %[40]q
 
   tags = {
     Name = %[1]q
@@ -2474,6 +2491,7 @@ resource "aws_vpn_connection" "test" {
 		tunnel1.psk,
 		tunnel1.dpdTimeoutAction,
 		tunnel1.dpdTimeoutSeconds,
+		tunnel1.enableTunnelLifecycleControl,
 		tunnel1.ikeVersions,
 		tunnel1.phase1DhGroupNumbers,
 		tunnel1.phase1EncryptionAlgorithms,
@@ -2491,6 +2509,7 @@ resource "aws_vpn_connection" "test" {
 		tunnel2.psk,
 		tunnel2.dpdTimeoutAction,
 		tunnel2.dpdTimeoutSeconds,
+		tunnel2.enableTunnelLifecycleControl,
 		tunnel2.ikeVersions,
 		tunnel2.phase1DhGroupNumbers,
 		tunnel2.phase1EncryptionAlgorithms,

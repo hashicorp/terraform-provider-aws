@@ -81,13 +81,14 @@ The following arguments are supported:
 * `name` - (Required) User-supplied name for the data source.
 * `type` - (Required) Type of the Data Source. Valid values: `AWS_LAMBDA`, `AMAZON_DYNAMODB`, `AMAZON_ELASTICSEARCH`, `HTTP`, `NONE`, `RELATIONAL_DATABASE`, `AMAZON_EVENTBRIDGE`.
 * `description` - (Optional) Description of the data source.
-* `service_role_arn` - (Optional) IAM service role ARN for the data source.
 * `dynamodb_config` - (Optional) DynamoDB settings. See [below](#dynamodb_config)
 * `elasticsearch_config` - (Optional) Amazon Elasticsearch settings. See [below](#elasticsearch_config)
+* `event_bridge_config` - (Optional) AWS EventBridge settings. See [below](#event_bridge_config)
 * `http_config` - (Optional) HTTP settings. See [below](#http_config)
 * `lambda_config` - (Optional) AWS Lambda settings. See [below](#lambda_config)
+* `opensearchservice_config` - (Optional) Amazon OpenSearch Service settings. See [below](#opensearchservice_config)
 * `relational_database_config` (Optional) AWS RDS settings. See [Relational Database Config](#relational_database_config)
-* `event_bridge_config` - (Optional) AWS EventBridge settings. See [below](#event_bridge_config)
+* `service_role_arn` - (Optional) IAM service role ARN for the data source.
 
 ### dynamodb_config
 
@@ -103,6 +104,12 @@ The following arguments are supported:
 
 * `endpoint` - (Required) HTTP endpoint of the Elasticsearch domain.
 * `region` - (Optional) AWS region of Elasticsearch domain. Defaults to current region.
+
+### event_bridge_config
+
+The following arguments are supported:
+
+* `event_bus_arn` - (Required) ARN for the EventBridge bus.
 
 ### http_config
 
@@ -125,6 +132,19 @@ The following arguments are supported:
 * `signing_region` - (Optional) Signing Amazon Web Services Region for IAM authorization.
 * `signing_service_name`- (Optional) Signing service name for IAM authorization.
 
+### lambda_config
+
+The following arguments are supported:
+
+* `function_arn` - (Required) ARN for the Lambda function.
+
+### opensearchservice_config
+
+The following arguments are supported:
+
+* `endpoint` - (Required) HTTP endpoint of the OpenSearch domain.
+* `region` - (Optional) AWS region of the OpenSearch domain. Defaults to current region.
+
 ### relational_database_config
 
 The following arguments are supported:
@@ -141,18 +161,6 @@ The following arguments are supported:
 * `database_name` - (Optional) Logical database name.
 * `region` - (Optional) AWS Region for RDS HTTP endpoint. Defaults to current region.
 * `schema` - (Optional) Logical schema name.
-
-### lambda_config
-
-The following arguments are supported:
-
-* `function_arn` - (Required) ARN for the Lambda function.
-
-### event_bridge_config
-
-The following arguments are supported:
-
-* `event_bus_arn` - (Required) ARN for the EventBridge bus.
 
 ## Attributes Reference
 

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ListTags lists kinesisvideo service tags.
@@ -80,15 +81,16 @@ func SetTagsOut(ctx context.Context, tags map[string]*string) {
 // UpdateTags updates kinesisvideo service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-
 func UpdateTags(ctx context.Context, conn kinesisvideoiface.KinesisVideoAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.KinesisVideo)
+	if len(removedTags) > 0 {
 		input := &kinesisvideo.UntagStreamInput{
 			StreamARN:  aws.String(identifier),
-			TagKeyList: aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeyList: aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.UntagStreamWithContext(ctx, input)
@@ -98,10 +100,12 @@ func UpdateTags(ctx context.Context, conn kinesisvideoiface.KinesisVideoAPI, ide
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.KinesisVideo)
+	if len(updatedTags) > 0 {
 		input := &kinesisvideo.TagStreamInput{
 			StreamARN: aws.String(identifier),
-			Tags:      Tags(updatedTags.IgnoreAWS()),
+			Tags:      Tags(updatedTags),
 		}
 
 		_, err := conn.TagStreamWithContext(ctx, input)

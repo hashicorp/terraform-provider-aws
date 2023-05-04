@@ -54,7 +54,7 @@ func FlattenStringList(list []*string) []interface{} {
 	return vs
 }
 
-// Takes list of pointers to strings. Expand to an array
+// Takes list of strings. Expand to an array
 // of raw strings and returns a []interface{}
 // to keep compatibility w/ schema.NewSetschema.NewSet
 func FlattenStringValueList(list []string) []interface{} {

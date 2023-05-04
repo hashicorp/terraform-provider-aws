@@ -45,7 +45,7 @@ func TestAccOpsWorksStack_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration_manager_name", "Chef"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_manager_version", "11.10"),
 					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.#", "1"),
-					resource.TestCheckNoResourceAttr(resourceName, "custom_json"),
+					resource.TestCheckResourceAttr(resourceName, "custom_json", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "default_availability_zone", "data.aws_availability_zones.available", "names.0"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_instance_profile_arn"),
 					resource.TestCheckResourceAttr(resourceName, "default_os", "Ubuntu 12.04 LTS"),

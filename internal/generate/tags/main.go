@@ -22,13 +22,16 @@ const (
 )
 
 var (
-	getTag             = flag.Bool("GetTag", false, "whether to generate GetTag")
-	listTags           = flag.Bool("ListTags", false, "whether to generate ListTags")
-	serviceTagsMap     = flag.Bool("ServiceTagsMap", false, "whether to generate service tags for map")
-	serviceTagsSlice   = flag.Bool("ServiceTagsSlice", false, "whether to generate service tags for slice")
-	untagInNeedTagType = flag.Bool("UntagInNeedTagType", false, "whether Untag input needs tag type")
-	updateTags         = flag.Bool("UpdateTags", false, "whether to generate UpdateTags")
+	createTags               = flag.Bool("CreateTags", false, "whether to generate CreateTags")
+	getTag                   = flag.Bool("GetTag", false, "whether to generate GetTag")
+	listTags                 = flag.Bool("ListTags", false, "whether to generate ListTags")
+	serviceTagsMap           = flag.Bool("ServiceTagsMap", false, "whether to generate service tags for map")
+	serviceTagsSlice         = flag.Bool("ServiceTagsSlice", false, "whether to generate service tags for slice")
+	untagInNeedTagType       = flag.Bool("UntagInNeedTagType", false, "whether Untag input needs tag type")
+	updateTags               = flag.Bool("UpdateTags", false, "whether to generate UpdateTags")
+	updateTagsNoIgnoreSystem = flag.Bool("UpdateTagsNoIgnoreSystem", false, "whether to not ignore system tags in UpdateTags")
 
+	createTagsFunc        = flag.String("CreateTagsFunc", "createTags", "createTagsFunc")
 	getTagFunc            = flag.String("GetTagFunc", "GetTag", "getTagFunc")
 	listTagsFunc          = flag.String("ListTagsFunc", "ListTags", "listTagsFunc")
 	listTagsInFiltIDName  = flag.String("ListTagsInFiltIDName", "", "listTagsInFiltIDName")
@@ -61,6 +64,7 @@ var (
 
 	sdkVersion   = flag.Int("AWSSDKVersion", sdkV1, "Version of the AWS SDK Go to use i.e. 1 or 2")
 	kvtValues    = flag.Bool("KVTValues", false, "Whether KVT string map is of string pointers")
+	skipNamesImp = flag.Bool("SkipNamesImp", false, "Whether to skip importing names")
 	skipTypesImp = flag.Bool("SkipTypesImp", false, "Whether to skip importing types")
 )
 
@@ -122,6 +126,7 @@ type TemplateData struct {
 	ProviderNameUpper      string
 	ServicePackage         string
 
+	CreateTagsFunc          string
 	GetTagFunc              string
 	ListTagsFunc            string
 	ListTagsInFiltIDName    string
@@ -154,6 +159,7 @@ type TemplateData struct {
 	UntagInTagsElem         string
 	UntagOp                 string
 	UpdateTagsFunc          string
+	UpdateTagsIgnoreSystem  bool
 
 	// The following are specific to writing import paths in the `headerBody`;
 	// to include the package, set the corresponding field's value to true
@@ -161,6 +167,7 @@ type TemplateData struct {
 	FmtPkg           bool
 	HelperSchemaPkg  bool
 	InternalTypesPkg bool
+	NamesPkg         bool
 	SkipTypesImp     bool
 	StrConvPkg       bool
 	TfResourcePkg    bool
@@ -205,6 +212,14 @@ func main() {
 		g.Fatalf("encountered: %s", err)
 	}
 
+	createTagsFunc := *createTagsFunc
+	if *createTags && !*updateTags {
+		g.Infof("CreateTags only valid with UpdateTags")
+		createTagsFunc = ""
+	} else if !*createTags {
+		createTagsFunc = ""
+	}
+
 	var clientType string
 	if *sdkVersion == sdkV1 {
 		clientType = fmt.Sprintf("%siface.%sAPI", awsPkg, clientTypeName)
@@ -232,10 +247,12 @@ func main() {
 		FmtPkg:           *updateTags,
 		HelperSchemaPkg:  awsPkg == "autoscaling",
 		InternalTypesPkg: *listTags || *serviceTagsMap || *serviceTagsSlice,
+		NamesPkg:         *updateTags && !*skipNamesImp,
 		SkipTypesImp:     *skipTypesImp,
 		StrConvPkg:       awsPkg == "autoscaling",
 		TfResourcePkg:    *getTag,
 
+		CreateTagsFunc:          createTagsFunc,
 		GetTagFunc:              *getTagFunc,
 		ListTagsFunc:            *listTagsFunc,
 		ListTagsInFiltIDName:    *listTagsInFiltIDName,
@@ -267,6 +284,7 @@ func main() {
 		UntagInTagsElem:         *untagInTagsElem,
 		UntagOp:                 *untagOp,
 		UpdateTagsFunc:          *updateTagsFunc,
+		UpdateTagsIgnoreSystem:  !*updateTagsNoIgnoreSystem,
 	}
 
 	templateBody := newTemplateBody(*sdkVersion, *kvtValues)

@@ -9,13 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	fwtypes "github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -275,6 +274,16 @@ func (w *wrappedResource) ValidateConfig(ctx context.Context, request resource.V
 	}
 }
 
+func (w *wrappedResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	if v, ok := w.inner.(resource.ResourceWithUpgradeState); ok {
+		ctx = w.bootstrapContext(ctx, w.meta)
+
+		return v.UpgradeState(ctx)
+	}
+
+	return nil
+}
+
 // tagsInterceptor implements transparent tagging.
 type tagsInterceptor struct {
 	tags *types.ServicePackageResourceTags
@@ -282,6 +291,11 @@ type tagsInterceptor struct {
 
 func (r tagsInterceptor) create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse, meta *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 	if r.tags == nil {
+		return ctx, diags
+	}
+
+	inContext, ok := conns.FromContext(ctx)
+	if !ok {
 		return ctx, diags
 	}
 
@@ -302,14 +316,14 @@ func (r tagsInterceptor) create(ctx context.Context, request resource.CreateRequ
 		// Merge the resource's configured tags with any provider configured default_tags.
 		tags := tagsInContext.DefaultConfig.MergeTags(tftags.New(ctx, planTags))
 		// Remove system tags.
-		tags = tags.IgnoreAWS()
+		tags = tags.IgnoreSystem(inContext.ServicePackageName)
 
 		tagsInContext.TagsIn = types.Some(tags)
 	case After:
 		// Set values for unknowns.
 		// Remove any provider configured ignore_tags and system tags from those passed to the service API.
 		// Computed tags_all include any provider configured default_tags.
-		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, tagsInContext.TagsIn.MustUnwrap().IgnoreAWS().IgnoreConfig(tagsInContext.IgnoreConfig).Map())
+		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, tagsInContext.TagsIn.MustUnwrap().IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig).Map())
 		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), &stateTagsAll)...)
 
 		if diags.HasError() {
@@ -326,25 +340,21 @@ func (r tagsInterceptor) read(ctx context.Context, request resource.ReadRequest,
 	}
 
 	inContext, ok := conns.FromContext(ctx)
-
 	if !ok {
 		return ctx, diags
 	}
 
 	sp, ok := meta.ServicePackages[inContext.ServicePackageName]
-
 	if !ok {
 		return ctx, diags
 	}
 
 	serviceName, err := names.HumanFriendly(inContext.ServicePackageName)
-
 	if err != nil {
 		serviceName = "<service>"
 	}
 
 	resourceName := inContext.ResourceName
-
 	if resourceName == "" {
 		resourceName = "<thing>"
 	}
@@ -366,7 +376,7 @@ func (r tagsInterceptor) read(ctx context.Context, request resource.ReadRequest,
 			if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute != "" {
 				var identifier string
 
-				diags.Append(request.State.GetAttribute(ctx, path.Root(identifierAttribute), &identifier)...)
+				diags.Append(response.State.GetAttribute(ctx, path.Root(identifierAttribute), &identifier)...)
 
 				if diags.HasError() {
 					return ctx, diags
@@ -385,6 +395,11 @@ func (r tagsInterceptor) read(ctx context.Context, request resource.ReadRequest,
 					err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
 				}
 
+				// ISO partitions may not support tagging, giving error.
+				if errs.IsUnsupportedOperationInPartitionError(meta.Partition, err) {
+					return ctx, diags
+				}
+
 				if err != nil {
 					diags.AddError(fmt.Sprintf("listing tags for %s %s (%s)", serviceName, resourceName, identifier), err.Error())
 
@@ -399,7 +414,7 @@ func (r tagsInterceptor) read(ctx context.Context, request resource.ReadRequest,
 		stateTags := tftags.Null
 		// Remove any provider configured ignore_tags and system tags from those returned from the service API.
 		// The resource's configured tags do not include any provider configured default_tags.
-		if v := apiTags.IgnoreAWS().IgnoreConfig(tagsInContext.IgnoreConfig).RemoveDefaultConfig(tagsInContext.DefaultConfig).Map(); len(v) > 0 {
+		if v := apiTags.IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig).RemoveDefaultConfig(tagsInContext.DefaultConfig).Map(); len(v) > 0 {
 			stateTags = flex.FlattenFrameworkStringValueMapLegacy(ctx, v)
 		}
 		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTags), &stateTags)...)
@@ -409,7 +424,7 @@ func (r tagsInterceptor) read(ctx context.Context, request resource.ReadRequest,
 		}
 
 		// Computed tags_all do.
-		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, apiTags.IgnoreAWS().IgnoreConfig(tagsInContext.IgnoreConfig).Map())
+		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, apiTags.IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig).Map())
 		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), &stateTagsAll)...)
 
 		if diags.HasError() {
@@ -426,25 +441,21 @@ func (r tagsInterceptor) update(ctx context.Context, request resource.UpdateRequ
 	}
 
 	inContext, ok := conns.FromContext(ctx)
-
 	if !ok {
 		return ctx, diags
 	}
 
 	sp, ok := meta.ServicePackages[inContext.ServicePackageName]
-
 	if !ok {
 		return ctx, diags
 	}
 
 	serviceName, err := names.HumanFriendly(inContext.ServicePackageName)
-
 	if err != nil {
 		serviceName = "<service>"
 	}
 
 	resourceName := inContext.ResourceName
-
 	if resourceName == "" {
 		resourceName = "<thing>"
 	}
@@ -466,7 +477,7 @@ func (r tagsInterceptor) update(ctx context.Context, request resource.UpdateRequ
 		// Merge the resource's configured tags with any provider configured default_tags.
 		tags := tagsInContext.DefaultConfig.MergeTags(tftags.New(ctx, planTags))
 		// Remove system tags.
-		tags = tags.IgnoreAWS()
+		tags = tags.IgnoreSystem(inContext.ServicePackageName)
 
 		tagsInContext.TagsIn = types.Some(tags)
 
@@ -507,13 +518,8 @@ func (r tagsInterceptor) update(ctx context.Context, request resource.UpdateRequ
 					err = v.UpdateTags(ctx, meta, identifier, r.tags.ResourceType, oldTagsAll, newTagsAll)
 				}
 
-				if verify.ErrorISOUnsupported(meta.Partition, err) {
-					// ISO partitions may not support tagging, giving error
-					tflog.Warn(ctx, "failed updating tags for resource", map[string]interface{}{
-						r.tags.IdentifierAttribute: identifier,
-						"error":                    err.Error(),
-					})
-
+				// ISO partitions may not support tagging, giving error.
+				if errs.IsUnsupportedOperationInPartitionError(meta.Partition, err) {
 					return ctx, diags
 				}
 

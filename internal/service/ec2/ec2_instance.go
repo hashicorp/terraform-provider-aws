@@ -34,7 +34,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_instance")
+// @SDKResource("aws_instance", name="Instance")
+// @Tags(identifierAttribute="id")
 func ResourceInstance() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -117,17 +118,60 @@ func ResourceInstance() *schema.Resource {
 					},
 				},
 			},
-			"cpu_core_count": {
-				Type:     schema.TypeInt,
+			"cpu_options": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"amd_sev_snp": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(ec2.AmdSevSnpSpecification_Values(), false),
+							// prevents ForceNew for the case where users launch EC2 instances without cpu_options
+							// then in a second apply set cpu_options.0.amd_sev_snp to "disabled"
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								if d.Id() != "" && old == "" && new == ec2.AmdSevSnpSpecificationDisabled {
+									return true
+								}
+								return false
+							},
+						},
+						"core_count": {
+							Type:          schema.TypeInt,
+							Optional:      true,
+							Computed:      true,
+							ForceNew:      true,
+							ConflictsWith: []string{"cpu_core_count"},
+						},
+						"threads_per_core": {
+							Type:          schema.TypeInt,
+							Optional:      true,
+							Computed:      true,
+							ForceNew:      true,
+							ConflictsWith: []string{"cpu_threads_per_core"},
+						},
+					},
+				},
+			},
+			"cpu_core_count": {
+				Type:          schema.TypeInt,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				Deprecated:    "use 'cpu_options' argument instead",
+				ConflictsWith: []string{"cpu_options.0.core_count"},
 			},
 			"cpu_threads_per_core": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
+				Type:          schema.TypeInt,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				Deprecated:    "use 'cpu_options' argument instead",
+				ConflictsWith: []string{"cpu_options.0.threads_per_core"},
 			},
 			"credit_specification": {
 				Type:     schema.TypeList,
@@ -656,8 +700,8 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"tenancy": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -805,17 +849,14 @@ func throughputDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool
 func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	instanceOpts, err := buildInstanceOpts(ctx, d, meta)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "collecting instance settings: %s", err)
 	}
 
-	tagSpecifications := tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeInstance)
+	tagSpecifications := getTagSpecificationsIn(ctx, ec2.ResourceTypeInstance)
 	tagSpecifications = append(tagSpecifications, tagSpecificationsFromMap(ctx, d.Get("volume_tags").(map[string]interface{}), ec2.ResourceTypeVolume)...)
-
 	input := &ec2.RunInstancesInput{
 		BlockDeviceMappings:               instanceOpts.BlockDeviceMappings,
 		CapacityReservationSpecification:  instanceOpts.CapacityReservationSpecification,
@@ -930,7 +971,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	for vol, blockDeviceTags := range blockDeviceTagsToCreate {
-		if err := CreateTags(ctx, conn, vol, blockDeviceTags); err != nil {
+		if err := createTags(ctx, conn, vol, Tags(tftags.New(ctx, blockDeviceTags))); err != nil {
 			log.Printf("[ERR] Error creating tags for EBS volume %s: %s", vol, err)
 		}
 	}
@@ -942,8 +983,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instance, err := FindInstanceByID(ctx, conn, d.Id())
 
@@ -982,9 +1021,14 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("tenancy", v.Tenancy)
 	}
 
+	// preserved to maintain backward compatibility
 	if v := instance.CpuOptions; v != nil {
 		d.Set("cpu_core_count", v.CoreCount)
 		d.Set("cpu_threads_per_core", v.ThreadsPerCore)
+	}
+
+	if err := d.Set("cpu_options", flattenCPUOptions(instance.CpuOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting cpu_options: %s", err)
 	}
 
 	if v := instance.HibernationOptions; v != nil {
@@ -1143,16 +1187,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("monitoring", monitoringState == ec2.MonitoringStateEnabled || monitoringState == ec2.MonitoringStatePending)
 	}
 
-	tags := KeyValueTags(ctx, instance.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, instance.Tags)
 
 	if _, ok := d.GetOk("volume_tags"); ok && !blockDeviceTagsDefined(d) {
 		volumeTags, err := readVolumeTags(ctx, conn, d.Id())
@@ -1292,14 +1327,6 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-
-	if d.HasChange("tags_all") && !d.IsNewResource() {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
-		}
-	}
 
 	if d.HasChange("volume_tags") && !d.IsNewResource() {
 		volumeIds, err := getInstanceVolumeIDs(ctx, conn, d.Id())
@@ -2696,7 +2723,10 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 		opts.Placement.HostResourceGroupArn = aws.String(v.(string))
 	}
 
-	if v := d.Get("cpu_core_count").(int); v > 0 {
+	if v, ok := d.GetOk("cpu_options"); ok {
+		opts.CpuOptions = expandCPUOptions(v.([]interface{}))
+	} else if v := d.Get("cpu_core_count").(int); v > 0 {
+		// preserved to maintain backward compatibility
 		tc := d.Get("cpu_threads_per_core").(int)
 		if tc < 0 {
 			tc = 2
@@ -2953,6 +2983,31 @@ func expandInstanceMetadataOptions(l []interface{}) *ec2.InstanceMetadataOptions
 	return opts
 }
 
+func expandCPUOptions(l []interface{}) *ec2.CpuOptionsRequest {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	opts := &ec2.CpuOptionsRequest{}
+
+	if v, ok := m["amd_sev_snp"].(string); ok && v != "" {
+		opts.AmdSevSnp = aws.String(v)
+	}
+
+	if v, ok := m["core_count"].(int); ok && v > 0 {
+		tc := m["threads_per_core"].(int)
+		if tc < 0 {
+			tc = 2
+		}
+		opts.CoreCount = aws.Int64(int64(v))
+		opts.ThreadsPerCore = aws.Int64(int64(tc))
+	}
+
+	return opts
+}
+
 func expandEnclaveOptions(l []interface{}) *ec2.EnclaveOptionsRequest {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -2990,6 +3045,28 @@ func flattenInstanceMetadataOptions(opts *ec2.InstanceMetadataOptionsResponse) [
 		"http_put_response_hop_limit": aws.Int64Value(opts.HttpPutResponseHopLimit),
 		"http_tokens":                 aws.StringValue(opts.HttpTokens),
 		"instance_metadata_tags":      aws.StringValue(opts.InstanceMetadataTags),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCPUOptions(opts *ec2.CpuOptions) []interface{} {
+	if opts == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := opts.AmdSevSnp; v != nil {
+		m["amd_sev_snp"] = aws.StringValue(v)
+	}
+
+	if v := opts.CoreCount; v != nil {
+		m["core_count"] = aws.Int64Value(v)
+	}
+
+	if v := opts.ThreadsPerCore; v != nil {
+		m["threads_per_core"] = aws.Int64Value(v)
 	}
 
 	return []interface{}{m}

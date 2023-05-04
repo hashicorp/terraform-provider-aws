@@ -700,6 +700,10 @@ func ResourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"predicted_capacity": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"protect_from_scale_in": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -856,6 +860,10 @@ func ResourceGroup() *schema.Resource {
 						},
 					},
 				},
+			},
+			"warm_pool_size": {
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 		},
 
@@ -1152,6 +1160,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("name", g.AutoScalingGroupName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(g.AutoScalingGroupName)))
 	d.Set("placement_group", g.PlacementGroup)
+	d.Set("predicted_capacity", g.PredictedCapacity)
 	d.Set("protect_from_scale_in", g.NewInstancesProtectedFromScaleIn)
 	d.Set("service_linked_role_arn", g.ServiceLinkedRoleARN)
 	d.Set("suspended_processes", flattenSuspendedProcesses(g.SuspendedProcesses))
@@ -1176,6 +1185,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	} else {
 		d.Set("warm_pool", nil)
 	}
+	d.Set("warm_pool_size", g.WarmPoolSize)
 
 	var tagOk, tagsOk bool
 	var v interface{}

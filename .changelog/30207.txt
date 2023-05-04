@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_lakeformation_data_lake_settings: Add `allow_external_data_filtering`, `external_data_filtering_allow_list` and `authorized_session_tag_value_list` arguments
+```
+
+```release-note:enhancement
+data-source/aws_lakeformation_data_lake_settings: Add `allow_external_data_filtering`, `external_data_filtering_allow_list` and `authorized_session_tag_value_list` attributes
+```

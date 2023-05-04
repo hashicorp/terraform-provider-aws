@@ -19,10 +19,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/attrmap"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 var (
@@ -171,8 +173,8 @@ var (
 			Optional:     true,
 			ValidateFunc: validation.IntBetween(0, 100),
 		},
-		"tags":     tftags.TagsSchema(),
-		"tags_all": tftags.TagsSchemaComputed(),
+		names.AttrTags:    tftags.TagsSchema(),
+		names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		"tracing_config": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -266,10 +268,10 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	output, err := conn.CreateTopicWithContext(ctx, input)
 
-	// Some partitions may not support tag-on-create
-	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] failed creating SNS Topic (%s) with tags: %s. Trying create without tags.", name, err)
+	// Some partitions (e.g. ISO) may not support tag-on-create.
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		input.Tags = nil
+
 		output, err = conn.CreateTopicWithContext(ctx, input)
 	}
 
@@ -279,28 +281,28 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(aws.StringValue(output.TopicArn))
 
-	err = putTopicAttributes(ctx, conn, d.Id(), attributes)
+	// Retry for eventual consistency; if ABAC is in use, this takes some time
+	// usually about 10s, presumably for tags really to be there, and we get a
+	// permissions error.
+	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		return nil, putTopicAttributes(ctx, conn, d.Id(), attributes)
+	}, sns.ErrCodeAuthorizationErrorException, "no identity-based policy allows")
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	// Post-create tagging supported in some partitions
+	// For partitions not supporting tag-on-create, attempt tag after create.
+	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+		err := createTags(ctx, conn, d.Id(), tags)
 
-	if input.Tags == nil {
-		if tags := GetTagsIn(ctx); len(tags) > 0 {
-			err := UpdateTags(ctx, conn, d.Id(), nil, KeyValueTags(ctx, tags))
+		// If default tags only, continue. Otherwise, error.
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+			return append(diags, resourceTopicRead(ctx, d, meta)...)
+		}
 
-			if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-				// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
-				log.Printf("[WARN] failed adding tags after create for SNS Topic (%s): %s", d.Id(), err)
-
-				return append(diags, resourceTopicRead(ctx, d, meta)...)
-			}
-
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "adding tags after create for SNS Topic (%s): %s", d.Id(), err)
-			}
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting SNS Topic (%s) tags: %s", d.Id(), err)
 		}
 	}
 

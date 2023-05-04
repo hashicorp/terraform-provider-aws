@@ -64,6 +64,68 @@ resource "aws_db_instance" "default" {
 }
 ```
 
+### RDS Custom for Oracle Usage with Replica
+
+```terraform
+# Lookup the available instance classes for the custom engine for the region being operated in
+data "aws_rds_orderable_db_instance" "custom-oracle" {
+  engine                     = "custom-oracle-ee" # CEV engine to be used
+  engine_version             = "19.c.ee.002"      # CEV engine version to be used
+  license_model              = "bring-your-own-license"
+  storage_type               = "gp3"
+  preferred_instance_classes = ["db.r5.24xlarge", "db.r5.16xlarge", "db.r5.12xlarge"]
+}
+
+# The RDS instance resource requires an ARN. Look up the ARN of the KMS key associated with the CEV.
+data "aws_kms_key" "by_id" {
+  key_id = "example-ef278353ceba4a5a97de6784565b9f78" # KMS key associated with the CEV
+}
+
+resource "aws_db_instance" "default" {
+  allocated_storage           = 50
+  auto_minor_version_upgrade  = false                         # Custom for Oracle not support minor version upgrades
+  custom_iam_instance_profile = "AWSRDSCustomInstanceProfile" # Instance profile is required for Custom for Oracle. See: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/custom-setup-orcl.html#custom-setup-orcl.iam-vpc
+  backup_retention_period     = 7
+  db_subnet_group_name        = local.db_subnet_group_name
+  engine                      = data.aws_rds_orderable_db_instance.custom-oracle.engine
+  engine_version              = data.aws_rds_orderable_db_instance.custom-oracle.engine_version
+  identifier                  = "ee-instance-demo"
+  instance_class              = data.aws_rds_orderable_db_instance.custom-oracle.instance_class
+  kms_key_id                  = data.aws_kms_key.by_id.arn
+  license_model               = data.aws_rds_orderable_db_instance.custom-oracle.license_model
+  multi_az                    = false # Custom for Oracle does not support multi-az
+  password                    = "avoid-plaintext-passwords"
+  username                    = "test"
+  storage_encrypted           = true
+
+  timeouts {
+    create = "3h"
+    delete = "3h"
+    update = "3h"
+  }
+}
+
+resource "aws_db_instance" "test-replica" {
+  replicate_source_db         = aws_db_instance.default.identifier
+  replica_mode                = "mounted"
+  auto_minor_version_upgrade  = false
+  custom_iam_instance_profile = "AWSRDSCustomInstanceProfile" # Instance profile is required for Custom for Oracle. See: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/custom-setup-orcl.html#custom-setup-orcl.iam-vpc
+  backup_retention_period     = 7
+  identifier                  = "ee-instance-replica"
+  instance_class              = data.aws_rds_orderable_db_instance.custom-oracle.instance_class
+  kms_key_id                  = data.aws_kms_key.by_id.arn
+  multi_az                    = false # Custom for Oracle does not support multi-az
+  skip_final_snapshot         = true
+  storage_encrypted           = true
+
+  timeouts {
+    create = "3h"
+    delete = "3h"
+    update = "3h"
+  }
+}
+```
+
 ### Storage Autoscaling
 
 To enable Storage Autoscaling with instances that support the feature, define the `max_allocated_storage` argument higher than the `allocated_storage` argument. Terraform will automatically hide differences with the `allocated_storage` argument value if autoscaling occurs.
@@ -169,17 +231,8 @@ for additional read replica contraints.
 * `domain` - (Optional) The ID of the Directory Service Active Directory domain to create the instance in.
 * `domain_iam_role_name` - (Optional, but required if domain is provided) The name of the IAM role to be used when making API calls to the Directory Service.
 * `enabled_cloudwatch_logs_exports` - (Optional) Set of log types to enable for exporting to CloudWatch logs. If omitted, no logs will be exported. Valid values (depending on `engine`). MySQL and MariaDB: `audit`, `error`, `general`, `slowquery`. PostgreSQL: `postgresql`, `upgrade`. MSSQL: `agent` , `error`. Oracle: `alert`, `audit`, `listener`, `trace`.
-* `engine` - (Required unless a `snapshot_identifier` or `replicate_source_db`
-is provided) The database engine to use.  For supported values, see the Engine parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html). Cannot be specified for a replica.
-Note that for Amazon Aurora instances the engine must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine'.
-For information on the difference between the available Aurora MySQL engines
-see [Comparison between Aurora MySQL 1 and Aurora MySQL 2](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraMySQL.Updates.20180206.html)
-in the Amazon RDS User Guide.
-* `engine_version` - (Optional) The engine version to use. If `auto_minor_version_upgrade`
-is enabled, you can provide a prefix of the version such as `5.7` (for `5.7.10`).
-The actual engine version used is returned in the attribute `engine_version_actual`, see [Attributes Reference](#attributes-reference) below.
-For supported values, see the EngineVersion parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
-Note that for Amazon Aurora instances the engine version must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine version'. Cannot be specified for a replica.
+* `engine` - (Required unless a `snapshot_identifier` or `replicate_source_db` is provided) The database engine to use. For supported values, see the Engine parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html). Note that for Amazon Aurora instances the engine must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine'. For information on the difference between the available Aurora MySQL engines see [Comparison between Aurora MySQL 1 and Aurora MySQL 2](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraMySQL.Updates.20180206.html) in the Amazon RDS User Guide.
+* `engine_version` - (Optional) The engine version to use. If `auto_minor_version_upgrade` is enabled, you can provide a prefix of the version such as `5.7` (for `5.7.10`). The actual engine version used is returned in the attribute `engine_version_actual`, see [Attributes Reference](#attributes-reference) below. For supported values, see the EngineVersion parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html). Note that for Amazon Aurora instances the engine version must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine version'.
 * `final_snapshot_identifier` - (Optional) The name of your final DB snapshot
 when this DB instance is deleted. Must be provided if `skip_final_snapshot` is
 set to `false`. The value must begin with a letter, only contain alphanumeric characters and hyphens, and not end with a hyphen or contain two consecutive hyphens. Must not be provided when deleting a read replica.

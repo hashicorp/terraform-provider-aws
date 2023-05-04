@@ -19,6 +19,10 @@ const (
 	unsetQuotaServiceCode = "s3"
 	unsetQuotaQuotaCode   = "L-FAABEEBA"
 	unsetQuotaQuotaName   = "Access Points"
+
+	hasUsageMetricServiceCode = "autoscaling"
+	hasUsageMetricQuotaCode   = "L-CDE20ADC"
+	hasUsageMetricQuotaName   = "Auto Scaling groups per region"
 )
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
@@ -69,5 +73,22 @@ func preCheckServiceQuotaUnset(ctx context.Context, serviceCode, quotaCode strin
 	}
 	if !tfawserr.ErrCodeEquals(err, servicequotas.ErrCodeNoSuchResourceException) {
 		t.Fatalf("unexpected PreCheck error getting Service Quota (%s/%s) : %s", serviceCode, quotaCode, err)
+	}
+}
+
+func preCheckServiceQuotaHasUsageMetric(ctx context.Context, serviceCode, quotaCode string, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasConn()
+
+	input := &servicequotas.GetAWSDefaultServiceQuotaInput{
+		QuotaCode:   aws.String(quotaCode),
+		ServiceCode: aws.String(serviceCode),
+	}
+
+	quota, err := conn.GetAWSDefaultServiceQuotaWithContext(ctx, input)
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error getting Service Quota (%s/%s) : %s", serviceCode, quotaCode, err)
+	}
+	if quota.Quota.UsageMetric == nil || quota.Quota.UsageMetric.MetricName == nil {
+		t.Fatalf("The Service Quota (%s/%s) does not have a usage metric. This test can only be run with a quota that has a usage metric. Please update the test to check a new quota.", serviceCode, quotaCode)
 	}
 }

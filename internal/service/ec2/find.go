@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -3345,7 +3346,7 @@ func FindVPCEndpointServicePermissions(ctx context.Context, conn *ec2.EC2, input
 	return output, nil
 }
 
-func FindVPCEndpointServicePermissionsByID(ctx context.Context, conn *ec2.EC2, id string) ([]*ec2.AllowedPrincipal, error) {
+func FindVPCEndpointServicePermissionsByServiceID(ctx context.Context, conn *ec2.EC2, id string) ([]*ec2.AllowedPrincipal, error) {
 	input := &ec2.DescribeVpcEndpointServicePermissionsInput{
 		ServiceId: aws.String(id),
 	}
@@ -3353,22 +3354,25 @@ func FindVPCEndpointServicePermissionsByID(ctx context.Context, conn *ec2.EC2, i
 	return FindVPCEndpointServicePermissions(ctx, conn, input)
 }
 
-func FindVPCEndpointServicePermissionExists(ctx context.Context, conn *ec2.EC2, serviceID, principalARN string) error {
-	allowedPrincipals, err := FindVPCEndpointServicePermissionsByID(ctx, conn, serviceID)
+func FindVPCEndpointServicePermission(ctx context.Context, conn *ec2.EC2, serviceID, principalARN string) (*ec2.AllowedPrincipal, error) {
+	// Applying a server-side filter on "principal" can lead to errors like
+	// "An error occurred (InvalidFilter) when calling the DescribeVpcEndpointServicePermissions operation: The filter value arn:aws:iam::123456789012:role/developer contains unsupported characters".
+	// Apply the filter client-side.
+	input := &ec2.DescribeVpcEndpointServicePermissionsInput{
+		ServiceId: aws.String(serviceID),
+	}
+
+	allowedPrincipals, err := FindVPCEndpointServicePermissions(ctx, conn, input)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	for _, v := range allowedPrincipals {
-		if aws.StringValue(v.Principal) == principalARN {
-			return nil
-		}
-	}
+	allowedPrincipals = slices.Filter(allowedPrincipals, func(v *ec2.AllowedPrincipal) bool {
+		return aws.StringValue(v.Principal) == principalARN
+	})
 
-	return &retry.NotFoundError{
-		LastError: fmt.Errorf("VPC Endpoint Service (%s) Principal (%s) not found", serviceID, principalARN),
-	}
+	return tfresource.AssertSinglePtrResult(allowedPrincipals)
 }
 
 // FindVPCEndpointRouteTableAssociationExists returns NotFoundError if no association for the specified VPC endpoint and route table IDs is found.

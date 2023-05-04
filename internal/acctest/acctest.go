@@ -179,8 +179,12 @@ func ProtoV5FactoriesPlusProvidersAlternate(ctx context.Context, t *testing.T, p
 	return protoV5ProviderFactoriesPlusProvidersInit(ctx, t, providers, ProviderName, ProviderNameAlternate)
 }
 
-func ProtoV5FactoriesNamed(ctx context.Context, t *testing.T, providers map[string]*schema.Provider) map[string]func() (tfprotov5.ProviderServer, error) {
-	return protoV5ProviderFactoriesNamedInit(ctx, t, providers, ProviderName, ProviderNameAlternate)
+func ProtoV5FactoriesNamedAlternate(ctx context.Context, t *testing.T, providers map[string]*schema.Provider) map[string]func() (tfprotov5.ProviderServer, error) {
+	return ProtoV5FactoriesNamed(ctx, t, providers, ProviderName, ProviderNameAlternate)
+}
+
+func ProtoV5FactoriesNamed(ctx context.Context, t *testing.T, providers map[string]*schema.Provider, providerNames ...string) map[string]func() (tfprotov5.ProviderServer, error) {
+	return protoV5ProviderFactoriesNamedInit(ctx, t, providers, providerNames...)
 }
 
 func ProtoV5FactoriesAlternate(ctx context.Context, t *testing.T) map[string]func() (tfprotov5.ProviderServer, error) {
@@ -252,8 +256,8 @@ func PreCheck(ctx context.Context, t *testing.T) {
 	})
 }
 
-// providerAccountID returns the account ID of an AWS provider
-func providerAccountID(provo *schema.Provider) string {
+// ProviderAccountID returns the account ID of an AWS provider
+func ProviderAccountID(provo *schema.Provider) string {
 	if provo == nil {
 		log.Print("[DEBUG] Unable to read account ID from test provider: empty provider")
 		return ""
@@ -717,7 +721,7 @@ func PrimaryInstanceState(s *terraform.State, name string) (*terraform.InstanceS
 // AccountID returns the account ID of Provider
 // Must be used within a resource.TestCheckFunc
 func AccountID() string {
-	return providerAccountID(Provider)
+	return ProviderAccountID(Provider)
 }
 
 func Region() string {
@@ -773,6 +777,14 @@ func PreCheckAlternateAccount(t *testing.T) {
 
 	if os.Getenv(envvar.AlternateAccessKeyId) != "" {
 		envvar.SkipIfEmpty(t, envvar.AlternateSecretAccessKey, "static credentials value when using "+envvar.AlternateAccessKeyId)
+	}
+}
+
+func PreCheckThirdAccount(t *testing.T) {
+	envvar.SkipIfAllEmpty(t, []string{envvar.ThirdProfile, envvar.ThirdAccessKeyId}, "credentials for running acceptance testing in third AWS account")
+
+	if os.Getenv(envvar.ThirdAccessKeyId) != "" {
+		envvar.SkipIfEmpty(t, envvar.ThirdSecretAccessKey, "static credentials value when using "+envvar.ThirdAccessKeyId)
 	}
 }
 
@@ -1050,13 +1062,57 @@ func PreCheckOutpostsOutposts(ctx context.Context, t *testing.T) {
 
 func ConfigAlternateAccountProvider() string {
 	//lintignore:AT004
+	return ConfigNamedAccountProvider(
+		ProviderNameAlternate,
+		os.Getenv(envvar.AlternateAccessKeyId),
+		os.Getenv(envvar.AlternateProfile),
+		os.Getenv(envvar.AlternateSecretAccessKey),
+	)
+}
+
+func ConfigMultipleAccountProvider(t *testing.T, accounts int) string {
+	var config strings.Builder
+
+	if accounts > 3 {
+		t.Fatalf("invalid number of Account configurations: %d", accounts)
+	}
+
+	if accounts >= 2 {
+		config.WriteString(
+			ConfigNamedAccountProvider(
+				ProviderNameAlternate,
+				os.Getenv(envvar.AlternateAccessKeyId),
+				os.Getenv(envvar.AlternateProfile),
+				os.Getenv(envvar.AlternateSecretAccessKey),
+			),
+		)
+	}
+	if accounts == 3 {
+		config.WriteString(
+			ConfigNamedAccountProvider(
+				ProviderNameThird,
+				os.Getenv(envvar.ThirdAccessKeyId),
+				os.Getenv(envvar.ThirdProfile),
+				os.Getenv(envvar.ThirdSecretAccessKey),
+			),
+		)
+	}
+
+	return config.String()
+}
+
+// ConfigNamedAccountProvider creates a new provider named configuration with a region.
+//
+// This can be used to build multiple provider configuration testing.
+func ConfigNamedAccountProvider(providerName, accessKey, profile, secretKey string) string {
+	//lintignore:AT004
 	return fmt.Sprintf(`
 provider %[1]q {
   access_key = %[2]q
   profile    = %[3]q
   secret_key = %[4]q
 }
-`, ProviderNameAlternate, os.Getenv(envvar.AlternateAccessKeyId), os.Getenv(envvar.AlternateProfile), os.Getenv(envvar.AlternateSecretAccessKey))
+`, providerName, accessKey, profile, secretKey)
 }
 
 // Deprecated: Use ConfigMultipleRegionProvider instead
@@ -1074,6 +1130,18 @@ func ConfigMultipleRegionProvider(regions int) string {
 	}
 
 	return config.String()
+}
+
+// ConfigNamedRegionalProvider creates a new named provider configuration with a region.
+//
+// This can be used to build multiple provider configuration testing.
+func ConfigNamedRegionalProvider(providerName string, region string) string {
+	//lintignore:AT004
+	return fmt.Sprintf(`
+provider %[1]q {
+  region = %[2]q
+}
+`, providerName, region)
 }
 
 func ConfigDefaultAndIgnoreTagsKeyPrefixes1(key1, value1, keyPrefix1 string) string {
@@ -1128,18 +1196,6 @@ provider "aws" {
   }
 }
 `, key1)
-}
-
-// ConfigNamedRegionalProvider creates a new provider named configuration with a region.
-//
-// This can be used to build multiple provider configuration testing.
-func ConfigNamedRegionalProvider(providerName string, region string) string {
-	//lintignore:AT004
-	return fmt.Sprintf(`
-provider %[1]q {
-  region = %[2]q
-}
-`, providerName, region)
 }
 
 // ConfigRegionalProvider creates a new provider configuration with a region.
@@ -2191,6 +2247,22 @@ func CheckResourceAttrGreaterThanValue(n, key, value string) resource.TestCheckF
 
 		return nil
 	}
+}
+
+func CheckResourceAttrGreaterThanOrEqualValue(n, key string, val int) resource.TestCheckFunc {
+	return resource.TestCheckResourceAttrWith(n, key, func(value string) error {
+		v, err := strconv.Atoi(value)
+
+		if err != nil {
+			return err
+		}
+
+		if v < val {
+			return fmt.Errorf("%s: Attribute %q is not greater than or equal to %d, got %d", n, key, val, v)
+		}
+
+		return nil
+	})
 }
 
 // RunSerialTests1Level runs test cases in parallel, optionally sleeping between each.

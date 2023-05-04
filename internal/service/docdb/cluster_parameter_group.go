@@ -19,11 +19,13 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const clusterParameterGroupMaxParamsBulkEdit = 20
 
-// @SDKResource("aws_docdb_cluster_parameter_group")
+// @SDKResource("aws_docdb_cluster_parameter_group", name="Cluster Parameter Group")
+// @Tags(identifierAttribute="arn")
 func ResourceClusterParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterParameterGroupCreate,
@@ -91,9 +93,8 @@ func ResourceClusterParameterGroup() *schema.Resource {
 					},
 				},
 			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -103,8 +104,6 @@ func ResourceClusterParameterGroup() *schema.Resource {
 func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	var groupName string
 	if v, ok := d.GetOk("name"); ok {
@@ -115,21 +114,19 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 		groupName = id.UniqueId()
 	}
 
-	createOpts := docdb.CreateDBClusterParameterGroupInput{
+	input := docdb.CreateDBClusterParameterGroupInput{
 		DBClusterParameterGroupName: aws.String(groupName),
 		DBParameterGroupFamily:      aws.String(d.Get("family").(string)),
 		Description:                 aws.String(d.Get("description").(string)),
-		Tags:                        Tags(tags.IgnoreAWS()),
+		Tags:                        GetTagsIn(ctx),
 	}
 
-	log.Printf("[DEBUG] Create DocDB Cluster Parameter Group: %#v", createOpts)
-
-	resp, err := conn.CreateDBClusterParameterGroupWithContext(ctx, &createOpts)
+	resp, err := conn.CreateDBClusterParameterGroupWithContext(ctx, &input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating DocDB Cluster Parameter Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating DocumentDB Cluster Parameter Group: %s", err)
 	}
 
-	d.SetId(aws.StringValue(createOpts.DBClusterParameterGroupName))
+	d.SetId(aws.StringValue(input.DBClusterParameterGroupName))
 
 	d.Set("arn", resp.DBClusterParameterGroup.DBClusterParameterGroupArn)
 
@@ -139,8 +136,6 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	describeOpts := &docdb.DescribeDBClusterParameterGroupsInput{
 		DBClusterParameterGroupName: aws.String(d.Id()),
@@ -149,11 +144,11 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 	describeResp, err := conn.DescribeDBClusterParameterGroupsWithContext(ctx, describeOpts)
 	if err != nil {
 		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBParameterGroupNotFoundFault) {
-			log.Printf("[WARN] DocDB Cluster Parameter Group (%s) not found, removing from state", d.Id())
+			log.Printf("[WARN] DocumentDB Cluster Parameter Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "reading DocDB Cluster Parameter Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DocumentDB Cluster Parameter Group (%s): %s", d.Id(), err)
 	}
 
 	if len(describeResp.DBClusterParameterGroups) != 1 ||
@@ -173,28 +168,11 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 
 	describeParametersResp, err := conn.DescribeDBClusterParametersWithContext(ctx, describeParametersOpts)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading DocDB Cluster Parameter Group (%s) parameters: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DocumentDB Cluster Parameter Group (%s) parameters: %s", d.Id(), err)
 	}
 
 	if err := d.Set("parameter", flattenParameters(describeParametersResp.Parameters, d.Get("parameter").(*schema.Set).List())); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting docdb cluster parameter: %s", err)
-	}
-
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for DocumentDB Cluster Parameter Group (%s): %s", d.Get("arn").(string), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting DocumentDB cluster parameter: %s", err)
 	}
 
 	return diags
@@ -235,17 +213,9 @@ func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.Resource
 
 				_, err := conn.ModifyDBClusterParameterGroupWithContext(ctx, &modifyOpts)
 				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "Error modifying DocDB Cluster Parameter Group: %s", err)
+					return sdkdiag.AppendErrorf(diags, "modifying DocumentDB Cluster Parameter Group: %s", err)
 				}
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating DocumentDB Cluster Parameter Group (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
@@ -290,7 +260,7 @@ func WaitForClusterParameterGroupDeletion(ctx context.Context, conn *docdb.DocDB
 			return retry.NonRetryableError(err)
 		}
 
-		return retry.RetryableError(fmt.Errorf("DocDB Parameter Group (%s) still exists", name))
+		return retry.RetryableError(fmt.Errorf("DocumentDB Parameter Group (%s) still exists", name))
 	})
 	if tfresource.TimedOut(err) {
 		_, err = conn.DescribeDBClusterParameterGroupsWithContext(ctx, params)
@@ -299,7 +269,7 @@ func WaitForClusterParameterGroupDeletion(ctx context.Context, conn *docdb.DocDB
 		}
 	}
 	if err != nil {
-		return fmt.Errorf("Error deleting DocDB cluster parameter group: %s", err)
+		return fmt.Errorf("deleting DocumentDB cluster parameter group: %s", err)
 	}
 	return nil
 }

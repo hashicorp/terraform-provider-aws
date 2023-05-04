@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_servicecatalog_provisioned_product: Changes in the provisioning_artifact_name attribute are now reflected correctly in AWS
+```

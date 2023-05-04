@@ -9,11 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
-const (
-	dbClusterRoleAssociationCreatedTimeout = 10 * time.Minute
-	dbClusterRoleAssociationDeletedTimeout = 10 * time.Minute
-)
-
 func waitEventSubscriptionCreated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.EventSubscription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{EventSubscriptionStatusCreating},
@@ -111,12 +106,14 @@ func waitDBProxyEndpointDeleted(ctx context.Context, conn *rds.RDS, id string, t
 	return nil, err
 }
 
-func waitDBClusterRoleAssociationCreated(ctx context.Context, conn *rds.RDS, dbClusterID, roleARN string) (*rds.DBClusterRole, error) {
+func waitDBClusterRoleAssociationCreated(ctx context.Context, conn *rds.RDS, dbClusterID, roleARN string, timeout time.Duration) (*rds.DBClusterRole, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{ClusterRoleStatusPending},
-		Target:  []string{ClusterRoleStatusActive},
-		Refresh: statusDBClusterRole(ctx, conn, dbClusterID, roleARN),
-		Timeout: dbClusterRoleAssociationCreatedTimeout,
+		Pending:    []string{ClusterRoleStatusPending},
+		Target:     []string{ClusterRoleStatusActive},
+		Refresh:    statusDBClusterRole(ctx, conn, dbClusterID, roleARN),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -128,12 +125,14 @@ func waitDBClusterRoleAssociationCreated(ctx context.Context, conn *rds.RDS, dbC
 	return nil, err
 }
 
-func waitDBClusterRoleAssociationDeleted(ctx context.Context, conn *rds.RDS, dbClusterID, roleARN string) (*rds.DBClusterRole, error) {
+func waitDBClusterRoleAssociationDeleted(ctx context.Context, conn *rds.RDS, dbClusterID, roleARN string, timeout time.Duration) (*rds.DBClusterRole, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{ClusterRoleStatusActive, ClusterRoleStatusPending},
-		Target:  []string{},
-		Refresh: statusDBClusterRole(ctx, conn, dbClusterID, roleARN),
-		Timeout: dbClusterRoleAssociationDeletedTimeout,
+		Pending:    []string{ClusterRoleStatusActive, ClusterRoleStatusPending},
+		Target:     []string{},
+		Refresh:    statusDBClusterRole(ctx, conn, dbClusterID, roleARN),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -215,6 +214,7 @@ func waitDBClusterInstanceDeleted(ctx context.Context, conn *rds.RDS, id string,
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			InstanceStatusConfiguringLogExports,
+			InstanceStatusDeletePreCheck,
 			InstanceStatusDeleting,
 			InstanceStatusModifying,
 		},

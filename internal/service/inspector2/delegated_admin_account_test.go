@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -17,17 +16,6 @@ import (
 	tfinspector2 "github.com/hashicorp/terraform-provider-aws/internal/service/inspector2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
-
-func TestAccInspector2DelegatedAdminAccount_serial(t *testing.T) {
-	t.Parallel()
-
-	testCases := map[string]func(t *testing.T){
-		"basic":      testAccDelegatedAdminAccount_basic,
-		"disappears": testAccDelegatedAdminAccount_disappears,
-	}
-
-	acctest.RunSerialTests1Level(t, testCases, 0)
-}
 
 func testAccDelegatedAdminAccount_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -153,20 +141,6 @@ func testAccCheckDelegatedAdminAccountExists(ctx context.Context, name string) r
 		}
 
 		return nil
-	}
-}
-
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client()
-
-	_, err := conn.ListDelegatedAdminAccounts(ctx, &inspector2.ListDelegatedAdminAccountsInput{})
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 
