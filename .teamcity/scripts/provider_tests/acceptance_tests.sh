@@ -4,12 +4,6 @@ set -euo pipefail
 
 # shellcheck disable=2157 # This isn't a constant string, it's a TeamCity variable substitution
 if [[ -n "%ACCTEST_ROLE_ARN%" ]]; then
-    echo "assuming role %ACCTEST_ROLE_ARN% for acctests"
-
-    echo "AWS_ACCESS_KEY_ID: $(echo "%AWS_ACCESS_KEY_ID%" | sed -E "s/^.+(.{4})/****\1/")"
-    echo "AWS_SECRET_ACCESS_KEY: $(echo "%AWS_SECRET_ACCESS_KEY%" | sed -E "s/^(.{4}).+(.{4})/\1****\2/")"
-    echo "ACCTEST_ROLE_ARN: %ACCTEST_ROLE_ARN%"
-
     conf=$(pwd)/aws.conf
 
     function cleanup {
