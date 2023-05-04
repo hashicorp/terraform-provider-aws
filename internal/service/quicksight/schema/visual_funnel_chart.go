@@ -262,3 +262,137 @@ func expandFunnelChartDataLabelOptions(tfList []interface{}) *quicksight.FunnelC
 
 	return options
 }
+
+func flattenFunnelChartVisual(apiObject *quicksight.FunnelChartVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"visual_id": aws.StringValue(apiObject.VisualId),
+	}
+	if apiObject.Actions != nil {
+		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
+	}
+	if apiObject.ChartConfiguration != nil {
+		tfMap["chart_configuration"] = flattenFunnelChartConfiguration(apiObject.ChartConfiguration)
+	}
+	if apiObject.ColumnHierarchies != nil {
+		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+	}
+	if apiObject.Subtitle != nil {
+		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
+	}
+	if apiObject.Title != nil {
+		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenFunnelChartConfiguration(apiObject *quicksight.FunnelChartConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CategoryLabelOptions != nil {
+		tfMap["category_label_options"] = flattenChartAxisLabelOptions(apiObject.CategoryLabelOptions)
+	}
+	if apiObject.DataLabelOptions != nil {
+		tfMap["data_label_options"] = flattenFunnelChartDataLabelOptions(apiObject.DataLabelOptions)
+	}
+	if apiObject.FieldWells != nil {
+		tfMap["field_wells"] = flattenFunnelChartFieldWells(apiObject.FieldWells)
+	}
+	if apiObject.SortConfiguration != nil {
+		tfMap["sort_configuration"] = flattenFunnelChartSortConfiguration(apiObject.SortConfiguration)
+	}
+	if apiObject.Tooltip != nil {
+		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)
+	}
+	if apiObject.ValueLabelOptions != nil {
+		tfMap["value_label_options"] = flattenChartAxisLabelOptions(apiObject.ValueLabelOptions)
+	}
+	if apiObject.VisualPalette != nil {
+		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenFunnelChartDataLabelOptions(apiObject *quicksight.FunnelChartDataLabelOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CategoryLabelVisibility != nil {
+		tfMap["category_label_visibility"] = aws.StringValue(apiObject.CategoryLabelVisibility)
+	}
+	if apiObject.LabelColor != nil {
+		tfMap["label_color"] = aws.StringValue(apiObject.LabelColor)
+	}
+	if apiObject.LabelFontConfiguration != nil {
+		tfMap["label_font_configuration"] = flattenFontConfiguration(apiObject.LabelFontConfiguration)
+	}
+	if apiObject.MeasureDataLabelStyle != nil {
+		tfMap["measure_data_label_style"] = aws.StringValue(apiObject.MeasureDataLabelStyle)
+	}
+	if apiObject.MeasureLabelVisibility != nil {
+		tfMap["measure_label_visibility"] = aws.StringValue(apiObject.MeasureLabelVisibility)
+	}
+	if apiObject.Position != nil {
+		tfMap["position"] = aws.StringValue(apiObject.Position)
+	}
+	if apiObject.Visibility != nil {
+		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenFunnelChartFieldWells(apiObject *quicksight.FunnelChartFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.FunnelChartAggregatedFieldWells != nil {
+		tfMap["funnel_chart_aggregated_field_wells"] = flattenFunnelChartAggregatedFieldWells(apiObject.FunnelChartAggregatedFieldWells)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenFunnelChartAggregatedFieldWells(apiObject *quicksight.FunnelChartAggregatedFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Category != nil {
+		tfMap["category"] = flattenDimensionField(apiObject.Category)
+	}
+	if apiObject.Values != nil {
+		tfMap["values"] = flattenMeasureField(apiObject.Values)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenFunnelChartSortConfiguration(apiObject *quicksight.FunnelChartSortConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CategoryItemsLimit != nil {
+		tfMap["category_items_limit"] = flattenItemsLimitConfiguration(apiObject.CategoryItemsLimit)
+	}
+	if apiObject.CategorySort != nil {
+		tfMap["category_sort"] = flattenFieldSortOptions(apiObject.CategorySort)
+	}
+
+	return []interface{}{tfMap}
+}

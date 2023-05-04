@@ -1449,17 +1449,6 @@ func flattenVisuals(apiObject []*quicksight.Visual) []interface{} {
 	return tfList
 }
 
-func flattenFunnelChartVisual(apiObject *quicksight.FunnelChartVisual) []interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-	// TODO
-
-	return []interface{}{tfMap}
-}
-
 func flattenGaugeChartVisual(apiObject *quicksight.GaugeChartVisual) []interface{} {
 	if apiObject == nil {
 		return nil
