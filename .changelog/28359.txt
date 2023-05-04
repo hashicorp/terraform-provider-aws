@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_cloudwatch_log_destination: Add `tags` argument and `tags_all` attribute to support resource tagging
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_log_group: Use resource tagging APIs that are not on a path to deprecation
+```
+
+```release-note:enhancement
+data-source/aws_cloudwatch_log_group: Use resource tagging APIs that are not on a path to deprecation
+```

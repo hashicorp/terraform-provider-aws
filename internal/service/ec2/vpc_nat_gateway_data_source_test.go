@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccVPCNATGatewayDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceNameById := "data.aws_nat_gateway.test_by_id"
 	dataSourceNameBySubnetId := "data.aws_nat_gateway.test_by_subnet_id"
@@ -18,12 +19,12 @@ func TestAccVPCNATGatewayDataSource_basic(t *testing.T) {
 	resourceName := "aws_nat_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNATGatewayDataSourceConfig(rName),
+				Config: testAccVPCNATGatewayDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceNameById, "connectivity_type", resourceName, "connectivity_type"),
 					resource.TestCheckResourceAttrPair(dataSourceNameById, "id", resourceName, "id"),
@@ -36,13 +37,14 @@ func TestAccVPCNATGatewayDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceNameById, "private_ip"),
 					resource.TestCheckNoResourceAttr(dataSourceNameById, "attached_vpc_id"),
 					resource.TestCheckResourceAttrSet(dataSourceNameById, "tags.OtherTag"),
+					resource.TestCheckResourceAttrPair(dataSourceNameById, "association_id", resourceName, "association_id"),
 				),
 			},
 		},
 	})
 }
 
-func testAccNATGatewayDataSourceConfig(rName string) string {
+func testAccVPCNATGatewayDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.5.0.0/16"

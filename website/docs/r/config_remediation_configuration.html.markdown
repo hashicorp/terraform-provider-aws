@@ -95,6 +95,7 @@ The value is either a dynamic (resource) value or a static value. You must selec
 * `name` - (Required) Name of the attribute.
 * `resource_value` - (Optional) Value is dynamic and changes at run-time.
 * `static_value` - (Optional) Value is static and does not change at run-time.
+* `static_values` - (Optional) List of static values.
 
 ## Attributes Reference
 

@@ -11,7 +11,9 @@ import (
 	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
 )
 
-func TestFindRegionByEc2Endpoint(t *testing.T) {
+func TestFindRegionByEC2Endpoint(t *testing.T) {
+	t.Parallel()
+
 	var testCases = []struct {
 		Value    string
 		ErrCount int
@@ -46,6 +48,8 @@ func TestFindRegionByEc2Endpoint(t *testing.T) {
 }
 
 func TestFindRegionByName(t *testing.T) {
+	t.Parallel()
+
 	var testCases = []struct {
 		Value    string
 		ErrCount int
@@ -76,12 +80,13 @@ func TestFindRegionByName(t *testing.T) {
 }
 
 func TestAccMetaRegionDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegionDataSourceConfig_empty,
@@ -96,12 +101,13 @@ func TestAccMetaRegionDataSource_basic(t *testing.T) {
 }
 
 func TestAccMetaRegionDataSource_endpoint(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegionDataSourceConfig_endpoint(),
@@ -116,12 +122,13 @@ func TestAccMetaRegionDataSource_endpoint(t *testing.T) {
 }
 
 func TestAccMetaRegionDataSource_endpointAndName(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegionDataSourceConfig_endpointAndName(),
@@ -136,12 +143,13 @@ func TestAccMetaRegionDataSource_endpointAndName(t *testing.T) {
 }
 
 func TestAccMetaRegionDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegionDataSourceConfig_name(),
@@ -163,8 +171,7 @@ func testAccRegionDataSourceConfig_endpoint() string {
 	return `
 data "aws_partition" "test" {}
 
-data "aws_regions" "test" {
-}
+data "aws_regions" "test" {}
 
 data "aws_region" "test" {
   endpoint = "ec2.${tolist(data.aws_regions.test.names)[0]}.${data.aws_partition.test.dns_suffix}"
@@ -176,8 +183,7 @@ func testAccRegionDataSourceConfig_endpointAndName() string {
 	return `
 data "aws_partition" "test" {}
 
-data "aws_regions" "test" {
-}
+data "aws_regions" "test" {}
 
 data "aws_region" "test" {
   endpoint = "ec2.${tolist(data.aws_regions.test.names)[0]}.${data.aws_partition.test.dns_suffix}"
@@ -188,8 +194,7 @@ data "aws_region" "test" {
 
 func testAccRegionDataSourceConfig_name() string {
 	return `
-data "aws_regions" "test" {
-}
+data "aws_regions" "test" {}
 
 data "aws_region" "test" {
   name = tolist(data.aws_regions.test.names)[0]

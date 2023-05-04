@@ -45,11 +45,11 @@ resource "aws_ami_launch_permission" "example" {
 
 The following arguments are supported:
 
-* `account_id` - (Optional) The AWS account ID for the launch permission.
-* `group` - (Optional) The name of the group for the launch permission. Valid values: `"all"`.
-* `image_id` - (Required) The ID of the AMI.
-* `organization_arn` - (Optional) The ARN of an organization for the launch permission.
-* `organizational_unit_arn` - (Optional) The ARN of an organizational unit for the launch permission.
+* `account_id` - (Optional) AWS account ID for the launch permission.
+* `group` - (Optional) Name of the group for the launch permission. Valid values: `"all"`.
+* `image_id` - (Required) ID of the AMI.
+* `organization_arn` - (Optional) ARN of an organization for the launch permission.
+* `organizational_unit_arn` - (Optional) ARN of an organizational unit for the launch permission.
 
 ## Attributes Reference
 

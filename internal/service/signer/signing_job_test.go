@@ -1,6 +1,7 @@
 package signer_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -14,6 +15,7 @@ import (
 )
 
 func TestAccSignerSigningJob_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_signer_signing_job.test"
 	profileResourceName := "aws_signer_signing_profile.test"
@@ -22,16 +24,19 @@ func TestAccSignerSigningJob_basic(t *testing.T) {
 	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:        acctest.ErrorCheck(t, signer.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA")
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSigningJobConfig(rName),
+				Config: testAccSigningJobConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSigningProfileExists(profileResourceName, &conf),
-					testAccCheckSigningJobExists(resourceName, &job),
+					testAccCheckSigningProfileExists(ctx, profileResourceName, &conf),
+					testAccCheckSigningJobExists(ctx, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "platform_id", "AWSLambda-SHA384-ECDSA"),
 					resource.TestCheckResourceAttr(resourceName, "platform_display_name", "AWS Lambda"),
 					resource.TestCheckResourceAttr(resourceName, "status", "Succeeded"),
@@ -39,10 +44,9 @@ func TestAccSignerSigningJob_basic(t *testing.T) {
 			},
 		},
 	})
-
 }
 
-func testAccSigningJobConfig(rName string) string {
+func testAccSigningJobConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -96,7 +100,7 @@ resource "aws_signer_signing_job" "test" {
 `, rName)
 }
 
-func testAccCheckSigningJobExists(res string, job *signer.DescribeSigningJobOutput) resource.TestCheckFunc {
+func testAccCheckSigningJobExists(ctx context.Context, res string, job *signer.DescribeSigningJobOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[res]
 		if !ok {
@@ -107,13 +111,13 @@ func testAccCheckSigningJobExists(res string, job *signer.DescribeSigningJobOutp
 			return fmt.Errorf("Signing job with that ID does not exist")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn()
 
 		params := &signer.DescribeSigningJobInput{
 			JobId: aws.String(rs.Primary.ID),
 		}
 
-		getJob, err := conn.DescribeSigningJob(params)
+		getJob, err := conn.DescribeSigningJobWithContext(ctx, params)
 		if err != nil {
 			return err
 		}

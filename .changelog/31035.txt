@@ -1,0 +1,23 @@
+```release-note:note
+resource/aws_instance: The `cpu_core_count` argument is deprecated in favor of the `cpu_options` block. The `cpu_options` block can set `core_count`
+```
+
+```release-note:note
+resource/aws_instance: The `cpu_threads_per_core` argument is deprecated in favor of the `cpu_options` block. The `cpu_options` block can set `threads_per_core`
+```
+
+```release-note:enhancement
+resource/aws_instance: Add `cpu_options` argument
+```
+
+```release-note:enhancement
+resource/aws_instance: Add `amd_sev_snp` argument
+```
+
+```release-note:enhancement
+resource/aws_launch_template: Add `amd_sev_snp` argument
+```
+
+```release-note:enhancement
+datasource/aws_launch_template: Add `amd_sev_snp` attribute
+```

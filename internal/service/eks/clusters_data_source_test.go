@@ -10,17 +10,18 @@ import (
 )
 
 func TestAccEKSClustersDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceResourceName := "data.aws_eks_clusters.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClustersDataSourceConfig_Basic(rName),
+				Config: testAccClustersDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceResourceName, "names.#", "0"),
 				),
@@ -29,9 +30,9 @@ func TestAccEKSClustersDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccClustersDataSourceConfig_Basic(rName string) string {
+func testAccClustersDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfig_Required(rName), `
+		testAccClusterConfig_required(rName), `
 data "aws_eks_clusters" "test" {
   depends_on = [aws_eks_cluster.test]
 }

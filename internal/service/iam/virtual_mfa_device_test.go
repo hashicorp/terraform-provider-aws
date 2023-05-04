@@ -1,6 +1,7 @@
 package iam_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"testing"
@@ -16,21 +17,22 @@ import (
 )
 
 func TestAccIAMVirtualMFADevice_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf iam.VirtualMFADevice
 	resourceName := "aws_iam_virtual_mfa_device.test"
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVirtualMFADeviceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVirtualMFADeviceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVirtualMFADeviceConfig(rName),
+				Config: testAccVirtualMFADeviceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVirtualMFADeviceExists(resourceName, &conf),
+					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("mfa/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "base_32_string_seed"),
 					resource.TestCheckResourceAttrSet(resourceName, "qr_code_png"),
@@ -47,21 +49,22 @@ func TestAccIAMVirtualMFADevice_basic(t *testing.T) {
 }
 
 func TestAccIAMVirtualMFADevice_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf iam.VirtualMFADevice
 	resourceName := "aws_iam_virtual_mfa_device.test"
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVirtualMFADeviceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVirtualMFADeviceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVirtualMFADeviceConfigTags1(rName, "key1", "value1"),
+				Config: testAccVirtualMFADeviceConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVirtualMFADeviceExists(resourceName, &conf),
+					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -73,18 +76,18 @@ func TestAccIAMVirtualMFADevice_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"path", "virtual_mfa_device_name", "base_32_string_seed", "qr_code_png"},
 			},
 			{
-				Config: testAccVirtualMFADeviceConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVirtualMFADeviceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVirtualMFADeviceExists(resourceName, &conf),
+					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccVirtualMFADeviceConfigTags1(rName, "key2", "value2"),
+				Config: testAccVirtualMFADeviceConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVirtualMFADeviceExists(resourceName, &conf),
+					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -94,23 +97,24 @@ func TestAccIAMVirtualMFADevice_tags(t *testing.T) {
 }
 
 func TestAccIAMVirtualMFADevice_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf iam.VirtualMFADevice
 	resourceName := "aws_iam_virtual_mfa_device.test"
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVirtualMFADeviceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVirtualMFADeviceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVirtualMFADeviceConfig(rName),
+				Config: testAccVirtualMFADeviceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVirtualMFADeviceExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceVirtualMFADevice(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceVirtualMFADevice(), resourceName),
+					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &conf),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceVirtualMFADevice(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceVirtualMFADevice(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -118,30 +122,31 @@ func TestAccIAMVirtualMFADevice_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckVirtualMFADeviceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+func testAccCheckVirtualMFADeviceDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_iam_virtual_mfa_device" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_iam_virtual_mfa_device" {
+				continue
+			}
+
+			output, err := tfiam.FindVirtualMFADevice(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if output != nil {
+				return fmt.Errorf("IAM Virtual MFA Device (%s) still exists", rs.Primary.ID)
+			}
 		}
 
-		output, err := tfiam.FindVirtualMFADevice(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if output != nil {
-			return fmt.Errorf("IAM Virtual MFA Device (%s) still exists", rs.Primary.ID)
-		}
-
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckVirtualMFADeviceExists(n string, res *iam.VirtualMFADevice) resource.TestCheckFunc {
+func testAccCheckVirtualMFADeviceExists(ctx context.Context, n string, res *iam.VirtualMFADevice) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -152,9 +157,9 @@ func testAccCheckVirtualMFADeviceExists(n string, res *iam.VirtualMFADevice) res
 			return errors.New("No Virtual MFA Device name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
-		output, err := tfiam.FindVirtualMFADevice(conn, rs.Primary.ID)
+		output, err := tfiam.FindVirtualMFADevice(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -165,7 +170,7 @@ func testAccCheckVirtualMFADeviceExists(n string, res *iam.VirtualMFADevice) res
 	}
 }
 
-func testAccVirtualMFADeviceConfig(rName string) string {
+func testAccVirtualMFADeviceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_virtual_mfa_device" "test" {
   virtual_mfa_device_name = %[1]q
@@ -173,7 +178,7 @@ resource "aws_iam_virtual_mfa_device" "test" {
 `, rName)
 }
 
-func testAccVirtualMFADeviceConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccVirtualMFADeviceConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_virtual_mfa_device" "test" {
   virtual_mfa_device_name = %[1]q
@@ -185,7 +190,7 @@ resource "aws_iam_virtual_mfa_device" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccVirtualMFADeviceConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccVirtualMFADeviceConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_virtual_mfa_device" "test" {
   virtual_mfa_device_name = %[1]q

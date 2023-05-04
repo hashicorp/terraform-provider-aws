@@ -1,26 +1,28 @@
 package apigateway
 
 import (
-	"fmt"
-	"log"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_api_gateway_account")
 func ResourceAccount() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAccountUpdate,
-		Read:   resourceAccountRead,
-		Update: resourceAccountUpdate,
-		Delete: resourceAccountDelete,
+		CreateWithoutTimeout: resourceAccountUpdate,
+		ReadWithoutTimeout:   resourceAccountRead,
+		UpdateWithoutTimeout: resourceAccountUpdate,
+		DeleteWithoutTimeout: schema.NoopContext,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -48,83 +50,73 @@ func ResourceAccount() *schema.Resource {
 	}
 }
 
-func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
-	log.Printf("[INFO] Reading API Gateway Account %s", d.Id())
-	account, err := conn.GetAccount(&apigateway.GetAccountInput{})
-	if err != nil {
-		return err
+	input := &apigateway.UpdateAccountInput{}
+
+	// Unfortunately AWS API doesn't allow empty ARNs,
+	// even though that's default settings for new AWS accounts
+	// BadRequestException: The role ARN is not well formed
+	if v, ok := d.GetOk("cloudwatch_role_arn"); ok {
+		input.PatchOperations = []*apigateway.PatchOperation{{
+			Op:    aws.String(apigateway.OpReplace),
+			Path:  aws.String("/cloudwatchRoleArn"),
+			Value: aws.String(v.(string)),
+		}}
+	} else {
+		input.PatchOperations = []*apigateway.PatchOperation{}
 	}
 
-	log.Printf("[DEBUG] Received API Gateway Account: %s", account)
+	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func() (interface{}, error) {
+			return conn.UpdateAccountWithContext(ctx, input)
+		},
+		func(err error) (bool, error) {
+			if tfawserr.ErrMessageContains(err, apigateway.ErrCodeBadRequestException, "The role ARN does not have required permissions") {
+				return true, err
+			}
+
+			if tfawserr.ErrMessageContains(err, apigateway.ErrCodeBadRequestException, "API Gateway could not successfully write to CloudWatch Logs using the ARN specified") {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating API Gateway Account: %s", err)
+	}
+
+	if d.IsNewResource() {
+		d.SetId("api-gateway-account")
+	}
+
+	return append(diags, resourceAccountRead(ctx, d, meta)...)
+}
+
+func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
+
+	account, err := conn.GetAccountWithContext(ctx, &apigateway.GetAccountInput{})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway Account: %s", err)
+	}
 
 	if _, ok := d.GetOk("cloudwatch_role_arn"); ok {
+		// Backwards compatibility:
 		// CloudwatchRoleArn cannot be empty nor made empty via API
 		// This resource can however be useful w/out defining cloudwatch_role_arn
 		// (e.g. for referencing throttle_settings)
 		d.Set("cloudwatch_role_arn", account.CloudwatchRoleArn)
 	}
-	d.Set("throttle_settings", FlattenThrottleSettings(account.ThrottleSettings))
-
-	return nil
-}
-
-func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
-
-	input := apigateway.UpdateAccountInput{}
-	operations := make([]*apigateway.PatchOperation, 0)
-
-	if d.HasChange("cloudwatch_role_arn") {
-		arn := d.Get("cloudwatch_role_arn").(string)
-		if len(arn) > 0 {
-			// Unfortunately AWS API doesn't allow empty ARNs,
-			// even though that's default settings for new AWS accounts
-			// BadRequestException: The role ARN is not well formed
-			operations = append(operations, &apigateway.PatchOperation{
-				Op:    aws.String("replace"),
-				Path:  aws.String("/cloudwatchRoleArn"),
-				Value: aws.String(arn),
-			})
-		}
+	if err := d.Set("throttle_settings", flattenThrottleSettings(account.ThrottleSettings)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting throttle_settings: %s", err)
 	}
-	input.PatchOperations = operations
 
-	log.Printf("[INFO] Updating API Gateway Account: %s", input)
-
-	// Retry due to eventual consistency of IAM
-	expectedErrMsg := "The role ARN does not have required permissions"
-	otherErrMsg := "API Gateway could not successfully write to CloudWatch Logs using the ARN specified"
-	var out *apigateway.Account
-	var err error
-	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
-		out, err = conn.UpdateAccount(&input)
-
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, "BadRequestException", expectedErrMsg) ||
-				tfawserr.ErrMessageContains(err, "BadRequestException", otherErrMsg) {
-				log.Printf("[DEBUG] Retrying API Gateway Account update: %s", err)
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		out, err = conn.UpdateAccount(&input)
-	}
-	if err != nil {
-		return fmt.Errorf("Updating API Gateway Account failed: %s", err)
-	}
-	log.Printf("[DEBUG] API Gateway Account updated: %s", out)
-
-	d.SetId("api-gateway-account")
-	return resourceAccountRead(d, meta)
-}
-
-func resourceAccountDelete(d *schema.ResourceData, meta interface{}) error {
-	// There is no API for "deleting" account or resetting it to "default" settings
-	return nil
+	return diags
 }

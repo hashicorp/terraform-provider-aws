@@ -12,20 +12,21 @@ import (
 )
 
 func TestAccVPCDHCPOptionsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_dhcp_options.test"
 	datasourceName := "data.aws_vpc_dhcp_options.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccVPCDHCPOptionsDataSourceConfig_Missing,
+				Config:      testAccVPCDHCPOptionsDataSourceConfig_missing,
 				ExpectError: regexp.MustCompile(`no matching EC2 DHCP Options Set found`),
 			},
 			{
-				Config: testAccVPCDHCPOptionsDataSourceConfig_dhcpOptionsID,
+				Config: testAccVPCDHCPOptionsDataSourceConfig_id,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "dhcp_options_id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "domain_name", resourceName, "domain_name"),
@@ -48,17 +49,18 @@ func TestAccVPCDHCPOptionsDataSource_basic(t *testing.T) {
 }
 
 func TestAccVPCDHCPOptionsDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_vpc_dhcp_options.test.0"
 	datasourceName := "data.aws_vpc_dhcp_options.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCDHCPOptionsDataSourceConfig_Filter(rInt, 1),
+				Config: testAccVPCDHCPOptionsDataSourceConfig_filter(rInt, 1),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "dhcp_options_id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "domain_name", resourceName, "domain_name"),
@@ -76,7 +78,7 @@ func TestAccVPCDHCPOptionsDataSource_filter(t *testing.T) {
 				),
 			},
 			{
-				Config:      testAccVPCDHCPOptionsDataSourceConfig_Filter(rInt, 2),
+				Config:      testAccVPCDHCPOptionsDataSourceConfig_filter(rInt, 2),
 				ExpectError: regexp.MustCompile(`multiple EC2 DHCP Options Sets matched`),
 			},
 			{
@@ -84,19 +86,19 @@ func TestAccVPCDHCPOptionsDataSource_filter(t *testing.T) {
 				// test case with resources in the state and an erroneous config, and
 				// thus the automatic destroy step will fail. This ensures we end with
 				// both an empty state and a valid config.
-				Config: `/* this config intentionally left blank */`,
+				Config: testAccVPCDHCPOptionsDataSourceConfig_blank(),
 			},
 		},
 	})
 }
 
-const testAccVPCDHCPOptionsDataSourceConfig_Missing = `
+const testAccVPCDHCPOptionsDataSourceConfig_missing = `
 data "aws_vpc_dhcp_options" "test" {
   dhcp_options_id = "does-not-exist"
 }
 `
 
-const testAccVPCDHCPOptionsDataSourceConfig_dhcpOptionsID = `
+const testAccVPCDHCPOptionsDataSourceConfig_id = `
 resource "aws_vpc_dhcp_options" "incorrect" {
   domain_name = "tf-acc-test-incorrect.example.com"
 }
@@ -118,7 +120,7 @@ data "aws_vpc_dhcp_options" "test" {
 }
 `
 
-func testAccVPCDHCPOptionsDataSourceConfig_Filter(rInt, count int) string {
+func testAccVPCDHCPOptionsDataSourceConfig_filter(rInt, count int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc_dhcp_options" "incorrect" {
   domain_name = "tf-acc-test-incorrect.example.com"
@@ -150,4 +152,8 @@ data "aws_vpc_dhcp_options" "test" {
   }
 }
 `, rInt, count)
+}
+
+func testAccVPCDHCPOptionsDataSourceConfig_blank() string {
+	return `/* this config intentionally left blank */`
 }

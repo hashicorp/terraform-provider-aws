@@ -19,7 +19,7 @@ Manages a RDS DB Cluster association with an IAM Role. Example use cases:
 resource "aws_rds_cluster_role_association" "example" {
   db_cluster_identifier = aws_rds_cluster.example.id
   feature_name          = "S3_INTEGRATION"
-  role_arn              = aws_iam_role.example.id
+  role_arn              = aws_iam_role.example.arn
 }
 ```
 
@@ -36,6 +36,13 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - DB Cluster Identifier and IAM Role ARN separated by a comma (`,`)
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 

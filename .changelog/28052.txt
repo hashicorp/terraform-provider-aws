@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_ecs_cluster: Add `service_connect_defaults` argument
+```
+
+```release-note:enhancement
+resource/aws_ecs_service: Add `service_connect_configuration` argument in support of [ECS Service Connect](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-connect.html)
+```
+
+```release-note:enhancement
+data-source/aws_ecs_cluster: Add `service_connect_defaults` attribute
+```

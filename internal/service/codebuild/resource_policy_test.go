@@ -1,6 +1,7 @@
 package codebuild_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,20 +16,21 @@ import (
 )
 
 func TestAccCodeBuildResourcePolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var reportGroup codebuild.GetResourcePolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_resource_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, codebuild.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckResourcePolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyBasicConfig(rName),
+				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourcePolicyExists(resourceName, &reportGroup),
+					testAccCheckResourcePolicyExists(ctx, resourceName, &reportGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_codebuild_report_group.test", "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
@@ -43,22 +45,23 @@ func TestAccCodeBuildResourcePolicy_basic(t *testing.T) {
 }
 
 func TestAccCodeBuildResourcePolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var reportGroup codebuild.GetResourcePolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_resource_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, codebuild.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckResourcePolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyBasicConfig(rName),
+				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourcePolicyExists(resourceName, &reportGroup),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcodebuild.ResourceResourcePolicy(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcodebuild.ResourceResourcePolicy(), resourceName),
+					testAccCheckResourcePolicyExists(ctx, resourceName, &reportGroup),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodebuild.ResourceResourcePolicy(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodebuild.ResourceResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -67,22 +70,23 @@ func TestAccCodeBuildResourcePolicy_disappears(t *testing.T) {
 }
 
 func TestAccCodeBuildResourcePolicy_disappears_resource(t *testing.T) {
+	ctx := acctest.Context(t)
 	var reportGroup codebuild.GetResourcePolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_resource_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, codebuild.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckResourcePolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyBasicConfig(rName),
+				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourcePolicyExists(resourceName, &reportGroup),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcodebuild.ResourceReportGroup(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcodebuild.ResourceResourcePolicy(), resourceName),
+					testAccCheckResourcePolicyExists(ctx, resourceName, &reportGroup),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodebuild.ResourceReportGroup(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodebuild.ResourceResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -90,41 +94,42 @@ func TestAccCodeBuildResourcePolicy_disappears_resource(t *testing.T) {
 	})
 }
 
-func testAccCheckResourcePolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
+func testAccCheckResourcePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_codebuild_resource_policy" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_codebuild_resource_policy" {
+				continue
+			}
+
+			resp, err := tfcodebuild.FindResourcePolicyByARN(ctx, conn, rs.Primary.ID)
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if resp != nil {
+				return fmt.Errorf("Found Resource Policy %s", rs.Primary.ID)
+			}
 		}
-
-		resp, err := tfcodebuild.FindResourcePolicyByARN(conn, rs.Primary.ID)
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if resp != nil {
-			return fmt.Errorf("Found Resource Policy %s", rs.Primary.ID)
-		}
-
+		return nil
 	}
-	return nil
 }
 
-func testAccCheckResourcePolicyExists(name string, policy *codebuild.GetResourcePolicyOutput) resource.TestCheckFunc {
+func testAccCheckResourcePolicyExists(ctx context.Context, name string, policy *codebuild.GetResourcePolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn()
 
-		resp, err := tfcodebuild.FindResourcePolicyByARN(conn, rs.Primary.ID)
+		resp, err := tfcodebuild.FindResourcePolicyByARN(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -139,7 +144,7 @@ func testAccCheckResourcePolicyExists(name string, policy *codebuild.GetResource
 	}
 }
 
-func testAccResourcePolicyBasicConfig(rName string) string {
+func testAccResourcePolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codebuild_report_group" "test" {
   name = %[1]q

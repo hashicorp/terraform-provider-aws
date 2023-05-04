@@ -2,7 +2,6 @@ package appintegrations
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"regexp"
 
@@ -16,17 +15,22 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_appintegrations_data_integration", name="Data Integration")
+// @Tags(identifierAttribute="arn")
 func ResourceDataIntegration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceDataIntegrationCreate,
-		ReadContext:   resourceDataIntegrationRead,
-		UpdateContext: resourceDataIntegrationUpdate,
-		DeleteContext: resourceDataIntegrationDelete,
+		CreateWithoutTimeout: resourceDataIntegrationCreate,
+		ReadWithoutTimeout:   resourceDataIntegrationRead,
+		UpdateWithoutTimeout: resourceDataIntegrationUpdate,
+		DeleteWithoutTimeout: resourceDataIntegrationDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -91,46 +95,35 @@ func ResourceDataIntegration() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`^\w+\:\/\/\w+\/[\w/!@#+=.-]+$`), "should be a valid source uri"),
 				),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceDataIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
 
 	name := d.Get("name").(string)
-
 	input := &appintegrationsservice.CreateDataIntegrationInput{
 		ClientToken:    aws.String(resource.UniqueId()),
 		KmsKey:         aws.String(d.Get("kms_key").(string)),
 		Name:           aws.String(name),
 		ScheduleConfig: expandScheduleConfig(d.Get("schedule_config").([]interface{})),
 		SourceURI:      aws.String(d.Get("source_uri").(string)),
+		Tags:           GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating AppIntegrations Data Integration %s", input)
-
 	output, err := conn.CreateDataIntegrationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating AppIntegrations Data Integration (%s): %w", name, err))
-	}
-
-	if output == nil {
-		return diag.FromErr(fmt.Errorf("error creating AppIntegrations Data Integration (%s): empty output", name))
+		return diag.Errorf("creating AppIntegrations Data Integration (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.Id))
@@ -139,14 +132,10 @@ func resourceDataIntegrationCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceDataIntegrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
 
-	id := d.Id()
-
-	resp, err := conn.GetDataIntegrationWithContext(ctx, &appintegrationsservice.GetDataIntegrationInput{
-		Identifier: aws.String(id),
+	output, err := conn.GetDataIntegrationWithContext(ctx, &appintegrationsservice.GetDataIntegrationInput{
+		Identifier: aws.String(d.Id()),
 	})
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appintegrationsservice.ErrCodeResourceNotFoundException) {
@@ -156,58 +145,33 @@ func resourceDataIntegrationRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting AppIntegrations Data Integration (%s): %w", d.Id(), err))
+		return diag.Errorf("reading AppIntegrations Data Integration (%s): %s", d.Id(), err)
 	}
 
-	if resp == nil {
-		return diag.FromErr(fmt.Errorf("error getting AppIntegrations Data Integration (%s): empty response", d.Id()))
+	d.Set("arn", output.Arn)
+	d.Set("description", output.Description)
+	d.Set("kms_key", output.KmsKey)
+	d.Set("name", output.Name)
+	if err := d.Set("schedule_config", flattenScheduleConfig(output.ScheduleConfiguration)); err != nil {
+		return diag.Errorf("schedule_config tags: %s", err)
 	}
-
-	d.Set("arn", resp.Arn)
-	d.Set("description", resp.Description)
-	d.Set("kms_key", resp.KmsKey)
-	d.Set("name", resp.Name)
-	d.Set("source_uri", resp.SourceURI)
-
-	if err := d.Set("schedule_config", flattenScheduleConfig(resp.ScheduleConfiguration)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting schedule_config: %w", err))
-	}
-
-	tags := KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
-	}
+	d.Set("source_uri", output.SourceURI)
 
 	return nil
 }
 
 func resourceDataIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn
-
-	id := d.Id()
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
 
 	if d.HasChanges("description", "name") {
 		_, err := conn.UpdateDataIntegrationWithContext(ctx, &appintegrationsservice.UpdateDataIntegrationInput{
 			Description: aws.String(d.Get("description").(string)),
-			Identifier:  aws.String(id),
+			Identifier:  aws.String(d.Id()),
 			Name:        aws.String(d.Get("name").(string)),
 		})
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating DataIntegration (%s): %w", d.Id(), err))
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
+			return diag.Errorf("updating AppIntegrations Data Integration (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -215,16 +179,14 @@ func resourceDataIntegrationUpdate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceDataIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn
-
-	id := d.Id()
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
 
 	_, err := conn.DeleteDataIntegrationWithContext(ctx, &appintegrationsservice.DeleteDataIntegrationInput{
-		DataIntegrationIdentifier: aws.String(id),
+		DataIntegrationIdentifier: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting DataIntegration (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting AppIntegrations Data Integration (%s): %s", d.Id(), err)
 	}
 
 	return nil

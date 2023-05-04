@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_dynamodb_kinesis_streaming_destination")
 func ResourceKinesisStreamingDestination() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceKinesisStreamingDestinationCreate,
@@ -42,7 +43,7 @@ func ResourceKinesisStreamingDestination() *schema.Resource {
 }
 
 func resourceKinesisStreamingDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DynamoDBConn
+	conn := meta.(*conns.AWSClient).DynamoDBConn()
 
 	streamArn := d.Get("stream_arn").(string)
 	tableName := d.Get("table_name").(string)
@@ -72,7 +73,7 @@ func resourceKinesisStreamingDestinationCreate(ctx context.Context, d *schema.Re
 }
 
 func resourceKinesisStreamingDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DynamoDBConn
+	conn := meta.(*conns.AWSClient).DynamoDBConn()
 
 	tableName, streamArn, err := KinesisStreamingDestinationParseID(d.Id())
 
@@ -80,7 +81,7 @@ func resourceKinesisStreamingDestinationRead(ctx context.Context, d *schema.Reso
 		return diag.FromErr(err)
 	}
 
-	output, err := FindDynamoDBKinesisDataStreamDestination(ctx, conn, streamArn, tableName)
+	output, err := FindKinesisDataStreamDestination(ctx, conn, streamArn, tableName)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] DynamoDB Kinesis Streaming Destination (stream: %s, table: %s) not found, removing from state", streamArn, tableName)
@@ -108,7 +109,7 @@ func resourceKinesisStreamingDestinationRead(ctx context.Context, d *schema.Reso
 }
 
 func resourceKinesisStreamingDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DynamoDBConn
+	conn := meta.(*conns.AWSClient).DynamoDBConn()
 
 	tableName, streamArn, err := KinesisStreamingDestinationParseID(d.Id())
 

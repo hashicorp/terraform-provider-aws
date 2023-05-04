@@ -175,7 +175,7 @@ resource "aws_lambda_function" "OnConnectFunction" {
   function_name = "OnConnectFunction"
   role          = aws_iam_role.OnConnectRole.arn
   handler       = "app.handler"
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
   memory_size   = 256
 
   environment {
@@ -259,7 +259,7 @@ resource "aws_lambda_function" "OnDisconnectFunction" {
   function_name = "OnDisconnectFunction"
   role          = aws_iam_role.OnDisconnectRole.arn
   handler       = "app.handler"
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
   memory_size   = 256
 
   environment {
@@ -343,7 +343,7 @@ resource "aws_lambda_function" "SendMessageFunction" {
   function_name = "SendMessageFunction"
   role          = aws_iam_role.SendMessageRole.arn
   handler       = "app.handler"
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
   memory_size   = 256
 
   environment {

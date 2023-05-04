@@ -1,6 +1,7 @@
 package appintegrations_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -15,6 +16,7 @@ import (
 )
 
 func TestAccDataIntegration_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dataIntegration appintegrationsservice.GetDataIntegrationOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -32,15 +34,15 @@ func TestAccDataIntegration_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDataIntegrationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataIntegrationConfig_basic(rName, description, sourceUri, firstExecutionFrom),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataIntegrationExists(resourceName, &dataIntegration),
+					testAccCheckDataIntegrationExists(ctx, resourceName, &dataIntegration),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key", "aws_kms_key.test", "arn"),
@@ -64,6 +66,7 @@ func TestAccDataIntegration_basic(t *testing.T) {
 }
 
 func TestAccDataIntegration_updateDescription(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dataIntegration appintegrationsservice.GetDataIntegrationOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -82,15 +85,15 @@ func TestAccDataIntegration_updateDescription(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDataIntegrationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataIntegrationConfig_basic(rName, originalDescription, sourceUri, firstExecutionFrom),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataIntegrationExists(resourceName, &dataIntegration),
+					testAccCheckDataIntegrationExists(ctx, resourceName, &dataIntegration),
 					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
 				),
 			},
@@ -102,7 +105,7 @@ func TestAccDataIntegration_updateDescription(t *testing.T) {
 			{
 				Config: testAccDataIntegrationConfig_basic(rName, updatedDescription, sourceUri, firstExecutionFrom),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataIntegrationExists(resourceName, &dataIntegration),
+					testAccCheckDataIntegrationExists(ctx, resourceName, &dataIntegration),
 					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
 				),
 			},
@@ -111,6 +114,7 @@ func TestAccDataIntegration_updateDescription(t *testing.T) {
 }
 
 func TestAccDataIntegration_updateName(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dataIntegration appintegrationsservice.GetDataIntegrationOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -129,15 +133,15 @@ func TestAccDataIntegration_updateName(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDataIntegrationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataIntegrationConfig_basic(rName, description, sourceUri, firstExecutionFrom),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataIntegrationExists(resourceName, &dataIntegration),
+					testAccCheckDataIntegrationExists(ctx, resourceName, &dataIntegration),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
@@ -149,7 +153,7 @@ func TestAccDataIntegration_updateName(t *testing.T) {
 			{
 				Config: testAccDataIntegrationConfig_basic(rName2, description, sourceUri, firstExecutionFrom),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataIntegrationExists(resourceName, &dataIntegration),
+					testAccCheckDataIntegrationExists(ctx, resourceName, &dataIntegration),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 				),
 			},
@@ -158,6 +162,7 @@ func TestAccDataIntegration_updateName(t *testing.T) {
 }
 
 func TestAccDataIntegration_updateTags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dataIntegration appintegrationsservice.GetDataIntegrationOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -175,15 +180,15 @@ func TestAccDataIntegration_updateTags(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDataIntegrationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataIntegrationConfig_basic(rName, description, sourceUri, firstExecutionFrom),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataIntegrationExists(resourceName, &dataIntegration),
+					testAccCheckDataIntegrationExists(ctx, resourceName, &dataIntegration),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 				),
@@ -196,7 +201,7 @@ func TestAccDataIntegration_updateTags(t *testing.T) {
 			{
 				Config: testAccDataIntegrationConfig_tags(rName, description, sourceUri, firstExecutionFrom),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataIntegrationExists(resourceName, &dataIntegration),
+					testAccCheckDataIntegrationExists(ctx, resourceName, &dataIntegration),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2a"),
@@ -205,7 +210,7 @@ func TestAccDataIntegration_updateTags(t *testing.T) {
 			{
 				Config: testAccDataIntegrationConfig_tagsUpdated(rName, description, sourceUri, firstExecutionFrom),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataIntegrationExists(resourceName, &dataIntegration),
+					testAccCheckDataIntegrationExists(ctx, resourceName, &dataIntegration),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
@@ -216,30 +221,33 @@ func TestAccDataIntegration_updateTags(t *testing.T) {
 	})
 }
 
-func testAccCheckDataIntegrationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppIntegrationsConn
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_appintegrations_data_integration" {
-			continue
-		}
+func testAccCheckDataIntegrationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppIntegrationsConn()
 
-		input := &appintegrationsservice.GetDataIntegrationInput{
-			Identifier: aws.String(rs.Primary.ID),
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_appintegrations_data_integration" {
+				continue
+			}
 
-		resp, err := conn.GetDataIntegration(input)
+			input := &appintegrationsservice.GetDataIntegrationInput{
+				Identifier: aws.String(rs.Primary.ID),
+			}
 
-		if err == nil {
-			if aws.StringValue(resp.Id) == rs.Primary.ID {
-				return fmt.Errorf("Data Integration '%s' was not deleted properly", rs.Primary.ID)
+			resp, err := conn.GetDataIntegrationWithContext(ctx, input)
+
+			if err == nil {
+				if aws.StringValue(resp.Id) == rs.Primary.ID {
+					return fmt.Errorf("Data Integration '%s' was not deleted properly", rs.Primary.ID)
+				}
 			}
 		}
-	}
 
-	return nil
+		return nil
+	}
 }
 
-func testAccCheckDataIntegrationExists(name string, dataIntegration *appintegrationsservice.GetDataIntegrationOutput) resource.TestCheckFunc {
+func testAccCheckDataIntegrationExists(ctx context.Context, name string, dataIntegration *appintegrationsservice.GetDataIntegrationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 
@@ -247,11 +255,11 @@ func testAccCheckDataIntegrationExists(name string, dataIntegration *appintegrat
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppIntegrationsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppIntegrationsConn()
 		input := &appintegrationsservice.GetDataIntegrationInput{
 			Identifier: aws.String(rs.Primary.ID),
 		}
-		resp, err := conn.GetDataIntegration(input)
+		resp, err := conn.GetDataIntegrationWithContext(ctx, input)
 
 		if err != nil {
 			return err

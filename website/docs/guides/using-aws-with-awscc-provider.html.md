@@ -8,7 +8,7 @@ description: |-
 
 # Using AWS & AWSCC Provider Together
 
-~> **NOTE**: The `awscc` provider is currently in technical preview. This means some aspects of its design and implementation are not yet considered stable for production use. We are actively looking for community feedback in order to identify needed improvements.
+~> **NOTE:** The `awscc` provider is currently in technical preview. This means some aspects of its design and implementation are not yet considered stable for production use. We are actively looking for community feedback in order to identify needed improvements.
 
 The [HashiCorp Terraform AWS Cloud Control Provider](https://registry.terraform.io/providers/hashicorp/awscc/latest) aims to bring Amazon Web Services (AWS) resources to Terraform users faster. The new provider is automatically generated, which means new features and services on AWS can be supported right away. The AWS Cloud Control provider supports hundreds of AWS resources, with more support being added as AWS service teams adopt the Cloud Control API standard.
 
@@ -39,7 +39,7 @@ Terraform can use many providers at once, as long as they are specified in your 
 
 ```terraform
 terraform {
-  required_version = ">= 0.15.3"
+  required_version = ">= 1.0.7"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -47,7 +47,7 @@ terraform {
     }
     awscc = {
       source  = "hashicorp/awscc"
-      version = ">= 0.21.0"
+      version = ">= 0.25.0"
     }
   }
 }
@@ -84,12 +84,13 @@ Above, we define a `awscc_networkmanager_global_network` with 2 tags and a descr
 
 Next we will create a [core network](https://docs.aws.amazon.com/vpc/latest/cloudwan/cloudwan-core-network-policy.html) using an AWSCC resource `awscc_networkmanager_core_network` and an AWS data source `data.aws_networkmanager_core_network_policy_document` which allows users to write HCL to generate the json policy used as the [core policy network](https://docs.aws.amazon.com/vpc/latest/cloudwan/cloudwan-policies-json.html).
 
-```
+```terraform
 resource "awscc_networkmanager_core_network" "main" {
   description       = "My Core Network"
   global_network_id = awscc_networkmanager_global_network.main.id
-  policy_document   = data.aws_networkmanager_core_network_policy_document.main.json
-  tags              = local.terraform_tag
+  # Compose jsonencode and jsondecode to produce a normalized JSON string.
+  policy_document = jsonencode(jsondecode(data.aws_networkmanager_core_network_policy_document.main.json))
+  tags            = local.terraform_tag
 }
 
 data "aws_networkmanager_core_network_policy_document" "main" {
@@ -104,7 +105,7 @@ data "aws_networkmanager_core_network_policy_document" "main" {
 
   segments {
     name                          = "shared"
-    description                   = "Segment for shared services"
+    description                   = "SegmentForSharedServices"
     require_attachment_acceptance = true
   }
 

@@ -11,18 +11,19 @@ import (
 )
 
 func TestAccLocationMapDataSource_mapName(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_location_map.test"
 	resourceName := "aws_location_map.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, locationservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMapDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMapDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigMapDataSource_mapName(rName),
+				Config: testAccMapDataSourceConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "configuration.#", resourceName, "configuration.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "configuration.0.style", resourceName, "configuration.0.style"),
@@ -38,7 +39,7 @@ func TestAccLocationMapDataSource_mapName(t *testing.T) {
 	})
 }
 
-func testAccConfigMapDataSource_mapName(rName string) string {
+func testAccMapDataSourceConfig_name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_location_map" "test" {
   configuration {

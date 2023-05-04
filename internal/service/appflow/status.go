@@ -5,13 +5,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appflow"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FlowStatus(ctx context.Context, conn *appflow.Appflow, id string) resource.StateRefreshFunc {
+func FlowStatus(ctx context.Context, conn *appflow.Appflow, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := FindFlowByArn(ctx, conn, id)
+		out, err := FindFlowByARN(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

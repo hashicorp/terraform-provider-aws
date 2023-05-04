@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_mskconnect_connector")
 func ResourceConnector() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectorCreate,
@@ -382,7 +383,7 @@ func ResourceConnector() *schema.Resource {
 }
 
 func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn
+	conn := meta.(*conns.AWSClient).KafkaConnectConn()
 
 	name := d.Get("name").(string)
 	input := &kafkaconnect.CreateConnectorInput{
@@ -428,7 +429,7 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn
+	conn := meta.(*conns.AWSClient).KafkaConnectConn()
 
 	connector, err := FindConnectorByARN(ctx, conn, d.Id())
 
@@ -499,7 +500,7 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn
+	conn := meta.(*conns.AWSClient).KafkaConnectConn()
 
 	input := &kafkaconnect.UpdateConnectorInput{
 		Capacity:       expandCapacityUpdate(d.Get("capacity").([]interface{})[0].(map[string]interface{})),
@@ -524,7 +525,7 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceConnectorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn
+	conn := meta.(*conns.AWSClient).KafkaConnectConn()
 
 	log.Printf("[DEBUG] Deleting MSK Connect Connector: %s", d.Id())
 	_, err := conn.DeleteConnectorWithContext(ctx, &kafkaconnect.DeleteConnectorInput{
@@ -762,13 +763,13 @@ func expandApacheCluster(tfMap map[string]interface{}) *kafkaconnect.ApacheKafka
 	}
 
 	if v, ok := tfMap["vpc"].([]interface{}); ok && len(v) > 0 {
-		apiObject.Vpc = expandVpc(v[0].(map[string]interface{}))
+		apiObject.Vpc = expandVPC(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
 }
 
-func expandVpc(tfMap map[string]interface{}) *kafkaconnect.Vpc {
+func expandVPC(tfMap map[string]interface{}) *kafkaconnect.Vpc {
 	if tfMap == nil {
 		return nil
 	}
@@ -1104,13 +1105,13 @@ func flattenApacheClusterDescription(apiObject *kafkaconnect.ApacheKafkaClusterD
 	}
 
 	if v := apiObject.Vpc; v != nil {
-		tfMap["vpc"] = []interface{}{flattenVpcDescription(v)}
+		tfMap["vpc"] = []interface{}{flattenVPCDescription(v)}
 	}
 
 	return tfMap
 }
 
-func flattenVpcDescription(apiObject *kafkaconnect.VpcDescription) map[string]interface{} {
+func flattenVPCDescription(apiObject *kafkaconnect.VpcDescription) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
