@@ -17,6 +17,7 @@ Upgrade topics:
 <!-- TOC depthFrom:2 depthTo:2 -->
 
 - [Provider Version Configuration](#provider-version-configuration)
+- [Provider Arguments](#provider-arguments)
 - [Data Source: aws_redshift_service_account](#data-source-aws_redshift_service_account)
 - [Data Source: aws_subnet_ids](#data-source-aws_subnet_ids)
 - [Resource: aws_acmpca_certificate_authority](#resource-aws_acmpca_certificate_authority)
@@ -72,6 +73,12 @@ provider "aws" {
   # Configuration options
 }
 ```
+
+## Provider Arguments
+
+Version 5.0.0 removes these `provider` arguments:
+
+* `skip_get_ec2_platforms` - Removed following the retirement of EC2-Classic
 
 ## Resource: aws_acmpca_certificate_authority
 

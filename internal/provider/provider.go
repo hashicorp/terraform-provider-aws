@@ -192,13 +192,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Description: "Skip the credentials validation via STS API. " +
 					"Used for AWS API implementations that do not have STS available/implemented.",
 			},
-			"skip_get_ec2_platforms": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Description: "Skip getting the supported EC2 platforms. " +
-					"Used by users that don't have ec2:DescribeAccountAttributes permissions.",
-				Deprecated: `With the retirement of EC2-Classic the skip_get_ec2_platforms attribute has been deprecated and will be removed in a future version.`,
-			},
 			"skip_metadata_api_check": {
 				Type:         nullable.TypeNullableBool,
 				Optional:     true,
@@ -449,7 +442,6 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		S3UsePathStyle:                 d.Get("s3_use_path_style").(bool) || d.Get("s3_force_path_style").(bool),
 		SecretKey:                      d.Get("secret_key").(string),
 		SkipCredsValidation:            d.Get("skip_credentials_validation").(bool),
-		SkipGetEC2Platforms:            d.Get("skip_get_ec2_platforms").(bool),
 		SkipRegionValidation:           d.Get("skip_region_validation").(bool),
 		SkipRequestingAccountId:        d.Get("skip_requesting_account_id").(bool),
 		STSRegion:                      d.Get("sts_region").(string),
