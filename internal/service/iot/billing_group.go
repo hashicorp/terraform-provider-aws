@@ -180,12 +180,11 @@ func resourceBillingGroupDelete(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).IoTConn()
 
 	log.Printf("[DEBUG] Deleting IoT Billing Group: %s", d.Id())
-	_, err := tfresource.RetryWhen(ctx, BillingGroupDeleteTimeout,
-		func() (interface{}, error) {
-			return conn.DeleteBillingGroupWithContext(ctx, &iot.DeleteBillingGroupInput{
-				BillingGroupName: aws.String(d.Id()),
-			})
-		})
+	deleteParams := &iot.DeleteBillingGroupInput{
+		BillingGroupName: aws.String(d.Id()),
+	}
+
+	_, err := conn.DeleteBillingGroupWithContext(ctx, deleteParams)
 
 	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 		return diags

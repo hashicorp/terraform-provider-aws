@@ -35,6 +35,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_iot_authorizer",
 		},
 		{
+			Factory:  ResourceBillingGroup,
+			TypeName: "aws_iot_billing_group",
+			Name:     "Billing Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceCertificate,
 			TypeName: "aws_iot_certificate",
 		},
