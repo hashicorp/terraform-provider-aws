@@ -7,10 +7,12 @@ NOTES:
 
 FEATURES:
 
+* **New Data Source:** `aws_appintegrations_event_integration` ([#24965](https://github.com/hashicorp/terraform-provider-aws/issues/24965))
 * **New Data Source:** `aws_dms_replication_instance` ([#15406](https://github.com/hashicorp/terraform-provider-aws/issues/15406))
 * **New Data Source:** `aws_vpclattice_auth_policy` ([#30898](https://github.com/hashicorp/terraform-provider-aws/issues/30898))
 * **New Data Source:** `aws_vpclattice_service_network` ([#30904](https://github.com/hashicorp/terraform-provider-aws/issues/30904))
 * **New Resource:** `aws_account_primary_contact` ([#26123](https://github.com/hashicorp/terraform-provider-aws/issues/26123))
+* **New Resource:** `aws_appintegrations_data_integration` ([#24941](https://github.com/hashicorp/terraform-provider-aws/issues/24941))
 * **New Resource:** `aws_chimesdkvoice_voice_profile_domain` ([#30977](https://github.com/hashicorp/terraform-provider-aws/issues/30977))
 * **New Resource:** `aws_directory_service_trust` ([#31037](https://github.com/hashicorp/terraform-provider-aws/issues/31037))
 * **New Resource:** `aws_vpclattice_access_log_subscription` ([#30896](https://github.com/hashicorp/terraform-provider-aws/issues/30896))
