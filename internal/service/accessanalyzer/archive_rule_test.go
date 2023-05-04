@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/accessanalyzer"
+	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -13,20 +13,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfaccessanalyzer "github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccAnalyzerArchiveRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var archiveRule accessanalyzer.ArchiveRuleSummary
+	var archiveRule types.ArchiveRuleSummary
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_archive_rule.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, accessanalyzer.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.AccessAnalyzerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AccessAnalyzerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckArchiveRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -48,7 +49,7 @@ func testAccAnalyzerArchiveRule_basic(t *testing.T) {
 
 func testAccAnalyzerArchiveRule_updateFilters(t *testing.T) {
 	ctx := acctest.Context(t)
-	var archiveRule accessanalyzer.ArchiveRuleSummary
+	var archiveRule types.ArchiveRuleSummary
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_archive_rule.test"
 
@@ -80,9 +81,9 @@ filter {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, accessanalyzer.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.AccessAnalyzerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AccessAnalyzerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckArchiveRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -121,16 +122,16 @@ filter {
 
 func testAccAnalyzerArchiveRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var archiveRule accessanalyzer.ArchiveRuleSummary
+	var archiveRule types.ArchiveRuleSummary
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_archive_rule.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, accessanalyzer.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.AccessAnalyzerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AccessAnalyzerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckArchiveRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -148,19 +149,20 @@ func testAccAnalyzerArchiveRule_disappears(t *testing.T) {
 
 func testAccCheckArchiveRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerClient()
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_accessanalyzer_archive_rule" {
 				continue
 			}
 
-			analyzerName, ruleName, err := tfaccessanalyzer.DecodeRuleID(rs.Primary.ID)
+			analyzerName, ruleName, err := tfaccessanalyzer.ArchiveRuleParseResourceID(rs.Primary.ID)
+
 			if err != nil {
-				return fmt.Errorf("unable to decode AccessAnalyzer ArchiveRule ID (%s): %s", rs.Primary.ID, err)
+				return err
 			}
 
-			_, err = tfaccessanalyzer.FindArchiveRule(ctx, conn, analyzerName, ruleName)
+			_, err = tfaccessanalyzer.FindArchiveRuleByTwoPartKey(ctx, conn, analyzerName, ruleName)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -170,37 +172,39 @@ func testAccCheckArchiveRuleDestroy(ctx context.Context) resource.TestCheckFunc 
 				return err
 			}
 
-			return fmt.Errorf("expected AccessAnalyzer ArchiveRule to be destroyed, %s found", rs.Primary.ID)
+			return fmt.Errorf("IAM Access Analyzer Archive Rule %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckArchiveRuleExists(ctx context.Context, name string, archiveRule *accessanalyzer.ArchiveRuleSummary) resource.TestCheckFunc {
+func testAccCheckArchiveRuleExists(ctx context.Context, n string, v *types.ArchiveRuleSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No AccessAnalyzer ArchiveRule is set")
+			return fmt.Errorf("No IAM Access Analyzer Archive Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn()
-		analyzerName, ruleName, err := tfaccessanalyzer.DecodeRuleID(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("unable to decode AccessAnalyzer ArchiveRule ID (%s): %s", rs.Primary.ID, err)
-		}
-
-		resp, err := tfaccessanalyzer.FindArchiveRule(ctx, conn, analyzerName, ruleName)
+		analyzerName, ruleName, err := tfaccessanalyzer.ArchiveRuleParseResourceID(rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("describing AccessAnalyzer ArchiveRule: %s", err.Error())
+			return err
 		}
 
-		*archiveRule = *resp
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerClient()
+
+		output, err := tfaccessanalyzer.FindArchiveRuleByTwoPartKey(ctx, conn, analyzerName, ruleName)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
 
 		return nil
 	}
