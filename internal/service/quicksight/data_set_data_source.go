@@ -219,8 +219,14 @@ func DataSourceDataSet() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchemaComputed(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
+			"tags_all": {
+				Type:       schema.TypeMap,
+				Optional:   true,
+				Computed:   true,
+				Elem:       &schema.Schema{Type: schema.TypeString},
+				Deprecated: `this attribute has been deprecated`,
+			},
 		},
 	}
 }
