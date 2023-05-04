@@ -143,15 +143,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Description: "The region where AWS operations will take place. Examples\n" +
 					"are us-east-1, us-west-2, etc.", // lintignore:AWSAT003,
 			},
-			"s3_force_path_style": {
-				Type:       schema.TypeBool,
-				Optional:   true,
-				Deprecated: "Use s3_use_path_style instead.",
-				Description: "Set this to true to enable the request to use path-style addressing,\n" +
-					"i.e., https://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\n" +
-					"use virtual hosted bucket addressing when possible\n" +
-					"(https://BUCKET.s3.amazonaws.com/KEY). Specific to the Amazon S3 service.",
-			},
 			"s3_use_path_style": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -172,32 +163,17 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Description: "List of paths to shared config files. If not set, defaults to [~/.aws/config].",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
-			"shared_credentials_file": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Deprecated:    "Use shared_credentials_files instead.",
-				ConflictsWith: []string{"shared_credentials_files"},
-				Description:   "The path to the shared credentials file. If not set, defaults to ~/.aws/credentials.",
-			},
 			"shared_credentials_files": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				ConflictsWith: []string{"shared_credentials_file"},
-				Description:   "List of paths to shared credentials files. If not set, defaults to [~/.aws/credentials].",
-				Elem:          &schema.Schema{Type: schema.TypeString},
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "List of paths to shared credentials files. If not set, defaults to [~/.aws/credentials].",
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"skip_credentials_validation": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Description: "Skip the credentials validation via STS API. " +
 					"Used for AWS API implementations that do not have STS available/implemented.",
-			},
-			"skip_get_ec2_platforms": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Description: "Skip getting the supported EC2 platforms. " +
-					"Used by users that don't have ec2:DescribeAccountAttributes permissions.",
-				Deprecated: `With the retirement of EC2-Classic the skip_get_ec2_platforms attribute has been deprecated and will be removed in a future version.`,
 			},
 			"skip_metadata_api_check": {
 				Type:         nullable.TypeNullableBool,
@@ -446,10 +422,9 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		MaxRetries:                     25, // Set default here, not in schema (muxing with v6 provider).
 		Profile:                        d.Get("profile").(string),
 		Region:                         d.Get("region").(string),
-		S3UsePathStyle:                 d.Get("s3_use_path_style").(bool) || d.Get("s3_force_path_style").(bool),
+		S3UsePathStyle:                 d.Get("s3_use_path_style").(bool),
 		SecretKey:                      d.Get("secret_key").(string),
 		SkipCredsValidation:            d.Get("skip_credentials_validation").(bool),
-		SkipGetEC2Platforms:            d.Get("skip_get_ec2_platforms").(bool),
 		SkipRegionValidation:           d.Get("skip_region_validation").(bool),
 		SkipRequestingAccountId:        d.Get("skip_requesting_account_id").(bool),
 		STSRegion:                      d.Get("sts_region").(string),
@@ -507,9 +482,7 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		config.MaxRetries = v.(int)
 	}
 
-	if v, ok := d.GetOk("shared_credentials_file"); ok {
-		config.SharedCredentialsFiles = []string{v.(string)}
-	} else if v, ok := d.GetOk("shared_credentials_files"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("shared_credentials_files"); ok && len(v.([]interface{})) > 0 {
 		config.SharedCredentialsFiles = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
@@ -548,19 +521,10 @@ func assumeRoleSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"duration": {
-					Type:          schema.TypeString,
-					Optional:      true,
-					Description:   "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
-					ValidateFunc:  validAssumeRoleDuration,
-					ConflictsWith: []string{"assume_role.0.duration_seconds"},
-				},
-				"duration_seconds": {
-					Type:          schema.TypeInt,
-					Optional:      true,
-					Deprecated:    "Use assume_role.duration instead",
-					Description:   "The duration, in seconds, of the role session.",
-					ValidateFunc:  validation.IntBetween(900, 43200),
-					ConflictsWith: []string{"assume_role.0.duration"},
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
+					ValidateFunc: validAssumeRoleDuration,
 				},
 				"external_id": {
 					Type:        schema.TypeString,
@@ -708,8 +672,6 @@ func expandAssumeRole(_ context.Context, tfMap map[string]interface{}) *awsbase.
 	if v, ok := tfMap["duration"].(string); ok && v != "" {
 		duration, _ := time.ParseDuration(v)
 		assumeRole.Duration = duration
-	} else if v, ok := tfMap["duration_seconds"].(int); ok && v != 0 {
-		assumeRole.Duration = time.Duration(v) * time.Second
 	}
 
 	if v, ok := tfMap["external_id"].(string); ok && v != "" {
@@ -757,8 +719,6 @@ func expandAssumeRoleWithWebIdentity(_ context.Context, tfMap map[string]interfa
 	if v, ok := tfMap["duration"].(string); ok && v != "" {
 		duration, _ := time.ParseDuration(v)
 		assumeRole.Duration = duration
-	} else if v, ok := tfMap["duration_seconds"].(int); ok && v != 0 {
-		assumeRole.Duration = time.Duration(v) * time.Second
 	}
 
 	if v, ok := tfMap["policy"].(string); ok && v != "" {
