@@ -111,7 +111,7 @@ func main() {
 	}
 }
 
-//go:embed file.tmpl
+//go:embed services.tmpl
 var tmpl string
 
 type acctestConfig struct {
