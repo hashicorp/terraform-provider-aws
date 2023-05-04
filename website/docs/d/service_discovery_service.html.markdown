@@ -37,7 +37,7 @@ In addition to all arguments above, the following attributes are exported:
 * `health_check_config` - Complex type that contains settings for an optional health check. Only for Public DNS namespaces.
 * `health_check_custom_config` -  A complex type that contains settings for ECS managed health checks.
 * `tags` - Map of tags to assign to the service. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - (**Deprecated**) Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ### dns_config
 
