@@ -3,51 +3,51 @@ subcategory: "IoT Core"
 layout: "aws"
 page_title: "AWS: aws_iot_billing_group"
 description: |-
-  Terraform resource for managing an AWS IoT Core Billing Group.
+    Manages an AWS IoT Billing Group.
 ---
 
 # Resource: aws_iot_billing_group
 
-Terraform resource for managing an AWS IoT Core Billing Group.
+Manages an AWS IoT Billing Group.
 
 ## Example Usage
 
-### Basic Usage
-
 ```terraform
 resource "aws_iot_billing_group" "example" {
+  name = "example"
+
+  properties {
+    description = "This is my billing group"
+  }
+
+  tags = {
+    terraform = "true"
+  }
 }
 ```
 
 ## Argument Reference
 
-The following arguments are required:
+* `name` - (Required) The name of the Billing Group.
+* `properties` - (Optional) The Billing Group properties. Defined below.
+* `tags` - (Optional) Key-value mapping of resource tags
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+### properties Reference
 
-The following arguments are optional:
-
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `description` - (Optional) A description of the Billing Group.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - ARN of the Billing Group. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `arn` - The ARN of the Billing Group.
+* `id` - The Billing Group ID.
+* `version` - The current version of the Billing Group record in the registry.
 
 ## Import
 
-IoT Core Billing Group can be imported using the `example_id_arg`, e.g.,
+IoT Billing Groups can be imported using the name, e.g.
 
 ```
-$ terraform import aws_iot_billing_group.example rft-8012925589
+$ terraform import aws_iot_billing_group.example example
 ```
