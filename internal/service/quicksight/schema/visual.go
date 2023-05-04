@@ -2,11 +2,13 @@ package schema
 
 import (
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 const customActionsMaxItems = 10
@@ -2018,6 +2020,234 @@ func flattenDataPathValue(apiObject *quicksight.DataPathValue) []interface{} {
 	}
 	if apiObject.FieldValue != nil {
 		tfMap["field_value"] = aws.StringValue(apiObject.FieldValue)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenColumnHierarchy(apiObject []*quicksight.ColumnHierarchy) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if config.DateTimeHierarchy != nil {
+			tfMap["date_time_hierarchy"] = flattenDateTimeHierarchy(config.DateTimeHierarchy)
+		}
+		if config.ExplicitHierarchy != nil {
+			tfMap["explicit_hierarchy"] = flattenExplicitHierarchy(config.ExplicitHierarchy)
+		}
+		if config.PredefinedHierarchy != nil {
+			tfMap["predefined_hierarchy"] = flattenPredefinedHierarchy(config.PredefinedHierarchy)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenDateTimeHierarchy(apiObject *quicksight.DateTimeHierarchy) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.HierarchyId != nil {
+		tfMap["hierarchy_id"] = aws.StringValue(apiObject.HierarchyId)
+	}
+	if apiObject.DrillDownFilters != nil {
+		tfMap["drill_down_filters"] = flattenDrillDownFilter(apiObject.DrillDownFilters)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenDrillDownFilter(apiObject []*quicksight.DrillDownFilter) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if config.CategoryFilter != nil {
+			tfMap["category_filter"] = flattenCategoryDrillDownFilter(config.CategoryFilter)
+		}
+		if config.NumericEqualityFilter != nil {
+			tfMap["numeric_equality_filter"] = flattenNumericEqualityDrillDownFilter(config.NumericEqualityFilter)
+		}
+		if config.TimeRangeFilter != nil {
+			tfMap["time_range_filter"] = flattenTimeRangeDrillDownFilter(config.TimeRangeFilter)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenCategoryDrillDownFilter(apiObject *quicksight.CategoryDrillDownFilter) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CategoryValues != nil {
+		tfMap["category_values"] = flex.FlattenStringList(apiObject.CategoryValues)
+	}
+	if apiObject.Column != nil {
+		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenNumericEqualityDrillDownFilter(apiObject *quicksight.NumericEqualityDrillDownFilter) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Column != nil {
+		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+	}
+	if apiObject.Value != nil {
+		tfMap["value"] = aws.Float64Value(apiObject.Value)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTimeRangeDrillDownFilter(apiObject *quicksight.TimeRangeDrillDownFilter) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Column != nil {
+		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
+	}
+	if apiObject.RangeMaximum != nil {
+		tfMap["range_maximum"] = aws.TimeValue(apiObject.RangeMaximum).Format(time.RFC3339)
+	}
+	if apiObject.RangeMinimum != nil {
+		tfMap["range_minimum"] = aws.TimeValue(apiObject.RangeMinimum).Format(time.RFC3339)
+	}
+	if apiObject.TimeGranularity != nil {
+		tfMap["time_granularity"] = aws.StringValue(apiObject.TimeGranularity)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenExplicitHierarchy(apiObject *quicksight.ExplicitHierarchy) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Columns != nil {
+		tfMap["columns"] = flattenColumnIdentifiers(apiObject.Columns)
+	}
+	if apiObject.HierarchyId != nil {
+		tfMap["hierarchy_id"] = aws.StringValue(apiObject.HierarchyId)
+	}
+	if apiObject.DrillDownFilters != nil {
+		tfMap["drill_down_filters"] = flattenDrillDownFilter(apiObject.DrillDownFilters)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenPredefinedHierarchy(apiObject *quicksight.PredefinedHierarchy) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Columns != nil {
+		tfMap["columns"] = flattenColumnIdentifiers(apiObject.Columns)
+	}
+	if apiObject.HierarchyId != nil {
+		tfMap["hierarchy_id"] = aws.StringValue(apiObject.HierarchyId)
+	}
+	if apiObject.DrillDownFilters != nil {
+		tfMap["drill_down_filters"] = flattenDrillDownFilter(apiObject.DrillDownFilters)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenVisualSubtitleLabelOptions(apiObject *quicksight.VisualSubtitleLabelOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.FormatText != nil {
+		tfMap["format_text"] = flattenLongFormatText(apiObject.FormatText)
+	}
+	if apiObject.Visibility != nil {
+		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenLongFormatText(apiObject *quicksight.LongFormatText) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.PlainText != nil {
+		tfMap["plain_text"] = aws.StringValue(apiObject.PlainText)
+	}
+	if apiObject.RichText != nil {
+		tfMap["rich_text"] = aws.StringValue(apiObject.RichText)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenVisualTitleLabelOptions(apiObject *quicksight.VisualTitleLabelOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.FormatText != nil {
+		tfMap["format_text"] = flattenShortFormatText(apiObject.FormatText)
+	}
+	if apiObject.Visibility != nil {
+		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenShortFormatText(apiObject *quicksight.ShortFormatText) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.PlainText != nil {
+		tfMap["plain_text"] = aws.StringValue(apiObject.PlainText)
+	}
+	if apiObject.RichText != nil {
+		tfMap["rich_text"] = aws.StringValue(apiObject.RichText)
 	}
 
 	return []interface{}{tfMap}
