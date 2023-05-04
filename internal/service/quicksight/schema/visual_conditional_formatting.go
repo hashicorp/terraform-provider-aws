@@ -487,3 +487,86 @@ func flattenConditionalFormattingSolidColor(apiObject *quicksight.ConditionalFor
 
 	return []interface{}{tfMap}
 }
+
+func flattenConditionalFormattingIcon(apiObject *quicksight.ConditionalFormattingIcon) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CustomCondition != nil {
+		tfMap["custom_condition"] = flattenConditionalFormattingCustomIconCondition(apiObject.CustomCondition)
+	}
+	if apiObject.IconSet != nil {
+		tfMap["icon_set"] = flattenConditionalFormattingIconSet(apiObject.IconSet)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenConditionalFormattingCustomIconCondition(apiObject *quicksight.ConditionalFormattingCustomIconCondition) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Color != nil {
+		tfMap["color"] = aws.StringValue(apiObject.Color)
+	}
+	if apiObject.Expression != nil {
+		tfMap["expression"] = aws.StringValue(apiObject.Expression)
+	}
+	if apiObject.IconOptions != nil {
+		tfMap["icon_options"] = flattenConditionalFormattingCustomIconOptions(apiObject.IconOptions)
+	}
+	if apiObject.DisplayConfiguration != nil {
+		tfMap["display_configuration"] = flattenConditionalFormattingIconDisplayConfiguration(apiObject.DisplayConfiguration)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenConditionalFormattingCustomIconOptions(apiObject *quicksight.ConditionalFormattingCustomIconOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Icon != nil {
+		tfMap["icon"] = aws.StringValue(apiObject.Icon)
+	}
+	if apiObject.UnicodeIcon != nil {
+		tfMap["unicode_icon"] = aws.StringValue(apiObject.UnicodeIcon)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenConditionalFormattingIconDisplayConfiguration(apiObject *quicksight.ConditionalFormattingIconDisplayConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.IconDisplayOption != nil {
+		tfMap["icon_display_option"] = aws.StringValue(apiObject.IconDisplayOption)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenConditionalFormattingIconSet(apiObject *quicksight.ConditionalFormattingIconSet) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Expression != nil {
+		tfMap["expression"] = aws.StringValue(apiObject.Expression)
+	}
+	if apiObject.IconSetType != nil {
+		tfMap["icon_set_type"] = aws.StringValue(apiObject.IconSetType)
+	}
+
+	return []interface{}{tfMap}
+}

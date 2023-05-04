@@ -84,7 +84,7 @@ func gaugeChartVisualSchema() *schema.Schema {
 															},
 														},
 													},
-													"reserve_angle": {
+													"reserve_range": {
 														Type:     schema.TypeInt,
 														Optional: true,
 													},
@@ -407,7 +407,7 @@ func expandArcAxisConfiguration(tfList []interface{}) *quicksight.ArcAxisConfigu
 	if v, ok := tfMap["range"].([]interface{}); ok && len(v) > 0 {
 		config.Range = expandArcAxisDisplayRange(v)
 	}
-	if v, ok := tfMap["reserve_angle"].(int64); ok {
+	if v, ok := tfMap["reserve_range"].(int64); ok {
 		config.ReserveRange = aws.Int64(v)
 	}
 
@@ -434,4 +434,244 @@ func expandArcAxisDisplayRange(tfList []interface{}) *quicksight.ArcAxisDisplayR
 	}
 
 	return config
+}
+
+func flattenGaugeChartVisual(apiObject *quicksight.GaugeChartVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"visual_id": aws.StringValue(apiObject.VisualId),
+	}
+	if apiObject.Actions != nil {
+		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
+	}
+	if apiObject.ChartConfiguration != nil {
+		tfMap["chart_configuration"] = flattenGaugeChartConfiguration(apiObject.ChartConfiguration)
+	}
+	if apiObject.ConditionalFormatting != nil {
+		tfMap["conditional_formatting"] = flattenGaugeChartConditionalFormatting(apiObject.ConditionalFormatting)
+	}
+	if apiObject.Subtitle != nil {
+		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
+	}
+	if apiObject.Title != nil {
+		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenGaugeChartConfiguration(apiObject *quicksight.GaugeChartConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.DataLabels != nil {
+		tfMap["data_labels"] = flattenDataLabelOptions(apiObject.DataLabels)
+	}
+	if apiObject.FieldWells != nil {
+		tfMap["field_wells"] = flattenGaugeChartFieldWells(apiObject.FieldWells)
+	}
+	if apiObject.GaugeChartOptions != nil {
+		tfMap["gauge_chart_options"] = flattenGaugeChartOptions(apiObject.GaugeChartOptions)
+	}
+	if apiObject.TooltipOptions != nil {
+		tfMap["tooltip"] = flattenTooltipOptions(apiObject.TooltipOptions)
+	}
+	if apiObject.VisualPalette != nil {
+		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenGaugeChartFieldWells(apiObject *quicksight.GaugeChartFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.TargetValues != nil {
+		tfMap["target_values"] = flattenMeasureField(apiObject.TargetValues)
+	}
+	if apiObject.Values != nil {
+		tfMap["values"] = flattenMeasureField(apiObject.Values)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenGaugeChartOptions(apiObject *quicksight.GaugeChartOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Arc != nil {
+		tfMap["arc"] = flattenArcConfiguration(apiObject.Arc)
+	}
+	if apiObject.ArcAxis != nil {
+		tfMap["arc_axis"] = flattenArcAxisConfiguration(apiObject.ArcAxis)
+	}
+	if apiObject.Comparison != nil {
+		tfMap["comparison"] = flattenComparisonConfiguration(apiObject.Comparison)
+	}
+	if apiObject.PrimaryValueDisplayType != nil {
+		tfMap["primary_value_display_type"] = aws.StringValue(apiObject.PrimaryValueDisplayType)
+	}
+	if apiObject.PrimaryValueFontConfiguration != nil {
+		tfMap["primary_value_font_configuration"] = flattenFontConfiguration(apiObject.PrimaryValueFontConfiguration)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenArcConfiguration(apiObject *quicksight.ArcConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ArcAngle != nil {
+		tfMap["arc_angle"] = aws.Float64Value(apiObject.ArcAngle)
+	}
+	if apiObject.ArcThickness != nil {
+		tfMap["arc_thickness"] = aws.StringValue(apiObject.ArcThickness)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenArcAxisConfiguration(apiObject *quicksight.ArcAxisConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Range != nil {
+		tfMap["range"] = flattenArcAxisDisplayRange(apiObject.Range)
+	}
+	if apiObject.ReserveRange != nil {
+		tfMap["reserve_range"] = aws.Int64Value(apiObject.ReserveRange)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenArcAxisDisplayRange(apiObject *quicksight.ArcAxisDisplayRange) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Max != nil {
+		tfMap["max"] = aws.Float64Value(apiObject.Max)
+	}
+	if apiObject.Min != nil {
+		tfMap["min"] = aws.Float64Value(apiObject.Min)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenComparisonConfiguration(apiObject *quicksight.ComparisonConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ComparisonFormat != nil {
+		tfMap["comparison_format"] = flattenComparisonFormatConfiguration(apiObject.ComparisonFormat)
+	}
+	if apiObject.ComparisonMethod != nil {
+		tfMap["comparison_method"] = aws.StringValue(apiObject.ComparisonMethod)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenComparisonFormatConfiguration(apiObject *quicksight.ComparisonFormatConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.NumberDisplayFormatConfiguration != nil {
+		tfMap["number_display_format_configuration"] = flattenNumberDisplayFormatConfiguration(apiObject.NumberDisplayFormatConfiguration)
+	}
+	if apiObject.PercentageDisplayFormatConfiguration != nil {
+		tfMap["percentage_display_format_configuration"] = flattenPercentageDisplayFormatConfiguration(apiObject.PercentageDisplayFormatConfiguration)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenGaugeChartConditionalFormatting(apiObject *quicksight.GaugeChartConditionalFormatting) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ConditionalFormattingOptions != nil {
+		tfMap["conditional_formatting_options"] = flattenGaugeChartConditionalFormattingOption(apiObject.ConditionalFormattingOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenGaugeChartConditionalFormattingOption(apiObject []*quicksight.GaugeChartConditionalFormattingOption) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if config.Arc != nil {
+			tfMap["arc"] = flattenGaugeChartArcConditionalFormatting(config.Arc)
+		}
+		if config.PrimaryValue != nil {
+			tfMap["primary_value"] = flattenGaugeChartPrimaryValueConditionalFormatting(config.PrimaryValue)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenGaugeChartArcConditionalFormatting(apiObject *quicksight.GaugeChartArcConditionalFormatting) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ForegroundColor != nil {
+		tfMap["foreground_color"] = flattenConditionalFormattingColor(apiObject.ForegroundColor)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenGaugeChartPrimaryValueConditionalFormatting(apiObject *quicksight.GaugeChartPrimaryValueConditionalFormatting) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Icon != nil {
+		tfMap["icon"] = flattenConditionalFormattingIcon(apiObject.Icon)
+	}
+	if apiObject.TextColor != nil {
+		tfMap["text_color"] = flattenConditionalFormattingColor(apiObject.TextColor)
+	}
+
+	return []interface{}{tfMap}
 }
