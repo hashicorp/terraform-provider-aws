@@ -143,15 +143,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Description: "The region where AWS operations will take place. Examples\n" +
 					"are us-east-1, us-west-2, etc.", // lintignore:AWSAT003,
 			},
-			"s3_force_path_style": {
-				Type:       schema.TypeBool,
-				Optional:   true,
-				Deprecated: "Use s3_use_path_style instead.",
-				Description: "Set this to true to enable the request to use path-style addressing,\n" +
-					"i.e., https://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\n" +
-					"use virtual hosted bucket addressing when possible\n" +
-					"(https://BUCKET.s3.amazonaws.com/KEY). Specific to the Amazon S3 service.",
-			},
 			"s3_use_path_style": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -439,7 +430,7 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		MaxRetries:                     25, // Set default here, not in schema (muxing with v6 provider).
 		Profile:                        d.Get("profile").(string),
 		Region:                         d.Get("region").(string),
-		S3UsePathStyle:                 d.Get("s3_use_path_style").(bool) || d.Get("s3_force_path_style").(bool),
+		S3UsePathStyle:                 d.Get("s3_use_path_style").(bool),
 		SecretKey:                      d.Get("secret_key").(string),
 		SkipCredsValidation:            d.Get("skip_credentials_validation").(bool),
 		SkipRegionValidation:           d.Get("skip_region_validation").(bool),

@@ -1,3 +1,3 @@
 ```release-note:breaking-change
-provider: The `skip_get_ec2_platforms` attribute has been removed
+provider: The `s3_force_path_style` and `skip_get_ec2_platforms` attributes have been removed
 ```
