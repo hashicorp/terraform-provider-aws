@@ -1449,17 +1449,6 @@ func flattenVisuals(apiObject []*quicksight.Visual) []interface{} {
 	return tfList
 }
 
-func flattenBoxPlotVisual(apiObject *quicksight.BoxPlotVisual) []interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-	// TODO
-
-	return []interface{}{tfMap}
-}
-
 func flattenComboChartVisual(apiObject *quicksight.ComboChartVisual) []interface{} {
 	if apiObject == nil {
 		return nil

@@ -333,3 +333,166 @@ func expandPaginationConfiguration(tfList []interface{}) *quicksight.PaginationC
 
 	return config
 }
+
+func flattenBoxPlotVisual(apiObject *quicksight.BoxPlotVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"visual_id": aws.StringValue(apiObject.VisualId),
+	}
+	if apiObject.Actions != nil {
+		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
+	}
+	if apiObject.ChartConfiguration != nil {
+		tfMap["chart_configuration"] = flattenBoxPlotChartConfiguration(apiObject.ChartConfiguration)
+	}
+	if apiObject.ColumnHierarchies != nil {
+		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+	}
+	if apiObject.Subtitle != nil {
+		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
+	}
+	if apiObject.Title != nil {
+		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenBoxPlotChartConfiguration(apiObject *quicksight.BoxPlotChartConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.BoxPlotOptions != nil {
+		tfMap["box_plot_options"] = flattenBoxPlotOptions(apiObject.BoxPlotOptions)
+	}
+	if apiObject.CategoryAxis != nil {
+		tfMap["category_axis"] = flattenAxisDisplayOptions(apiObject.CategoryAxis)
+	}
+	if apiObject.CategoryLabelOptions != nil {
+		tfMap["category_label_options"] = flattenChartAxisLabelOptions(apiObject.CategoryLabelOptions)
+	}
+	if apiObject.FieldWells != nil {
+		tfMap["field_wells"] = flattenBoxPlotFieldWells(apiObject.FieldWells)
+	}
+	if apiObject.Legend != nil {
+		tfMap["legend"] = flattenLegendOptions(apiObject.Legend)
+	}
+	if apiObject.PrimaryYAxisDisplayOptions != nil {
+		tfMap["primary_y_axis_display_options"] = flattenAxisDisplayOptions(apiObject.PrimaryYAxisDisplayOptions)
+	}
+	if apiObject.PrimaryYAxisLabelOptions != nil {
+		tfMap["primary_y_axis_label_options"] = flattenChartAxisLabelOptions(apiObject.PrimaryYAxisLabelOptions)
+	}
+	if apiObject.ReferenceLines != nil {
+		tfMap["reference_lines"] = flattenReferenceLine(apiObject.ReferenceLines)
+	}
+	if apiObject.SortConfiguration != nil {
+		tfMap["sort_configuration"] = flattenBoxPlotSortConfiguration(apiObject.SortConfiguration)
+	}
+	if apiObject.Tooltip != nil {
+		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)
+	}
+	if apiObject.VisualPalette != nil {
+		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenBoxPlotOptions(apiObject *quicksight.BoxPlotOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.AllDataPointsVisibility != nil {
+		tfMap["all_data_points_visibility"] = aws.StringValue(apiObject.AllDataPointsVisibility)
+	}
+	if apiObject.OutlierVisibility != nil {
+		tfMap["outlier_visibility"] = aws.StringValue(apiObject.OutlierVisibility)
+	}
+	if apiObject.StyleOptions != nil {
+		tfMap["style_options"] = flattenBoxPlotStyleOptions(apiObject.StyleOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenBoxPlotStyleOptions(apiObject *quicksight.BoxPlotStyleOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.FillStyle != nil {
+		tfMap["fill_style"] = aws.StringValue(apiObject.FillStyle)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenBoxPlotFieldWells(apiObject *quicksight.BoxPlotFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.BoxPlotAggregatedFieldWells != nil {
+		tfMap["box_plot_aggregated_field_wells"] = flattenBoxPlotAggregatedFieldWells(apiObject.BoxPlotAggregatedFieldWells)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenBoxPlotAggregatedFieldWells(apiObject *quicksight.BoxPlotAggregatedFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.GroupBy != nil {
+		tfMap["group_by"] = flattenDimensionField(apiObject.GroupBy)
+	}
+	if apiObject.Values != nil {
+		tfMap["values"] = flattenMeasureField(apiObject.Values)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenBoxPlotSortConfiguration(apiObject *quicksight.BoxPlotSortConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CategorySort != nil {
+		tfMap["category_sort"] = flattenFieldSortOptions(apiObject.CategorySort)
+	}
+	if apiObject.PaginationConfiguration != nil {
+		tfMap["pagination_configuration"] = flattenPaginationConfiguration(apiObject.PaginationConfiguration)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenPaginationConfiguration(apiObject *quicksight.PaginationConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.PageNumber != nil {
+		tfMap["page_number"] = aws.Int64Value(apiObject.PageNumber)
+	}
+	if apiObject.PageSize != nil {
+		tfMap["page_size"] = aws.Int64Value(apiObject.PageSize)
+	}
+
+	return []interface{}{tfMap}
+}
