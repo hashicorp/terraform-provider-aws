@@ -4,6 +4,7 @@ package conns
 import (
 	"net/http"
 
+	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	"github.com/aws/aws-sdk-go-v2/service/account"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
@@ -40,7 +41,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/accessanalyzer"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/alexaforbusiness"
@@ -360,7 +360,7 @@ type AWSClient struct {
 	apigatewayConn                   *apigateway.APIGateway
 	apigatewaymanagementapiConn      *apigatewaymanagementapi.ApiGatewayManagementApi
 	apigatewayv2Conn                 *apigatewayv2.ApiGatewayV2
-	accessanalyzerConn               *accessanalyzer.AccessAnalyzer
+	accessanalyzerClient             *accessanalyzer.Client
 	accountClient                    *account.Client
 	alexaforbusinessConn             *alexaforbusiness.AlexaForBusiness
 	amplifyConn                      *amplify.Amplify
@@ -698,8 +698,8 @@ func (client *AWSClient) APIGatewayV2Conn() *apigatewayv2.ApiGatewayV2 {
 	return client.apigatewayv2Conn
 }
 
-func (client *AWSClient) AccessAnalyzerConn() *accessanalyzer.AccessAnalyzer {
-	return client.accessanalyzerConn
+func (client *AWSClient) AccessAnalyzerClient() *accessanalyzer.Client {
+	return client.accessanalyzerClient
 }
 
 func (client *AWSClient) AccountClient() *account.Client {
