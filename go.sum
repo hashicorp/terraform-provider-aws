@@ -199,8 +199,8 @@ github.com/hashicorp/go-cleanhttp v0.5.2 h1:035FKYIWjmULyFRBKPs8TBQoi0x6d9G4xc9n
 github.com/hashicorp/go-cleanhttp v0.5.2/go.mod h1:kO/YDlP8L1346E6Sodw+PrpBSV4/SoxCXGY6BqNFT48=
 github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320 h1:1/D3zfFHttUKaCaGKZ/dR2roBXv0vKbSCnssIldfQdI=
 github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320/go.mod h1:EiZBMaudVLy8fmjf9Npq1dq9RalhveqZG5w/yz3mHWs=
-github.com/hashicorp/go-hclog v1.4.0 h1:ctuWFGrhFha8BnnzxqeRGidlEcQkDyL5u8J8t5eA11I=
-github.com/hashicorp/go-hclog v1.4.0/go.mod h1:W4Qnvbt70Wk/zYJryRzDRU/4r0kIg0PVHBcfoyhpF5M=
+github.com/hashicorp/go-hclog v1.5.0 h1:bI2ocEMgcVlz55Oj1xZNBsVi900c7II+fWDyV9o+13c=
+github.com/hashicorp/go-hclog v1.5.0/go.mod h1:W4Qnvbt70Wk/zYJryRzDRU/4r0kIg0PVHBcfoyhpF5M=
 github.com/hashicorp/go-multierror v1.0.0/go.mod h1:dHtQlpGsu+cZNNAkkCN/P3hoUDHhCYQXV3UM06sGGrk=
 github.com/hashicorp/go-multierror v1.1.1 h1:H5DkEtf6CXdFp0N0Em5UCwQpXMWke8IA0+lD48awMYo=
 github.com/hashicorp/go-multierror v1.1.1/go.mod h1:iw975J/qwKPdAO1clOe2L8331t/9/fmwbPZ6JB6eMoM=
@@ -235,6 +235,8 @@ github.com/hashicorp/terraform-plugin-mux v0.10.0 h1:VejY1BffxGy2iYOaa8DDHavY4k9
 github.com/hashicorp/terraform-plugin-mux v0.10.0/go.mod h1:9sdnpmY20xIsl4ItsfODZYE+MgpSy/osXpSf+RwaZCY=
 github.com/hashicorp/terraform-plugin-sdk/v2 v2.26.1 h1:G9WAfb8LHeCxu7Ae8nc1agZlQOSCUWsb610iAogBhCs=
 github.com/hashicorp/terraform-plugin-sdk/v2 v2.26.1/go.mod h1:xcOSYlRVdPLmDUoqPhO9fiO/YCN/l6MGYeTzGt5jgkQ=
+github.com/hashicorp/terraform-plugin-testing v1.2.0 h1:pASRAe6BOZFO4xSGQr9WzitXit0nrQAYDk8ziuRfn9E=
+github.com/hashicorp/terraform-plugin-testing v1.2.0/go.mod h1:+8bp3O7xUb1UtBcdknrGdVRIuTw4b62TYSIgXHqlyew=
 github.com/hashicorp/terraform-registry-address v0.2.0 h1:92LUg03NhfgZv44zpNTLBGIbiyTokQCDcdH5BhVHT3s=
 github.com/hashicorp/terraform-registry-address v0.2.0/go.mod h1:478wuzJPzdmqT6OGbB/iH82EDcI8VFM4yujknh/1nIs=
 github.com/hashicorp/terraform-svchost v0.1.0 h1:0+RcgZdZYNd81Vw7tu62g9JiLLvbOigp7QtyNh6CjXk=

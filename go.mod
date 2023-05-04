@@ -63,6 +63,7 @@ require (
 	github.com/hashicorp/terraform-plugin-log v0.8.0
 	github.com/hashicorp/terraform-plugin-mux v0.10.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.26.1
+	github.com/hashicorp/terraform-plugin-testing v1.2.0
 	github.com/jmespath/go-jmespath v0.4.0
 	github.com/mattbaird/jsonpatch v0.0.0-20200820163806-098863c1fc24
 	github.com/mitchellh/cli v1.1.5
@@ -108,7 +109,7 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-checkpoint v0.5.0 // indirect
-	github.com/hashicorp/go-hclog v1.4.0 // indirect
+	github.com/hashicorp/go-hclog v1.5.0 // indirect
 	github.com/hashicorp/go-plugin v1.4.9 // indirect
 	github.com/hashicorp/hc-install v0.5.0 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
