@@ -36,6 +36,7 @@ In addition to the arguments above, the following attributes are exported:
 * `tags` - Metadata that you can assign to help organize the report plans you create.
 
 ### Event Filter Attributes
+
 For **event_filter** the following attributes are supported:
 
 * `source` - The source of the events.
