@@ -120,7 +120,7 @@ func resourceVoiceProfileDomainCreate(ctx context.Context, d *schema.ResourceDat
 func resourceVoiceProfileDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn()
 
-	out, err := findVoiceProfileDomainByID(ctx, conn, d.Id())
+	out, err := FindVoiceProfileDomainByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ChimeSDKVoice VoiceProfileDomain (%s) not found, removing from state", d.Id())
@@ -188,7 +188,7 @@ func resourceVoiceProfileDomainDelete(ctx context.Context, d *schema.ResourceDat
 	return nil
 }
 
-func findVoiceProfileDomainByID(ctx context.Context, conn *chimesdkvoice.ChimeSDKVoice, id string) (*chimesdkvoice.VoiceProfileDomain, error) {
+func FindVoiceProfileDomainByID(ctx context.Context, conn *chimesdkvoice.ChimeSDKVoice, id string) (*chimesdkvoice.VoiceProfileDomain, error) {
 	in := &chimesdkvoice.GetVoiceProfileDomainInput{
 		VoiceProfileDomainId: aws.String(id),
 	}

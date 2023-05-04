@@ -37,7 +37,7 @@ func TestAccChimeSDKVoiceVoiceProfileDomain_serial(t *testing.T) {
 
 func testAccVoiceProfileDomain_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var voiceprofiledomain chimesdkvoice.GetVoiceProfileDomainOutput
+	var voiceprofiledomain chimesdkvoice.VoiceProfileDomain
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chimesdkvoice_voice_profile_domain.test"
 
@@ -52,18 +52,13 @@ func testAccVoiceProfileDomain_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckVoiceProfileDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVoiceProfileDomainConfig(rName, ""),
+				Config: testAccVoiceProfileDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceProfileDomainExists(ctx, resourceName, &voiceprofiledomain),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "server_side_encryption_configuration.0.kms_key_arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "chime", regexp.MustCompile(`voice-profile-domain/+.`)),
 				),
-			},
-			{
-				Config:             testAccVoiceProfileDomainConfig(rName, ""),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
 			},
 			{
 				ResourceName:      resourceName,
@@ -77,7 +72,7 @@ func testAccVoiceProfileDomain_basic(t *testing.T) {
 func testAccVoiceProfileDomain_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var voiceprofiledomain chimesdkvoice.GetVoiceProfileDomainOutput
+	var voiceprofiledomain chimesdkvoice.VoiceProfileDomain
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chimesdkvoice_voice_profile_domain.test"
 
@@ -92,7 +87,7 @@ func testAccVoiceProfileDomain_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckVoiceProfileDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVoiceProfileDomainConfig(rName, ""),
+				Config: testAccVoiceProfileDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceProfileDomainExists(ctx, resourceName, &voiceprofiledomain),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfchimesdkvoice.ResourceVoiceProfileDomain(), resourceName),
@@ -105,7 +100,7 @@ func testAccVoiceProfileDomain_disappears(t *testing.T) {
 
 func testAccVoiceProfileDomain_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 chimesdkvoice.GetVoiceProfileDomainOutput
+	var v1, v2 chimesdkvoice.VoiceProfileDomain
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -122,7 +117,7 @@ func testAccVoiceProfileDomain_update(t *testing.T) {
 		CheckDestroy:             testAccCheckVoiceProfileDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVoiceProfileDomainConfig(rName1, ""),
+				Config: testAccVoiceProfileDomainConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceProfileDomainExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
@@ -131,7 +126,7 @@ func testAccVoiceProfileDomain_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccVoiceProfileDomainConfig(rName2, description),
+				Config: testAccVoiceProfileDomainConfig_description(rName2, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceProfileDomainExists(ctx, resourceName, &v2),
 					testAccCheckVoiceProfileDomainNotRecreated(&v1, &v2),
@@ -147,7 +142,7 @@ func testAccVoiceProfileDomain_update(t *testing.T) {
 
 func testAccVoiceProfileDomain_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var voiceprofiledomain chimesdkvoice.GetVoiceProfileDomainOutput
+	var voiceprofiledomain chimesdkvoice.VoiceProfileDomain
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chimesdkvoice_voice_profile_domain.test"
 
@@ -204,9 +199,7 @@ func testAccCheckVoiceProfileDomainDestroy(ctx context.Context) resource.TestChe
 				continue
 			}
 
-			_, err := conn.GetVoiceProfileDomainWithContext(ctx, &chimesdkvoice.GetVoiceProfileDomainInput{
-				VoiceProfileDomainId: aws.String(rs.Primary.ID),
-			})
+			_, err := tfchimesdkvoice.FindVoiceProfileDomainByID(ctx, conn, rs.Primary.ID)
 			if err != nil {
 				if tfawserr.ErrCodeEquals(err, chimesdkvoice.ErrCodeNotFoundException) {
 					return nil
@@ -221,7 +214,7 @@ func testAccCheckVoiceProfileDomainDestroy(ctx context.Context) resource.TestChe
 	}
 }
 
-func testAccCheckVoiceProfileDomainExists(ctx context.Context, name string, voiceprofiledomain *chimesdkvoice.GetVoiceProfileDomainOutput) resource.TestCheckFunc {
+func testAccCheckVoiceProfileDomainExists(ctx context.Context, name string, voiceprofiledomain *chimesdkvoice.VoiceProfileDomain) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -233,10 +226,7 @@ func testAccCheckVoiceProfileDomainExists(ctx context.Context, name string, voic
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn()
-		resp, err := conn.GetVoiceProfileDomainWithContext(ctx, &chimesdkvoice.GetVoiceProfileDomainInput{
-			VoiceProfileDomainId: aws.String(rs.Primary.ID),
-		})
-
+		resp, err := tfchimesdkvoice.FindVoiceProfileDomainByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.ChimeSDKVoice, create.ErrActionCheckingExistence, tfchimesdkvoice.ResNameVoiceProfileDomain, rs.Primary.ID, err)
 		}
@@ -262,40 +252,47 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckVoiceProfileDomainNotRecreated(before, after *chimesdkvoice.GetVoiceProfileDomainOutput) resource.TestCheckFunc {
+func testAccCheckVoiceProfileDomainNotRecreated(before, after *chimesdkvoice.VoiceProfileDomain) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.VoiceProfileDomain.VoiceProfileDomainId), aws.StringValue(after.VoiceProfileDomain.VoiceProfileDomainId); before != after {
-			return create.Error(names.ChimeSDKVoice, create.ErrActionCheckingNotRecreated, tfchimesdkvoice.ResNameVoiceProfileDomain, before, errors.New("recreated"))
+		if beforeID, afterID := aws.StringValue(before.VoiceProfileDomainId), aws.StringValue(after.VoiceProfileDomainId); beforeID != afterID {
+			return create.Error(names.ChimeSDKVoice, create.ErrActionCheckingNotRecreated, tfchimesdkvoice.ResNameVoiceProfileDomain, beforeID, errors.New("recreated"))
 		}
 
 		return nil
 	}
 }
 
-func testAccVoiceProfileDomainConfig(rName, description string) string {
-	formattedDescription := ""
-	if description != "" {
-		formattedDescription = fmt.Sprintf("description = %[1]q", description)
-	}
+func testAccVoiceProfileDomainConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-
-
 resource "aws_kms_key" "test" {
   description             = "TF Acceptance Test Voice Profile Domain"
   deletion_window_in_days = 7
 }
-
 
 resource "aws_chimesdkvoice_voice_profile_domain" "test" {
   name = %[1]q
   server_side_encryption_configuration {
     kms_key_arn = aws_kms_key.test.arn
   }
-  %s
+}
+`, rName)
 }
 
+func testAccVoiceProfileDomainConfig_description(rName, description string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = "TF Acceptance Test Voice Profile Domain"
+  deletion_window_in_days = 7
+}
 
-`, rName, formattedDescription)
+resource "aws_chimesdkvoice_voice_profile_domain" "test" {
+  name = %[1]q
+  server_side_encryption_configuration {
+    kms_key_arn = aws_kms_key.test.arn
+  }
+  description = %[2]q
+}
+`, rName, description)
 }
 
 func testAccVoiceProfileDomainConfig_tags1(rName, tagKey1, tagValue1 string) string {
@@ -304,7 +301,6 @@ resource "aws_kms_key" "test" {
   description             = "TF Acceptance Test Voice Profile Domain"
   deletion_window_in_days = 7
 }
-
 
 resource "aws_chimesdkvoice_voice_profile_domain" "test" {
   name = %[1]q
@@ -316,8 +312,6 @@ resource "aws_chimesdkvoice_voice_profile_domain" "test" {
     %[2]s = %[3]q
   }
 }
-
-
 `, rName, tagKey1, tagValue1)
 }
 
@@ -327,7 +321,6 @@ resource "aws_kms_key" "test" {
   description             = "TF Acceptance Test Voice Profile Domain"
   deletion_window_in_days = 7
 }
-
 
 resource "aws_chimesdkvoice_voice_profile_domain" "test" {
   name = %[1]q
@@ -340,7 +333,5 @@ resource "aws_chimesdkvoice_voice_profile_domain" "test" {
     %[4]s = %[5]q
   }
 }
-
-
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
