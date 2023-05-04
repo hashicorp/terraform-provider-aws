@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccDataIntegration_basic(t *testing.T) {
+func TestAccAppIntegrationsDataIntegration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dataIntegration appintegrationsservice.GetDataIntegrationOutput
 
@@ -65,7 +65,7 @@ func TestAccDataIntegration_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataIntegration_updateDescription(t *testing.T) {
+func TestAccAppIntegrationsDataIntegration_updateDescription(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dataIntegration appintegrationsservice.GetDataIntegrationOutput
 
@@ -113,7 +113,7 @@ func TestAccDataIntegration_updateDescription(t *testing.T) {
 	})
 }
 
-func TestAccDataIntegration_updateName(t *testing.T) {
+func TestAccAppIntegrationsDataIntegration_updateName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dataIntegration appintegrationsservice.GetDataIntegrationOutput
 
@@ -161,7 +161,7 @@ func TestAccDataIntegration_updateName(t *testing.T) {
 	})
 }
 
-func TestAccDataIntegration_updateTags(t *testing.T) {
+func TestAccAppIntegrationsDataIntegration_updateTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dataIntegration appintegrationsservice.GetDataIntegrationOutput
 
