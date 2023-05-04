@@ -46,20 +46,20 @@ func ResourceVoiceProfileDomain() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
-			"id": {
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -82,8 +82,8 @@ func ResourceVoiceProfileDomain() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -94,22 +94,13 @@ func resourceVoiceProfileDomainCreate(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn()
 
 	in := &chimesdkvoice.CreateVoiceProfileDomainInput{
-		Name: aws.String(d.Get("name").(string)),
+		Name:                              aws.String(d.Get(names.AttrName).(string)),
+		ServerSideEncryptionConfiguration: expandServerSideEncryptionConfiguration(d.Get("server_side_encryption_configuration").([]interface{})),
+		Tags:                              GetTagsIn(ctx),
 	}
 
-	if description, ok := d.GetOk("description"); ok {
-		in.Description = aws.String(description.(string))
-	}
-
-	if serverSideEncryptionConfiguration, ok := d.GetOk("server_side_encryption_configuration"); ok && len(serverSideEncryptionConfiguration.([]interface{})) > 0 {
-		in.ServerSideEncryptionConfiguration = expandServerSideEncryptionConfiguration(serverSideEncryptionConfiguration.([]interface{}))
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
+	if v, ok := d.GetOk(names.AttrDescription); ok {
+		in.Description = aws.String(v.(string))
 	}
 
 	out, err := conn.CreateVoiceProfileDomainWithContext(ctx, in)
@@ -141,29 +132,12 @@ func resourceVoiceProfileDomainRead(ctx context.Context, d *schema.ResourceData,
 		return create.DiagError(names.ChimeSDKVoice, create.ErrActionReading, ResNameVoiceProfileDomain, d.Id(), err)
 	}
 
-	d.Set("arn", out.VoiceProfileDomainArn)
-	d.Set("id", out.VoiceProfileDomainId)
-	d.Set("name", out.Name)
-	d.Set("description", out.Description)
+	d.SetId(aws.StringValue(out.VoiceProfileDomainId))
+	d.Set(names.AttrARN, out.VoiceProfileDomainArn)
+	d.Set(names.AttrName, out.Name)
+	d.Set(names.AttrDescription, out.Description)
 
 	if err := d.Set("server_side_encryption_configuration", flattenServerSideEncryptionConfiguration(out.ServerSideEncryptionConfiguration)); err != nil {
-		return create.DiagError(names.ChimeSDKVoice, create.ErrActionSetting, ResNameVoiceProfileDomain, d.Id(), err)
-	}
-
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-	if err != nil {
-		return create.DiagError(names.ChimeSDKVoice, create.ErrActionReading, ResNameVoiceProfileDomain, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.ChimeSDKVoice, create.ErrActionSetting, ResNameVoiceProfileDomain, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return create.DiagError(names.ChimeSDKVoice, create.ErrActionSetting, ResNameVoiceProfileDomain, d.Id(), err)
 	}
 
@@ -176,11 +150,11 @@ func resourceVoiceProfileDomainUpdate(ctx context.Context, d *schema.ResourceDat
 	if d.HasChanges(names.AttrName, names.AttrDescription) {
 		in := &chimesdkvoice.UpdateVoiceProfileDomainInput{
 			VoiceProfileDomainId: aws.String(d.Id()),
-			Name:                 aws.String(d.Get("name").(string)),
+			Name:                 aws.String(d.Get(names.AttrName).(string)),
 		}
 
-		if description, ok := d.GetOk("description"); ok {
-			in.Description = aws.String(description.(string))
+		if v, ok := d.GetOk(names.AttrDescription); ok {
+			in.Description = aws.String(v.(string))
 		}
 
 		_, err := conn.UpdateVoiceProfileDomainWithContext(ctx, in)
