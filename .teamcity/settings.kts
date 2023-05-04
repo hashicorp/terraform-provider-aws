@@ -115,8 +115,8 @@ project {
             if (awsSecretAccessKey != "") {
                 password("AWS_ALTERNATE_SECRET_ACCESS_KEY", alternateAWSSecretAccessKey, display = ParameterDisplay.HIDDEN)
             }
-            text("ACCTEST_ALTERNATE_ROLE_ARN", alternateAccTestRoleARN, display = ParameterDisplay.HIDDEN)
         }
+        text("ACCTEST_ALTERNATE_ROLE_ARN", alternateAccTestRoleARN, display = ParameterDisplay.HIDDEN)
 
         // Define this parameter even when not set to allow individual builds to set the value
         text("env.TF_ACC_TERRAFORM_VERSION", DslContext.getParameter("terraform_version", ""))
