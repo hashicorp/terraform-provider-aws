@@ -1,6 +1,6 @@
 ## 4.66.0 (Unreleased)
 
-BREAKING CHANGES:
+NOTES:
 
 * resource/aws_instance: The `cpu_core_count` argument is deprecated in favor of the `cpu_options` block. The `cpu_options` block can set `core_count` ([#31035](https://github.com/hashicorp/terraform-provider-aws/issues/31035))
 * resource/aws_instance: The `cpu_threads_per_core` argument is deprecated in favor of the `cpu_options` block. The `cpu_options` block can set `threads_per_core` ([#31035](https://github.com/hashicorp/terraform-provider-aws/issues/31035))
@@ -11,6 +11,7 @@ FEATURES:
 * **New Data Source:** `aws_vpclattice_auth_policy` ([#30898](https://github.com/hashicorp/terraform-provider-aws/issues/30898))
 * **New Data Source:** `aws_vpclattice_service_network` ([#30904](https://github.com/hashicorp/terraform-provider-aws/issues/30904))
 * **New Resource:** `aws_account_primary_contact` ([#26123](https://github.com/hashicorp/terraform-provider-aws/issues/26123))
+* **New Resource:** `aws_chimesdkvoice_voice_profile_domain` ([#30977](https://github.com/hashicorp/terraform-provider-aws/issues/30977))
 * **New Resource:** `aws_directory_service_trust` ([#31037](https://github.com/hashicorp/terraform-provider-aws/issues/31037))
 * **New Resource:** `aws_vpclattice_access_log_subscription` ([#30896](https://github.com/hashicorp/terraform-provider-aws/issues/30896))
 * **New Resource:** `aws_vpclattice_auth_policy` ([#30891](https://github.com/hashicorp/terraform-provider-aws/issues/30891))
@@ -44,12 +45,16 @@ ENHANCEMENTS:
 * resource/aws_lambda_layer_version: Add support for `java17` `compatible_runtimes` value ([#31028](https://github.com/hashicorp/terraform-provider-aws/issues/31028))
 * resource/aws_launch_template: Add `amd_sev_snp` argument ([#31035](https://github.com/hashicorp/terraform-provider-aws/issues/31035))
 * resource/aws_medialive_channel: Added H265 support. ([#30908](https://github.com/hashicorp/terraform-provider-aws/issues/30908))
+* resource/aws_rds_cluster_role_association: Add configurable Create and Delete timeouts ([#31015](https://github.com/hashicorp/terraform-provider-aws/issues/31015))
+* resource/aws_redshift_scheduled_action: Add plan time validation for `name` argument ([#31020](https://github.com/hashicorp/terraform-provider-aws/issues/31020))
+* resource/aws_redshiftserverless_workgroup: Add support for defining custom timeouts ([#31054](https://github.com/hashicorp/terraform-provider-aws/issues/31054))
 * resource/aws_sagemaker_domain: Add `domain_settings.r_studio_server_pro_domain_settings`, `default_user_settings.canvas_app_settings.model_register_settings`, and `default_user_settings.r_studio_server_pro_app_settings` arguments ([#31031](https://github.com/hashicorp/terraform-provider-aws/issues/31031))
 * resource/aws_sagemaker_endpoint_configuration: Add `async_inference_config.output_config.notification_config.include_inference_response_in` and `async_inference_config.output_config.s3_failure_path` arguments ([#31070](https://github.com/hashicorp/terraform-provider-aws/issues/31070))
 * resource/aws_sagemaker_user_profile: Add `user_settings.canvas_app_settings.model_register_settings` and `user_settings.r_studio_server_pro_app_settings` arguments ([#31072](https://github.com/hashicorp/terraform-provider-aws/issues/31072))
 * resource/aws_servicecatalog_provisioning_artifact: Add `provisioning_artifact_id` attribute ([#31086](https://github.com/hashicorp/terraform-provider-aws/issues/31086))
 * resource/aws_sfn_state_machine: Add configurable timeouts ([#31097](https://github.com/hashicorp/terraform-provider-aws/issues/31097))
 * resource/aws_spot_fleet_request: Add 'aws_spot_fleet_request.context' argument ([#30918](https://github.com/hashicorp/terraform-provider-aws/issues/30918))
+* resource/aws_vpn_connection: Add `tunnel1_enable_tunnel_lifecycle_control` and `tunnel2_enable_tunnel_lifecycle_control` arguments ([#31064](https://github.com/hashicorp/terraform-provider-aws/issues/31064))
 
 BUG FIXES:
 
