@@ -190,15 +190,13 @@ resource "aws_rds_cluster_role_association" "test" {
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier      = %[1]q
-  engine                  = "aurora-postgresql"
-  availability_zones      = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
-  database_name           = "mydb"
-  master_username         = "foo"
-  master_password         = "foobarfoobarfoobar"
-  backup_retention_period = 5
-  preferred_backup_window = "07:00-09:00"
-  skip_final_snapshot     = true
+  cluster_identifier  = %[1]q
+  engine              = "aurora-postgresql"
+  availability_zones  = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
+  database_name       = "mydb"
+  master_username     = "foo"
+  master_password     = "foobarfoobarfoobar"
+  skip_final_snapshot = true
 }
 
 resource "aws_iam_role" "test" {
