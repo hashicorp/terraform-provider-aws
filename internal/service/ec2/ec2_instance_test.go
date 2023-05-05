@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -3621,6 +3622,432 @@ func TestAccEC2Instance_GetPasswordData_trueToFalse(t *testing.T) {
 	})
 }
 
+func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToDisabledToEnabledToUnspecified(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2, v3, v4 ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			// AMD SEV-SNP currently only supported in us-east-2
+			// Ref: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/snp-requirements.html
+			acctest.PreCheckRegion(t, endpoints.UsEast2RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpUnspecified(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					// empty string set if amd_sev_snp is not specified
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+			{
+				// test DiffSuppressFunc to suppress "" to "disabled"
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationDisabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v2),
+					testAccCheckInstanceNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					// Since read is not triggered, empty string is returned
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ""),
+				),
+			},
+			{
+				// expect recreation when it is enabled
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v3),
+					testAccCheckInstanceRecreated(&v2, &v3),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationEnabled),
+				),
+			},
+			{
+				// expect no recreation if the cpu options block is removed - amd_sev_snp should still be enabled
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpUnspecified(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v4),
+					testAccCheckInstanceNotRecreated(&v3, &v4),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationEnabled),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToEnabledToDisabledToUnspecified(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2, v3, v4 ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			// AMD SEV-SNP currently only supported in us-east-2
+			// Ref: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/snp-requirements.html
+			acctest.PreCheckRegion(t, endpoints.UsEast2RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpUnspecified(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					// API returns empty string if amd_sev_snp is not specified
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+			{
+				// expect recreation when it is enabled
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v2),
+					testAccCheckInstanceRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationEnabled),
+				),
+			},
+			{
+				// expect recreation when it is disabled
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationDisabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v3),
+					testAccCheckInstanceRecreated(&v2, &v3),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationDisabled),
+				),
+			},
+			{
+				// expect no recreation if the cpu options block is removed - amd_sev_snp should still be disabled
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpUnspecified(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v4),
+					testAccCheckInstanceNotRecreated(&v3, &v4),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationDisabled),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_cpuOptionsAmdSevSnpEnabledToDisabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			// AMD SEV-SNP currently only supported in us-east-2
+			// Ref: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/snp-requirements.html
+			acctest.PreCheckRegion(t, endpoints.UsEast2RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationEnabled),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+			{
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationDisabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v2),
+					testAccCheckInstanceRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationDisabled),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_cpuOptionsAmdSevSnpDisabledToEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			// AMD SEV-SNP currently only supported in us-east-2
+			// Ref: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/snp-requirements.html
+			acctest.PreCheckRegion(t, endpoints.UsEast2RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationDisabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationDisabled),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+			{
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v2),
+					testAccCheckInstanceRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationEnabled),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_cpuOptionsAmdSevSnpCoreThreads(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	originalCoreCount := 2
+	updatedCoreCount := 3
+	originalThreadsPerCore := 2
+	updatedThreadsPerCore := 1
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			// AMD SEV-SNP currently only supported in us-east-2
+			// Ref: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/snp-requirements.html
+			acctest.PreCheckRegion(t, endpoints.UsEast2RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpCoreThreads(rName, ec2.AmdSevSnpSpecificationEnabled, originalCoreCount, originalThreadsPerCore),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationEnabled),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(originalCoreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(originalThreadsPerCore)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(originalCoreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_threads_per_core", strconv.Itoa(originalThreadsPerCore)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+			{
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpCoreThreads(rName, ec2.AmdSevSnpSpecificationDisabled, updatedCoreCount, updatedThreadsPerCore),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v2),
+					testAccCheckInstanceRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationDisabled),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(updatedCoreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(updatedThreadsPerCore)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(updatedCoreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_threads_per_core", strconv.Itoa(updatedThreadsPerCore)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_cpuOptionsCoreThreads(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	originalCoreCount := 2
+	updatedCoreCount := 3
+	originalThreadsPerCore := 2
+	updatedThreadsPerCore := 1
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_cpuOptionsCoreThreads(rName, originalCoreCount, originalThreadsPerCore),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(originalCoreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(originalThreadsPerCore)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(originalCoreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_threads_per_core", strconv.Itoa(originalThreadsPerCore)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+			{
+				Config: testAccInstanceConfig_cpuOptionsCoreThreads(rName, updatedCoreCount, updatedThreadsPerCore),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v2),
+					testAccCheckInstanceRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(updatedCoreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(updatedThreadsPerCore)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(updatedCoreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_threads_per_core", strconv.Itoa(updatedThreadsPerCore)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_cpuOptionsCoreThreadsMigration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	coreCount := 2
+	threadsPerCore := 2
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_cpuOptionsCoreThreadsDeprecated(rName, coreCount, threadsPerCore),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(coreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(threadsPerCore)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(coreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_threads_per_core", strconv.Itoa(threadsPerCore)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+			{
+				// EC2 instance should not be recreated
+				Config: testAccInstanceConfig_cpuOptionsCoreThreads(rName, coreCount, threadsPerCore),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v2),
+					testAccCheckInstanceNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(coreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(threadsPerCore)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(coreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_threads_per_core", strconv.Itoa(threadsPerCore)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_cpuOptionsCoreThreadsUnspecifiedToSpecified(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	defaultCoreCount := 4
+	defaultThreadsPerCore := 2
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_cpuOptionsUnspecified(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(defaultCoreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(defaultThreadsPerCore)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(defaultCoreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_threads_per_core", strconv.Itoa(defaultThreadsPerCore)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+			{
+				// EC2 instance should not be recreated
+				Config: testAccInstanceConfig_cpuOptionsCoreThreads(rName, defaultCoreCount, defaultThreadsPerCore),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v2),
+					testAccCheckInstanceNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(defaultCoreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(defaultThreadsPerCore)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(defaultCoreCount)),
+					resource.TestCheckResourceAttr(resourceName, "cpu_threads_per_core", strconv.Itoa(defaultThreadsPerCore)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_CreditSpecificationEmpty_nonBurstable(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.Instance
@@ -5008,10 +5435,12 @@ func TestInstanceCPUCoreCountSchema(t *testing.T) {
 
 	actualSchema := tfec2.ResourceInstance().Schema["cpu_core_count"]
 	expectedSchema := &schema.Schema{
-		Type:     schema.TypeInt,
-		Optional: true,
-		Computed: true,
-		ForceNew: true,
+		Type:          schema.TypeInt,
+		Optional:      true,
+		Computed:      true,
+		ForceNew:      true,
+		Deprecated:    "use 'cpu_options' argument instead",
+		ConflictsWith: []string{"cpu_options.0.core_count"},
 	}
 	if !reflect.DeepEqual(actualSchema, expectedSchema) {
 		t.Fatalf(
@@ -5026,10 +5455,12 @@ func TestInstanceCPUThreadsPerCoreSchema(t *testing.T) {
 
 	actualSchema := tfec2.ResourceInstance().Schema["cpu_threads_per_core"]
 	expectedSchema := &schema.Schema{
-		Type:     schema.TypeInt,
-		Optional: true,
-		Computed: true,
-		ForceNew: true,
+		Type:          schema.TypeInt,
+		Optional:      true,
+		Computed:      true,
+		ForceNew:      true,
+		Deprecated:    "use 'cpu_options' argument instead",
+		ConflictsWith: []string{"cpu_options.0.threads_per_core"},
 	}
 	if !reflect.DeepEqual(actualSchema, expectedSchema) {
 		t.Fatalf(
@@ -5157,6 +5588,28 @@ data "aws_ami" "win2016core-ami" {
   }
 }
 `
+}
+
+// testAccLatestAmazonLinux2023AMIConfig returns the configuration for a data source that
+// describes the latest Amazon Linux 2023 AMI for x86.
+// The data source is named 'amzn-linux-2023-ami'.
+func testAccLatestAmazonLinux2023AMIConfig() string {
+	return testAccLatestAmazonLinux2023AMIConfigWithProvider(acctest.ProviderName)
+}
+
+func testAccLatestAmazonLinux2023AMIConfigWithProvider(provider string) string {
+	return fmt.Sprintf(`
+data "aws_ami" "amzn-linux-2023-ami" {
+  provider    = %[1]q
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["al2023-ami-2023.*-x86_64"]
+  }
+}
+`, provider)
 }
 
 func testAccAvailableAZsWavelengthZonesExcludeConfig(excludeZoneIds ...string) string {
@@ -7531,6 +7984,132 @@ resource "aws_instance" "test" {
   }
 }
 `, rName, publicKey, val))
+}
+
+func testAccInstanceConfig_cpuOptionsAmdSevSnpUnspecified(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceVPCConfig(rName, false, 0),
+		testAccLatestAmazonLinux2023AMIConfig(),
+		acctest.AvailableEC2InstanceTypeForRegion("c6a.2xlarge", "m6a.2xlarge"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-linux-2023-ami.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, amdSevSnp string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceVPCConfig(rName, false, 0),
+		testAccLatestAmazonLinux2023AMIConfig(),
+		acctest.AvailableEC2InstanceTypeForRegion("c6a.2xlarge", "m6a.2xlarge"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-linux-2023-ami.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  cpu_options {
+    amd_sev_snp = %[2]q
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, amdSevSnp))
+}
+
+func testAccInstanceConfig_cpuOptionsAmdSevSnpCoreThreads(rName, amdSevSnp string, coreCount, threadsPerCore int) string {
+	return acctest.ConfigCompose(
+		testAccInstanceVPCConfig(rName, false, 0),
+		testAccLatestAmazonLinux2023AMIConfig(),
+		acctest.AvailableEC2InstanceTypeForRegion("c6a.2xlarge", "m6a.2xlarge"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-linux-2023-ami.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  cpu_options {
+    amd_sev_snp      = %[2]q
+    core_count       = %[3]d
+    threads_per_core = %[4]d
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, amdSevSnp, coreCount, threadsPerCore))
+}
+
+func testAccInstanceConfig_cpuOptionsUnspecified(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceVPCConfig(rName, false, 0),
+		testAccLatestAmazonLinux2023AMIConfig(),
+		acctest.AvailableEC2InstanceTypeForRegion("c6a.2xlarge", "m6a.2xlarge"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-linux-2023-ami.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccInstanceConfig_cpuOptionsCoreThreads(rName string, coreCount, threadsPerCore int) string {
+	return acctest.ConfigCompose(
+		testAccInstanceVPCConfig(rName, false, 0),
+		testAccLatestAmazonLinux2023AMIConfig(),
+		acctest.AvailableEC2InstanceTypeForRegion("c6a.2xlarge", "m6a.2xlarge"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-linux-2023-ami.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  cpu_options {
+    core_count       = %[2]d
+    threads_per_core = %[3]d
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, coreCount, threadsPerCore))
+}
+
+func testAccInstanceConfig_cpuOptionsCoreThreadsDeprecated(rName string, coreCount, threadsPerCore int) string {
+	return acctest.ConfigCompose(
+		testAccInstanceVPCConfig(rName, false, 0),
+		testAccLatestAmazonLinux2023AMIConfig(),
+		acctest.AvailableEC2InstanceTypeForRegion("c6a.2xlarge", "m6a.2xlarge"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-linux-2023-ami.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  cpu_core_count       = %[2]d
+  cpu_threads_per_core = %[3]d
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, coreCount, threadsPerCore))
 }
 
 func testAccInstanceConfig_creditSpecificationEmptyNonBurstable(rName string) string {

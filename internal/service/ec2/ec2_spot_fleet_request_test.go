@@ -58,6 +58,37 @@ func TestAccEC2SpotFleetRequest_basic(t *testing.T) {
 	})
 }
 
+func TestAccEC2SpotFleetRequest_context(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
+	contextId := "test_context"
+
+	// Receiving this error is confirmation that the Context ID was included in the spot fleet request.
+	errRegexp, err := regexp.Compile(fmt.Sprintf(`Error: creating EC2 Spot Fleet Request: UnauthorizedOperation: The account "\d+" is not allowed to access Context "%s".`, contextId))
+	if err != nil {
+		t.Fatalf("error compiling expected error regexp: %s", err)
+	}
+
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
+	if err != nil {
+		t.Fatalf("error generating random SSH key: %s", err)
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccSpotFleetRequestConfig_context(rName, publicKey, validUntil, contextId),
+				ExpectError: errRegexp,
+			},
+		},
+	})
+}
+
 func TestAccEC2SpotFleetRequest_targetCapacityUnitType(t *testing.T) {
 	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
@@ -1989,6 +2020,33 @@ resource "aws_spot_fleet_request" "test" {
   depends_on = [aws_iam_policy_attachment.test]
 }
 `, rName, validUntil))
+}
+
+func testAccSpotFleetRequestConfig_context(rName, publicKey, validUntil, contextId string) string {
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
+resource "aws_spot_fleet_request" "test" {
+  context                             = %[3]q
+  iam_fleet_role                      = aws_iam_role.test.arn
+  spot_price                          = "0.05"
+  target_capacity                     = 2
+  valid_until                         = %[2]q
+  terminate_instances_with_expiration = true
+  instance_interruption_behaviour     = "stop"
+  wait_for_fulfillment                = true
+
+  launch_specification {
+    instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    key_name      = aws_key_pair.test.key_name
+
+    tags = {
+      Name = %[1]q
+    }
+  }
+
+  depends_on = [aws_iam_policy_attachment.test]
+}
+`, rName, validUntil, contextId))
 }
 
 func testAccSpotFleetRequestConfig_tags1(rName, publicKey, validUntil, tagKey1, tagValue1 string) string {
