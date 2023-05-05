@@ -1451,17 +1451,6 @@ func flattenVisuals(apiObject []*quicksight.Visual) []interface{} {
 	return tfList
 }
 
-func flattenGeospatialMapVisual(apiObject *quicksight.GeospatialMapVisual) []interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-	// TODO
-
-	return []interface{}{tfMap}
-}
-
 func flattenHeatMapVisual(apiObject *quicksight.HeatMapVisual) []interface{} {
 	if apiObject == nil {
 		return nil

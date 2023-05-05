@@ -93,8 +93,8 @@ func geospatialMapVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"tooltip": tooltipOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
-
+							"tooltip":        tooltipOptionsSchema(),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
+							"visual_palette": visualPaletteSchema(),           // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
 							"window_options": geospatialWindowOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GeospatialWindowOptions.html
 						},
 					},
@@ -295,4 +295,146 @@ func expandSimpleClusterMarker(tfList []interface{}) *quicksight.SimpleClusterMa
 		config.Color = aws.String(v)
 	}
 	return config
+}
+
+func flattenGeospatialMapVisual(apiObject *quicksight.GeospatialMapVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"visual_id": aws.StringValue(apiObject.VisualId),
+	}
+	if apiObject.Actions != nil {
+		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
+	}
+	if apiObject.ChartConfiguration != nil {
+		tfMap["chart_configuration"] = flattenGeospatialMapConfiguration(apiObject.ChartConfiguration)
+	}
+	if apiObject.ColumnHierarchies != nil {
+		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+	}
+	if apiObject.Subtitle != nil {
+		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
+	}
+	if apiObject.Title != nil {
+		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenGeospatialMapConfiguration(apiObject *quicksight.GeospatialMapConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.FieldWells != nil {
+		tfMap["field_wells"] = flattenGeospatialMapFieldWells(apiObject.FieldWells)
+	}
+	if apiObject.Legend != nil {
+		tfMap["legend"] = flattenLegendOptions(apiObject.Legend)
+	}
+	if apiObject.MapStyleOptions != nil {
+		tfMap["map_style_options"] = flattenGeospatialMapStyleOptions(apiObject.MapStyleOptions)
+	}
+	if apiObject.PointStyleOptions != nil {
+		tfMap["point_style_options"] = flattenGeospatialPointStyleOptions(apiObject.PointStyleOptions)
+	}
+	if apiObject.Tooltip != nil {
+		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)
+	}
+	if apiObject.WindowOptions != nil {
+		tfMap["window_options"] = flattenGeospatialWindowOptions(apiObject.WindowOptions)
+	}
+	if apiObject.VisualPalette != nil {
+		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenGeospatialMapFieldWells(apiObject *quicksight.GeospatialMapFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.GeospatialMapAggregatedFieldWells != nil {
+		tfMap["geospatial_map_aggregated_field_wells"] = flattenGeospatialMapAggregatedFieldWells(apiObject.GeospatialMapAggregatedFieldWells)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenGeospatialMapAggregatedFieldWells(apiObject *quicksight.GeospatialMapAggregatedFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Colors != nil {
+		tfMap["colors"] = flattenDimensionField(apiObject.Colors)
+	}
+	if apiObject.Geospatial != nil {
+		tfMap["geospatial"] = flattenDimensionField(apiObject.Geospatial)
+	}
+	if apiObject.Values != nil {
+		tfMap["values"] = flattenMeasureField(apiObject.Values)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenGeospatialPointStyleOptions(apiObject *quicksight.GeospatialPointStyleOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ClusterMarkerConfiguration != nil {
+		tfMap["cluster_marker_configuration"] = flattenClusterMarkerConfiguration(apiObject.ClusterMarkerConfiguration)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenClusterMarkerConfiguration(apiObject *quicksight.ClusterMarkerConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ClusterMarker != nil {
+		tfMap["cluster_marker"] = flattenClusterMarker(apiObject.ClusterMarker)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenClusterMarker(apiObject *quicksight.ClusterMarker) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.SimpleClusterMarker != nil {
+		tfMap["simple_cluster_marker"] = flattenSimpleClusterMarker(apiObject.SimpleClusterMarker)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenSimpleClusterMarker(apiObject *quicksight.SimpleClusterMarker) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Color != nil {
+		tfMap["color"] = aws.StringValue(apiObject.Color)
+	}
+
+	return []interface{}{tfMap}
 }
