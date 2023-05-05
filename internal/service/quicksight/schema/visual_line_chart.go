@@ -265,9 +265,10 @@ func lineChartVisualSchema() *schema.Schema {
 										"small_multiples_sort":                fieldSortOptionsSchema(fieldSortOptionsMaxItems100), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
 									},
 								},
+								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 							},
 							"tooltip":                tooltipOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
-							"type":                   stringSchema(false, validation.StringInSlice(quicksight.LineChartType_Values(), false)),
+							"type":                   stringOptionalComputedSchema(validation.StringInSlice(quicksight.LineChartType_Values(), false)),
 							"visual_palette":         visualPaletteSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
 							"x_axis_display_options": axisDisplayOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
 							"x_axis_label_options":   chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
@@ -907,4 +908,445 @@ func expandLineChartSeriesSettings(tfList []interface{}) *quicksight.LineChartSe
 	}
 
 	return options
+}
+
+func flattenLineChartVisual(apiObject *quicksight.LineChartVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"visual_id": aws.StringValue(apiObject.VisualId),
+	}
+	if apiObject.Actions != nil {
+		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
+	}
+	if apiObject.ChartConfiguration != nil {
+		tfMap["chart_configuration"] = flattenLineChartConfiguration(apiObject.ChartConfiguration)
+	}
+	if apiObject.ColumnHierarchies != nil {
+		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+	}
+	if apiObject.Subtitle != nil {
+		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
+	}
+	if apiObject.Title != nil {
+		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenLineChartConfiguration(apiObject *quicksight.LineChartConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ContributionAnalysisDefaults != nil {
+		tfMap["contribution_analysis_defaults"] = flattenContributionAnalysisDefault(apiObject.ContributionAnalysisDefaults)
+	}
+	if apiObject.DataLabels != nil {
+		tfMap["data_labels"] = flattenDataLabelOptions(apiObject.DataLabels)
+	}
+	if apiObject.DefaultSeriesSettings != nil {
+		tfMap["default_series_settings"] = flattenLineChartDefaultSeriesSettings(apiObject.DefaultSeriesSettings)
+	}
+	if apiObject.FieldWells != nil {
+		tfMap["field_wells"] = flattenLineChartFieldWells(apiObject.FieldWells)
+	}
+	if apiObject.ForecastConfigurations != nil {
+		tfMap["forecast_configurations"] = flattenForecastConfiguration(apiObject.ForecastConfigurations)
+	}
+	if apiObject.Legend != nil {
+		tfMap["legend"] = flattenLegendOptions(apiObject.Legend)
+	}
+	if apiObject.PrimaryYAxisDisplayOptions != nil {
+		tfMap["primary_y_axis_display_options"] = flattenLineSeriesAxisDisplayOptions(apiObject.PrimaryYAxisDisplayOptions)
+	}
+	if apiObject.PrimaryYAxisLabelOptions != nil {
+		tfMap["primary_y_axis_label_options"] = flattenChartAxisLabelOptions(apiObject.PrimaryYAxisLabelOptions)
+	}
+	if apiObject.ReferenceLines != nil {
+		tfMap["reference_lines"] = flattenReferenceLine(apiObject.ReferenceLines)
+	}
+	if apiObject.SecondaryYAxisDisplayOptions != nil {
+		tfMap["secondary_y_axis_display_options"] = flattenLineSeriesAxisDisplayOptions(apiObject.SecondaryYAxisDisplayOptions)
+	}
+	if apiObject.SecondaryYAxisLabelOptions != nil {
+		tfMap["secondary_y_axis_label_options"] = flattenChartAxisLabelOptions(apiObject.SecondaryYAxisLabelOptions)
+	}
+	if apiObject.Series != nil {
+		tfMap["series"] = flattenSeriesItem(apiObject.Series)
+	}
+	if apiObject.SmallMultiplesOptions != nil {
+		tfMap["small_multiples_options"] = flattenSmallMultiplesOptions(apiObject.SmallMultiplesOptions)
+	}
+	if apiObject.SortConfiguration != nil {
+		tfMap["sort_configuration"] = flattenLineChartSortConfiguration(apiObject.SortConfiguration)
+	}
+	if apiObject.Tooltip != nil {
+		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)
+	}
+	if apiObject.Type != nil {
+		tfMap["type"] = aws.StringValue(apiObject.Type)
+	}
+	if apiObject.VisualPalette != nil {
+		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
+	}
+	if apiObject.XAxisDisplayOptions != nil {
+		tfMap["x_axis_display_options"] = flattenAxisDisplayOptions(apiObject.XAxisDisplayOptions)
+	}
+	if apiObject.XAxisLabelOptions != nil {
+		tfMap["x_axis_label_options"] = flattenChartAxisLabelOptions(apiObject.XAxisLabelOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenLineChartDefaultSeriesSettings(apiObject *quicksight.LineChartDefaultSeriesSettings) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.AxisBinding != nil {
+		tfMap["axis_binding"] = aws.StringValue(apiObject.AxisBinding)
+	}
+	if apiObject.LineStyleSettings != nil {
+		tfMap["line_style_settings"] = flattenLineChartLineStyleSettings(apiObject.LineStyleSettings)
+	}
+	if apiObject.MarkerStyleSettings != nil {
+		tfMap["marker_style_settings"] = flattenLineChartMarkerStyleSettings(apiObject.MarkerStyleSettings)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenLineChartLineStyleSettings(apiObject *quicksight.LineChartLineStyleSettings) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.LineInterpolation != nil {
+		tfMap["line_interpolation"] = aws.StringValue(apiObject.LineInterpolation)
+	}
+	if apiObject.LineStyle != nil {
+		tfMap["line_style"] = aws.StringValue(apiObject.LineStyle)
+	}
+	if apiObject.LineVisibility != nil {
+		tfMap["line_visibility"] = aws.StringValue(apiObject.LineVisibility)
+	}
+	if apiObject.LineWidth != nil {
+		tfMap["line_width"] = aws.StringValue(apiObject.LineWidth)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenLineChartMarkerStyleSettings(apiObject *quicksight.LineChartMarkerStyleSettings) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.MarkerColor != nil {
+		tfMap["marker_color"] = aws.StringValue(apiObject.MarkerColor)
+	}
+	if apiObject.MarkerShape != nil {
+		tfMap["marker_shape"] = aws.StringValue(apiObject.MarkerShape)
+	}
+	if apiObject.MarkerSize != nil {
+		tfMap["marker_size"] = aws.StringValue(apiObject.MarkerSize)
+	}
+	if apiObject.MarkerVisibility != nil {
+		tfMap["marker_visibility"] = aws.StringValue(apiObject.MarkerVisibility)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenLineChartFieldWells(apiObject *quicksight.LineChartFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.LineChartAggregatedFieldWells != nil {
+		tfMap["line_chart_aggregated_field_wells"] = flattenLineChartAggregatedFieldWells(apiObject.LineChartAggregatedFieldWells)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenLineChartAggregatedFieldWells(apiObject *quicksight.LineChartAggregatedFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Category != nil {
+		tfMap["category"] = flattenDimensionFields(apiObject.Category)
+	}
+	if apiObject.Colors != nil {
+		tfMap["colors"] = flattenDimensionFields(apiObject.Colors)
+	}
+	if apiObject.SmallMultiples != nil {
+		tfMap["small_multiples"] = flattenDimensionFields(apiObject.SmallMultiples)
+	}
+	if apiObject.Values != nil {
+		tfMap["values"] = flattenMeasureFields(apiObject.Values)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenForecastConfiguration(apiObject []*quicksight.ForecastConfiguration) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if config.ForecastProperties != nil {
+			tfMap["forecast_properties"] = flattenTimeBasedForecastProperties(config.ForecastProperties)
+		}
+		if config.Scenario != nil {
+			tfMap["scenario"] = flattenForecastScenario(config.Scenario)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenTimeBasedForecastProperties(apiObject *quicksight.TimeBasedForecastProperties) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.LowerBoundary != nil {
+		tfMap["lower_boundary"] = aws.Float64Value(apiObject.LowerBoundary)
+	}
+	if apiObject.PeriodsBackward != nil {
+		tfMap["periods_backward"] = aws.Int64Value(apiObject.PeriodsBackward)
+	}
+	if apiObject.PeriodsForward != nil {
+		tfMap["periods_forward"] = aws.Int64Value(apiObject.PeriodsForward)
+	}
+	if apiObject.PredictionInterval != nil {
+		tfMap["prediction_interval"] = aws.Int64Value(apiObject.PredictionInterval)
+	}
+	if apiObject.Seasonality != nil {
+		tfMap["seasonality"] = aws.Int64Value(apiObject.Seasonality)
+	}
+	if apiObject.UpperBoundary != nil {
+		tfMap["upper_boundary"] = aws.Float64Value(apiObject.UpperBoundary)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenForecastScenario(apiObject *quicksight.ForecastScenario) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.WhatIfPointScenario != nil {
+		tfMap["what_if_point_scenario"] = flattenWhatIfPointScenario(apiObject.WhatIfPointScenario)
+	}
+	if apiObject.WhatIfRangeScenario != nil {
+		tfMap["what_if_range_scenario"] = flattenWhatIfRangeScenario(apiObject.WhatIfRangeScenario)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenWhatIfPointScenario(apiObject *quicksight.WhatIfPointScenario) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Date != nil {
+		tfMap["date"] = aws.TimeValue(apiObject.Date).Format(time.RFC3339)
+	}
+	if apiObject.Value != nil {
+		tfMap["value"] = aws.Float64Value(apiObject.Value)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenWhatIfRangeScenario(apiObject *quicksight.WhatIfRangeScenario) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.EndDate != nil {
+		tfMap["end_date"] = aws.TimeValue(apiObject.EndDate).Format(time.RFC3339)
+	}
+	if apiObject.StartDate != nil {
+		tfMap["start_date"] = aws.TimeValue(apiObject.StartDate).Format(time.RFC3339)
+	}
+	if apiObject.Value != nil {
+		tfMap["value"] = aws.Float64Value(apiObject.Value)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenLineSeriesAxisDisplayOptions(apiObject *quicksight.LineSeriesAxisDisplayOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.AxisOptions != nil {
+		tfMap["axis_options"] = flattenAxisDisplayOptions(apiObject.AxisOptions)
+	}
+	if apiObject.MissingDataConfigurations != nil {
+		tfMap["missing_data_configurations"] = flattenMissingDataConfiguration(apiObject.MissingDataConfigurations)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenMissingDataConfiguration(apiObject []*quicksight.MissingDataConfiguration) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if config.TreatmentOption != nil {
+			tfMap["treatment_option"] = aws.StringValue(config.TreatmentOption)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenSeriesItem(apiObject []*quicksight.SeriesItem) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if config.DataFieldSeriesItem != nil {
+			tfMap["data_field_series_item"] = flattenDataFieldSeriesItem(config.DataFieldSeriesItem)
+		}
+		if config.FieldSeriesItem != nil {
+			tfMap["field_series_item"] = flattenFieldSeriesItem(config.FieldSeriesItem)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenDataFieldSeriesItem(apiObject *quicksight.DataFieldSeriesItem) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.AxisBinding != nil {
+		tfMap["axis_binding"] = aws.StringValue(apiObject.AxisBinding)
+	}
+	if apiObject.FieldId != nil {
+		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
+	}
+	if apiObject.FieldValue != nil {
+		tfMap["field_value"] = aws.StringValue(apiObject.FieldValue)
+	}
+	if apiObject.Settings != nil {
+		tfMap["settings"] = flattenLineChartSeriesSettings(apiObject.Settings)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenLineChartSeriesSettings(apiObject *quicksight.LineChartSeriesSettings) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.LineStyleSettings != nil {
+		tfMap["line_style_settings"] = flattenLineChartLineStyleSettings(apiObject.LineStyleSettings)
+	}
+	if apiObject.MarkerStyleSettings != nil {
+		tfMap["marker_style_settings"] = flattenLineChartMarkerStyleSettings(apiObject.MarkerStyleSettings)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenFieldSeriesItem(apiObject *quicksight.FieldSeriesItem) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.AxisBinding != nil {
+		tfMap["axis_binding"] = aws.StringValue(apiObject.AxisBinding)
+	}
+	if apiObject.FieldId != nil {
+		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
+	}
+	if apiObject.Settings != nil {
+		tfMap["settings"] = flattenLineChartSeriesSettings(apiObject.Settings)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenLineChartSortConfiguration(apiObject *quicksight.LineChartSortConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CategoryItemsLimitConfiguration != nil {
+		tfMap["category_items_limit_configuration"] = flattenItemsLimitConfiguration(apiObject.CategoryItemsLimitConfiguration)
+	}
+	if apiObject.CategorySort != nil {
+		tfMap["category_sort"] = flattenFieldSortOptions(apiObject.CategorySort)
+	}
+	if apiObject.ColorItemsLimitConfiguration != nil {
+		tfMap["color_items_limit_configuration"] = flattenItemsLimitConfiguration(apiObject.ColorItemsLimitConfiguration)
+	}
+	if apiObject.SmallMultiplesLimitConfiguration != nil {
+		tfMap["small_multiples_limit_configuration"] = flattenItemsLimitConfiguration(apiObject.SmallMultiplesLimitConfiguration)
+	}
+	if apiObject.SmallMultiplesSort != nil {
+		tfMap["small_multiples_sort"] = flattenFieldSortOptions(apiObject.SmallMultiplesSort)
+	}
+
+	return []interface{}{tfMap}
 }
