@@ -6,6 +6,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -13,10 +14,12 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -221,11 +224,16 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.Ipv6NetmaskLength = aws.Int64(int64(v.(int)))
 	}
 
-	output, err := conn.CreateVpcWithContext(ctx, input)
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.CreateVpcWithContext(ctx, input)
+		// "UnsupportedOperation: The operation AllocateIpamPoolCidr is not supported. Account 123456789012 is not monitored by IPAM ipam-07b079e3392782a55."
+	}, errCodeUnsupportedOperation, "is not monitored by IPAM")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPC: %s", err)
 	}
+
+	output := outputRaw.(*ec2.CreateVpcOutput)
 
 	d.SetId(aws.StringValue(output.Vpc.VpcId))
 
@@ -355,31 +363,35 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 		d.Set("default_security_group_id", v.GroupId)
 	}
 
-	d.Set("assign_generated_ipv6_cidr_block", nil)
-	d.Set("ipv6_cidr_block", nil)
-	d.Set("ipv6_cidr_block_network_border_group", nil)
-	d.Set("ipv6_ipam_pool_id", nil)
-	d.Set("ipv6_netmask_length", nil)
-
-	ipv6CIDRBlockAssociation := defaultIPv6CIDRBlockAssociation(vpc, d.Get("ipv6_association_id").(string))
-
-	if ipv6CIDRBlockAssociation == nil {
+	if ipv6CIDRBlockAssociation := defaultIPv6CIDRBlockAssociation(vpc, d.Get("ipv6_association_id").(string)); ipv6CIDRBlockAssociation == nil {
+		d.Set("assign_generated_ipv6_cidr_block", nil)
 		d.Set("ipv6_association_id", nil)
+		d.Set("ipv6_cidr_block", nil)
+		d.Set("ipv6_cidr_block_network_border_group", nil)
+		d.Set("ipv6_ipam_pool_id", nil)
+		d.Set("ipv6_netmask_length", nil)
 	} else {
 		cidrBlock := aws.StringValue(ipv6CIDRBlockAssociation.Ipv6CidrBlock)
 		ipv6PoolID := aws.StringValue(ipv6CIDRBlockAssociation.Ipv6Pool)
-		isAmazonIPv6Pool := ipv6PoolID == AmazonIPv6PoolID
+		isAmazonIPv6Pool := ipv6PoolID == amazonIPv6PoolID
 		d.Set("assign_generated_ipv6_cidr_block", isAmazonIPv6Pool)
 		d.Set("ipv6_association_id", ipv6CIDRBlockAssociation.AssociationId)
 		d.Set("ipv6_cidr_block", cidrBlock)
 		d.Set("ipv6_cidr_block_network_border_group", ipv6CIDRBlockAssociation.NetworkBorderGroup)
-		if !isAmazonIPv6Pool {
-			d.Set("ipv6_ipam_pool_id", ipv6PoolID)
+		if isAmazonIPv6Pool {
+			d.Set("ipv6_ipam_pool_id", nil)
+		} else {
+			if ipv6PoolID == ipamManagedIPv6PoolID {
+				d.Set("ipv6_ipam_pool_id", d.Get("ipv6_ipam_pool_id"))
+			} else {
+				d.Set("ipv6_ipam_pool_id", ipv6PoolID)
+			}
 		}
+		d.Set("ipv6_netmask_length", nil)
 		if ipv6PoolID != "" && !isAmazonIPv6Pool {
 			parts := strings.Split(cidrBlock, "/")
 			if len(parts) == 2 {
-				if v, err := strconv.Atoi(parts[1]); err != nil {
+				if v, err := strconv.Atoi(parts[1]); err == nil {
 					d.Set("ipv6_netmask_length", v)
 				} else {
 					log.Printf("[WARN] Unable to parse CIDR (%s) netmask length: %s", cidrBlock, err)
@@ -497,6 +509,24 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPC (%s) delete: %s", d.Id(), err)
+	}
+
+	// If the VPC's CIDR block was allocated from an IPAM pool, wait for the allocation to disappear.
+	ipamPoolID := d.Get("ipv4_ipam_pool_id").(string)
+	if ipamPoolID == "" {
+		ipamPoolID = d.Get("ipv6_ipam_pool_id").(string)
+	}
+	if ipamPoolID != "" && ipamPoolID != amazonIPv6PoolID {
+		const (
+			timeout = 20 * time.Minute // IPAM eventual consistency
+		)
+		_, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (interface{}, error) {
+			return findIPAMPoolAllocationsForVPC(ctx, conn, ipamPoolID, d.Id())
+		})
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPC (%s) IPAM Pool (%s) Allocation delete: %s", d.Id(), ipamPoolID, err)
+		}
 	}
 
 	return diags
@@ -784,4 +814,26 @@ func modifyVPCTenancy(ctx context.Context, conn *ec2.EC2, vpcID string, v string
 	}
 
 	return nil
+}
+
+func findIPAMPoolAllocationsForVPC(ctx context.Context, conn *ec2.EC2, poolID, vpcID string) ([]*ec2.IpamPoolAllocation, error) {
+	input := &ec2.GetIpamPoolAllocationsInput{
+		IpamPoolId: aws.String(poolID),
+	}
+
+	output, err := FindIPAMPoolAllocations(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	output = slices.Filter(output, func(v *ec2.IpamPoolAllocation) bool {
+		return aws.StringValue(v.ResourceType) == ec2.IpamPoolAllocationResourceTypeVpc && aws.StringValue(v.ResourceId) == vpcID
+	})
+
+	if len(output) == 0 {
+		return nil, &retry.NotFoundError{}
+	}
+
+	return output, nil
 }

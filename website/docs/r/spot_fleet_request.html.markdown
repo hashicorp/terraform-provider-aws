@@ -198,6 +198,7 @@ Most of these arguments directly correspond to the
   Spot instances on your behalf when you cancel its Spot fleet request using
 CancelSpotFleetRequests or when the Spot fleet request expires, if you set
 terminateInstancesWithExpiration.
+* `context` - (Optional) Reserved.
 * `replace_unhealthy_instances` - (Optional) Indicates whether Spot fleet should replace unhealthy instances. Default `false`.
 * `launch_specification` - (Optional) Used to define the launch configuration of the
   spot-fleet request. Can be specified multiple times to define different bids

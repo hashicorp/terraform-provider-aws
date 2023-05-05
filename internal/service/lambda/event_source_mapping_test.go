@@ -234,7 +234,7 @@ func TestAccLambdaEventSourceMapping_DynamoDB_streamAdded(t *testing.T) {
 		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDynamoDBStreamConfig(rName, false),
+				Config: testAccEventSourceMappingConfig_dynamoDBStreamBase(rName, false),
 			},
 			{
 				ResourceName:            resourceName,
@@ -243,7 +243,7 @@ func TestAccLambdaEventSourceMapping_DynamoDB_streamAdded(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"last_modified"},
 			},
 			{
-				Config: testAccEventSourceMappingDynamoDBStreamEnabled(rName),
+				Config: testAccEventSourceMappingConfig_dynamoDBStreamEnabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, mappingResourceName, &conf),
 				),
@@ -1171,6 +1171,89 @@ func TestAccLambdaEventSourceMapping_SQS_scalingConfig(t *testing.T) {
 	})
 }
 
+func TestAccLambdaEventSourceMapping_documentDB(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v lambda.EventSourceMappingConfiguration
+	resourceName := "aws_lambda_event_source_mapping.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSecretsManager(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEventSourceMappingConfig_documentDB(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
+					resource.TestCheckResourceAttr(resourceName, "document_db_event_source_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "document_db_event_source_config.0.collection_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "document_db_event_source_config.0.database_name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "document_db_event_source_config.0.full_document", "Default"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.#", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"last_modified"},
+			},
+		},
+	})
+}
+
+func testAccPreCheckMQ(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn()
+
+	input := &mq.ListBrokersInput{}
+
+	_, err := conn.ListBrokersWithContext(ctx, input)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+func testAccPreCheckMSK(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
+
+	input := &kafka.ListClustersInput{}
+
+	_, err := conn.ListClustersWithContext(ctx, input)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+func testAccPreCheckSecretsManager(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn()
+
+	input := &secretsmanager.ListSecretsInput{}
+
+	_, err := conn.ListSecretsWithContext(ctx, input)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
 func testAccCheckEventSourceMappingIsBeingDisabled(ctx context.Context, conf *lambda.EventSourceMappingConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
@@ -1447,7 +1530,7 @@ resource "aws_lambda_function" "test" {
 `, rName)
 }
 
-func testAccDynamoDBStreamConfig(rName string, streamEnabled bool) string {
+func testAccEventSourceMappingConfig_dynamoDBStreamBase(rName string, streamEnabled bool) string {
 	var streamStatus string
 	var streamViewType string
 	if streamEnabled {
@@ -1781,8 +1864,101 @@ resource "aws_secretsmanager_secret_version" "test" {
 `, rName)
 }
 
+func testAccEventSourceMappingConfig_documentDBBase(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "lambda.amazonaws.com"
+    },
+    "Effect": "Allow"
+  }]
+}
+EOF
+}
+
+resource "aws_iam_policy" "test" {
+  name = %[1]q
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+		"rds:DescribeDBClusters",
+		"rds:DescribeDBClusterParameters",
+		"rds:DescribeDBSubnetGroups",
+		"ec2:CreateNetworkInterface",
+		"ec2:DescribeNetworkInterfaces",
+		"ec2:DescribeVpcs",
+		"ec2:DeleteNetworkInterface",
+		"ec2:DescribeSubnets",
+		"ec2:DescribeSecurityGroups",
+		"kms:Decrypt",
+		"secretsmanager:GetSecretValue"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy_attachment" "test" {
+  name       = %[1]q
+  roles      = [aws_iam_role.test.name]
+  policy_arn = aws_iam_policy.test.arn
+}
+
+resource "aws_secretsmanager_secret" "test" {
+  name = %[1]q
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id     = aws_secretsmanager_secret.test.id
+  secret_string = jsonencode({ username = "tfacctest", password = "avoid-plaintext-passwords" })
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  handler       = "exports.example"
+  role          = aws_iam_role.test.arn
+  runtime       = "nodejs16.x"
+}
+
+resource "aws_docdb_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_docdb_cluster" "test" {
+  cluster_identifier = %[1]q
+
+  db_subnet_group_name            = aws_docdb_subnet_group.test.name
+  master_username                 = "tfacctest"
+  master_password                 = "avoid-plaintext-passwords"
+  db_cluster_parameter_group_name = "default.docdb4.0"
+  skip_final_snapshot             = true
+
+  enabled_cloudwatch_logs_exports = [
+    "audit",
+    "profiler",
+  ]
+}
+`, rName))
+}
+
 func testAccEventSourceMappingConfig_kinesisStartingPositionTimestamp(rName, startingPositionTimestamp string) string {
-	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kinesisBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kinesisBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size                  = 100
   enabled                     = true
@@ -1947,10 +2123,44 @@ resource "aws_lambda_event_source_mapping" "test" {
 
 func testAccEventSourceMappingConfig_sqsUpdateFunctionName(rName string) string {
 	return acctest.ConfigCompose(testAccEventSourceMappingConfig_sqsBase(rName), fmt.Sprintf(`
+resource "aws_iam_role" "test_update" {
+  name = "%[1]s-update"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "lambda.amazonaws.com"
+    },
+    "Effect": "Allow"
+  }]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test_update" {
+  role = aws_iam_role.test_update.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": ["sqs:*"],
+    "Resource": "*"
+  }]
+}
+EOF
+
+  depends_on = [aws_lambda_function.test_update]
+}
+
 resource "aws_lambda_function" "test_update" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%[1]s-update"
-  role          = aws_iam_role.test.arn
+  role          = aws_iam_role.test_update.arn
   handler       = "exports.example"
   runtime       = "nodejs16.x"
 }
@@ -2160,8 +2370,8 @@ resource "aws_lambda_event_source_mapping" "test" {
 `)
 }
 
-func testAccEventSourceMappingDynamoDBStreamEnabled(rName string) string {
-	return acctest.ConfigCompose(testAccDynamoDBStreamConfig(rName, true), `
+func testAccEventSourceMappingConfig_dynamoDBStreamEnabled(rName string) string {
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_dynamoDBStreamBase(rName, true), `
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size        = 150
   enabled           = true
@@ -2219,52 +2429,25 @@ resource "aws_lambda_event_source_mapping" "test" {
 `, batchSize))
 }
 
-func testAccPreCheckMQ(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn()
+func testAccEventSourceMappingConfig_documentDB(rName string) string {
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_documentDBBase(rName), `
+resource "aws_lambda_event_source_mapping" "test" {
+  enabled          = true
+  event_source_arn = aws_docdb_cluster.test.arn
+  function_name    = aws_lambda_function.test.arn
 
-	input := &mq.ListBrokersInput{}
+  document_db_event_source_config {
+    database_name = "test"
+  }
 
-	_, err := conn.ListBrokersWithContext(ctx, input)
+  source_access_configuration {
+    type = "BASIC_AUTH"
+    uri  = aws_secretsmanager_secret_version.test.arn
+  }
 
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
+  depends_on = [aws_iam_policy_attachment.test]
 }
-
-func testAccPreCheckMSK(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
-
-	input := &kafka.ListClustersInput{}
-
-	_, err := conn.ListClustersWithContext(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-func testAccPreCheckSecretsManager(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn()
-
-	input := &secretsmanager.ListSecretsInput{}
-
-	_, err := conn.ListSecretsWithContext(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
+`)
 }
 
 func testAccEventSourceMappingConfig_sqsFilterCriteria1(rName string, pattern1 string) string {

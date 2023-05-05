@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_spot_instance_request", name="Spot Instance Request")
@@ -46,7 +47,7 @@ func ResourceSpotInstanceRequest() *schema.Resource {
 
 			// Everything on a spot instance is ForceNew except tags
 			for k, v := range s {
-				if k == "tags" || k == "tags_all" {
+				if k == names.AttrTags || k == names.AttrTagsAll {
 					continue
 				}
 				v.ForceNew = true

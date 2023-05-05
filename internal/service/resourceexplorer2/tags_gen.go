@@ -84,10 +84,12 @@ func UpdateTags(ctx context.Context, conn *resourceexplorer2.Client, identifier 
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.ResourceExplorer2)
+	if len(removedTags) > 0 {
 		input := &resourceexplorer2.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     removedTags.IgnoreSystem(names.ResourceExplorer2).Keys(),
+			TagKeys:     removedTags.Keys(),
 		}
 
 		_, err := conn.UntagResource(ctx, input)
@@ -97,10 +99,12 @@ func UpdateTags(ctx context.Context, conn *resourceexplorer2.Client, identifier 
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.ResourceExplorer2)
+	if len(updatedTags) > 0 {
 		input := &resourceexplorer2.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreSystem(names.ResourceExplorer2)),
+			Tags:        Tags(updatedTags),
 		}
 
 		_, err := conn.TagResource(ctx, input)

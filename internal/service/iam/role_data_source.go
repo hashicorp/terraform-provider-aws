@@ -28,6 +28,22 @@ func DataSourceRole() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"create_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"max_session_duration": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"path": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -36,27 +52,27 @@ func DataSourceRole() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"role_last_used": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"region": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"last_used_date": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"tags": tftags.TagsSchemaComputed(),
 			"unique_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"create_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"max_session_duration": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -81,6 +97,11 @@ func dataSourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if err := d.Set("create_date", output.Role.CreateDate.Format(time.RFC3339)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting create_date: %s", err)
 	}
+
+	if err := d.Set("role_last_used", flattenRoleLastUsed(output.Role.RoleLastUsed)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting role_last_used: %s", err)
+	}
+
 	d.Set("description", output.Role.Description)
 	d.Set("max_session_duration", output.Role.MaxSessionDuration)
 	d.Set("name", output.Role.RoleName)

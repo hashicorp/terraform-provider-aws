@@ -500,16 +500,21 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 		input.PathName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("product_id"); ok {
-		input.ProductId = aws.String(v.(string))
-	} else if v, ok := d.GetOk("product_name"); ok {
+	// check product_name first. product_id is optional/computed and will always be
+	// set by the time update is called
+	if v, ok := d.GetOk("product_name"); ok {
 		input.ProductName = aws.String(v.(string))
+	} else if v, ok := d.GetOk("product_id"); ok {
+		input.ProductId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("provisioning_artifact_id"); ok {
-		input.ProvisioningArtifactId = aws.String(v.(string))
-	} else if v, ok := d.GetOk("provisioning_artifact_name"); ok {
+	// check provisioning_artifact_name first. provisioning_artrifact_id is optional/computed
+	// and will always be set by the time update is called
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/26271
+	if v, ok := d.GetOk("provisioning_artifact_name"); ok {
 		input.ProvisioningArtifactName = aws.String(v.(string))
+	} else if v, ok := d.GetOk("provisioning_artifact_id"); ok {
+		input.ProvisioningArtifactId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("provisioning_parameters"); ok && len(v.([]interface{})) > 0 {

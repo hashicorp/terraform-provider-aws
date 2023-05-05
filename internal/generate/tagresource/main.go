@@ -15,11 +15,9 @@ import (
 )
 
 var (
-	createTagsFunc = flag.String("CreateTagsFunc", "CreateTags", "createTagsFunc")
 	getTagFunc     = flag.String("GetTagFunc", "GetTag", "getTagFunc")
 	idAttribName   = flag.String("IDAttribName", "resource_arn", "idAttribName")
 	updateTagsFunc = flag.String("UpdateTagsFunc", "UpdateTags", "updateTagsFunc")
-	withContext    = flag.Bool("WithContext", true, `whether the Context-aware function includes "WithContext" in the name`)
 )
 
 func usage() {
@@ -71,11 +69,9 @@ func main() {
 		ProviderResourceName: providerResName,
 		ServicePackage:       servicePackage,
 
-		CreateTagsFunc: *createTagsFunc,
 		GetTagFunc:     *getTagFunc,
 		IDAttribName:   *idAttribName,
 		UpdateTagsFunc: *updateTagsFunc,
-		WithContext:    *withContext,
 	}
 
 	const (

@@ -187,12 +187,13 @@ The following arguments are optional:
 For a `physical_table_map` item to be valid, only one of `custom_sql`, `relational_table`, or `s3_source` should be configured.
 
 * `physical_table_map_id` - (Required) Key of the physical table map.
-* `custom_sql` - (Optional) A physical table type built from the results of the custom SQL query. See [custom_sql](#custom_sq1).
+* `custom_sql` - (Optional) A physical table type built from the results of the custom SQL query. See [custom_sql](#custom_sql).
 * `relational_table` - (Optional) A physical table type for relational data sources. See [relational_table](#relational_table).
 * `s3_source` - (Optional) A physical table type for as S3 data source. See [s3_source](#s3_source).
 
-### custom_sq1
+### custom_sql
 
+* `data_source_arn` - (Required) ARN of the data source.
 * `name` - (Required) Display name for the SQL query result.
 * `sql_query` - (Required) SQL query.
 * `columns` - (Optional) Column schema from the SQL query result set. See [columns](#columns).

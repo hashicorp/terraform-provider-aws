@@ -98,15 +98,16 @@ func SetTagsOut(ctx context.Context, tags []*acm.Tag) {
 // UpdateTags updates acm service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-
 func UpdateTags(ctx context.Context, conn acmiface.ACMAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.ACM)
+	if len(removedTags) > 0 {
 		input := &acm.RemoveTagsFromCertificateInput{
 			CertificateArn: aws.String(identifier),
-			Tags:           Tags(removedTags.IgnoreSystem(names.ACM)),
+			Tags:           Tags(removedTags),
 		}
 
 		_, err := conn.RemoveTagsFromCertificateWithContext(ctx, input)
@@ -116,10 +117,12 @@ func UpdateTags(ctx context.Context, conn acmiface.ACMAPI, identifier string, ol
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.ACM)
+	if len(updatedTags) > 0 {
 		input := &acm.AddTagsToCertificateInput{
 			CertificateArn: aws.String(identifier),
-			Tags:           Tags(updatedTags.IgnoreSystem(names.ACM)),
+			Tags:           Tags(updatedTags),
 		}
 
 		_, err := conn.AddTagsToCertificateWithContext(ctx, input)

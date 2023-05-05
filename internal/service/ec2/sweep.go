@@ -1428,7 +1428,7 @@ func sweepRouteTables(region string) error {
 						continue
 					}
 
-					if gatewayID := aws.StringValue(route.GatewayId); gatewayID == "local" || gatewayID == "VpcLattice" {
+					if gatewayID := aws.StringValue(route.GatewayId); gatewayID == gatewayIDLocal || gatewayID == gatewayIDVPCLattice {
 						continue
 					}
 

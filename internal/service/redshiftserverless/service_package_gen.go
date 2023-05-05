@@ -25,6 +25,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  DataSourceCredentials,
 			TypeName: "aws_redshiftserverless_credentials",
 		},
+		{
+			Factory:  DataSourceWorkgroup,
+			TypeName: "aws_redshiftserverless_workgroup",
+		},
 	}
 }
 

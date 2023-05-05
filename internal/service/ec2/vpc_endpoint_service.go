@@ -248,7 +248,7 @@ func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData,
 
 	SetTagsOut(ctx, svcCfg.Tags)
 
-	allowedPrincipals, err := FindVPCEndpointServicePermissionsByID(ctx, conn, d.Id())
+	allowedPrincipals, err := FindVPCEndpointServicePermissionsByServiceID(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC Endpoint Service (%s) permissions: %s", d.Id(), err)

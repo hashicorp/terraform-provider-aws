@@ -125,6 +125,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceParameterGroup,
 			TypeName: "aws_db_parameter_group",
+			Name:     "DB Parameter Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceProxy,

@@ -204,7 +204,7 @@ func testAccCheckTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			if err != nil {
-				return fmt.Errorf("Error finding Inspector Assessment Template: %s", err)
+				return fmt.Errorf("finding Inspector Classic Assessment Template: %s", err)
 			}
 
 			if len(resp.AssessmentTemplates) > 0 {
@@ -236,7 +236,7 @@ func testAccCheckTemplateExists(ctx context.Context, name string, v *inspector.A
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Inspector assessment template ID is set")
+			return fmt.Errorf("No Inspector Classic Assessment template ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn()
@@ -249,7 +249,7 @@ func testAccCheckTemplateExists(ctx context.Context, name string, v *inspector.A
 		}
 
 		if resp.AssessmentTemplates == nil || len(resp.AssessmentTemplates) == 0 {
-			return fmt.Errorf("Inspector assessment template not found")
+			return fmt.Errorf("Inspector Classic Assessment template not found")
 		}
 
 		*v = *resp.AssessmentTemplates[0]

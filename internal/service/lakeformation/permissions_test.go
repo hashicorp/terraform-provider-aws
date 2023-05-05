@@ -13,6 +13,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -268,6 +269,53 @@ func testAccPermissions_lfTagPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lf_tag_policy.0.expression.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_policy.0.expression.0.key", tagName, "key"),
 					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_policy.0.expression.0.values", tagName, "values"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", lakeformation.PermissionAlter),
+					resource.TestCheckResourceAttr(resourceName, "permissions.1", lakeformation.PermissionCreateTable),
+					resource.TestCheckResourceAttr(resourceName, "permissions.2", lakeformation.PermissionDrop),
+					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.0", lakeformation.PermissionCreateTable),
+				),
+			},
+		},
+	})
+}
+
+func testAccPermissions_lfTagPolicyMultiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lakeformation_permissions.test"
+	roleName := "aws_iam_role.test"
+	// tagName := "aws_lakeformation_lf_tag.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPermissionsConfig_lfTagPolicyMultiple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPermissionsExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_resource", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "lf_tag_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lf_tag_policy.0.resource_type", "DATABASE"),
+					resource.TestCheckResourceAttr(resourceName, "lf_tag_policy.0.expression.#", "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag_policy.0.expression.*", map[string]string{
+						"key":      rName + "-0",
+						"values.#": "2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag_policy.0.expression.*", map[string]string{
+						"key":      rName + "-1",
+						"values.#": "2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag_policy.0.expression.*", map[string]string{
+						"key":      rName + "-2",
+						"values.#": "2",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", lakeformation.PermissionAlter),
 					resource.TestCheckResourceAttr(resourceName, "permissions.1", lakeformation.PermissionCreateTable),
@@ -885,7 +933,8 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.LakeFor
 				}
 				expressionSlice[i] = expression
 			}
-			tfMap["expression"] = expressionSlice
+			// The exact details of the set hash function don't matter, elements just have distinct values.
+			tfMap["expression"] = schema.NewSet(func(_ interface{}) int { return sdkacctest.RandInt() }, expressionSlice)
 		}
 
 		input.Resource.LFTagPolicy = tflakeformation.ExpandLFTagPolicyResource(tfMap)
@@ -1293,11 +1342,6 @@ resource "aws_s3_bucket" "test" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_lakeformation_resource" "test" {
   arn      = aws_s3_bucket.test.arn
   role_arn = aws_iam_role.test.arn
@@ -1437,6 +1481,82 @@ resource "aws_lakeformation_permissions" "test" {
     expression {
       key    = aws_lakeformation_lf_tag.test.key
       values = aws_lakeformation_lf_tag.test.values
+    }
+  }
+
+  # for consistency, ensure that admins are setup before testing
+  depends_on = [
+    aws_lakeformation_data_lake_settings.test,
+    aws_lakeformation_lf_tag.test,
+  ]
+}
+`, rName)
+}
+
+func testAccPermissionsConfig_lfTagPolicyMultiple(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  path               = "/"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "glue.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
+resource "aws_lakeformation_data_lake_settings" "test" {
+  admins = [data.aws_iam_session_context.current.issuer_arn]
+}
+
+resource "aws_lakeformation_lf_tag" "test" {
+  count = 3
+
+  key    = "%[1]s-${count.index}"
+  values = ["value1", "value2"]
+
+  # for consistency, ensure that admins are setup before testing
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+
+resource "aws_lakeformation_permissions" "test" {
+  permissions                   = ["ALTER", "CREATE_TABLE", "DROP"]
+  permissions_with_grant_option = ["CREATE_TABLE"]
+  principal                     = aws_iam_role.test.arn
+
+  lf_tag_policy {
+    resource_type = "DATABASE"
+
+    expression {
+      key    = aws_lakeformation_lf_tag.test[2].key
+      values = aws_lakeformation_lf_tag.test[2].values
+    }
+
+    expression {
+      key    = aws_lakeformation_lf_tag.test[0].key
+      values = aws_lakeformation_lf_tag.test[0].values
+    }
+
+    expression {
+      key    = aws_lakeformation_lf_tag.test[1].key
+      values = aws_lakeformation_lf_tag.test[1].values
     }
   }
 

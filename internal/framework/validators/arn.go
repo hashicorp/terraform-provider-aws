@@ -4,14 +4,14 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
 type arnValidator struct{}
 
 func (validator arnValidator) Description(_ context.Context) string {
-	return "An Amazon Resource Name"
+	return "value must be a valid Amazon Resource Name"
 }
 
 func (validator arnValidator) MarkdownDescription(ctx context.Context) string {
@@ -24,10 +24,10 @@ func (validator arnValidator) ValidateString(ctx context.Context, request valida
 	}
 
 	if !arn.IsARN(request.ConfigValue.ValueString()) {
-		response.Diagnostics.Append(diag.NewAttributeErrorDiagnostic(
+		response.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
 			request.Path,
 			validator.Description(ctx),
-			"value must be a valid ARN",
+			request.ConfigValue.ValueString(),
 		))
 		return
 	}

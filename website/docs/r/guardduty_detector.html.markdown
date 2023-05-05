@@ -80,18 +80,21 @@ The `audit_logs` block supports the following:
   Defaults to `true`.
 
 ### Malware Protection
+
 `malware_protection` block supports the following:
 
 * `scan_ec2_instance_with_findings` - (Required) Configure whether [Malware Protection](https://docs.aws.amazon.com/guardduty/latest/ug/malware-protection.html) is enabled as data source for EC2 instances with findings for the detector.
   See [Scan EC2 instance with findings](#scan-ec2-instance-with-findings) below for more details.
 
 #### Scan EC2 instance with findings
+
 The `scan_ec2_instance_with_findings` block supports the following:
 
 * `ebs_volumes` - (Required) Configure whether scanning EBS volumes is enabled as data source for the detector for instances with findings.
   See [EBS volumes](#ebs-volumes) below for more details.
 
 #### EBS volumes
+
 The `ebs_volumes` block supports the following:
 
 * `enable` - (Required) If true, enables [Malware Protection](https://docs.aws.amazon.com/guardduty/latest/ug/malware-protection.html) as data source for the detector.
@@ -113,3 +116,5 @@ GuardDuty detectors can be imported using the detector ID, e.g.,
 ```
 $ terraform import aws_guardduty_detector.MyDetector 00b00fd5aecc0ab60a708659477e9617
 ```
+
+The ID of the detector can be retrieved via the [AWS CLI](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/guardduty/list-detectors.html) using `aws guardduty list-detectors`.
