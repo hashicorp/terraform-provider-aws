@@ -1451,17 +1451,6 @@ func flattenVisuals(apiObject []*quicksight.Visual) []interface{} {
 	return tfList
 }
 
-func flattenHistogramVisual(apiObject *quicksight.HistogramVisual) []interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-	// TODO
-
-	return []interface{}{tfMap}
-}
-
 func flattenInsightVisual(apiObject *quicksight.InsightVisual) []interface{} {
 	if apiObject == nil {
 		return nil

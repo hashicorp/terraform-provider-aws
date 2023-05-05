@@ -288,3 +288,138 @@ func expandBinWidthOptions(tfList []interface{}) *quicksight.BinWidthOptions {
 
 	return options
 }
+
+func flattenHistogramVisual(apiObject *quicksight.HistogramVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"visual_id": aws.StringValue(apiObject.VisualId),
+	}
+	if apiObject.Actions != nil {
+		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
+	}
+	if apiObject.ChartConfiguration != nil {
+		tfMap["chart_configuration"] = flattenHistogramConfiguration(apiObject.ChartConfiguration)
+	}
+	if apiObject.Subtitle != nil {
+		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
+	}
+	if apiObject.Title != nil {
+		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenHistogramConfiguration(apiObject *quicksight.HistogramConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.BinOptions != nil {
+		tfMap["bin_options"] = flattenHistogramBinOptions(apiObject.BinOptions)
+	}
+	if apiObject.DataLabels != nil {
+		tfMap["data_labels"] = flattenDataLabelOptions(apiObject.DataLabels)
+	}
+	if apiObject.FieldWells != nil {
+		tfMap["field_wells"] = flattenHistogramFieldWells(apiObject.FieldWells)
+	}
+	if apiObject.Tooltip != nil {
+		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)
+	}
+	if apiObject.VisualPalette != nil {
+		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
+	}
+	if apiObject.XAxisDisplayOptions != nil {
+		tfMap["x_axis_display_options"] = flattenAxisDisplayOptions(apiObject.XAxisDisplayOptions)
+	}
+	if apiObject.XAxisLabelOptions != nil {
+		tfMap["x_axis_label_options"] = flattenChartAxisLabelOptions(apiObject.XAxisLabelOptions)
+	}
+	if apiObject.YAxisDisplayOptions != nil {
+		tfMap["y_axis_display_options"] = flattenAxisDisplayOptions(apiObject.YAxisDisplayOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenHistogramBinOptions(apiObject *quicksight.HistogramBinOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.BinCount != nil {
+		tfMap["bin_count"] = flattenBinCountOptions(apiObject.BinCount)
+	}
+	if apiObject.BinWidth != nil {
+		tfMap["bin_width"] = flattenBinWidthOptions(apiObject.BinWidth)
+	}
+	if apiObject.SelectedBinType != nil {
+		tfMap["selected_bin_type"] = aws.StringValue(apiObject.SelectedBinType)
+	}
+	if apiObject.StartValue != nil {
+		tfMap["start_value"] = aws.Float64Value(apiObject.StartValue)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenBinCountOptions(apiObject *quicksight.BinCountOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Value != nil {
+		tfMap["value"] = aws.Int64Value(apiObject.Value)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenBinWidthOptions(apiObject *quicksight.BinWidthOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.BinCountLimit != nil {
+		tfMap["bin_count_limit"] = aws.Int64Value(apiObject.BinCountLimit)
+	}
+	if apiObject.Value != nil {
+		tfMap["value"] = aws.Float64Value(apiObject.Value)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenHistogramFieldWells(apiObject *quicksight.HistogramFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.HistogramAggregatedFieldWells != nil {
+		tfMap["histogram_aggregated_field_wells"] = flattenHistogramAggregatedFieldWells(apiObject.HistogramAggregatedFieldWells)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenHistogramAggregatedFieldWells(apiObject *quicksight.HistogramAggregatedFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Values != nil {
+		tfMap["values"] = flattenMeasureField(apiObject.Values)
+	}
+
+	return []interface{}{tfMap}
+}
