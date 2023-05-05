@@ -32,6 +32,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Listener",
 		},
 		{
+			Factory:  DataSourceResourcePolicy,
+			TypeName: "aws_vpclattice_resource_policy",
+		},
+		{
 			Factory:  DataSourceService,
 			TypeName: "aws_vpclattice_service",
 		},
