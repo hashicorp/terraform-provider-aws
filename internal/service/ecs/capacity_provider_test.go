@@ -124,6 +124,20 @@ func TestAccECSCapacityProvider_managedScaling(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.target_capacity", "100"),
 				),
 			},
+			{
+				Config: testAccCapacityProviderConfig_managedScaling(rName, ecs.ManagedScalingStatusEnabled, 0, 100, 10, 100),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, resourceName, &provider),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_group_provider.0.auto_scaling_group_arn", "aws_autoscaling_group.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_termination_protection", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.instance_warmup_period", "0"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.minimum_scaling_step_size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.maximum_scaling_step_size", "100"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.status", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.target_capacity", "100"),
+				),
+			},
 		},
 	})
 }
@@ -284,11 +298,17 @@ resource "aws_autoscaling_group" "test" {
     id = aws_launch_template.test.id
   }
 
-  tags = [{
+  tag {
     key                 = "Name"
     value               = %[1]q
     propagate_at_launch = true
-  }]
+  }
+
+  lifecycle {
+    ignore_changes = [
+      tag,
+    ]
+  }
 }
 `, rName))
 }
