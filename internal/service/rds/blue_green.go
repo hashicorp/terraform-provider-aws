@@ -113,7 +113,7 @@ func (h *instanceHandler) precondition(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if needsPreConditions {
-		err := dbInstanceModify(ctx, h.conn, input, d.Timeout(schema.TimeoutUpdate))
+		err := dbInstanceModify(ctx, h.conn, d.Id(), input, d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return fmt.Errorf("setting pre-conditions: %s", err)
 		}
@@ -148,7 +148,7 @@ func (h *instanceHandler) modifyTarget(ctx context.Context, identifier string, d
 	if needsModify {
 		log.Printf("[DEBUG] %s: Updating Green environment", operation)
 
-		err := dbInstanceModify(ctx, h.conn, modifyInput, timeout)
+		err := dbInstanceModify(ctx, h.conn, d.Id(), modifyInput, timeout)
 		if err != nil {
 			return fmt.Errorf("updating Green environment: %s", err)
 		}
