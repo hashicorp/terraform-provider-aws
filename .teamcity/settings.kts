@@ -184,9 +184,7 @@ object PullRequest : BuildType({
                     sendTo = notifier.destination
                     messageFormat = verboseMessageFormat {
                         addBranch = true
-                        addChanges = true
                         addStatusText = true
-                        maximumNumberOfChanges = 10
                     }
                 }
                 branchFilter = "+:*"
