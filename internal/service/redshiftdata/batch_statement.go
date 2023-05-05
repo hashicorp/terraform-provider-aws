@@ -145,7 +145,7 @@ func resourceBatchStatementRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("cluster_identifier", sub.ClusterIdentifier)
 	d.Set("database", d.Get("database").(string))
 	d.Set("db_user", d.Get("db_user").(string))
-	f := flattenSqlStatements(sub.SubStatements)
+	f := flattenSQLStatements(sub.SubStatements)
 	d.Set("sqls", f)
 	d.Set("secret_arn", sub.SecretArn)
 	d.Set("workgroup_name", sub.WorkgroupName)
@@ -153,7 +153,7 @@ func resourceBatchStatementRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func flattenSqlStatements(apiObjects []*redshiftdataapiservice.SubStatementData) []string {
+func flattenSQLStatements(apiObjects []*redshiftdataapiservice.SubStatementData) []string {
 	if len(apiObjects) == 0 {
 		return nil
 	}
