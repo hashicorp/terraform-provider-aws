@@ -41,28 +41,29 @@ func TestAccOrganizationsPolicyDataSource_UnattachedPolicy(t *testing.T) {
 func testAccOrganizationsPolicyDataSourceConfig_UnattachedPolicy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {
-	feature_set = "ALL"
-	enabled_policy_types = "ALL"
+  feature_set          = "ALL"
+  enabled_policy_types = "ALL"
 }
 
 resource "aws_organizations_policy" "test" {
-	depends_on = [aws_organizations_organization.test]
-	content = <<EOF
+  depends_on = [aws_organizations_organization.test]
+
+  content = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": {
-	"Effect": "Allow",
-	"Action": "*",
-	"Resource": "*"
-	}
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "*",
+    "Resource": "*"
+  }
 }
 EOF
 
-name = %[1]q
+  name = %[1]q
 }
 
 data "aws_organizations_policy" "test" {
-	policy_id = aws_organizations_policy.test.id
+  policy_id = aws_organizations_policy.test.id
 }
 `, rName)
 }
