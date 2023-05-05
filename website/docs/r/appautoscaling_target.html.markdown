@@ -10,6 +10,8 @@ description: |-
 
 Provides an Application AutoScaling ScalableTarget resource. To manage policies which get attached to the target, see the [`aws_appautoscaling_policy` resource](/docs/providers/aws/r/appautoscaling_policy.html).
 
+~> **NOTE:** Scalable targets created before 2023-03-20 may not have an assigned `arn`. These resource cannot use `tags` or participate in `default_tags`. To prevent `terraform plan` showing differences that can never be reconciled, use the [`lifecycle.ignore_changes`](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#ignore_changes) meta-argument. See the example below.
+
 ~> **NOTE:** The [Application Auto Scaling service automatically attempts to manage IAM Service-Linked Roles](https://docs.aws.amazon.com/autoscaling/application/userguide/security_iam_service-with-iam.html#security_iam_service-with-iam-roles) when registering certain service namespaces for the first time. To manually manage this role, see the [`aws_iam_service_linked_role` resource](/docs/providers/aws/r/iam_service_linked_role.html).
 
 ## Example Usage
@@ -59,6 +61,24 @@ resource "aws_appautoscaling_target" "replicas" {
   resource_id        = "cluster:${aws_rds_cluster.example.id}"
   min_capacity       = 1
   max_capacity       = 15
+}
+```
+
+### Supressing `tags_all` Differences For Older Resources
+
+```terraform
+resource "aws_appautoscaling_target" "ecs_target" {
+  max_capacity       = 4
+  min_capacity       = 1
+  resource_id        = "service/${aws_ecs_cluster.example.name}/${aws_ecs_service.example.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+
+  lifecycle {
+    ignore_changes = [
+      tags_all,
+    ]
+  }
 }
 ```
 
