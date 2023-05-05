@@ -54,11 +54,6 @@ func ResourceClientVPNNetworkAssociation() *schema.Resource {
 				Set:        schema.HashString,
 				Deprecated: "Use the `security_group_ids` attribute of the `aws_ec2_client_vpn_endpoint` resource instead.",
 			},
-			"status": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: `This attribute has been deprecated.`,
-			},
 			"subnet_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -135,7 +130,6 @@ func resourceClientVPNNetworkAssociationRead(ctx context.Context, d *schema.Reso
 	d.Set("association_id", network.AssociationId)
 	d.Set("client_vpn_endpoint_id", network.ClientVpnEndpointId)
 	d.Set("security_groups", aws.StringValueSlice(network.SecurityGroups))
-	d.Set("status", network.Status.Code)
 	d.Set("subnet_id", network.TargetNetworkId)
 	d.Set("vpc_id", network.VpcId)
 

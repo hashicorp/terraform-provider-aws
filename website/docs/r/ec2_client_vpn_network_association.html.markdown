@@ -48,7 +48,6 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The unique ID of the target network association.
 * `association_id` - The unique ID of the target network association.
-* `status` - **Deprecated** The current state of the target network association.
 * `vpc_id` - The ID of the VPC in which the target subnet is located.
 
 ## Timeouts
