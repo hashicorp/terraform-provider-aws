@@ -17,14 +17,6 @@ func DataSourcePolicy() *schema.Resource {
 		ReadWithoutTimeout: dataSourcePolicyRead,
 
 		Schema: map[string]*schema.Schema{
-			"policy_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"content": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -33,17 +25,21 @@ func DataSourcePolicy() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"description": {
+			"content": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"id": {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"policy_id": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"type": {
 				Type:     schema.TypeString,
@@ -69,6 +65,7 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.SetId(aws.StringValue(output.Policy.PolicySummary.Id))
+	d.Set("arn", output.Policy.PolicySummary.Arn)
 	d.Set("aws_managed", output.Policy.PolicySummary.AwsManaged)
 	d.Set("content", output.Policy.Content)
 	d.Set("description", output.Policy.PolicySummary.Description)

@@ -36,10 +36,9 @@ The following arguments are required:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `content` - The text content of the policy.
 * `arn` - The Amazon Resource Name of the policy.
 * `aws_managed` - Indicates if a policy is an AWS managed policy.
+* `content` - The text content of the policy.
 * `description` - The description of the policy.
-* `id` - The unique identifier.
 * `name` - The friendly name of the policy.
 * `type` - The type of policy values can be `SERVICE_CONTROL_POLICY | TAG_POLICY | BACKUP_POLICY | AISERVICES_OPT_OUT_POLICY`
