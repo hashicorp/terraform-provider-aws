@@ -53,30 +53,27 @@ func DataSourcePolicy() *schema.Resource {
 	}
 }
 
-const (
-	DSNamePolicy = "Organization Policy Data Source"
-)
-
 func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	policyID := d.Get("policy_id").(string)
-
 	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
+	policyID := d.Get("policy_id").(string)
 	input := &organizations.DescribePolicyInput{
 		PolicyId: aws.String(policyID),
 	}
+
 	output, err := conn.DescribePolicyWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing Policy (%s): %s", input, err)
+		return sdkdiag.AppendErrorf(diags, "reading Organizations Policy (%s): %s", policyID, err)
 	}
 
 	d.SetId(aws.StringValue(output.Policy.PolicySummary.Id))
-	d.Set("name", aws.StringValue(output.Policy.PolicySummary.Name))
-	d.Set("description", aws.StringValue(output.Policy.PolicySummary.Description))
-	d.Set("type", aws.StringValue(output.Policy.PolicySummary.Type))
-	d.Set("content", aws.StringValue(output.Policy.Content))
-	d.Set("aws_managed", aws.BoolValue(output.Policy.PolicySummary.AwsManaged))
+	d.Set("aws_managed", output.Policy.PolicySummary.AwsManaged)
+	d.Set("content", output.Policy.Content)
+	d.Set("description", output.Policy.PolicySummary.Description)
+	d.Set("name", output.Policy.PolicySummary.Name)
+	d.Set("type", output.Policy.PolicySummary.Type)
 
 	return diags
 }
