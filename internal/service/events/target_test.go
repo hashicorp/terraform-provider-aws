@@ -2315,7 +2315,7 @@ resource "aws_cloudwatch_event_target" "test" {
   role_arn = aws_iam_role.test.arn
 
   ecs_target {
-    task_definition_arn = aws_ecs_task_definition.test.arn
+    task_definition_arn = aws_ecs_task_definition.task.arn
     launch_type         = "FARGATE"
 
     network_configuration {
