@@ -9,7 +9,7 @@ Resources:
     Properties:
       MaxSessionDuration: 8400
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Principal:
@@ -19,15 +19,15 @@ Resources:
       Policies:
         - PolicyName: ResourceTypePolicy
           PolicyDocument:
-            Version: '2012-10-17'
+            Version: "2012-10-17"
             Statement:
               - Effect: Allow
                 Action:
-                - "initech:CreateReport"
-                - "initech:DeleteReport"
-                - "initech:DescribeReport"
-                - "initech:ListReports"
-                - "initech:UpdateReport"
+                  - "initech:CreateReport"
+                  - "initech:DeleteReport"
+                  - "initech:DescribeReport"
+                  - "initech:ListReports"
+                  - "initech:UpdateReport"
                 Resource: "*"
 Outputs:
   ExecutionRoleArn:

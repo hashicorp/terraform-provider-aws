@@ -23,16 +23,16 @@ data "aws_kinesis_stream_consumer" "example" {
 
 ## Argument Reference
 
-* `arn` - (Optional) Amazon Resource Name (ARN) of the stream consumer.
+* `arn` - (Optional) ARN of the stream consumer.
 * `name` - (Optional) Name of the stream consumer.
-* `stream_arn` - (Required) Amazon Resource Name (ARN) of the data stream the consumer is registered with.
+* `stream_arn` - (Required) ARN of the data stream the consumer is registered with.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `creation_timestamp` - Approximate timestamp in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) of when the stream consumer was created.
-* `id` - Amazon Resource Name (ARN) of the stream consumer.
-* `status` - The current status of the stream consumer.
+* `id` - ARN of the stream consumer.
+* `status` - Current status of the stream consumer.
 
 [1]: https://docs.aws.amazon.com/streams/latest/dev/amazon-kinesis-consumers.html

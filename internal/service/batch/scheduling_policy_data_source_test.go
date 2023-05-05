@@ -11,14 +11,15 @@ import (
 )
 
 func TestAccBatchSchedulingPolicyDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("tf_acc_test_")
 	resourceName := "aws_batch_scheduling_policy.test"
 	datasourceName := "data.aws_batch_scheduling_policy.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, batch.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSchedulingPolicyDataSourceConfig_basic(rName),

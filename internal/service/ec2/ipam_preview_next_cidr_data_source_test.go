@@ -10,14 +10,15 @@ import (
 )
 
 func TestAccIPAMPreviewNextCIDRDataSource_ipv4Basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_vpc_ipam_preview_next_cidr.test"
 	netmaskLength := "28"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPreviewNextCIDRDataSourceConfig_basic(netmaskLength),
@@ -32,15 +33,16 @@ func TestAccIPAMPreviewNextCIDRDataSource_ipv4Basic(t *testing.T) {
 }
 
 func TestAccIPAMPreviewNextCIDRDataSource_ipv4Allocated(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_vpc_ipam_preview_next_cidr.test"
 	netmaskLength := "28"
 	allocatedCidr := "172.2.0.0/28"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPreviewNextCIDRDataSourceConfig_basic(netmaskLength),
@@ -64,16 +66,17 @@ func TestAccIPAMPreviewNextCIDRDataSource_ipv4Allocated(t *testing.T) {
 }
 
 func TestAccIPAMPreviewNextCIDRDataSource_ipv4DisallowedCIDR(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_vpc_ipam_preview_next_cidr.test"
 	disallowedCidr := "172.2.0.0/28"
 	netmaskLength := "28"
 	expectedCidr := "172.2.0.16/28"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPreviewNextCIDRDataSourceConfig_ipv4Disallowed(netmaskLength, disallowedCidr),

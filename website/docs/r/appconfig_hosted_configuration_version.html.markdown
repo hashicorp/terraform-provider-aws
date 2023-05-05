@@ -83,19 +83,19 @@ resource "aws_appconfig_hosted_configuration_version" "example" {
 
 The following arguments are supported:
 
-* `application_id` - (Required, Forces new resource) The application ID.
-* `configuration_profile_id` - (Required, Forces new resource) The configuration profile ID.
-* `content` - (Required, Forces new resource) The content of the configuration or the configuration data.
-* `content_type` - (Required, Forces new resource) A standard MIME type describing the format of the configuration content. For more information, see [Content-Type](https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.17).
-* `description` - (Optional, Forces new resource) A description of the configuration.
+* `application_id` - (Required, Forces new resource) Application ID.
+* `configuration_profile_id` - (Required, Forces new resource) Configuration profile ID.
+* `content` - (Required, Forces new resource) Content of the configuration or the configuration data.
+* `content_type` - (Required, Forces new resource) Standard MIME type describing the format of the configuration content. For more information, see [Content-Type](https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.17).
+* `description` - (Optional, Forces new resource) Description of the configuration.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) of the AppConfig  hosted configuration version.
-* `id` - The AppConfig application ID, configuration profile ID, and version number separated by a slash (`/`).
-* `version_number` - The version number of the hosted configuration.
+* `arn` - ARN of the AppConfig  hosted configuration version.
+* `id` - AppConfig application ID, configuration profile ID, and version number separated by a slash (`/`).
+* `version_number` - Version number of the hosted configuration.
 
 ## Import
 

@@ -5,6 +5,8 @@ import (
 )
 
 func TestCIDRBlocksEqual(t *testing.T) {
+	t.Parallel()
+
 	for _, ts := range []struct {
 		cidr1 string
 		cidr2 string
@@ -26,6 +28,8 @@ func TestCIDRBlocksEqual(t *testing.T) {
 }
 
 func TestCanonicalCIDRBlock(t *testing.T) {
+	t.Parallel()
+
 	for _, ts := range []struct {
 		cidr     string
 		expected string

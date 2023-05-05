@@ -9,27 +9,25 @@ import (
 )
 
 func TestAccIoTIndexingConfiguration_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]func(t *testing.T){
 		"basic":         testAccIndexingConfiguration_basic,
 		"allAttributes": testAccIndexingConfiguration_allAttributes,
 	}
 
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
 func testAccIndexingConfiguration_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_iot_indexing_configuration.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.CheckDestroyNoop,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexingConfigurationConfig_basic,
@@ -57,13 +55,14 @@ func testAccIndexingConfiguration_basic(t *testing.T) {
 }
 
 func testAccIndexingConfiguration_allAttributes(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_iot_indexing_configuration.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.CheckDestroyNoop,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexingConfigurationConfig_allAttributes,

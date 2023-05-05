@@ -11,15 +11,16 @@ import (
 )
 
 func TestAccCognitoIDPUserPoolsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserPoolsDataSourceConfig(rName),
+				Config: testAccUserPoolsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.test", "arns.#", "2"),
 					resource.TestCheckResourceAttr("data.aws_cognito_user_pools.test", "ids.#", "2"),
@@ -31,7 +32,7 @@ func TestAccCognitoIDPUserPoolsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccUserPoolsDataSourceConfig(rName string) string {
+func testAccUserPoolsDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   count = 2

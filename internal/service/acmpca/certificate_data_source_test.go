@@ -11,15 +11,16 @@ import (
 )
 
 func TestAccACMPCACertificateDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_acmpca_certificate.test"
 	dataSourceName := "data.aws_acmpca_certificate.test"
 
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCertificateDataSourceConfig_nonExistent,

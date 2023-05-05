@@ -10,14 +10,15 @@ import (
 )
 
 func TestAccSageMakerPrebuiltECRImageDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	expectedID := tfsagemaker.PrebuiltECRImageIDByRegion_factorMachines[acctest.Region()]
 
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPrebuiltECRImageDataSourceConfig_basic,
@@ -32,14 +33,15 @@ func TestAccSageMakerPrebuiltECRImageDataSource_basic(t *testing.T) {
 }
 
 func TestAccSageMakerPrebuiltECRImageDataSource_region(t *testing.T) {
+	ctx := acctest.Context(t)
 	expectedID := tfsagemaker.PrebuiltECRImageIDByRegion_sparkML[acctest.Region()]
 
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPrebuiltECRImageDataSourceConfig_explicitRegion,

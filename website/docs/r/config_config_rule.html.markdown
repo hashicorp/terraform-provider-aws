@@ -35,43 +35,36 @@ resource "aws_config_configuration_recorder" "foo" {
   role_arn = aws_iam_role.r.arn
 }
 
-resource "aws_iam_role" "r" {
-  name = "my-awsconfig-role"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "config.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+    principals {
+      type        = "Service"
+      identifiers = ["config.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-POLICY
+
+resource "aws_iam_role" "r" {
+  name               = "my-awsconfig-role"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "p" {
+  statement {
+    effect    = "Allow"
+    actions   = ["config:Put*"]
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_role_policy" "p" {
-  name = "my-awsconfig-policy"
-  role = aws_iam_role.r.id
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-  	{
-  		"Action": "config:Put*",
-  		"Effect": "Allow",
-  		"Resource": "*"
-
-  	}
-  ]
-}
-POLICY
+  name   = "my-awsconfig-policy"
+  role   = aws_iam_role.r.id
+  policy = data.aws_iam_policy_document.p.json
 }
 ```
 
@@ -109,7 +102,6 @@ resource "aws_config_config_rule" "example" {
   ]
 }
 ```
-
 
 ### Custom Policies
 
@@ -153,7 +145,7 @@ The following arguments are supported:
 * `maximum_execution_frequency` - (Optional) The maximum frequency with which AWS Config runs evaluations for a rule.
 * `scope` - (Optional) Scope defines which resources can trigger an evaluation for the rule. See [Source](#source) Below.
 * `source` - (Required) Source specifies the rule owner, the rule identifier, and the notifications that cause the function to evaluate your AWS resources. See [Scope](#scope) Below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Scope
 
@@ -196,7 +188,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the config rule
 * `rule_id` - The ID of the config rule
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

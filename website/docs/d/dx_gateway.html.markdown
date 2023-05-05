@@ -20,10 +20,10 @@ data "aws_dx_gateway" "example" {
 
 ## Argument Reference
 
-* `name` - (Required) The name of the gateway to retrieve.
+* `name` - (Required) Name of the gateway to retrieve.
 
 ## Attributes Reference
 
-* `amazon_side_asn` - The ASN on the Amazon side of the connection.
-* `id` - The ID of the gateway.
+* `amazon_side_asn` - ASN on the Amazon side of the connection.
+* `id` - ID of the gateway.
 * `owner_account_id` - AWS Account ID of the gateway.

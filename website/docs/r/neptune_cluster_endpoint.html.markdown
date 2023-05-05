@@ -29,7 +29,7 @@ The following arguments are supported:
 * `endpoint_type` - (Required) The type of the endpoint. One of: `READER`, `WRITER`, `ANY`.
 * `excluded_members` - (Optional) List of DB instance identifiers that aren't part of the custom endpoint group. All other eligible instances are reachable through the custom endpoint. Only relevant if the list of static members is empty.
 * `static_members` - (Optional) List of DB instance identifiers that are part of the custom endpoint group.
-* `tags` - (Optional) A map of tags to assign to the Neptune cluster. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the Neptune cluster. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
@@ -38,7 +38,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The Neptune Cluster Endpoint Amazon Resource Name (ARN).
 * `endpoint` - The DNS address of the endpoint.
 * `id` - The Neptune Cluster Endpoint Identifier.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

@@ -11,16 +11,17 @@ import (
 )
 
 func TestAccAPIGatewayV2APIsDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSource1Name := "data.aws_apigatewayv2_apis.test1"
 	dataSource2Name := "data.aws_apigatewayv2_apis.test2"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIsDataSourceConfig_name(rName1, rName2),
@@ -34,16 +35,17 @@ func TestAccAPIGatewayV2APIsDataSource_name(t *testing.T) {
 }
 
 func TestAccAPIGatewayV2APIsDataSource_protocolType(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSource1Name := "data.aws_apigatewayv2_apis.test1"
 	dataSource2Name := "data.aws_apigatewayv2_apis.test2"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIsDataSourceConfig_protocolType(rName1, rName2),
@@ -57,6 +59,7 @@ func TestAccAPIGatewayV2APIsDataSource_protocolType(t *testing.T) {
 }
 
 func TestAccAPIGatewayV2APIsDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSource1Name := "data.aws_apigatewayv2_apis.test1"
 	dataSource2Name := "data.aws_apigatewayv2_apis.test2"
 	dataSource3Name := "data.aws_apigatewayv2_apis.test3"
@@ -64,10 +67,10 @@ func TestAccAPIGatewayV2APIsDataSource_tags(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIsDataSourceConfig_tags(rName1, rName2),

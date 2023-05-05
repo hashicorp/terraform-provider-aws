@@ -14,9 +14,10 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_connect_security_profile")
 func DataSourceSecurityProfile() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceSecurityProfileRead,
+		ReadWithoutTimeout: dataSourceSecurityProfileRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -60,7 +61,7 @@ func DataSourceSecurityProfile() *schema.Resource {
 }
 
 func dataSourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceID := d.Get("instance_id").(string)
@@ -116,7 +117,7 @@ func dataSourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, 
 		d.Set("permissions", flex.FlattenStringSet(permissions))
 	}
 
-	if err := d.Set("tags", KeyValueTags(securityProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, securityProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting tags: %s", err))
 	}
 

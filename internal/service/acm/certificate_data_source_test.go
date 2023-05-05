@@ -15,6 +15,7 @@ import (
 const certificateRE = `^arn:[^:]+:acm:[^:]+:[^:]+:certificate/.+$`
 
 func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
+	ctx := acctest.Context(t)
 	if os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN") == "" {
 		t.Skip("Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set")
 	}
@@ -37,9 +38,9 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 	resourceName := "data.aws_acm_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateDataSourceConfig_basic(domain),
@@ -102,6 +103,7 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 }
 
 func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
+	ctx := acctest.Context(t)
 	if os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN") == "" {
 		t.Skip("Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set")
 	}
@@ -124,21 +126,21 @@ func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 	resourceName := "data.aws_acm_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCertificateDataSourceConfig_basic(domain),
-				ExpectError: regexp.MustCompile(`Multiple certificates for domain`),
+				ExpectError: regexp.MustCompile(`multiple certificates for domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_status(domain, acm.CertificateStatusIssued),
-				ExpectError: regexp.MustCompile(`Multiple certificates for domain`),
+				ExpectError: regexp.MustCompile(`multiple certificates for domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_types(domain, acm.CertificateTypeAmazonIssued),
-				ExpectError: regexp.MustCompile(`Multiple certificates for domain`),
+				ExpectError: regexp.MustCompile(`multiple certificates for domain`),
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_mostRecent(domain, true),
@@ -166,6 +168,7 @@ func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 }
 
 func TestAccACMCertificateDataSource_noMatchReturnsError(t *testing.T) {
+	ctx := acctest.Context(t)
 	if os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN") == "" {
 		t.Skip("Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set")
 	}
@@ -173,49 +176,50 @@ func TestAccACMCertificateDataSource_noMatchReturnsError(t *testing.T) {
 	domain := fmt.Sprintf("tf-acc-nonexistent.%s", os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN"))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCertificateDataSourceConfig_basic(domain),
-				ExpectError: regexp.MustCompile(`No certificate for domain`),
+				ExpectError: regexp.MustCompile(`no certificate for domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_status(domain, acm.CertificateStatusIssued),
-				ExpectError: regexp.MustCompile(`No certificate for domain`),
+				ExpectError: regexp.MustCompile(`no certificate for domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_types(domain, acm.CertificateTypeAmazonIssued),
-				ExpectError: regexp.MustCompile(`No certificate for domain`),
+				ExpectError: regexp.MustCompile(`no certificate for domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_mostRecent(domain, true),
-				ExpectError: regexp.MustCompile(`No certificate for domain`),
+				ExpectError: regexp.MustCompile(`no certificate for domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_mostRecentAndStatus(domain, acm.CertificateStatusIssued, true),
-				ExpectError: regexp.MustCompile(`No certificate for domain`),
+				ExpectError: regexp.MustCompile(`no certificate for domain`),
 			},
 			{
 				Config:      testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, acm.CertificateTypeAmazonIssued, true),
-				ExpectError: regexp.MustCompile(`No certificate for domain`),
+				ExpectError: regexp.MustCompile(`no certificate for domain`),
 			},
 		},
 	})
 }
 
 func TestAccACMCertificateDataSource_keyTypes(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
 	dataSourceName := "data.aws_acm_certificate.test"
-	key := acctest.TLSRSAPrivateKeyPEM(4096)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, acctest.RandomDomain().String())
+	key := acctest.TLSRSAPrivateKeyPEM(t, 4096)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomDomain().String())
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, acm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateDataSourceConfig_keyTypes(acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), rName),

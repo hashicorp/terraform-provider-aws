@@ -11,15 +11,16 @@ import (
 )
 
 func TestAccECSContainerDefinitionDataSource_ecsContainerDefinition(t *testing.T) {
+	ctx := acctest.Context(t)
 	rString := sdkacctest.RandString(8)
 	clusterName := fmt.Sprintf("tf_acc_td_ds_cluster_ecs_containter_definition_%s", rString)
 	svcName := fmt.Sprintf("tf_acc_svc_td_ds_ecs_containter_definition_%s", rString)
 	tdName := fmt.Sprintf("tf_acc_td_ds_ecs_containter_definition_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContainerDefinitionDataSourceConfig_basic(clusterName, tdName, svcName),

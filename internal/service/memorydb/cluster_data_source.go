@@ -2,6 +2,7 @@ package memorydb
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -12,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_memorydb_cluster")
 func DataSourceCluster() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterRead,
@@ -30,6 +32,10 @@ func DataSourceCluster() *schema.Resource {
 				Computed: true,
 			},
 			"cluster_endpoint": endpointSchema(),
+			"data_tiering": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -154,7 +160,7 @@ func DataSourceCluster() *schema.Resource {
 }
 
 func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
@@ -174,6 +180,15 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	if v := cluster.ClusterEndpoint; v != nil {
 		d.Set("cluster_endpoint", flattenEndpoint(v))
 		d.Set("port", v.Port)
+	}
+
+	if v := aws.StringValue(cluster.DataTiering); v != "" {
+		b, err := strconv.ParseBool(v)
+		if err != nil {
+			return diag.Errorf("error reading data_tiering for MemoryDB Cluster (%s): %s", d.Id(), err)
+		}
+
+		d.Set("data_tiering", b)
 	}
 
 	d.Set("description", cluster.Description)
@@ -215,7 +230,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("subnet_group_name", cluster.SubnetGroupName)
 	d.Set("tls_enabled", cluster.TLSEnabled)
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("error listing tags for MemoryDB Cluster (%s): %s", d.Id(), err)

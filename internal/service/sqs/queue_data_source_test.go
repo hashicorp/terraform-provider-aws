@@ -12,14 +12,15 @@ import (
 )
 
 func TestAccSQSQueueDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("tf_acc_test_")
 	resourceName := "aws_sqs_queue.test"
 	datasourceName := "data.aws_sqs_queue.by_name"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sqs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueueDataSourceConfig_basic(rName),
@@ -33,14 +34,15 @@ func TestAccSQSQueueDataSource_basic(t *testing.T) {
 }
 
 func TestAccSQSQueueDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("tf_acc_test_")
 	resourceName := "aws_sqs_queue.test"
 	datasourceName := "data.aws_sqs_queue.by_name"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sqs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueueDataSourceConfig_tags(rName),

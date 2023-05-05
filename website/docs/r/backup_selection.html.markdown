@@ -19,22 +19,21 @@ Manages selection conditions for AWS Backup plan resources.
 The below example creates an IAM role with the default managed IAM Policy for allowing AWS Backup to create backups.
 
 ```terraform
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["backup.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
 resource "aws_iam_role" "example" {
   name               = "example"
-  assume_role_policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": ["sts:AssumeRole"],
-      "Effect": "allow",
-      "Principal": {
-        "Service": ["backup.amazonaws.com"]
-      }
-    }
-  ]
-}
-POLICY
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 resource "aws_iam_role_policy_attachment" "example" {
@@ -72,6 +71,7 @@ resource "aws_backup_selection" "example" {
   iam_role_arn = aws_iam_role.example.arn
   name         = "tf_example_backup_selection"
   plan_id      = aws_backup_plan.example.id
+  resources    = ["*"]
 
   condition {
     string_equals {

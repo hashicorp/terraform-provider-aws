@@ -6,10 +6,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
-func lifecycleConfigurationRulesStatus(ctx context.Context, conn *s3.S3, bucket, expectedBucketOwner string, rules []*s3.LifecycleRule) resource.StateRefreshFunc {
+func lifecycleConfigurationRulesStatus(ctx context.Context, conn *s3.S3, bucket, expectedBucketOwner string, rules []*s3.LifecycleRule) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &s3.GetBucketLifecycleConfigurationInput{
 			Bucket: aws.String(bucket),
@@ -30,7 +30,7 @@ func lifecycleConfigurationRulesStatus(ctx context.Context, conn *s3.S3, bucket,
 		}
 
 		if output == nil {
-			return nil, "", &resource.NotFoundError{
+			return nil, "", &retry.NotFoundError{
 				Message:     "Empty result",
 				LastRequest: input,
 			}
@@ -58,7 +58,7 @@ func lifecycleConfigurationRulesStatus(ctx context.Context, conn *s3.S3, bucket,
 	}
 }
 
-func bucketVersioningStatus(ctx context.Context, conn *s3.S3, bucket, expectedBucketOwner string) resource.StateRefreshFunc {
+func bucketVersioningStatus(ctx context.Context, conn *s3.S3, bucket, expectedBucketOwner string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &s3.GetBucketVersioningInput{
 			Bucket: aws.String(bucket),
@@ -79,7 +79,7 @@ func bucketVersioningStatus(ctx context.Context, conn *s3.S3, bucket, expectedBu
 		}
 
 		if output == nil {
-			return nil, "", &resource.NotFoundError{
+			return nil, "", &retry.NotFoundError{
 				Message:     "Empty result",
 				LastRequest: input,
 			}

@@ -81,7 +81,7 @@ The following arguments are supported:
 Note - Only file_system_id or volume_id can be specified. file_system_id is used for Lustre and Windows, volume_id is used for ONTAP.
 
 * `file_system_id` - (Optional) The ID of the file system to back up. Required if backing up Lustre or Windows file systems.
-* `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level. If you have set `copy_tags_to_backups` to true, and you specify one or more tags, no existing file system tags are copied from the file system to the backup.
+* `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level. If you have set `copy_tags_to_backups` to true, and you specify one or more tags, no existing file system tags are copied from the file system to the backup.
 * `volume_id` - (Optional) The ID of the volume to back up. Required if backing up a ONTAP Volume.
 
 ## Attributes Reference
@@ -92,16 +92,15 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Identifier of the backup, e.g., `fs-12345678`
 * `kms_key_id` -  The ID of the AWS Key Management Service (AWS KMS) key used to encrypt the backup of the Amazon FSx file system's data at rest.
 * `owner_id` - AWS account identifier that created the file system.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `type` - The type of the file system backup.
 
 ## Timeouts
 
-`aws_fsx_backup` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
-configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `10m`) How long to wait for the backup to be created.
-* `delete` - (Default `10m`) How long to wait for the backup to be deleted.
+* `create` - (Default `10m`)
+* `delete` - (Default `10m`)
 
 ## Import
 

@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_appflow_flow: Add attribute `preserve_source_data_typing` to `s3_output_format_config` in `s3`
+```

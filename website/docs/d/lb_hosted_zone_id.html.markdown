@@ -33,8 +33,8 @@ resource "aws_route53_record" "www" {
 * `region` - (Optional) Name of the region whose AWS ELB HostedZoneId is desired.
   Defaults to the region from the AWS provider configuration.
 
-* `load_balancer_type` - (Optional) The type of load balancer to create. Possible values are `application` or `network`. The default value is `application`.
+* `load_balancer_type` - (Optional) Type of load balancer to create. Possible values are `application` or `network`. The default value is `application`.
 
 ## Attributes Reference
 
-* `id` - The ID of the AWS ELB HostedZoneId in the selected region.
+* `id` - ID of the AWS ELB HostedZoneId in the selected region.

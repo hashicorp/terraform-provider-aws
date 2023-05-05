@@ -12,13 +12,14 @@ import (
 )
 
 func TestAccServerlessRepoApplicationDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_serverlessapplicationrepository_application.secrets_manager_postgres_single_user_rotator"
 	appARN := testAccCloudFormationApplicationID()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, serverlessapplicationrepository.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, serverlessapplicationrepository.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationDataSourceConfig_basic(appARN),
@@ -40,6 +41,7 @@ func TestAccServerlessRepoApplicationDataSource_basic(t *testing.T) {
 }
 
 func TestAccServerlessRepoApplicationDataSource_versioned(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_serverlessapplicationrepository_application.secrets_manager_postgres_single_user_rotator"
 	appARN := testAccCloudFormationApplicationID()
 
@@ -49,9 +51,9 @@ func TestAccServerlessRepoApplicationDataSource_versioned(t *testing.T) {
 	)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, serverlessapplicationrepository.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, serverlessapplicationrepository.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationDataSourceConfig_versioned(appARN, version1),

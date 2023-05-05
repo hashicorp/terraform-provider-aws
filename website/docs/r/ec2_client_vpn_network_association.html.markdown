@@ -48,15 +48,14 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The unique ID of the target network association.
 * `association_id` - The unique ID of the target network association.
-* `status` - **Deprecated** The current state of the target network association.
 * `vpc_id` - The ID of the VPC in which the target subnet is located.
 
 ## Timeouts
 
-`aws_ec2_client_vpn_network_association` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `30 minutes`) Used for network association
-- `delete` - (Default `30 minutes`) Used for network disassociation
+- `create` - (Default `30m`)
+- `delete` - (Default `30m`)
 
 ## Import
 

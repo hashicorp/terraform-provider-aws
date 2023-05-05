@@ -12,13 +12,14 @@ import (
 )
 
 func TestAccKMSAliasDataSource_service(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := "alias/aws/s3"
 	resourceName := "data.aws_kms_alias.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAliasDataSourceConfig_basic(rName),
@@ -34,14 +35,15 @@ func TestAccKMSAliasDataSource_service(t *testing.T) {
 }
 
 func TestAccKMSAliasDataSource_cmk(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	aliasResourceName := "aws_kms_alias.test"
 	datasourceAliasResourceName := "data.aws_kms_alias.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAliasDataSourceConfig_cmk(rName),

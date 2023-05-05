@@ -1,22 +1,23 @@
 package servicequotas
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicequotas"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func findServiceQuotaDefaultByID(conn *servicequotas.ServiceQuotas, serviceCode, quotaCode string) (*servicequotas.ServiceQuota, error) {
+func findServiceQuotaDefaultByID(ctx context.Context, conn *servicequotas.ServiceQuotas, serviceCode, quotaCode string) (*servicequotas.ServiceQuota, error) {
 	input := &servicequotas.GetAWSDefaultServiceQuotaInput{
 		ServiceCode: aws.String(serviceCode),
 		QuotaCode:   aws.String(quotaCode),
 	}
 
-	output, err := conn.GetAWSDefaultServiceQuota(input)
+	output, err := conn.GetAWSDefaultServiceQuotaWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -28,13 +29,13 @@ func findServiceQuotaDefaultByID(conn *servicequotas.ServiceQuotas, serviceCode,
 	return output.Quota, nil
 }
 
-func findServiceQuotaDefaultByName(conn *servicequotas.ServiceQuotas, serviceCode, quotaName string) (*servicequotas.ServiceQuota, error) {
+func findServiceQuotaDefaultByName(ctx context.Context, conn *servicequotas.ServiceQuotas, serviceCode, quotaName string) (*servicequotas.ServiceQuota, error) {
 	input := &servicequotas.ListAWSDefaultServiceQuotasInput{
 		ServiceCode: aws.String(serviceCode),
 	}
 
 	var defaultQuota *servicequotas.ServiceQuota
-	err := conn.ListAWSDefaultServiceQuotasPages(input, func(page *servicequotas.ListAWSDefaultServiceQuotasOutput, lastPage bool) bool {
+	err := conn.ListAWSDefaultServiceQuotasPagesWithContext(ctx, input, func(page *servicequotas.ListAWSDefaultServiceQuotasOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -58,16 +59,16 @@ func findServiceQuotaDefaultByName(conn *servicequotas.ServiceQuotas, serviceCod
 	return defaultQuota, nil
 }
 
-func findServiceQuotaByID(conn *servicequotas.ServiceQuotas, serviceCode, quotaCode string) (*servicequotas.ServiceQuota, error) {
+func findServiceQuotaByID(ctx context.Context, conn *servicequotas.ServiceQuotas, serviceCode, quotaCode string) (*servicequotas.ServiceQuota, error) {
 	input := &servicequotas.GetServiceQuotaInput{
 		ServiceCode: aws.String(serviceCode),
 		QuotaCode:   aws.String(quotaCode),
 	}
 
-	output, err := conn.GetServiceQuota(input)
+	output, err := conn.GetServiceQuotaWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, servicequotas.ErrCodeNoSuchResourceException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -81,14 +82,14 @@ func findServiceQuotaByID(conn *servicequotas.ServiceQuotas, serviceCode, quotaC
 	}
 
 	if output.Quota.ErrorReason != nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     fmt.Sprintf("%s: %s", aws.StringValue(output.Quota.ErrorReason.ErrorCode), aws.StringValue(output.Quota.ErrorReason.ErrorMessage)),
 			LastRequest: input,
 		}
 	}
 
 	if output.Quota.Value == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     "empty value",
 			LastRequest: input,
 		}

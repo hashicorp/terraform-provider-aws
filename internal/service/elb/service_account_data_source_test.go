@@ -10,14 +10,15 @@ import (
 )
 
 func TestAccELBServiceAccountDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	expectedAccountID := tfelb.AccountIdPerRegionMap[acctest.Region()]
 
 	dataSourceName := "data.aws_elb_service_account.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceAccountDataSourceConfig_basic,
@@ -31,14 +32,15 @@ func TestAccELBServiceAccountDataSource_basic(t *testing.T) {
 }
 
 func TestAccELBServiceAccountDataSource_region(t *testing.T) {
+	ctx := acctest.Context(t)
 	expectedAccountID := tfelb.AccountIdPerRegionMap[acctest.Region()]
 
 	dataSourceName := "data.aws_elb_service_account.regional"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceAccountDataSourceConfig_explicitRegion,

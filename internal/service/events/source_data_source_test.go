@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccEventsSourceDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	key := "EVENT_BRIDGE_PARTNER_EVENT_SOURCE_NAME"
 	busName := os.Getenv(key)
 	if busName == "" {
@@ -27,9 +28,9 @@ func TestAccEventsSourceDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_cloudwatch_event_source.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSourceDataSourceConfig_partner(busName),
