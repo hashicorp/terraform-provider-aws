@@ -33,7 +33,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rds v1.43.2
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.12
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.1.10
-	github.com/aws/aws-sdk-go-v2/service/route53domains v1.14.9
+	github.com/aws/aws-sdk-go-v2/service/route53domains v1.14.10
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.10
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.3.5
