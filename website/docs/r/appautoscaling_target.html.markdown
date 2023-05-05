@@ -64,7 +64,7 @@ resource "aws_appautoscaling_target" "replicas" {
 }
 ```
 
-### Supressing `tags_all` Differences For Older Resources
+### Suppressing `tags_all` Differences For Older Resources
 
 ```terraform
 resource "aws_appautoscaling_target" "ecs_target" {
