@@ -49,8 +49,8 @@ github.com/aws/aws-sdk-go-v2/service/account v1.10.5 h1:K+Od2Oz2nhQJx3e3Q+ziU11a
 github.com/aws/aws-sdk-go-v2/service/account v1.10.5/go.mod h1:sxLUXrqYXCfOBPBBk0azv+UOoFsnrQ9G1ZcICrb9O+0=
 github.com/aws/aws-sdk-go-v2/service/auditmanager v1.24.6 h1:UNaqp6XOs26fmBNASN9SF23H3DytHaaRQ/hF/BJNnes=
 github.com/aws/aws-sdk-go-v2/service/auditmanager v1.24.6/go.mod h1:HtY67X+mN8oq2UMidOuIcXn+XWFyGYnpTvEoNGQBxc0=
-github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.1.3 h1:naHZ6PN42l4A8y1uICWSn4eILezIax7r6iSaqsL6tYg=
-github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.1.3/go.mod h1:B+j10S5V7q7VfEAMYAfCTHYJg2e6AVG/wDYkTo6nE4s=
+github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.1.4 h1:rUKIsoew72A/gZkBrSApQSjvksEKLRWkUE7jlK7YkpE=
+github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.1.4/go.mod h1:B+j10S5V7q7VfEAMYAfCTHYJg2e6AVG/wDYkTo6nE4s=
 github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.10 h1:S5KfC/c9s3/laYc4Bxu+kxKmCrozw4dpmhYRzBqfEB0=
 github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.10/go.mod h1:/hg0Z2APD1zFe758rOTwIuIQEe7ohaodrhY906f4ISs=
 github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.20.10 h1:3OAeRqUboCVhc3cozVzckL501B6V6mu4qyo08s3jsms=
