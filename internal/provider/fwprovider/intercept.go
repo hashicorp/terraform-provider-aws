@@ -382,28 +382,32 @@ func (r tagsInterceptor) read(ctx context.Context, request resource.ReadRequest,
 					return ctx, diags
 				}
 
-				// If the service package has a generic resource list tags methods, call it.
-				var err error
+				// Some old resources may not have the required attribute set after Read:
+				// https://github.com/hashicorp/terraform-provider-aws/issues/31180
+				if identifier != "" {
+					// If the service package has a generic resource list tags methods, call it.
+					var err error
 
-				if v, ok := sp.(interface {
-					ListTags(context.Context, any, string) error
-				}); ok {
-					err = v.ListTags(ctx, meta, identifier) // Sets tags in Context
-				} else if v, ok := sp.(interface {
-					ListTags(context.Context, any, string, string) error
-				}); ok && r.tags.ResourceType != "" {
-					err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
-				}
+					if v, ok := sp.(interface {
+						ListTags(context.Context, any, string) error
+					}); ok {
+						err = v.ListTags(ctx, meta, identifier) // Sets tags in Context
+					} else if v, ok := sp.(interface {
+						ListTags(context.Context, any, string, string) error
+					}); ok && r.tags.ResourceType != "" {
+						err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
+					}
 
-				// ISO partitions may not support tagging, giving error.
-				if errs.IsUnsupportedOperationInPartitionError(meta.Partition, err) {
-					return ctx, diags
-				}
+					// ISO partitions may not support tagging, giving error.
+					if errs.IsUnsupportedOperationInPartitionError(meta.Partition, err) {
+						return ctx, diags
+					}
 
-				if err != nil {
-					diags.AddError(fmt.Sprintf("listing tags for %s %s (%s)", serviceName, resourceName, identifier), err.Error())
+					if err != nil {
+						diags.AddError(fmt.Sprintf("listing tags for %s %s (%s)", serviceName, resourceName, identifier), err.Error())
 
-					return ctx, diags
+						return ctx, diags
+					}
 				}
 			}
 		}

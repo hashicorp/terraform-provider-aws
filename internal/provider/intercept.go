@@ -284,33 +284,37 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 						identifier = d.Get(identifierAttribute).(string)
 					}
 
-					// If the service package has a generic resource list tags methods, call it.
-					var err error
+					// Some old resources may not have the required attribute set after Read:
+					// https://github.com/hashicorp/terraform-provider-aws/issues/31180
+					if identifier != "" {
+						// If the service package has a generic resource list tags methods, call it.
+						var err error
 
-					if v, ok := sp.(interface {
-						ListTags(context.Context, any, string) error
-					}); ok {
-						err = v.ListTags(ctx, meta, identifier) // Sets tags in Context
-					} else if v, ok := sp.(interface {
-						ListTags(context.Context, any, string, string) error
-					}); ok && r.tags.ResourceType != "" {
-						err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
-					}
-
-					// ISO partitions may not support tagging, giving error.
-					if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
-						return ctx, diags
-					}
-
-					if inContext.ServicePackageName == names.DynamoDB && err != nil {
-						// When a DynamoDB Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`.
-						if tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
-							err = nil
+						if v, ok := sp.(interface {
+							ListTags(context.Context, any, string) error
+						}); ok {
+							err = v.ListTags(ctx, meta, identifier) // Sets tags in Context
+						} else if v, ok := sp.(interface {
+							ListTags(context.Context, any, string, string) error
+						}); ok && r.tags.ResourceType != "" {
+							err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
 						}
-					}
 
-					if err != nil {
-						return ctx, sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
+						// ISO partitions may not support tagging, giving error.
+						if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+							return ctx, diags
+						}
+
+						if inContext.ServicePackageName == names.DynamoDB && err != nil {
+							// When a DynamoDB Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`.
+							if tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
+								err = nil
+							}
+						}
+
+						if err != nil {
+							return ctx, sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
+						}
 					}
 				}
 			}
