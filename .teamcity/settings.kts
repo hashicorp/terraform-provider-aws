@@ -292,6 +292,7 @@ object FullBuild : BuildType({
                 buildFailedToStart = true
                 buildFailed = true
                 buildFinishedSuccessfully = true
+                firstBuildErrorOccurs = true
             }
         }
     }
