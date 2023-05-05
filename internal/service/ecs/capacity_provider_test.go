@@ -298,11 +298,11 @@ resource "aws_autoscaling_group" "test" {
     id = aws_launch_template.test.id
   }
 
-  tags = [{
+  tag {
     key                 = "Name"
     value               = %[1]q
     propagate_at_launch = true
-  }]
+  }
 }
 `, rName))
 }
