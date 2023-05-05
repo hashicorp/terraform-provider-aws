@@ -226,7 +226,6 @@ func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 	d.Set("arn", key.metadata.Arn)
 	d.Set("custom_key_store_id", key.metadata.CustomKeyStoreId)
-	d.Set("xks_key_id", key.metadata.XksKeyConfiguration.Id)
 	d.Set("customer_master_key_spec", key.metadata.CustomerMasterKeySpec)
 	d.Set("description", key.metadata.Description)
 	d.Set("enable_key_rotation", key.rotation)
@@ -234,6 +233,12 @@ func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("key_id", key.metadata.KeyId)
 	d.Set("key_usage", key.metadata.KeyUsage)
 	d.Set("multi_region", key.metadata.MultiRegion)
+
+	if key.metadata.XksKeyConfiguration != nil {
+		d.Set("xks_key_id", key.metadata.XksKeyConfiguration.Id)
+	} else {
+		d.Set("xks_key_id", nil)
+	}
 
 	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), key.policy)
 	if err != nil {
