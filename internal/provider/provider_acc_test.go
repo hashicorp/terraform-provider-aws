@@ -866,7 +866,6 @@ func testAccProviderConfig_endpoints(endpoints string) string {
 	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
 provider "aws" {
   skip_credentials_validation = true
-  skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 
@@ -903,7 +902,6 @@ func testAccProviderConfig_unusualEndpoints(unusual1, unusual2, unusual3 unusual
 	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
 provider "aws" {
   skip_credentials_validation = true
-  skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 
@@ -921,7 +919,6 @@ func testAccProviderConfig_ignoreTagsKeys0() string {
 	return acctest.ConfigCompose(testAccProviderConfig_base, `
 provider "aws" {
   skip_credentials_validation = true
-  skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
@@ -937,7 +934,6 @@ provider "aws" {
   }
 
   skip_credentials_validation = true
-  skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
@@ -953,7 +949,6 @@ provider "aws" {
   }
 
   skip_credentials_validation = true
-  skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
@@ -965,7 +960,6 @@ func testAccProviderConfig_ignoreTagsKeyPrefixes0() string {
 	return acctest.ConfigCompose(testAccProviderConfig_base, `
 provider "aws" {
   skip_credentials_validation = true
-  skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
@@ -981,7 +975,6 @@ provider "aws" {
   }
 
   skip_credentials_validation = true
-  skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
@@ -997,7 +990,6 @@ provider "aws" {
   }
 
   skip_credentials_validation = true
-  skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
@@ -1011,7 +1003,6 @@ provider "aws" {
   default_tags {}
 
   skip_credentials_validation = true
-  skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
@@ -1026,7 +1017,6 @@ provider "aws" {
   ignore_tags {}
 
   skip_credentials_validation = true
-  skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
@@ -1040,7 +1030,6 @@ provider "aws" {
   ignore_tags {}
 
   skip_credentials_validation = true
-  skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
@@ -1053,7 +1042,6 @@ func testAccProviderConfig_region(region string) string {
 provider "aws" {
   region                      = %[1]q
   skip_credentials_validation = true
-  skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
@@ -1067,7 +1055,6 @@ provider "aws" {
   region                      = %[1]q
   sts_region                  = %[2]q
   skip_credentials_validation = true
-  skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
