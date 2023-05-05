@@ -22,6 +22,7 @@ Upgrade topics:
 - [Data Source: aws_subnet_ids](#data-source-aws_subnet_ids)
 - [Resource: aws_acmpca_certificate_authority](#resource-aws_acmpca_certificate_authority)
 - [Resource: aws_ce_anomaly_subscription](#resource-aws_ce_anomaly_subscription)
+- [Resource: aws_ec2_client_vpn_endpoint](#resource-aws_ec2_client_vpn_endpoint)
 
 <!-- /TOC -->
 
@@ -91,6 +92,10 @@ The `status` attribute is superfluous and sometimes incorrect. It has been remov
 ## Resource: aws_ce_anomaly_subscription
 
 The `threshold` attribute has been removed.
+
+## Resource: aws_ec2_client_vpn_endpoint
+
+The `status` attribute has been removed.
 
 ## Data Source: aws_redshift_service_account
 
