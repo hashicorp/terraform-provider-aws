@@ -17,7 +17,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.17.0
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.1.9
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.95.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.96.1
 	github.com/aws/aws-sdk-go-v2/service/fis v1.14.9
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.15.10
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.10
