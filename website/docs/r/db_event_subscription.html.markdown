@@ -34,7 +34,7 @@ resource "aws_db_event_subscription" "default" {
   sns_topic = aws_sns_topic.default.arn
 
   source_type = "db-instance"
-  source_ids  = [aws_db_instance.default.id]
+  source_ids  = [aws_db_instance.default.identifier]
 
   event_categories = [
     "availability",
