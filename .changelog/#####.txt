@@ -1,0 +1,4 @@
+```release-note:bug
+resource/aws_appautoscaling_target: Fix `InvalidParameter: 1 validation error(s) found.
+minimum field size of 1, ListTagsForResourceInput.ResourceARN.` introduced in [v4.66.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#4660-may--4-2023)
+```
