@@ -13,6 +13,7 @@ const (
 	AwsUsGovPartitionID = "aws-us-gov" // AWS GovCloud (US) partition.
 	AwsIsoPartitionID   = "aws-iso"    // AWS ISO (US) partition.
 	AwsIsoBPartitionID  = "aws-iso-b"  // AWS ISOB (US) partition.
+	AwsIsoEPartitionID  = "aws-iso-e"  // AWS ISOE (Europe) partition.
 )
 
 // AWS Standard partition's regions.
@@ -69,8 +70,11 @@ const (
 	UsIsobEast1RegionID = "us-isob-east-1" // US ISOB East (Ohio).
 )
 
+// AWS ISOE (Europe) partition's regions.
+const ()
+
 // DefaultResolver returns an Endpoint resolver that will be able
-// to resolve endpoints for: AWS Standard, AWS China, AWS GovCloud (US), AWS ISO (US), and AWS ISOB (US).
+// to resolve endpoints for: AWS Standard, AWS China, AWS GovCloud (US), AWS ISO (US), AWS ISOB (US), and AWS ISOE (Europe).
 //
 // Use DefaultPartitions() to get the list of the default partitions.
 func DefaultResolver() Resolver {
@@ -78,7 +82,7 @@ func DefaultResolver() Resolver {
 }
 
 // DefaultPartitions returns a list of the partitions the SDK is bundled
-// with. The available partitions are: AWS Standard, AWS China, AWS GovCloud (US), AWS ISO (US), and AWS ISOB (US).
+// with. The available partitions are: AWS Standard, AWS China, AWS GovCloud (US), AWS ISO (US), AWS ISOB (US), and AWS ISOE (Europe).
 //
 //    partitions := endpoints.DefaultPartitions
 //    for _, p := range partitions {
@@ -94,6 +98,7 @@ var defaultPartitions = partitions{
 	awsusgovPartition,
 	awsisoPartition,
 	awsisobPartition,
+	awsisoePartition,
 }
 
 // AwsPartition returns the Resolver for AWS Standard.
@@ -33420,6 +33425,9 @@ var awsusgovPartition = partition{
 					Deprecated: boxedTrue,
 				},
 				endpointKey{
+					Region: "us-gov-east-1",
+				}: endpoint{},
+				endpointKey{
 					Region: "us-gov-west-1",
 				}: endpoint{},
 				endpointKey{
@@ -38076,6 +38084,9 @@ var awsusgovPartition = partition{
 					Deprecated: boxedTrue,
 				},
 				endpointKey{
+					Region: "us-gov-east-1",
+				}: endpoint{},
+				endpointKey{
 					Region: "us-gov-west-1",
 				}: endpoint{},
 				endpointKey{
@@ -39575,4 +39586,38 @@ var awsisobPartition = partition{
 			},
 		},
 	},
+}
+
+// AwsIsoEPartition returns the Resolver for AWS ISOE (Europe).
+func AwsIsoEPartition() Partition {
+	return awsisoePartition.Partition()
+}
+
+var awsisoePartition = partition{
+	ID:        "aws-iso-e",
+	Name:      "AWS ISOE (Europe)",
+	DNSSuffix: "cloud.adc-e.uk",
+	RegionRegex: regionRegex{
+		Regexp: func() *regexp.Regexp {
+			reg, _ := regexp.Compile("^eu\\-isoe\\-\\w+\\-\\d+$")
+			return reg
+		}(),
+	},
+	Defaults: endpointDefaults{
+		defaultKey{}: endpoint{
+			Hostname:          "{service}.{region}.{dnsSuffix}",
+			Protocols:         []string{"https"},
+			SignatureVersions: []string{"v4"},
+		},
+		defaultKey{
+			Variant: fipsVariant,
+		}: endpoint{
+			Hostname:          "{service}-fips.{region}.{dnsSuffix}",
+			DNSSuffix:         "cloud.adc-e.uk",
+			Protocols:         []string{"https"},
+			SignatureVersions: []string{"v4"},
+		},
+	},
+	Regions:  regions{},
+	Services: services{},
 }
