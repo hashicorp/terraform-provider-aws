@@ -52,6 +52,12 @@ func ResourceKey() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 22),
 			},
+			"xks_key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 128),
+			},
 			"customer_master_key_spec": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -143,7 +149,15 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.Policy = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("custom_key_store_id"); ok {
+	if v, ok := d.GetOk("xks_key_id"); ok {
+		if _, ok := d.GetOk("custom_key_store_id"); !ok {
+			return sdkdiag.AppendErrorf(diags, "custom_key_store_id must be set when xks_key_id is set")
+		}
+
+		input.Origin = aws.String(kms.OriginTypeExternalKeyStore)
+		input.CustomKeyStoreId = aws.String(d.Get("custom_key_store_id").(string))
+		input.XksKeyId = aws.String(v.(string))
+	} else if v, ok := d.GetOk("custom_key_store_id"); ok {
 		input.Origin = aws.String(kms.OriginTypeAwsCloudhsm)
 		input.CustomKeyStoreId = aws.String(v.(string))
 	}
@@ -212,6 +226,7 @@ func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 	d.Set("arn", key.metadata.Arn)
 	d.Set("custom_key_store_id", key.metadata.CustomKeyStoreId)
+	d.Set("xks_key_id", key.metadata.XksKeyConfiguration.Id)
 	d.Set("customer_master_key_spec", key.metadata.CustomerMasterKeySpec)
 	d.Set("description", key.metadata.Description)
 	d.Set("enable_key_rotation", key.rotation)
