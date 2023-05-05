@@ -330,7 +330,7 @@ resource "aws_db_instance" "test" {
 }
 
 resource "aws_db_proxy_target" "test" {
-  db_instance_identifier = aws_db_instance.test.id
+  db_instance_identifier = aws_db_instance.test.identifier
   db_proxy_name          = aws_db_proxy.test.name
   target_group_name      = "default"
 }

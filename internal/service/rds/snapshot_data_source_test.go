@@ -85,7 +85,7 @@ data "aws_db_snapshot" "snapshot" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.bar.id
+  db_instance_identifier = aws_db_instance.bar.identifier
   db_snapshot_identifier = "testsnapshot%[2]d"
 }
 `, mySQLPreferredInstanceClasses, rInt)

@@ -167,7 +167,7 @@ func testAccCheckInstanceRoleAssociationDisappears(ctx context.Context, dbInstan
 func testAccInstanceRoleAssociationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance_role_association" "test" {
-  db_instance_identifier = aws_db_instance.test.id
+  db_instance_identifier = aws_db_instance.test.identifier
   feature_name           = "S3_INTEGRATION"
   role_arn               = aws_iam_role.test.arn
 }

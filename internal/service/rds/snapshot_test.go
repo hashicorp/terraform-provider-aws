@@ -249,7 +249,7 @@ resource "aws_db_instance" "test" {
 func testAccSnapshotConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccSnapshotConfig_base(rName), fmt.Sprintf(`
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.test.id
+  db_instance_identifier = aws_db_instance.test.identifier
   db_snapshot_identifier = %[1]q
 }
 `, rName))
@@ -258,7 +258,7 @@ resource "aws_db_snapshot" "test" {
 func testAccSnapshotConfig_tags1(rName, tag1Key, tag1Value string) string {
 	return acctest.ConfigCompose(testAccSnapshotConfig_base(rName), fmt.Sprintf(`
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.test.id
+  db_instance_identifier = aws_db_instance.test.identifier
   db_snapshot_identifier = %[1]q
 
   tags = {
@@ -271,7 +271,7 @@ resource "aws_db_snapshot" "test" {
 func testAccSnapshotConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return acctest.ConfigCompose(testAccSnapshotConfig_base(rName), fmt.Sprintf(`
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.test.id
+  db_instance_identifier = aws_db_instance.test.identifier
   db_snapshot_identifier = %[1]q
 
   tags = {
@@ -285,7 +285,7 @@ resource "aws_db_snapshot" "test" {
 func testAccSnapshotConfig_share(rName string) string {
 	return acctest.ConfigCompose(testAccSnapshotConfig_base(rName), fmt.Sprintf(`
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.test.id
+  db_instance_identifier = aws_db_instance.test.identifier
   db_snapshot_identifier = %[1]q
   shared_accounts        = ["all"]
 }
