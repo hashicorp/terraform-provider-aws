@@ -495,10 +495,10 @@ func flattenGaugeChartFieldWells(apiObject *quicksight.GaugeChartFieldWells) []i
 
 	tfMap := map[string]interface{}{}
 	if apiObject.TargetValues != nil {
-		tfMap["target_values"] = flattenMeasureField(apiObject.TargetValues)
+		tfMap["target_values"] = flattenMeasureFields(apiObject.TargetValues)
 	}
 	if apiObject.Values != nil {
-		tfMap["values"] = flattenMeasureField(apiObject.Values)
+		tfMap["values"] = flattenMeasureFields(apiObject.Values)
 	}
 
 	return []interface{}{tfMap}

@@ -450,7 +450,26 @@ func expandNumericalMeasureField(tfList []interface{}) *quicksight.NumericalMeas
 	return field
 }
 
-func flattenDimensionField(apiObject []*quicksight.DimensionField) []interface{} {
+func flattenDimensionField(apiObject *quicksight.DimensionField) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CategoricalDimensionField != nil {
+		tfMap["categorical_dimension_field"] = flattenCategoricalDimensionField(apiObject.CategoricalDimensionField)
+	}
+	if apiObject.DateDimensionField != nil {
+		tfMap["date_dimension_field"] = flattenDateDimensionField(apiObject.DateDimensionField)
+	}
+	if apiObject.NumericalDimensionField != nil {
+		tfMap["numerical_dimension_field"] = flattenNumericalDimensionField(apiObject.NumericalDimensionField)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenDimensionFields(apiObject []*quicksight.DimensionField) []interface{} {
 	if len(apiObject) == 0 {
 		return nil
 	}
@@ -547,7 +566,29 @@ func flattenNumericalDimensionField(apiObject *quicksight.NumericalDimensionFiel
 	return []interface{}{tfMap}
 }
 
-func flattenMeasureField(apiObject []*quicksight.MeasureField) []interface{} {
+func flattenMeasureField(apiObject *quicksight.MeasureField) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CalculatedMeasureField != nil {
+		tfMap["calculated_measure_field"] = flattenCalculatedMeasureField(apiObject.CalculatedMeasureField)
+	}
+	if apiObject.CategoricalMeasureField != nil {
+		tfMap["categorical_measure_field"] = flattenCategoricalMeasureField(apiObject.CategoricalMeasureField)
+	}
+	if apiObject.DateMeasureField != nil {
+		tfMap["date_measure_field"] = flattenDateMeasureField(apiObject.DateMeasureField)
+	}
+	if apiObject.NumericalMeasureField != nil {
+		tfMap["numerical_measure_field"] = flattenNumericalMeasureField(apiObject.NumericalMeasureField)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenMeasureFields(apiObject []*quicksight.MeasureField) []interface{} {
 	if len(apiObject) == 0 {
 		return nil
 	}

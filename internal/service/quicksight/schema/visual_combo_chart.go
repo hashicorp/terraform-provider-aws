@@ -365,16 +365,16 @@ func flattenComboChartAggregatedFieldWells(apiObject *quicksight.ComboChartAggre
 
 	tfMap := map[string]interface{}{}
 	if apiObject.BarValues != nil {
-		tfMap["bar_values"] = flattenMeasureField(apiObject.BarValues)
+		tfMap["bar_values"] = flattenMeasureFields(apiObject.BarValues)
 	}
 	if apiObject.Category != nil {
-		tfMap["category"] = flattenDimensionField(apiObject.Category)
+		tfMap["category"] = flattenDimensionFields(apiObject.Category)
 	}
 	if apiObject.Colors != nil {
-		tfMap["colors"] = flattenDimensionField(apiObject.Colors)
+		tfMap["colors"] = flattenDimensionFields(apiObject.Colors)
 	}
 	if apiObject.LineValues != nil {
-		tfMap["line_values"] = flattenMeasureField(apiObject.LineValues)
+		tfMap["line_values"] = flattenMeasureFields(apiObject.LineValues)
 	}
 
 	return []interface{}{tfMap}

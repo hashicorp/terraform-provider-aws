@@ -418,7 +418,7 @@ func flattenHistogramAggregatedFieldWells(apiObject *quicksight.HistogramAggrega
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Values != nil {
-		tfMap["values"] = flattenMeasureField(apiObject.Values)
+		tfMap["values"] = flattenMeasureFields(apiObject.Values)
 	}
 
 	return []interface{}{tfMap}

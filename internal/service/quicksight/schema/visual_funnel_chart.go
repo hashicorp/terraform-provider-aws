@@ -372,10 +372,10 @@ func flattenFunnelChartAggregatedFieldWells(apiObject *quicksight.FunnelChartAgg
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Category != nil {
-		tfMap["category"] = flattenDimensionField(apiObject.Category)
+		tfMap["category"] = flattenDimensionFields(apiObject.Category)
 	}
 	if apiObject.Values != nil {
-		tfMap["values"] = flattenMeasureField(apiObject.Values)
+		tfMap["values"] = flattenMeasureFields(apiObject.Values)
 	}
 
 	return []interface{}{tfMap}

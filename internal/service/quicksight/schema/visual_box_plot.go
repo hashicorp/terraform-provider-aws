@@ -456,10 +456,10 @@ func flattenBoxPlotAggregatedFieldWells(apiObject *quicksight.BoxPlotAggregatedF
 
 	tfMap := map[string]interface{}{}
 	if apiObject.GroupBy != nil {
-		tfMap["group_by"] = flattenDimensionField(apiObject.GroupBy)
+		tfMap["group_by"] = flattenDimensionFields(apiObject.GroupBy)
 	}
 	if apiObject.Values != nil {
-		tfMap["values"] = flattenMeasureField(apiObject.Values)
+		tfMap["values"] = flattenMeasureFields(apiObject.Values)
 	}
 
 	return []interface{}{tfMap}

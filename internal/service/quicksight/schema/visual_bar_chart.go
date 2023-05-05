@@ -373,16 +373,16 @@ func flattenBarChartAggregatedFieldWells(apiObject *quicksight.BarChartAggregate
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Category != nil {
-		tfMap["category"] = flattenDimensionField(apiObject.Category)
+		tfMap["category"] = flattenDimensionFields(apiObject.Category)
 	}
 	if apiObject.Colors != nil {
-		tfMap["colors"] = flattenDimensionField(apiObject.Colors)
+		tfMap["colors"] = flattenDimensionFields(apiObject.Colors)
 	}
 	if apiObject.SmallMultiples != nil {
-		tfMap["small_multiples"] = flattenDimensionField(apiObject.SmallMultiples)
+		tfMap["small_multiples"] = flattenDimensionFields(apiObject.SmallMultiples)
 	}
 	if apiObject.Values != nil {
-		tfMap["values"] = flattenMeasureField(apiObject.Values)
+		tfMap["values"] = flattenMeasureFields(apiObject.Values)
 	}
 
 	return []interface{}{tfMap}

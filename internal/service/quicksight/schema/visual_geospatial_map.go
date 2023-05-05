@@ -378,13 +378,13 @@ func flattenGeospatialMapAggregatedFieldWells(apiObject *quicksight.GeospatialMa
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Colors != nil {
-		tfMap["colors"] = flattenDimensionField(apiObject.Colors)
+		tfMap["colors"] = flattenDimensionFields(apiObject.Colors)
 	}
 	if apiObject.Geospatial != nil {
-		tfMap["geospatial"] = flattenDimensionField(apiObject.Geospatial)
+		tfMap["geospatial"] = flattenDimensionFields(apiObject.Geospatial)
 	}
 	if apiObject.Values != nil {
-		tfMap["values"] = flattenMeasureField(apiObject.Values)
+		tfMap["values"] = flattenMeasureFields(apiObject.Values)
 	}
 
 	return []interface{}{tfMap}

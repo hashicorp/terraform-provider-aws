@@ -304,13 +304,13 @@ func flattenHeatMapAggregatedFieldWells(apiObject *quicksight.HeatMapAggregatedF
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Columns != nil {
-		tfMap["columns"] = flattenDimensionField(apiObject.Columns)
+		tfMap["columns"] = flattenDimensionFields(apiObject.Columns)
 	}
 	if apiObject.Rows != nil {
-		tfMap["rows"] = flattenDimensionField(apiObject.Rows)
+		tfMap["rows"] = flattenDimensionFields(apiObject.Rows)
 	}
 	if apiObject.Values != nil {
-		tfMap["values"] = flattenMeasureField(apiObject.Values)
+		tfMap["values"] = flattenMeasureFields(apiObject.Values)
 	}
 
 	return []interface{}{tfMap}

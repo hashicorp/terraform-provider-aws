@@ -420,10 +420,10 @@ func flattenFilledMapAggregatedFieldWells(apiObject *quicksight.FilledMapAggrega
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Geospatial != nil {
-		tfMap["geospatial"] = flattenDimensionField(apiObject.Geospatial)
+		tfMap["geospatial"] = flattenDimensionFields(apiObject.Geospatial)
 	}
 	if apiObject.Values != nil {
-		tfMap["values"] = flattenMeasureField(apiObject.Values)
+		tfMap["values"] = flattenMeasureFields(apiObject.Values)
 	}
 
 	return []interface{}{tfMap}

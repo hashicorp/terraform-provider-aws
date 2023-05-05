@@ -710,3 +710,371 @@ func expandCustomNarrativeOptions(tfList []interface{}) *quicksight.CustomNarrat
 
 	return options
 }
+
+func flattenInsightVisual(apiObject *quicksight.InsightVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"visual_id":           aws.StringValue(apiObject.VisualId),
+		"data_set_identifier": aws.StringValue(apiObject.DataSetIdentifier),
+	}
+	if apiObject.Actions != nil {
+		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
+	}
+	if apiObject.InsightConfiguration != nil {
+		tfMap["insight_configuration"] = flattenInsightConfiguration(apiObject.InsightConfiguration)
+	}
+	if apiObject.Subtitle != nil {
+		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
+	}
+	if apiObject.Title != nil {
+		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenInsightConfiguration(apiObject *quicksight.InsightConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Computations != nil {
+		tfMap["computations"] = flattenComputation(apiObject.Computations)
+	}
+	if apiObject.CustomNarrative != nil {
+		tfMap["custom_narrative"] = flattenCustomNarrativeOptions(apiObject.CustomNarrative)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenComputation(apiObject []*quicksight.Computation) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if config.Forecast != nil {
+			tfMap["forecast"] = flattenForecastComputation(config.Forecast)
+		}
+		if config.GrowthRate != nil {
+			tfMap["growth_rate"] = flattenGrowthRateComputation(config.GrowthRate)
+		}
+		if config.MaximumMinimum != nil {
+			tfMap["maximum_minimum"] = flattenMaximumMinimumComputation(config.MaximumMinimum)
+		}
+		if config.MetricComparison != nil {
+			tfMap["metric_comparison"] = flattenMetricComparisonComputation(config.MetricComparison)
+		}
+		if config.PeriodOverPeriod != nil {
+			tfMap["period_over_period"] = flattenPeriodOverPeriodComputation(config.PeriodOverPeriod)
+		}
+		if config.PeriodToDate != nil {
+			tfMap["period_to_date"] = flattenPeriodToDateComputation(config.PeriodToDate)
+		}
+		if config.TopBottomMovers != nil {
+			tfMap["top_bottom_movers"] = flattenTopBottomMoversComputation(config.TopBottomMovers)
+		}
+		if config.TopBottomRanked != nil {
+			tfMap["top_bottom_ranked"] = flattenTopBottomRankedComputation(config.TopBottomRanked)
+		}
+		if config.TotalAggregation != nil {
+			tfMap["total_aggregation"] = flattenTotalAggregationComputation(config.TotalAggregation)
+		}
+		if config.UniqueValues != nil {
+			tfMap["unique_values"] = flattenUniqueValuesComputation(config.UniqueValues)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenForecastComputation(apiObject *quicksight.ForecastComputation) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ComputationId != nil {
+		tfMap["computation_id"] = aws.StringValue(apiObject.ComputationId)
+	}
+	if apiObject.Time != nil {
+		tfMap["time"] = flattenDimensionField(apiObject.Time)
+	}
+	if apiObject.CustomSeasonalityValue != nil {
+		tfMap["custom_seasonality_value"] = aws.Int64Value(apiObject.CustomSeasonalityValue)
+	}
+	if apiObject.LowerBoundary != nil {
+		tfMap["lower_boundary"] = aws.Float64Value(apiObject.LowerBoundary)
+	}
+	if apiObject.Name != nil {
+		tfMap["name"] = aws.StringValue(apiObject.Name)
+	}
+	if apiObject.PeriodsBackward != nil {
+		tfMap["periods_backward"] = aws.Int64Value(apiObject.PeriodsBackward)
+	}
+	if apiObject.PeriodsForward != nil {
+		tfMap["periods_forward"] = aws.Int64Value(apiObject.PeriodsForward)
+	}
+	if apiObject.PredictionInterval != nil {
+		tfMap["prediction_interval"] = aws.Int64Value(apiObject.PredictionInterval)
+	}
+	if apiObject.Seasonality != nil {
+		tfMap["seasonality"] = aws.StringValue(apiObject.Seasonality)
+	}
+	if apiObject.UpperBoundary != nil {
+		tfMap["upper_boundary"] = aws.Float64Value(apiObject.UpperBoundary)
+	}
+	if apiObject.Value != nil {
+		tfMap["value"] = flattenMeasureField(apiObject.Value)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenGrowthRateComputation(apiObject *quicksight.GrowthRateComputation) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ComputationId != nil {
+		tfMap["computation_id"] = aws.StringValue(apiObject.ComputationId)
+	}
+	if apiObject.Time != nil {
+		tfMap["time"] = flattenDimensionField(apiObject.Time)
+	}
+	if apiObject.Name != nil {
+		tfMap["name"] = aws.StringValue(apiObject.Name)
+	}
+	if apiObject.PeriodSize != nil {
+		tfMap["period_size"] = aws.Int64Value(apiObject.PeriodSize)
+	}
+	if apiObject.Value != nil {
+		tfMap["value"] = flattenMeasureField(apiObject.Value)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenMaximumMinimumComputation(apiObject *quicksight.MaximumMinimumComputation) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ComputationId != nil {
+		tfMap["computation_id"] = aws.StringValue(apiObject.ComputationId)
+	}
+	if apiObject.Time != nil {
+		tfMap["time"] = flattenDimensionField(apiObject.Time)
+	}
+	if apiObject.Type != nil {
+		tfMap["type"] = aws.StringValue(apiObject.Type)
+	}
+	if apiObject.Name != nil {
+		tfMap["name"] = aws.StringValue(apiObject.Name)
+	}
+	if apiObject.Value != nil {
+		tfMap["value"] = flattenMeasureField(apiObject.Value)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenMetricComparisonComputation(apiObject *quicksight.MetricComparisonComputation) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ComputationId != nil {
+		tfMap["computation_id"] = aws.StringValue(apiObject.ComputationId)
+	}
+	if apiObject.Time != nil {
+		tfMap["time"] = flattenDimensionField(apiObject.Time)
+	}
+	if apiObject.FromValue != nil {
+		tfMap["from_value"] = flattenMeasureField(apiObject.FromValue)
+	}
+	if apiObject.TargetValue != nil {
+		tfMap["target_value"] = flattenMeasureField(apiObject.TargetValue)
+	}
+	if apiObject.Name != nil {
+		tfMap["name"] = aws.StringValue(apiObject.Name)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenPeriodOverPeriodComputation(apiObject *quicksight.PeriodOverPeriodComputation) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ComputationId != nil {
+		tfMap["computation_id"] = aws.StringValue(apiObject.ComputationId)
+	}
+	if apiObject.Time != nil {
+		tfMap["time"] = flattenDimensionField(apiObject.Time)
+	}
+	if apiObject.Name != nil {
+		tfMap["name"] = aws.StringValue(apiObject.Name)
+	}
+	if apiObject.Value != nil {
+		tfMap["value"] = flattenMeasureField(apiObject.Value)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenPeriodToDateComputation(apiObject *quicksight.PeriodToDateComputation) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ComputationId != nil {
+		tfMap["computation_id"] = aws.StringValue(apiObject.ComputationId)
+	}
+	if apiObject.Time != nil {
+		tfMap["time"] = flattenDimensionField(apiObject.Time)
+	}
+	if apiObject.Name != nil {
+		tfMap["name"] = aws.StringValue(apiObject.Name)
+	}
+	if apiObject.PeriodTimeGranularity != nil {
+		tfMap["period_time_granularity"] = aws.StringValue(apiObject.PeriodTimeGranularity)
+	}
+	if apiObject.Value != nil {
+		tfMap["value"] = flattenMeasureField(apiObject.Value)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTopBottomMoversComputation(apiObject *quicksight.TopBottomMoversComputation) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ComputationId != nil {
+		tfMap["computation_id"] = aws.StringValue(apiObject.ComputationId)
+	}
+	if apiObject.Category != nil {
+		tfMap["category"] = flattenDimensionField(apiObject.Category)
+	}
+	if apiObject.MoverSize != nil {
+		tfMap["mover_size"] = aws.Int64Value(apiObject.MoverSize)
+	}
+	if apiObject.Name != nil {
+		tfMap["name"] = aws.StringValue(apiObject.Name)
+	}
+	if apiObject.SortOrder != nil {
+		tfMap["sort_order"] = aws.StringValue(apiObject.SortOrder)
+	}
+	if apiObject.Time != nil {
+		tfMap["time"] = flattenDimensionField(apiObject.Time)
+	}
+	if apiObject.Type != nil {
+		tfMap["type"] = aws.StringValue(apiObject.Type)
+	}
+	if apiObject.Value != nil {
+		tfMap["value"] = flattenMeasureField(apiObject.Value)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTopBottomRankedComputation(apiObject *quicksight.TopBottomRankedComputation) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ComputationId != nil {
+		tfMap["computation_id"] = aws.StringValue(apiObject.ComputationId)
+	}
+	if apiObject.Category != nil {
+		tfMap["category"] = flattenDimensionField(apiObject.Category)
+	}
+	if apiObject.Name != nil {
+		tfMap["name"] = aws.StringValue(apiObject.Name)
+	}
+	if apiObject.ResultSize != nil {
+		tfMap["result_size"] = aws.Int64Value(apiObject.ResultSize)
+	}
+	if apiObject.Type != nil {
+		tfMap["type"] = aws.StringValue(apiObject.Type)
+	}
+	if apiObject.Value != nil {
+		tfMap["value"] = flattenMeasureField(apiObject.Value)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTotalAggregationComputation(apiObject *quicksight.TotalAggregationComputation) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ComputationId != nil {
+		tfMap["computation_id"] = aws.StringValue(apiObject.ComputationId)
+	}
+	if apiObject.Name != nil {
+		tfMap["name"] = aws.StringValue(apiObject.Name)
+	}
+	if apiObject.Value != nil {
+		tfMap["value"] = flattenMeasureField(apiObject.Value)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenUniqueValuesComputation(apiObject *quicksight.UniqueValuesComputation) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ComputationId != nil {
+		tfMap["computation_id"] = aws.StringValue(apiObject.ComputationId)
+	}
+	if apiObject.Category != nil {
+		tfMap["category"] = flattenDimensionField(apiObject.Category)
+	}
+	if apiObject.Name != nil {
+		tfMap["name"] = aws.StringValue(apiObject.Name)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenCustomNarrativeOptions(apiObject *quicksight.CustomNarrativeOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Narrative != nil {
+		tfMap["narrative"] = aws.StringValue(apiObject.Narrative)
+	}
+
+	return []interface{}{tfMap}
+}
