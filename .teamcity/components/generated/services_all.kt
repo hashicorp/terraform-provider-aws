@@ -154,7 +154,7 @@ val services = mapOf(
     "resourcegroups" to ServiceSpec("Resource Groups"),
     "resourcegroupstaggingapi" to ServiceSpec("Resource Groups Tagging"),
     "rolesanywhere" to ServiceSpec("Roles Anywhere"),
-    "route53" to ServiceSpec("Route 53", vpcLock = true, regionOverride = "us-east-1"),
+    "route53" to ServiceSpec("Route 53", vpcLock = true),
     "route53domains" to ServiceSpec("Route 53 Domains"),
     "route53recoverycontrolconfig" to ServiceSpec("Route 53 Recovery Control Config"),
     "route53recoveryreadiness" to ServiceSpec("Route 53 Recovery Readiness"),
