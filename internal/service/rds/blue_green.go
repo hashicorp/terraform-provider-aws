@@ -97,7 +97,7 @@ func (h *instanceHandler) precondition(ctx context.Context, d *schema.ResourceDa
 	needsPreConditions := false
 	input := &rds_sdkv2.ModifyDBInstanceInput{
 		ApplyImmediately:     true,
-		DBInstanceIdentifier: aws.String(d.Id()),
+		DBInstanceIdentifier: aws.String(d.Get("identifier").(string)),
 	}
 
 	// Backups must be enabled for Blue/Green Deployments. Enable them first.
@@ -123,7 +123,7 @@ func (h *instanceHandler) precondition(ctx context.Context, d *schema.ResourceDa
 
 func (h *instanceHandler) createBlueGreenInput(d *schema.ResourceData) *rds_sdkv2.CreateBlueGreenDeploymentInput {
 	input := &rds_sdkv2.CreateBlueGreenDeploymentInput{
-		BlueGreenDeploymentName: aws.String(d.Id()),
+		BlueGreenDeploymentName: aws.String(d.Get("identifier").(string)),
 		Source:                  aws.String(d.Get("arn").(string)),
 	}
 
