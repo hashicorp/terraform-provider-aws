@@ -413,6 +413,8 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 
 	clusterSetResourceDataEngineVersionFromClusterInstance(d, db)
 
+	SetTagsOut(ctx, db.TagList)
+
 	return nil
 }
 

@@ -131,12 +131,14 @@ func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	for _, address := range ng.NatGatewayAddresses {
-		if aws.BoolValue(address.IsPrimary) {
+		// Length check guarantees the attributes are always set (#30865).
+		if len(ng.NatGatewayAddresses) == 1 || aws.BoolValue(address.IsPrimary) {
 			d.Set("allocation_id", address.AllocationId)
 			d.Set("association_id", address.AssociationId)
 			d.Set("network_interface_id", address.NetworkInterfaceId)
 			d.Set("private_ip", address.PrivateIp)
 			d.Set("public_ip", address.PublicIp)
+			break
 		}
 	}
 

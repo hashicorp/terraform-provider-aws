@@ -2334,7 +2334,7 @@ func flattenUploadSettings(apiObject *quicksight.UploadSettings) []interface{} {
 		tfMap["format"] = aws.StringValue(apiObject.Format)
 	}
 	if apiObject.StartFromRow != nil {
-		tfMap["start_from_row"] = aws.Int64Value(apiObject.StartFromRow)
+		tfMap["start_from_row"] = int(aws.Int64Value(apiObject.StartFromRow))
 	}
 	if apiObject.TextQualifier != nil {
 		tfMap["text_qualifier"] = aws.StringValue(apiObject.TextQualifier)

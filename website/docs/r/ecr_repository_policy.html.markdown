@@ -25,8 +25,8 @@ data "aws_iam_policy_document" "foopolicy" {
     effect = "Allow"
 
     principals {
-      type        = "*"
-      identifiers = ["*"]
+      type        = "AWS"
+      identifiers = ["123456789012"]
     }
 
     actions = [

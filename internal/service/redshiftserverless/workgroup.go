@@ -29,6 +29,12 @@ func ResourceWorkgroup() *schema.Resource {
 		UpdateWithoutTimeout: resourceWorkgroupUpdate,
 		DeleteWithoutTimeout: resourceWorkgroupDelete,
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(20 * time.Minute),
+			Update: schema.DefaultTimeout(20 * time.Minute),
+			Delete: schema.DefaultTimeout(20 * time.Minute),
+		},
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -205,7 +211,7 @@ func resourceWorkgroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.SetId(aws.StringValue(out.Workgroup.WorkgroupName))
 
-	if _, err := waitWorkgroupAvailable(ctx, conn, d.Id()); err != nil {
+	if _, err := waitWorkgroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Redshift Serverless Workgroup (%s) to be created: %s", d.Id(), err)
 	}
 
@@ -286,7 +292,7 @@ func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			return sdkdiag.AppendErrorf(diags, "updating Redshift Serverless Workgroup (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitWorkgroupAvailable(ctx, conn, d.Id()); err != nil {
+		if _, err := waitWorkgroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Redshift Serverless Workgroup (%s) to be updated: %s", d.Id(), err)
 		}
 	}
@@ -314,7 +320,7 @@ func resourceWorkgroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "deleting Redshift Serverless Workgroup (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitWorkgroupDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitWorkgroupDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Redshift Serverless Workgroup (%s): waiting for completion: %s", d.Id(), err)
 	}
 

@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -14,8 +16,8 @@ func TestUTCTimestampValidator(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
-		val         types.String
-		expectError bool
+		val                 types.String
+		expectedDiagnostics diag.Diagnostics
 	}
 
 	tests := map[string]testCase{
@@ -29,8 +31,14 @@ func TestUTCTimestampValidator(t *testing.T) {
 			val: types.StringValue("2023-02-28T14:04:05Z"),
 		},
 		"invalid timestamp": {
-			val:         types.StringValue("02 Jan 06 15:04 -0700"),
-			expectError: true,
+			val: types.StringValue("02 Jan 06 15:04 -0700"),
+			expectedDiagnostics: diag.Diagnostics{
+				diag.NewAttributeErrorDiagnostic(
+					path.Root("test"),
+					"Invalid Attribute Value",
+					`Attribute test value must be a valid UTC Timestamp, got: 02 Jan 06 15:04 -0700`,
+				),
+			},
 		},
 	}
 
@@ -39,20 +47,18 @@ func TestUTCTimestampValidator(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
+			ctx := context.Background()
+
 			request := validator.StringRequest{
 				Path:           path.Root("test"),
 				PathExpression: path.MatchRoot("test"),
 				ConfigValue:    test.val,
 			}
 			response := validator.StringResponse{}
-			fwvalidators.UTCTimestamp().ValidateString(context.Background(), request, &response)
+			fwvalidators.UTCTimestamp().ValidateString(ctx, request, &response)
 
-			if !response.Diagnostics.HasError() && test.expectError {
-				t.Fatal("expected error, got no error")
-			}
-
-			if response.Diagnostics.HasError() && !test.expectError {
-				t.Fatalf("got unexpected error: %s", response.Diagnostics)
+			if diff := cmp.Diff(response.Diagnostics, test.expectedDiagnostics); diff != "" {
+				t.Errorf("unexpected diagnostics difference: %s", diff)
 			}
 		})
 	}
@@ -62,8 +68,8 @@ func TestOnceADayWindowFormatValidator(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
-		val         types.String
-		expectError bool
+		val                 types.String
+		expectedDiagnostics diag.Diagnostics
 	}
 
 	tests := map[string]testCase{
@@ -77,8 +83,14 @@ func TestOnceADayWindowFormatValidator(t *testing.T) {
 			val: types.StringValue("04:00-05:00"),
 		},
 		"invalid format": {
-			val:         types.StringValue("24:00-25:00"),
-			expectError: true,
+			val: types.StringValue("24:00-25:00"),
+			expectedDiagnostics: diag.Diagnostics{
+				diag.NewAttributeErrorDiagnostic(
+					path.Root("test"),
+					"Invalid Attribute Value",
+					`Attribute test value must satisfy the format of "hh24:mi-hh24:mi", got: 24:00-25:00`,
+				),
+			},
 		},
 	}
 
@@ -95,12 +107,8 @@ func TestOnceADayWindowFormatValidator(t *testing.T) {
 			response := validator.StringResponse{}
 			fwvalidators.OnceADayWindowFormat().ValidateString(context.Background(), request, &response)
 
-			if !response.Diagnostics.HasError() && test.expectError {
-				t.Fatal("expected error, got no error")
-			}
-
-			if response.Diagnostics.HasError() && !test.expectError {
-				t.Fatalf("got unexpected error: %s", response.Diagnostics)
+			if diff := cmp.Diff(response.Diagnostics, test.expectedDiagnostics); diff != "" {
+				t.Errorf("unexpected diagnostics difference: %s", diff)
 			}
 		})
 	}
@@ -110,8 +118,8 @@ func TestOnceAWeekWindowFormatValidator(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
-		val         types.String
-		expectError bool
+		val                 types.String
+		expectedDiagnostics diag.Diagnostics
 	}
 
 	tests := map[string]testCase{
@@ -125,8 +133,14 @@ func TestOnceAWeekWindowFormatValidator(t *testing.T) {
 			val: types.StringValue("sun:04:00-sun:05:00"),
 		},
 		"invalid format": {
-			val:         types.StringValue("sun:04:00-sun:04:60"),
-			expectError: true,
+			val: types.StringValue("sun:04:00-sun:04:60"),
+			expectedDiagnostics: diag.Diagnostics{
+				diag.NewAttributeErrorDiagnostic(
+					path.Root("test"),
+					"Invalid Attribute Value",
+					`Attribute test value must satisfy the format of "ddd:hh24:mi-ddd:hh24:mi", got: sun:04:00-sun:04:60`,
+				),
+			},
 		},
 	}
 
@@ -143,12 +157,8 @@ func TestOnceAWeekWindowFormatValidator(t *testing.T) {
 			response := validator.StringResponse{}
 			fwvalidators.OnceAWeekWindowFormat().ValidateString(context.Background(), request, &response)
 
-			if !response.Diagnostics.HasError() && test.expectError {
-				t.Fatal("expected error, got no error")
-			}
-
-			if response.Diagnostics.HasError() && !test.expectError {
-				t.Fatalf("got unexpected error: %s", response.Diagnostics)
+			if diff := cmp.Diff(response.Diagnostics, test.expectedDiagnostics); diff != "" {
+				t.Errorf("unexpected diagnostics difference: %s", diff)
 			}
 		})
 	}

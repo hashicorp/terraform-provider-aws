@@ -430,6 +430,104 @@ func TestAccMediaLiveChannel_VideoDescriptions_CodecSettings_h264Settings(t *tes
 	})
 }
 
+func TestAccMediaLiveChannel_VideoDescriptions_CodecSettings_h265Settings(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var channel medialive.DescribeChannelOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_medialive_channel.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
+			testAccChannelsPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckChannelDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccChannelConfig_videoDescriptionCodecSettingsH265Settings(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckChannelExists(ctx, resourceName, &channel),
+					resource.TestCheckResourceAttrSet(resourceName, "channel_id"),
+					resource.TestCheckResourceAttr(resourceName, "channel_class", "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "input_specification.0.codec", "AVC"),
+					resource.TestCheckResourceAttr(resourceName, "input_specification.0.input_resolution", "HD"),
+					resource.TestCheckResourceAttr(resourceName, "input_specification.0.maximum_bitrate", "MAX_20_MBPS"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "input_attachments.*", map[string]string{
+						"input_attachment_name": "example-input1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "destinations.*", map[string]string{
+						"id": rName,
+					}),
+					resource.TestCheckResourceAttr(resourceName, "encoder_settings.0.timecode_config.0.source", "EMBEDDED"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.audio_descriptions.*", map[string]string{
+						"audio_selector_name": rName,
+						"name":                rName,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.video_descriptions.*", map[string]string{
+						"name":             "test-video-name",
+						"respond_to_afd":   "NONE",
+						"scaling_behavior": "DEFAULT",
+						"sharpness":        "100",
+						"height":           "720",
+						"width":            "1280",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.video_descriptions.0.codec_settings.0.h265_settings.*", map[string]string{
+						"adaptive_quantization":   "LOW",
+						"afd_signaling":           "FIXED",
+						"bitrate":                 "5400000",
+						"buf_size":                "20000000",
+						"color_metadata":          "IGNORE",
+						"fixed_afd":               "AFD_0000",
+						"flicker_aq":              "ENABLED",
+						"framerate_denominator":   "1",
+						"framerate_numerator":     "50",
+						"gop_closed_cadence":      "1",
+						"gop_size":                "1.92",
+						"gop_size_units":          "SECONDS",
+						"level":                   "H265_LEVEL_AUTO",
+						"look_ahead_rate_control": "HIGH",
+						"min_i_interval":          "6",
+						"profile":                 "MAIN_10BIT",
+						"rate_control_mode":       "CBR",
+						"scan_type":               "PROGRESSIVE",
+						"scene_change_detect":     "ENABLED",
+						"slices":                  "2",
+						"tier":                    "HIGH",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.video_descriptions.0.codec_settings.0.h265_settings.0.color_space_settings.0.hdr10_settings.*", map[string]string{
+						"max_cll":  "16",
+						"max_fall": "16",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.video_descriptions.0.codec_settings.0.h265_settings.0.filter_settings.0.temporal_filter_settings.*", map[string]string{
+						"post_filter_sharpening": "AUTO",
+						"strength":               "STRENGTH_1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.video_descriptions.0.codec_settings.0.h265_settings.0.timecode_burnin_settings.*", map[string]string{
+						"timecode_burnin_font_size": "SMALL_16",
+						"timecode_burnin_position":  "BOTTOM_CENTER",
+						"prefix":                    "terraform-test",
+					}),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"start_channel"},
+			},
+		},
+	})
+}
+
 func TestAccMediaLiveChannel_hls(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -1394,6 +1492,152 @@ resource "aws_medialive_channel" "test" {
 
       outputs {
         output_name             = "test-output-name"
+        video_description_name  = "test-video-name"
+        audio_description_names = [%[1]q]
+        output_settings {
+          archive_output_settings {
+            name_modifier = "_1"
+            extension     = "m2ts"
+            container_settings {
+              m2ts_settings {
+                audio_buffer_model = "ATSC"
+                buffer_model       = "MULTIPLEX"
+                rate_mode          = "CBR"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccChannelConfig_videoDescriptionCodecSettingsH265Settings(rName string) string {
+	return acctest.ConfigCompose(
+		testAccChannelConfig_base(rName),
+		testAccChannelConfig_baseS3(rName),
+		testAccChannelConfig_baseMultiplex(rName),
+		fmt.Sprintf(`
+resource "aws_medialive_channel" "test" {
+  name          = %[1]q
+  channel_class = "STANDARD"
+  role_arn      = aws_iam_role.test.arn
+
+  input_specification {
+    codec            = "AVC"
+    input_resolution = "HD"
+    maximum_bitrate  = "MAX_20_MBPS"
+  }
+
+  input_attachments {
+    input_attachment_name = "example-input1"
+    input_id              = aws_medialive_input.test.id
+  }
+
+  destinations {
+    id = %[1]q
+
+    settings {
+      url = "s3://${aws_s3_bucket.test1.id}/test1"
+    }
+
+    settings {
+      url = "s3://${aws_s3_bucket.test2.id}/test2"
+    }
+  }
+
+  encoder_settings {
+    timecode_config {
+      source = "EMBEDDED"
+    }
+
+    audio_descriptions {
+      audio_selector_name = %[1]q
+      name                = %[1]q
+      codec_settings {
+        aac_settings {
+          rate_control_mode = "CBR"
+        }
+      }
+    }
+
+    video_descriptions {
+      name             = "test-video-name"
+      respond_to_afd   = "NONE"
+      sharpness        = 100
+      scaling_behavior = "DEFAULT"
+      width            = 1280
+      height           = 720
+      codec_settings {
+        h265_settings {
+          bitrate  = "5400000"
+          buf_size = "20000000"
+
+          framerate_numerator   = 50
+          framerate_denominator = 1
+
+          color_metadata        = "IGNORE"
+          adaptive_quantization = "LOW"
+
+          flicker_aq = "ENABLED"
+
+          afd_signaling = "FIXED"
+          fixed_afd     = "AFD_0000"
+
+          gop_closed_cadence = 1
+          gop_size           = 1.92
+          gop_size_units     = "SECONDS"
+          min_i_interval     = 6
+          scan_type          = "PROGRESSIVE"
+
+          level                   = "H265_LEVEL_AUTO"
+          look_ahead_rate_control = "HIGH"
+          profile                 = "MAIN_10BIT"
+
+          rate_control_mode   = "CBR"
+          scene_change_detect = "ENABLED"
+
+          slices = 2
+          tier   = "HIGH"
+
+          timecode_insertion = "DISABLED"
+
+          color_space_settings {
+            hdr10_settings {
+              max_cll  = 16
+              max_fall = 16
+            }
+          }
+
+          filter_settings {
+            temporal_filter_settings {
+              post_filter_sharpening = "AUTO"
+              strength               = "STRENGTH_1"
+            }
+          }
+
+          timecode_burnin_settings {
+            timecode_burnin_font_size = "SMALL_16"
+            timecode_burnin_position  = "BOTTOM_CENTER"
+            prefix                    = "terraform-test"
+          }
+        }
+      }
+    }
+
+    output_groups {
+      output_group_settings {
+        archive_group_settings {
+          destination {
+            destination_ref_id = %[1]q
+          }
+        }
+      }
+
+      outputs {
+        output_name             = %[1]q
         video_description_name  = "test-video-name"
         audio_description_names = [%[1]q]
         output_settings {
