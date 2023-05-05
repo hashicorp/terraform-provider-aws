@@ -126,6 +126,10 @@ func flattenCustomContentConfiguration(apiObject *quicksight.CustomContentConfig
 	if apiObject == nil {
 		return nil
 	}
+	// When unset, the API can return an empty object rather than nil.
+	if *apiObject == (quicksight.CustomContentConfiguration{}) {
+		return nil
+	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.ContentType != nil {

@@ -120,6 +120,15 @@ func DefinitionSchema() *schema.Schema {
 	}
 }
 
+func stringOptionalComputedSchema(validateFunc schema.SchemaValidateFunc) *schema.Schema {
+	return &schema.Schema{
+		Type:         schema.TypeString,
+		Optional:     true,
+		Computed:     true,
+		ValidateFunc: validateFunc,
+	}
+}
+
 func stringSchema(required bool, validateFunc schema.SchemaValidateFunc) *schema.Schema {
 	return &schema.Schema{
 		Type:         schema.TypeString,

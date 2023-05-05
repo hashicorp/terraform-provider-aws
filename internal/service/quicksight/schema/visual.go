@@ -264,12 +264,13 @@ func visualSubtitleLabelOptionsSchema() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualSubtitleLabelOptions.html
 		Type:     schema.TypeList,
 		Optional: true,
+		Computed: true,
 		MinItems: 1,
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"format_text": longFormatTextSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LongFormatText.html
-				"visibility":  stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+				"visibility":  stringOptionalComputedSchema(validation.StringInSlice(quicksight.Visibility_Values(), false)),
 			},
 		},
 	}
@@ -325,12 +326,13 @@ func visualTitleLabelOptionsSchema() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualTitleLabelOptions.html
 		Type:     schema.TypeList,
 		Optional: true,
+		Computed: true,
 		MinItems: 1,
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"format_text": shortFormatTextSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ShortFormatText.html
-				"visibility":  stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+				"visibility":  stringOptionalComputedSchema(validation.StringInSlice(quicksight.Visibility_Values(), false)),
 			},
 		},
 	}
