@@ -121,7 +121,7 @@ resource "aws_redshiftdata_batch_statement" "test" {
   cluster_identifier = aws_redshift_cluster.test.cluster_identifier
   database           = aws_redshift_cluster.test.database_name
   db_user            = aws_redshift_cluster.test.master_username
-  sqls                = ["CREATE GROUP group_name;","CREATE GROUP group_name2;"]
+  sqls               = ["CREATE GROUP group_name;", "CREATE GROUP group_name2;"]
 }
 `, rName))
 }
@@ -140,7 +140,7 @@ resource "aws_redshiftserverless_workgroup" "test" {
 resource "aws_redshiftdata_batch_statement" "test" {
   workgroup_name = aws_redshiftserverless_workgroup.test.workgroup_name
   database       = "dev"
-  sqls            = ["CREATE GROUP group_name;"]
+  sqls           = ["CREATE GROUP group_name;"]
 }
 `, rName)
 }
