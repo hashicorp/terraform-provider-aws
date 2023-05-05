@@ -19,7 +19,7 @@ resource "aws_redshiftdata_batch_statement" "example" {
   cluster_identifier = aws_redshift_cluster.example.cluster_identifier
   database           = aws_redshift_cluster.example.database_name
   db_user            = aws_redshift_cluster.example.master_username
-  sqls                = ["CREATE GROUP group_name;"]
+  sqls               = ["CREATE GROUP group_name;"]
 }
 ```
 
@@ -29,7 +29,7 @@ resource "aws_redshiftdata_batch_statement" "example" {
 resource "aws_redshiftdata_batch_statement" "example" {
   workgroup_name = aws_redshiftserverless_workgroup.example.workgroup_name
   database       = "dev"
-  sqls            = ["CREATE GROUP group_name;"]
+  sqls           = ["CREATE GROUP group_name;"]
 }
 ```
 
