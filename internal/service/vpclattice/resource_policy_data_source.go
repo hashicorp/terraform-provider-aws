@@ -2,6 +2,7 @@ package vpclattice
 
 import (
 	"context"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -36,7 +37,7 @@ const (
 func dataSourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient()
 
-	resourceArn := d.Id()
+	resourceArn := d.Get("resource_arn").(string)
 
 	policy, err := findResourcePolicyByID(ctx, conn, resourceArn)
 	if err != nil {
@@ -46,7 +47,6 @@ func dataSourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, m
 	if policy == nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionReading, DSNameResourcePolicy, d.Id(), err)
 	}
-
 	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.ToString(policy.Policy))
 
 	if err != nil {
@@ -54,6 +54,7 @@ func dataSourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.Set("policy", policyToSet)
+	d.SetId(resourceArn)
 
 	return nil
 }

@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccDataSourceResourcePolicy_basic(t *testing.T) {
+func TestAccDataSourceResourcePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
