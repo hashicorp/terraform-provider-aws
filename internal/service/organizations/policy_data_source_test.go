@@ -25,7 +25,7 @@ func TestAccOrganizationsPolicyDataSource_UnattachedPolicy(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationsPolicyDataSourceConfig_UnattachedPolicy(rName),
+				Config: testAccPolicyDataSourceConfig_unattachedPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "policy_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
@@ -38,7 +38,7 @@ func TestAccOrganizationsPolicyDataSource_UnattachedPolicy(t *testing.T) {
 	})
 }
 
-func testAccOrganizationsPolicyDataSourceConfig_UnattachedPolicy(rName string) string {
+func testAccPolicyDataSourceConfig_unattachedPolicy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {
   feature_set          = "ALL"
