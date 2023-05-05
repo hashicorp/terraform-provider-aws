@@ -1,4 +1,10 @@
 ## 4.67.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_appautoscaling_target: Fix `InvalidParameter: 1 validation error(s) found.
+minimum field size of 1, ListTagsForResourceInput.ResourceARN.` related to [Application Auto Scaling resource tagging](https://aws.amazon.com/about-aws/whats-new/2023/03/application-auto-scaling-resource-tagging/) introduced in [v4.66.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#4660-may--4-2023) ([#31214](https://github.com/hashicorp/terraform-provider-aws/issues/31214))
+
 ## 4.66.0 (May  4, 2023)
 
 NOTES:
