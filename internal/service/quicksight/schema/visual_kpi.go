@@ -447,3 +447,221 @@ func expandKPIProgressBarConditionalFormatting(tfList []interface{}) *quicksight
 
 	return options
 }
+
+func flattenKPIVisual(apiObject *quicksight.KPIVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"visual_id": aws.StringValue(apiObject.VisualId),
+	}
+	if apiObject.Actions != nil {
+		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
+	}
+	if apiObject.ChartConfiguration != nil {
+		tfMap["chart_configuration"] = flattenKPIConfiguration(apiObject.ChartConfiguration)
+	}
+	if apiObject.ConditionalFormatting != nil {
+		tfMap["conditional_formatting"] = flattenKPIConditionalFormatting(apiObject.ConditionalFormatting)
+	}
+	if apiObject.ColumnHierarchies != nil {
+		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+	}
+	if apiObject.Subtitle != nil {
+		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
+	}
+	if apiObject.Title != nil {
+		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenKPIConfiguration(apiObject *quicksight.KPIConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.FieldWells != nil {
+		tfMap["field_wells"] = flattenKPIFieldWells(apiObject.FieldWells)
+	}
+	if apiObject.KPIOptions != nil {
+		tfMap["kpi_options"] = flattenKPIOptions(apiObject.KPIOptions)
+	}
+	if apiObject.SortConfiguration != nil {
+		tfMap["sort_configuration"] = flattenKPISortConfiguration(apiObject.SortConfiguration)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenKPIFieldWells(apiObject *quicksight.KPIFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.TargetValues != nil {
+		tfMap["target_values"] = flattenMeasureFields(apiObject.TargetValues)
+	}
+	if apiObject.TrendGroups != nil {
+		tfMap["trend_groups"] = flattenDimensionFields(apiObject.TrendGroups)
+	}
+	if apiObject.Values != nil {
+		tfMap["values"] = flattenMeasureFields(apiObject.Values)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenKPIOptions(apiObject *quicksight.KPIOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Comparison != nil {
+		tfMap["comparison"] = flattenComparisonConfiguration(apiObject.Comparison)
+	}
+	if apiObject.PrimaryValueDisplayType != nil {
+		tfMap["primary_value_display_type"] = aws.StringValue(apiObject.PrimaryValueDisplayType)
+	}
+	if apiObject.PrimaryValueFontConfiguration != nil {
+		tfMap["primary_value_font_configuration"] = flattenFontConfiguration(apiObject.PrimaryValueFontConfiguration)
+	}
+	if apiObject.ProgressBar != nil {
+		tfMap["progress_bar"] = flattenProgressBarOptions(apiObject.ProgressBar)
+	}
+	if apiObject.SecondaryValue != nil {
+		tfMap["secondary_value"] = flattenSecondaryValueOptions(apiObject.SecondaryValue)
+	}
+	if apiObject.SecondaryValueFontConfiguration != nil {
+		tfMap["secondary_value_font_configuration"] = flattenFontConfiguration(apiObject.SecondaryValueFontConfiguration)
+	}
+	if apiObject.TrendArrows != nil {
+		tfMap["trend_arrows"] = flattenTrendArrowOptions(apiObject.TrendArrows)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenProgressBarOptions(apiObject *quicksight.ProgressBarOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Visibility != nil {
+		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenSecondaryValueOptions(apiObject *quicksight.SecondaryValueOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Visibility != nil {
+		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTrendArrowOptions(apiObject *quicksight.TrendArrowOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Visibility != nil {
+		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenKPISortConfiguration(apiObject *quicksight.KPISortConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.TrendGroupSort != nil {
+		tfMap["trend_group_sort"] = flattenFieldSortOptions(apiObject.TrendGroupSort)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenKPIConditionalFormatting(apiObject *quicksight.KPIConditionalFormatting) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ConditionalFormattingOptions != nil {
+		tfMap["conditional_formatting_options"] = flattenKPIConditionalFormattingOption(apiObject.ConditionalFormattingOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenKPIConditionalFormattingOption(apiObject []*quicksight.KPIConditionalFormattingOption) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if config.PrimaryValue != nil {
+			tfMap["primary_value"] = flattenKPIPrimaryValueConditionalFormatting(config.PrimaryValue)
+		}
+		if config.ProgressBar != nil {
+			tfMap["progress_bar"] = flattenKPIProgressBarConditionalFormatting(config.ProgressBar)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenKPIPrimaryValueConditionalFormatting(apiObject *quicksight.KPIPrimaryValueConditionalFormatting) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Icon != nil {
+		tfMap["icon"] = flattenConditionalFormattingIcon(apiObject.Icon)
+	}
+	if apiObject.TextColor != nil {
+		tfMap["text_color"] = flattenConditionalFormattingColor(apiObject.TextColor)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenKPIProgressBarConditionalFormatting(apiObject *quicksight.KPIProgressBarConditionalFormatting) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ForegroundColor != nil {
+		tfMap["foreground_color"] = flattenConditionalFormattingColor(apiObject.ForegroundColor)
+	}
+
+	return []interface{}{tfMap}
+}

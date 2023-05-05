@@ -1451,17 +1451,6 @@ func flattenVisuals(apiObject []*quicksight.Visual) []interface{} {
 	return tfList
 }
 
-func flattenKPIVisual(apiObject *quicksight.KPIVisual) []interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-	// TODO
-
-	return []interface{}{tfMap}
-}
-
 func flattenLineChartVisual(apiObject *quicksight.LineChartVisual) []interface{} {
 	if apiObject == nil {
 		return nil
