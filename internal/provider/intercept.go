@@ -235,28 +235,33 @@ func (r tagsInterceptor) run(ctx context.Context, d *schema.ResourceData, meta a
 					} else {
 						identifier = d.Get(identifierAttribute).(string)
 					}
-					o, n := d.GetChange(names.AttrTagsAll)
 
-					// If the service package has a generic resource update tags methods, call it.
-					var err error
+					// Some old resources may not have the required attribute set after Read:
+					// https://github.com/hashicorp/terraform-provider-aws/issues/31180
+					if identifier != "" {
+						o, n := d.GetChange(names.AttrTagsAll)
 
-					if v, ok := sp.(interface {
-						UpdateTags(context.Context, any, string, any, any) error
-					}); ok {
-						err = v.UpdateTags(ctx, meta, identifier, o, n)
-					} else if v, ok := sp.(interface {
-						UpdateTags(context.Context, any, string, string, any, any) error
-					}); ok && r.tags.ResourceType != "" {
-						err = v.UpdateTags(ctx, meta, identifier, r.tags.ResourceType, o, n)
-					}
+						// If the service package has a generic resource update tags methods, call it.
+						var err error
 
-					// ISO partitions may not support tagging, giving error.
-					if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
-						return ctx, diags
-					}
+						if v, ok := sp.(interface {
+							UpdateTags(context.Context, any, string, any, any) error
+						}); ok {
+							err = v.UpdateTags(ctx, meta, identifier, o, n)
+						} else if v, ok := sp.(interface {
+							UpdateTags(context.Context, any, string, string, any, any) error
+						}); ok && r.tags.ResourceType != "" {
+							err = v.UpdateTags(ctx, meta, identifier, r.tags.ResourceType, o, n)
+						}
 
-					if err != nil {
-						return ctx, sdkdiag.AppendErrorf(diags, "updating tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
+						// ISO partitions may not support tagging, giving error.
+						if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+							return ctx, diags
+						}
+
+						if err != nil {
+							return ctx, sdkdiag.AppendErrorf(diags, "updating tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
+						}
 					}
 				}
 				// TODO If the only change was to tags it would be nice to not call the resource's U handler.

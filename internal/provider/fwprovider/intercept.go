@@ -509,28 +509,32 @@ func (r tagsInterceptor) update(ctx context.Context, request resource.UpdateRequ
 					return ctx, diags
 				}
 
-				// If the service package has a generic resource update tags methods, call it.
-				var err error
+				// Some old resources may not have the required attribute set after Read:
+				// https://github.com/hashicorp/terraform-provider-aws/issues/31180
+				if identifier != "" {
+					// If the service package has a generic resource update tags methods, call it.
+					var err error
 
-				if v, ok := sp.(interface {
-					UpdateTags(context.Context, any, string, any, any) error
-				}); ok {
-					err = v.UpdateTags(ctx, meta, identifier, oldTagsAll, newTagsAll)
-				} else if v, ok := sp.(interface {
-					UpdateTags(context.Context, any, string, string, any, any) error
-				}); ok && r.tags.ResourceType != "" {
-					err = v.UpdateTags(ctx, meta, identifier, r.tags.ResourceType, oldTagsAll, newTagsAll)
-				}
+					if v, ok := sp.(interface {
+						UpdateTags(context.Context, any, string, any, any) error
+					}); ok {
+						err = v.UpdateTags(ctx, meta, identifier, oldTagsAll, newTagsAll)
+					} else if v, ok := sp.(interface {
+						UpdateTags(context.Context, any, string, string, any, any) error
+					}); ok && r.tags.ResourceType != "" {
+						err = v.UpdateTags(ctx, meta, identifier, r.tags.ResourceType, oldTagsAll, newTagsAll)
+					}
 
-				// ISO partitions may not support tagging, giving error.
-				if errs.IsUnsupportedOperationInPartitionError(meta.Partition, err) {
-					return ctx, diags
-				}
+					// ISO partitions may not support tagging, giving error.
+					if errs.IsUnsupportedOperationInPartitionError(meta.Partition, err) {
+						return ctx, diags
+					}
 
-				if err != nil {
-					diags.AddError(fmt.Sprintf("updating tags for %s %s (%s)", serviceName, resourceName, identifier), err.Error())
+					if err != nil {
+						diags.AddError(fmt.Sprintf("updating tags for %s %s (%s)", serviceName, resourceName, identifier), err.Error())
 
-					return ctx, diags
+						return ctx, diags
+					}
 				}
 			}
 			// TODO If the only change was to tags it would be nice to not call the resource's U handler.
