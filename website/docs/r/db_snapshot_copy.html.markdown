@@ -18,7 +18,7 @@ resource "aws_db_instance" "example" {
   engine            = "mysql"
   engine_version    = "5.6.21"
   instance_class    = "db.t2.micro"
-  name              = "baz"
+  db_name           = "baz"
   password          = "barbarbarbar"
   username          = "foo"
 

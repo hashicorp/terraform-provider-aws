@@ -64,7 +64,7 @@ resource "aws_db_instance" "bar" {
   engine              = data.aws_rds_engine_version.default.engine
   engine_version      = data.aws_rds_engine_version.default.version
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  name                = "baz"
+  db_name             = "baz"
   password            = "barbarbarbar"
   username            = "foo"
   skip_final_snapshot = true

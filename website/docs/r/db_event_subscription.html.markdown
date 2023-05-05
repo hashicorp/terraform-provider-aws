@@ -18,7 +18,7 @@ resource "aws_db_instance" "default" {
   engine               = "mysql"
   engine_version       = "5.6.17"
   instance_class       = "db.t2.micro"
-  name                 = "mydb"
+  db_name              = "mydb"
   username             = "foo"
   password             = "bar"
   db_subnet_group_name = "my_database_subnet_group"
