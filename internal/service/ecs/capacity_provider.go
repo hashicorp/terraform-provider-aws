@@ -317,24 +317,24 @@ func expandManagedScaling(configured interface{}) *ecs.ManagedScaling {
 		return nil
 	}
 
-	p := configured.([]interface{})[0].(map[string]interface{})
+	tfMap := configured.([]interface{})[0].(map[string]interface{})
 
 	managedScaling := ecs.ManagedScaling{}
 
-	if val, ok := p["instance_warmup_period"].(int); ok && val != 0 {
-		managedScaling.InstanceWarmupPeriod = aws.Int64(int64(val))
+	if v, ok := tfMap["instance_warmup_period"].(int); ok {
+		managedScaling.InstanceWarmupPeriod = aws.Int64(int64(v))
 	}
-	if val, ok := p["maximum_scaling_step_size"].(int); ok && val != 0 {
-		managedScaling.MaximumScalingStepSize = aws.Int64(int64(val))
+	if v, ok := tfMap["maximum_scaling_step_size"].(int); ok && v != 0 {
+		managedScaling.MaximumScalingStepSize = aws.Int64(int64(v))
 	}
-	if val, ok := p["minimum_scaling_step_size"].(int); ok && val != 0 {
-		managedScaling.MinimumScalingStepSize = aws.Int64(int64(val))
+	if v, ok := tfMap["minimum_scaling_step_size"].(int); ok && v != 0 {
+		managedScaling.MinimumScalingStepSize = aws.Int64(int64(v))
 	}
-	if val, ok := p["status"].(string); ok && len(val) > 0 {
-		managedScaling.Status = aws.String(val)
+	if v, ok := tfMap["status"].(string); ok && len(v) > 0 {
+		managedScaling.Status = aws.String(v)
 	}
-	if val, ok := p["target_capacity"].(int); ok && val != 0 {
-		managedScaling.TargetCapacity = aws.Int64(int64(val))
+	if v, ok := tfMap["target_capacity"].(int); ok && v != 0 {
+		managedScaling.TargetCapacity = aws.Int64(int64(v))
 	}
 
 	return &managedScaling
