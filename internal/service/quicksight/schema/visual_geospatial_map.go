@@ -168,7 +168,10 @@ func expandGeospatialMapConfiguration(tfList []interface{}) *quicksight.Geospati
 	if v, ok := tfMap["tooltip"].([]interface{}); ok && len(v) > 0 {
 		config.Tooltip = expandTooltipOptions(v)
 	}
-	if v, ok := tfMap["value_axis"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["visual_palatte"].([]interface{}); ok && len(v) > 0 {
+		config.VisualPalette = expandVisualPalette(v)
+	}
+	if v, ok := tfMap["window_options"].([]interface{}); ok && len(v) > 0 {
 		config.WindowOptions = expandGeospatialWindowOptions(v)
 	}
 

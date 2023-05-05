@@ -1451,17 +1451,6 @@ func flattenVisuals(apiObject []*quicksight.Visual) []interface{} {
 	return tfList
 }
 
-func flattenHeatMapVisual(apiObject *quicksight.HeatMapVisual) []interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-	// TODO
-
-	return []interface{}{tfMap}
-}
-
 func flattenHistogramVisual(apiObject *quicksight.HistogramVisual) []interface{} {
 	if apiObject == nil {
 		return nil
@@ -2165,4 +2154,64 @@ func flattenShortFormatText(apiObject *quicksight.ShortFormatText) []interface{}
 	}
 
 	return []interface{}{tfMap}
+}
+
+func flattenColorScale(apiObject *quicksight.ColorScale) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ColorFillType != nil {
+		tfMap["color_fill_type"] = aws.StringValue(apiObject.ColorFillType)
+	}
+	if apiObject.Colors != nil {
+		tfMap["colors"] = flattenDataColors(apiObject.Colors)
+	}
+	if apiObject.NullValueColor != nil {
+		tfMap["null_value_color"] = flattenDataColor(apiObject.NullValueColor)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenDataColor(apiObject *quicksight.DataColor) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Color != nil {
+		tfMap["color"] = aws.StringValue(apiObject.Color)
+	}
+	if apiObject.DataValue != nil {
+		tfMap["data_value"] = aws.Float64Value(apiObject.DataValue)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenDataColors(apiObject []*quicksight.DataColor) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if config.Color != nil {
+			tfMap["color"] = aws.StringValue(config.Color)
+		}
+		if config.DataValue != nil {
+			tfMap["data_value"] = aws.Float64Value(config.DataValue)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }

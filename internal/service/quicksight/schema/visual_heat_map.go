@@ -222,3 +222,118 @@ func expandHeatMapSortConfiguration(tfList []interface{}) *quicksight.HeatMapSor
 
 	return config
 }
+
+func flattenHeatMapVisual(apiObject *quicksight.HeatMapVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"visual_id": aws.StringValue(apiObject.VisualId),
+	}
+	if apiObject.Actions != nil {
+		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
+	}
+	if apiObject.ChartConfiguration != nil {
+		tfMap["chart_configuration"] = flattenHeatMapConfiguration(apiObject.ChartConfiguration)
+	}
+	if apiObject.ColumnHierarchies != nil {
+		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+	}
+	if apiObject.Subtitle != nil {
+		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
+	}
+	if apiObject.Title != nil {
+		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenHeatMapConfiguration(apiObject *quicksight.HeatMapConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ColorScale != nil {
+		tfMap["color_scale"] = flattenColorScale(apiObject.ColorScale)
+	}
+	if apiObject.ColumnLabelOptions != nil {
+		tfMap["column_label_options"] = flattenChartAxisLabelOptions(apiObject.ColumnLabelOptions)
+	}
+	if apiObject.DataLabels != nil {
+		tfMap["data_labels"] = flattenDataLabelOptions(apiObject.DataLabels)
+	}
+	if apiObject.FieldWells != nil {
+		tfMap["field_wells"] = flattenHeatMapFieldWells(apiObject.FieldWells)
+	}
+	if apiObject.Legend != nil {
+		tfMap["legend"] = flattenLegendOptions(apiObject.Legend)
+	}
+	if apiObject.RowLabelOptions != nil {
+		tfMap["row_label_options"] = flattenChartAxisLabelOptions(apiObject.RowLabelOptions)
+	}
+	if apiObject.SortConfiguration != nil {
+		tfMap["sort_configuration"] = flattenHeatMapSortConfiguration(apiObject.SortConfiguration)
+	}
+	if apiObject.Tooltip != nil {
+		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenHeatMapFieldWells(apiObject *quicksight.HeatMapFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.HeatMapAggregatedFieldWells != nil {
+		tfMap["heat_map_aggregated_field_wells"] = flattenHeatMapAggregatedFieldWells(apiObject.HeatMapAggregatedFieldWells)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenHeatMapAggregatedFieldWells(apiObject *quicksight.HeatMapAggregatedFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Columns != nil {
+		tfMap["columns"] = flattenDimensionField(apiObject.Columns)
+	}
+	if apiObject.Rows != nil {
+		tfMap["rows"] = flattenDimensionField(apiObject.Rows)
+	}
+	if apiObject.Values != nil {
+		tfMap["values"] = flattenMeasureField(apiObject.Values)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenHeatMapSortConfiguration(apiObject *quicksight.HeatMapSortConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.HeatMapColumnItemsLimitConfiguration != nil {
+		tfMap["heat_map_column_items_limit_configuration"] = flattenItemsLimitConfiguration(apiObject.HeatMapColumnItemsLimitConfiguration)
+	}
+	if apiObject.HeatMapColumnSort != nil {
+		tfMap["heat_map_column_sort"] = flattenFieldSortOptions(apiObject.HeatMapColumnSort)
+	}
+	if apiObject.HeatMapRowItemsLimitConfiguration != nil {
+		tfMap["heat_map_row_items_limit_configuration"] = flattenItemsLimitConfiguration(apiObject.HeatMapRowItemsLimitConfiguration)
+	}
+	if apiObject.HeatMapRowSort != nil {
+		tfMap["heat_map_row_sort"] = flattenFieldSortOptions(apiObject.HeatMapRowSort)
+	}
+
+	return []interface{}{tfMap}
+}
