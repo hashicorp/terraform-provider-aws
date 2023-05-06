@@ -157,6 +157,8 @@ func resourceDataIntegrationRead(ctx context.Context, d *schema.ResourceData, me
 	}
 	d.Set("source_uri", output.SourceURI)
 
+	SetTagsOut(ctx, output.Tags)
+
 	return nil
 }
 
