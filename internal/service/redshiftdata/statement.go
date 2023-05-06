@@ -233,7 +233,7 @@ func statusStatement(ctx context.Context, conn *redshiftdata.Client, id string) 
 	}
 }
 
-func waitStatementFinished(ctx context.Context, conn *redshiftdata.Client, id string, timeout time.Duration) (*redshiftdata.DescribeStatementOutput, error) {
+func waitStatementFinished(ctx context.Context, conn *redshiftdataapiservice.RedshiftDataAPIService, id string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			types.StatusStringPicked,
@@ -254,10 +254,10 @@ func waitStatementFinished(ctx context.Context, conn *redshiftdata.Client, id st
 			tfresource.SetLastError(err, errors.New(aws.ToString(output.Error)))
 		}
 
-		return output, err
+		return err
 	}
 
-	return nil, err
+	return err
 }
 
 func expandParameter(tfMap map[string]any) *types.SqlParameter {
