@@ -86,7 +86,7 @@ func dataSourceBucketRead(ctx context.Context, d *schema.ResourceData, meta inte
 		input := &s3.ListBucketsInput{}
 
 		log.Printf("[DEBUG] Checking for S3 bucket with prefix: %s", prefix)
-		listBucketOutput, err := conn.ListBuckets(input)
+		listBucketOutput, err := conn.ListBucketsWithContext(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "Failed listing S3 buckets: %s", err)
@@ -94,7 +94,7 @@ func dataSourceBucketRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 		for _, buc := range listBucketOutput.Buckets {
 			if strings.HasPrefix(*buc.Name, prefix) {
-				bucket = *buc.Name
+				bucket = aws.StringValue(buc.Name)
 				break
 			}
 		}
