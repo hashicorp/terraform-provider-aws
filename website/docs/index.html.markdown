@@ -313,7 +313,6 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 * `insecure` - (Optional) Whether to explicitly allow the provider to perform "insecure" SSL requests. If omitted, the default value is `false`.
 * `max_retries` - (Optional) Maximum number of times an API call is retried when AWS throttles requests or you experience transient failures.
   The delay between the subsequent API calls increases exponentially.
-  If omitted, the default value is `25`.
   Can also be set using the environment variable `AWS_MAX_ATTEMPTS`
   and the shared configuration parameter `max_attempts`.
 * `profile` - (Optional) AWS profile name as set in the shared configuration and credentials files.

@@ -419,7 +419,6 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		Endpoints:                      make(map[string]string),
 		HTTPProxy:                      d.Get("http_proxy").(string),
 		Insecure:                       d.Get("insecure").(bool),
-		MaxRetries:                     25, // Set default here, not in schema (muxing with v6 provider).
 		Profile:                        d.Get("profile").(string),
 		Region:                         d.Get("region").(string),
 		S3UsePathStyle:                 d.Get("s3_use_path_style").(bool),
