@@ -11,18 +11,19 @@ import (
 )
 
 func TestAccImageBuilderComponentDataSource_arn(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_imagebuilder_component.test"
 	resourceName := "aws_imagebuilder_component.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckComponentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckComponentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccComponentBuildVersionARNDataSourceConfig(rName),
+				Config: testAccComponentDataSourceConfig_buildVersionARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "change_description", resourceName, "change_description"),
@@ -44,7 +45,7 @@ func TestAccImageBuilderComponentDataSource_arn(t *testing.T) {
 	})
 }
 
-func testAccComponentBuildVersionARNDataSourceConfig(rName string) string {
+func testAccComponentDataSourceConfig_buildVersionARN(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_imagebuilder_component" "test" {
   data = yamlencode({

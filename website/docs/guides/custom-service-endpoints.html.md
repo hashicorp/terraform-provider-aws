@@ -106,8 +106,11 @@ provider "aws" {
   <li><code>ce</code> (or <code>costexplorer</code>)</li>
   <li><code>chime</code></li>
   <li><code>chimesdkidentity</code></li>
+  <li><code>chimesdkmediapipelines</code></li>
   <li><code>chimesdkmeetings</code></li>
   <li><code>chimesdkmessaging</code></li>
+  <li><code>chimesdkvoice</code></li>
+  <li><code>cleanrooms</code></li>
   <li><code>cloud9</code></li>
   <li><code>cloudcontrol</code> (or <code>cloudcontrolapi</code>)</li>
   <li><code>clouddirectory</code></li>
@@ -137,6 +140,7 @@ provider "aws" {
   <li><code>connect</code></li>
   <li><code>connectcontactlens</code></li>
   <li><code>connectparticipant</code></li>
+  <li><code>controltower</code></li>
   <li><code>cur</code> (or <code>costandusagereportservice</code>)</li>
   <li><code>customerprofiles</code></li>
   <li><code>databrew</code> (or <code>gluedatabrew</code>)</li>
@@ -153,6 +157,7 @@ provider "aws" {
   <li><code>dlm</code></li>
   <li><code>dms</code> (or <code>databasemigration</code> or <code>databasemigrationservice</code>)</li>
   <li><code>docdb</code></li>
+  <li><code>docdbelastic</code></li>
   <li><code>drs</code></li>
   <li><code>ds</code> (or <code>directoryservice</code>)</li>
   <li><code>dynamodb</code></li>
@@ -166,7 +171,7 @@ provider "aws" {
   <li><code>efs</code></li>
   <li><code>eks</code></li>
   <li><code>elasticache</code></li>
-  <li><code>elasticbeanstalk</code></li>
+  <li><code>elasticbeanstalk</code> (or <code>beanstalk</code>)</li>
   <li><code>elasticinference</code></li>
   <li><code>elasticsearch</code> (or <code>es</code> or <code>elasticsearchservice</code>)</li>
   <li><code>elastictranscoder</code></li>
@@ -174,6 +179,7 @@ provider "aws" {
   <li><code>elbv2</code> (or <code>elasticloadbalancingv2</code>)</li>
   <li><code>emr</code></li>
   <li><code>emrcontainers</code></li>
+  <li><code>emrserverless</code></li>
   <li><code>events</code> (or <code>eventbridge</code> or <code>cloudwatchevents</code>)</li>
   <li><code>evidently</code> (or <code>cloudwatchevidently</code>)</li>
   <li><code>finspace</code></li>
@@ -201,7 +207,8 @@ provider "aws" {
   <li><code>identitystore</code></li>
   <li><code>imagebuilder</code></li>
   <li><code>inspector</code></li>
-  <li><code>inspector2</code></li>
+  <li><code>inspector2</code> (or <code>inspectorv2</code>)</li>
+  <li><code>internetmonitor</code></li>
   <li><code>iot</code></li>
   <li><code>iot1clickdevices</code> (or <code>iot1clickdevicesservice</code>)</li>
   <li><code>iot1clickprojects</code></li>
@@ -218,7 +225,8 @@ provider "aws" {
   <li><code>iottwinmaker</code></li>
   <li><code>iotwireless</code></li>
   <li><code>ivs</code></li>
-  <li><code>kafka</code></li>
+  <li><code>ivschat</code></li>
+  <li><code>kafka</code> (or <code>msk</code>)</li>
   <li><code>kafkaconnect</code></li>
   <li><code>kendra</code></li>
   <li><code>keyspaces</code></li>
@@ -232,14 +240,14 @@ provider "aws" {
   <li><code>kms</code></li>
   <li><code>lakeformation</code></li>
   <li><code>lambda</code></li>
-  <li><code>lexmodels</code> (or <code>lexmodelbuilding</code> or <code>lexmodelbuildingservice</code>)</li>
+  <li><code>lexmodels</code> (or <code>lexmodelbuilding</code> or <code>lexmodelbuildingservice</code> or <code>lex</code>)</li>
   <li><code>lexmodelsv2</code> (or <code>lexv2models</code>)</li>
   <li><code>lexruntime</code> (or <code>lexruntimeservice</code>)</li>
   <li><code>lexruntimev2</code> (or <code>lexv2runtime</code>)</li>
   <li><code>licensemanager</code></li>
   <li><code>lightsail</code></li>
   <li><code>location</code> (or <code>locationservice</code>)</li>
-  <li><code>logs</code> (or <code>cloudwatchlogs</code>)</li>
+  <li><code>logs</code> (or <code>cloudwatchlog</code> or <code>cloudwatchlogs</code>)</li>
   <li><code>lookoutequipment</code></li>
   <li><code>lookoutmetrics</code></li>
   <li><code>lookoutvision</code> (or <code>lookoutforvision</code>)</li>
@@ -273,7 +281,9 @@ provider "aws" {
   <li><code>networkfirewall</code></li>
   <li><code>networkmanager</code></li>
   <li><code>nimble</code> (or <code>nimblestudio</code>)</li>
+  <li><code>oam</code> (or <code>cloudwatchobservabilityaccessmanager</code>)</li>
   <li><code>opensearch</code> (or <code>opensearchservice</code>)</li>
+  <li><code>opensearchserverless</code></li>
   <li><code>opsworks</code></li>
   <li><code>opsworkscm</code></li>
   <li><code>organizations</code></li>
@@ -286,6 +296,7 @@ provider "aws" {
   <li><code>pinpoint</code></li>
   <li><code>pinpointemail</code></li>
   <li><code>pinpointsmsvoice</code></li>
+  <li><code>pipes</code></li>
   <li><code>polly</code></li>
   <li><code>pricing</code></li>
   <li><code>proton</code></li>
@@ -298,11 +309,14 @@ provider "aws" {
   <li><code>rdsdata</code> (or <code>rdsdataservice</code>)</li>
   <li><code>redshift</code></li>
   <li><code>redshiftdata</code> (or <code>redshiftdataapiservice</code>)</li>
+  <li><code>redshiftserverless</code></li>
   <li><code>rekognition</code></li>
   <li><code>resiliencehub</code></li>
+  <li><code>resourceexplorer2</code></li>
   <li><code>resourcegroups</code></li>
   <li><code>resourcegroupstaggingapi</code> (or <code>resourcegroupstagging</code>)</li>
   <li><code>robomaker</code></li>
+  <li><code>rolesanywhere</code></li>
   <li><code>route53</code></li>
   <li><code>route53domains</code></li>
   <li><code>route53recoverycluster</code></li>
@@ -319,9 +333,11 @@ provider "aws" {
   <li><code>sagemakerfeaturestoreruntime</code></li>
   <li><code>sagemakerruntime</code></li>
   <li><code>savingsplans</code></li>
+  <li><code>scheduler</code></li>
   <li><code>schemas</code></li>
   <li><code>secretsmanager</code></li>
   <li><code>securityhub</code></li>
+  <li><code>securitylake</code></li>
   <li><code>serverlessrepo</code> (or <code>serverlessapprepo</code> or <code>serverlessapplicationrepository</code>)</li>
   <li><code>servicecatalog</code></li>
   <li><code>servicecatalogappregistry</code> (or <code>appregistry</code>)</li>
@@ -357,6 +373,7 @@ provider "aws" {
   <li><code>transfer</code></li>
   <li><code>translate</code></li>
   <li><code>voiceid</code></li>
+  <li><code>vpclattice</code></li>
   <li><code>waf</code></li>
   <li><code>wafregional</code></li>
   <li><code>wafv2</code></li>

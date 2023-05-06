@@ -2,6 +2,7 @@ package deploy
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"sort"
@@ -12,25 +13,30 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_codedeploy_deployment_group", name="Deployment Group")
+// @Tags(identifierAttribute="arn")
 func ResourceDeploymentGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDeploymentGroupCreate,
-		Read:   resourceDeploymentGroupRead,
-		Update: resourceDeploymentGroupUpdate,
-		Delete: resourceDeploymentGroupDelete,
+		CreateWithoutTimeout: resourceDeploymentGroupCreate,
+		ReadWithoutTimeout:   resourceDeploymentGroupRead,
+		UpdateWithoutTimeout: resourceDeploymentGroupUpdate,
+		DeleteWithoutTimeout: resourceDeploymentGroupDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), ":")
 
 				if len(idParts) != 2 {
@@ -39,7 +45,7 @@ func ResourceDeploymentGroup() *schema.Resource {
 
 				applicationName := idParts[0]
 				deploymentGroupName := idParts[1]
-				conn := meta.(*conns.AWSClient).DeployConn
+				conn := meta.(*conns.AWSClient).DeployConn()
 
 				input := &codedeploy.GetDeploymentGroupInput{
 					ApplicationName:     aws.String(applicationName),
@@ -47,7 +53,7 @@ func ResourceDeploymentGroup() *schema.Resource {
 				}
 
 				log.Printf("[DEBUG] Reading CodeDeploy Application: %s", input)
-				output, err := conn.GetDeploymentGroup(input)
+				output, err := conn.GetDeploymentGroupWithContext(ctx, input)
 
 				if err != nil {
 					return []*schema.ResourceData{}, err
@@ -476,28 +482,26 @@ func ResourceDeploymentGroup() *schema.Resource {
 				},
 				Set: resourceTriggerHashConfig,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceDeploymentGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeployConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-	// required fields
+func resourceDeploymentGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DeployConn()
+
 	applicationName := d.Get("app_name").(string)
 	deploymentGroupName := d.Get("deployment_group_name").(string)
 	serviceRoleArn := d.Get("service_role_arn").(string)
-
 	input := codedeploy.CreateDeploymentGroupInput{
 		ApplicationName:     aws.String(applicationName),
 		DeploymentGroupName: aws.String(deploymentGroupName),
 		ServiceRoleArn:      aws.String(serviceRoleArn),
-		Tags:                Tags(tags.IgnoreAWS()),
+		Tags:                GetTagsIn(ctx),
 	}
 
 	if attr, ok := d.GetOk("deployment_style"); ok {
@@ -526,7 +530,7 @@ func resourceDeploymentGroupCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if attr, ok := d.GetOk("ecs_service"); ok {
-		input.EcsServices = expandCodeDeployEcsServices(attr.([]interface{}))
+		input.EcsServices = expandECSServices(attr.([]interface{}))
 	}
 
 	if attr, ok := d.GetOk("trigger_configuration"); ok {
@@ -554,45 +558,42 @@ func resourceDeploymentGroupCreate(d *schema.ResourceData, meta interface{}) err
 
 	var resp *codedeploy.CreateDeploymentGroupOutput
 	var err error
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-		resp, err = conn.CreateDeploymentGroup(&input)
+	err = retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
+		resp, err = conn.CreateDeploymentGroupWithContext(ctx, &input)
 
 		if tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeInvalidRoleException) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if tfawserr.ErrMessageContains(err, codedeploy.ErrCodeInvalidTriggerConfigException, "Topic ARN") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
 	})
 
 	if tfresource.TimedOut(err) {
-		resp, err = conn.CreateDeploymentGroup(&input)
+		resp, err = conn.CreateDeploymentGroupWithContext(ctx, &input)
 	}
 	if err != nil {
-		return fmt.Errorf("Error creating CodeDeploy deployment group: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Error creating CodeDeploy deployment group: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.DeploymentGroupId))
 
-	return resourceDeploymentGroupRead(d, meta)
+	return append(diags, resourceDeploymentGroupRead(ctx, d, meta)...)
 }
 
-func resourceDeploymentGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeployConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	log.Printf("[DEBUG] Reading CodeDeploy DeploymentGroup %s", d.Id())
+func resourceDeploymentGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DeployConn()
 
 	deploymentGroupName := d.Get("deployment_group_name").(string)
-	resp, err := conn.GetDeploymentGroup(&codedeploy.GetDeploymentGroupInput{
+	resp, err := conn.GetDeploymentGroupWithContext(ctx, &codedeploy.GetDeploymentGroupInput{
 		ApplicationName:     aws.String(d.Get("app_name").(string)),
 		DeploymentGroupName: aws.String(deploymentGroupName),
 	})
@@ -600,11 +601,11 @@ func resourceDeploymentGroupRead(d *schema.ResourceData, meta interface{}) error
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeDeploymentGroupDoesNotExistException) {
 		log.Printf("[WARN] CodeDeploy Deployment Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("finding CodeDeploy Deployment Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "finding CodeDeploy Deployment Group (%s): %s", d.Id(), err)
 	}
 
 	group := resp.DeploymentGroupInfo
@@ -631,71 +632,55 @@ func resourceDeploymentGroupRead(d *schema.ResourceData, meta interface{}) error
 		autoScalingGroups[i] = aws.StringValue(autoScalingGroup.Name)
 	}
 	if err := d.Set("autoscaling_groups", autoScalingGroups); err != nil {
-		return fmt.Errorf("error setting autoscaling_groups: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting autoscaling_groups: %s", err)
 	}
 
 	if err := d.Set("deployment_style", FlattenDeploymentStyle(group.DeploymentStyle)); err != nil {
-		return fmt.Errorf("error setting deployment_style: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting deployment_style: %s", err)
 	}
 
 	if err := d.Set("ec2_tag_set", ec2TagSetToMap(group.Ec2TagSet)); err != nil {
-		return fmt.Errorf("error setting ec2_tag_set: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting ec2_tag_set: %s", err)
 	}
 
 	if err := d.Set("ec2_tag_filter", ec2TagFiltersToMap(group.Ec2TagFilters)); err != nil {
-		return fmt.Errorf("error setting ec2_tag_filter: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting ec2_tag_filter: %s", err)
 	}
 
-	if err := d.Set("ecs_service", flattenCodeDeployEcsServices(group.EcsServices)); err != nil {
-		return fmt.Errorf("error setting ecs_service: %w", err)
+	if err := d.Set("ecs_service", flattenECSServices(group.EcsServices)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ecs_service: %s", err)
 	}
 
 	if err := d.Set("on_premises_instance_tag_filter", onPremisesTagFiltersToMap(group.OnPremisesInstanceTagFilters)); err != nil {
-		return fmt.Errorf("error setting on_premises_instance_tag_filter: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting on_premises_instance_tag_filter: %s", err)
 	}
 
 	if err := d.Set("trigger_configuration", TriggerConfigsToMap(group.TriggerConfigurations)); err != nil {
-		return fmt.Errorf("error setting trigger_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting trigger_configuration: %s", err)
 	}
 
 	if err := d.Set("auto_rollback_configuration", AutoRollbackConfigToMap(group.AutoRollbackConfiguration)); err != nil {
-		return fmt.Errorf("error setting auto_rollback_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting auto_rollback_configuration: %s", err)
 	}
 
 	if err := d.Set("alarm_configuration", AlarmConfigToMap(group.AlarmConfiguration)); err != nil {
-		return fmt.Errorf("error setting alarm_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting alarm_configuration: %s", err)
 	}
 
 	if err := d.Set("load_balancer_info", FlattenLoadBalancerInfo(group.LoadBalancerInfo)); err != nil {
-		return fmt.Errorf("error setting load_balancer_info: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting load_balancer_info: %s", err)
 	}
 
 	if err := d.Set("blue_green_deployment_config", FlattenBlueGreenDeploymentConfig(group.BlueGreenDeploymentConfiguration)); err != nil {
-		return fmt.Errorf("error setting blue_green_deployment_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting blue_green_deployment_config: %s", err)
 	}
 
-	tags, err := ListTags(conn, groupArn)
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for CodeDeploy Deployment Group (%s): %w", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceDeploymentGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeployConn
+func resourceDeploymentGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DeployConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		// required fields
@@ -751,7 +736,7 @@ func resourceDeploymentGroupUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		if d.HasChange("ecs_service") {
-			input.EcsServices = expandCodeDeployEcsServices(d.Get("ecs_service").([]interface{}))
+			input.EcsServices = expandECSServices(d.Get("ecs_service").([]interface{}))
 		}
 
 		if d.HasChange("trigger_configuration") {
@@ -783,60 +768,53 @@ func resourceDeploymentGroupUpdate(d *schema.ResourceData, meta interface{}) err
 		log.Printf("[DEBUG] Updating CodeDeploy DeploymentGroup %s", d.Id())
 
 		var err error
-		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-			_, err = conn.UpdateDeploymentGroup(&input)
+		err = retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
+			_, err = conn.UpdateDeploymentGroupWithContext(ctx, &input)
 
 			if tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeInvalidRoleException) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			if tfawserr.ErrMessageContains(err, codedeploy.ErrCodeInvalidTriggerConfigException, "Topic ARN") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 
 			return nil
 		})
 
 		if tfresource.TimedOut(err) {
-			_, err = conn.UpdateDeploymentGroup(&input)
+			_, err = conn.UpdateDeploymentGroupWithContext(ctx, &input)
 		}
 		if err != nil {
-			return fmt.Errorf("error updating CodeDeploy deployment group (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CodeDeploy deployment group (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating CodeDeploy Deployment Group (%s) tags: %w", d.Get("arn").(string), err)
-		}
-	}
-
-	return resourceDeploymentGroupRead(d, meta)
+	return append(diags, resourceDeploymentGroupRead(ctx, d, meta)...)
 }
 
-func resourceDeploymentGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeployConn
+func resourceDeploymentGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DeployConn()
 
 	log.Printf("[DEBUG] Deleting CodeDeploy DeploymentGroup %s", d.Id())
-	_, err := conn.DeleteDeploymentGroup(&codedeploy.DeleteDeploymentGroupInput{
+	_, err := conn.DeleteDeploymentGroupWithContext(ctx, &codedeploy.DeleteDeploymentGroupInput{
 		ApplicationName:     aws.String(d.Get("app_name").(string)),
 		DeploymentGroupName: aws.String(d.Get("deployment_group_name").(string)),
 	})
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeDeploymentGroupDoesNotExistException) {
-			return nil
+			return diags
 		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting CodeDeploy Deployment Group (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 // buildOnPremTagFilters converts raw schema lists into a list of
@@ -956,7 +934,7 @@ func BuildAlarmConfig(configured []interface{}) *codedeploy.AlarmConfiguration {
 	return result
 }
 
-func expandCodeDeployEcsServices(l []interface{}) []*codedeploy.ECSService {
+func expandECSServices(l []interface{}) []*codedeploy.ECSService {
 	ecsServices := make([]*codedeploy.ECSService, 0)
 
 	for _, mRaw := range l {
@@ -977,7 +955,7 @@ func expandCodeDeployEcsServices(l []interface{}) []*codedeploy.ECSService {
 	return ecsServices
 }
 
-func expandCodeDeployElbInfo(l []interface{}) []*codedeploy.ELBInfo {
+func expandELBInfo(l []interface{}) []*codedeploy.ELBInfo {
 	elbInfos := []*codedeploy.ELBInfo{}
 
 	for _, mRaw := range l {
@@ -997,7 +975,7 @@ func expandCodeDeployElbInfo(l []interface{}) []*codedeploy.ELBInfo {
 	return elbInfos
 }
 
-func expandCodeDeployTargetGroupInfo(l []interface{}) []*codedeploy.TargetGroupInfo {
+func expandTargetGroupInfo(l []interface{}) []*codedeploy.TargetGroupInfo {
 	targetGroupInfos := []*codedeploy.TargetGroupInfo{}
 
 	for _, mRaw := range l {
@@ -1017,7 +995,7 @@ func expandCodeDeployTargetGroupInfo(l []interface{}) []*codedeploy.TargetGroupI
 	return targetGroupInfos
 }
 
-func expandCodeDeployTargetGroupPairInfo(l []interface{}) []*codedeploy.TargetGroupPairInfo {
+func expandTargetGroupPairInfo(l []interface{}) []*codedeploy.TargetGroupPairInfo {
 	targetGroupPairInfos := []*codedeploy.TargetGroupPairInfo{}
 
 	for _, mRaw := range l {
@@ -1028,9 +1006,9 @@ func expandCodeDeployTargetGroupPairInfo(l []interface{}) []*codedeploy.TargetGr
 		m := mRaw.(map[string]interface{})
 
 		targetGroupPairInfo := &codedeploy.TargetGroupPairInfo{
-			ProdTrafficRoute: expandCodeDeployTrafficRoute(m["prod_traffic_route"].([]interface{})),
-			TargetGroups:     expandCodeDeployTargetGroupInfo(m["target_group"].([]interface{})),
-			TestTrafficRoute: expandCodeDeployTrafficRoute(m["test_traffic_route"].([]interface{})),
+			ProdTrafficRoute: expandTrafficRoute(m["prod_traffic_route"].([]interface{})),
+			TargetGroups:     expandTargetGroupInfo(m["target_group"].([]interface{})),
+			TestTrafficRoute: expandTrafficRoute(m["test_traffic_route"].([]interface{})),
 		}
 
 		targetGroupPairInfos = append(targetGroupPairInfos, targetGroupPairInfo)
@@ -1039,7 +1017,7 @@ func expandCodeDeployTargetGroupPairInfo(l []interface{}) []*codedeploy.TargetGr
 	return targetGroupPairInfos
 }
 
-func expandCodeDeployTrafficRoute(l []interface{}) *codedeploy.TrafficRoute {
+func expandTrafficRoute(l []interface{}) *codedeploy.TrafficRoute {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -1084,15 +1062,15 @@ func ExpandLoadBalancerInfo(list []interface{}) *codedeploy.LoadBalancerInfo {
 	lbInfo := list[0].(map[string]interface{})
 
 	if attr, ok := lbInfo["elb_info"]; ok && attr.(*schema.Set).Len() > 0 {
-		loadBalancerInfo.ElbInfoList = expandCodeDeployElbInfo(attr.(*schema.Set).List())
+		loadBalancerInfo.ElbInfoList = expandELBInfo(attr.(*schema.Set).List())
 	}
 
 	if attr, ok := lbInfo["target_group_info"]; ok && attr.(*schema.Set).Len() > 0 {
-		loadBalancerInfo.TargetGroupInfoList = expandCodeDeployTargetGroupInfo(attr.(*schema.Set).List())
+		loadBalancerInfo.TargetGroupInfoList = expandTargetGroupInfo(attr.(*schema.Set).List())
 	}
 
 	if attr, ok := lbInfo["target_group_pair_info"]; ok && len(attr.([]interface{})) > 0 {
-		loadBalancerInfo.TargetGroupPairInfoList = expandCodeDeployTargetGroupPairInfo(attr.([]interface{}))
+		loadBalancerInfo.TargetGroupPairInfoList = expandTargetGroupPairInfo(attr.([]interface{}))
 	}
 
 	return loadBalancerInfo
@@ -1273,7 +1251,7 @@ func AlarmConfigToMap(config *codedeploy.AlarmConfiguration) []map[string]interf
 	return result
 }
 
-func flattenCodeDeployEcsServices(ecsServices []*codedeploy.ECSService) []interface{} {
+func flattenECSServices(ecsServices []*codedeploy.ECSService) []interface{} {
 	l := make([]interface{}, 0)
 
 	for _, ecsService := range ecsServices {
@@ -1292,7 +1270,7 @@ func flattenCodeDeployEcsServices(ecsServices []*codedeploy.ECSService) []interf
 	return l
 }
 
-func flattenCodeDeployElbInfo(elbInfos []*codedeploy.ELBInfo) []interface{} {
+func flattenELBInfo(elbInfos []*codedeploy.ELBInfo) []interface{} {
 	l := make([]interface{}, 0)
 
 	for _, elbInfo := range elbInfos {
@@ -1310,7 +1288,7 @@ func flattenCodeDeployElbInfo(elbInfos []*codedeploy.ELBInfo) []interface{} {
 	return l
 }
 
-func flattenCodeDeployTargetGroupInfo(targetGroupInfos []*codedeploy.TargetGroupInfo) []interface{} {
+func flattenTargetGroupInfo(targetGroupInfos []*codedeploy.TargetGroupInfo) []interface{} {
 	l := make([]interface{}, 0)
 
 	for _, targetGroupInfo := range targetGroupInfos {
@@ -1328,7 +1306,7 @@ func flattenCodeDeployTargetGroupInfo(targetGroupInfos []*codedeploy.TargetGroup
 	return l
 }
 
-func flattenCodeDeployTargetGroupPairInfo(targetGroupPairInfos []*codedeploy.TargetGroupPairInfo) []interface{} {
+func flattenTargetGroupPairInfo(targetGroupPairInfos []*codedeploy.TargetGroupPairInfo) []interface{} {
 	l := make([]interface{}, 0)
 
 	for _, targetGroupPairInfo := range targetGroupPairInfos {
@@ -1337,9 +1315,9 @@ func flattenCodeDeployTargetGroupPairInfo(targetGroupPairInfos []*codedeploy.Tar
 		}
 
 		m := map[string]interface{}{
-			"prod_traffic_route": flattenCodeDeployTrafficRoute(targetGroupPairInfo.ProdTrafficRoute),
-			"target_group":       flattenCodeDeployTargetGroupInfo(targetGroupPairInfo.TargetGroups),
-			"test_traffic_route": flattenCodeDeployTrafficRoute(targetGroupPairInfo.TestTrafficRoute),
+			"prod_traffic_route": flattenTrafficRoute(targetGroupPairInfo.ProdTrafficRoute),
+			"target_group":       flattenTargetGroupInfo(targetGroupPairInfo.TargetGroups),
+			"test_traffic_route": flattenTrafficRoute(targetGroupPairInfo.TestTrafficRoute),
 		}
 
 		l = append(l, m)
@@ -1348,7 +1326,7 @@ func flattenCodeDeployTargetGroupPairInfo(targetGroupPairInfos []*codedeploy.Tar
 	return l
 }
 
-func flattenCodeDeployTrafficRoute(trafficRoute *codedeploy.TrafficRoute) []interface{} {
+func flattenTrafficRoute(trafficRoute *codedeploy.TrafficRoute) []interface{} {
 	if trafficRoute == nil {
 		return []interface{}{}
 	}
@@ -1386,9 +1364,9 @@ func FlattenLoadBalancerInfo(loadBalancerInfo *codedeploy.LoadBalancerInfo) []in
 	}
 
 	m := map[string]interface{}{
-		"elb_info":               schema.NewSet(LoadBalancerInfoHash, flattenCodeDeployElbInfo(loadBalancerInfo.ElbInfoList)),
-		"target_group_info":      schema.NewSet(LoadBalancerInfoHash, flattenCodeDeployTargetGroupInfo(loadBalancerInfo.TargetGroupInfoList)),
-		"target_group_pair_info": flattenCodeDeployTargetGroupPairInfo(loadBalancerInfo.TargetGroupPairInfoList),
+		"elb_info":               schema.NewSet(LoadBalancerInfoHash, flattenELBInfo(loadBalancerInfo.ElbInfoList)),
+		"target_group_info":      schema.NewSet(LoadBalancerInfoHash, flattenTargetGroupInfo(loadBalancerInfo.TargetGroupInfoList)),
+		"target_group_pair_info": flattenTargetGroupPairInfo(loadBalancerInfo.TargetGroupPairInfoList),
 	}
 
 	return []interface{}{m}
@@ -1397,7 +1375,6 @@ func FlattenLoadBalancerInfo(loadBalancerInfo *codedeploy.LoadBalancerInfo) []in
 // FlattenBlueGreenDeploymentConfig converts a codedeploy.BlueGreenDeploymentConfiguration object
 // into a []map[string]interface{} list containing a single item
 func FlattenBlueGreenDeploymentConfig(config *codedeploy.BlueGreenDeploymentConfiguration) []map[string]interface{} {
-
 	if config == nil {
 		return nil
 	}

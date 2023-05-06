@@ -8,7 +8,7 @@ description: |-
 
 # Terraform AWS Provider Version 4 Upgrade Guide
 
-Version 4.0.0 of the AWS provider for Terraform is a major release and includes some changes that you will need to consider when upgrading. We intend this guide to help with that process and focus only on changes from version 3.X to version 4.0.0. See the [Version 3 Upgrade Guide](/docs/providers/aws/guides/version-3-upgrade.html) for information about upgrading from 1.X to version 3.0.0.
+Version 4.0.0 of the AWS provider for Terraform is a major release and includes some changes that you will need to consider when upgrading. We intend this guide to help with that process and focus only on changes from version 3.X to version 4.0.0. See the [Version 3 Upgrade Guide](/docs/providers/aws/guides/version-3-upgrade.html) for information about upgrading from 2.X to version 3.0.0.
 
 We previously marked most of the changes we outline in this guide as deprecated in the Terraform plan/apply output throughout previous provider releases. You can find these changes, including deprecation notices, in the [Terraform AWS Provider CHANGELOG](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md).
 
@@ -21,7 +21,7 @@ See [Changes to Authentication](#changes-to-authentication) for more details.
 
 ~> **NOTE:** Version 4.0.0 of the AWS Provider will be the last major version to support [EC2-Classic resources](#ec2-classic-resource-and-data-source-support) as AWS plans to fully retire EC2-Classic Networking. See the [AWS News Blog](https://aws.amazon.com/blogs/aws/ec2-classic-is-retiring-heres-how-to-prepare/) for additional details.
 
-~> **NOTE:** Version 4.0.0 and 4.x.x versions of the AWS Provider will be the last versions compatible with Terraform 0.12-0.15.
+~> **NOTE:** Version 4.0.0 of the AWS Provider will be the last major version to support [Macie Classic resources](#macie-classic-resource-support) as AWS plans to fully retire Macie Classic. See the [Amazon Macie Classic FAQs](https://aws.amazon.com/macie/classic-faqs/) for additional details.
 
 Upgrade topics:
 
@@ -74,7 +74,6 @@ Upgrade topics:
 - [Resource: aws_fsx_ontap_storage_virtual_machine](#resource-aws_fsx_ontap_storage_virtual_machine)
 - [Resource: aws_lb_target_group](#resource-aws_lb_target_group)
 - [Resource: aws_s3_bucket_object](#resource-aws_s3_bucket_object)
-- [Resource: aws_spot_instance_request](#resource-aws_spot_instance_request)
 
 <!-- /TOC -->
 
@@ -83,9 +82,9 @@ Additional Topics:
 <!-- TOC depthFrom:2 depthTo:2 -->
 
 - [EC2-Classic resource and data source support](#ec2-classic-resource-and-data-source-support)
+- [Macie Classic resource support](#macie-classic-resource-support)
 
 <!-- /TOC -->
-
 
 ## Provider Version Configuration
 
@@ -490,6 +489,8 @@ resource "aws_s3_bucket_cors_configuration" "example" {
 ```
 
 ### Migrating to `aws_s3_bucket_lifecycle_configuration`
+
+~> **Note:** In version `3.x` of the provider, the `lifecycle_rule.id` argument was optional, while in version `4.x`, the `aws_s3_bucket_lifecycle_configuration.rule.id` argument required. Use the AWS CLI s3api [get-bucket-lifecycle-configuration](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/s3api/get-bucket-lifecycle-configuration.html) to get the source bucket's lifecycle configuration to determine the ID.
 
 #### For Lifecycle Rules with no `prefix` previously configured
 
@@ -906,7 +907,7 @@ resource "aws_s3_bucket" "example" {
 }
 
 resource "aws_s3_bucket_policy" "example" {
-  bucket = aws_s3_bucket.accesslogs_bucket.id
+  bucket = aws_s3_bucket.example.id
   policy = <<EOF
 {
   "Id": "Policy1446577137248",
@@ -1200,7 +1201,7 @@ When you create an object whose `version_id` you need and an `aws_s3_bucket_vers
 
 ~> **NOTE:** For critical and/or production S3 objects, do not create a bucket, enable versioning, and create an object in the bucket within the same configuration. Doing so will not allow the AWS-recommended 15 minutes between enabling versioning and writing to the bucket.
 
-This example shows the `aws_s3_object.example` depending implicitly on the versioning resource through the reference to `aws_s3_bucket_versioning.example.bucket` to define `bucket`:
+This example shows the `aws_s3_object.example` depending implicitly on the versioning resource through the reference to `aws_s3_bucket_versioning.example.id` to define `bucket`:
 
 ```terraform
 resource "aws_s3_bucket" "example" {
@@ -1216,7 +1217,7 @@ resource "aws_s3_bucket_versioning" "example" {
 }
 
 resource "aws_s3_object" "example" {
-  bucket = aws_s3_bucket_versioning.example.bucket
+  bucket = aws_s3_bucket_versioning.example.id
   key    = "droeloe"
   source = "example.txt"
 }
@@ -2205,9 +2206,9 @@ You will get the following error after upgrading:
 ```
 │ Error: Value for unconfigurable attribute
 │
-│   with aws_s3_bucket.accesslogs_bucket,
-│   on main.tf line 1, in resource "aws_s3_bucket" "accesslogs_bucket":
-│    1: resource "aws_s3_bucket" "accesslogs_bucket" {
+│   with aws_s3_bucket.example,
+│   on main.tf line 1, in resource "aws_s3_bucket" "example":
+│    1: resource "aws_s3_bucket" "example" {
 │
 │ Can't configure a value for "policy": its value will be decided automatically based on the result of applying this configuration.
 ```
@@ -2223,7 +2224,7 @@ resource "aws_s3_bucket" "example" {
 }
 
 resource "aws_s3_bucket_policy" "example" {
-  bucket = aws_s3_bucket.accesslogs_bucket.id
+  bucket = aws_s3_bucket.example.id
   policy = <<EOF
 {
   "Id": "Policy1446577137248",
@@ -2302,9 +2303,9 @@ You will get the following error after upgrading:
 ```
 │ Error: Value for unconfigurable attribute
 │
-│   with aws_s3_bucket.source,
-│   on main.tf line 1, in resource "aws_s3_bucket" "source":
-│    1: resource "aws_s3_bucket" "source" {
+│   with aws_s3_bucket.example,
+│   on main.tf line 1, in resource "aws_s3_bucket" "example":
+│    1: resource "aws_s3_bucket" "example" {
 │
 │ Can't configure a value for "replication_configuration": its value will be decided automatically based on the result of applying this configuration.
 ```
@@ -2321,7 +2322,7 @@ resource "aws_s3_bucket" "example" {
 }
 
 resource "aws_s3_bucket_replication_configuration" "example" {
-  bucket = aws_s3_bucket.source.id
+  bucket = aws_s3_bucket.example.id
   role   = aws_iam_role.replication.arn
 
   rule {
@@ -2696,7 +2697,7 @@ resource "aws_s3_bucket_versioning" "example" {
 }
 
 resource "aws_s3_object" "example" {
-  bucket = aws_s3_bucket_versioning.example.bucket
+  bucket = aws_s3_bucket_versioning.example.id
   key    = "droeloe"
   source = "example.txt"
 }
@@ -2943,7 +2944,7 @@ resource "aws_default_vpc" "default" {
 
 ## Plural Data Source Behavior
 
-The following plural data sources are now consistent with [Provider Design](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/provider-design.md#data-sources)
+The following plural data sources are now consistent with [Provider Design](https://hashicorp.github.io/terraform-provider-aws/provider-design/#plural-data-sources)
 such that they no longer return an error if zero results are found.
 
 * [aws_cognito_user_pools](/docs/providers/aws/d/cognito_user_pools.html)
@@ -3241,7 +3242,7 @@ Previously, `ipv6_cidr_block` could be set to `""`. However, the value `""` is n
 
 ### Removal of arn Wildcard Suffix
 
-Previously, the data source returned the Amazon Resource Name (ARN) directly from the API, which included a `:*` suffix to denote all CloudWatch Log Streams under the CloudWatch Log Group. Most other AWS resources that return ARNs and many other AWS services do not use the `:*` suffix. The suffix is now automatically removed. For example, the data source previously returned an ARN such as `arn:aws:logs:us-east-1:123456789012:log-group:/example:*` but will now return `arn:aws:logs:us-east-1:123456789012:log-group:/example`.
+Previously, the data source returned the ARN directly from the API, which included a `:*` suffix to denote all CloudWatch Log Streams under the CloudWatch Log Group. Most other AWS resources that return ARNs and many other AWS services do not use the `:*` suffix. The suffix is now automatically removed. For example, the data source previously returned an ARN such as `arn:aws:logs:us-east-1:123456789012:log-group:/example:*` but will now return `arn:aws:logs:us-east-1:123456789012:log-group:/example`.
 
 Workarounds, such as using `replace()` as shown below, should be removed:
 
@@ -3295,7 +3296,7 @@ data "aws_iam_policy_document" "ad-log-policy" {
 
 ## Data Source: aws_subnet_ids
 
-The `aws_subnet_ids` data source has been deprecated and will be removed removed in a future version. Use the `aws_subnets` data source instead.
+The `aws_subnet_ids` data source has been deprecated and will be removed in a future version. Use the `aws_subnets` data source instead.
 
 For example, change a configuration such as
 
@@ -3483,7 +3484,6 @@ We removed the misspelled argument `active_directory_configuration.0.self_manage
 
 ## Resource: aws_lb_target_group
 
-
 For `protocol = "TCP"`, you can no longer set `stickiness.type` to `lb_cookie` even when `enabled = false`. Instead, either change the `protocol` to `"HTTP"` or `"HTTPS"`, or change `stickiness.type` to `"source_ip"`.
 
 For example, this configuration is no longer valid:
@@ -3530,30 +3530,6 @@ For example, the following will import an S3 object into state, assuming the con
 
 ~> **CAUTION:** We do not recommend modifying the state file manually. If you do, you can make it unusable. However, if you accept that risk, some community members have upgraded to the new resource by searching and replacing `"type": "aws_s3_bucket_object",` with `"type": "aws_s3_object",` in the state file, and then running `terraform apply -refresh-only`.
 
-## Resource: aws_spot_instance_request
-
-### instance_interruption_behaviour Argument removal
-
-Switch your Terraform configuration from the `instance_interruption_behaviour` attribute to the `instance_interruption_behavior` attribute instead.
-
-For example, given this previous configuration:
-
-```terraform
-resource "aws_spot_instance_request" "example" {
-  # ... other configuration ...
-  instance_interruption_behaviour = "hibernate"
-}
-```
-
-An updated configuration:
-
-```terraform
-resource "aws_spot_instance_request" "example" {
-  # ... other configuration ...
-  instance_interruption_behavior =  "hibernate"
-}
-```
-
 ## EC2-Classic Resource and Data Source Support
 
 While an upgrade to this major version will not directly impact EC2-Classic resources configured with Terraform,
@@ -3571,3 +3547,10 @@ be compatible with EC2-Classic as AWS completes their EC2-Classic networking ret
 * [ElastiCache clusters](/docs/providers/aws/r/elasticache_cluster.html)
 * [Spot Requests](/docs/providers/aws/r/spot_instance_request.html)
 * [Capacity Reservations](/docs/providers/aws/r/ec2_capacity_reservation.html)
+
+## Macie Classic Resource Support
+
+These resources should be considered deprecated and will be removed in version 5.0.0.
+
+* [Account Associations](/docs/providers/aws/r/macie_member_account_association.html)
+* [S3 Bucket Associations](/docs/providers/aws/r/macie_s3_bucket_association.html)

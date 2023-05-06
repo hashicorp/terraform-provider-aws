@@ -5,6 +5,8 @@ import (
 )
 
 func TestBase64Encode(t *testing.T) {
+	t.Parallel()
+
 	for _, tt := range base64encodingTests {
 		out := Base64Encode(tt.in)
 		if out != tt.out {

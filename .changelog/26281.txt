@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_acm_certificate: Add `not_before` argument
+```
+
+```release-note:enhancement
+resource/aws_acm_certificate: Add `not_after` argument
+```

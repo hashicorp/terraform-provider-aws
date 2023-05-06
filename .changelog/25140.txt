@@ -1,0 +1,2 @@
+```release-note:enhancement
+resource/aws_neptune_cluster: Add `allow_major_version_upgrade` argument.

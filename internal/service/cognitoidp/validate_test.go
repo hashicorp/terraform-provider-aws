@@ -6,6 +6,8 @@ import (
 )
 
 func TestValidUserGroupName(t *testing.T) {
+	t.Parallel()
+
 	validValues := []string{
 		"foo",
 		"7346241598935552",
@@ -38,6 +40,8 @@ func TestValidUserGroupName(t *testing.T) {
 }
 
 func TestValidUserPoolEmailVerificationMessage(t *testing.T) {
+	t.Parallel()
+
 	validValues := []string{
 		"{####}",
 		"Foo {####}",
@@ -68,6 +72,8 @@ func TestValidUserPoolEmailVerificationMessage(t *testing.T) {
 }
 
 func TestValidUserPoolEmailVerificationSubject(t *testing.T) {
+	t.Parallel()
+
 	validValues := []string{
 		"FooBar",
 		"AZERTYUIOPQSDFGHJKLMWXCVBN?./+%£*¨°0987654321&é\" '(§è!çà)-@^'{####},=ù`$|´”’[å»ÛÁØ]–Ô¥#‰±•",
@@ -96,6 +102,8 @@ func TestValidUserPoolEmailVerificationSubject(t *testing.T) {
 }
 
 func TestValidUserPoolID(t *testing.T) {
+	t.Parallel()
+
 	validValues := []string{
 		"eu-west-1_Foo123",         //lintignore:AWSAT003
 		"ap-southeast-2_BaRBaz987", //lintignore:AWSAT003
@@ -124,6 +132,8 @@ func TestValidUserPoolID(t *testing.T) {
 }
 
 func TestValidUserPoolSMSAuthenticationMessage(t *testing.T) {
+	t.Parallel()
+
 	validValues := []string{
 		"{####}",
 		"Foo {####}",
@@ -153,6 +163,8 @@ func TestValidUserPoolSMSAuthenticationMessage(t *testing.T) {
 }
 
 func TestValidUserPoolSMSVerificationMessage(t *testing.T) {
+	t.Parallel()
+
 	validValues := []string{
 		"{####}",
 		"Foo {####}",

@@ -10,16 +10,17 @@ import (
 )
 
 func TestAccOutpostsOutpostInstanceTypeDataSource_instanceType(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_outposts_outpost_instance_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, outposts.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, outposts.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOutpostInstanceTypeInstanceTypeDataSourceConfig(),
+				Config: testAccOutpostInstanceTypeDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "instance_type", regexp.MustCompile(`^.+$`)),
 				),
@@ -29,16 +30,17 @@ func TestAccOutpostsOutpostInstanceTypeDataSource_instanceType(t *testing.T) {
 }
 
 func TestAccOutpostsOutpostInstanceTypeDataSource_preferredInstanceTypes(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_outposts_outpost_instance_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, outposts.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, outposts.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOutpostInstanceTypePreferredInstanceTypesDataSourceConfig(),
+				Config: testAccOutpostInstanceTypeDataSourceConfig_preferreds(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "instance_type", regexp.MustCompile(`^.+$`)),
 				),
@@ -47,7 +49,7 @@ func TestAccOutpostsOutpostInstanceTypeDataSource_preferredInstanceTypes(t *test
 	})
 }
 
-func testAccOutpostInstanceTypeInstanceTypeDataSourceConfig() string {
+func testAccOutpostInstanceTypeDataSourceConfig_basic() string {
 	return `
 data "aws_outposts_outposts" "test" {}
 
@@ -62,7 +64,7 @@ data "aws_outposts_outpost_instance_type" "test" {
 `
 }
 
-func testAccOutpostInstanceTypePreferredInstanceTypesDataSourceConfig() string {
+func testAccOutpostInstanceTypeDataSourceConfig_preferreds() string {
 	return `
 data "aws_outposts_outposts" "test" {}
 

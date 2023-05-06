@@ -7,6 +7,8 @@ import (
 )
 
 func TestValidPublicKeyName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -35,6 +37,8 @@ func TestValidPublicKeyName(t *testing.T) {
 }
 
 func TestValidPublicKeyNamePrefix(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int

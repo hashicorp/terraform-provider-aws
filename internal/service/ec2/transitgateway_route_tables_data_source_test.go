@@ -11,16 +11,17 @@ import (
 )
 
 func testAccTransitGatewayRouteTablesDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_ec2_transit_gateway_route_tables.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayRouteTablesDataSourceConfig(rName),
+				Config: testAccTransitGatewayRouteTablesDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", "0"),
 				),
@@ -30,16 +31,17 @@ func testAccTransitGatewayRouteTablesDataSource_basic(t *testing.T) {
 }
 
 func testAccTransitGatewayRouteTablesDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_ec2_transit_gateway_route_tables.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayRouteTablesTransitGatewayFilterDataSource(rName),
+				Config: testAccTransitGatewayRouteTablesDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "2"),
 				),
@@ -49,16 +51,17 @@ func testAccTransitGatewayRouteTablesDataSource_filter(t *testing.T) {
 }
 
 func testAccTransitGatewayRouteTablesDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_ec2_transit_gateway_route_tables.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayRouteTablesTransitGatewayTagsDataSource(rName),
+				Config: testAccTransitGatewayRouteTablesDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "1"),
 				),
@@ -68,16 +71,17 @@ func testAccTransitGatewayRouteTablesDataSource_tags(t *testing.T) {
 }
 
 func testAccTransitGatewayRouteTablesDataSource_empty(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_ec2_transit_gateway_route_tables.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayRouteTablesTransitGatewayEmptyDataSource(rName),
+				Config: testAccTransitGatewayRouteTablesDataSourceConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "0"),
 				),
@@ -86,7 +90,7 @@ func testAccTransitGatewayRouteTablesDataSource_empty(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayRouteTablesDataSourceConfig(rName string) string {
+func testAccTransitGatewayRouteTablesDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   tags = {
@@ -108,7 +112,7 @@ data "aws_ec2_transit_gateway_route_tables" "test" {
 `, rName)
 }
 
-func testAccTransitGatewayRouteTablesTransitGatewayFilterDataSource(rName string) string {
+func testAccTransitGatewayRouteTablesDataSourceConfig_filter(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   tags = {
@@ -135,7 +139,7 @@ data "aws_ec2_transit_gateway_route_tables" "test" {
 `, rName)
 }
 
-func testAccTransitGatewayRouteTablesTransitGatewayTagsDataSource(rName string) string {
+func testAccTransitGatewayRouteTablesDataSourceConfig_tags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   tags = {
@@ -161,7 +165,7 @@ data "aws_ec2_transit_gateway_route_tables" "test" {
 `, rName)
 }
 
-func testAccTransitGatewayRouteTablesTransitGatewayEmptyDataSource(rName string) string {
+func testAccTransitGatewayRouteTablesDataSourceConfig_empty(rName string) string {
 	return fmt.Sprintf(`
 data "aws_ec2_transit_gateway_route_tables" "test" {
   tags = {

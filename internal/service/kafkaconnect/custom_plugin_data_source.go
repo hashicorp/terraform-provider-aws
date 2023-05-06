@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_mskconnect_custom_plugin")
 func DataSourceCustomPlugin() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCustomPluginRead,
@@ -41,7 +42,7 @@ func DataSourceCustomPlugin() *schema.Resource {
 }
 
 func dataSourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn
+	conn := meta.(*conns.AWSClient).KafkaConnectConn()
 
 	name := d.Get("name")
 	var output []*kafkaconnect.CustomPluginSummary

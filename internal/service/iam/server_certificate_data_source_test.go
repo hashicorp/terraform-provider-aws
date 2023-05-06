@@ -16,6 +16,8 @@ import (
 )
 
 func TestResourceSortByExpirationDate(t *testing.T) {
+	t.Parallel()
+
 	certs := []*iam.ServerCertificateMetadata{
 		{
 			ServerCertificateName: aws.String("oldest"),
@@ -37,19 +39,20 @@ func TestResourceSortByExpirationDate(t *testing.T) {
 }
 
 func TestAccIAMServerCertificateDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckServerCertificateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataServerCertConfig(rName, key, certificate),
+				Config: testAccServerCertificateDataSourceConfig_cert(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("aws_iam_server_certificate.test_cert", "arn"),
 					resource.TestCheckResourceAttrSet("data.aws_iam_server_certificate.test", "arn"),
@@ -66,14 +69,15 @@ func TestAccIAMServerCertificateDataSource_basic(t *testing.T) {
 }
 
 func TestAccIAMServerCertificateDataSource_matchNamePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckServerCertificateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDataServerCertMatchNamePrefixConfig,
+				Config:      testAccServerCertificateDataSourceConfig_certMatchNamePrefix,
 				ExpectError: regexp.MustCompile(`Search for AWS IAM server certificate returned no results`),
 			},
 		},
@@ -81,21 +85,22 @@ func TestAccIAMServerCertificateDataSource_matchNamePrefix(t *testing.T) {
 }
 
 func TestAccIAMServerCertificateDataSource_path(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	path := "/test-path/"
 	pathPrefix := "/test-path/"
 
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckServerCertificateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataServerCertPathConfig(rName, path, pathPrefix, key, certificate),
+				Config: testAccServerCertificateDataSourceConfig_certPath(rName, path, pathPrefix, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_server_certificate.test", "path", path),
 				),
@@ -104,7 +109,7 @@ func TestAccIAMServerCertificateDataSource_path(t *testing.T) {
 	})
 }
 
-func testAccDataServerCertConfig(rName, key, certificate string) string {
+func testAccServerCertificateDataSourceConfig_cert(rName, key, certificate string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_server_certificate" "test_cert" {
   name             = "%[1]s"
@@ -119,7 +124,7 @@ data "aws_iam_server_certificate" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
-func testAccDataServerCertPathConfig(rName, path, pathPrefix, key, certificate string) string {
+func testAccServerCertificateDataSourceConfig_certPath(rName, path, pathPrefix, key, certificate string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_server_certificate" "test_cert" {
   name             = "%[1]s"
@@ -136,7 +141,7 @@ data "aws_iam_server_certificate" "test" {
 `, rName, path, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), pathPrefix)
 }
 
-var testAccDataServerCertMatchNamePrefixConfig = `
+var testAccServerCertificateDataSourceConfig_certMatchNamePrefix = `
 data "aws_iam_server_certificate" "test" {
   name_prefix = "MyCert"
   latest      = true

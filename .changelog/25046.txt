@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ec2_managed_prefix_list_entry: Fix error when attempting to create or delete multiple list entries
+```

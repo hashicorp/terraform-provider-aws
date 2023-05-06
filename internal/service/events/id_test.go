@@ -7,6 +7,8 @@ import (
 )
 
 func TestPermissionParseResourceID(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName      string
 		InputID       string
@@ -65,7 +67,10 @@ func TestPermissionParseResourceID(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			gotPart0, gotPart1, err := tfevents.PermissionParseResourceID(testCase.InputID)
 
 			if err == nil && testCase.ExpectedError {
@@ -88,6 +93,8 @@ func TestPermissionParseResourceID(t *testing.T) {
 }
 
 func TestRuleParseResourceID(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName      string
 		InputID       string
@@ -176,7 +183,10 @@ func TestRuleParseResourceID(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			gotPart0, gotPart1, err := tfevents.RuleParseResourceID(testCase.InputID)
 
 			if err == nil && testCase.ExpectedError {
@@ -199,6 +209,8 @@ func TestRuleParseResourceID(t *testing.T) {
 }
 
 func TestTargetParseImportID(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName      string
 		InputID       string
@@ -325,7 +337,10 @@ func TestTargetParseImportID(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			gotPart0, gotPart1, gotPart2, err := tfevents.TargetParseImportID(testCase.InputID)
 
 			if err == nil && testCase.ExpectedError {

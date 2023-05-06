@@ -22,6 +22,6 @@ data "aws_ses_domain_identity" "example" {
 
 The following attributes are exported:
 
-* `arn` - The ARN of the domain identity.
-* `domain` - The name of the domain
-* `verification_token` - A code which when added to the domain as a TXT record will signal to SES that the owner of the domain has authorized SES to act on their behalf.
+* `arn` - ARN of the domain identity.
+* `domain` - Name of the domain
+* `verification_token` - Code which when added to the domain as a TXT record will signal to SES that the owner of the domain has authorized SES to act on their behalf.

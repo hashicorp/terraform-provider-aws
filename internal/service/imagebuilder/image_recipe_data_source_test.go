@@ -11,18 +11,19 @@ import (
 )
 
 func TestAccImageBuilderImageRecipeDataSource_arn(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_imagebuilder_image_recipe.test"
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckImageRecipeDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImageRecipeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageRecipeARNDataSourceConfig(rName),
+				Config: testAccImageRecipeDataSourceConfig_arn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "block_device_mapping.#", resourceName, "block_device_mapping.#"),
@@ -47,7 +48,7 @@ func TestAccImageBuilderImageRecipeDataSource_arn(t *testing.T) {
 	})
 }
 
-func testAccImageRecipeARNDataSourceConfig(rName string) string {
+func testAccImageRecipeDataSourceConfig_arn(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 

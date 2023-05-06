@@ -1,19 +1,23 @@
 package cloudfront
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_cloudfront_origin_access_identities")
 func DataSourceOriginAccessIdentities() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceOriginAccessIdentitiesRead,
+		ReadWithoutTimeout: dataSourceOriginAccessIdentitiesRead,
 
 		Schema: map[string]*schema.Schema{
 			"comments": {
@@ -40,8 +44,9 @@ func DataSourceOriginAccessIdentities() *schema.Resource {
 	}
 }
 
-func dataSourceOriginAccessIdentitiesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func dataSourceOriginAccessIdentitiesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	var comments []interface{}
 
@@ -51,7 +56,7 @@ func dataSourceOriginAccessIdentitiesRead(d *schema.ResourceData, meta interface
 
 	var output []*cloudfront.OriginAccessIdentitySummary
 
-	err := conn.ListCloudFrontOriginAccessIdentitiesPages(&cloudfront.ListCloudFrontOriginAccessIdentitiesInput{}, func(page *cloudfront.ListCloudFrontOriginAccessIdentitiesOutput, lastPage bool) bool {
+	err := conn.ListCloudFrontOriginAccessIdentitiesPagesWithContext(ctx, &cloudfront.ListCloudFrontOriginAccessIdentitiesInput{}, func(page *cloudfront.ListCloudFrontOriginAccessIdentitiesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -74,7 +79,7 @@ func dataSourceOriginAccessIdentitiesRead(d *schema.ResourceData, meta interface
 	})
 
 	if err != nil {
-		return fmt.Errorf("listing CloudFront origin access identities: %w", err)
+		return sdkdiag.AppendErrorf(diags, "listing CloudFront origin access identities: %s", err)
 	}
 
 	var iamARNs, ids, s3CanonicalUserIDs []string
@@ -97,5 +102,5 @@ func dataSourceOriginAccessIdentitiesRead(d *schema.ResourceData, meta interface
 	d.Set("ids", ids)
 	d.Set("s3_canonical_user_ids", s3CanonicalUserIDs)
 
-	return nil
+	return diags
 }

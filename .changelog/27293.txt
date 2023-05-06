@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_route53_zone: Add `primary_name_server` attribute
+```
+
+```release-note:enhancement
+data-source/aws_route53_zone: Add `primary_name_server` attribute
+```

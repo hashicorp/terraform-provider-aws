@@ -11,17 +11,18 @@ import (
 )
 
 func TestAccELBV2ListenerDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb_listener.test"
 	dataSourceName2 := "data.aws_lb_listener.from_lb_and_port"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAcclbListenerBasicDataSourceConfig(rName),
+				Config: testAccListenerDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "load_balancer_arn"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "arn"),
@@ -46,17 +47,18 @@ func TestAccELBV2ListenerDataSource_basic(t *testing.T) {
 }
 
 func TestAccELBV2ListenerDataSource_backwardsCompatibility(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_alb_listener.test"
 	dataSourceName2 := "data.aws_alb_listener.from_lb_and_port"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAcclbListenerBackwardsCompatibilityDataSourceConfig(rName),
+				Config: testAccListenerDataSourceConfig_backwardsCompatibility(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "load_balancer_arn"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "arn"),
@@ -79,19 +81,20 @@ func TestAccELBV2ListenerDataSource_backwardsCompatibility(t *testing.T) {
 }
 
 func TestAccELBV2ListenerDataSource_https(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	dataSourceName := "data.aws_lb_listener.test"
 	dataSourceName2 := "data.aws_lb_listener.from_lb_and_port"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAcclbListenerHTTPSDataSourceConfig(rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)),
+				Config: testAccListenerDataSourceConfig_https(rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "load_balancer_arn"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "arn"),
@@ -118,17 +121,18 @@ func TestAccELBV2ListenerDataSource_https(t *testing.T) {
 }
 
 func TestAccELBV2ListenerDataSource_DefaultAction_forward(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb_listener.test"
 	resourceName := "aws_lb_listener.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAcclbListenerDefaultActionForwardDataSourceConfig(rName),
+				Config: testAccListenerDataSourceConfig_defaultActionForward(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "default_action.#", resourceName, "default_action.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "default_action.0.forward.#", resourceName, "default_action.0.forward.#"),
@@ -138,7 +142,7 @@ func TestAccELBV2ListenerDataSource_DefaultAction_forward(t *testing.T) {
 	})
 }
 
-func testAcclbListenerBasicDataSourceConfig(rName string) string {
+func testAccListenerDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
@@ -194,7 +198,7 @@ data "aws_lb_listener" "from_lb_and_port" {
 `, rName))
 }
 
-func testAcclbListenerBackwardsCompatibilityDataSourceConfig(rName string) string {
+func testAccListenerDataSourceConfig_backwardsCompatibility(rName string) string {
 	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_alb_listener" "test" {
   load_balancer_arn = aws_alb.test.id
@@ -250,7 +254,7 @@ data "aws_alb_listener" "from_lb_and_port" {
 `, rName))
 }
 
-func testAcclbListenerHTTPSDataSourceConfig(rName, certificate, key string) string {
+func testAccListenerDataSourceConfig_https(rName, certificate, key string) string {
 	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
@@ -325,7 +329,7 @@ data "aws_lb_listener" "from_lb_and_port" {
 `, rName, certificate, key))
 }
 
-func testAcclbListenerDefaultActionForwardDataSourceConfig(rName string) string {
+func testAccListenerDataSourceConfig_defaultActionForward(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`

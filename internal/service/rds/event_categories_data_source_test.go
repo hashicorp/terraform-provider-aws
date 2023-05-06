@@ -10,15 +10,16 @@ import (
 )
 
 func TestAccRDSEventCategoriesDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_db_event_categories.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckEventCategoriesConfig(),
+				Config: testAccEventCategoriesDataSourceConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// These checks are not meant to be exhaustive, as regions have different support.
 					// Instead these are generally to indicate that filtering works as expected.
@@ -41,15 +42,16 @@ func TestAccRDSEventCategoriesDataSource_basic(t *testing.T) {
 }
 
 func TestAccRDSEventCategoriesDataSource_sourceType(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_db_event_categories.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckEventCategoriesSourceTypeConfig("db-snapshot"),
+				Config: testAccEventCategoriesDataSourceConfig_sourceType("db-snapshot"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// These checks are not meant to be exhaustive, as regions have different support.
 					// Instead these are generally to indicate that filtering works as expected.
@@ -63,13 +65,13 @@ func TestAccRDSEventCategoriesDataSource_sourceType(t *testing.T) {
 	})
 }
 
-func testAccCheckEventCategoriesConfig() string {
+func testAccEventCategoriesDataSourceConfig_basic() string {
 	return `
 data "aws_db_event_categories" "test" {}
 `
 }
 
-func testAccCheckEventCategoriesSourceTypeConfig(sourceType string) string {
+func testAccEventCategoriesDataSourceConfig_sourceType(sourceType string) string {
 	return fmt.Sprintf(`
 data "aws_db_event_categories" "test" {
   source_type = %[1]q

@@ -11,9 +11,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_datapipeline_pipeline_definition")
 func DataSourcePipelineDefinition() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourcePipelineDefinitionRead,
+		ReadWithoutTimeout: dataSourcePipelineDefinitionRead,
 
 		Schema: map[string]*schema.Schema{
 			"parameter_object": {
@@ -108,7 +109,7 @@ func DataSourcePipelineDefinition() *schema.Resource {
 }
 
 func dataSourcePipelineDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DataPipelineConn
+	conn := meta.(*conns.AWSClient).DataPipelineConn()
 
 	pipelineID := d.Get("pipeline_id").(string)
 	input := &datapipeline.GetPipelineDefinitionInput{
@@ -121,13 +122,13 @@ func dataSourcePipelineDefinitionRead(ctx context.Context, d *schema.ResourceDat
 		return diag.Errorf("error getting DataPipeline Definition (%s): %s", pipelineID, err)
 	}
 
-	if err = d.Set("parameter_object", flattenDataPipelinePipelineDefinitionParameterObjects(resp.ParameterObjects)); err != nil {
+	if err = d.Set("parameter_object", flattenPipelineDefinitionParameterObjects(resp.ParameterObjects)); err != nil {
 		return diag.Errorf("error setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", pipelineID, err)
 	}
-	if err = d.Set("parameter_value", flattenDataPipelinePipelineDefinitionParameterValues(resp.ParameterValues)); err != nil {
+	if err = d.Set("parameter_value", flattenPipelineDefinitionParameterValues(resp.ParameterValues)); err != nil {
 		return diag.Errorf("error setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", pipelineID, err)
 	}
-	if err = d.Set("pipeline_object", flattenDataPipelinePipelineDefinitionObjects(resp.PipelineObjects)); err != nil {
+	if err = d.Set("pipeline_object", flattenPipelineDefinitionObjects(resp.PipelineObjects)); err != nil {
 		return diag.Errorf("error setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", pipelineID, err)
 	}
 	d.SetId(pipelineID)

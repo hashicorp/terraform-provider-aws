@@ -33,7 +33,7 @@ The following arguments are supported:
 * `name` (Required) Human friendly name given to the instance group. Changing this forces a new resource to be created.
 * `cluster_id` (Required) ID of the EMR Cluster to attach to. Changing this forces a new resource to be created.
 * `instance_type` (Required) The EC2 instance type for all instances in the instance group. Changing this forces a new resource to be created.
-* `instance_count` (optional) target number of instances for the instance group. defaults to 0.
+* `instance_count` (Optional) target number of instances for the instance group. defaults to 0.
 * `bid_price` - (Optional) If set, the bid price for each EC2 instance in the instance group, expressed in USD. By setting this attribute, the instance group is being declared as a Spot Instance, and will implicitly create a Spot request. Leave this blank to use On-Demand Instances.
 * `ebs_optimized` (Optional) Indicates whether an Amazon EBS volume is EBS-optimized. Changing this forces a new resource to be created.
 * `ebs_config` (Optional) One or more `ebs_config` blocks as defined below. Changing this forces a new resource to be created.
@@ -83,5 +83,5 @@ In addition to all arguments above, the following attributes are exported:
 EMR task instance group can be imported using their EMR Cluster id and Instance Group id separated by a forward-slash `/`, e.g.,
 
 ```
-$ terraform import aws_emr_instance_group.task_greoup j-123456ABCDEF/ig-15EK4O09RZLNR
+$ terraform import aws_emr_instance_group.task_group j-123456ABCDEF/ig-15EK4O09RZLNR
 ```

@@ -11,17 +11,18 @@ import (
 )
 
 func TestAccKinesisStreamDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_kinesis_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, kinesis.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kinesis.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckStreamDataSourceConfig(rName, 2),
+				Config: testAccStreamDataSourceConfig_basic(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "arn"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "creation_timestamp"),
@@ -36,7 +37,7 @@ func TestAccKinesisStreamDataSource_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCheckStreamDataSourceConfig(rName, 3),
+				Config: testAccStreamDataSourceConfig_basic(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "closed_shards.#", "4"),
 					resource.TestCheckResourceAttr(dataSourceName, "open_shards.#", "3"),
@@ -46,7 +47,7 @@ func TestAccKinesisStreamDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckStreamDataSourceConfig(rName string, shardCount int) string {
+func testAccStreamDataSourceConfig_basic(rName string, shardCount int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
   name             = %[1]q

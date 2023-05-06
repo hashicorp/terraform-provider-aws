@@ -11,17 +11,18 @@ import (
 )
 
 func TestAccSSMParametersByPathDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "data.aws_ssm_parameters_by_path.test"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckParametersByPathDataSourceConfig(rName1, rName2, false),
+				Config: testAccParametersByPathDataSourceConfig_basic(rName1, rName2, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "arns.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "names.#", "2"),
@@ -35,7 +36,7 @@ func TestAccSSMParametersByPathDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckParametersByPathDataSourceConfig(rName1, rName2 string, withDecryption bool) string {
+func testAccParametersByPathDataSourceConfig_basic(rName1, rName2 string, withDecryption bool) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "test1" {
   name  = "/%[1]s/param-a"
@@ -69,16 +70,17 @@ data "aws_ssm_parameters_by_path" "test" {
 }
 
 func TestAccSSMParametersByPathDataSource_withRecursion(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "data.aws_ssm_parameters_by_path.recursive"
 	pathPrefix := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckParametersByPathDataSourceConfigWithRecursion(pathPrefix),
+				Config: testAccParametersByPathDataSourceConfig_recursion(pathPrefix),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "arns.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "names.#", "2"),
@@ -91,7 +93,7 @@ func TestAccSSMParametersByPathDataSource_withRecursion(t *testing.T) {
 	})
 }
 
-func testAccCheckParametersByPathDataSourceConfigWithRecursion(pathPrefix string) string {
+func testAccParametersByPathDataSourceConfig_recursion(pathPrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "top_level" {
   name  = "/%[1]s/top_param"

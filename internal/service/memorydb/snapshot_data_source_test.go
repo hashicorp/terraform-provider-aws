@@ -11,17 +11,18 @@ import (
 )
 
 func TestAccMemoryDBSnapshotDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_snapshot.test"
 	dataSourceName := "data.aws_memorydb_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, memorydb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotDataSourceConfig(rName),
+				Config: testAccSnapshotDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "cluster_configuration.0.description", resourceName, "cluster_configuration.0.description"),
@@ -49,7 +50,7 @@ func TestAccMemoryDBSnapshotDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccSnapshotDataSourceConfig(rName string) string {
+func testAccSnapshotDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccSnapshotConfigBase(rName),
 		fmt.Sprintf(`
