@@ -54,6 +54,7 @@ resource "aws_cloudfront_distribution" "test" {
 ```
 
 ### Get bucket by name-prefix
+
 ```terraform
 resource "aws_s3_bucket" "test" {
   bucket = "test-prefix"
@@ -67,7 +68,6 @@ data "aws_s3_bucket" "selected" {
   ]
 }
 ```
-
 
 ## Argument Reference
 
