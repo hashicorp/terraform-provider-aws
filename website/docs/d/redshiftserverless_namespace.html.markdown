@@ -3,7 +3,7 @@ subcategory: "Redshift Serverless"
 layout: "aws"
 page_title: "AWS: aws_redshiftserverless_namespace"
 description: |-
-Terraform data source for managing an AWS Redshift Serverless Namespace.
+  Terraform data source for managing an AWS Redshift Serverless Namespace.
 ---
 
 # Data Source: aws_redshiftserverless_namespace
