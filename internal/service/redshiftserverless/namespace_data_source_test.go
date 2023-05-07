@@ -181,7 +181,7 @@ func testAccNamespaceDataSourceConfig_logExports(rName string, logExport string)
 	return fmt.Sprintf(`
 resource "aws_redshiftserverless_namespace" "test" {
   namespace_name = %[1]q
-  log_exports = [%[2]q]
+  log_exports    = [%[2]q]
 }
 
 data "aws_redshiftserverless_namespace" "test" {
