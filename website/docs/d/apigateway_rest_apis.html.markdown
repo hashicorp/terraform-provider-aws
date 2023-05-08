@@ -6,9 +6,9 @@ description: |-
   Provides details about multiple Amazon API Gateway APIs.
 ---
 
-# Data Source: aws_apigateway_apis
+# Data Source: aws_api_gateway_rest_apis
 
-Provides details about multiple Amazon API Gateway Version 1 APIs.
+Provides details about multiple Amazon API Gateway REST APIs.
 
 ## Example Usage
 
