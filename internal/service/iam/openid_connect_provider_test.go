@@ -133,6 +133,35 @@ func TestAccIAMOpenIDConnectProvider_disappears(t *testing.T) {
 	})
 }
 
+func TestAccIAMOpenIDConnectProvider_clientIdListOrder(t *testing.T) {
+	ctx := acctest.Context(t)
+	rString := sdkacctest.RandString(5)
+	resourceName := "aws_iam_openid_connect_provider.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOpenIDConnectProviderConfig_clientIdList_first(rString),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenIDConnectProvider(ctx, resourceName),
+				),
+			},
+			{
+				Config: testAccOpenIDConnectProviderConfig_clientIdList_second(rString),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenIDConnectProvider(ctx, resourceName),
+				),
+				ExpectNonEmptyPlan: false, // Expect an empty plan as only the order has been changed
+				PlanOnly:           true,  // Expect an empty plan as only the order has been changed
+			},
+		},
+	})
+}
+
 func testAccCheckOpenIDConnectProviderDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
@@ -181,35 +210,6 @@ func testAccCheckOpenIDConnectProvider(ctx context.Context, id string) resource.
 
 		return err
 	}
-}
-
-func TestAccIAMOpenidConnectProvider_clientIdListOrder(t *testing.T) {
-	ctx := acctest.Context(t)
-	rString := sdkacctest.RandString(5)
-	resourceName := "aws_iam_openid_connect_provider.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccOpenIDConnectProviderConfig_clientIdList_first(rString),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenIDConnectProvider(ctx, resourceName),
-				),
-			},
-			{
-				Config: testAccOpenIDConnectProviderConfig_clientIdList_second(rString),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenIDConnectProvider(ctx, resourceName),
-				),
-				ExpectNonEmptyPlan: false, // Expect an empty plan as only the order has been changed
-				PlanOnly:           true,  // Expect an empty plan as only the order has been changed
-			},
-		},
-	})
 }
 
 func testAccOpenIDConnectProviderConfig_basic(rString string) string {
