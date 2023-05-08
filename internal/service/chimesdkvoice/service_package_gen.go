@@ -33,6 +33,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 				IdentifierAttribute: "arn",
 			},
 		},
+		{
+			Factory:  ResourceTags,
+			TypeName: "aws_chimesdkvoice_tags",
+		},
 	}
 }
 
