@@ -3372,7 +3372,7 @@ func FindVPCEndpointServicePermission(ctx context.Context, conn *ec2.EC2, servic
 		return aws.StringValue(v.Principal) == principalARN
 	})
 
-	return tfresource.AssertSingleResult(allowedPrincipals)
+	return tfresource.AssertSinglePtrResult(allowedPrincipals)
 }
 
 // FindVPCEndpointRouteTableAssociationExists returns NotFoundError if no association for the specified VPC endpoint and route table IDs is found.

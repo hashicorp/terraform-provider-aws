@@ -52,7 +52,8 @@ The following arguments are optional:
 In addition to all arguments above, the following attributes are exported:
 
 * `created_time` - Time when the provisioning artifact was created.
-* `id` - Provisioning Artifact identifier and product identifier separated by a colon.
+* `id` - Provisioning artifact identifier and product identifier separated by a colon.
+* `provisioning_artifact_id` - Provisioning artifact identifier.
 * `status` - Status of the provisioning artifact.
 
 ## Timeouts
