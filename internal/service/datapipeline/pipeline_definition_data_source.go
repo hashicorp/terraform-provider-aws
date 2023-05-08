@@ -11,9 +11,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_datapipeline_pipeline_definition")
 func DataSourcePipelineDefinition() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourcePipelineDefinitionRead,
+		ReadWithoutTimeout: dataSourcePipelineDefinitionRead,
 
 		Schema: map[string]*schema.Schema{
 			"parameter_object": {
@@ -108,7 +109,7 @@ func DataSourcePipelineDefinition() *schema.Resource {
 }
 
 func dataSourcePipelineDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DataPipelineConn
+	conn := meta.(*conns.AWSClient).DataPipelineConn()
 
 	pipelineID := d.Get("pipeline_id").(string)
 	input := &datapipeline.GetPipelineDefinitionInput{

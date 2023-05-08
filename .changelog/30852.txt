@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ecs_service: Fix removal of `service_registries` configuration block
+```

@@ -10,6 +10,8 @@ import (
 )
 
 func TestNameValuesFiltersMap(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name    string
 		filters namevaluesfilters.NameValuesFilters
@@ -42,7 +44,10 @@ func TestNameValuesFiltersMap(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.filters.Map()
 
 			testNameValuesFiltersVerifyMap(t, got, testCase.want)
@@ -51,6 +56,8 @@ func TestNameValuesFiltersMap(t *testing.T) {
 }
 
 func TestNameValuesFiltersAdd(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name    string
 		filters namevaluesfilters.NameValuesFilters
@@ -136,7 +143,10 @@ func TestNameValuesFiltersAdd(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.filters.Add(testCase.add)
 
 			testNameValuesFiltersVerifyMap(t, got.Map(), testCase.want)

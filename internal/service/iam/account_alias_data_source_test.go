@@ -11,16 +11,17 @@ import (
 )
 
 func testAccAccountAliasDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iam_account_alias.test"
 	resourceName := "aws_iam_account_alias.test"
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountAliasDestroy,
+		CheckDestroy:             testAccCheckAccountAliasDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountAliasDataSourceConfig_basic(rName),

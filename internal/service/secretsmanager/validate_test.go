@@ -7,6 +7,8 @@ import (
 )
 
 func TestValidSecretName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -33,6 +35,8 @@ func TestValidSecretName(t *testing.T) {
 }
 
 func TestValidSecretNamePrefix(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int

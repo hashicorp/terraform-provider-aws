@@ -9,9 +9,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func init() {
@@ -22,51 +24,71 @@ func init() {
 }
 
 func sweepKeys(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).KMSConn
+	input := &kms.ListKeysInput{
+		Limit: aws.Int64(1000),
+	}
+	conn := client.(*conns.AWSClient).KMSConn()
+	var sweeperErrs *multierror.Error
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListKeysPages(&kms.ListKeysInput{Limit: aws.Int64(1000)}, func(out *kms.ListKeysOutput, lastPage bool) bool {
-		for _, k := range out.Keys {
-			kKeyId := aws.StringValue(k.KeyId)
-			kOut, err := conn.DescribeKey(&kms.DescribeKeyInput{
-				KeyId: k.KeyId,
-			})
-			if err != nil {
-				log.Printf("Error: Failed to describe key %q: %s", kKeyId, err)
-				return false
-			}
-			if aws.StringValue(kOut.KeyMetadata.KeyManager) == kms.KeyManagerTypeAws {
-				// Skip (default) keys which are managed by AWS
+	err = conn.ListKeysPagesWithContext(ctx, input, func(page *kms.ListKeysOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Keys {
+			keyID := aws.StringValue(v.KeyId)
+			key, err := FindKeyByID(ctx, conn, keyID)
+
+			if tfresource.NotFound(err) {
 				continue
 			}
-			if aws.StringValue(kOut.KeyMetadata.KeyState) == kms.KeyStatePendingDeletion {
-				// Skip keys which are already scheduled for deletion
+
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error reading KMS Key (%s): %w", keyID, err))
+				continue
+			}
+
+			if aws.StringValue(key.KeyManager) == kms.KeyManagerTypeAws {
+				log.Printf("[DEBUG] Skipping KMS Key (%s): managed by AWS", keyID)
+				continue
+			}
+			if aws.StringValue(key.KeyState) == kms.KeyStatePendingDeletion {
+				log.Printf("[DEBUG] Skipping KMS Key (%s): pending deletion", keyID)
 				continue
 			}
 
 			r := ResourceKey()
 			d := r.Data(nil)
-			d.SetId(kKeyId)
-			d.Set("key_id", kKeyId)
+			d.SetId(keyID)
+			d.Set("key_id", keyID)
 			d.Set("deletion_window_in_days", "7")
-			err = r.Delete(d, client)
-			if err != nil {
-				log.Printf("Error: Failed to schedule key %q for deletion: %s", kKeyId, err)
-				return false
-			}
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
+
 		return !lastPage
 	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping KMS Key sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error describing KMS keys: %w", err)
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping KMS Key sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
 
-	return nil
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing KMS Keys (%s): %w", region, err))
+	}
+
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping KMS Keys (%s): %w", region, err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }

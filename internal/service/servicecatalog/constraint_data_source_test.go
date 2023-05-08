@@ -10,20 +10,21 @@ import (
 )
 
 func TestAccServiceCatalogConstraintDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_constraint.test"
 	dataSourceName := "data.aws_servicecatalog_constraint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConstraintDestroy,
+		CheckDestroy:             testAccCheckConstraintDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConstraintDataSourceConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConstraintExists(resourceName),
+					testAccCheckConstraintExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "accept_language", dataSourceName, "accept_language"),
 					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
 					resource.TestCheckResourceAttrPair(resourceName, "owner", dataSourceName, "owner"),

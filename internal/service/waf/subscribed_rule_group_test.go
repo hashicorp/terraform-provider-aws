@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccWAFSubscribedRuleGroupDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if os.Getenv("WAF_SUBSCRIBED_RULE_GROUP_NAME") == "" {
 		t.Skip("Environment variable WAF_SUBSCRIBED_RULE_GROUP_NAME is not set")
 	}
@@ -27,7 +28,7 @@ func TestAccWAFSubscribedRuleGroupDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_waf_subscribed_rule_group.rulegroup"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(waf.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, waf.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
 		CheckDestroy:             nil,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

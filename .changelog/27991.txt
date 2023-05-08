@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_opsworks_permission: `stack_id` and `user_arn` are both Required and ForceNew
+```
+
+```release-note:enhancement
+resource/aws_efs_mount_target: Add configurable timeouts for Create and Delete
+```

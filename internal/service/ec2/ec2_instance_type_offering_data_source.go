@@ -1,19 +1,22 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_ec2_instance_type_offering")
 func DataSourceInstanceTypeOffering() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceInstanceTypeOfferingRead,
+		ReadWithoutTimeout: dataSourceInstanceTypeOfferingRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -39,8 +42,9 @@ func DataSourceInstanceTypeOffering() *schema.Resource {
 	}
 }
 
-func dataSourceInstanceTypeOfferingRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceInstanceTypeOfferingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeInstanceTypeOfferingsInput{}
 
@@ -52,14 +56,14 @@ func dataSourceInstanceTypeOfferingRead(d *schema.ResourceData, meta interface{}
 		input.LocationType = aws.String(v.(string))
 	}
 
-	instanceTypeOfferings, err := FindInstanceTypeOfferings(conn, input)
+	instanceTypeOfferings, err := FindInstanceTypeOfferings(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("reading EC2 Instance Type Offerings: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance Type Offerings: %s", err)
 	}
 
 	if len(instanceTypeOfferings) == 0 {
-		return fmt.Errorf("no EC2 Instance Type Offerings found matching criteria; try different search")
+		return sdkdiag.AppendErrorf(diags, "no EC2 Instance Type Offerings found matching criteria; try different search")
 	}
 
 	var foundInstanceTypes []string
@@ -90,7 +94,7 @@ func dataSourceInstanceTypeOfferingRead(d *schema.ResourceData, meta interface{}
 	}
 
 	if resultInstanceType == "" && len(foundInstanceTypes) > 1 {
-		return fmt.Errorf("multiple EC2 Instance Offerings found matching criteria; try different search")
+		return sdkdiag.AppendErrorf(diags, "multiple EC2 Instance Offerings found matching criteria; try different search")
 	}
 
 	if resultInstanceType == "" && len(foundInstanceTypes) == 1 {
@@ -98,11 +102,11 @@ func dataSourceInstanceTypeOfferingRead(d *schema.ResourceData, meta interface{}
 	}
 
 	if resultInstanceType == "" {
-		return fmt.Errorf("no EC2 Instance Type Offerings found matching criteria; try different search")
+		return sdkdiag.AppendErrorf(diags, "no EC2 Instance Type Offerings found matching criteria; try different search")
 	}
 
 	d.SetId(resultInstanceType)
 	d.Set("instance_type", resultInstanceType)
 
-	return nil
+	return diags
 }

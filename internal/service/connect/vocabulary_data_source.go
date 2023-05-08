@@ -14,9 +14,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_connect_vocabulary")
 func DataSourceVocabulary() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceVocabularyRead,
+		ReadWithoutTimeout: dataSourceVocabularyRead,
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -53,19 +55,19 @@ func DataSourceVocabulary() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tftags.TagsSchemaComputed(),
 			"vocabulary_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ExactlyOneOf: []string{"vocabulary_id", "name"},
 			},
-			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceID := d.Get("instance_id").(string)
@@ -113,7 +115,7 @@ func dataSourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("state", vocabulary.State)
 	d.Set("vocabulary_id", vocabulary.Id)
 
-	if err := d.Set("tags", KeyValueTags(vocabulary.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, vocabulary.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("setting tags: %s", err)
 	}
 

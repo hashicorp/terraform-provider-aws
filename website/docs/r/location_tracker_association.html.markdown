@@ -40,7 +40,7 @@ No additional attributes are exported.
 
 ## Timeouts
 
-`aws_location_tracker_association` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+`aws_location_tracker_association` provides the following [Timeouts](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts) configuration options:
 
 * `create` - (Optional, Default: `30m`)
 * `delete` - (Optional, Default: `30m`)

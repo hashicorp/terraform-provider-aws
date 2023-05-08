@@ -22,19 +22,13 @@ data "aws_iam_instance_profile" "example" {
 
 ## Argument Reference
 
-* `name` - (Required) The friendly IAM instance profile name to match.
+* `name` - (Required) Friendly IAM instance profile name to match.
 
 ## Attributes Reference
 
-* `arn` - The Amazon Resource Name (ARN) specifying the instance profile.
-
-* `create_date` - The string representation of the date the instance profile
-   was created.
-
-* `path` - The path to the instance profile.
-
-* `role_arn` - The role arn associated with this instance profile.
-
-* `role_id` - The role id associated with this instance profile.
-
-* `role_name` - The role name associated with this instance profile.
+* `arn` - ARN.
+* `create_date` - String representation of the date the instance profile was created.
+* `path` - Path to the instance profile.
+* `role_arn` - Role ARN associated with this instance profile.
+* `role_id` - Role ID associated with this instance profile.
+* `role_name` - Role name associated with this instance profile.

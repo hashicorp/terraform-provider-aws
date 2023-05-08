@@ -1,6 +1,7 @@
 package ecs
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -12,7 +13,7 @@ import (
 )
 
 func resourceTaskDefinitionMigrateState(v int, is *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	switch v {
 	case 0:
@@ -26,8 +27,9 @@ func resourceTaskDefinitionMigrateState(v int, is *terraform.InstanceState, meta
 func migrateTaskDefinitionStateV0toV1(is *terraform.InstanceState, conn *ecs.ECS) (*terraform.InstanceState, error) {
 	arn := is.Attributes["arn"]
 
+	ctx := context.TODO() // nosemgrep:ci.semgrep.migrate.context-todo
 	// We need to pull definitions from the API b/c they're unrecoverable from the checksum
-	td, err := conn.DescribeTaskDefinition(&ecs.DescribeTaskDefinitionInput{
+	td, err := conn.DescribeTaskDefinitionWithContext(ctx, &ecs.DescribeTaskDefinitionInput{
 		TaskDefinition: aws.String(arn),
 	})
 	if err != nil {

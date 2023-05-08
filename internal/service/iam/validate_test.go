@@ -5,6 +5,8 @@ import (
 )
 
 func TestValidRoleProfileName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"tf-test-role-profile-1",
 	}
@@ -30,6 +32,8 @@ func TestValidRoleProfileName(t *testing.T) {
 }
 
 func TestValidAccountAlias(t *testing.T) {
+	t.Parallel()
+
 	validAliases := []string{
 		"tf-alias",
 		"0tf-alias1",
@@ -59,6 +63,8 @@ func TestValidAccountAlias(t *testing.T) {
 }
 
 func TestValidOpenIDURL(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -94,6 +100,8 @@ func TestValidOpenIDURL(t *testing.T) {
 }
 
 func TestValidRolePolicyRoleName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int

@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccIAMUserSSHKeyDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_iam_user_ssh_key.test"
 	dataSourceName := "data.aws_iam_user_ssh_key.test"
 
@@ -21,7 +22,7 @@ func TestAccIAMUserSSHKeyDataSource_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{

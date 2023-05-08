@@ -62,7 +62,7 @@ resource "aws_security_group_rule" "demo-cluster-ingress-workstation-https" {
 }
 
 resource "aws_eks_cluster" "demo" {
-  name     = var.cluster-name
+  name     = var.cluster_name
   role_arn = aws_iam_role.demo-cluster.arn
 
   vpc_config {

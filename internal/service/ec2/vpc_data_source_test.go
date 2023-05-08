@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccVPCDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rInt1 := sdkacctest.RandIntRange(1, 128)
 	rInt2 := sdkacctest.RandIntRange(128, 254)
 	cidr := fmt.Sprintf("10.%d.%d.0/28", rInt1, rInt2)
@@ -23,7 +24,7 @@ func TestAccVPCDataSource_basic(t *testing.T) {
 	ds4ResourceName := "data.aws_vpc.by_filter"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -34,6 +35,7 @@ func TestAccVPCDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(ds1ResourceName, "cidr_block", cidr),
 					resource.TestCheckResourceAttr(ds1ResourceName, "enable_dns_hostnames", "false"),
 					resource.TestCheckResourceAttr(ds1ResourceName, "enable_dns_support", "true"),
+					resource.TestCheckResourceAttr(ds1ResourceName, "enable_network_address_usage_metrics", "false"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "id", vpcResourceName, "id"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "ipv6_association_id", vpcResourceName, "ipv6_association_id"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "ipv6_cidr_block", vpcResourceName, "ipv6_cidr_block"),
@@ -62,14 +64,15 @@ func TestAccVPCDataSource_basic(t *testing.T) {
 }
 
 func TestAccVPCDataSource_CIDRBlockAssociations_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy,
+		CheckDestroy:             testAccCheckVPCDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCDataSourceConfig_cidrBlockAssociationsMultiple(rName),

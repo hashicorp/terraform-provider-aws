@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glacier"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -23,54 +22,45 @@ func init() {
 }
 
 func sweepVaults(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).GlacierConn
-	var sweeperErrs *multierror.Error
+	input := &glacier.ListVaultsInput{}
+	conn := client.(*conns.AWSClient).GlacierConn()
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListVaultsPages(&glacier.ListVaultsInput{}, func(page *glacier.ListVaultsOutput, lastPage bool) bool {
+	err = conn.ListVaultsPagesWithContext(ctx, input, func(page *glacier.ListVaultsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, vault := range page.VaultList {
-			name := aws.StringValue(vault.VaultName)
+		for _, v := range page.VaultList {
+			r := ResourceVault()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.VaultName))
 
-			// First attempt to delete the vault's notification configuration in case the vault deletion fails.
-			log.Printf("[INFO] Deleting Glacier Vault (%s) Notifications", name)
-			_, err := conn.DeleteVaultNotifications(&glacier.DeleteVaultNotificationsInput{
-				VaultName: aws.String(name),
-			})
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting Glacier Vault (%s) Notifications: %w", name, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-
-			log.Printf("[INFO] Deleting Glacier Vault: %s", name)
-			_, err = conn.DeleteVault(&glacier.DeleteVaultInput{
-				VaultName: aws.String(name),
-			})
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting Glacier Vault (%s): %w", name, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
+
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Glacier Vaults sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Glacier Vaults: %w", err))
+		log.Printf("[WARN] Skipping Glacier Vault sweep for %s: %s", region, err)
+		return nil
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing Glacier Vaults (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Glacier Vaults (%s): %w", region, err)
+	}
+
+	return nil
 }

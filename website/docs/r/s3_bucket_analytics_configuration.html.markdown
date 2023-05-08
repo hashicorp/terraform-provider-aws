@@ -16,7 +16,7 @@ Provides a S3 bucket [analytics configuration](https://docs.aws.amazon.com/Amazo
 
 ```terraform
 resource "aws_s3_bucket_analytics_configuration" "example-entire-bucket" {
-  bucket = aws_s3_bucket.example.bucket
+  bucket = aws_s3_bucket.example.id
   name   = "EntireBucket"
 
   storage_class_analysis {
@@ -43,7 +43,7 @@ resource "aws_s3_bucket" "analytics" {
 
 ```terraform
 resource "aws_s3_bucket_analytics_configuration" "example-filtered" {
-  bucket = aws_s3_bucket.example.bucket
+  bucket = aws_s3_bucket.example.id
   name   = "ImportantBlueDocuments"
 
   filter {
@@ -65,7 +65,7 @@ resource "aws_s3_bucket" "example" {
 
 The following arguments are supported:
 
-* `bucket` - (Required) The name of the bucket this analytics configuration is associated with.
+* `bucket` - (Required) Name of the bucket this analytics configuration is associated with.
 * `name` - (Required) Unique identifier of the analytics configuration for the bucket.
 * `filter` - (Optional) Object filtering that accepts a prefix, tags, or a logical AND of prefix and tags (documented below).
 * `storage_class_analysis` - (Optional) Configuration for the analytics data export (documented below).
@@ -81,7 +81,7 @@ The `storage_class_analysis` configuration supports the following:
 
 The `data_export` configuration supports the following:
 
-* `output_schema_version` - (Optional) The schema version of exported analytics data. Allowed values: `V_1`. Default value: `V_1`.
+* `output_schema_version` - (Optional) Schema version of exported analytics data. Allowed values: `V_1`. Default value: `V_1`.
 * `destination` - (Required) Specifies the destination for the exported analytics data (documented below).
 
 The `destination` configuration supports the following:
@@ -90,10 +90,10 @@ The `destination` configuration supports the following:
 
 The `s3_bucket_destination` configuration supports the following:
 
-* `bucket_arn` - (Required) The ARN of the destination bucket.
-* `bucket_account_id` - (Optional) The account ID that owns the destination bucket.
-* `format` - (Optional) The output format of exported analytics data. Allowed values: `CSV`. Default value: `CSV`.
-* `prefix` - (Optional) The prefix to append to exported analytics data.
+* `bucket_arn` - (Required) ARN of the destination bucket.
+* `bucket_account_id` - (Optional) Account ID that owns the destination bucket.
+* `format` - (Optional) Output format of exported analytics data. Allowed values: `CSV`. Default value: `CSV`.
+* `prefix` - (Optional) Prefix to append to exported analytics data.
 
 ## Attributes Reference
 

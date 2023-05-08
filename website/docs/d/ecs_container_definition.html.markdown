@@ -24,18 +24,18 @@ data "aws_ecs_container_definition" "ecs-mongo" {
 
 The following arguments are supported:
 
-* `task_definition` - (Required) The ARN of the task definition which contains the container
-* `container_name` - (Required) The name of the container definition
+* `task_definition` - (Required) ARN of the task definition which contains the container
+* `container_name` - (Required) Name of the container definition
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `image` - The docker image in use, including the digest
-* `image_digest` - The digest of the docker image in use
-* `cpu` - The CPU limit for this container definition
-* `memory` - The memory limit for this container definition
-* `memory_reservation` - The soft limit (in MiB) of memory to reserve for the container. When system memory is under contention, Docker attempts to keep the container memory to this soft limit
-* `environment` - The environment in use
+* `image` - Docker image in use, including the digest
+* `image_digest` - Digest of the docker image in use
+* `cpu` - CPU limit for this container definition
+* `memory` - Memory limit for this container definition
+* `memory_reservation` - Soft limit (in MiB) of memory to reserve for the container. When system memory is under contention, Docker attempts to keep the container memory to this soft limit
+* `environment` - Environment in use
 * `disable_networking` - Indicator if networking is disabled
 * `docker_labels` - Set docker labels

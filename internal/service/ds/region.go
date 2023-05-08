@@ -17,8 +17,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_directory_service_region", name="Region")
+// @Tags
 func ResourceRegion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRegionCreate,
@@ -54,8 +57,8 @@ func ResourceRegion() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidRegionName,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_settings": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -84,9 +87,7 @@ func ResourceRegion() *schema.Resource {
 }
 
 func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).DSConn()
 
 	directoryID := d.Get("directory_id").(string)
 	regionName := d.Get("region_name").(string)
@@ -112,21 +113,21 @@ func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("waiting for Directory Service Region (%s) create: %s", d.Id(), err)
 	}
 
-	if len(tags) > 0 {
-		regionConn, err := regionalConn(meta.(*conns.AWSClient), regionName)
+	regionConn, err := regionalConn(meta.(*conns.AWSClient), regionName)
 
-		if err != nil {
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if tags := GetTagsIn(ctx); len(tags) > 0 {
+		if err := createTags(ctx, regionConn, directoryID, tags); err != nil {
+			return diag.Errorf("setting Directory Service Directory (%s) tags: %s", directoryID, err)
+		}
+	}
+
+	if v, ok := d.GetOk("desired_number_of_domain_controllers"); ok {
+		if err := updateNumberOfDomainControllers(ctx, regionConn, directoryID, v.(int), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return diag.FromErr(err)
-		}
-
-		if err := UpdateTagsWithContext(ctx, regionConn, directoryID, nil, tags); err != nil {
-			return diag.Errorf("adding Directory Service Directory (%s) tags: %s", directoryID, err)
-		}
-
-		if v, ok := d.GetOk("desired_number_of_domain_controllers"); ok {
-			if err := updateNumberOfDomainControllers(regionConn, directoryID, v.(int), d.Timeout(schema.TimeoutCreate)); err != nil {
-				return diag.FromErr(err)
-			}
 		}
 	}
 
@@ -134,9 +135,7 @@ func resourceRegionCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DSConn()
 
 	directoryID, regionName, err := RegionParseResourceID(d.Id())
 
@@ -173,22 +172,13 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.FromErr(err)
 	}
 
-	tags, err := ListTagsWithContext(ctx, regionConn, directoryID)
+	tags, err := ListTags(ctx, regionConn, directoryID)
 
 	if err != nil {
 		return diag.Errorf("listing tags for Directory Service Directory (%s): %s", directoryID, err)
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, Tags(tags))
 
 	return nil
 }
@@ -207,7 +197,7 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if d.HasChange("desired_number_of_domain_controllers") {
-		if err := updateNumberOfDomainControllers(conn, directoryID, d.Get("desired_number_of_domain_controllers").(int), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := updateNumberOfDomainControllers(ctx, conn, directoryID, d.Get("desired_number_of_domain_controllers").(int), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return diag.FromErr(err)
 		}
 	}
@@ -215,7 +205,7 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, directoryID, o, n); err != nil {
+		if err := UpdateTags(ctx, conn, directoryID, o, n); err != nil {
 			return diag.Errorf("updating Directory Service Directory (%s) tags: %s", directoryID, err)
 		}
 	}
@@ -257,7 +247,7 @@ func resourceRegionDelete(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func regionalConn(client *conns.AWSClient, regionName string) (*directoryservice.DirectoryService, error) {
-	sess, err := conns.NewSessionForRegion(&client.DSConn.Config, regionName, client.TerraformVersion)
+	sess, err := conns.NewSessionForRegion(&client.DSConn().Config, regionName, client.TerraformVersion)
 
 	if err != nil {
 		return nil, fmt.Errorf("creating AWS session (%s): %w", regionName, err)

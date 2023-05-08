@@ -55,6 +55,10 @@ type ServeOpts struct {
 	// information needed for Terraform to connect to the provider to stdout.
 	// os.Interrupt will be captured and used to stop the server.
 	//
+	// Ensure the ProviderAddr field is correctly set when this is enabled,
+	// otherwise the TF_REATTACH_PROVIDERS environment variable will not
+	// correctly point Terraform to the running provider binary.
+	//
 	// This option cannot be combined with TestConfig.
 	Debug bool
 
@@ -76,8 +80,11 @@ type ServeOpts struct {
 	// the terraform-plugin-log logging sink.
 	UseTFLogSink testing.T
 
-	// ProviderAddr is the address of the provider under test, like
-	// registry.terraform.io/hashicorp/random.
+	// ProviderAddr is the address of the provider under test or debugging,
+	// such as registry.terraform.io/hashicorp/random. This value is used in
+	// the TF_REATTACH_PROVIDERS environment variable during debugging so
+	// Terraform can correctly match the provider address in the Terraform
+	// configuration to the running provider binary.
 	ProviderAddr string
 }
 

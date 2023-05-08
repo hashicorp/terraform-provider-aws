@@ -1,6 +1,7 @@
 package directconnect_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,21 +16,22 @@ import (
 )
 
 func TestAccDirectConnectGateway_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v directconnect.Gateway
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_dx_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayDestroy,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayConfig_basic(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayExists(resourceName, &v),
+					testAccCheckGatewayExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
 				),
 			},
@@ -43,22 +45,23 @@ func TestAccDirectConnectGateway_basic(t *testing.T) {
 }
 
 func TestAccDirectConnectGateway_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v directconnect.Gateway
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_dx_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayDestroy,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayConfig_basic(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdirectconnect.ResourceGateway(), resourceName),
+					testAccCheckGatewayExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdirectconnect.ResourceGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -67,21 +70,22 @@ func TestAccDirectConnectGateway_disappears(t *testing.T) {
 }
 
 func TestAccDirectConnectGateway_complex(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v directconnect.Gateway
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_dx_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayDestroy,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayConfig_associationMultiVPNSingleAccount(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayExists(resourceName, &v),
+					testAccCheckGatewayExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
 				),
 			},
@@ -94,30 +98,64 @@ func TestAccDirectConnectGateway_complex(t *testing.T) {
 	})
 }
 
-func testAccCheckGatewayDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
+func TestAccDirectConnectGateway_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v directconnect.Gateway
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	resourceName := "aws_dx_gateway.test"
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_dx_gateway" {
-			continue
-		}
-
-		_, err := tfdirectconnect.FindGatewayByID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Direct Connect Gateway %s still exists", rs.Primary.ID)
-	}
-	return nil
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayConfig_basic(rName1, rBgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGatewayExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+				),
+			},
+			{
+				Config: testAccGatewayConfig_basic(rName2, rBgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGatewayExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+				),
+			},
+		},
+	})
 }
 
-func testAccCheckGatewayExists(name string, v *directconnect.Gateway) resource.TestCheckFunc {
+func testAccCheckGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn()
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_dx_gateway" {
+				continue
+			}
+
+			_, err := tfdirectconnect.FindGatewayByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Direct Connect Gateway %s still exists", rs.Primary.ID)
+		}
+		return nil
+	}
+}
+
+func testAccCheckGatewayExists(ctx context.Context, name string, v *directconnect.Gateway) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -128,9 +166,9 @@ func testAccCheckGatewayExists(name string, v *directconnect.Gateway) resource.T
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn()
 
-		output, err := tfdirectconnect.FindGatewayByID(conn, rs.Primary.ID)
+		output, err := tfdirectconnect.FindGatewayByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

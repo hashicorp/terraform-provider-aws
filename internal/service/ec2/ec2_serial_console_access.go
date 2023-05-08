@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKResource("aws_ec2_serial_console_access")
 func ResourceSerialConsoleAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSerialConsoleAccessCreate,
@@ -17,7 +18,7 @@ func ResourceSerialConsoleAccess() *schema.Resource {
 		DeleteWithoutTimeout: resourceSerialConsoleAccessDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -31,7 +32,7 @@ func ResourceSerialConsoleAccess() *schema.Resource {
 }
 
 func resourceSerialConsoleAccessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	enabled := d.Get("enabled").(bool)
 	if err := setSerialConsoleAccess(ctx, conn, enabled); err != nil {
@@ -44,7 +45,7 @@ func resourceSerialConsoleAccessCreate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceSerialConsoleAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	output, err := conn.GetSerialConsoleAccessStatusWithContext(ctx, &ec2.GetSerialConsoleAccessStatusInput{})
 
@@ -58,7 +59,7 @@ func resourceSerialConsoleAccessRead(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceSerialConsoleAccessUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	enabled := d.Get("enabled").(bool)
 	if err := setSerialConsoleAccess(ctx, conn, enabled); err != nil {
@@ -69,7 +70,7 @@ func resourceSerialConsoleAccessUpdate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceSerialConsoleAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	// Removing the resource disables serial console access.
 	if err := setSerialConsoleAccess(ctx, conn, false); err != nil {

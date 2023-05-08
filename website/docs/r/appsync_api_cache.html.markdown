@@ -30,9 +30,9 @@ resource "aws_appsync_api_cache" "example" {
 
 The following arguments are supported:
 
-* `api_id` - (Required) The GraphQL API ID.
+* `api_id` - (Required) GraphQL API ID.
 * `api_caching_behavior` - (Required) Caching behavior. Valid values are `FULL_REQUEST_CACHING` and `PER_RESOLVER_CACHING`.
-* `type` - (Required) The cache instance type. Valid values are `SMALL`, `MEDIUM`, `LARGE`, `XLARGE`, `LARGE_2X`, `LARGE_4X`, `LARGE_8X`, `LARGE_12X`, `T2_SMALL`, `T2_MEDIUM`, `R4_LARGE`, `R4_XLARGE`, `R4_2XLARGE`, `R4_4XLARGE`, `R4_8XLARGE`.
+* `type` - (Required) Cache instance type. Valid values are `SMALL`, `MEDIUM`, `LARGE`, `XLARGE`, `LARGE_2X`, `LARGE_4X`, `LARGE_8X`, `LARGE_12X`, `T2_SMALL`, `T2_MEDIUM`, `R4_LARGE`, `R4_XLARGE`, `R4_2XLARGE`, `R4_4XLARGE`, `R4_8XLARGE`.
 * `ttl` - (Required) TTL in seconds for cache entries.
 * `at_rest_encryption_enabled` - (Optional) At-rest encryption flag for cache. You cannot update this setting after creation.
 * `transit_encryption_enabled` - (Optional) Transit encryption flag when connecting to cache. You cannot update this setting after creation.
@@ -41,7 +41,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The AppSync API ID.
+* `id` - AppSync API ID.
 
 ## Import
 

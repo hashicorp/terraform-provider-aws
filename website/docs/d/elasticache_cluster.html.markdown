@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_elasticache_cluster
 
-Use this data source to get information about an Elasticache Cluster
+Use this data source to get information about an ElastiCache Cluster
 
 ## Example Usage
 
@@ -24,7 +24,6 @@ The following arguments are supported:
 
 * `cluster_id` – (Required) Group identifier.
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -33,6 +32,8 @@ In addition to all arguments above, the following attributes are exported:
 * `num_cache_nodes` – The number of cache nodes that the cache cluster has.
 * `engine` – Name of the cache engine.
 * `engine_version` – Version number of the cache engine.
+* `ip_discovery` - The IP version advertised in the discovery protocol.
+* `network_type` - The IP versions for cache cluster connections.
 * `subnet_group_name` – Name of the subnet group associated to the cache cluster.
 * `security_group_names` – List of security group names associated with this cache cluster.
 * `security_group_ids` – List VPC security groups associated with the cache cluster.
@@ -41,17 +42,18 @@ In addition to all arguments above, the following attributes are exported:
 * `log_delivery_configuration` - Redis [SLOWLOG](https://redis.io/commands/slowlog) or Redis [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log) delivery settings.
 * `maintenance_window` – Specifies the weekly time range for when maintenance
 on the cache cluster is performed.
-* `snapshot_window` - The daily time range (in UTC) during which ElastiCache will
+* `snapshot_window` - Daily time range (in UTC) during which ElastiCache will
 begin taking a daily snapshot of the cache cluster.
 * `snapshot_retention_limit` - The number of days for which ElastiCache will
 retain automatic cache cluster snapshots before deleting them.
-* `availability_zone` - The Availability Zone for the cache cluster.
-* `notification_topic_arn` – An Amazon Resource Name (ARN) of an
+* `availability_zone` - Availability Zone for the cache cluster.
+* `notification_topic_arn` – An ARN of an
 SNS topic that ElastiCache notifications get sent to.
 * `port` – The port number on which each of the cache nodes will
 accept connections.
-* `configuration_endpoint` - (Memcached only) The configuration endpoint to allow host discovery.
-* `cluster_address` - (Memcached only) The DNS name of the cache cluster without the port appended.
-* `cache_nodes` - List of node objects including `id`, `address`, `port` and `availability_zone`.
+* `configuration_endpoint` - (Memcached only) Configuration endpoint to allow host discovery.
+* `cluster_address` - (Memcached only) DNS name of the cache cluster without the port appended.
+* `preferred_outpost_arn` - The outpost ARN in which the cache cluster was created if created in outpost.
+* `cache_nodes` - List of node objects including `id`, `address`, `port`, `availability_zone` and `outpost_arn`.
    Referenceable e.g., as `${data.aws_elasticache_cluster.bar.cache_nodes.0.address}`
-* `tags` - The tags assigned to the resource
+* `tags` - Tags assigned to the resource

@@ -20,7 +20,7 @@ data "aws_imagebuilder_distribution_configuration" "example" {
 
 ## Argument Reference
 
-* `arn` - (Required) Amazon Resource Name (ARN) of the distribution configuration.
+* `arn` - (Required) ARN of the distribution configuration.
 
 ## Attributes Reference
 
@@ -33,7 +33,7 @@ In addition to all arguments above, the following attributes are exported:
     * `ami_distribution_configuration` - Nested list of AMI distribution configuration.
         * `ami_tags` - Key-value map of tags to apply to distributed AMI.
         * `description` - Description to apply to distributed AMI.
-        * `kms_key_id` - Amazon Resource Name (ARN) of Key Management Service (KMS) Key to encrypt AMI.
+        * `kms_key_id` - ARN of Key Management Service (KMS) Key to encrypt AMI.
         * `launch_permission` - Nested list of EC2 launch permissions.
             * `organization_arns` - Set of AWS Organization ARNs.
             * `organizational_unit_arns` - Set of AWS Organizational Unit ARNs.
@@ -57,7 +57,7 @@ In addition to all arguments above, the following attributes are exported:
         * `snapshot_configuration` - Nested list of configurations for managing the number of snapshots that are created from pre-provisioned instances for the Windows AMI when faster launching is enabled.
             * `target_resource_count` - The number of pre-provisioned snapshots to keep on hand for a fast-launch enabled Windows AMI.
     * `launch_template_configuration` - Nested list of launch template configurations.
-        * `default` - Indicates whether the specified Amazon EC2 launch template is set as the default launch template.
+        * `default` - Whether the specified Amazon EC2 launch template is set as the default launch template.
         * `launch_template_id` - ID of the Amazon EC2 launch template.
         * `account_id` - The account ID that this configuration applies to.
     * `license_configuration_arns` - Set of Amazon Resource Names (ARNs) of License Manager License Configurations.

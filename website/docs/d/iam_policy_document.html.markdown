@@ -525,7 +525,7 @@ The following arguments are required:
 
 The `principals` and `not_principals` arguments define to whom a statement applies or does not apply, respectively.
 
-~> **NOTE**: Even though the [IAM Documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html) states that `"Principal": "*"` and `"Principal": {"AWS": "*"}` are equivalent, those principal elements have different behavior in some situations, e.g., IAM Role Trust Policy. To have Terraform render JSON containing `"Principal": "*"`, use `type = "*"` and `identifiers = ["*"]`. To have Terraform render JSON containing `"Principal": {"AWS": "*"}`, use `type = "AWS"` and `identifiers = ["*"]`.
+~> **NOTE:** Even though the [IAM Documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html) states that `"Principal": "*"` and `"Principal": {"AWS": "*"}` are equivalent, those principal elements have different behavior in some situations, e.g., IAM Role Trust Policy. To have Terraform render JSON containing `"Principal": "*"`, use `type = "*"` and `identifiers = ["*"]`. To have Terraform render JSON containing `"Principal": {"AWS": "*"}`, use `type = "AWS"` and `identifiers = ["*"]`.
 
 -> For more information about AWS principals, refer to the [AWS Identity and Access Management User Guide: AWS JSON policy elements: Principal](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html).
 

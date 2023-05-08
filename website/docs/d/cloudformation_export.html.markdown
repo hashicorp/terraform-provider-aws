@@ -29,11 +29,11 @@ resource "aws_instance" "web" {
 
 ## Argument Reference
 
-* `name` - (Required) The name of the export as it appears in the console or from [list-exports](http://docs.aws.amazon.com/cli/latest/reference/cloudformation/list-exports.html)
+* `name` - (Required) Name of the export as it appears in the console or from [list-exports](http://docs.aws.amazon.com/cli/latest/reference/cloudformation/list-exports.html)
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `value` - The value from Cloudformation export identified by the export name found from [list-exports](http://docs.aws.amazon.com/cli/latest/reference/cloudformation/list-exports.html)
-* `exporting_stack_id` - The exporting_stack_id (AWS ARNs) equivalent `ExportingStackId` from [list-exports](http://docs.aws.amazon.com/cli/latest/reference/cloudformation/list-exports.html)
+* `value` - Value from Cloudformation export identified by the export name found from [list-exports](http://docs.aws.amazon.com/cli/latest/reference/cloudformation/list-exports.html)
+* `exporting_stack_id` - ARN of stack that contains the exported output name and value.

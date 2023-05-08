@@ -11,15 +11,16 @@ import (
 )
 
 func TestAccKafkaConfigurationDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_msk_configuration.test"
 	resourceName := "aws_msk_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, kafka.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationDestroy,
+		CheckDestroy:             testAccCheckConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationDataSourceConfig_name(rName),

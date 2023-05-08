@@ -27,17 +27,17 @@ resource "aws_apigatewayv2_route_response" "example" {
 
 The following arguments are supported:
 
-* `api_id` - (Required) The API identifier.
-* `route_id` - (Required) The identifier of the [`aws_apigatewayv2_route`](/docs/providers/aws/r/apigatewayv2_route.html).
-* `route_response_key` - (Required) The route response key.
+* `api_id` - (Required) API identifier.
+* `route_id` - (Required) Identifier of the [`aws_apigatewayv2_route`](/docs/providers/aws/r/apigatewayv2_route.html).
+* `route_response_key` - (Required) Route response key.
 * `model_selection_expression` - (Optional) The [model selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-model-selection-expressions) for the route response.
-* `response_models` - (Optional) The response models for the route response.
+* `response_models` - (Optional) Response models for the route response.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The route response identifier.
+* `id` - Route response identifier.
 
 ## Import
 
