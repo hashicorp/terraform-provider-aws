@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func customContentVisualSchema() *schema.Schema {
@@ -19,10 +20,11 @@ func customContentVisualSchema() *schema.Schema {
 				"visual_id":           idSchema(),
 				"actions":             visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
 				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CustomContentConfiguration.html
-					Type:     schema.TypeList,
-					Optional: true,
-					MinItems: 1,
-					MaxItems: 1,
+					Type:             schema.TypeList,
+					Optional:         true,
+					MinItems:         1,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"content_type":  stringSchema(false, validation.StringInSlice(quicksight.CustomContentType_Values(), false)),
@@ -124,10 +126,6 @@ func flattenCustomContentVisual(apiObject *quicksight.CustomContentVisual) []int
 
 func flattenCustomContentConfiguration(apiObject *quicksight.CustomContentConfiguration) []interface{} {
 	if apiObject == nil {
-		return nil
-	}
-	// When unset, the API can return an empty object rather than nil.
-	if *apiObject == (quicksight.CustomContentConfiguration{}) {
 		return nil
 	}
 
