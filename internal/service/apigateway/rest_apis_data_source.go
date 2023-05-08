@@ -49,7 +49,6 @@ func dataSourceClustersRead(ctx context.Context, d *schema.ResourceData, meta in
 			}
 
 			apiNames = append(apiNames, aws.StringValue(item.Name))
-
 		}
 
 		return !lastPage
