@@ -181,7 +181,6 @@ func ResourceOntapFileSystem() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 				MaxItems: 50,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -210,7 +209,7 @@ func ResourceOntapFileSystem() *schema.Resource {
 			"throughput_capacity": {
 				Type:         schema.TypeInt,
 				Required:     true,
-				ValidateFunc: validation.IntInSlice([]int{128, 256, 512, 1024, 2048}),
+				ValidateFunc: validation.IntInSlice([]int{128, 256, 512, 1024, 2048, 4096}),
 			},
 			"vpc_id": {
 				Type:     schema.TypeString,
@@ -396,6 +395,22 @@ func resourceOntapFileSystemUpdate(ctx context.Context, d *schema.ResourceData, 
 
 		if d.HasChange("disk_iops_configuration") {
 			input.OntapConfiguration.DiskIopsConfiguration = expandOntapFileDiskIopsConfiguration(d.Get("disk_iops_configuration").([]interface{}))
+		}
+
+		if d.HasChange("route_table_ids") {
+			o, n := d.GetChange("route_table_ids")
+			ns := n.(*schema.Set)
+			os := o.(*schema.Set)
+			added := ns.Difference(os)
+			removed := os.Difference(ns)
+
+			if added.Len() > 0 {
+				input.OntapConfiguration.AddRouteTableIds = flex.ExpandStringSet(added)
+			}
+
+			if removed.Len() > 0 {
+				input.OntapConfiguration.RemoveRouteTableIds = flex.ExpandStringSet(removed)
+			}
 		}
 
 		_, err := conn.UpdateFileSystemWithContext(ctx, input)
