@@ -307,3 +307,162 @@ func expandRadarChartAreaStyleSettings(tfList []interface{}) *quicksight.RadarCh
 
 	return config
 }
+
+func flattenRadarChartVisual(apiObject *quicksight.RadarChartVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"visual_id": aws.StringValue(apiObject.VisualId),
+	}
+	if apiObject.Actions != nil {
+		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
+	}
+	if apiObject.ChartConfiguration != nil {
+		tfMap["chart_configuration"] = flattenRadarChartConfiguration(apiObject.ChartConfiguration)
+	}
+	if apiObject.ColumnHierarchies != nil {
+		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+	}
+	if apiObject.Subtitle != nil {
+		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
+	}
+	if apiObject.Title != nil {
+		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenRadarChartConfiguration(apiObject *quicksight.RadarChartConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.AlternateBandColorsVisibility != nil {
+		tfMap["alternate_band_colors_visibility"] = aws.StringValue(apiObject.AlternateBandColorsVisibility)
+	}
+	if apiObject.AlternateBandEvenColor != nil {
+		tfMap["alternate_band_even_color"] = aws.StringValue(apiObject.AlternateBandEvenColor)
+	}
+	if apiObject.AlternateBandOddColor != nil {
+		tfMap["alternate_band_odd_color"] = aws.StringValue(apiObject.AlternateBandOddColor)
+	}
+	if apiObject.BaseSeriesSettings != nil {
+		tfMap["base_series_settings"] = flattenRadarChartSeriesSettings(apiObject.BaseSeriesSettings)
+	}
+	if apiObject.CategoryAxis != nil {
+		tfMap["category_axis"] = flattenAxisDisplayOptions(apiObject.CategoryAxis)
+	}
+	if apiObject.CategoryLabelOptions != nil {
+		tfMap["category_label_options"] = flattenChartAxisLabelOptions(apiObject.CategoryLabelOptions)
+	}
+	if apiObject.ColorAxis != nil {
+		tfMap["color_axis"] = flattenAxisDisplayOptions(apiObject.ColorAxis)
+	}
+	if apiObject.ColorLabelOptions != nil {
+		tfMap["color_label_options"] = flattenChartAxisLabelOptions(apiObject.ColorLabelOptions)
+	}
+	if apiObject.FieldWells != nil {
+		tfMap["field_wells"] = flattenRadarChartFieldWells(apiObject.FieldWells)
+	}
+	if apiObject.Legend != nil {
+		tfMap["legend"] = flattenLegendOptions(apiObject.Legend)
+	}
+	if apiObject.Shape != nil {
+		tfMap["shape"] = aws.StringValue(apiObject.Shape)
+	}
+	if apiObject.SortConfiguration != nil {
+		tfMap["sort_configuration"] = flattenRadarChartSortConfiguration(apiObject.SortConfiguration)
+	}
+	if apiObject.StartAngle != nil {
+		tfMap["start_angle"] = aws.Float64Value(apiObject.StartAngle)
+	}
+	if apiObject.VisualPalette != nil {
+		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenRadarChartSeriesSettings(apiObject *quicksight.RadarChartSeriesSettings) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.AreaStyleSettings != nil {
+		tfMap["area_style_settings"] = flattenRadarChartAreaStyleSettings(apiObject.AreaStyleSettings)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenRadarChartAreaStyleSettings(apiObject *quicksight.RadarChartAreaStyleSettings) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Visibility != nil {
+		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenRadarChartFieldWells(apiObject *quicksight.RadarChartFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.RadarChartAggregatedFieldWells != nil {
+		tfMap["bar_chart_aggregated_field_wells"] = flattenRadarChartAggregatedFieldWells(apiObject.RadarChartAggregatedFieldWells)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenRadarChartAggregatedFieldWells(apiObject *quicksight.RadarChartAggregatedFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Category != nil {
+		tfMap["category"] = flattenDimensionFields(apiObject.Category)
+	}
+	if apiObject.Color != nil {
+		tfMap["color"] = flattenDimensionFields(apiObject.Color)
+	}
+	if apiObject.Values != nil {
+		tfMap["values"] = flattenMeasureFields(apiObject.Values)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenRadarChartSortConfiguration(apiObject *quicksight.RadarChartSortConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CategoryItemsLimit != nil {
+		tfMap["category_items_limit"] = flattenItemsLimitConfiguration(apiObject.CategoryItemsLimit)
+	}
+	if apiObject.CategorySort != nil {
+		tfMap["category_sort"] = flattenFieldSortOptions(apiObject.CategorySort)
+	}
+	if apiObject.ColorItemsLimit != nil {
+		tfMap["color_items_limit"] = flattenItemsLimitConfiguration(apiObject.ColorItemsLimit)
+	}
+	if apiObject.ColorSort != nil {
+		tfMap["color_sort"] = flattenFieldSortOptions(apiObject.ColorSort)
+	}
+
+	return []interface{}{tfMap}
+}

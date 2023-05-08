@@ -1451,17 +1451,6 @@ func flattenVisuals(apiObject []*quicksight.Visual) []interface{} {
 	return tfList
 }
 
-func flattenRadarChartVisual(apiObject *quicksight.RadarChartVisual) []interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-	// TODO
-
-	return []interface{}{tfMap}
-}
-
 func flattenSankeyDiagramVisual(apiObject *quicksight.SankeyDiagramVisual) []interface{} {
 	if apiObject == nil {
 		return nil
