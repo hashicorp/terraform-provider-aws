@@ -38,7 +38,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceSamplingRule,
+			Factory:  resourceSamplingRule,
 			TypeName: "aws_xray_sampling_rule",
 			Name:     "Sampling Rule",
 			Tags: &types.ServicePackageResourceTags{
