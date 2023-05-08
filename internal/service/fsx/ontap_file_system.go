@@ -411,7 +411,6 @@ func resourceOntapFileSystemUpdate(ctx context.Context, d *schema.ResourceData, 
 			if removed.Len() > 0 {
 				input.OntapConfiguration.RemoveRouteTableIds = flex.ExpandStringSet(removed)
 			}
-
 		}
 
 		_, err := conn.UpdateFileSystemWithContext(ctx, input)
