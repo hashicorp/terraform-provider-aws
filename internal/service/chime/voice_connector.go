@@ -46,6 +46,10 @@ func ResourceVoiceConnector() *schema.Resource {
 				Type:     schema.TypeBool,
 				Required: true,
 			},
+			"voice_connector_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -93,6 +97,7 @@ func resourceVoiceConnectorRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("aws_region", resp.VoiceConnector.AwsRegion)
 	d.Set("outbound_host_name", resp.VoiceConnector.OutboundHostName)
 	d.Set("require_encryption", resp.VoiceConnector.RequireEncryption)
+	d.Set("voice_connector_arn", resp.VoiceConnector.VoiceConnectorArn)
 	d.Set("name", resp.VoiceConnector.Name)
 
 	return nil

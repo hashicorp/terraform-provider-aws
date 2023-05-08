@@ -34,6 +34,8 @@ In addition to all arguments above, the following attributes are exported:
 
 * `outbound_host_name` - The outbound host name for the Amazon Chime Voice Connector.
 
+* `voice_connector_arn` - The arn of the Amazon Chime Voice Connector.
+
 ## Import
 
 Configuration Recorder can be imported using the name, e.g.,
