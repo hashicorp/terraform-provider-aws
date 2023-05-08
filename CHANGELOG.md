@@ -3,7 +3,8 @@
 FEATURES:
 
 * **New Data Source:** `aws_connect_user` ([#26156](https://github.com/hashicorp/terraform-provider-aws/issues/26156))
-* **New Data Source:** `aws_organization_policy` ([#30920](https://github.com/hashicorp/terraform-provider-aws/issues/30920))
+* **New Data Source:** `aws_organizations_policy` ([#30920](https://github.com/hashicorp/terraform-provider-aws/issues/30920))
+* **New Data Source:** `aws_redshiftserverless_namespace` ([#31250](https://github.com/hashicorp/terraform-provider-aws/issues/31250))
 
 ENHANCEMENTS:
 
