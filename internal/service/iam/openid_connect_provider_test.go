@@ -286,7 +286,7 @@ resource "aws_iam_openid_connect_provider" "test" {
     "abc.testle.com",
     "def.testle.com",
     "ghi.testle.com",
-	]
+  ]
 
   thumbprint_list = ["oif8192f189fa2178f-testle.thumbprint.com"]
 }
