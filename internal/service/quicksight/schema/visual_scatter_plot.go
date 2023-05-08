@@ -230,3 +230,124 @@ func expandScatterPlotUnaggregatedFieldWells(tfList []interface{}) *quicksight.S
 
 	return config
 }
+
+func flattenScatterPlotVisual(apiObject *quicksight.ScatterPlotVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"visual_id": aws.StringValue(apiObject.VisualId),
+	}
+	if apiObject.Actions != nil {
+		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
+	}
+	if apiObject.ChartConfiguration != nil {
+		tfMap["chart_configuration"] = flattenScatterPlotConfiguration(apiObject.ChartConfiguration)
+	}
+	if apiObject.ColumnHierarchies != nil {
+		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+	}
+	if apiObject.Subtitle != nil {
+		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
+	}
+	if apiObject.Title != nil {
+		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenScatterPlotConfiguration(apiObject *quicksight.ScatterPlotConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.DataLabels != nil {
+		tfMap["data_labels"] = flattenDataLabelOptions(apiObject.DataLabels)
+	}
+	if apiObject.FieldWells != nil {
+		tfMap["field_wells"] = flattenScatterPlotFieldWells(apiObject.FieldWells)
+	}
+	if apiObject.Legend != nil {
+		tfMap["legend"] = flattenLegendOptions(apiObject.Legend)
+	}
+	if apiObject.Tooltip != nil {
+		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)
+	}
+	if apiObject.VisualPalette != nil {
+		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
+	}
+	if apiObject.XAxisDisplayOptions != nil {
+		tfMap["x_axis_display_options"] = flattenAxisDisplayOptions(apiObject.XAxisDisplayOptions)
+	}
+	if apiObject.XAxisLabelOptions != nil {
+		tfMap["x_axis_label_options"] = flattenChartAxisLabelOptions(apiObject.XAxisLabelOptions)
+	}
+	if apiObject.YAxisDisplayOptions != nil {
+		tfMap["y_axis_display_options"] = flattenAxisDisplayOptions(apiObject.YAxisDisplayOptions)
+	}
+	if apiObject.YAxisLabelOptions != nil {
+		tfMap["y_axis_label_options"] = flattenChartAxisLabelOptions(apiObject.YAxisLabelOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenScatterPlotFieldWells(apiObject *quicksight.ScatterPlotFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ScatterPlotCategoricallyAggregatedFieldWells != nil {
+		tfMap["scatter_plot_categorically_aggregated_field_wells"] = flattenScatterPlotCategoricallyAggregatedFieldWells(apiObject.ScatterPlotCategoricallyAggregatedFieldWells)
+	}
+	if apiObject.ScatterPlotUnaggregatedFieldWells != nil {
+		tfMap["scatter_plot_unaggregated_field_wells"] = flattenScatterPlotUnaggregatedFieldWells(apiObject.ScatterPlotUnaggregatedFieldWells)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenScatterPlotCategoricallyAggregatedFieldWells(apiObject *quicksight.ScatterPlotCategoricallyAggregatedFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Category != nil {
+		tfMap["category"] = flattenDimensionFields(apiObject.Category)
+	}
+	if apiObject.Size != nil {
+		tfMap["size"] = flattenMeasureFields(apiObject.Size)
+	}
+	if apiObject.XAxis != nil {
+		tfMap["x_axis"] = flattenMeasureFields(apiObject.XAxis)
+	}
+	if apiObject.YAxis != nil {
+		tfMap["y_axis"] = flattenMeasureFields(apiObject.YAxis)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenScatterPlotUnaggregatedFieldWells(apiObject *quicksight.ScatterPlotUnaggregatedFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Size != nil {
+		tfMap["size"] = flattenMeasureFields(apiObject.Size)
+	}
+	if apiObject.XAxis != nil {
+		tfMap["x_axis"] = flattenDimensionFields(apiObject.XAxis)
+	}
+	if apiObject.YAxis != nil {
+		tfMap["y_axis"] = flattenDimensionFields(apiObject.YAxis)
+	}
+
+	return []interface{}{tfMap}
+}
