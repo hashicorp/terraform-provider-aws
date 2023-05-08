@@ -183,6 +183,35 @@ func testAccCheckOpenIDConnectProvider(ctx context.Context, id string) resource.
 	}
 }
 
+func TestAccIAMOpenidConnectProvider_clientIdListOrder(t *testing.T) {
+	ctx := acctest.Context(t)
+	rString := sdkacctest.RandString(5)
+	resourceName := "aws_iam_openid_connect_provider.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOpenIDConnectProviderConfig_clientIdList_first(rString),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenIDConnectProvider(ctx, resourceName),
+				),
+			},
+			{
+				Config: testAccOpenIDConnectProviderConfig_clientIdList_second(rString),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenIDConnectProvider(ctx, resourceName),
+				),
+				ExpectNonEmptyPlan: false, // Expect an empty plan as only the order has been changed
+				PlanOnly:           true,  // Expect an empty plan as only the order has been changed
+			},
+		},
+	})
+}
+
 func testAccOpenIDConnectProviderConfig_basic(rString string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_openid_connect_provider" "test" {
@@ -246,4 +275,36 @@ resource "aws_iam_openid_connect_provider" "test" {
   }
 }
 `, rString, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccOpenIDConnectProviderConfig_clientIdList_first(rString string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_openid_connect_provider" "test" {
+  url = "https://accounts.testle.com/%s"
+
+  client_id_list = [
+	  "abc.testle.com",
+	  "def.testle.com",
+	  "ghi.testle.com",
+	]
+
+  thumbprint_list = ["oif8192f189fa2178f-testle.thumbprint.com"]
+}
+`, rString)
+}
+
+func testAccOpenIDConnectProviderConfig_clientIdList_second(rString string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_openid_connect_provider" "test" {
+  url = "https://accounts.testle.com/%s"
+
+  client_id_list = [
+	  "def.testle.com",
+	  "ghi.testle.com",
+	  "abc.testle.com",
+	]
+
+  thumbprint_list = ["oif8192f189fa2178f-testle.thumbprint.com"]
+}
+`, rString)
 }
