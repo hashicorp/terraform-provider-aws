@@ -33,14 +33,26 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceChannel,
 			TypeName: "aws_ivs_channel",
+			Name:     "Channel",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourcePlaybackKeyPair,
 			TypeName: "aws_ivs_playback_key_pair",
+			Name:     "Playback Key Pair",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceRecordingConfiguration,
 			TypeName: "aws_ivs_recording_configuration",
+			Name:     "Recording Configuration",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 	}
 }

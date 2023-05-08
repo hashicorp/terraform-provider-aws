@@ -1137,7 +1137,6 @@ func testAccCheckClusterInstanceExists(ctx context.Context, n string, v *rds.DBI
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 		output, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

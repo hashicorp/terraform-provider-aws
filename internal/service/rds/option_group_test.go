@@ -578,7 +578,6 @@ func testAccCheckOptionGroupExists(ctx context.Context, n string, v *rds.OptionG
 		}
 
 		resp, err := conn.DescribeOptionGroupsWithContext(ctx, &opts)
-
 		if err != nil {
 			return err
 		}

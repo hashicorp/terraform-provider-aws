@@ -53,6 +53,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceCluster,
 			TypeName: "aws_redshift_cluster",
+			Name:     "Cluster",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceClusterIAMRoles,
@@ -61,6 +65,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceClusterSnapshot,
 			TypeName: "aws_redshift_cluster_snapshot",
+			Name:     "Cluster Snapshot",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceEndpointAccess,
@@ -73,18 +81,34 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceEventSubscription,
 			TypeName: "aws_redshift_event_subscription",
+			Name:     "Event Subscription",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceHSMClientCertificate,
 			TypeName: "aws_redshift_hsm_client_certificate",
+			Name:     "HSM Client Certificate",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceHSMConfiguration,
 			TypeName: "aws_redshift_hsm_configuration",
+			Name:     "HSM Configuration",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceParameterGroup,
 			TypeName: "aws_redshift_parameter_group",
+			Name:     "Parameter Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourcePartner,
@@ -101,10 +125,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceSnapshotCopyGrant,
 			TypeName: "aws_redshift_snapshot_copy_grant",
+			Name:     "Snapshot Copy Grant",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceSnapshotSchedule,
 			TypeName: "aws_redshift_snapshot_schedule",
+			Name:     "Snapshot Schedule",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceSnapshotScheduleAssociation,
@@ -113,10 +145,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceSubnetGroup,
 			TypeName: "aws_redshift_subnet_group",
+			Name:     "Subnet Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceUsageLimit,
 			TypeName: "aws_redshift_usage_limit",
+			Name:     "Usage Limit",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }

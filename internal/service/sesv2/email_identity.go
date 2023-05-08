@@ -24,7 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_sesv2_email_identity")
+// @SDKResource("aws_sesv2_email_identity", name="Email Identity")
+// @Tags(identifierAttribute="arn")
 func ResourceEmailIdentity() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEmailIdentityCreate,
@@ -116,8 +117,8 @@ func ResourceEmailIdentity() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"verified_for_sending_status": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -137,6 +138,7 @@ func resourceEmailIdentityCreate(ctx context.Context, d *schema.ResourceData, me
 
 	in := &sesv2.CreateEmailIdentityInput{
 		EmailIdentity: aws.String(d.Get("email_identity").(string)),
+		Tags:          GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("configuration_set_name"); ok {
@@ -145,13 +147,6 @@ func resourceEmailIdentityCreate(ctx context.Context, d *schema.ResourceData, me
 
 	if v, ok := d.GetOk("dkim_signing_attributes"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		in.DkimSigningAttributes = expandDKIMSigningAttributes(v.([]interface{})[0].(map[string]interface{}))
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	out, err := conn.CreateEmailIdentity(ctx, in)
@@ -208,24 +203,6 @@ func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.Set("identity_type", string(out.IdentityType))
-
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameEmailIdentity, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameEmailIdentity, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameEmailIdentity, d.Id(), err)
-	}
-
 	d.Set("verified_for_sending_status", out.VerifiedForSendingStatus)
 
 	return nil
@@ -264,14 +241,6 @@ func resourceEmailIdentityUpdate(ctx context.Context, d *schema.ResourceData, me
 		log.Printf("[DEBUG] Updating SESV2 EmailIdentity DkimSigningAttributes (%s): %#v", d.Id(), in)
 		_, err := conn.PutEmailIdentityDkimSigningAttributes(ctx, in)
 		if err != nil {
-			return create.DiagError(names.SESV2, create.ErrActionUpdating, ResNameEmailIdentity, d.Id(), err)
-		}
-	}
-
-	if d.HasChanges("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return create.DiagError(names.SESV2, create.ErrActionUpdating, ResNameEmailIdentity, d.Id(), err)
 		}
 	}

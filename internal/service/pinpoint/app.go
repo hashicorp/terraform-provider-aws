@@ -15,9 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_pinpoint_app")
+// @SDKResource("aws_pinpoint_app", name="App")
+// @Tags(identifierAttribute="arn")
 func ResourceApp() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAppCreate,
@@ -143,8 +145,8 @@ func ResourceApp() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -154,8 +156,6 @@ func ResourceApp() *schema.Resource {
 func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	var name string
 
@@ -172,11 +172,8 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	req := &pinpoint.CreateAppInput{
 		CreateApplicationRequest: &pinpoint.CreateApplicationRequest{
 			Name: aws.String(name),
+			Tags: GetTagsIn(ctx),
 		},
-	}
-
-	if len(tags) > 0 {
-		req.CreateApplicationRequest.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	output, err := conn.CreateAppWithContext(ctx, req)
@@ -190,57 +187,9 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceAppUpdate(ctx, d, meta)...)
 }
 
-func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
-
-	appSettings := &pinpoint.WriteApplicationSettingsRequest{}
-
-	//if d.HasChange("cloudwatch_metrics_enabled") {
-	//	appSettings.CloudWatchMetricsEnabled = aws.Bool(d.Get("cloudwatch_metrics_enabled").(bool));
-	//}
-
-	if d.HasChange("campaign_hook") {
-		appSettings.CampaignHook = expandCampaignHook(d.Get("campaign_hook").([]interface{}))
-	}
-
-	if d.HasChange("limits") {
-		appSettings.Limits = expandCampaignLimits(d.Get("limits").([]interface{}))
-	}
-
-	if d.HasChange("quiet_time") {
-		appSettings.QuietTime = expandQuietTime(d.Get("quiet_time").([]interface{}))
-	}
-
-	req := pinpoint.UpdateApplicationSettingsInput{
-		ApplicationId:                   aws.String(d.Id()),
-		WriteApplicationSettingsRequest: appSettings,
-	}
-
-	_, err := conn.UpdateApplicationSettingsWithContext(ctx, &req)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Pinpoint Application (%s): %s", d.Id(), err)
-	}
-
-	if !d.IsNewResource() {
-		arn := d.Get("arn").(string)
-		if d.HasChange("tags_all") {
-			o, n := d.GetChange("tags_all")
-
-			if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating PinPoint Application (%s) tags: %s", arn, err)
-			}
-		}
-	}
-
-	return append(diags, resourceAppRead(ctx, d, meta)...)
-}
-
 func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[INFO] Reading Pinpoint App Attributes for %s", d.Id())
 
@@ -285,24 +234,42 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "setting quiet_time: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for PinPoint Application (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
+}
+
+func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).PinpointConn()
+
+	appSettings := &pinpoint.WriteApplicationSettingsRequest{}
+
+	//if d.HasChange("cloudwatch_metrics_enabled") {
+	//	appSettings.CloudWatchMetricsEnabled = aws.Bool(d.Get("cloudwatch_metrics_enabled").(bool));
+	//}
+
+	if d.HasChange("campaign_hook") {
+		appSettings.CampaignHook = expandCampaignHook(d.Get("campaign_hook").([]interface{}))
+	}
+
+	if d.HasChange("limits") {
+		appSettings.Limits = expandCampaignLimits(d.Get("limits").([]interface{}))
+	}
+
+	if d.HasChange("quiet_time") {
+		appSettings.QuietTime = expandQuietTime(d.Get("quiet_time").([]interface{}))
+	}
+
+	req := pinpoint.UpdateApplicationSettingsInput{
+		ApplicationId:                   aws.String(d.Id()),
+		WriteApplicationSettingsRequest: appSettings,
+	}
+
+	_, err := conn.UpdateApplicationSettingsWithContext(ctx, &req)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Pinpoint Application (%s): %s", d.Id(), err)
+	}
+
+	return append(diags, resourceAppRead(ctx, d, meta)...)
 }
 
 func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

@@ -684,20 +684,17 @@ func TestAccS3BucketReplicationConfiguration_schemaV2(t *testing.T) {
 
 func TestAccS3BucketReplicationConfiguration_schemaV2SameRegion(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	rNameDestination := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameDestination := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dstBucketResourceName := "aws_s3_bucket.destination"
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_s3_bucket_replication_configuration.test"
 
-	// record the initialized providers so that we can use them to check for the instances in each region
-	var providers []*schema.Provider
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
-		CheckDestroy:             acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroyWithProvider(ctx), &providers),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketReplicationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_schemaV2SameRegion(rName, rNameDestination),
@@ -1177,6 +1174,39 @@ func TestAccS3BucketReplicationConfiguration_migrate_withChange(t *testing.T) {
 			},
 		},
 	})
+}
+
+// testAccCheckBucketReplicationConfigurationDestroy is the equivalent of the "WithProvider"
+// version, but for use with "same region" tests requiring only one provider.
+func testAccCheckBucketReplicationConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_s3_bucket_replication_configuration" {
+				continue
+			}
+			input := &s3.GetBucketReplicationInput{Bucket: aws.String(rs.Primary.ID)}
+
+			output, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
+				return conn.GetBucketReplicationWithContext(ctx, input)
+			}, s3.ErrCodeNoSuchBucket)
+
+			if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeReplicationConfigurationNotFound, s3.ErrCodeNoSuchBucket) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if replication, ok := output.(*s3.GetBucketReplicationOutput); ok && replication != nil && replication.ReplicationConfiguration != nil {
+				return fmt.Errorf("S3 Replication Configuration for bucket (%s) still exists", rs.Primary.ID)
+			}
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckBucketReplicationConfigurationDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
@@ -1938,11 +1968,6 @@ resource "aws_s3_bucket" "source" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "source_acl" {
-  bucket = aws_s3_bucket.source.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_versioning" "source" {
   bucket = aws_s3_bucket.source.id
   versioning_configuration {
@@ -2016,11 +2041,6 @@ resource "aws_s3_bucket_versioning" "destination" {
 
 resource "aws_s3_bucket" "source" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "source_acl" {
-  bucket = aws_s3_bucket.source.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_versioning" "source" {
@@ -2320,11 +2340,6 @@ POLICY
 
 resource "aws_s3_bucket" "source" {
   bucket = "%[1]s-source"
-}
-
-resource "aws_s3_bucket_acl" "source" {
-  bucket = aws_s3_bucket.source.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_versioning" "source" {

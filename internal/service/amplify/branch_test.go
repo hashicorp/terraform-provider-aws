@@ -89,7 +89,7 @@ func testAccBranch_disappears(t *testing.T) {
 	})
 }
 
-func testAccBranch_Tags(t *testing.T) {
+func testAccBranch_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var branch amplify.Branch
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

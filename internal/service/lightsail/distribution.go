@@ -22,7 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lightsail_distribution")
+// @SDKResource("aws_lightsail_distribution", name="Distribution")
+// @Tags(identifierAttribute="id")
 func ResourceDistribution() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDistributionCreate,
@@ -308,8 +309,8 @@ func ResourceDistribution() *schema.Resource {
 				Computed:    true,
 				Description: "The support code. Include this code in your email to support when you have questions about your Lightsail distribution. This code enables our support team to look up your Lightsail information more easily.",
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -328,6 +329,7 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 		DefaultCacheBehavior: expandCacheBehavior(d.Get("default_cache_behavior").([]interface{})[0].(map[string]interface{})),
 		DistributionName:     aws.String(d.Get("name").(string)),
 		Origin:               expandInputOrigin(d.Get("origin").([]interface{})[0].(map[string]interface{})),
+		Tags:                 GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("cache_behavior_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -340,13 +342,6 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 
 	if v, ok := d.GetOk("ip_address_type"); ok {
 		in.IpAddressType = aws.String(v.(string))
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	out, err := conn.CreateDistributionWithContext(ctx, in)
@@ -441,18 +436,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("status", out.Status)
 	d.Set("support_code", out.SupportCode)
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
-	}
+	SetTagsOut(ctx, out.Tags)
 
 	return nil
 }
@@ -519,10 +503,6 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if !update && !bundleUpdate && !d.HasChange("tags_all") {
-		return nil
-	}
-
 	if update {
 		log.Printf("[DEBUG] Updating Lightsail Distribution (%s): %#v", d.Id(), in)
 		out, err := conn.UpdateDistributionWithContext(ctx, in)
@@ -548,14 +528,6 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 
 		if diag != nil {
 			return diag
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return create.DiagError(names.Lightsail, create.ErrActionUpdating, ResNameDistribution, d.Id(), err)
 		}
 	}
 

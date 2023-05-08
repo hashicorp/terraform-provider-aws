@@ -34,8 +34,18 @@ const (
 
 // WaitIAMPropagation retries the specified function if the returned error indicates an IAM eventual consistency issue.
 // If the retries time out the specified function is called one last time.
-func WaitIAMPropagation(ctx context.Context, f func() (interface{}, error)) (interface{}, error) {
-	return tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, f, kms.ErrCodeMalformedPolicyDocumentException)
+func WaitIAMPropagation[T any](ctx context.Context, f func() (T, error)) (T, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+		return f()
+	},
+		kms.ErrCodeMalformedPolicyDocumentException)
+
+	if err != nil {
+		var zero T
+		return zero, err
+	}
+
+	return outputRaw.(T), nil
 }
 
 func WaitKeyDeleted(ctx context.Context, conn *kms.KMS, id string) (*kms.KeyMetadata, error) {

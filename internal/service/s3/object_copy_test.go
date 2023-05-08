@@ -156,7 +156,28 @@ resource "aws_s3_bucket" "target" {
   bucket = %[3]q
 }
 
+resource "aws_s3_bucket_public_access_block" "target" {
+  bucket = aws_s3_bucket.target.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_ownership_controls" "target" {
+  bucket = aws_s3_bucket.target.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_object_copy" "test" {
+  depends_on = [
+    aws_s3_bucket_public_access_block.target,
+    aws_s3_bucket_ownership_controls.target,
+  ]
+
   bucket = aws_s3_bucket.target.bucket
   key    = %[4]q
   source = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"

@@ -16,9 +16,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_gamelift_build")
+// @SDKResource("aws_gamelift_build", name="Build")
+// @Tags(identifierAttribute="arn")
 func ResourceBuild() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBuildCreate,
@@ -81,8 +83,8 @@ func ResourceBuild() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -92,14 +94,12 @@ func ResourceBuild() *schema.Resource {
 func resourceBuildCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := gamelift.CreateBuildInput{
 		Name:            aws.String(d.Get("name").(string)),
 		OperatingSystem: aws.String(d.Get("operating_system").(string)),
 		StorageLocation: expandStorageLocation(d.Get("storage_location").([]interface{})),
-		Tags:            Tags(tags.IgnoreAWS()),
+		Tags:            GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("version"); ok {
@@ -139,10 +139,7 @@ func resourceBuildCreate(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceBuildRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	log.Printf("[INFO] Reading GameLift Build: %s", d.Id())
 	build, err := FindBuildByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] GameLift Build (%s) not found, removing from state", d.Id())
@@ -160,22 +157,6 @@ func resourceBuildRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	arn := aws.StringValue(build.BuildArn)
 	d.Set("arn", arn)
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Game Lift Build (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
 
 	return diags
 }
@@ -197,15 +178,6 @@ func resourceBuildUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		_, err := conn.UpdateBuildWithContext(ctx, &input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating GameLift build client: %s", err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		arn := d.Get("arn").(string)
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Game Lift Build (%s) tags: %s", arn, err)
 		}
 	}
 

@@ -22,6 +22,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -37,7 +38,8 @@ const (
 	ServerlessMaxNCUs    = 128.0
 )
 
-// @SDKResource("aws_neptune_cluster")
+// @SDKResource("aws_neptune_cluster", name="Cluster")
+// @Tags(identifierAttribute="arn")
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
@@ -278,8 +280,8 @@ func ResourceCluster() *schema.Resource {
 				ForceNew: true,
 				Default:  false,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -295,8 +297,6 @@ func ResourceCluster() *schema.Resource {
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	// Check if any of the parameters that require a cluster modification after creation are set.
 	// See https://docs.aws.amazon.com/neptune/latest/userguide/backup-restore-restore-snapshot.html#backup-restore-restore-snapshot-considerations.
@@ -322,7 +322,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Port:                             aws.Int64(int64(d.Get("port").(int))),
 		StorageEncrypted:                 aws.Bool(d.Get("storage_encrypted").(bool)),
 		DeletionProtection:               aws.Bool(d.Get("deletion_protection").(bool)),
-		Tags:                             Tags(tags.IgnoreAWS()),
+		Tags:                             GetTagsIn(ctx),
 		ServerlessV2ScalingConfiguration: serverlessConfiguration,
 	}
 	inputR := &neptune.RestoreDBClusterFromSnapshotInput{
@@ -332,7 +332,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Port:                             aws.Int64(int64(d.Get("port").(int))),
 		SnapshotIdentifier:               aws.String(d.Get("snapshot_identifier").(string)),
 		DeletionProtection:               aws.Bool(d.Get("deletion_protection").(bool)),
-		Tags:                             Tags(tags.IgnoreAWS()),
+		Tags:                             GetTagsIn(ctx),
 		ServerlessV2ScalingConfiguration: serverlessConfiguration,
 	}
 	inputM := &neptune.ModifyDBClusterInput{
@@ -482,8 +482,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	dbc, err := FindClusterByID(ctx, conn, d.Id())
 
@@ -548,23 +546,6 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		securityGroupIDs = append(securityGroupIDs, aws.StringValue(v.VpcSecurityGroupId))
 	}
 	d.Set("vpc_security_group_ids", securityGroupIDs)
-
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Neptune Cluster (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
 
 	return diags
 }
@@ -725,14 +706,6 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			if err := removeIAMRoleFromCluster(ctx, conn, d.Id(), v); err != nil {
 				return sdkdiag.AppendErrorf(diags, "removing IAM Role (%s) from Neptune Cluster (%s): %s", v, d.Id(), err)
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Neptune Cluster (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 

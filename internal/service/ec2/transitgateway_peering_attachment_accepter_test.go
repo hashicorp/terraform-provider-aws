@@ -53,7 +53,7 @@ func testAccTransitGatewayPeeringAttachmentAccepter_basic(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayPeeringAttachmentAccepter_Tags(t *testing.T) {
+func testAccTransitGatewayPeeringAttachmentAccepter_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
 	resourceName := "aws_ec2_transit_gateway_peering_attachment_accepter.test"

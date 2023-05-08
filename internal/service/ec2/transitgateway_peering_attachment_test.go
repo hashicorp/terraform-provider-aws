@@ -82,7 +82,7 @@ func testAccTransitGatewayPeeringAttachment_disappears(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayPeeringAttachment_Tags(t *testing.T) {
+func testAccTransitGatewayPeeringAttachment_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

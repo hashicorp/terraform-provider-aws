@@ -17,9 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_codedeploy_app")
+// @SDKResource("aws_codedeploy_app", name="App")
+// @Tags(identifierAttribute="arn")
 func ResourceApp() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAppCreate,
@@ -89,8 +91,8 @@ func ResourceApp() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -100,17 +102,13 @@ func ResourceApp() *schema.Resource {
 func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeployConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	application := d.Get("name").(string)
 	computePlatform := d.Get("compute_platform").(string)
-	log.Printf("[DEBUG] Creating CodeDeploy application %s", application)
-
 	resp, err := conn.CreateApplicationWithContext(ctx, &codedeploy.CreateApplicationInput{
 		ApplicationName: aws.String(application),
 		ComputePlatform: aws.String(computePlatform),
-		Tags:            Tags(tags.IgnoreAWS()),
+		Tags:            GetTagsIn(ctx),
 	})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CodeDeploy Application (%s): %s", application, err)
@@ -129,8 +127,6 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeployConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	application := resourceAppParseID(d.Id())
 	name := d.Get("name").(string)
@@ -174,23 +170,6 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("github_account_name", app.GitHubAccountName)
 	d.Set("linked_to_github", app.LinkedToGitHub)
 
-	tags, err := ListTags(ctx, conn, appArn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for CodeDeploy application (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -208,14 +187,6 @@ func resourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating CodeDeploy Application (%s) name: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating CodeDeploy Application (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 

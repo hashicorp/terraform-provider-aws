@@ -33,10 +33,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceLedger,
 			TypeName: "aws_qldb_ledger",
+			Name:     "Ledger",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceStream,
 			TypeName: "aws_qldb_stream",
+			Name:     "Stream",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }

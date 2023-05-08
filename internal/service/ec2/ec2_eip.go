@@ -20,6 +20,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -27,7 +28,8 @@ const (
 	addressAssociationClassicTimeout = 2 * time.Minute
 )
 
-// @SDKResource("aws_eip")
+// @SDKResource("aws_eip", name="EIP")
+// @Tags(identifierAttribute="id")
 func ResourceEIP() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEIPCreate,
@@ -118,8 +120,8 @@ func ResourceEIP() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -133,10 +135,10 @@ func ResourceEIP() *schema.Resource {
 func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-	input := &ec2.AllocateAddressInput{}
+	input := &ec2.AllocateAddressInput{
+		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeElasticIp),
+	}
 
 	if v := d.Get("vpc"); v != nil && v.(bool) {
 		input.Domain = aws.String(ec2.DomainTypeVpc)
@@ -158,11 +160,6 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.PublicIpv4Pool = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeElasticIp)
-	}
-
-	log.Printf("[DEBUG] Creating EC2 EIP: %s", input)
 	output, err := conn.AllocateAddressWithContext(ctx, input)
 
 	if err != nil {
@@ -199,8 +196,6 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var err error
 	var address *ec2.Address
@@ -249,16 +244,7 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface
 		d.SetId(aws.StringValue(address.AllocationId))
 	}
 
-	tags := KeyValueTags(ctx, address.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, address.Tags)
 
 	return diags
 }
@@ -284,18 +270,6 @@ func resourceEIPUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 			if err := associateEIP(ctx, conn, d.Id(), newInstanceID, newNetworkInterfaceID, d.Get("associate_with_private_ip").(string)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EC2 EIP (%s): %s", d.Id(), err)
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		if d.Get("domain").(string) == ec2.DomainTypeStandard {
-			return sdkdiag.AppendErrorf(diags, "tags cannot be set for a standard-domain EIP - must be a VPC-domain EIP")
-		}
-
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 EIP (%s) tags: %s", d.Id(), err)
 		}
 	}
 

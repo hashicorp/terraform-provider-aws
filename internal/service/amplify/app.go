@@ -18,9 +18,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_amplify_app")
+// @SDKResource("aws_amplify_app", name="App")
+// @Tags(identifierAttribute="arn")
 func ResourceApp() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAppCreate,
@@ -311,8 +313,8 @@ func ResourceApp() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 1000),
 			},
 
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -320,13 +322,12 @@ func ResourceApp() *schema.Resource {
 func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 
 	input := &amplify.CreateAppInput{
 		Name: aws.String(name),
+		Tags: GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("access_token"); ok {
@@ -393,10 +394,6 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.Repository = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	log.Printf("[DEBUG] Creating Amplify App: %s", input)
 	output, err := conn.CreateAppWithContext(ctx, input)
 
@@ -412,8 +409,6 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	app, err := FindAppByID(ctx, conn, d.Id())
 
@@ -460,15 +455,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 	d.Set("repository", app.Repository)
 
-	tags := KeyValueTags(ctx, app.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, app.Tags)
 
 	return diags
 }
@@ -568,13 +555,6 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Amplify App (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 

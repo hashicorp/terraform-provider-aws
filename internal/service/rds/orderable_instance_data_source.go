@@ -279,7 +279,6 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 		}
 		return !lastPage
 	})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS Orderable DB Instance Options: %s", err)
 	}

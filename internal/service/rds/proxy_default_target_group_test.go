@@ -374,7 +374,6 @@ func testAccCheckProxyTargetGroupExists(ctx context.Context, n string, v *rds.DB
 		}
 
 		resp, err := conn.DescribeDBProxyTargetGroupsWithContext(ctx, &opts)
-
 		if err != nil {
 			return err
 		}

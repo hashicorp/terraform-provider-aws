@@ -24,7 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_medialive_multiplex")
+// @SDKResource("aws_medialive_multiplex", name="Multiplex")
+// @Tags(identifierAttribute="arn")
 func ResourceMultiplex() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMultiplexCreate,
@@ -93,8 +94,8 @@ func ResourceMultiplex() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -112,17 +113,11 @@ func resourceMultiplexCreate(ctx context.Context, d *schema.ResourceData, meta i
 		RequestId:         aws.String(id.UniqueId()),
 		Name:              aws.String(d.Get("name").(string)),
 		AvailabilityZones: flex.ExpandStringValueList(d.Get("availability_zones").([]interface{})),
+		Tags:              GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("multiplex_settings"); ok && len(v.([]interface{})) > 0 {
 		in.MultiplexSettings = expandMultiplexSettings(v.([]interface{}))
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	out, err := conn.CreateMultiplex(ctx, in)
@@ -172,23 +167,6 @@ func resourceMultiplexRead(ctx context.Context, d *schema.ResourceData, meta int
 		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameMultiplex, d.Id(), err)
 	}
 
-	tags, err := ListTags(ctx, conn, aws.ToString(out.Arn))
-	if err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionReading, ResNameMultiplex, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameMultiplex, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameMultiplex, d.Id(), err)
-	}
-
 	return nil
 }
 
@@ -235,14 +213,6 @@ func resourceMultiplexUpdate(ctx context.Context, d *schema.ResourceData, meta i
 					return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameMultiplex, d.Id(), err)
 				}
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameMultiplex, d.Id(), err)
 		}
 	}
 

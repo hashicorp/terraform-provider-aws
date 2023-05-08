@@ -25,7 +25,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_transcribe_language_model")
+// @SDKResource("aws_transcribe_language_model", name="Language Model")
+// @Tags(identifierAttribute="arn")
 func ResourceLanguageModel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLanguageModelCreate,
@@ -90,8 +91,8 @@ func ResourceLanguageModel() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -111,17 +112,11 @@ func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, me
 		BaseModelName: types.BaseModelName(d.Get("base_model_name").(string)),
 		LanguageCode:  types.CLMLanguageCode(d.Get("language_code").(string)),
 		ModelName:     aws.String(d.Get("model_name").(string)),
+		Tags:          GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("input_data_config"); ok && len(v.([]interface{})) > 0 {
 		in.InputDataConfig = expandInputDataConfig(v.([]interface{}))
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
@@ -182,38 +177,11 @@ func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta
 		return create.DiagError(names.Transcribe, create.ErrActionSetting, ResNameLanguageModel, d.Id(), err)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
-	if err != nil {
-		return create.DiagError(names.Transcribe, create.ErrActionReading, ResNameLanguageModel, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.Transcribe, create.ErrActionSetting, ResNameLanguageModel, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.Transcribe, create.ErrActionSetting, ResNameLanguageModel, d.Id(), err)
-	}
-
 	return nil
 }
 
 func resourceLanguageModelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeClient()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return create.DiagError(names.Transcribe, create.ErrActionUpdating, ResNameLanguageModel, d.Id(), err)
-		}
-	}
-
+	// Tags only.
 	return resourceLanguageModelRead(ctx, d, meta)
 }
 

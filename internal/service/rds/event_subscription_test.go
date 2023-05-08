@@ -312,7 +312,6 @@ func testAccCheckEventSubscriptionExists(ctx context.Context, n string, v *rds.E
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 		output, err := tfrds.FindEventSubscriptionByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

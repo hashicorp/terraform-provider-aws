@@ -23,7 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_sesv2_dedicated_ip_pool")
+// @SDKResource("aws_sesv2_dedicated_ip_pool", name="Dedicated IP Pool")
+// @Tags(identifierAttribute="arn")
 func ResourceDedicatedIPPool() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDedicatedIPPoolCreate,
@@ -58,8 +59,8 @@ func ResourceDedicatedIPPool() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[types.ScalingMode](),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -75,15 +76,10 @@ func resourceDedicatedIPPoolCreate(ctx context.Context, d *schema.ResourceData, 
 
 	in := &sesv2.CreateDedicatedIpPoolInput{
 		PoolName: aws.String(d.Get("pool_name").(string)),
+		Tags:     GetTagsIn(ctx),
 	}
 	if v, ok := d.GetOk("scaling_mode"); ok {
 		in.ScalingMode = types.ScalingMode(v.(string))
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	out, err := conn.CreateDedicatedIpPool(ctx, in)
@@ -115,37 +111,11 @@ func resourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("scaling_mode", string(out.DedicatedIpPool.ScalingMode))
 	d.Set("arn", poolNameToARN(meta, poolName))
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameDedicatedIPPool, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameDedicatedIPPool, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameDedicatedIPPool, d.Id(), err)
-	}
-
 	return nil
 }
 
 func resourceDedicatedIPPoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
-
-	if d.HasChanges("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return create.DiagError(names.SESV2, create.ErrActionUpdating, ResNameDedicatedIPPool, d.Id(), err)
-		}
-	}
-
+	// Tags only.
 	return resourceDedicatedIPPoolRead(ctx, d, meta)
 }
 

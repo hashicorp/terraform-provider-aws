@@ -25,6 +25,7 @@ resource "aws_eks_addon" "example" {
 ```
 
 ## Example Update add-on usage with resolve_conflicts and PRESERVE
+
 `resolve_conflicts` with `PRESERVE` can be used to retain the config changes applied to the add-on with kubectl while upgrading to a newer version of the add-on.
 
 ~> **Note:** `resolve_conflicts` with `PRESERVE` can only be used for upgrading the add-ons but not during the creation of add-on.
@@ -39,6 +40,7 @@ resource "aws_eks_addon" "example" {
 ```
 
 ## Example add-on usage with custom configuration_values
+
 Custom add-on configuration can be passed using `configuration_values` as a single JSON string while creating or updating the add-on.
 
 ~> **Note:** `configuration_values` is a single JSON string should match the valid JSON schema for each add-on with specific version.

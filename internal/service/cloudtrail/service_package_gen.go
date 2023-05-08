@@ -33,10 +33,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceCloudTrail,
 			TypeName: "aws_cloudtrail",
+			Name:     "Trail",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceEventDataStore,
 			TypeName: "aws_cloudtrail_event_data_store",
+			Name:     "Event Data Store",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 	}
 }

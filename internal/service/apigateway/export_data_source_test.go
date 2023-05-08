@@ -11,7 +11,7 @@ import (
 
 func TestAccAPIGatewayExportDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandString(8)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_api_gateway_export.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -34,11 +34,11 @@ func TestAccAPIGatewayExportDataSource_basic(t *testing.T) {
 }
 
 func testAccExportDataSourceConfig_basic(rName string) string {
-	return testAccStageConfig_base(rName) + `
+	return acctest.ConfigCompose(testAccStageConfig_base(rName), `
 resource "aws_api_gateway_stage" "test" {
   rest_api_id   = aws_api_gateway_rest_api.test.id
   stage_name    = "prod"
-  deployment_id = aws_api_gateway_deployment.dev.id
+  deployment_id = aws_api_gateway_deployment.test.id
 }
 
 data "aws_api_gateway_export" "test" {
@@ -46,5 +46,5 @@ data "aws_api_gateway_export" "test" {
   stage_name  = aws_api_gateway_stage.test.stage_name
   export_type = "oas30"
 }
-`
+`)
 }

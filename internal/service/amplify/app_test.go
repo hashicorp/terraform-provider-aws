@@ -92,7 +92,7 @@ func testAccApp_disappears(t *testing.T) {
 	})
 }
 
-func testAccApp_Tags(t *testing.T) {
+func testAccApp_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var app amplify.App
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

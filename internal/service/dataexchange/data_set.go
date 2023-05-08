@@ -15,9 +15,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_dataexchange_data_set")
+// @SDKResource("aws_dataexchange_data_set", name="Data Set")
+// @Tags(identifierAttribute="arn")
 func ResourceDataSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataSetCreate,
@@ -48,8 +50,8 @@ func ResourceDataSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
@@ -58,17 +60,12 @@ func ResourceDataSet() *schema.Resource {
 func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataExchangeConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &dataexchange.CreateDataSetInput{
 		Name:        aws.String(d.Get("name").(string)),
 		AssetType:   aws.String(d.Get("asset_type").(string)),
 		Description: aws.String(d.Get("description").(string)),
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
+		Tags:        GetTagsIn(ctx),
 	}
 
 	out, err := conn.CreateDataSetWithContext(ctx, input)
@@ -84,8 +81,6 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataExchangeConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	dataSet, err := FindDataSetById(ctx, conn, d.Id())
 
@@ -104,15 +99,7 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("description", dataSet.Description)
 	d.Set("arn", dataSet.Arn)
 
-	tags := KeyValueTags(ctx, dataSet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, dataSet.Tags)
 
 	return diags
 }
@@ -138,14 +125,6 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		_, err := conn.UpdateDataSetWithContext(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "Error Updating DataExchange DataSet: %s", err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating DataExchange DataSet (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 

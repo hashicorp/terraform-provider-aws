@@ -18,9 +18,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_storagegateway_smb_file_share")
+// @SDKResource("aws_storagegateway_smb_file_share", name="SMB File Share")
+// @Tags(identifierAttribute="arn")
 func ResourceSMBFileShare() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSMBFileShareCreate,
@@ -184,8 +186,8 @@ func ResourceSMBFileShare() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"valid_user_list": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -206,8 +208,6 @@ func ResourceSMBFileShare() *schema.Resource {
 func resourceSMBFileShareCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &storagegateway.CreateSMBFileShareInput{
 		AccessBasedEnumeration: aws.Bool(d.Get("access_based_enumeration").(bool)),
@@ -220,6 +220,7 @@ func resourceSMBFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 		RequesterPays:          aws.Bool(d.Get("requester_pays").(bool)),
 		Role:                   aws.String(d.Get("role_arn").(string)),
 		SMBACLEnabled:          aws.Bool(d.Get("smb_acl_enabled").(bool)),
+		Tags:                   GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("admin_user_list"); ok && v.(*schema.Set).Len() > 0 {
@@ -282,10 +283,6 @@ func resourceSMBFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 		input.VPCEndpointDNSName = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	log.Printf("[DEBUG] Creating Storage Gateway SMB File Share: %s", input)
 	output, err := conn.CreateSMBFileShareWithContext(ctx, input)
 
@@ -305,8 +302,6 @@ func resourceSMBFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 func resourceSMBFileShareRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	fileshare, err := FindSMBFileShareByARN(ctx, conn, d.Id())
 
@@ -356,16 +351,7 @@ func resourceSMBFileShareRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("valid_user_list", aws.StringValueSlice(fileshare.ValidUserList))
 	d.Set("vpc_endpoint_dns_name", fileshare.VPCEndpointDNSName)
 
-	tags := KeyValueTags(ctx, fileshare.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, fileshare.Tags)
 
 	return diags
 }
@@ -443,13 +429,6 @@ func resourceSMBFileShareUpdate(ctx context.Context, d *schema.ResourceData, met
 
 		if _, err = waitSMBFileShareUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Storage Gateway SMB File Share (%s) to update: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 

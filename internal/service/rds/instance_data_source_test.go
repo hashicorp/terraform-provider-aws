@@ -53,6 +53,7 @@ func TestAccRDSInstanceDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
 func TestAccRDSInstanceDataSource_ManagedMasterPassword_managed(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {

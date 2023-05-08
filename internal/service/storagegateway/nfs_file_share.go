@@ -19,9 +19,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_storagegateway_nfs_file_share")
+// @SDKResource("aws_storagegateway_nfs_file_share", name="NFS File Share")
+// @Tags(identifierAttribute="arn")
 func ResourceNFSFileShare() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNFSFileShareCreate,
@@ -199,8 +201,8 @@ func ResourceNFSFileShare() *schema.Resource {
 				Default:      squashRootSquash,
 				ValidateFunc: validation.StringInSlice(squash_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_endpoint_dns_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -215,8 +217,6 @@ func ResourceNFSFileShare() *schema.Resource {
 func resourceNFSFileShareCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	fileShareDefaults, err := expandNFSFileShareDefaults(d.Get("nfs_file_share_defaults").([]interface{}))
 
@@ -238,7 +238,7 @@ func resourceNFSFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 		RequesterPays:        aws.Bool(d.Get("requester_pays").(bool)),
 		Role:                 aws.String(d.Get("role_arn").(string)),
 		Squash:               aws.String(d.Get("squash").(string)),
-		Tags:                 Tags(tags.IgnoreAWS()),
+		Tags:                 GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("audit_destination_arn"); ok {
@@ -288,8 +288,6 @@ func resourceNFSFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 func resourceNFSFileShareRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	fileshare, err := FindNFSFileShareByARN(ctx, conn, d.Id())
 
@@ -332,16 +330,7 @@ func resourceNFSFileShareRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("squash", fileshare.Squash)
 	d.Set("vpc_endpoint_dns_name", fileshare.VPCEndpointDNSName)
 
-	tags := KeyValueTags(ctx, fileshare.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, fileshare.Tags)
 
 	return diags
 }
@@ -399,14 +388,6 @@ func resourceNFSFileShareUpdate(ctx context.Context, d *schema.ResourceData, met
 
 		if _, err = waitNFSFileShareUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Storage Gateway NFS File Share (%s) update: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 

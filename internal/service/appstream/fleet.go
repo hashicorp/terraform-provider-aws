@@ -24,7 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_appstream_fleet")
+// @SDKResource("aws_appstream_fleet", name="Fleet")
+// @Tags(identifierAttribute="arn")
 func ResourceFleet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFleetCreate,
@@ -194,8 +195,8 @@ func ResourceFleet() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -206,10 +207,8 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		Name:            aws.String(d.Get("name").(string)),
 		InstanceType:    aws.String(d.Get("instance_type").(string)),
 		ComputeCapacity: expandComputeCapacity(d.Get("compute_capacity").([]interface{})),
+		Tags:            GetTagsIn(ctx),
 	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
@@ -263,10 +262,6 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.VpcConfig = expandVPCConfig(v.([]interface{}))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	var err error
 	var output *appstream.CreateFleetOutput
 	err = retry.RetryContext(ctx, fleetOperationTimeout, func() *retry.RetryError {
@@ -313,9 +308,6 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppStreamConn()
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeFleetsWithContext(ctx, &appstream.DescribeFleetsInput{Names: []*string{aws.String(d.Id())}})
 
@@ -380,29 +372,6 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	} else {
 		d.Set("vpc_config", nil)
-	}
-
-	tg, err := conn.ListTagsForResourceWithContext(ctx, &appstream.ListTagsForResourceInput{
-		ResourceArn: fleet.Arn,
-	})
-
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing stack tags for AppStream Stack (%s): %w", d.Id(), err))
-	}
-
-	if tg.Tags == nil {
-		log.Printf("[DEBUG] AppStream Stack tags (%s) not found", d.Id())
-		return nil
-	}
-
-	tags := KeyValueTags(ctx, tg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err = d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "tags", d.Id(), err))
-	}
-
-	if err = d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "tags_all", d.Id(), err))
 	}
 
 	return nil
@@ -488,18 +457,9 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.VpcConfig = expandVPCConfig(d.Get("vpc_config").([]interface{}))
 	}
 
-	resp, err := conn.UpdateFleetWithContext(ctx, input)
+	_, err := conn.UpdateFleetWithContext(ctx, input)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error updating Appstream Fleet (%s): %w", d.Id(), err))
-	}
-
-	if d.HasChange("tags") {
-		arn := aws.StringValue(resp.Fleet.Arn)
-
-		o, n := d.GetChange("tags")
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating Appstream Fleet tags (%s): %w", d.Id(), err))
-		}
 	}
 
 	// Start fleet workflow if stopped

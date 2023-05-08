@@ -18,9 +18,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_codepipeline_custom_action_type")
+// @SDKResource("aws_codepipeline_custom_action_type", name="Custom Action Type")
+// @Tags(identifierAttribute="arn")
 func ResourceCustomActionType() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomActionTypeCreate,
@@ -161,8 +163,8 @@ func ResourceCustomActionType() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"version": {
 				Type:         schema.TypeString,
 				ForceNew:     true,
@@ -177,8 +179,6 @@ func ResourceCustomActionType() *schema.Resource {
 
 func resourceCustomActionTypeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CodePipelineConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	category := d.Get("category").(string)
 	provider := d.Get("provider_name").(string)
@@ -187,6 +187,7 @@ func resourceCustomActionTypeCreate(ctx context.Context, d *schema.ResourceData,
 	input := &codepipeline.CreateCustomActionTypeInput{
 		Category: aws.String(category),
 		Provider: aws.String(provider),
+		Tags:     GetTagsIn(ctx),
 		Version:  aws.String(version),
 	}
 
@@ -206,10 +207,6 @@ func resourceCustomActionTypeCreate(ctx context.Context, d *schema.ResourceData,
 		input.Settings = expandActionTypeSettings(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	_, err := conn.CreateCustomActionTypeWithContext(ctx, input)
 
 	if err != nil {
@@ -223,8 +220,6 @@ func resourceCustomActionTypeCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CodePipelineConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	category, provider, version, err := CustomActionTypeParseResourceID(d.Id())
 
@@ -283,38 +278,11 @@ func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, m
 	}
 	d.Set("version", actionType.Id.Version)
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return diag.Errorf("listing tags for CodePipeline Custom Action Type (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
-
 	return nil
 }
 
 func resourceCustomActionTypeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodePipelineConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		arn := d.Get("arn").(string)
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return diag.Errorf("updating CodePipeline Custom Action Type (%s) tags: %s", arn, err)
-		}
-	}
-
+	// Tags only.
 	return resourceCustomActionTypeRead(ctx, d, meta)
 }
 

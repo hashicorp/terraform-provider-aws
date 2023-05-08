@@ -29,7 +29,7 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 		DeleteWithoutTimeout: resourceBucketLifecycleConfigurationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{

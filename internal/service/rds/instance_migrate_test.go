@@ -52,7 +52,6 @@ func TestInstanceStateUpgradeV0(t *testing.T) {
 			t.Parallel()
 
 			got, err := tfrds.InstanceStateUpgradeV0(ctx, testCase.InputState, nil)
-
 			if err != nil {
 				t.Fatalf("error migrating state: %s", err)
 			}

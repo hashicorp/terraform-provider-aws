@@ -252,7 +252,7 @@ func TestAccMWAAEnvironment_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "airflow_configuration_options.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "airflow_configuration_options.core.default_task_retries", "1"),
 					resource.TestCheckResourceAttr(resourceName, "airflow_configuration_options.core.parallelism", "16"),
-					resource.TestCheckResourceAttr(resourceName, "airflow_version", "1.10.12"),
+					resource.TestCheckResourceAttr(resourceName, "airflow_version", "2.4.3"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "airflow", "environment/"+rName),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttr(resourceName, "dag_s3_path", "dags/"),
@@ -288,9 +288,10 @@ func TestAccMWAAEnvironment_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "plugins_s3_path", "plugins.zip"),
 					resource.TestCheckResourceAttr(resourceName, "requirements_s3_path", "requirements.txt"),
-					resource.TestCheckResourceAttr(resourceName, "schedulers", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schedulers", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "service_role_arn"),
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "source_bucket_arn", "s3", rName),
+					resource.TestCheckResourceAttr(resourceName, "startup_script_s3_path", "startup.sh"),
 					resource.TestCheckResourceAttrSet(resourceName, "status"),
 					resource.TestCheckResourceAttr(resourceName, "webserver_access_mode", mwaa.WebserverAccessModePublicOnly),
 					resource.TestCheckResourceAttrSet(resourceName, "webserver_url"),
@@ -534,11 +535,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_versioning" "test" {
   bucket = aws_s3_bucket.test.id
   versioning_configuration {
@@ -697,7 +693,7 @@ resource "aws_mwaa_environment" "test" {
     "core.parallelism"          = 16
   }
 
-  airflow_version    = "1.10.12"
+  airflow_version    = "2.4.3"
   dag_s3_path        = aws_s3_object.dags.key
   environment_class  = "mw1.medium"
   execution_role_arn = aws_iam_role.test.arn
@@ -741,8 +737,9 @@ resource "aws_mwaa_environment" "test" {
 
   plugins_s3_path                 = aws_s3_object.plugins.key
   requirements_s3_path            = aws_s3_object.requirements.key
-  schedulers                      = 1
+  schedulers                      = 2
   source_bucket_arn               = aws_s3_bucket.test.arn
+  startup_script_s3_path          = aws_s3_object.startup_script.key
   webserver_access_mode           = "PUBLIC_ONLY"
   weekly_maintenance_window_start = "SAT:03:00"
 
@@ -795,6 +792,13 @@ resource "aws_s3_object" "requirements" {
   acl     = "private"
   key     = "requirements.txt"
   content = ""
+}
+
+resource "aws_s3_object" "startup_script" {
+  bucket  = aws_s3_bucket.test.id
+  acl     = "private"
+  key     = "startup.sh"
+  content = "airflow db init"
 }
 
 `, rName))

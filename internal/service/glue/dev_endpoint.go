@@ -21,9 +21,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_glue_dev_endpoint")
+// @SDKResource("aws_glue_dev_endpoint", name="Dev Endpoint")
+// @Tags(identifierAttribute="arn")
 func ResourceDevEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDevEndpointCreate,
@@ -122,8 +124,8 @@ func ResourceDevEndpoint() *schema.Resource {
 				ForceNew:     true,
 				RequiredWith: []string{"security_group_ids"},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"private_address": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -170,14 +172,12 @@ func ResourceDevEndpoint() *schema.Resource {
 func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-	name := d.Get("name").(string)
 
+	name := d.Get("name").(string)
 	input := &glue.CreateDevEndpointInput{
 		EndpointName: aws.String(name),
 		RoleArn:      aws.String(d.Get("role_arn").(string)),
-		Tags:         Tags(tags.IgnoreAWS()),
+		Tags:         GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("arguments"); ok {
@@ -271,8 +271,6 @@ func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	endpoint, err := FindDevEndpointByName(ctx, conn, d.Id())
 
@@ -376,23 +374,6 @@ func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	if err := d.Set("worker_type", endpoint.WorkerType); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting worker_type for Glue Dev Endpoint (%s): %s", d.Id(), err)
-	}
-
-	tags, err := ListTags(ctx, conn, endpointARN)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Glue Dev Endpoint (%s): %s", endpointARN, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	if err := d.Set("yarn_endpoint_address", endpoint.YarnEndpointAddress); err != nil {
@@ -499,13 +480,6 @@ func resourceDevEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Glue Dev Endpoint: %s", err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 

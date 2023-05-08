@@ -3,6 +3,7 @@ package secretsmanager_test
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -21,7 +22,7 @@ func TestAccSecretsManagerSecretRotation_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret_rotation.test"
 	lambdaFunctionResourceName := "aws_lambda_function.test1"
-
+	days01 := 7
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
@@ -30,13 +31,13 @@ func TestAccSecretsManagerSecretRotation_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Test creating secret rotation resource
 			{
-				Config: testAccSecretRotationConfig_basic(rName, 7),
+				Config: testAccSecretRotationConfig_basic(rName, days01),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretRotationExists(ctx, resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.automatically_after_days", "7"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.automatically_after_days", strconv.Itoa(days01)),
 				),
 			},
 			// Test updating rotation
@@ -52,6 +53,88 @@ func TestAccSecretsManagerSecretRotation_basic(t *testing.T) {
 					),
 				},
 			*/
+			// Test importing secret rotation
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSecretsManagerSecretRotation_scheduleExpression(t *testing.T) {
+	ctx := acctest.Context(t)
+	var secret secretsmanager.DescribeSecretOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_secretsmanager_secret_rotation.test"
+	lambdaFunctionResourceName := "aws_lambda_function.test1"
+	scheduleExpression := "rate(10 days)"
+	scheduleExpression02 := "rate(10 days)"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretRotationDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Test creating secret rotation resource
+			{
+				Config: testAccSecretRotationConfig_scheduleExpression(rName, scheduleExpression),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecretRotationExists(ctx, resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.schedule_expression", scheduleExpression),
+				),
+			},
+			{
+				Config: testAccSecretRotationConfig_scheduleExpression(rName, scheduleExpression02),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecretRotationExists(ctx, resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.schedule_expression", scheduleExpression02),
+				),
+			},
+			// Test importing secret rotation
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSecretsManagerSecretRotation_duration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var secret secretsmanager.DescribeSecretOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_secretsmanager_secret_rotation.test"
+	lambdaFunctionResourceName := "aws_lambda_function.test1"
+	days01 := 7
+	duration := "3h"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretRotationDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Test creating secret rotation resource
+			{
+				Config: testAccSecretRotationConfig_duration(rName, days01, duration),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecretRotationExists(ctx, resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.automatically_after_days", strconv.Itoa(days01)),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.duration", duration),
+				),
+			},
 			// Test importing secret rotation
 			{
 				ResourceName:      resourceName,
@@ -174,4 +257,107 @@ resource "aws_secretsmanager_secret_rotation" "test" {
   depends_on = [aws_lambda_permission.test1]
 }
 `, rName, automaticallyAfterDays)
+}
+
+func testAccSecretRotationConfig_scheduleExpression(rName string, scheduleExpression string) string {
+	return acctest.ConfigLambdaBase(rName, rName, rName) + fmt.Sprintf(`
+# Not a real rotation function
+resource "aws_lambda_function" "test1" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%[1]s-1"
+  handler       = "exports.example"
+  role          = aws_iam_role.iam_for_lambda.arn
+  runtime       = "nodejs16.x"
+}
+
+resource "aws_lambda_permission" "test1" {
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.test1.function_name
+  principal     = "secretsmanager.amazonaws.com"
+  statement_id  = "AllowExecutionFromSecretsManager1"
+}
+
+# Not a real rotation function
+resource "aws_lambda_function" "test2" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%[1]s-2"
+  handler       = "exports.example"
+  role          = aws_iam_role.iam_for_lambda.arn
+  runtime       = "nodejs16.x"
+}
+
+resource "aws_lambda_permission" "test2" {
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.test2.function_name
+  principal     = "secretsmanager.amazonaws.com"
+  statement_id  = "AllowExecutionFromSecretsManager2"
+}
+
+resource "aws_secretsmanager_secret" "test" {
+  name = "%[1]s"
+}
+
+resource "aws_secretsmanager_secret_rotation" "test" {
+  secret_id           = aws_secretsmanager_secret.test.id
+  rotation_lambda_arn = aws_lambda_function.test1.arn
+
+  rotation_rules {
+    schedule_expression = "%[2]s"
+  }
+
+  depends_on = [aws_lambda_permission.test1]
+}
+`, rName, scheduleExpression)
+}
+
+func testAccSecretRotationConfig_duration(rName string, automaticallyAfterDays int, duration string) string {
+	return acctest.ConfigLambdaBase(rName, rName, rName) + fmt.Sprintf(`
+# Not a real rotation function
+resource "aws_lambda_function" "test1" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%[1]s-1"
+  handler       = "exports.example"
+  role          = aws_iam_role.iam_for_lambda.arn
+  runtime       = "nodejs16.x"
+}
+
+resource "aws_lambda_permission" "test1" {
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.test1.function_name
+  principal     = "secretsmanager.amazonaws.com"
+  statement_id  = "AllowExecutionFromSecretsManager1"
+}
+
+# Not a real rotation function
+resource "aws_lambda_function" "test2" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%[1]s-2"
+  handler       = "exports.example"
+  role          = aws_iam_role.iam_for_lambda.arn
+  runtime       = "nodejs16.x"
+}
+
+resource "aws_lambda_permission" "test2" {
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.test2.function_name
+  principal     = "secretsmanager.amazonaws.com"
+  statement_id  = "AllowExecutionFromSecretsManager2"
+}
+
+resource "aws_secretsmanager_secret" "test" {
+  name = "%[1]s"
+}
+
+resource "aws_secretsmanager_secret_rotation" "test" {
+  secret_id           = aws_secretsmanager_secret.test.id
+  rotation_lambda_arn = aws_lambda_function.test1.arn
+
+  rotation_rules {
+    automatically_after_days = %[2]d
+    duration                 = "%[3]s"
+  }
+
+  depends_on = [aws_lambda_permission.test1]
+}
+`, rName, automaticallyAfterDays, duration)
 }

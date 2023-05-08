@@ -201,6 +201,10 @@ func resourceOrganizationManagedRuleRead(ctx context.Context, d *schema.Resource
 		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameOrganizationManagedRule, d.Id(), errors.New("empty rule after creation"))
 	}
 
+	if rule.OrganizationCustomPolicyRuleMetadata != nil {
+		return sdkdiag.AppendErrorf(diags, "expected Organization Custom Rule, found Organization Custom Policy Rule: %s", d.Id())
+	}
+
 	if rule.OrganizationCustomRuleMetadata != nil {
 		return sdkdiag.AppendErrorf(diags, "expected Config Organization Managed Rule, found Config Organization Custom Rule: %s", d.Id())
 	}

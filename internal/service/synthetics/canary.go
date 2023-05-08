@@ -22,12 +22,14 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/mitchellh/go-homedir"
 )
 
 const canaryMutex = `aws_synthetics_canary`
 
-// @SDKResource("aws_synthetics_canary")
+// @SDKResource("aws_synthetics_canary", name="Canary")
+// @Tags(identifierAttribute="arn")
 func ResourceCanary() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCanaryCreate,
@@ -205,8 +207,8 @@ func ResourceCanary() *schema.Resource {
 				Default:      31,
 				ValidateFunc: validation.IntBetween(1, 455),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"timeline": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -268,8 +270,6 @@ func ResourceCanary() *schema.Resource {
 func resourceCanaryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SyntheticsConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &synthetics.CreateCanaryInput{
@@ -277,6 +277,7 @@ func resourceCanaryCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		ExecutionRoleArn:   aws.String(d.Get("execution_role_arn").(string)),
 		Name:               aws.String(name),
 		RuntimeVersion:     aws.String(d.Get("runtime_version").(string)),
+		Tags:               GetTagsIn(ctx),
 	}
 
 	if code, err := expandCanaryCode(d); err != nil {
@@ -307,10 +308,6 @@ func resourceCanaryCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if v, ok := d.GetOk("success_retention_period"); ok {
 		input.SuccessRetentionPeriodInDays = aws.Int64(int64(v.(int)))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	output, err := conn.CreateCanaryWithContext(ctx, input)
@@ -360,8 +357,6 @@ func resourceCanaryCreate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceCanaryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SyntheticsConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	canary, err := FindCanaryByName(ctx, conn, d.Id())
 
@@ -419,16 +414,7 @@ func resourceCanaryRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "setting artifact_config: %s", err)
 	}
 
-	tags := KeyValueTags(ctx, canary.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, canary.Tags)
 
 	return diags
 }
@@ -533,14 +519,6 @@ func resourceCanaryUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 					return sdkdiag.AppendErrorf(diags, "updating Synthetics Canary (%s): %s", d.Id(), err)
 				}
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Synthetics Canary (%s) tags: %s", d.Id(), err)
 		}
 	}
 

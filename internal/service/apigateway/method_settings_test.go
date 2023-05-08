@@ -626,7 +626,7 @@ func testAccCheckMethodSettingsDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			_, err := tfapigateway.FindStageByName(ctx, conn, rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["stage_name"])
+			_, err := tfapigateway.FindStageByTwoPartKey(ctx, conn, rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["stage_name"])
 			if tfresource.NotFound(err) {
 				continue
 			}

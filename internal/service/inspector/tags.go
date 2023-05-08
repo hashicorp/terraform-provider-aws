@@ -12,20 +12,21 @@ import (
 	"github.com/aws/aws-sdk-go/service/inspector/inspectoriface"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Custom Inspector tag service update functions using the same format as generated code.
+// Custom Inspector Classic tag service update functions using the same format as generated code.
 
-// updateTags updates inspector resource tags.
+// updateTags updates Inspector Classic resource tags.
 // The identifier is the resource ARN.
 func updateTags(ctx context.Context, conn inspectoriface.InspectorAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
-	newTags := tftags.New(ctx, newTagsMap)
+	newTags := tftags.New(ctx, newTagsMap).IgnoreSystem(names.Inspector)
 
 	if len(newTags) > 0 {
 		input := &inspector.SetTagsForResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(newTags.IgnoreAWS()),
+			Tags:        Tags(newTags),
 		}
 
 		_, err := conn.SetTagsForResourceWithContext(ctx, input)
@@ -48,7 +49,7 @@ func updateTags(ctx context.Context, conn inspectoriface.InspectorAPI, identifie
 	return nil
 }
 
-// UpdateTags updates inspector service tags.
+// UpdateTags updates Inspector Classic service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return updateTags(ctx, meta.(*conns.AWSClient).InspectorConn(), identifier, oldTags, newTags)

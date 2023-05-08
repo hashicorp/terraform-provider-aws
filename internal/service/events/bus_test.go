@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccEventsBus_basic(t *testing.T) {
@@ -22,7 +23,6 @@ func TestAccEventsBus_basic(t *testing.T) {
 	var v1, v2, v3 eventbridge.DescribeEventBusOutput
 	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	busNameModified := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
 	resourceName := "aws_cloudwatch_event_bus.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -72,9 +72,8 @@ func TestAccEventsBus_basic(t *testing.T) {
 
 func TestAccEventsBus_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2, v3, v4 eventbridge.DescribeEventBusOutput
+	var v1, v2, v3 eventbridge.DescribeEventBusOutput
 	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
 	resourceName := "aws_cloudwatch_event_bus.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -84,11 +83,11 @@ func TestAccEventsBus_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckBusDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBusConfig_tags1(busName, "key1", "value"),
+				Config: testAccBusConfig_tags1(busName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -97,30 +96,22 @@ func TestAccEventsBus_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBusConfig_tags2(busName, "key1", "updated", "key2", "added"),
+				Config: testAccBusConfig_tags2(busName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(ctx, resourceName, &v2),
 					testAccCheckBusNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "added"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccBusConfig_tags1(busName, "key2", "added"),
+				Config: testAccBusConfig_tags1(busName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(ctx, resourceName, &v3),
 					testAccCheckBusNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "added"),
-				),
-			},
-			{
-				Config: testAccBusConfig_basic(busName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBusExists(ctx, resourceName, &v4),
-					testAccCheckBusNotRecreated(&v3, &v4),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -129,6 +120,7 @@ func TestAccEventsBus_tags(t *testing.T) {
 
 func TestAccEventsBus_default(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
@@ -147,7 +139,6 @@ func TestAccEventsBus_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v eventbridge.DescribeEventBusOutput
 	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
 	resourceName := "aws_cloudwatch_event_bus.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -208,15 +199,17 @@ func testAccCheckBusDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			params := eventbridge.DescribeEventBusInput{
-				Name: aws.String(rs.Primary.ID),
+			_, err := tfevents.FindEventBusByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			resp, err := conn.DescribeEventBusWithContext(ctx, &params)
-
-			if err == nil {
-				return fmt.Errorf("EventBridge event bus (%s) still exists: %s", rs.Primary.ID, resp)
+			if err != nil {
+				return err
 			}
+
+			return fmt.Errorf("EventBridge Event Bus %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -230,19 +223,19 @@ func testAccCheckBusExists(ctx context.Context, n string, v *eventbridge.Describ
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
-		params := eventbridge.DescribeEventBusInput{
-			Name: aws.String(rs.Primary.ID),
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No EventBridge Event Bus ID is set")
 		}
-		resp, err := conn.DescribeEventBusWithContext(ctx, &params)
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
+
+		output, err := tfevents.FindEventBusByName(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if resp == nil {
-			return fmt.Errorf("EventBridge event bus (%s) not found", n)
-		}
 
-		*v = *resp
+		*v = *output
 
 		return nil
 	}

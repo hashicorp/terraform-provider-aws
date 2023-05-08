@@ -89,14 +89,26 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceContactFlow,
 			TypeName: "aws_connect_contact_flow",
+			Name:     "Contact Flow",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceContactFlowModule,
 			TypeName: "aws_connect_contact_flow_module",
+			Name:     "Contact Flow Module",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceHoursOfOperation,
 			TypeName: "aws_connect_hours_of_operation",
+			Name:     "Hours Of Operation",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceInstance,
@@ -113,30 +125,58 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourcePhoneNumber,
 			TypeName: "aws_connect_phone_number",
+			Name:     "Phone Number",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceQueue,
 			TypeName: "aws_connect_queue",
+			Name:     "Queue",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceQuickConnect,
 			TypeName: "aws_connect_quick_connect",
+			Name:     "Quick Connect",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceRoutingProfile,
 			TypeName: "aws_connect_routing_profile",
+			Name:     "Routing Profile",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceSecurityProfile,
 			TypeName: "aws_connect_security_profile",
+			Name:     "Security Profile",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceUser,
 			TypeName: "aws_connect_user",
+			Name:     "User",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceUserHierarchyGroup,
 			TypeName: "aws_connect_user_hierarchy_group",
+			Name:     "User Hierarchy Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceUserHierarchyStructure,
@@ -145,6 +185,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceVocabulary,
 			TypeName: "aws_connect_vocabulary",
+			Name:     "Vocabulary",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }

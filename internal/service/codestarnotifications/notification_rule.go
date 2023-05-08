@@ -27,7 +27,8 @@ const (
 	targetSubscriptionTimeout = 30 * time.Second
 )
 
-// @SDKResource("aws_codestarnotifications_notification_rule")
+// @SDKResource("aws_codestarnotifications_notification_rule", name="Notification Rule")
+// @Tags(identifierAttribute="id")
 func ResourceNotificationRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNotificationRuleCreate,
@@ -87,8 +88,8 @@ func ResourceNotificationRule() *schema.Resource {
 				}, false),
 			},
 
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 
 			"target": {
 				Type:     schema.TypeSet,
@@ -134,23 +135,18 @@ func expandNotificationRuleTargets(targetsData []interface{}) []*codestarnotific
 func resourceNotificationRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeStarNotificationsConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-	params := &codestarnotifications.CreateNotificationRuleInput{
+	input := &codestarnotifications.CreateNotificationRuleInput{
 		DetailType:   aws.String(d.Get("detail_type").(string)),
 		EventTypeIds: flex.ExpandStringSet(d.Get("event_type_ids").(*schema.Set)),
 		Name:         aws.String(d.Get("name").(string)),
 		Resource:     aws.String(d.Get("resource").(string)),
 		Status:       aws.String(d.Get("status").(string)),
+		Tags:         GetTagsIn(ctx),
 		Targets:      expandNotificationRuleTargets(d.Get("target").(*schema.Set).List()),
 	}
 
-	if len(tags) > 0 {
-		params.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	res, err := conn.CreateNotificationRuleWithContext(ctx, params)
+	res, err := conn.CreateNotificationRuleWithContext(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CodeStar Notification Rule: %s", err)
 	}
@@ -163,8 +159,6 @@ func resourceNotificationRuleCreate(ctx context.Context, d *schema.ResourceData,
 func resourceNotificationRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeStarNotificationsConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	rule, err := conn.DescribeNotificationRuleWithContext(ctx, &codestarnotifications.DescribeNotificationRuleInput{
 		Arn: aws.String(d.Id()),
@@ -192,16 +186,8 @@ func resourceNotificationRuleRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("name", rule.Name)
 	d.Set("status", rule.Status)
 	d.Set("resource", rule.Resource)
-	tags := tftags.New(ctx, rule.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, rule.Tags)
 
 	targets := make([]map[string]interface{}, 0, len(rule.Targets))
 	for _, t := range rule.Targets {
@@ -276,7 +262,7 @@ func resourceNotificationRuleUpdate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeStarNotificationsConn()
 
-	params := &codestarnotifications.UpdateNotificationRuleInput{
+	input := &codestarnotifications.UpdateNotificationRuleInput{
 		Arn:          aws.String(d.Id()),
 		DetailType:   aws.String(d.Get("detail_type").(string)),
 		EventTypeIds: flex.ExpandStringSet(d.Get("event_type_ids").(*schema.Set)),
@@ -285,15 +271,8 @@ func resourceNotificationRuleUpdate(ctx context.Context, d *schema.ResourceData,
 		Targets:      expandNotificationRuleTargets(d.Get("target").(*schema.Set).List()),
 	}
 
-	if _, err := conn.UpdateNotificationRuleWithContext(ctx, params); err != nil {
+	if _, err := conn.UpdateNotificationRuleWithContext(ctx, input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating CodeStar Notification Rule (%s): %s", d.Id(), err)
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating CodeStar Notification Rule (%s): %s", d.Id(), err)
-		}
 	}
 
 	if d.HasChange("target") {

@@ -588,31 +588,31 @@ func TestAccS3Object_acl(t *testing.T) {
 		CheckDestroy:             testAccCheckObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectConfig_acl(rName, "some_bucket_content", "private"),
+				Config: testAccObjectConfig_acl(rName, "some_bucket_content", s3.BucketCannedACLPrivate, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj1),
 					testAccCheckObjectBody(&obj1, "some_bucket_content"),
-					resource.TestCheckResourceAttr(resourceName, "acl", "private"),
+					resource.TestCheckResourceAttr(resourceName, "acl", s3.BucketCannedACLPrivate),
 					testAccCheckObjectACL(ctx, resourceName, []string{"FULL_CONTROL"}),
 				),
 			},
 			{
-				Config: testAccObjectConfig_acl(rName, "some_bucket_content", "public-read"),
+				Config: testAccObjectConfig_acl(rName, "some_bucket_content", s3.BucketCannedACLPublicRead, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj2),
 					testAccCheckObjectVersionIdEquals(&obj2, &obj1),
 					testAccCheckObjectBody(&obj2, "some_bucket_content"),
-					resource.TestCheckResourceAttr(resourceName, "acl", "public-read"),
+					resource.TestCheckResourceAttr(resourceName, "acl", s3.BucketCannedACLPublicRead),
 					testAccCheckObjectACL(ctx, resourceName, []string{"FULL_CONTROL", "READ"}),
 				),
 			},
 			{
-				Config: testAccObjectConfig_acl(rName, "changed_some_bucket_content", "private"),
+				Config: testAccObjectConfig_acl(rName, "changed_some_bucket_content", s3.BucketCannedACLPrivate, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj3),
 					testAccCheckObjectVersionIdDiffers(&obj3, &obj2),
 					testAccCheckObjectBody(&obj3, "changed_some_bucket_content"),
-					resource.TestCheckResourceAttr(resourceName, "acl", "private"),
+					resource.TestCheckResourceAttr(resourceName, "acl", s3.BucketCannedACLPrivate),
 					testAccCheckObjectACL(ctx, resourceName, []string{"FULL_CONTROL"}),
 				),
 			},
@@ -1785,10 +1785,26 @@ resource "aws_s3_object" "object" {
 `, rName, source)
 }
 
-func testAccObjectConfig_acl(rName string, content, acl string) string {
+func testAccObjectConfig_acl(rName, content, acl string, blockPublicAccess bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_public_access_block" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  block_public_acls       = %[4]t
+  block_public_policy     = %[4]t
+  ignore_public_acls      = %[4]t
+  restrict_public_buckets = %[4]t
+}
+
+resource "aws_s3_bucket_ownership_controls" "test" {
+  bucket = aws_s3_bucket.test.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
 }
 
 resource "aws_s3_bucket_versioning" "test" {
@@ -1799,13 +1815,18 @@ resource "aws_s3_bucket_versioning" "test" {
 }
 
 resource "aws_s3_object" "object" {
-  # Must have bucket versioning enabled first
-  bucket  = aws_s3_bucket_versioning.test.bucket
+  depends_on = [
+    aws_s3_bucket_public_access_block.test,
+    aws_s3_bucket_ownership_controls.test,
+    aws_s3_bucket_versioning.test,
+  ]
+
+  bucket  = aws_s3_bucket.test.id
   key     = "test-key"
   content = %[2]q
   acl     = %[3]q
 }
-`, rName, content, acl)
+`, rName, content, acl, blockPublicAccess)
 }
 
 func testAccObjectConfig_storageClass(rName string, storage_class string) string {

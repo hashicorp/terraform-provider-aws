@@ -20,9 +20,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_glue_trigger")
+// @SDKResource("aws_glue_trigger", name="Trigger")
+// @Tags(identifierAttribute="arn")
 func ResourceTrigger() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTriggerCreate,
@@ -185,8 +187,8 @@ func ResourceTrigger() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -205,15 +207,13 @@ func ResourceTrigger() *schema.Resource {
 func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+
 	name := d.Get("name").(string)
 	triggerType := d.Get("type").(string)
-
 	input := &glue.CreateTriggerInput{
 		Actions:         expandActions(d.Get("actions").([]interface{})),
 		Name:            aws.String(name),
-		Tags:            Tags(tags.IgnoreAWS()),
+		Tags:            GetTagsIn(ctx),
 		Type:            aws.String(triggerType),
 		StartOnCreation: aws.Bool(d.Get("start_on_creation").(bool)),
 	}
@@ -302,8 +302,6 @@ func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceTriggerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := FindTriggerByName(ctx, conn, d.Id())
 	if err != nil {
@@ -358,24 +356,6 @@ func resourceTriggerRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.Set("name", trigger.Name)
 	d.Set("schedule", trigger.Schedule)
-
-	tags, err := ListTags(ctx, conn, triggerARN)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Glue Trigger (%s): %s", triggerARN, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	d.Set("type", trigger.Type)
 	d.Set("workflow_name", trigger.WorkflowName)
 
@@ -447,13 +427,6 @@ func resourceTriggerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 					return sdkdiag.AppendErrorf(diags, "stopping Glue Trigger (%s): %s", d.Id(), err)
 				}
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 

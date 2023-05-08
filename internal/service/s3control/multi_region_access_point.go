@@ -29,7 +29,7 @@ func resourceMultiRegionAccessPoint() *schema.Resource {
 		DeleteWithoutTimeout: resourceMultiRegionAccessPointDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{

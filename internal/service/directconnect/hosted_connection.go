@@ -162,7 +162,8 @@ func resourceHostedConnectionDelete(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	if err := deleteConnection(ctx, conn, d.Id(), waitHostedConnectionDeleted); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Direct Connect Hosted Connection (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
+
 	return diags
 }

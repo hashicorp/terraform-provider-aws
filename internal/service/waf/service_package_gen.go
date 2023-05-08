@@ -61,6 +61,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceRateBasedRule,
 			TypeName: "aws_waf_rate_based_rule",
+			Name:     "Rate Based Rule",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceRegexMatchSet,
@@ -73,10 +77,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceRule,
 			TypeName: "aws_waf_rule",
+			Name:     "Rule",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceRuleGroup,
 			TypeName: "aws_waf_rule_group",
+			Name:     "Rule Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceSizeConstraintSet,
@@ -89,6 +101,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceWebACL,
 			TypeName: "aws_waf_web_acl",
+			Name:     "Web ACL",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceXSSMatchSet,

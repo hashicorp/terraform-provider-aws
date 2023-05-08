@@ -32,6 +32,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceScheduleGroup,
 			TypeName: "aws_scheduler_schedule_group",
+			Name:     "Schedule Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }

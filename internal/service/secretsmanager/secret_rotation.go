@@ -3,6 +3,7 @@ package secretsmanager
 import (
 	"context"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -11,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -48,8 +50,28 @@ func ResourceSecretRotation() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"automatically_after_days": {
-							Type:     schema.TypeInt,
-							Required: true,
+							Type:          schema.TypeInt,
+							Optional:      true,
+							ConflictsWith: []string{"rotation_rules.0.schedule_expression"},
+							ExactlyOneOf:  []string{"rotation_rules.0.automatically_after_days", "rotation_rules.0.schedule_expression"},
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								_, exists := d.GetOk("rotation_rules.0.schedule_expression")
+								return exists
+							},
+							DiffSuppressOnRefresh: true,
+							ValidateFunc:          validation.IntBetween(1, 1000),
+						},
+						"duration": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringMatch(regexp.MustCompile(`[0-9h]+`), ""),
+						},
+						"schedule_expression": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"rotation_rules.0.automatically_after_days"},
+							ExactlyOneOf:  []string{"rotation_rules.0.automatically_after_days", "rotation_rules.0.schedule_expression"},
+							ValidateFunc:  validation.StringMatch(regexp.MustCompile(`[0-9A-Za-z\(\)#\?\*\-\/, ]+`), ""),
 						},
 					},
 				},
@@ -231,11 +253,20 @@ func expandRotationRules(l []interface{}) *secretsmanager.RotationRulesType {
 	if len(l) == 0 {
 		return nil
 	}
+	rules := &secretsmanager.RotationRulesType{}
 
-	m := l[0].(map[string]interface{})
+	tfMap := l[0].(map[string]interface{})
 
-	rules := &secretsmanager.RotationRulesType{
-		AutomaticallyAfterDays: aws.Int64(int64(m["automatically_after_days"].(int))),
+	if v, ok := tfMap["automatically_after_days"].(int); ok && v != 0 {
+		rules.AutomaticallyAfterDays = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["duration"].(string); ok && v != "" {
+		rules.Duration = aws.String(v)
+	}
+
+	if v, ok := tfMap["schedule_expression"].(string); ok && v != "" {
+		rules.ScheduleExpression = aws.String(v)
 	}
 
 	return rules
@@ -243,11 +274,21 @@ func expandRotationRules(l []interface{}) *secretsmanager.RotationRulesType {
 
 func flattenRotationRules(rules *secretsmanager.RotationRulesType) []interface{} {
 	if rules == nil {
-		return []interface{}{}
+		return nil
 	}
 
-	m := map[string]interface{}{
-		"automatically_after_days": int(aws.Int64Value(rules.AutomaticallyAfterDays)),
+	m := map[string]interface{}{}
+
+	if v := rules.AutomaticallyAfterDays; v != nil {
+		m["automatically_after_days"] = int(aws.Int64Value(v))
+	}
+
+	if v := rules.Duration; v != nil {
+		m["duration"] = aws.StringValue(v)
+	}
+
+	if v := rules.ScheduleExpression; v != nil {
+		m["schedule_expression"] = aws.StringValue(v)
 	}
 
 	return []interface{}{m}

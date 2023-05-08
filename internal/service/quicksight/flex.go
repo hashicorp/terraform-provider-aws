@@ -3,12 +3,29 @@ package quicksight
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+func expandResourcePermissions(tfList []interface{}) []*quicksight.ResourcePermission {
+	permissions := make([]*quicksight.ResourcePermission, len(tfList))
+
+	for i, tfListRaw := range tfList {
+		tfMap := tfListRaw.(map[string]interface{})
+
+		permission := &quicksight.ResourcePermission{
+			Actions:   flex.ExpandStringSet(tfMap["actions"].(*schema.Set)),
+			Principal: aws.String(tfMap["principal"].(string)),
+		}
+
+		permissions[i] = permission
+	}
+	return permissions
+}
+
 func DiffPermissions(o, n []interface{}) ([]*quicksight.ResourcePermission, []*quicksight.ResourcePermission) {
-	old := expandDataSourcePermissions(o)
-	new := expandDataSourcePermissions(n)
+	old := expandResourcePermissions(o)
+	new := expandResourcePermissions(n)
 
 	var toGrant, toRevoke []*quicksight.ResourcePermission
 
@@ -29,7 +46,6 @@ func DiffPermissions(o, n []interface{}) ([]*quicksight.ResourcePermission, []*q
 			}
 
 			toRemove := oldActions.Difference(newActions)
-			toAdd := newActions.Difference(oldActions)
 
 			if toRemove.Len() > 0 {
 				toRevoke = append(toRevoke, &quicksight.ResourcePermission{
@@ -38,9 +54,9 @@ func DiffPermissions(o, n []interface{}) ([]*quicksight.ResourcePermission, []*q
 				})
 			}
 
-			if toAdd.Len() > 0 {
+			if newActions.Len() > 0 {
 				toGrant = append(toGrant, &quicksight.ResourcePermission{
-					Actions:   flex.ExpandStringSet(toAdd),
+					Actions:   flex.ExpandStringSet(newActions),
 					Principal: np.Principal,
 				})
 			}
@@ -67,4 +83,32 @@ func DiffPermissions(o, n []interface{}) ([]*quicksight.ResourcePermission, []*q
 	}
 
 	return toGrant, toRevoke
+}
+
+func flattenPermissions(perms []*quicksight.ResourcePermission) []interface{} {
+	if len(perms) == 0 {
+		return []interface{}{}
+	}
+
+	values := make([]interface{}, 0)
+
+	for _, p := range perms {
+		if p == nil {
+			continue
+		}
+
+		perm := make(map[string]interface{})
+
+		if p.Principal != nil {
+			perm["principal"] = aws.StringValue(p.Principal)
+		}
+
+		if p.Actions != nil {
+			perm["actions"] = flex.FlattenStringList(p.Actions)
+		}
+
+		values = append(values, perm)
+	}
+
+	return values
 }

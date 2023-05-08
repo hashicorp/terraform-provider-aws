@@ -29,7 +29,7 @@ func resourceObjectLambdaAccessPoint() *schema.Resource {
 		DeleteWithoutTimeout: resourceObjectLambdaAccessPointDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{

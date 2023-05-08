@@ -23,7 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_sesv2_contact_list")
+// @SDKResource("aws_sesv2_contact_list", name="Contact List")
+// @Tags(identifierAttribute="arn")
 func ResourceContactList() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContactListCreate,
@@ -57,8 +58,8 @@ func ResourceContactList() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"topic": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -99,6 +100,7 @@ func resourceContactListCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	in := &sesv2.CreateContactListInput{
 		ContactListName: aws.String(d.Get("contact_list_name").(string)),
+		Tags:            GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -107,13 +109,6 @@ func resourceContactListCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	if v, ok := d.GetOk("topic"); ok && v.(*schema.Set).Len() > 0 {
 		in.Topics = expandTopics(v.(*schema.Set).List())
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	out, err := conn.CreateContactList(ctx, in)
@@ -163,23 +158,6 @@ func resourceContactListRead(ctx context.Context, d *schema.ResourceData, meta i
 		return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameContactList, d.Id(), err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameEmailIdentity, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameContactList, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameContactList, d.Id(), err)
-	}
-
 	return nil
 }
 
@@ -197,14 +175,6 @@ func resourceContactListUpdate(ctx context.Context, d *schema.ResourceData, meta
 		log.Printf("[DEBUG] Updating SESV2 ContactList (%s): %#v", d.Id(), in)
 		if _, err := conn.UpdateContactList(ctx, in); err != nil {
 			return create.DiagError(names.SESV2, create.ErrActionUpdating, ResNameContactList, d.Id(), err)
-		}
-	}
-
-	if d.HasChanges("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return create.DiagError(names.SESV2, create.ErrActionUpdating, ResNameEmailIdentity, d.Id(), err)
 		}
 	}
 

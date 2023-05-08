@@ -61,7 +61,7 @@ One of the following target arguments must be supplied:
 * `carrier_gateway_id` - (Optional) Identifier of a carrier gateway. This attribute can only be used when the VPC contains a subnet which is associated with a Wavelength Zone.
 * `core_network_arn` - (Optional) The Amazon Resource Name (ARN) of a core network.
 * `egress_only_gateway_id` - (Optional) Identifier of a VPC Egress Only Internet Gateway.
-* `gateway_id` - (Optional) Identifier of a VPC internet gateway or a virtual private gateway.
+* `gateway_id` - (Optional) Identifier of a VPC internet gateway or a virtual private gateway. Specify `local` when updating a previously [imported](#import) local route.
 * `instance_id` - (Optional, **Deprecated** use `network_interface_id` instead) Identifier of an EC2 instance.
 * `nat_gateway_id` - (Optional) Identifier of a VPC NAT gateway.
 * `local_gateway_id` - (Optional) Identifier of a Outpost local gateway.
@@ -94,7 +94,7 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 Individual routes can be imported using `ROUTETABLEID_DESTINATION`.
-
+[Local routes](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Route_Tables.html#RouteTables) can be imported using the VPC's IPv4 or IPv6 CIDR blocks.
 For example, import a route in route table `rtb-656C65616E6F72` with an IPv4 destination CIDR of `10.42.0.0/16` like this:
 
 ```console

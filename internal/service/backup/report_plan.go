@@ -19,9 +19,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_backup_report_plan")
+// @SDKResource("aws_backup_report_plan", name="Report Plan")
+// @Tags(identifierAttribute="arn")
 func ResourceReportPlan() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReportPlanCreate,
@@ -88,6 +90,13 @@ func ResourceReportPlan() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"accounts": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
 						"framework_arns": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -99,6 +108,20 @@ func ResourceReportPlan() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
+						"organization_units": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"regions": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
 						// A report plan template cannot be updated
 						"report_template": {
 							Type:         schema.TypeString,
@@ -109,8 +132,8 @@ func ResourceReportPlan() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -120,14 +143,13 @@ func ResourceReportPlan() *schema.Resource {
 func resourceReportPlanCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &backup.CreateReportPlanInput{
 		IdempotencyToken:      aws.String(id.UniqueId()),
 		ReportDeliveryChannel: expandReportDeliveryChannel(d.Get("report_delivery_channel").([]interface{})),
 		ReportPlanName:        aws.String(name),
+		ReportPlanTags:        GetTagsIn(ctx),
 		ReportSetting:         expandReportSetting(d.Get("report_setting").([]interface{})),
 	}
 
@@ -135,11 +157,6 @@ func resourceReportPlanCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.ReportPlanDescription = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.ReportPlanTags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating Backup Report Plan: %s", input)
 	output, err := conn.CreateReportPlanWithContext(ctx, input)
 
 	if err != nil {
@@ -159,8 +176,6 @@ func resourceReportPlanCreate(ctx context.Context, d *schema.ResourceData, meta 
 func resourceReportPlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	reportPlan, err := FindReportPlanByName(ctx, conn, d.Id())
 
@@ -188,23 +203,6 @@ func resourceReportPlanRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting report_setting: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Report Plan (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -230,14 +228,6 @@ func resourceReportPlanUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 		if _, err := waitReportPlanUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Backup Report Plan (%s) update: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags for Backup Report Plan (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -303,12 +293,24 @@ func expandReportSetting(reportSetting []interface{}) *backup.ReportSetting {
 		ReportTemplate: aws.String(tfMap["report_template"].(string)),
 	}
 
+	if v, ok := tfMap["accounts"]; ok && v.(*schema.Set).Len() > 0 {
+		result.Accounts = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
 	if v, ok := tfMap["framework_arns"]; ok && v.(*schema.Set).Len() > 0 {
 		result.FrameworkArns = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := tfMap["number_of_frameworks"].(int); ok && v > 0 {
 		result.NumberOfFrameworks = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["organization_units"]; ok && v.(*schema.Set).Len() > 0 {
+		result.OrganizationUnits = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := tfMap["regions"]; ok && v.(*schema.Set).Len() > 0 {
+		result.Regions = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	return result
@@ -343,12 +345,24 @@ func flattenReportSetting(reportSetting *backup.ReportSetting) []interface{} {
 		"report_template": aws.StringValue(reportSetting.ReportTemplate),
 	}
 
+	if reportSetting.Accounts != nil && len(reportSetting.Accounts) > 0 {
+		values["accounts"] = flex.FlattenStringSet(reportSetting.Accounts)
+	}
+
 	if reportSetting.FrameworkArns != nil && len(reportSetting.FrameworkArns) > 0 {
 		values["framework_arns"] = flex.FlattenStringSet(reportSetting.FrameworkArns)
 	}
 
 	if reportSetting.NumberOfFrameworks != nil {
 		values["number_of_frameworks"] = aws.Int64Value(reportSetting.NumberOfFrameworks)
+	}
+
+	if reportSetting.OrganizationUnits != nil && len(reportSetting.OrganizationUnits) > 0 {
+		values["organization_units"] = flex.FlattenStringSet(reportSetting.OrganizationUnits)
+	}
+
+	if reportSetting.Regions != nil && len(reportSetting.Regions) > 0 {
+		values["regions"] = flex.FlattenStringSet(reportSetting.Regions)
 	}
 
 	return []interface{}{values}

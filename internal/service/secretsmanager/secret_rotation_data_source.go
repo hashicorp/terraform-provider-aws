@@ -41,6 +41,14 @@ func DataSourceSecretRotation() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
+						"duration": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"schedule_expression": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},

@@ -22,7 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_oam_link")
+// @SDKResource("aws_oam_link", name="Link")
+// @Tags(identifierAttribute="id")
 func ResourceLink() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLinkCreate,
@@ -77,8 +78,8 @@ func ResourceLink() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -96,13 +97,7 @@ func resourceLinkCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		LabelTemplate:  aws.String(d.Get("label_template").(string)),
 		ResourceTypes:  flex.ExpandStringyValueSet[types.ResourceType](d.Get("resource_types").(*schema.Set)),
 		SinkIdentifier: aws.String(d.Get("sink_identifier").(string)),
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
+		Tags:           GetTagsIn(ctx),
 	}
 
 	out, err := conn.CreateLink(ctx, in)
@@ -142,23 +137,6 @@ func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("sink_arn", out.SinkArn)
 	d.Set("sink_identifier", out.SinkArn)
 
-	tags, err := ListTags(ctx, conn, d.Id())
-	if err != nil {
-		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionReading, ResNameLink, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionSetting, ResNameLink, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionSetting, ResNameLink, d.Id(), err)
-	}
-
 	return nil
 }
 
@@ -174,14 +152,6 @@ func resourceLinkUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	if d.HasChanges("resource_types") {
 		in.ResourceTypes = flex.ExpandStringyValueSet[types.ResourceType](d.Get("resource_types").(*schema.Set))
 		update = true
-	}
-
-	if d.HasChange("tags_all") {
-		log.Printf("[DEBUG] Updating ObservabilityAccessManager Link Tags (%s): %#v", d.Id(), d.Get("tags_all"))
-		oldTags, newTags := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), oldTags, newTags); err != nil {
-			return create.DiagError(names.ObservabilityAccessManager, create.ErrActionUpdating, ResNameLink, d.Id(), err)
-		}
 	}
 
 	if update {

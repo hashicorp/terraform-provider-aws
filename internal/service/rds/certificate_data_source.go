@@ -85,7 +85,6 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 		}
 		return !lastPage
 	})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS Certificates: %s", err)
 	}

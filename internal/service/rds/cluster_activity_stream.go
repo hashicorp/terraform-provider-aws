@@ -72,7 +72,6 @@ func resourceClusterActivityStreamCreate(ctx context.Context, d *schema.Resource
 	}
 
 	_, err := conn.StartActivityStreamWithContext(ctx, input)
-
 	if err != nil {
 		return diag.Errorf("creating RDS Cluster Activity Stream (%s): %s", arn, err)
 	}
@@ -117,7 +116,6 @@ func resourceClusterActivityStreamDelete(ctx context.Context, d *schema.Resource
 		ApplyImmediately: aws.Bool(true),
 		ResourceArn:      aws.String(d.Id()),
 	})
-
 	if err != nil {
 		return diag.Errorf("stopping RDS Cluster Activity Stream (%s): %s", d.Id(), err)
 	}
@@ -131,7 +129,6 @@ func resourceClusterActivityStreamDelete(ctx context.Context, d *schema.Resource
 
 func FindDBClusterWithActivityStream(ctx context.Context, conn *rds.RDS, arn string) (*rds.DBCluster, error) {
 	output, err := FindDBClusterByID(ctx, conn, arn)
-
 	if err != nil {
 		return nil, err
 	}

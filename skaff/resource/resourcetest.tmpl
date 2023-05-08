@@ -246,7 +246,19 @@ func TestAcc{{ .Service }}{{ .Resource }}_disappears(t *testing.T) {
 				Config: testAcc{{ .Resource }}Config_basic(rName, testAcc{{ .Resource }}VersionNewer),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheck{{ .Resource }}Exists(resourceName, &{{ .ResourceLower }}),
+					{{- if .PluginFramework }}
+					{{- if .IncludeComments }}
+					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
+					// but expects a new resource factory function as the third argument. To expose this
+					// private function to the testing package, you may need to add a line like the following
+					// to exports_test.go:
+					//
+					//   var Resource{{ .Resource}} = newResource{{ .Resource }}
+					{{- end }}
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tf{{ .ServicePackage }}.Resource{{ .Resource }}, resourceName),
+					{{- else }}
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tf{{ .ServicePackage }}.Resource{{ .Resource }}(), resourceName),
+					{{- end }}
 				),
 				ExpectNonEmptyPlan: true,
 			},

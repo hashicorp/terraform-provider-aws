@@ -76,7 +76,6 @@ func testAccReservedInstanceExists(ctx context.Context, n string, reservation *r
 		}
 
 		resp, err := tfrds.FindReservedDBInstanceByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

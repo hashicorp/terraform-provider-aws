@@ -2,6 +2,8 @@ package acmpca_test
 
 import (
 	"context"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -44,6 +46,7 @@ func TestAccACMPCACertificate_rootCertificate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "validity.0.type", "YEARS"),
 					resource.TestCheckResourceAttr(resourceName, "signing_algorithm", "SHA512WITHRSA"),
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "template_arn", "acm-pca", "template/RootCACertificate/V1"),
+					resource.TestCheckNoResourceAttr(resourceName, "api_passthrough"),
 				),
 			},
 			{
@@ -51,6 +54,52 @@ func TestAccACMPCACertificate_rootCertificate(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"api_passthrough",
+					"certificate_signing_request",
+					"signing_algorithm",
+					"template_arn",
+					"validity",
+				},
+			},
+		},
+	})
+}
+
+func TestAccACMPCACertificate_rootCertificateWithAPIPassthrough(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_acmpca_certificate.test"
+	certificateAuthorityResourceName := "aws_acmpca_certificate_authority.test"
+
+	domain := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateConfig_rootWithAPIPassthrough(domain),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateExists(ctx, resourceName),
+					testAccCheckCertificateExtension(resourceName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexp.MustCompile(`certificate-authority/.+/certificate/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_chain", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", certificateAuthorityResourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate_signing_request"),
+					resource.TestCheckResourceAttr(resourceName, "validity.0.value", "1"),
+					resource.TestCheckResourceAttr(resourceName, "validity.0.type", "YEARS"),
+					resource.TestCheckResourceAttr(resourceName, "signing_algorithm", "SHA512WITHRSA"),
+					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "template_arn", "acm-pca", "template/RootCACertificate_APIPassthrough/V1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"api_passthrough",
 					"certificate_signing_request",
 					"signing_algorithm",
 					"template_arn",
@@ -95,6 +144,7 @@ func TestAccACMPCACertificate_subordinateCertificate(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"api_passthrough",
 					"certificate_signing_request",
 					"signing_algorithm",
 					"template_arn",
@@ -138,6 +188,7 @@ func TestAccACMPCACertificate_endEntityCertificate(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"api_passthrough",
 					"certificate_signing_request",
 					"signing_algorithm",
 					"template_arn",
@@ -182,6 +233,7 @@ func TestAccACMPCACertificate_Validity_endDate(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"api_passthrough",
 					"certificate_signing_request",
 					"signing_algorithm",
 					"template_arn",
@@ -226,6 +278,7 @@ func TestAccACMPCACertificate_Validity_absolute(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"api_passthrough",
 					"certificate_signing_request",
 					"signing_algorithm",
 					"template_arn",
@@ -298,6 +351,32 @@ func testAccCheckCertificateExists(ctx context.Context, resourceName string) res
 	}
 }
 
+func testAccCheckCertificateExtension(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		block, _ := pem.Decode([]byte(rs.Primary.Attributes["certificate"]))
+		cert, err := x509.ParseCertificate(block.Bytes)
+		if err != nil {
+			return fmt.Errorf("Failed to parse certificate: %w", err)
+		}
+
+		if len(cert.PermittedDNSDomains) != 1 {
+			return fmt.Errorf("Permitted DNS Domains expected to have 1 element, got %d", len(cert.PermittedDNSDomains))
+		}
+
+		expectedPermittedDNSDomain := ".permitted.test"
+		if cert.PermittedDNSDomains[0] != expectedPermittedDNSDomain {
+			return fmt.Errorf("Expected permitted DNS domain: %s, got: %s", expectedPermittedDNSDomain, cert.PermittedDNSDomains[0])
+		}
+
+		return nil
+	}
+}
+
 func testAccCertificateConfig_root(domain string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate" "test" {
@@ -311,6 +390,51 @@ resource "aws_acmpca_certificate" "test" {
     type  = "YEARS"
     value = 1
   }
+}
+
+resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+  type                            = "ROOT"
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = %[1]q
+    }
+  }
+}
+
+data "aws_partition" "current" {}
+`, domain)
+}
+
+func testAccCertificateConfig_rootWithAPIPassthrough(domain string) string {
+	return fmt.Sprintf(`
+resource "aws_acmpca_certificate" "test" {
+  certificate_authority_arn   = aws_acmpca_certificate_authority.test.arn
+  certificate_signing_request = aws_acmpca_certificate_authority.test.certificate_signing_request
+  signing_algorithm           = "SHA512WITHRSA"
+
+  template_arn = "arn:${data.aws_partition.current.partition}:acm-pca:::template/RootCACertificate_APIPassthrough/V1"
+
+  validity {
+    type  = "YEARS"
+    value = 1
+  }
+
+  api_passthrough = jsonencode({
+    Extensions = {
+      CustomExtensions = [
+        {
+          ObjectIdentifier = "2.5.29.30",
+          Value            = "MBWgEzARgg8ucGVybWl0dGVkLnRlc3Q=",
+          Critical         = true
+        },
+      ]
+    }
+  })
 }
 
 resource "aws_acmpca_certificate_authority" "test" {

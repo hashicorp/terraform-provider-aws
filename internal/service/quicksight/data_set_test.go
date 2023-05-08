@@ -354,7 +354,7 @@ func TestAccQuickSightDataSet_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckDataSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSetConfigTags(rId, rName, "key1", "value1"),
+				Config: testAccDataSetConfigTags1(rId, rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -365,6 +365,23 @@ func TestAccQuickSightDataSet_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDataSetConfigTags2(rId, rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccDataSetConfigTags1(rId, rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -770,7 +787,7 @@ resource "aws_quicksight_data_set" "test" {
 `, rId, rName))
 }
 
-func testAccDataSetConfigTags(rId, rName, key, value string) string {
+func testAccDataSetConfigTags1(rId, rName, key1, value1 string) string {
 	return acctest.ConfigCompose(
 		testAccDataSetConfigBase(rId, rName),
 		fmt.Sprintf(`
@@ -796,5 +813,35 @@ resource "aws_quicksight_data_set" "test" {
     %[3]q = %[4]q
   }
 }
-`, rId, rName, key, value))
+`, rId, rName, key1, value1))
+}
+
+func testAccDataSetConfigTags2(rId, rName, key1, value1, key2, value2 string) string {
+	return acctest.ConfigCompose(
+		testAccDataSetConfigBase(rId, rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_data_set" "test" {
+  data_set_id = %[1]q
+  name        = %[2]q
+  import_mode = "SPICE"
+
+  physical_table_map {
+    physical_table_map_id = %[1]q
+    s3_source {
+      data_source_arn = aws_quicksight_data_source.test.arn
+      input_columns {
+        name = "Column1"
+        type = "STRING"
+      }
+      upload_settings {
+        format = "JSON"
+      }
+    }
+  }
+  tags = {
+    %[3]q = %[4]q
+    %[5]q = %[6]q
+  }
+}
+`, rId, rName, key1, value1, key2, value2))
 }

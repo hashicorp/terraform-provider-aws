@@ -22,7 +22,7 @@ import (
 func TestAccS3BucketNotification_eventbridge(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3_bucket_notification.notification"
+	resourceName := "aws_s3_bucket_notification.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -33,7 +33,7 @@ func TestAccS3BucketNotification_eventbridge(t *testing.T) {
 			{
 				Config: testAccBucketNotificationConfig_eventBridge(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketEventBridgeNotification(ctx, "aws_s3_bucket.bucket")),
+					testAccCheckBucketEventBridgeNotification(ctx, "aws_s3_bucket.test")),
 			},
 			{
 				ResourceName:      resourceName,
@@ -47,7 +47,7 @@ func TestAccS3BucketNotification_eventbridge(t *testing.T) {
 func TestAccS3BucketNotification_lambdaFunction(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3_bucket_notification.notification"
+	resourceName := "aws_s3_bucket_notification.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -58,9 +58,9 @@ func TestAccS3BucketNotification_lambdaFunction(t *testing.T) {
 			{
 				Config: testAccBucketNotificationConfig_lambdaFunction(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLambdaFunctionConfiguration(ctx, "aws_s3_bucket.bucket",
+					testAccCheckBucketLambdaFunctionConfiguration(ctx, "aws_s3_bucket.test",
 						"notification-lambda",
-						"aws_lambda_function.func",
+						"aws_lambda_function.test",
 						[]string{"s3:ObjectCreated:*", "s3:ObjectRemoved:Delete"},
 						&s3.KeyFilter{
 							FilterRules: []*s3.FilterRule{
@@ -120,7 +120,7 @@ func TestAccS3BucketNotification_LambdaFunctionLambdaFunctionARN_alias(t *testin
 func TestAccS3BucketNotification_queue(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3_bucket_notification.notification"
+	resourceName := "aws_s3_bucket_notification.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -131,9 +131,9 @@ func TestAccS3BucketNotification_queue(t *testing.T) {
 			{
 				Config: testAccBucketNotificationConfig_queue(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketQueueNotification(ctx, "aws_s3_bucket.bucket",
+					testAccCheckBucketQueueNotification(ctx, "aws_s3_bucket.test",
 						"notification-sqs",
-						"aws_sqs_queue.queue",
+						"aws_sqs_queue.test",
 						[]string{"s3:ObjectCreated:*", "s3:ObjectRemoved:Delete"},
 						&s3.KeyFilter{
 							FilterRules: []*s3.FilterRule{
@@ -162,7 +162,7 @@ func TestAccS3BucketNotification_queue(t *testing.T) {
 func TestAccS3BucketNotification_topic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3_bucket_notification.notification"
+	resourceName := "aws_s3_bucket_notification.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -173,9 +173,9 @@ func TestAccS3BucketNotification_topic(t *testing.T) {
 			{
 				Config: testAccBucketNotificationConfig_topic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketTopicNotification(ctx, "aws_s3_bucket.bucket",
+					testAccCheckBucketTopicNotification(ctx, "aws_s3_bucket.test",
 						"notification-sns1",
-						"aws_sns_topic.topic",
+						"aws_sns_topic.test",
 						[]string{"s3:ObjectCreated:*", "s3:ObjectRemoved:Delete"},
 						nil,
 					),
@@ -193,7 +193,7 @@ func TestAccS3BucketNotification_topic(t *testing.T) {
 func TestAccS3BucketNotification_Topic_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3_bucket_notification.notification"
+	resourceName := "aws_s3_bucket_notification.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -204,9 +204,9 @@ func TestAccS3BucketNotification_Topic_multiple(t *testing.T) {
 			{
 				Config: testAccBucketNotificationConfig_topicMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketTopicNotification(ctx, "aws_s3_bucket.bucket",
+					testAccCheckBucketTopicNotification(ctx, "aws_s3_bucket.test",
 						"notification-sns1",
-						"aws_sns_topic.topic",
+						"aws_sns_topic.test",
 						[]string{"s3:ObjectCreated:*", "s3:ObjectRemoved:Delete"},
 						&s3.KeyFilter{
 							FilterRules: []*s3.FilterRule{
@@ -221,9 +221,9 @@ func TestAccS3BucketNotification_Topic_multiple(t *testing.T) {
 							},
 						},
 					),
-					testAccCheckBucketTopicNotification(ctx, "aws_s3_bucket.bucket",
+					testAccCheckBucketTopicNotification(ctx, "aws_s3_bucket.test",
 						"notification-sns2",
-						"aws_sns_topic.topic",
+						"aws_sns_topic.test",
 						[]string{"s3:ObjectCreated:*", "s3:ObjectRemoved:Delete"},
 						&s3.KeyFilter{
 							FilterRules: []*s3.FilterRule{
@@ -258,9 +258,9 @@ func TestAccS3BucketNotification_update(t *testing.T) {
 			{
 				Config: testAccBucketNotificationConfig_topic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketTopicNotification(ctx, "aws_s3_bucket.bucket",
+					testAccCheckBucketTopicNotification(ctx, "aws_s3_bucket.test",
 						"notification-sns1",
-						"aws_sns_topic.topic",
+						"aws_sns_topic.test",
 						[]string{"s3:ObjectCreated:*", "s3:ObjectRemoved:Delete"},
 						nil,
 					),
@@ -269,9 +269,9 @@ func TestAccS3BucketNotification_update(t *testing.T) {
 			{
 				Config: testAccBucketNotificationConfig_queue(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketQueueNotification(ctx, "aws_s3_bucket.bucket",
+					testAccCheckBucketQueueNotification(ctx, "aws_s3_bucket.test",
 						"notification-sqs",
-						"aws_sqs_queue.queue",
+						"aws_sqs_queue.test",
 						[]string{"s3:ObjectCreated:*", "s3:ObjectRemoved:Delete"},
 						&s3.KeyFilter{
 							FilterRules: []*s3.FilterRule{
@@ -534,17 +534,38 @@ func testAccBucketNotificationConfig_eventBridge(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
+resource "aws_s3_bucket_public_access_block" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_ownership_controls" "test" {
+  bucket = aws_s3_bucket.test.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
+  depends_on = [
+    aws_s3_bucket_public_access_block.test,
+    aws_s3_bucket_ownership_controls.test,
+  ]
+
+  bucket = aws_s3_bucket.test.id
   acl    = "public-read"
 }
 
-resource "aws_s3_bucket_notification" "notification" {
-  bucket = aws_s3_bucket.bucket.id
+resource "aws_s3_bucket_notification" "test" {
+  bucket = aws_s3_bucket.test.id
 
   eventbridge = true
 }
@@ -555,7 +576,7 @@ func testAccBucketNotificationConfig_topicMultiple(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_sns_topic" "topic" {
+resource "aws_sns_topic" "test" {
   name = %[1]q
 
   policy = <<POLICY
@@ -570,7 +591,7 @@ resource "aws_sns_topic" "topic" {
       "Resource": "arn:${data.aws_partition.current.partition}:sns:*:*:%[1]s",
       "Condition": {
         "ArnLike": {
-          "aws:SourceArn": "${aws_s3_bucket.bucket.arn}"
+          "aws:SourceArn": "${aws_s3_bucket.test.arn}"
         }
       }
     }
@@ -579,21 +600,42 @@ resource "aws_sns_topic" "topic" {
 POLICY
 }
 
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
+resource "aws_s3_bucket_public_access_block" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_ownership_controls" "test" {
+  bucket = aws_s3_bucket.test.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
+  depends_on = [
+    aws_s3_bucket_public_access_block.test,
+    aws_s3_bucket_ownership_controls.test,
+  ]
+
+  bucket = aws_s3_bucket.test.id
   acl    = "public-read"
 }
 
-resource "aws_s3_bucket_notification" "notification" {
-  bucket = aws_s3_bucket.bucket.id
+resource "aws_s3_bucket_notification" "test" {
+  bucket = aws_s3_bucket.test.id
 
   topic {
     id        = "notification-sns1"
-    topic_arn = aws_sns_topic.topic.arn
+    topic_arn = aws_sns_topic.test.arn
 
     events = [
       "s3:ObjectCreated:*",
@@ -606,7 +648,7 @@ resource "aws_s3_bucket_notification" "notification" {
 
   topic {
     id        = "notification-sns2"
-    topic_arn = aws_sns_topic.topic.arn
+    topic_arn = aws_sns_topic.test.arn
 
     events = [
       "s3:ObjectCreated:*",
@@ -623,7 +665,7 @@ func testAccBucketNotificationConfig_queue(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_sqs_queue" "queue" {
+resource "aws_sqs_queue" "test" {
   name = %[1]q
 
   policy = <<POLICY
@@ -637,7 +679,7 @@ resource "aws_sqs_queue" "queue" {
       "Resource": "arn:${data.aws_partition.current.partition}:sqs:*:*:%[1]s",
       "Condition": {
         "ArnEquals": {
-          "aws:SourceArn": "${aws_s3_bucket.bucket.arn}"
+          "aws:SourceArn": "${aws_s3_bucket.test.arn}"
         }
       }
     }
@@ -646,21 +688,42 @@ resource "aws_sqs_queue" "queue" {
 POLICY
 }
 
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
+resource "aws_s3_bucket_public_access_block" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_ownership_controls" "test" {
+  bucket = aws_s3_bucket.test.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
+  depends_on = [
+    aws_s3_bucket_public_access_block.test,
+    aws_s3_bucket_ownership_controls.test,
+  ]
+
+  bucket = aws_s3_bucket.test.id
   acl    = "public-read"
 }
 
-resource "aws_s3_bucket_notification" "notification" {
-  bucket = aws_s3_bucket.bucket.id
+resource "aws_s3_bucket_notification" "test" {
+  bucket = aws_s3_bucket.test.id
 
   queue {
     id        = "notification-sqs"
-    queue_arn = aws_sqs_queue.queue.arn
+    queue_arn = aws_sqs_queue.test.arn
 
     events = [
       "s3:ObjectCreated:*",
@@ -678,7 +741,7 @@ func testAccBucketNotificationConfig_lambdaFunction(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_iam_role" "iam_for_lambda" {
+resource "aws_iam_role" "test" {
   name = %[1]q
 
   assume_role_policy = <<EOF
@@ -698,37 +761,58 @@ resource "aws_iam_role" "iam_for_lambda" {
 EOF
 }
 
-resource "aws_lambda_permission" "allow_bucket" {
+resource "aws_lambda_permission" "test" {
   statement_id  = "AllowExecutionFromS3Bucket"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.func.arn
+  function_name = aws_lambda_function.test.arn
   principal     = "s3.${data.aws_partition.current.dns_suffix}"
-  source_arn    = aws_s3_bucket.bucket.arn
+  source_arn    = aws_s3_bucket.test.arn
 }
 
-resource "aws_lambda_function" "func" {
+resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
-  role          = aws_iam_role.iam_for_lambda.arn
+  role          = aws_iam_role.test.arn
   handler       = "exports.example"
   runtime       = "nodejs16.x"
 }
 
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
+resource "aws_s3_bucket_public_access_block" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_ownership_controls" "test" {
+  bucket = aws_s3_bucket.test.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
+  depends_on = [
+    aws_s3_bucket_public_access_block.test,
+    aws_s3_bucket_ownership_controls.test,
+  ]
+
+  bucket = aws_s3_bucket.test.id
   acl    = "public-read"
 }
 
-resource "aws_s3_bucket_notification" "notification" {
-  bucket = aws_s3_bucket.bucket.id
+resource "aws_s3_bucket_notification" "test" {
+  bucket = aws_s3_bucket.test.id
 
   lambda_function {
     id                  = "notification-lambda"
-    lambda_function_arn = aws_lambda_function.func.arn
+    lambda_function_arn = aws_lambda_function.test.arn
 
     events = [
       "s3:ObjectCreated:*",
@@ -792,11 +876,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_notification" "test" {
   bucket = aws_s3_bucket.test.id
 
@@ -813,7 +892,7 @@ func testAccBucketNotificationConfig_topic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_sns_topic" "topic" {
+resource "aws_sns_topic" "test" {
   name = %[1]q
 
   policy = <<POLICY
@@ -830,7 +909,7 @@ resource "aws_sns_topic" "topic" {
       "Resource": "arn:${data.aws_partition.current.partition}:sns:*:*:%[1]s",
       "Condition": {
         "ArnLike": {
-          "aws:SourceArn": "${aws_s3_bucket.bucket.arn}"
+          "aws:SourceArn": "${aws_s3_bucket.test.arn}"
         }
       }
     }
@@ -839,21 +918,42 @@ resource "aws_sns_topic" "topic" {
 POLICY
 }
 
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
+resource "aws_s3_bucket_public_access_block" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_ownership_controls" "test" {
+  bucket = aws_s3_bucket.test.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
+  depends_on = [
+    aws_s3_bucket_public_access_block.test,
+    aws_s3_bucket_ownership_controls.test,
+  ]
+
+  bucket = aws_s3_bucket.test.id
   acl    = "public-read"
 }
 
-resource "aws_s3_bucket_notification" "notification" {
-  bucket = aws_s3_bucket.bucket.id
+resource "aws_s3_bucket_notification" "test" {
+  bucket = aws_s3_bucket.test.id
 
   topic {
     id        = "notification-sns1"
-    topic_arn = aws_sns_topic.topic.arn
+    topic_arn = aws_sns_topic.test.arn
 
     events = [
       "s3:ObjectCreated:*",

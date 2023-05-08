@@ -263,7 +263,7 @@ func testAccTransitGatewayVPCAttachment_SubnetIDs(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayVPCAttachment_Tags(t *testing.T) {
+func testAccTransitGatewayVPCAttachment_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var transitGatewayVpcAttachment1, transitGatewayVpcAttachment2, transitGatewayVpcAttachment3 ec2.TransitGatewayVpcAttachment
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"

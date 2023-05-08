@@ -37,6 +37,7 @@ func TestAccVPCNATGatewayDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceNameById, "private_ip"),
 					resource.TestCheckNoResourceAttr(dataSourceNameById, "attached_vpc_id"),
 					resource.TestCheckResourceAttrSet(dataSourceNameById, "tags.OtherTag"),
+					resource.TestCheckResourceAttrPair(dataSourceNameById, "association_id", resourceName, "association_id"),
 				),
 			},
 		},

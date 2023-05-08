@@ -22,7 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_medialive_input_security_group")
+// @SDKResource("aws_medialive_input_security_group", name="Input Security Group")
+// @Tags(identifierAttribute="arn")
 func ResourceInputSecurityGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInputSecurityGroupCreate,
@@ -64,8 +65,8 @@ func ResourceInputSecurityGroup() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -80,14 +81,8 @@ func resourceInputSecurityGroupCreate(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).MediaLiveClient()
 
 	in := &medialive.CreateInputSecurityGroupInput{
+		Tags:           GetTagsIn(ctx),
 		WhitelistRules: expandWhitelistRules(d.Get("whitelist_rules").(*schema.Set).List()),
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	out, err := conn.CreateInputSecurityGroup(ctx, in)
@@ -127,23 +122,6 @@ func resourceInputSecurityGroupRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("inputs", out.Inputs)
 	d.Set("whitelist_rules", flattenInputWhitelistRules(out.WhitelistRules))
 
-	tags, err := ListTags(ctx, conn, aws.ToString(out.Arn))
-	if err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionReading, ResNameInputSecurityGroup, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameInputSecurityGroup, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameInputSecurityGroup, d.Id(), err)
-	}
-
 	return nil
 }
 
@@ -167,14 +145,6 @@ func resourceInputSecurityGroupUpdate(ctx context.Context, d *schema.ResourceDat
 
 		if _, err := waitInputSecurityGroupUpdated(ctx, conn, aws.ToString(out.SecurityGroup.Id), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return create.DiagError(names.MediaLive, create.ErrActionWaitingForUpdate, ResNameInputSecurityGroup, d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameInputSecurityGroup, d.Id(), err)
 		}
 	}
 

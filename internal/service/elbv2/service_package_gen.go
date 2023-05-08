@@ -61,10 +61,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceLoadBalancer,
 			TypeName: "aws_alb",
+			Name:     "Load Balancer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceListener,
 			TypeName: "aws_alb_listener",
+			Name:     "Listener",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceListenerCertificate,
@@ -73,10 +81,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceListenerRule,
 			TypeName: "aws_alb_listener_rule",
+			Name:     "Listener Rule",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceTargetGroup,
 			TypeName: "aws_alb_target_group",
+			Name:     "Target Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceTargetGroupAttachment,
@@ -85,10 +101,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceLoadBalancer,
 			TypeName: "aws_lb",
+			Name:     "Load Balancer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceListener,
 			TypeName: "aws_lb_listener",
+			Name:     "Listener",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceListenerCertificate,
@@ -97,10 +121,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceListenerRule,
 			TypeName: "aws_lb_listener_rule",
+			Name:     "Listener Rule",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceTargetGroup,
 			TypeName: "aws_lb_target_group",
+			Name:     "Target Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceTargetGroupAttachment,

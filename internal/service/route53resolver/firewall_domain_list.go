@@ -18,9 +18,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_route53_resolver_firewall_domain_list")
+// @SDKResource("aws_route53_resolver_firewall_domain_list", name="Firewall Domain List")
+// @Tags(identifierAttribute="arn")
 func ResourceFirewallDomainList() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFirewallDomainListCreate,
@@ -48,8 +50,8 @@ func ResourceFirewallDomainList() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validResolverName,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -58,17 +60,12 @@ func ResourceFirewallDomainList() *schema.Resource {
 
 func resourceFirewallDomainListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &route53resolver.CreateFirewallDomainListInput{
 		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-firewall-domain-list-")),
 		Name:             aws.String(name),
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
+		Tags:             GetTagsIn(ctx),
 	}
 
 	output, err := conn.CreateFirewallDomainListWithContext(ctx, input)
@@ -100,8 +97,6 @@ func resourceFirewallDomainListCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceFirewallDomainListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	firewallDomainList, err := FindFirewallDomainListByID(ctx, conn, d.Id())
 
@@ -140,23 +135,6 @@ func resourceFirewallDomainListRead(ctx context.Context, d *schema.ResourceData,
 
 	d.Set("domains", aws.StringValueSlice(output))
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return diag.Errorf("listing tags for Route53 Resolver Firewall Domain List (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
-
 	return nil
 }
 
@@ -194,14 +172,6 @@ func resourceFirewallDomainListUpdate(ctx context.Context, d *schema.ResourceDat
 
 		if _, err = waitFirewallDomainListUpdated(ctx, conn, d.Id()); err != nil {
 			return diag.Errorf("waiting for Route53 Resolver Firewall Domain List (%s) update: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating Route53 Resolver Firewall Domain List (%s) tags: %s", d.Id(), err)
 		}
 	}
 

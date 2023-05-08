@@ -298,14 +298,14 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMinor(t *testing.T) {
 		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				//Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora", "5.6.mysql_aurora.1.22.2"),
+				// Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora", "5.6.mysql_aurora.1.22.2"),
 				Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora-postgresql", "13.4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
 				),
 			},
 			{
-				//Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora", "5.6.mysql_aurora.1.23.2"),
+				// Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora", "5.6.mysql_aurora.1.23.2"),
 				Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora-postgresql", "13.5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster2),
@@ -622,7 +622,6 @@ func testAccCheckGlobalClusterExists(ctx context.Context, resourceName string, g
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 		cluster, err := tfrds.DescribeGlobalCluster(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
@@ -680,7 +679,6 @@ func testAccCheckGlobalClusterDisappears(ctx context.Context, globalCluster *rds
 		}
 
 		_, err := conn.DeleteGlobalClusterWithContext(ctx, input)
-
 		if err != nil {
 			return err
 		}

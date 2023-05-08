@@ -544,7 +544,7 @@ func TestAccOpenSearchDomain_duplicate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "OpenSearch_1.1")),
-				ExpectError: regexp.MustCompile(`domain .+ already exists`),
+				ExpectError: regexp.MustCompile(`OpenSearch Domain ".+" already exists`),
 			},
 		},
 	})

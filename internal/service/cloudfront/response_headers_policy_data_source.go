@@ -137,6 +137,26 @@ func DataSourceResponseHeadersPolicy() *schema.Resource {
 				Computed:     true,
 				ExactlyOneOf: []string{"id", "name"},
 			},
+			"remove_headers_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"items": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"header": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"security_headers_config": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -335,6 +355,13 @@ func dataSourceResponseHeadersPolicyRead(ctx context.Context, d *schema.Resource
 	}
 	d.Set("etag", output.ETag)
 	d.Set("name", apiObject.Name)
+	if apiObject.RemoveHeadersConfig != nil {
+		if err := d.Set("remove_headers_config", []interface{}{flattenResponseHeadersPolicyRemoveHeadersConfig(apiObject.RemoveHeadersConfig)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting remove_headers_config: %s", err)
+		}
+	} else {
+		d.Set("remove_headers_config", nil)
+	}
 	if apiObject.SecurityHeadersConfig != nil {
 		if err := d.Set("security_headers_config", []interface{}{flattenResponseHeadersPolicySecurityHeadersConfig(apiObject.SecurityHeadersConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting security_headers_config: %s", err)

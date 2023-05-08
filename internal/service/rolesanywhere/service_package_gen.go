@@ -28,10 +28,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceProfile,
 			TypeName: "aws_rolesanywhere_profile",
+			Name:     "Profile",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceTrustAnchor,
 			TypeName: "aws_rolesanywhere_trust_anchor",
+			Name:     "Trust Anchor",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }
