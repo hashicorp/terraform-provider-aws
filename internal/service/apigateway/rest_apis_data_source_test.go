@@ -30,7 +30,7 @@ func TestAccAPIGatewayRestAPIsDataSource_filter(t *testing.T) {
 	})
 }
 
-func testCheckItemInList(resource, attr, value string) error {
+func testCheckItemInList(resource, attr, value string) func(s *terraform.State) error {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resource]
 		if !ok {
