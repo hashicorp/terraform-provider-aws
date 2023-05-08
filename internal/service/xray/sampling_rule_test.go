@@ -253,10 +253,10 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccSamplingRuleConfig_basic(ruleName string) string {
+func testAccSamplingRuleConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_xray_sampling_rule" "test" {
-  rule_name      = "%s"
+  rule_name      = %[1]q
   priority       = 5
   reservoir_size = 10
   url_path       = "*"
@@ -272,15 +272,15 @@ resource "aws_xray_sampling_rule" "test" {
     Hello = "World"
   }
 }
-`, ruleName)
+`, rName)
 }
 
-func testAccSamplingRuleConfig_update(ruleName string, priority int, reservoirSize int) string {
+func testAccSamplingRuleConfig_update(rName string, priority, reservoirSize int) string {
 	return fmt.Sprintf(`
 resource "aws_xray_sampling_rule" "test" {
-  rule_name      = "%s"
-  priority       = %d
-  reservoir_size = %d
+  rule_name      = %[1]q
+  priority       = %[2]d
+  reservoir_size = %[3]d
   url_path       = "*"
   host           = "*"
   http_method    = "GET"
@@ -290,10 +290,10 @@ resource "aws_xray_sampling_rule" "test" {
   resource_arn   = "*"
   version        = 1
 }
-`, ruleName, priority, reservoirSize)
+`, rName, priority, reservoirSize)
 }
 
-func testAccSamplingRuleConfig_tags1(ruleName, tagKey1, tagValue1 string) string {
+func testAccSamplingRuleConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_xray_sampling_rule" "test" {
   rule_name      = %[1]q
@@ -316,10 +316,10 @@ resource "aws_xray_sampling_rule" "test" {
     %[2]q = %[3]q
   }
 }
-`, ruleName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1)
 }
 
-func testAccSamplingRuleConfig_tags2(ruleName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccSamplingRuleConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_xray_sampling_rule" "test" {
   rule_name      = %[1]q
@@ -343,5 +343,5 @@ resource "aws_xray_sampling_rule" "test" {
     %[4]q = %[5]q
   }
 }
-`, ruleName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
