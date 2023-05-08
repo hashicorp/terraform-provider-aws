@@ -1,4 +1,15 @@
 ## 4.67.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/aws_elastic_beanstalk_hosted_zone: Add hosted zone ID for `ap-southeast-3` AWS Region ([#31248](https://github.com/hashicorp/terraform-provider-aws/issues/31248))
+* data-source/aws_s3_bucket: Set `hosted_zone_id` for `cn-north-1` AWS China Region ([#31247](https://github.com/hashicorp/terraform-provider-aws/issues/31247))
+* resource/aws_s3_bucket: Set `hosted_zone_id` for `cn-north-1` AWS China Region ([#31247](https://github.com/hashicorp/terraform-provider-aws/issues/31247))
+
+BUG FIXES:
+
+* resource/aws_appintegrations_data_integration: Correctly read `tags` into state ([#31241](https://github.com/hashicorp/terraform-provider-aws/issues/31241))
+
 ## 4.66.1 (May  5, 2023)
 
 BUG FIXES:
