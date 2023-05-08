@@ -1451,17 +1451,6 @@ func flattenVisuals(apiObject []*quicksight.Visual) []interface{} {
 	return tfList
 }
 
-func flattenPivotTableVisual(apiObject *quicksight.PivotTableVisual) []interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-	// TODO
-
-	return []interface{}{tfMap}
-}
-
 func flattenRadarChartVisual(apiObject *quicksight.RadarChartVisual) []interface{} {
 	if apiObject == nil {
 		return nil
@@ -1871,6 +1860,31 @@ func flattenDataPathValue(apiObject *quicksight.DataPathValue) []interface{} {
 	}
 
 	return []interface{}{tfMap}
+}
+
+func flattenDataPathValues(apiObject []*quicksight.DataPathValue) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if config.FieldId != nil {
+			tfMap["field_id"] = aws.StringValue(config.FieldId)
+		}
+		if config.FieldValue != nil {
+			tfMap["field_value"] = aws.StringValue(config.FieldValue)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }
 
 func flattenColumnHierarchy(apiObject []*quicksight.ColumnHierarchy) []interface{} {
