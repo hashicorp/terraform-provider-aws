@@ -174,6 +174,35 @@ func TestAccCloudWatchMetricStream_includeFilters(t *testing.T) {
 	})
 }
 
+func TestAccCloudWatchMetricStream_includeFiltersWithMetricNames(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_cloudwatch_metric_stream.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMetricStreamDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMetricStreamConfig_includeFiltersWithMetricNames(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMetricStreamExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
+					resource.TestCheckResourceAttr(resourceName, "include_filter.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccCloudWatchMetricStream_excludeFilters(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cloudwatch_metric_stream.test"
@@ -187,6 +216,35 @@ func TestAccCloudWatchMetricStream_excludeFilters(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMetricStreamConfig_excludeFilters(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMetricStreamExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
+					resource.TestCheckResourceAttr(resourceName, "exclude_filter.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccCloudWatchMetricStream_excludeFiltersWithMetricNames(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_cloudwatch_metric_stream.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMetricStreamDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMetricStreamConfig_excludeFiltersWithMetricNames(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -657,6 +715,31 @@ resource "aws_cloudwatch_metric_stream" "test" {
 `, rName)
 }
 
+func testAccMetricStreamConfig_includeFiltersWithMetricNames(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+
+resource "aws_cloudwatch_metric_stream" "test" {
+  name          = %[1]q
+  role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/MyRole"
+  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:deliverystream/MyFirehose"
+  output_format = "json"
+
+  include_filter {
+    namespace = "AWS/EC2"
+	metric_names = ["CPUUtilization", "NetworkOut"]
+  }
+
+  include_filter {
+    namespace = "AWS/EBS"
+	metric_names = []
+  }
+}
+`, rName)
+}
+
 func testAccMetricStreamConfig_excludeFilters(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -675,6 +758,31 @@ resource "aws_cloudwatch_metric_stream" "test" {
 
   exclude_filter {
     namespace = "AWS/EBS"
+  }
+}
+`, rName)
+}
+
+func testAccMetricStreamConfig_excludeFiltersWithMetricNames(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+
+resource "aws_cloudwatch_metric_stream" "test" {
+  name          = %[1]q
+  role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/MyRole"
+  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:deliverystream/MyFirehose"
+  output_format = "json"
+
+  exclude_filter {
+    namespace = "AWS/EC2"
+	metric_names = ["CPUUtilization", "NetworkOut"]
+  }
+
+  exclude_filter {
+    namespace = "AWS/EBS"
+	metric_names = []
   }
 }
 `, rName)

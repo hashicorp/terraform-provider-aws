@@ -64,6 +64,15 @@ func ResourceMetricStream() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
+						"metric_names": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 999,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(1, 255),
+							},
+						},
 					},
 				},
 			},
@@ -82,6 +91,15 @@ func ResourceMetricStream() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
+						},
+						"metric_names": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 999,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(1, 255),
+							},
 						},
 					},
 				},
@@ -441,7 +459,13 @@ func expandMetricStreamFilters(s *schema.Set) []*cloudwatch.MetricStreamFilter {
 		if v, ok := mFilter["namespace"].(string); ok && v != "" {
 			filter.Namespace = aws.String(v)
 		}
-
+		if v, ok := mFilter["metric_names"].([]interface{}); ok && len(v) != 0 {
+			filter.MetricNames = make([]*string, len(v))
+			for i, metricName := range v {
+				str := metricName.(string)
+				filter.MetricNames[i] = &str
+			}
+		}
 		filters = append(filters, filter)
 	}
 
@@ -455,7 +479,9 @@ func flattenMetricStreamFilters(s []*cloudwatch.MetricStreamFilter) []map[string
 		if bd.Namespace != nil {
 			stage := make(map[string]interface{})
 			stage["namespace"] = aws.StringValue(bd.Namespace)
-
+			if bd.MetricNames != nil {
+				stage["metric_names"] = aws.StringValueSlice(bd.MetricNames)
+			}
 			filters = append(filters, stage)
 		}
 	}
