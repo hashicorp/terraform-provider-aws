@@ -26,7 +26,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceEncryptionConfig,
+			Factory:  resourceEncryptionConfig,
 			TypeName: "aws_xray_encryption_config",
 		},
 		{
