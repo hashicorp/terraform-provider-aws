@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_chimesdkvoice_tags
+```
+
+```release-note:enhancement
+resource/aws_chime_voice_connector: Add `voice_connector_arn` export attribute
+```
