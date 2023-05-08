@@ -10,6 +10,8 @@ import (
 )
 
 func TestUnsuccessfulItemError(t *testing.T) {
+	t.Parallel()
+
 	unsuccessfulItemError := &ec2.UnsuccessfulItemError{
 		Code:    aws.String("test code"),
 		Message: aws.String("test message"),
@@ -27,6 +29,8 @@ func TestUnsuccessfulItemError(t *testing.T) {
 }
 
 func TestUnsuccessfulItemsError(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		Name     string
 		Items    []*ec2.UnsuccessfulItem
@@ -114,7 +118,10 @@ func TestUnsuccessfulItemsError(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
 			err := tfec2.UnsuccessfulItemsError(testCase.Items)
 
 			got := tfawserr.ErrCodeEquals(err, "test code")

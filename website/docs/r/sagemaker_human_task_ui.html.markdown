@@ -34,7 +34,6 @@ The following arguments are supported:
 
 * `content` - (Required) The content of the Liquid template for the worker user interface.
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:

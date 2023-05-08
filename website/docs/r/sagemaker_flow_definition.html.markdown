@@ -140,7 +140,6 @@ The following arguments are supported:
 * `dollars` - (Optional) The whole number of dollars in the amount. Valid value range between `0` and `2`.
 * `tenth_fractions_of_a_cent` - (Optional) Fractions of a cent, in tenths. Valid value range between `0` and `9`.
 
-
 ### Human Loop Activation Config
 
 * `human_loop_activation_conditions_config` - (Required) defines under what conditions SageMaker creates a human loop. See [Human Loop Activation Conditions Config](#human-loop-activation-conditions-config) details below.

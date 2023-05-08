@@ -24,7 +24,7 @@ data "aws_s3_objects" "my_objects" {
 data "aws_s3_object" "object_info" {
   count  = length(data.aws_s3_objects.my_objects.keys)
   key    = element(data.aws_s3_objects.my_objects.keys, count.index)
-  bucket = data.aws_s3_objects.my_objects.bucket
+  bucket = data.aws_s3_objects.my_objects.id
 }
 ```
 
@@ -34,7 +34,7 @@ The following arguments are supported:
 
 * `bucket` - (Required) Lists object keys in this S3 bucket. Alternatively, an [S3 access point](https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html) ARN can be specified
 * `prefix` - (Optional) Limits results to object keys with this prefix (Default: none)
-* `delimiter` - (Optional) A character used to group keys (Default: none)
+* `delimiter` - (Optional) Character used to group keys (Default: none)
 * `encoding_type` - (Optional) Encodes keys using this method (Default: none; besides none, only "url" can be used)
 * `max_keys` - (Optional) Maximum object keys to return (Default: 1000)
 * `start_after` - (Optional) Returns key names lexicographically after a specific object key in your bucket (Default: none; S3 lists object keys in UTF-8 character encoding in lexicographical order)

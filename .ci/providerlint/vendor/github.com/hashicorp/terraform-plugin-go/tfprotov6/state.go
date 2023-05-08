@@ -77,3 +77,22 @@ func (s RawState) Unmarshal(typ tftypes.Type) (tftypes.Value, error) {
 	}
 	return tftypes.Value{}, ErrUnknownRawStateType
 }
+
+// UnmarshalOpts contains options that can be used to modify the behaviour when
+// unmarshalling. Currently, this only contains a struct for opts for JSON but
+// could have a field for Flatmap in the future.
+type UnmarshalOpts struct {
+	ValueFromJSONOpts tftypes.ValueFromJSONOpts
+}
+
+// UnmarshalWithOpts is identical to Unmarshal but also accepts a tftypes.UnmarshalOpts which contains
+// options that can be used to modify the behaviour when unmarshalling JSON or Flatmap.
+func (s RawState) UnmarshalWithOpts(typ tftypes.Type, opts UnmarshalOpts) (tftypes.Value, error) {
+	if s.JSON != nil {
+		return tftypes.ValueFromJSONWithOpts(s.JSON, typ, opts.ValueFromJSONOpts) //nolint:staticcheck
+	}
+	if s.Flatmap != nil {
+		return tftypes.Value{}, fmt.Errorf("flatmap states cannot be unmarshaled, only states written by Terraform 0.12 and higher can be unmarshaled")
+	}
+	return tftypes.Value{}, ErrUnknownRawStateType
+}

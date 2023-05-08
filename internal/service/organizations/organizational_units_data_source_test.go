@@ -9,12 +9,14 @@ import (
 )
 
 func testAccOrganizationalUnitsDataSource_basic(t *testing.T) {
-	resourceName := "aws_organizations_organizational_unit.test"
-	dataSourceName := "data.aws_organizations_organizational_units.test"
-	resource.ParallelTest(t, resource.TestCase{
+	ctx := acctest.Context(t)
+	topOUDataSourceName := "data.aws_organizations_organizational_units.current"
+	newOUDataSourceName := "data.aws_organizations_organizational_units.test"
+
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckOrganizationsAccount(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -22,10 +24,8 @@ func testAccOrganizationalUnitsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccOrganizationalUnitsDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "children.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "children.0.name"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "children.0.id"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "children.0.arn"),
+					acctest.CheckResourceAttrGreaterThanValue(topOUDataSourceName, "children.#", "0"),
+					resource.TestCheckResourceAttr(newOUDataSourceName, "children.#", "0"),
 				),
 			},
 		},
@@ -33,14 +33,18 @@ func testAccOrganizationalUnitsDataSource_basic(t *testing.T) {
 }
 
 const testAccOrganizationalUnitsDataSourceConfig_basic = `
-resource "aws_organizations_organization" "test" {}
+data "aws_organizations_organization" "current" {}
 
 resource "aws_organizations_organizational_unit" "test" {
   name      = "test"
-  parent_id = aws_organizations_organization.test.roots[0].id
+  parent_id = data.aws_organizations_organization.current.roots[0].id
+}
+
+data "aws_organizations_organizational_units" "current" {
+  parent_id = aws_organizations_organizational_unit.test.parent_id
 }
 
 data "aws_organizations_organizational_units" "test" {
-  parent_id = aws_organizations_organizational_unit.test.parent_id
+  parent_id = aws_organizations_organizational_unit.test.id
 }
 `

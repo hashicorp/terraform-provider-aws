@@ -50,7 +50,7 @@ The following arguments are supported:
 
 * `html_body` - (Required) The email HTML body.
 * `subject` - (Required) The email subject.
-* `test_body` - (Required) The email text body.
+* `text_body` - (Required) The email text body.
 
 #### actions
 
@@ -74,8 +74,12 @@ The following arguments are supported:
 
 ### risk_exception_configuration
 
-* `blocked_ip_range_list` - (Optional) Overrides the risk decision to always block the pre-authentication requests. The IP range is in CIDR notation, a compact representation of an IP address and its routing prefix.
-* `skipped_ip_range_list` - (Optional) Risk detection isn't performed on the IP addresses in this range list. The IP range is in CIDR notation.
+* `blocked_ip_range_list` - (Optional) Overrides the risk decision to always block the pre-authentication requests.
+  The IP range is in CIDR notation, a compact representation of an IP address and its routing prefix.
+  Can contain a maximum of 200 items.
+* `skipped_ip_range_list` - (Optional) Risk detection isn't performed on the IP addresses in this range list.
+  The IP range is in CIDR notation.
+  Can contain a maximum of 200 items.
 
 ## Attributes Reference
 

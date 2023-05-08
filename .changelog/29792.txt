@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_aws_lb: Add `enable_xff_client_port`, `xff_header_processing_mode` and `enable_tls_version_and_cipher_suite_headers` arguments
+```
+
+```release-note:enhancement
+data-source/aws_aws_lb: Add `enable_xff_client_port`, `xff_header_processing_mode` and `enable_tls_version_and_cipher_suite_headers` attributes
+```

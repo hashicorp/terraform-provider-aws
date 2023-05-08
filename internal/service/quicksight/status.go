@@ -5,11 +5,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 // status fetches the DataSource and its Status
-func status(ctx context.Context, conn *quicksight.QuickSight, accountId, datasourceId string) resource.StateRefreshFunc {
+func status(ctx context.Context, conn *quicksight.QuickSight, accountId, datasourceId string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &quicksight.DescribeDataSourceInput{
 			AwsAccountId: aws.String(accountId),

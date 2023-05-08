@@ -19,7 +19,6 @@ func AssociationMigrateState(
 }
 
 func migrateAssociationStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error) {
-
 	if is.Empty() {
 		log.Println("[DEBUG] Empty InstanceState; nothing to migrate.")
 
@@ -34,5 +33,4 @@ func migrateAssociationStateV0toV1(is *terraform.InstanceState) (*terraform.Inst
 	log.Printf("[DEBUG] Attributes after migration: %#v, new id: %s", is.Attributes, is.Attributes["association_id"])
 
 	return is, nil
-
 }

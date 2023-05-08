@@ -72,7 +72,7 @@ pizza should have. The slot type could include the values: thick, thin, stuffed.
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `1m`)
 * `update` - (Default `1m`)

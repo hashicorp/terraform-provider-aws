@@ -44,22 +44,22 @@ The following arguments are supported:
 
 In addition to all of the arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) of the hierarchy group.
-* `hierarchy_path` - A block that contains information about the levels in the hierarchy group. The `hierarchy_path` block is documented below.
-* `level_id` - The identifier of the level in the hierarchy group.
-* `id` - The identifier of the hosting Amazon Connect Instance and identifier of the hierarchy group separated by a colon (`:`).
-* `tags` - A map of tags to assign to the hierarchy group.
+* `arn` - ARN of the hierarchy group.
+* `hierarchy_path` - Block that contains information about the levels in the hierarchy group. The `hierarchy_path` block is documented below.
+* `level_id` - Identifier of the level in the hierarchy group.
+* `id` - Identifier of the hosting Amazon Connect Instance and identifier of the hierarchy group separated by a colon (`:`).
+* `tags` - Map of tags to assign to the hierarchy group.
 
 A `hierarchy_path` block supports the following attributes:
 
-* `level_one` - A block that defines the details of level one. The level block is documented below.
-* `level_two` - A block that defines the details of level two. The level block is documented below.
-* `level_three` - A block that defines the details of level three. The level block is documented below.
-* `level_four` - A block that defines the details of level four. The level block is documented below.
-* `level_five` - A block that defines the details of level five. The level block is documented below.
+* `level_one` - Details of level one. See below.
+* `level_two` - Details of level two. See below.
+* `level_three` - Details of level three. See below.
+* `level_four` - Details of level four. See below.
+* `level_five` - Details of level five. See below.
 
 A level block supports the following attributes:
 
-* `arn` -  The Amazon Resource Name (ARN) of the hierarchy group.
+* `arn` -  ARN of the hierarchy group.
 * `id` -  The identifier of the hierarchy group.
-* `name` - The name of the hierarchy group.
+* `name` - Name of the hierarchy group.

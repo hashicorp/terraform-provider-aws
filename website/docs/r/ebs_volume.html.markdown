@@ -23,7 +23,7 @@ resource "aws_ebs_volume" "example" {
 }
 ```
 
-~> **NOTE**: At least one of `size` or `snapshot_id` is required when specifying an EBS volume
+~> **NOTE:** At least one of `size` or `snapshot_id` is required when specifying an EBS volume
 
 ## Argument Reference
 
@@ -42,7 +42,7 @@ The following arguments are supported:
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `throughput` - (Optional) The throughput that the volume supports, in MiB/s. Only valid for `type` of `gp3`.
 
-~> **NOTE**: When changing the `size`, `iops` or `type` of an instance, there are [considerations](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/considerations.html) to be aware of.
+~> **NOTE:** When changing the `size`, `iops` or `type` of an instance, there are [considerations](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/considerations.html) to be aware of.
 
 ## Attributes Reference
 
@@ -54,7 +54,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `5m`)
 - `update` - (Default `5m`)

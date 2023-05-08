@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesis"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -23,32 +22,28 @@ func init() {
 }
 
 func sweepStreams(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).KinesisConn
+	conn := client.(*conns.AWSClient).KinesisConn()
+	sweepResources := make([]sweep.Sweepable, 0)
+
 	input := &kinesis.ListStreamsInput{}
-	var sweeperErrs *multierror.Error
+	err = conn.ListStreamsPagesWithContext(ctx, input, func(page *kinesis.ListStreamsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
 
-	err = conn.ListStreamsPages(input, func(page *kinesis.ListStreamsOutput, lastPage bool) bool {
-		for _, streamName := range page.StreamNames {
-			if streamName == nil {
-				continue
-			}
-
+		for _, v := range page.StreamSummaries {
 			r := ResourceStream()
 			d := r.Data(nil)
-			d.Set("name", streamName)
+			d.SetId(aws.StringValue(v.StreamARN))
 			d.Set("enforce_consumer_deletion", true)
+			d.Set("name", v.StreamName)
 
-			err := r.Delete(d, client)
-
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting Kinesis Stream (%s): %w", aws.StringValue(streamName), err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -58,10 +53,15 @@ func sweepStreams(region string) error {
 		log.Printf("[WARN] Skipping Kinesis Stream sweep for %s: %s", region, err)
 		return nil
 	}
-
 	if err != nil {
-		return fmt.Errorf("Error listing Kinesis Streams: %s", err)
+		return fmt.Errorf("error listing Kinesis Streams (%s): %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Kinesis Streams (%s): %w", region, err)
+	}
+
+	return nil
 }

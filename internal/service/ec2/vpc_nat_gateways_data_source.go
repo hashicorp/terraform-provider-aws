@@ -1,19 +1,21 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_nat_gateways")
 func DataSourceNATGateways() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceNATGatewaysRead,
+		ReadWithoutTimeout: dataSourceNATGatewaysRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -35,8 +37,8 @@ func DataSourceNATGateways() *schema.Resource {
 	}
 }
 
-func dataSourceNATGatewaysRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceNATGatewaysRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeNatGatewaysInput{}
 
@@ -50,7 +52,7 @@ func dataSourceNATGatewaysRead(d *schema.ResourceData, meta interface{}) error {
 
 	if tags, ok := d.GetOk("tags"); ok {
 		input.Filter = append(input.Filter, BuildTagFilterList(
-			Tags(tftags.New(tags.(map[string]interface{}))),
+			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
@@ -62,10 +64,10 @@ func dataSourceNATGatewaysRead(d *schema.ResourceData, meta interface{}) error {
 		input.Filter = nil
 	}
 
-	output, err := FindNATGateways(conn, input)
+	output, err := FindNATGateways(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 NAT Gateways: %w", err)
+		return diag.Errorf("error reading EC2 NAT Gateways: %s", err)
 	}
 
 	var natGatewayIDs []string

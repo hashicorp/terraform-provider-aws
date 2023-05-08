@@ -5,6 +5,8 @@ import (
 )
 
 func TestValidPrincipal(t *testing.T) {
+	t.Parallel()
+
 	v := ""
 	_, errors := validPrincipal(v, "arn")
 	if len(errors) == 0 {

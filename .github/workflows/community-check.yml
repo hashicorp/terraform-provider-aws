@@ -1,0 +1,52 @@
+name: Community Check
+
+on:
+  workflow_call:
+    outputs:
+      core_contributor:
+        value: ${{ jobs.community_check.outputs.is_core_contributor }}
+      maintainer:
+        value: ${{ jobs.community_check.outputs.is_maintainer }}
+      partner:
+        value: ${{ jobs.community_check.outputs.is_partner }}
+
+jobs:
+  community_check:
+    name: Check community lists for username
+    runs-on: ubuntu-latest
+    outputs:
+      is_core_contributor: ${{ steps.determination.outputs.is_core_contributor }}
+      is_maintainer: ${{ steps.determination.outputs.is_maintainer }}
+      is_partner: ${{ steps.determination.outputs.is_partner }}
+    steps:
+      - name: Decode user lists from secrets
+        id: decode
+        env:
+          CORE_CONTRIBUTORS: ${{ secrets.CORE_CONTRIBUTORS }}
+          MAINTAINERS: ${{ secrets.MAINTAINERS }}
+          PARTNERS: ${{ secrets.PARTNERS }}
+        run: |
+          # Create shell variables to hold decoded values
+          CORE_CONTRIBUTORS_DECODED=$(echo $CORE_CONTRIBUTORS | base64 -d | jq '. | tojson')
+          MAINTAINERS_DECODED=$(echo $MAINTAINERS | base64 -d | jq '. | tojson')
+          PARTNERS_DECODED=$(echo $PARTNERS | base64 -d | jq '. | tojson')
+
+          # Mask the variables so the values aren't exposed
+          echo "::add-mask::$CORE_CONTRIBUTORS_DECODED"
+          echo "::add-mask::$MAINTAINERS_DECODED"
+          echo "::add-mask::$PARTNERS_DECODED"
+
+          # Set outputs
+          echo "core_contributors_list=$CORE_CONTRIBUTORS_DECODED" >> $GITHUB_OUTPUT
+          echo "maintainers_list=$MAINTAINERS_DECODED" >> $GITHUB_OUTPUT
+          echo "partners_list=$PARTNERS_DECODED" >> $GITHUB_OUTPUT
+      - name: Determine if user is in lists
+        id: determination
+        env:
+          IS_CORE_CONTRIBUTOR: ${{ contains(fromJSON(steps.decode.outputs.core_contributors_list), github.actor) }}
+          IS_MAINTAINER: ${{ contains(fromJSON(steps.decode.outputs.maintainers_list), github.actor) }}
+          IS_PARTNER: ${{ contains(fromJSON(steps.decode.outputs.partners_list), github.actor) }}
+        run: |
+          echo "is_core_contributor=$IS_CORE_CONTRIBUTOR" >> $GITHUB_OUTPUT
+          echo "is_maintainer=$IS_MAINTAINER" >> $GITHUB_OUTPUT
+          echo "is_partner=$IS_PARTNER" >> $GITHUB_OUTPUT

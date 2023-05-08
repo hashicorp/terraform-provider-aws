@@ -26,6 +26,24 @@ resource "aws_glue_connection" "example" {
 }
 ```
 
+### Non-VPC Connection with secret manager reference
+
+```terraform
+
+data "aws_secretmanager_secret" "example" {
+  name = "example-secret"
+}
+
+resource "aws_glue_connection" "example" {
+  connection_properties = {
+    JDBC_CONNECTION_URL = "jdbc:mysql://example.com/exampledatabase"
+    SECRET_ID           = data.aws_secretmanager_secret.example.name
+  }
+
+  name = "example"
+}
+```
+
 ### VPC Connection
 
 For more information, see the [AWS Documentation](https://docs.aws.amazon.com/glue/latest/dg/populate-add-connection.html#connection-JDBC-VPC).

@@ -22,13 +22,14 @@ func init() {
 }
 
 func sweepClusters(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).DAXConn
+	conn := client.(*conns.AWSClient).DAXConn()
 
-	resp, err := conn.DescribeClusters(&dax.DescribeClustersInput{})
+	resp, err := conn.DescribeClustersWithContext(ctx, &dax.DescribeClustersInput{})
 	if err != nil {
 		// GovCloud (with no DAX support) has an endpoint that responds with:
 		// InvalidParameterValueException: Access Denied to API Version: DAX_V3
@@ -48,7 +49,7 @@ func sweepClusters(region string) error {
 
 	for _, cluster := range resp.Clusters {
 		log.Printf("[INFO] Deleting DAX cluster %s", *cluster.ClusterName)
-		_, err := conn.DeleteCluster(&dax.DeleteClusterInput{
+		_, err := conn.DeleteClusterWithContext(ctx, &dax.DeleteClusterInput{
 			ClusterName: cluster.ClusterName,
 		})
 		if err != nil {

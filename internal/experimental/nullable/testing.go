@@ -13,7 +13,7 @@ type testCase struct {
 	expectedErr *regexp.Regexp
 }
 
-func runTestCases(t *testing.T, cases []testCase) {
+func runValidationTestCases(t *testing.T, cases []testCase) {
 	t.Helper()
 
 	matchErr := func(errs []error, r *regexp.Regexp) bool {

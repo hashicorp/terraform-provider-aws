@@ -12,13 +12,14 @@ import (
 )
 
 func TestAccImageBuilderImageDataSource_ARN_aws(t *testing.T) { // nosemgrep:ci.aws-in-func-name
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_imagebuilder_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImageDestroy,
+		CheckDestroy:             testAccCheckImageDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageDataSourceConfig_arn(),
@@ -27,7 +28,7 @@ func TestAccImageBuilderImageDataSource_ARN_aws(t *testing.T) { // nosemgrep:ci.
 					acctest.MatchResourceAttrRegionalARNAccountID(dataSourceName, "build_version_arn", "imagebuilder", "aws", regexp.MustCompile(`image/amazon-linux-2-x86/\d+\.\d+\.\d+/\d+`)),
 					acctest.CheckResourceAttrRFC3339(dataSourceName, "date_created"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "distribution_configuration_arn"),
-					resource.TestCheckResourceAttr(dataSourceName, "enhanced_image_metadata_enabled", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, "enhanced_image_metadata_enabled", "false"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "image_recipe_arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "image_tests_configuration.#", "0"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "infrastructure_configuration_arn"),
@@ -45,15 +46,16 @@ func TestAccImageBuilderImageDataSource_ARN_aws(t *testing.T) { // nosemgrep:ci.
 
 // Verify additional fields returned by Self owned Images
 func TestAccImageBuilderImageDataSource_ARN_self(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_imagebuilder_image.test"
 	resourceName := "aws_imagebuilder_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImageDestroy,
+		CheckDestroy:             testAccCheckImageDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageDataSourceConfig_arnSelf(rName),
@@ -78,22 +80,27 @@ func TestAccImageBuilderImageDataSource_ARN_self(t *testing.T) {
 	})
 }
 
-func TestAccImageBuilderImageDataSource_ARN_containerRecipeARN(t *testing.T) {
+func TestAccImageBuilderImageDataSource_ARN_containerRecipe(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_imagebuilder_image.test"
 	resourceName := "aws_imagebuilder_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImageDestroy,
+		CheckDestroy:             testAccCheckImageDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageDataSourceConfig_arnContainerRecipeARN(rName),
+				Config: testAccImageDataSourceConfig_arnContainerRecipe(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "container_recipe_arn", resourceName, "container_recipe_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "output_resources.#", resourceName, "output_resources.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "output_resources.0.containers.#", resourceName, "output_resources.0.containers.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "output_resources.0.containers.0.image_uris.#", resourceName, "output_resources.0.containers.0.image_uris.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "output_resources.0.containers.0.region", resourceName, "output_resources.0.containers.0.region"),
 				),
 			},
 		},
@@ -228,7 +235,7 @@ data "aws_imagebuilder_image" "test" {
 `, rName)
 }
 
-func testAccImageDataSourceConfig_arnContainerRecipeARN(rName string) string {
+func testAccImageDataSourceConfig_arnContainerRecipe(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -311,7 +318,8 @@ resource "aws_iam_instance_profile" "test" {
 }
 
 resource "aws_ecr_repository" "test" {
-  name = %[1]q
+  name         = %[1]q
+  force_delete = true
 }
 
 data "aws_imagebuilder_component" "update-linux" {

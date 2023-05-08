@@ -14,9 +14,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_connect_user")
 func DataSourceUser() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceUserRead,
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -96,19 +98,19 @@ func DataSourceUser() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"tags": tftags.TagsSchemaComputed(),
 			"user_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ExactlyOneOf: []string{"user_id", "name"},
 			},
-			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceID := d.Get("instance_id").(string)
@@ -163,7 +165,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("setting phone_config: %s", err)
 	}
 
-	if err := d.Set("tags", KeyValueTags(user.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, user.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("setting tags: %s", err)
 	}
 

@@ -93,7 +93,7 @@ For some AWS components, the AWS API allows specifying an [IAM resource-based po
 
 Provider developers should implement this capability in a new resource rather than adding it to the associated resource. Reasons for this include:
 
-* Many of the policies must include the Amazon Resource Name (ARN) of the resource. Working around this requirement with custom difference handling within a self-contained resource is unnecessarily cumbersome.
+* Many of the policies must include the ARN of the resource. Working around this requirement with custom difference handling within a self-contained resource is unnecessarily cumbersome.
 * Some policies involving multiple resources need to cross-reference each other's ARNs. Without a separate resource, this introduces a configuration cycle.
 * Splitting the resources allows operators to logically split their configurations into purely operational and security boundaries. This allows environments to have distinct practitioners roles and permissions for IAM versus infrastructure changes.
 

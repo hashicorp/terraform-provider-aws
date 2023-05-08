@@ -2,9 +2,7 @@
 package {{ .ServicePackage }}
 
 import (
-	{{- if .ContextPkg }}
 	"context"
-	{{- end }}
 	{{- if .FmtPkg }}
 	"fmt"
 	{{- end }}
@@ -28,9 +26,18 @@ import (
 	{{- end }}
 	{{- if .ParentNotFoundErrCode }}
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	{{- end }}
+	{{- if .ConnsPkg }}
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	{{- end }}
 	{{- if .TfResourcePkg }}
     "github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	{{- end }}
+	{{- if .InternalTypesPkg }}
+    "github.com/hashicorp/terraform-provider-aws/internal/types"
+	{{- end }}
+	{{- if .NamesPkg }}
+    "github.com/hashicorp/terraform-provider-aws/names"
 	{{- end }}
 )

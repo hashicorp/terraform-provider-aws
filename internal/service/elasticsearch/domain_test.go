@@ -1,18 +1,15 @@
 package elasticsearch_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/aws/aws-sdk-go/service/iam"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -23,24 +20,25 @@ import (
 )
 
 func TestAccElasticsearchDomain_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_version", "1.5"),
 					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexp.MustCompile(`.*es\..*/_plugin/kibana/`)),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "0"),
@@ -50,7 +48,7 @@ func TestAccElasticsearchDomain_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 		},
@@ -58,32 +56,33 @@ func TestAccElasticsearchDomain_basic(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_requireHTTPS(t *testing.T) {
+	ctx := acctest.Context(t)
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_endpointOptions(rName, true, "Policy-Min-TLS-1-0-2019-07"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists("aws_elasticsearch_domain.test", &domain),
+					testAccCheckDomainExists(ctx, "aws_elasticsearch_domain.test", &domain),
 					testAccCheckDomainEndpointOptions(true, "Policy-Min-TLS-1-0-2019-07", &domain),
 				),
 			},
 			{
 				ResourceName:      "aws_elasticsearch_domain.test",
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 			{
 				Config: testAccDomainConfig_endpointOptions(rName, true, "Policy-Min-TLS-1-2-2019-07"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists("aws_elasticsearch_domain.test", &domain),
+					testAccCheckDomainExists(ctx, "aws_elasticsearch_domain.test", &domain),
 					testAccCheckDomainEndpointOptions(true, "Policy-Min-TLS-1-2-2019-07", &domain),
 				),
 			},
@@ -92,28 +91,29 @@ func TestAccElasticsearchDomain_requireHTTPS(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_customEndpoint(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
-	customEndpoint := fmt.Sprintf("%s.example.com", rName[:28])
+	customEndpoint := fmt.Sprintf("%s.example.com", rName)
 	certResourceName := "aws_acm_certificate.test"
-	certKey := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(certKey, customEndpoint)
+	certKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, certKey, customEndpoint)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_customEndpoint(rName, true, "Policy-Min-TLS-1-0-2019-07", true, customEndpoint, certKey, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "domain_endpoint_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "domain_endpoint_options.0.custom_endpoint_enabled", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_endpoint_options.0.custom_endpoint"),
@@ -123,13 +123,13 @@ func TestAccElasticsearchDomain_customEndpoint(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 			{
 				Config: testAccDomainConfig_customEndpoint(rName, true, "Policy-Min-TLS-1-0-2019-07", true, customEndpoint, certKey, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					testAccCheckDomainEndpointOptions(true, "Policy-Min-TLS-1-0-2019-07", &domain),
 					testAccCheckCustomEndpoint(resourceName, true, customEndpoint, &domain),
 				),
@@ -137,7 +137,7 @@ func TestAccElasticsearchDomain_customEndpoint(t *testing.T) {
 			{
 				Config: testAccDomainConfig_customEndpoint(rName, true, "Policy-Min-TLS-1-0-2019-07", false, customEndpoint, certKey, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					testAccCheckDomainEndpointOptions(true, "Policy-Min-TLS-1-0-2019-07", &domain),
 					testAccCheckCustomEndpoint(resourceName, false, customEndpoint, &domain),
 				),
@@ -147,20 +147,21 @@ func TestAccElasticsearchDomain_customEndpoint(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_Cluster_zoneAwareness(t *testing.T) {
+	ctx := acctest.Context(t)
 	var domain1, domain2, domain3, domain4 elasticsearch.ElasticsearchDomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_clusterZoneAwarenessAvailabilityZoneCount(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain1),
+					testAccCheckDomainExists(ctx, resourceName, &domain1),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.0.availability_zone_count", "3"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", "true"),
@@ -169,13 +170,13 @@ func TestAccElasticsearchDomain_Cluster_zoneAwareness(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 			{
 				Config: testAccDomainConfig_clusterZoneAwarenessAvailabilityZoneCount(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain2),
+					testAccCheckDomainExists(ctx, resourceName, &domain2),
 					testAccCheckDomainNotRecreated(&domain1, &domain2), // note: this check does not work and always passes
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.0.availability_zone_count", "2"),
@@ -185,7 +186,7 @@ func TestAccElasticsearchDomain_Cluster_zoneAwareness(t *testing.T) {
 			{
 				Config: testAccDomainConfig_clusterZoneAwarenessEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain3),
+					testAccCheckDomainExists(ctx, resourceName, &domain3),
 					testAccCheckDomainNotRecreated(&domain2, &domain3), // note: this check does not work and always passes
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", "0"),
@@ -194,7 +195,7 @@ func TestAccElasticsearchDomain_Cluster_zoneAwareness(t *testing.T) {
 			{
 				Config: testAccDomainConfig_clusterZoneAwarenessAvailabilityZoneCount(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain4),
+					testAccCheckDomainExists(ctx, resourceName, &domain4),
 					testAccCheckDomainNotRecreated(&domain3, &domain4), // note: this check does not work and always passes
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.0.availability_zone_count", "3"),
@@ -206,20 +207,21 @@ func TestAccElasticsearchDomain_Cluster_zoneAwareness(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_warm(t *testing.T) {
+	ctx := acctest.Context(t)
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_warm(rName, "ultrawarm1.medium.elasticsearch", false, 6),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_type", ""),
@@ -228,7 +230,7 @@ func TestAccElasticsearchDomain_warm(t *testing.T) {
 			{
 				Config: testAccDomainConfig_warm(rName, "ultrawarm1.medium.elasticsearch", true, 6),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", "6"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_type", "ultrawarm1.medium.elasticsearch"),
@@ -237,13 +239,13 @@ func TestAccElasticsearchDomain_warm(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 			{
 				Config: testAccDomainConfig_warm(rName, "ultrawarm1.medium.elasticsearch", true, 7),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", "7"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_type", "ultrawarm1.medium.elasticsearch"),
@@ -252,7 +254,7 @@ func TestAccElasticsearchDomain_warm(t *testing.T) {
 			{
 				Config: testAccDomainConfig_warm(rName, "ultrawarm1.large.elasticsearch", true, 7),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", "7"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_type", "ultrawarm1.large.elasticsearch"),
@@ -263,20 +265,21 @@ func TestAccElasticsearchDomain_warm(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_withColdStorageOptions(t *testing.T) {
+	ctx := acctest.Context(t)
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_coldStorageOptions(rName, false, false, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cluster_config.0.cold_storage_options.*", map[string]string{
 						"enabled": "false",
 					})),
@@ -284,13 +287,13 @@ func TestAccElasticsearchDomain_withColdStorageOptions(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 			{
 				Config: testAccDomainConfig_coldStorageOptions(rName, true, true, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cluster_config.0.cold_storage_options.*", map[string]string{
 						"enabled": "true",
 					})),
@@ -300,38 +303,39 @@ func TestAccElasticsearchDomain_withColdStorageOptions(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_withDedicatedMaster(t *testing.T) {
+	ctx := acctest.Context(t)
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_dedicatedClusterMaster(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 			{
 				Config: testAccDomainConfig_dedicatedClusterMaster(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 				),
 			},
 			{
 				Config: testAccDomainConfig_dedicatedClusterMaster(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 				),
 			},
 		},
@@ -339,22 +343,23 @@ func TestAccElasticsearchDomain_withDedicatedMaster(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_duplicate(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy: func(s *terraform.State) error {
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn
-			_, err := conn.DeleteElasticsearchDomain(&elasticsearch.DeleteElasticsearchDomainInput{
-				DomainName: aws.String(rName[:28]),
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn()
+			_, err := conn.DeleteElasticsearchDomainWithContext(ctx, &elasticsearch.DeleteElasticsearchDomainInput{
+				DomainName: aws.String(rName),
 			})
 			return err
 		},
@@ -362,9 +367,9 @@ func TestAccElasticsearchDomain_duplicate(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Create duplicate
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn
-					_, err := conn.CreateElasticsearchDomain(&elasticsearch.CreateElasticsearchDomainInput{
-						DomainName: aws.String(rName[:28]),
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn()
+					_, err := conn.CreateElasticsearchDomainWithContext(ctx, &elasticsearch.CreateElasticsearchDomainInput{
+						DomainName: aws.String(rName),
 						EBSOptions: &elasticsearch.EBSOptions{
 							EBSEnabled: aws.Bool(true),
 							VolumeSize: aws.Int64(10),
@@ -374,14 +379,14 @@ func TestAccElasticsearchDomain_duplicate(t *testing.T) {
 						t.Fatal(err)
 					}
 
-					err = tfelasticsearch.WaitForDomainCreation(conn, rName[:28], 60*time.Minute)
+					err = tfelasticsearch.WaitForDomainCreation(ctx, conn, rName, 60*time.Minute)
 					if err != nil {
 						t.Fatal(err)
 					}
 				},
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(
 						resourceName, "elasticsearch_version", "1.5"),
 				),
@@ -392,24 +397,25 @@ func TestAccElasticsearchDomain_duplicate(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_v23(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_v23(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(
 						resourceName, "elasticsearch_version", "2.3"),
 				),
@@ -417,7 +423,7 @@ func TestAccElasticsearchDomain_v23(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 		},
@@ -425,30 +431,31 @@ func TestAccElasticsearchDomain_v23(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_complex(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_complex(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 		},
@@ -456,30 +463,31 @@ func TestAccElasticsearchDomain_complex(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_vpc(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_vpc(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 		},
@@ -487,33 +495,34 @@ func TestAccElasticsearchDomain_vpc(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_VPC_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_vpcUpdate1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					testAccCheckNumberOfSecurityGroups(1, &domain),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 			{
 				Config: testAccDomainConfig_vpcUpdate2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					testAccCheckNumberOfSecurityGroups(2, &domain),
 				),
 			},
@@ -522,36 +531,37 @@ func TestAccElasticsearchDomain_VPC_update(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_internetToVPCEndpoint(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 			{
 				Config: testAccDomainConfig_internetToVPCEndpoint(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 				),
 			},
 		},
@@ -559,25 +569,26 @@ func TestAccElasticsearchDomain_internetToVPCEndpoint(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_AutoTuneOptions(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	autoTuneStartAtTime := testAccGetValidStartAtTime(t, "24h")
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_autoTuneOptions(rName, autoTuneStartAtTime),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(
 						resourceName, "elasticsearch_version", "6.7"),
 					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexp.MustCompile(`.*es\..*/_plugin/kibana/`)),
@@ -595,7 +606,7 @@ func TestAccElasticsearchDomain_AutoTuneOptions(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 		},
@@ -603,31 +614,32 @@ func TestAccElasticsearchDomain_AutoTuneOptions(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_AdvancedSecurityOptions_userDB(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_advancedSecurityOptionsUserDB(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					testAccCheckAdvancedSecurityOptions(true, true, &domain),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 				// MasterUserOptions are not returned from DescribeElasticsearchDomainConfig
 				ImportStateVerifyIgnore: []string{
@@ -640,31 +652,32 @@ func TestAccElasticsearchDomain_AdvancedSecurityOptions_userDB(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_AdvancedSecurityOptions_iam(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_advancedSecurityOptionsIAM(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					testAccCheckAdvancedSecurityOptions(true, false, &domain),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 				// MasterUserOptions are not returned from DescribeElasticsearchDomainConfig
 				ImportStateVerifyIgnore: []string{
@@ -677,31 +690,32 @@ func TestAccElasticsearchDomain_AdvancedSecurityOptions_iam(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_AdvancedSecurityOptions_disabled(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_advancedSecurityOptionsDisabled(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					testAccCheckAdvancedSecurityOptions(false, false, &domain),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 				// MasterUserOptions are not returned from DescribeElasticsearchDomainConfig
 				ImportStateVerifyIgnore: []string{
@@ -714,24 +728,25 @@ func TestAccElasticsearchDomain_AdvancedSecurityOptions_disabled(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_LogPublishingOptions_indexSlowLogs(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_logPublishingOptions(rName, elasticsearch.LogTypeIndexSlowLogs),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
 						"log_type": elasticsearch.LogTypeIndexSlowLogs,
@@ -741,7 +756,7 @@ func TestAccElasticsearchDomain_LogPublishingOptions_indexSlowLogs(t *testing.T)
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 		},
@@ -749,24 +764,25 @@ func TestAccElasticsearchDomain_LogPublishingOptions_indexSlowLogs(t *testing.T)
 }
 
 func TestAccElasticsearchDomain_LogPublishingOptions_searchSlowLogs(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_logPublishingOptions(rName, elasticsearch.LogTypeSearchSlowLogs),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
 						"log_type": elasticsearch.LogTypeSearchSlowLogs,
@@ -776,7 +792,7 @@ func TestAccElasticsearchDomain_LogPublishingOptions_searchSlowLogs(t *testing.T
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 		},
@@ -784,24 +800,25 @@ func TestAccElasticsearchDomain_LogPublishingOptions_searchSlowLogs(t *testing.T
 }
 
 func TestAccElasticsearchDomain_LogPublishingOptions_esApplicationLogs(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_logPublishingOptions(rName, elasticsearch.LogTypeEsApplicationLogs),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
 						"log_type": elasticsearch.LogTypeEsApplicationLogs,
@@ -811,7 +828,7 @@ func TestAccElasticsearchDomain_LogPublishingOptions_esApplicationLogs(t *testin
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 		},
@@ -819,24 +836,25 @@ func TestAccElasticsearchDomain_LogPublishingOptions_esApplicationLogs(t *testin
 }
 
 func TestAccElasticsearchDomain_LogPublishingOptions_auditLogs(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_logPublishingOptions(rName, elasticsearch.LogTypeAuditLogs),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
 						"log_type": elasticsearch.LogTypeAuditLogs,
@@ -846,7 +864,7 @@ func TestAccElasticsearchDomain_LogPublishingOptions_auditLogs(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 				// MasterUserOptions are not returned from DescribeElasticsearchDomainConfig
 				ImportStateVerifyIgnore: []string{"advanced_security_options.0.master_user_options"},
@@ -856,41 +874,42 @@ func TestAccElasticsearchDomain_LogPublishingOptions_auditLogs(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_cognitoOptionsCreateAndRemove(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckCognitoIdentityProvider(t)
-			testAccPreCheckIAMServiceLinkedRoleEs(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckCognitoIdentityProvider(ctx, t)
+			testAccPreCheckIAMServiceLinkedRole(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_cognitoOptions(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					testAccCheckCognitoOptions(true, &domain),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 			{
 				Config: testAccDomainConfig_cognitoOptions(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					testAccCheckCognitoOptions(false, &domain),
 				),
 			},
@@ -899,41 +918,42 @@ func TestAccElasticsearchDomain_cognitoOptionsCreateAndRemove(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_cognitoOptionsUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckCognitoIdentityProvider(t)
-			testAccPreCheckIAMServiceLinkedRoleEs(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckCognitoIdentityProvider(ctx, t)
+			testAccPreCheckIAMServiceLinkedRole(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_cognitoOptions(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					testAccCheckCognitoOptions(false, &domain),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 			{
 				Config: testAccDomainConfig_cognitoOptions(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					testAccCheckCognitoOptions(true, &domain),
 				),
 			},
@@ -942,30 +962,31 @@ func TestAccElasticsearchDomain_cognitoOptionsUpdate(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_policy(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_policy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 		},
@@ -973,24 +994,25 @@ func TestAccElasticsearchDomain_policy(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_policyIgnoreEquivalent(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_policyOrder(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 				),
 			},
 			{
@@ -1002,31 +1024,32 @@ func TestAccElasticsearchDomain_policyIgnoreEquivalent(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_Encryption_atRestDefaultKey(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "6.0", true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					testAccCheckDomainEncrypted(true, &domain),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 		},
@@ -1034,31 +1057,32 @@ func TestAccElasticsearchDomain_Encryption_atRestDefaultKey(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_Encryption_atRestSpecifyKey(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_encryptAtRestKey(rName, "6.0", true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					testAccCheckDomainEncrypted(true, &domain),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 		},
@@ -1066,31 +1090,32 @@ func TestAccElasticsearchDomain_Encryption_atRestSpecifyKey(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_Encryption_atRestEnable(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var domain1, domain2 elasticsearch.ElasticsearchDomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "6.7", false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain1),
+					testAccCheckDomainExists(ctx, resourceName, &domain1),
 					testAccCheckDomainEncrypted(false, &domain1),
 				),
 			},
 			{
 				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "6.7", true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain2),
+					testAccCheckDomainExists(ctx, resourceName, &domain2),
 					testAccCheckDomainEncrypted(true, &domain2),
 					testAccCheckDomainNotRecreated(&domain1, &domain2), // note: this check does not work and always passes
 				),
@@ -1098,7 +1123,7 @@ func TestAccElasticsearchDomain_Encryption_atRestEnable(t *testing.T) {
 			{
 				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "6.7", false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain1),
+					testAccCheckDomainExists(ctx, resourceName, &domain1),
 					testAccCheckDomainEncrypted(false, &domain1),
 				),
 			},
@@ -1107,31 +1132,32 @@ func TestAccElasticsearchDomain_Encryption_atRestEnable(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_Encryption_atRestEnableLegacy(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var domain1, domain2 elasticsearch.ElasticsearchDomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "5.6", false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain1),
+					testAccCheckDomainExists(ctx, resourceName, &domain1),
 					testAccCheckDomainEncrypted(false, &domain1),
 				),
 			},
 			{
 				Config: testAccDomainConfig_encryptAtRestDefaultKey(rName, "5.6", true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain2),
+					testAccCheckDomainExists(ctx, resourceName, &domain2),
 					testAccCheckDomainEncrypted(true, &domain2),
 				),
 			},
@@ -1140,31 +1166,32 @@ func TestAccElasticsearchDomain_Encryption_atRestEnableLegacy(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_Encryption_nodeToNode(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "6.0", true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					testAccCheckNodeToNodeEncrypted(true, &domain),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 		},
@@ -1172,31 +1199,32 @@ func TestAccElasticsearchDomain_Encryption_nodeToNode(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_Encryption_nodeToNodeEnable(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var domain1, domain2 elasticsearch.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "6.7", false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain1),
+					testAccCheckDomainExists(ctx, resourceName, &domain1),
 					testAccCheckNodeToNodeEncrypted(false, &domain1),
 				),
 			},
 			{
 				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "6.7", true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain2),
+					testAccCheckDomainExists(ctx, resourceName, &domain2),
 					testAccCheckNodeToNodeEncrypted(true, &domain2),
 					testAccCheckDomainNotRecreated(&domain1, &domain2), // note: this check does not work and always passes
 				),
@@ -1204,7 +1232,7 @@ func TestAccElasticsearchDomain_Encryption_nodeToNodeEnable(t *testing.T) {
 			{
 				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "6.7", false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain1),
+					testAccCheckDomainExists(ctx, resourceName, &domain1),
 					testAccCheckNodeToNodeEncrypted(false, &domain1),
 				),
 			},
@@ -1213,38 +1241,39 @@ func TestAccElasticsearchDomain_Encryption_nodeToNodeEnable(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_Encryption_nodeToNodeEnableLegacy(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var domain1, domain2 elasticsearch.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "6.0", false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain1),
+					testAccCheckDomainExists(ctx, resourceName, &domain1),
 					testAccCheckNodeToNodeEncrypted(false, &domain1),
 				),
 			},
 			{
 				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "6.0", true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain2),
+					testAccCheckDomainExists(ctx, resourceName, &domain2),
 					testAccCheckNodeToNodeEncrypted(true, &domain2),
 				),
 			},
 			{
 				Config: testAccDomainConfig_nodeToNodeEncryption(rName, "6.0", false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain1),
+					testAccCheckDomainExists(ctx, resourceName, &domain1),
 					testAccCheckNodeToNodeEncrypted(false, &domain1),
 				),
 			},
@@ -1253,24 +1282,25 @@ func TestAccElasticsearchDomain_Encryption_nodeToNodeEnableLegacy(t *testing.T) 
 }
 
 func TestAccElasticsearchDomain_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckELBDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -1278,13 +1308,13 @@ func TestAccElasticsearchDomain_tags(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 			{
 				Config: testAccDomainConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -1293,7 +1323,7 @@ func TestAccElasticsearchDomain_tags(t *testing.T) {
 			{
 				Config: testAccDomainConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -1303,24 +1333,25 @@ func TestAccElasticsearchDomain_tags(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var input elasticsearch.ElasticsearchDomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_clusterUpdate(rName, 2, 22),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &input),
+					testAccCheckDomainExists(ctx, resourceName, &input),
 					testAccCheckNumberOfInstances(2, &input),
 					testAccCheckSnapshotHour(22, &input),
 				),
@@ -1328,13 +1359,13 @@ func TestAccElasticsearchDomain_update(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 			{
 				Config: testAccDomainConfig_clusterUpdate(rName, 4, 23),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &input),
+					testAccCheckDomainExists(ctx, resourceName, &input),
 					testAccCheckNumberOfInstances(4, &input),
 					testAccCheckSnapshotHour(23, &input),
 				),
@@ -1342,25 +1373,27 @@ func TestAccElasticsearchDomain_update(t *testing.T) {
 		}})
 }
 
-func TestAccElasticsearchDomain_UpdateVolume_type(t *testing.T) {
+func TestAccElasticsearchDomain_VolumeType_update(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
+	ctx := acctest.Context(t)
+
 	var input elasticsearch.ElasticsearchDomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_clusterUpdateEBSVolume(rName, 24, 250, 3500),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &input),
+					testAccCheckDomainExists(ctx, resourceName, &input),
 					testAccCheckEBSVolumeEnabled(true, &input),
 					testAccCheckEBSVolumeSize(24, &input),
 					testAccCheckEBSVolumeThroughput(250, &input),
@@ -1370,20 +1403,20 @@ func TestAccElasticsearchDomain_UpdateVolume_type(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 			{
 				Config: testAccDomainConfig_clusterUpdateInstanceStore(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &input),
+					testAccCheckDomainExists(ctx, resourceName, &input),
 					testAccCheckEBSVolumeEnabled(false, &input),
 				),
 			},
 			{
 				Config: testAccDomainConfig_clusterUpdateEBSVolume(rName, 12, 125, 3000),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &input),
+					testAccCheckDomainExists(ctx, resourceName, &input),
 					testAccCheckEBSVolumeEnabled(true, &input),
 					testAccCheckEBSVolumeSize(12, &input),
 					testAccCheckEBSVolumeThroughput(125, &input),
@@ -1394,25 +1427,27 @@ func TestAccElasticsearchDomain_UpdateVolume_type(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13867
-func TestAccElasticsearchDomain_WithVolumeType_missing(t *testing.T) {
+func TestAccElasticsearchDomain_VolumeType_missing(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
+	ctx := acctest.Context(t)
+
 	var domain elasticsearch.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_disabledEBSNullVolumeType(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.instance_type", "i3.xlarge.elasticsearch"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.instance_count", "1"),
@@ -1425,7 +1460,7 @@ func TestAccElasticsearchDomain_WithVolumeType_missing(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 		},
@@ -1433,33 +1468,34 @@ func TestAccElasticsearchDomain_WithVolumeType_missing(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_Update_version(t *testing.T) {
+	ctx := acctest.Context(t)
 	var domain1, domain2, domain3 elasticsearch.ElasticsearchDomainStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_clusterUpdateVersion(rName, "5.5"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain1),
+					testAccCheckDomainExists(ctx, resourceName, &domain1),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_version", "5.5"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     rName[:28],
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 			{
 				Config: testAccDomainConfig_clusterUpdateVersion(rName, "5.6"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain2),
+					testAccCheckDomainExists(ctx, resourceName, &domain2),
 					testAccCheckDomainNotRecreated(&domain1, &domain2), // note: this check does not work and always passes
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_version", "5.6"),
 				),
@@ -1467,7 +1503,7 @@ func TestAccElasticsearchDomain_Update_version(t *testing.T) {
 			{
 				Config: testAccDomainConfig_clusterUpdateVersion(rName, "6.3"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName, &domain3),
+					testAccCheckDomainExists(ctx, resourceName, &domain3),
 					testAccCheckDomainNotRecreated(&domain2, &domain3), // note: this check does not work and always passes
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_version", "6.3"),
 				),
@@ -1476,28 +1512,33 @@ func TestAccElasticsearchDomain_Update_version(t *testing.T) {
 }
 
 func TestAccElasticsearchDomain_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceDisappears(acctest.Provider, tfelasticsearch.ResourceDomain(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticsearch.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
+}
+
+func testAccRandomDomainName() string {
+	return fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1)))
 }
 
 func testAccCheckDomainEndpointOptions(enforceHTTPS bool, tls string, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
@@ -1662,7 +1703,7 @@ func testAccCheckCognitoOptions(enabled bool, status *elasticsearch.Elasticsearc
 	}
 }
 
-func testAccCheckDomainExists(n string, domain *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+func testAccCheckDomainExists(ctx context.Context, n string, domain *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1673,8 +1714,8 @@ func testAccCheckDomainExists(n string, domain *elasticsearch.ElasticsearchDomai
 			return fmt.Errorf("No ES Domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn
-		resp, err := tfelasticsearch.FindDomainByName(conn, rs.Primary.Attributes["domain_name"])
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn()
+		resp, err := tfelasticsearch.FindDomainByName(ctx, conn, rs.Primary.Attributes["domain_name"])
 		if err != nil {
 			return fmt.Errorf("Error describing domain: %s", err.Error())
 		}
@@ -1693,7 +1734,7 @@ func testAccCheckDomainExists(n string, domain *elasticsearch.ElasticsearchDomai
 func testAccCheckDomainNotRecreated(domain1, domain2 *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		/*
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn()
 
 			ic, err := conn.DescribeElasticsearchDomainConfig(&elasticsearch.DescribeElasticsearchDomainConfigInput{
 				DomainName: domain1.DomainName,
@@ -1724,27 +1765,28 @@ func testAccCheckDomainNotRecreated(domain1, domain2 *elasticsearch.Elasticsearc
 	}
 }
 
-func testAccCheckDomainDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_elasticsearch_domain" {
-			continue
+func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_elasticsearch_domain" {
+				continue
+			}
+
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn()
+			_, err := tfelasticsearch.FindDomainByName(ctx, conn, rs.Primary.Attributes["domain_name"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Elasticsearch domain %s still exists", rs.Primary.ID)
 		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn
-		_, err := tfelasticsearch.FindDomainByName(conn, rs.Primary.Attributes["domain_name"])
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Elasticsearch domain %s still exists", rs.Primary.ID)
-
+		return nil
 	}
-	return nil
 }
 
 func testAccGetValidStartAtTime(t *testing.T, timeUntilStart string) string {
@@ -1756,42 +1798,14 @@ func testAccGetValidStartAtTime(t *testing.T, timeUntilStart string) string {
 	return n.Add(d).Format(time.RFC3339)
 }
 
-func testAccPreCheckIAMServiceLinkedRoleEs(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
-	dnsSuffix := acctest.Provider.Meta().(*conns.AWSClient).DNSSuffix
-
-	input := &iam.ListRolesInput{
-		PathPrefix: aws.String("/aws-service-role/es."),
-	}
-
-	var role *iam.Role
-	err := conn.ListRolesPages(input, func(page *iam.ListRolesOutput, lastPage bool) bool {
-		for _, r := range page.Roles {
-			if strings.HasPrefix(aws.StringValue(r.Path), "/aws-service-role/es.") {
-				role = r
-			}
-		}
-
-		return !lastPage
-	})
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-
-	if role == nil {
-		t.Fatalf("missing IAM Service Linked Role (es.%s), please create it in the AWS account and retry", dnsSuffix)
-	}
+func testAccPreCheckIAMServiceLinkedRole(ctx context.Context, t *testing.T) {
+	acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/es")
 }
 
 func testAccDomainConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   ebs_options {
     ebs_enabled = true
@@ -1804,7 +1818,7 @@ resource "aws_elasticsearch_domain" "test" {
 func testAccDomainConfig_autoTuneOptions(rName, autoTuneStartAtTime string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
-  domain_name           = substr(%[1]q, 0, 28)
+  domain_name           = %[1]q
   elasticsearch_version = "6.7"
 
   ebs_options {
@@ -1834,7 +1848,7 @@ resource "aws_elasticsearch_domain" "test" {
 func testAccDomainConfig_disabledEBSNullVolumeType(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
-  domain_name           = substr(%[1]q, 0, 28)
+  domain_name           = %[1]q
   elasticsearch_version = "6.0"
 
   cluster_config {
@@ -1854,7 +1868,7 @@ resource "aws_elasticsearch_domain" "test" {
 func testAccDomainConfig_endpointOptions(rName string, enforceHttps bool, tlsSecurityPolicy string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   domain_endpoint_options {
     enforce_https       = %[2]t
@@ -1877,7 +1891,7 @@ resource "aws_acm_certificate" "test" {
 }
 
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   domain_endpoint_options {
     enforce_https                   = %[2]t
@@ -1898,7 +1912,7 @@ resource "aws_elasticsearch_domain" "test" {
 func testAccDomainConfig_clusterZoneAwarenessAvailabilityZoneCount(rName string, availabilityZoneCount int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   cluster_config {
     instance_type          = "t2.small.elasticsearch"
@@ -1921,7 +1935,7 @@ resource "aws_elasticsearch_domain" "test" {
 func testAccDomainConfig_clusterZoneAwarenessEnabled(rName string, zoneAwarenessEnabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   cluster_config {
     instance_type          = "t2.small.elasticsearch"
@@ -1948,7 +1962,7 @@ func testAccDomainConfig_warm(rName, warmType string, enabled bool, warmCnt int)
 
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
-  domain_name           = substr(%[1]q, 0, 28)
+  domain_name           = %[1]q
   elasticsearch_version = "6.8"
 
   cluster_config {
@@ -1978,7 +1992,7 @@ resource "aws_elasticsearch_domain" "test" {
 func testAccDomainConfig_dedicatedClusterMaster(rName string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   cluster_config {
     instance_type            = "t2.small.elasticsearch"
@@ -2016,7 +2030,7 @@ func testAccDomainConfig_coldStorageOptions(rName string, dMasterEnabled bool, w
 
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   elasticsearch_version = "7.9"
 
@@ -2044,7 +2058,7 @@ resource "aws_elasticsearch_domain" "test" {
 func testAccDomainConfig_clusterUpdate(rName string, instanceInt, snapshotInt int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   advanced_options = {
     "indices.fielddata.cache.size" = 80
@@ -2075,7 +2089,7 @@ resource "aws_elasticsearch_domain" "test" {
 func testAccDomainConfig_clusterUpdateEBSVolume(rName string, volumeSize int, volumeThroughput int, volumeIops int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   elasticsearch_version = "6.0"
 
@@ -2103,7 +2117,7 @@ resource "aws_elasticsearch_domain" "test" {
 func testAccDomainConfig_clusterUpdateVersion(rName, version string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   elasticsearch_version = "%v"
 
@@ -2124,7 +2138,7 @@ resource "aws_elasticsearch_domain" "test" {
 func testAccDomainConfig_clusterUpdateInstanceStore(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   elasticsearch_version = "6.0"
 
@@ -2148,7 +2162,7 @@ resource "aws_elasticsearch_domain" "test" {
 func testAccDomainConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   ebs_options {
     ebs_enabled = true
@@ -2165,7 +2179,7 @@ resource "aws_elasticsearch_domain" "test" {
 func testAccDomainConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
   ebs_options {
     ebs_enabled = true
     volume_size = 10
@@ -2183,7 +2197,7 @@ func testAccDomainConfig_policy(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   ebs_options {
     ebs_enabled = true
@@ -2225,7 +2239,7 @@ func testAccDomainConfig_policyOrder(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   ebs_options {
     ebs_enabled = true
@@ -2276,7 +2290,7 @@ func testAccDomainConfig_policyNewOrder(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   ebs_options {
     ebs_enabled = true
@@ -2325,7 +2339,7 @@ data "aws_iam_policy_document" "test" {
 func testAccDomainConfig_encryptAtRestDefaultKey(rName, version string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   elasticsearch_version = %[2]q
 
@@ -2354,7 +2368,7 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   elasticsearch_version = %[2]q
 
@@ -2379,7 +2393,7 @@ resource "aws_elasticsearch_domain" "test" {
 func testAccDomainConfig_nodeToNodeEncryption(rName, version string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   elasticsearch_version = %[2]q
 
@@ -2402,7 +2416,7 @@ resource "aws_elasticsearch_domain" "test" {
 func testAccDomainConfig_complex(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   advanced_options = {
     "indices.fielddata.cache.size" = 80
@@ -2433,7 +2447,7 @@ resource "aws_elasticsearch_domain" "test" {
 func testAccDomainConfig_v23(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   ebs_options {
     ebs_enabled = true
@@ -2486,7 +2500,7 @@ resource "aws_security_group" "test2" {
 }
 
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   ebs_options {
     ebs_enabled = true
@@ -2568,7 +2582,7 @@ resource "aws_security_group" "test2" {
 }
 
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   ebs_options {
     ebs_enabled = true
@@ -2650,7 +2664,7 @@ resource "aws_security_group" "test2" {
 }
 
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   ebs_options {
     ebs_enabled = true
@@ -2712,7 +2726,7 @@ resource "aws_security_group" "test2" {
 }
 
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   ebs_options {
     ebs_enabled = true
@@ -2736,7 +2750,7 @@ resource "aws_elasticsearch_domain" "test" {
 func testAccDomainConfig_advancedSecurityOptionsUserDB(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
-  domain_name           = substr(%[1]q, 0, 28)
+  domain_name           = %[1]q
   elasticsearch_version = "7.1"
 
   cluster_config {
@@ -2780,7 +2794,7 @@ resource "aws_iam_user" "test" {
 }
 
 resource "aws_elasticsearch_domain" "test" {
-  domain_name           = substr(%[1]q, 0, 28)
+  domain_name           = %[1]q
   elasticsearch_version = "7.1"
 
   cluster_config {
@@ -2819,7 +2833,7 @@ resource "aws_elasticsearch_domain" "test" {
 func testAccDomainConfig_advancedSecurityOptionsDisabled(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
-  domain_name           = substr(%[1]q, 0, 28)
+  domain_name           = %[1]q
   elasticsearch_version = "7.1"
 
   cluster_config {
@@ -2914,7 +2928,7 @@ func testAccDomainConfig_logPublishingOptions(rName, logType string) string {
 	}
 	return acctest.ConfigCompose(testAccDomain_LogPublishingOptions_BaseConfig(rName), fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
-  domain_name           = substr(%[1]q, 0, 28)
+  domain_name           = %[1]q
   elasticsearch_version = "7.1" # needed for ESApplication/Audit Log Types
 
   ebs_options {
@@ -2992,7 +3006,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = substr(%[1]q, 0, 28)
+  domain_name = %[1]q
 
   elasticsearch_version = "6.0"
 
@@ -3011,14 +3025,14 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName, cognitoOptions)
 }
 
-func testAccPreCheckCognitoIdentityProvider(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+func testAccPreCheckCognitoIdentityProvider(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
 	input := &cognitoidentityprovider.ListUserPoolsInput{
 		MaxResults: aws.Int64(1),
 	}
 
-	_, err := conn.ListUserPools(input)
+	_, err := conn.ListUserPoolsWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -3027,37 +3041,4 @@ func testAccPreCheckCognitoIdentityProvider(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
-}
-
-func testAccCheckELBDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_elb" {
-			continue
-		}
-
-		describe, err := conn.DescribeLoadBalancers(&elb.DescribeLoadBalancersInput{
-			LoadBalancerNames: []*string{aws.String(rs.Primary.ID)},
-		})
-
-		if err == nil {
-			if len(describe.LoadBalancerDescriptions) != 0 &&
-				*describe.LoadBalancerDescriptions[0].LoadBalancerName == rs.Primary.ID {
-				return fmt.Errorf("ELB still exists")
-			}
-		}
-
-		// Verify the error
-		providerErr, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-
-		if providerErr.Code() != elb.ErrCodeAccessPointNotFoundException {
-			return fmt.Errorf("Unexpected error: %s", err)
-		}
-	}
-
-	return nil
 }

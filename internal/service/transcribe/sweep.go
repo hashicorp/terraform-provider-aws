@@ -4,7 +4,6 @@
 package transcribe
 
 import (
-	"context"
 	"fmt"
 	"log"
 
@@ -52,14 +51,14 @@ func init() {
 }
 
 func sweepLanguageModels(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		fmt.Errorf("error getting client: %s", err)
 	}
 
-	ctx := context.Background()
-	conn := client.(*conns.AWSClient).TranscribeConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.(*conns.AWSClient).TranscribeClient()
+	sweepResources := make([]sweep.Sweepable, 0)
 	in := &transcribe.ListLanguageModelsInput{}
 	var errs *multierror.Error
 
@@ -89,7 +88,7 @@ func sweepLanguageModels(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Transcribe Language Models for %s: %w", region, err))
 	}
 
@@ -102,14 +101,14 @@ func sweepLanguageModels(region string) error {
 }
 
 func sweepMedicalVocabularies(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		fmt.Errorf("error getting client: %s", err)
 	}
 
-	ctx := context.Background()
-	conn := client.(*conns.AWSClient).TranscribeConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.(*conns.AWSClient).TranscribeClient()
+	sweepResources := make([]sweep.Sweepable, 0)
 	in := &transcribe.ListMedicalVocabulariesInput{}
 	var errs *multierror.Error
 
@@ -140,7 +139,7 @@ func sweepMedicalVocabularies(region string) error {
 		in.NextToken = out.NextToken
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Transcribe Medical Vocabularies for %s: %w", region, err))
 	}
 
@@ -153,14 +152,14 @@ func sweepMedicalVocabularies(region string) error {
 }
 
 func sweepVocabularies(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		fmt.Errorf("error getting client: %s", err)
 	}
 
-	ctx := context.Background()
-	conn := client.(*conns.AWSClient).TranscribeConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.(*conns.AWSClient).TranscribeClient()
+	sweepResources := make([]sweep.Sweepable, 0)
 	in := &transcribe.ListVocabulariesInput{}
 	var errs *multierror.Error
 
@@ -191,7 +190,7 @@ func sweepVocabularies(region string) error {
 		in.NextToken = out.NextToken
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Transcribe Vocabularies for %s: %w", region, err))
 	}
 
@@ -204,14 +203,14 @@ func sweepVocabularies(region string) error {
 }
 
 func sweepVocabularyFilters(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		fmt.Errorf("error getting client: %s", err)
 	}
 
-	ctx := context.Background()
-	conn := client.(*conns.AWSClient).TranscribeConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.(*conns.AWSClient).TranscribeClient()
+	sweepResources := make([]sweep.Sweepable, 0)
 	in := &transcribe.ListVocabularyFiltersInput{}
 	var errs *multierror.Error
 
@@ -243,7 +242,7 @@ func sweepVocabularyFilters(region string) error {
 		in.NextToken = out.NextToken
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Transcribe Vocabulary Filters for %s: %w", region, err))
 	}
 

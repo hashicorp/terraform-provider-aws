@@ -7,6 +7,8 @@ import (
 )
 
 func TestValidEventSubscriptionName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -37,6 +39,8 @@ func TestValidEventSubscriptionName(t *testing.T) {
 }
 
 func TestValidEventSubscriptionNamePrefix(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -67,6 +71,8 @@ func TestValidEventSubscriptionNamePrefix(t *testing.T) {
 }
 
 func TestValidParamGroupName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -111,6 +117,8 @@ func TestValidParamGroupName(t *testing.T) {
 }
 
 func TestValidParamGroupNamePrefix(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -151,6 +159,8 @@ func TestValidParamGroupNamePrefix(t *testing.T) {
 }
 
 func TestValidSubnetGroupName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -183,6 +193,8 @@ func TestValidSubnetGroupName(t *testing.T) {
 }
 
 func TestValidSubnetGroupNamePrefix(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int

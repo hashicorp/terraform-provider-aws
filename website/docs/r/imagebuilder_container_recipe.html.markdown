@@ -65,6 +65,7 @@ The following attributes are optional:
 * `dockerfile_template_uri` - (Optional) The Amazon S3 URI for the Dockerfile that will be used to build the container image.
 * `instance_configuration` - (Optional) Configuration block used to configure an instance for building and testing container images. Detailed below.
 * `kms_key_id` - (Optional) The KMS key used to encrypt the container image.
+* `platform_override` - (Optional) Specifies the operating system platform when you use a custom base image.
 * `tags` - (Optional) Key-value map of resource tags for the container recipe. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `working_directory` - (Optional) The working directory to be used during build and test workflows.
 
@@ -93,7 +94,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `block_device_mapping` - (Optional) Configuration block(s) with block device mappings for the the container recipe. Detailed below.
+* `block_device_mapping` - (Optional) Configuration block(s) with block device mappings for the container recipe. Detailed below.
 * `image` - (Optional) The AMI ID to use as the base image for a container build and test instance. If not specified, Image Builder will use the appropriate ECS-optimized AMI as a base image.
 
 ### block_device_mapping

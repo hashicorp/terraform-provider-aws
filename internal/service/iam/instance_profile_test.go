@@ -1,6 +1,7 @@
 package iam_test
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -17,20 +18,21 @@ import (
 )
 
 func TestAccIAMInstanceProfile_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf iam.GetInstanceProfileOutput
 	resourceName := "aws_iam_instance_profile.test"
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceProfileDestroy,
+		CheckDestroy:             testAccCheckInstanceProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceProfileExists(resourceName, &conf),
+					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("instance-profile/test-%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "role", "aws_iam_role.test", "name"),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("test-%s", rName)),
@@ -47,19 +49,20 @@ func TestAccIAMInstanceProfile_basic(t *testing.T) {
 }
 
 func TestAccIAMInstanceProfile_withoutRole(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf iam.GetInstanceProfileOutput
 	resourceName := "aws_iam_instance_profile.test"
 	rName := sdkacctest.RandString(5)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceProfileDestroy,
+		CheckDestroy:             testAccCheckInstanceProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceProfileConfig_noRole(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceProfileExists(resourceName, &conf),
+					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
 				),
 			},
 			{
@@ -73,20 +76,21 @@ func TestAccIAMInstanceProfile_withoutRole(t *testing.T) {
 }
 
 func TestAccIAMInstanceProfile_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf iam.GetInstanceProfileOutput
 	resourceName := "aws_iam_instance_profile.test"
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceProfileDestroy,
+		CheckDestroy:             testAccCheckInstanceProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceProfileConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceProfileExists(resourceName, &conf),
+					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -100,7 +104,7 @@ func TestAccIAMInstanceProfile_tags(t *testing.T) {
 			{
 				Config: testAccInstanceProfileConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceProfileExists(resourceName, &conf),
+					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -109,7 +113,7 @@ func TestAccIAMInstanceProfile_tags(t *testing.T) {
 			{
 				Config: testAccInstanceProfileConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceProfileExists(resourceName, &conf),
+					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -119,20 +123,21 @@ func TestAccIAMInstanceProfile_tags(t *testing.T) {
 }
 
 func TestAccIAMInstanceProfile_namePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf iam.GetInstanceProfileOutput
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iam_instance_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceProfileDestroy,
+		CheckDestroy:             testAccCheckInstanceProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceProfileConfig_prefixName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceProfileExists(resourceName, &conf),
+					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
 					testAccCheckInstanceProfileGeneratedNamePrefix(
 						resourceName, "test-"),
 				),
@@ -148,21 +153,22 @@ func TestAccIAMInstanceProfile_namePrefix(t *testing.T) {
 }
 
 func TestAccIAMInstanceProfile_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf iam.GetInstanceProfileOutput
 	resourceName := "aws_iam_instance_profile.test"
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceProfileDestroy,
+		CheckDestroy:             testAccCheckInstanceProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceProfileExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceInstanceProfile(), resourceName),
+					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceInstanceProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -171,21 +177,22 @@ func TestAccIAMInstanceProfile_disappears(t *testing.T) {
 }
 
 func TestAccIAMInstanceProfile_Disappears_role(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf iam.GetInstanceProfileOutput
 	resourceName := "aws_iam_instance_profile.test"
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceProfileDestroy,
+		CheckDestroy:             testAccCheckInstanceProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceProfileExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceRole(), "aws_iam_role.test"),
+					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceRole(), "aws_iam_role.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -210,33 +217,35 @@ func testAccCheckInstanceProfileGeneratedNamePrefix(resource, prefix string) res
 	}
 }
 
-func testAccCheckInstanceProfileDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+func testAccCheckInstanceProfileDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_iam_instance_profile" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_iam_instance_profile" {
+				continue
+			}
+
+			// Try to get role
+			_, err := conn.GetInstanceProfileWithContext(ctx, &iam.GetInstanceProfileInput{
+				InstanceProfileName: aws.String(rs.Primary.ID),
+			})
+			if err == nil {
+				return fmt.Errorf("still exist.")
+			}
+
+			if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+				continue
+			}
+
+			return err
 		}
 
-		// Try to get role
-		_, err := conn.GetInstanceProfile(&iam.GetInstanceProfileInput{
-			InstanceProfileName: aws.String(rs.Primary.ID),
-		})
-		if err == nil {
-			return fmt.Errorf("still exist.")
-		}
-
-		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			continue
-		}
-
-		return err
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckInstanceProfileExists(n string, res *iam.GetInstanceProfileOutput) resource.TestCheckFunc {
+func testAccCheckInstanceProfileExists(ctx context.Context, n string, res *iam.GetInstanceProfileOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -247,9 +256,9 @@ func testAccCheckInstanceProfileExists(n string, res *iam.GetInstanceProfileOutp
 			return fmt.Errorf("No Instance Profile name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
-		resp, err := conn.GetInstanceProfile(&iam.GetInstanceProfileInput{
+		resp, err := conn.GetInstanceProfileWithContext(ctx, &iam.GetInstanceProfileInput{
 			InstanceProfileName: aws.String(rs.Primary.ID),
 		})
 		if err != nil {

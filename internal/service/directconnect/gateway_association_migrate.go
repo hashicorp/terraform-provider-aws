@@ -75,14 +75,14 @@ func resourceGatewayAssociationResourceV0() *schema.Resource {
 	}
 }
 
-func GatewayAssociationStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+func GatewayAssociationStateUpgradeV0(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	log.Println("[INFO] Found Direct Connect Gateway Association state v0; migrating to v1")
 
 	// dx_gateway_association_id was introduced in v2.8.0. Handle the case where it's not yet present.
 	if v, ok := rawState["dx_gateway_association_id"]; !ok || v == nil {
-		output, err := FindGatewayAssociationByGatewayIDAndVirtualGatewayID(conn, rawState["dx_gateway_id"].(string), rawState["vpn_gateway_id"].(string))
+		output, err := FindGatewayAssociationByGatewayIDAndVirtualGatewayID(ctx, conn, rawState["dx_gateway_id"].(string), rawState["vpn_gateway_id"].(string))
 
 		if err != nil {
 			return nil, err

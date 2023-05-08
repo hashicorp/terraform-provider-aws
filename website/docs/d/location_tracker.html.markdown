@@ -20,14 +20,14 @@ data "aws_location_tracker" "example" {
 
 ## Argument Reference
 
-* `tracker_name` - (Required) The name of the tracker resource.
+* `tracker_name` - (Required) Name of the tracker resource.
 
 ## Attribute Reference
 
-* `create_time` - The timestamp for when the tracker resource was created in ISO 8601 format.
-* `description` - The optional description for the tracker resource.
-* `kms_key_id` - A key identifier for an AWS KMS customer managed key assigned to the Amazon Location resource.
-* `position_filtering` - The position filtering method of the tracker resource.
+* `create_time` - Timestamp for when the tracker resource was created in ISO 8601 format.
+* `description` - Optional description for the tracker resource.
+* `kms_key_id` - Key identifier for an AWS KMS customer managed key assigned to the Amazon Location resource.
+* `position_filtering` - Position filtering method of the tracker resource.
 * `tags` - Key-value map of resource tags for the tracker.
-* `tracker_arn` - The Amazon Resource Name (ARN) for the tracker resource. Used when you need to specify a resource across all AWS.
-* `update_time` - The timestamp for when the tracker resource was last updated in ISO 8601 format.
+* `tracker_arn` - ARN for the tracker resource. Used when you need to specify a resource across all AWS.
+* `update_time` - Timestamp for when the tracker resource was last updated in ISO 8601 format.

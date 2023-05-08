@@ -13,6 +13,7 @@ import (
 )
 
 func TestAccKMSReplicaKey_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var key kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	primaryKeyResourceName := "aws_kms_key.test"
@@ -20,17 +21,17 @@ func TestAccKMSReplicaKey_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccCheckKeyDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicaKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(resourceName, &key),
+					testAccCheckKeyExists(ctx, resourceName, &key),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kms", regexp.MustCompile(`key/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "false"),
 					resource.TestCheckResourceAttr(resourceName, "deletion_window_in_days", "30"),
@@ -54,24 +55,25 @@ func TestAccKMSReplicaKey_basic(t *testing.T) {
 }
 
 func TestAccKMSReplicaKey_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var key kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_replica_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccCheckKeyDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicaKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(resourceName, &key),
-					acctest.CheckResourceDisappears(acctest.Provider, tfkms.ResourceReplicaKey(), resourceName),
+					testAccCheckKeyExists(ctx, resourceName, &key),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkms.ResourceReplicaKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -80,6 +82,7 @@ func TestAccKMSReplicaKey_disappears(t *testing.T) {
 }
 
 func TestAccKMSReplicaKey_descriptionAndEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
 	var key kms.KeyMetadata
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -89,17 +92,17 @@ func TestAccKMSReplicaKey_descriptionAndEnabled(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccCheckKeyDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicaKeyConfig_descriptionAndEnabled(rName1, rName2, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(resourceName, &key),
+					testAccCheckKeyExists(ctx, resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "description", rName2),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 				),
@@ -113,7 +116,7 @@ func TestAccKMSReplicaKey_descriptionAndEnabled(t *testing.T) {
 			{
 				Config: testAccReplicaKeyConfig_descriptionAndEnabled(rName1, rName3, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(resourceName, &key),
+					testAccCheckKeyExists(ctx, resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "description", rName3),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 				),
@@ -121,7 +124,7 @@ func TestAccKMSReplicaKey_descriptionAndEnabled(t *testing.T) {
 			{
 				Config: testAccReplicaKeyConfig_descriptionAndEnabled(rName1, rName4, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(resourceName, &key),
+					testAccCheckKeyExists(ctx, resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "description", rName4),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 				),
@@ -131,6 +134,7 @@ func TestAccKMSReplicaKey_descriptionAndEnabled(t *testing.T) {
 }
 
 func TestAccKMSReplicaKey_policy(t *testing.T) {
+	ctx := acctest.Context(t)
 	var key kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_replica_key.test"
@@ -139,19 +143,19 @@ func TestAccKMSReplicaKey_policy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccCheckKeyDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicaKeyConfig_policy(rName, policy1, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(resourceName, &key),
+					testAccCheckKeyExists(ctx, resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "false"),
-					testAccCheckKeyHasPolicy(resourceName, policy1),
+					testAccCheckKeyHasPolicy(ctx, resourceName, policy1),
 				),
 			},
 			{
@@ -163,9 +167,9 @@ func TestAccKMSReplicaKey_policy(t *testing.T) {
 			{
 				Config: testAccReplicaKeyConfig_policy(rName, policy2, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(resourceName, &key),
+					testAccCheckKeyExists(ctx, resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "true"),
-					testAccCheckExternalKeyHasPolicy(resourceName, policy2),
+					testAccCheckExternalKeyHasPolicy(ctx, resourceName, policy2),
 				),
 			},
 		},
@@ -173,23 +177,24 @@ func TestAccKMSReplicaKey_policy(t *testing.T) {
 }
 
 func TestAccKMSReplicaKey_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var key kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_replica_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccCheckKeyDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicaKeyConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(resourceName, &key),
+					testAccCheckKeyExists(ctx, resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -203,7 +208,7 @@ func TestAccKMSReplicaKey_tags(t *testing.T) {
 			{
 				Config: testAccReplicaKeyConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(resourceName, &key),
+					testAccCheckKeyExists(ctx, resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -212,7 +217,7 @@ func TestAccKMSReplicaKey_tags(t *testing.T) {
 			{
 				Config: testAccReplicaKeyConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(resourceName, &key),
+					testAccCheckKeyExists(ctx, resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -222,23 +227,24 @@ func TestAccKMSReplicaKey_tags(t *testing.T) {
 }
 
 func TestAccKMSReplicaKey_twoReplicas(t *testing.T) {
+	ctx := acctest.Context(t)
 	var key kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_replica_key.test1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 3)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3),
-		CheckDestroy:             testAccCheckKeyDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicaKeyConfig_two(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(resourceName, &key),
+					testAccCheckKeyExists(ctx, resourceName, &key),
 				),
 			},
 		},

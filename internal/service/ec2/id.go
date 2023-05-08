@@ -7,24 +7,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 )
 
-const managedPrefixListEntryIDSeparator = ","
-
-func ManagedPrefixListEntryCreateID(prefixListID, cidrBlock string) string {
-	parts := []string{prefixListID, cidrBlock}
-	id := strings.Join(parts, managedPrefixListEntryIDSeparator)
-	return id
-}
-
-func ManagedPrefixListEntryParseID(id string) (string, string, error) {
-	parts := strings.Split(id, managedPrefixListEntryIDSeparator)
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], nil
-	}
-
-	return "", "",
-		fmt.Errorf("unexpected format for ID (%q), expected prefix-list-id"+managedPrefixListEntryIDSeparator+"cidr-block", id)
-}
-
 // RouteCreateID returns a route resource ID.
 func RouteCreateID(routeTableID, destination string) string {
 	return fmt.Sprintf("r-%s%d", routeTableID, create.StringHashcode(destination))

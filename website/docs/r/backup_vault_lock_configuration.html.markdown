@@ -26,7 +26,7 @@ resource "aws_backup_vault_lock_configuration" "test" {
 The following arguments are supported:
 
 * `backup_vault_name` - (Required) Name of the backup vault to add a lock configuration for.
-* `changeable_for_days` - (Optional) The number of days before the lock date.
+* `changeable_for_days` - (Optional) The number of days before the lock date. If omitted creates a vault lock in `governance` mode, otherwise it will create a vault lock in `compliance` mode.
 * `max_retention_days` - (Optional) The maximum retention period that the vault retains its recovery points.
 * `min_retention_days` - (Optional) The minimum retention period that the vault retains its recovery points.
 

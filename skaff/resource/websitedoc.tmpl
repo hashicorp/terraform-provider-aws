@@ -1,14 +1,14 @@
 ---
-subcategory: "{{ .Service }}"
+subcategory: "{{ .HumanFriendlyService }}"
 layout: "aws"
 page_title: "AWS: aws_{{ .ServicePackage }}_{{ .ResourceSnake }}"
 description: |-
-  Terraform resource for managing an AWS {{ .Service }} {{ .Resource }}.
+  Terraform resource for managing an AWS {{ .HumanFriendlyService }} {{ .HumanResourceName }}.
 ---
 
 # Resource: aws_{{ .ServicePackage }}_{{ .ResourceSnake }}
 
-Terraform resource for managing an AWS {{ .Service }} {{ .Resource }}.
+Terraform resource for managing an AWS {{ .HumanFriendlyService }} {{ .HumanResourceName }}.
 
 ## Example Usage
 
@@ -23,22 +23,22 @@ resource "aws_{{ .ServicePackage }}_{{ .ResourceSnake }}" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description.
+* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Concise argument description.
+* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - ARN of the {{ .Resource }}.
-* `example_attribute` - Concise description.
+* `arn` - ARN of the {{ .HumanResourceName }}. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `60m`)
 * `update` - (Default `180m`)
@@ -46,7 +46,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-{{ .Service }} {{ .Resource }} can be imported using the `example_id_arg`, e.g.,
+{{ .HumanFriendlyService }} {{ .HumanResourceName }} can be imported using the `example_id_arg`, e.g.,
 
 ```
 $ terraform import aws_{{ .ServicePackage }}_{{ .ResourceSnake }}.example rft-8012925589
