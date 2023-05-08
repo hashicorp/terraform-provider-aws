@@ -8102,9 +8102,6 @@ resource "aws_instance" "test" {
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   subnet_id     = aws_subnet.test.id
 
-  cpu_core_count       = %[2]d
-  cpu_threads_per_core = %[3]d
-
   tags = {
     Name = %[1]q
   }
