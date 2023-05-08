@@ -2,9 +2,13 @@ package vpclattice
 
 import (
 	"context"
+	"errors"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
+	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -39,7 +43,7 @@ func dataSourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, m
 
 	resourceArn := d.Get("resource_arn").(string)
 
-	policy, err := findResourcePolicyByID(ctx, conn, resourceArn)
+	policy, err := findDataSourceResourcePolicyById(ctx, conn, resourceArn)
 	if err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionReading, DSNameResourcePolicy, d.Id(), err)
 	}
@@ -47,14 +51,32 @@ func dataSourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, m
 	if policy == nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionReading, DSNameResourcePolicy, d.Id(), err)
 	}
-	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.ToString(policy.Policy))
 
-	if err != nil {
-		return diag.Errorf("setting policy %s: %s", aws.ToString(policy.Policy), err)
-	}
-
-	d.Set("policy", policyToSet)
+	d.Set("resource_arn", resourceArn)
 	d.SetId(resourceArn)
+	d.Set("policy", aws.ToString(policy.Policy))
 
 	return nil
+}
+
+func findDataSourceResourcePolicyById(ctx context.Context, conn *vpclattice.Client, resource_arn string) (*vpclattice.GetResourcePolicyOutput, error) {
+	in := &vpclattice.GetResourcePolicyInput{
+		ResourceArn: aws.String(resource_arn),
+	}
+
+	out, err := conn.GetResourcePolicy(ctx, in)
+
+	if err != nil {
+		var nfe *types.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
+		}
+
+		return nil, err
+	}
+
+	return out, nil
 }
