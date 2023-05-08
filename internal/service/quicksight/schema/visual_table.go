@@ -990,3 +990,474 @@ func expandDataBarsOptions(tfList []interface{}) *quicksight.DataBarsOptions {
 	}
 	return options
 }
+
+func flattenTableVisual(apiObject *quicksight.TableVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"visual_id": aws.StringValue(apiObject.VisualId),
+	}
+	if apiObject.Actions != nil {
+		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
+	}
+	if apiObject.ChartConfiguration != nil {
+		tfMap["chart_configuration"] = flattenTableConfiguration(apiObject.ChartConfiguration)
+	}
+	if apiObject.ConditionalFormatting != nil {
+		tfMap["conditional_formatting"] = flattenTableConditionalFormatting(apiObject.ConditionalFormatting)
+	}
+	if apiObject.Subtitle != nil {
+		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
+	}
+	if apiObject.Title != nil {
+		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTableConfiguration(apiObject *quicksight.TableConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.FieldOptions != nil {
+		tfMap["field_options"] = flattenTableFieldOptions(apiObject.FieldOptions)
+	}
+	if apiObject.FieldWells != nil {
+		tfMap["field_wells"] = flattenTableFieldWells(apiObject.FieldWells)
+	}
+	if apiObject.PaginatedReportOptions != nil {
+		tfMap["paginated_report_options"] = flattenTablePaginatedReportOptions(apiObject.PaginatedReportOptions)
+	}
+	if apiObject.SortConfiguration != nil {
+		tfMap["sort_configuration"] = flattenTableSortConfiguration(apiObject.SortConfiguration)
+	}
+	if apiObject.TableInlineVisualizations != nil {
+		tfMap["table_inline_visualizations"] = flattenTableInlineVisualization(apiObject.TableInlineVisualizations)
+	}
+	if apiObject.TableOptions != nil {
+		tfMap["table_options"] = flattenTableOptions(apiObject.TableOptions)
+	}
+	if apiObject.TotalOptions != nil {
+		tfMap["total_options"] = flattenTotalOptions(apiObject.TotalOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTableFieldOptions(apiObject *quicksight.TableFieldOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Order != nil {
+		tfMap["order"] = flex.FlattenStringList(apiObject.Order)
+	}
+	if apiObject.SelectedFieldOptions != nil {
+		tfMap["selected_field_options"] = flattenTableFieldOption(apiObject.SelectedFieldOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTableFieldOption(apiObject []*quicksight.TableFieldOption) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if config.FieldId != nil {
+			tfMap["field_id"] = aws.StringValue(config.FieldId)
+		}
+		if config.CustomLabel != nil {
+			tfMap["custom_label"] = aws.StringValue(config.CustomLabel)
+		}
+		if config.URLStyling != nil {
+			tfMap["url_styling"] = flattenTableFieldURLConfiguration(config.URLStyling)
+		}
+		if config.Visibility != nil {
+			tfMap["visbility"] = aws.StringValue(config.Visibility)
+		}
+		if config.Width != nil {
+			tfMap["width"] = aws.StringValue(config.Width)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenTableFieldURLConfiguration(apiObject *quicksight.TableFieldURLConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ImageConfiguration != nil {
+		tfMap["image_configuration"] = flattenTableFieldImageConfiguration(apiObject.ImageConfiguration)
+	}
+	if apiObject.LinkConfiguration != nil {
+		tfMap["link_configuration"] = flattenTableFieldLinkConfiguration(apiObject.LinkConfiguration)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTableFieldImageConfiguration(apiObject *quicksight.TableFieldImageConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.SizingOptions != nil {
+		tfMap["sizing_options"] = flattenTableCellImageSizingConfiguration(apiObject.SizingOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTableCellImageSizingConfiguration(apiObject *quicksight.TableCellImageSizingConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.TableCellImageScalingConfiguration != nil {
+		tfMap["table_cell_image_scaling_configuration"] = aws.StringValue(apiObject.TableCellImageScalingConfiguration)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTableFieldLinkConfiguration(apiObject *quicksight.TableFieldLinkConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Content != nil {
+		tfMap["content"] = flattenTableFieldLinkContentConfiguration(apiObject.Content)
+	}
+	if apiObject.Target != nil {
+		tfMap["target"] = aws.StringValue(apiObject.Target)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTableFieldLinkContentConfiguration(apiObject *quicksight.TableFieldLinkContentConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CustomIconContent != nil {
+		tfMap["custom_icon_content"] = flattenTableFieldCustomIconContent(apiObject.CustomIconContent)
+	}
+	if apiObject.CustomTextContent != nil {
+		tfMap["custom_text_content"] = flattenTableFieldCustomTextContent(apiObject.CustomTextContent)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTableFieldCustomIconContent(apiObject *quicksight.TableFieldCustomIconContent) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Icon != nil {
+		tfMap["icon"] = aws.StringValue(apiObject.Icon)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTableFieldCustomTextContent(apiObject *quicksight.TableFieldCustomTextContent) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.FontConfiguration != nil {
+		tfMap["font_configuration"] = flattenFontConfiguration(apiObject.FontConfiguration)
+	}
+	if apiObject.Value != nil {
+		tfMap["value"] = aws.StringValue(apiObject.Value)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTableFieldWells(apiObject *quicksight.TableFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.TableAggregatedFieldWells != nil {
+		tfMap["table_aggregated_field_wells"] = flattenTableAggregatedFieldWells(apiObject.TableAggregatedFieldWells)
+	}
+	if apiObject.TableUnaggregatedFieldWells != nil {
+		tfMap["table_unaggregated_field_wells"] = flattenTableUnaggregatedFieldWells(apiObject.TableUnaggregatedFieldWells)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTableAggregatedFieldWells(apiObject *quicksight.TableAggregatedFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.GroupBy != nil {
+		tfMap["group_by"] = flattenDimensionFields(apiObject.GroupBy)
+	}
+	if apiObject.Values != nil {
+		tfMap["values"] = flattenMeasureFields(apiObject.Values)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTableUnaggregatedFieldWells(apiObject *quicksight.TableUnaggregatedFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Values != nil {
+		tfMap["values"] = flattenUnaggregatedField(apiObject.Values)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenUnaggregatedField(apiObject []*quicksight.UnaggregatedField) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if config.Column != nil {
+			tfMap["column"] = flattenColumnIdentifier(config.Column)
+		}
+		if config.FieldId != nil {
+			tfMap["field_id"] = aws.StringValue(config.FieldId)
+		}
+		if config.FormatConfiguration != nil {
+			tfMap["format_configuration"] = flattenFormatConfiguration(config.FormatConfiguration)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenTablePaginatedReportOptions(apiObject *quicksight.TablePaginatedReportOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.OverflowColumnHeaderVisibility != nil {
+		tfMap["overflow_column_header_visibility"] = aws.StringValue(apiObject.OverflowColumnHeaderVisibility)
+	}
+	if apiObject.VerticalOverflowVisibility != nil {
+		tfMap["vertical_overflow_visibility"] = aws.StringValue(apiObject.VerticalOverflowVisibility)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTableSortConfiguration(apiObject *quicksight.TableSortConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.PaginationConfiguration != nil {
+		tfMap["pagination_configuration"] = flattenPaginationConfiguration(apiObject.PaginationConfiguration)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTableInlineVisualization(apiObject []*quicksight.TableInlineVisualization) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if config.DataBars != nil {
+			tfMap["data_bars"] = flattenDataBarsOptions(config.DataBars)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenDataBarsOptions(apiObject *quicksight.DataBarsOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.FieldId != nil {
+		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
+	}
+	if apiObject.NegativeColor != nil {
+		tfMap["negative_color"] = aws.StringValue(apiObject.NegativeColor)
+	}
+	if apiObject.PositiveColor != nil {
+		tfMap["positive_color"] = aws.StringValue(apiObject.PositiveColor)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTableOptions(apiObject *quicksight.TableOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CellStyle != nil {
+		tfMap["cell_style"] = flattenTableCellStyle(apiObject.CellStyle)
+	}
+	if apiObject.HeaderStyle != nil {
+		tfMap["header_style"] = flattenTableCellStyle(apiObject.HeaderStyle)
+	}
+	if apiObject.Orientation != nil {
+		tfMap["orientation"] = aws.StringValue(apiObject.Orientation)
+	}
+	if apiObject.RowAlternateColorOptions != nil {
+		tfMap["row_alternate_color_options"] = flattenRowAlternateColorOptions(apiObject.RowAlternateColorOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTotalOptions(apiObject *quicksight.TotalOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CustomLabel != nil {
+		tfMap["custom_label"] = aws.StringValue(apiObject.CustomLabel)
+	}
+	if apiObject.Placement != nil {
+		tfMap["placement"] = aws.StringValue(apiObject.Placement)
+	}
+	if apiObject.ScrollStatus != nil {
+		tfMap["scroll_status"] = aws.StringValue(apiObject.ScrollStatus)
+	}
+	if apiObject.TotalCellStyle != nil {
+		tfMap["total_cell_style"] = flattenTableCellStyle(apiObject.TotalCellStyle)
+	}
+	if apiObject.TotalsVisibility != nil {
+		tfMap["totals_visibility"] = aws.StringValue(apiObject.TotalsVisibility)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTableConditionalFormatting(apiObject *quicksight.TableConditionalFormatting) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ConditionalFormattingOptions != nil {
+		tfMap["conditional_formatting_options"] = flattenTableConditionalFormattingOption(apiObject.ConditionalFormattingOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTableConditionalFormattingOption(apiObject []*quicksight.TableConditionalFormattingOption) []interface{} {
+	if len(apiObject) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, config := range apiObject {
+		if config == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{}
+		if config.Cell != nil {
+			tfMap["cell"] = flattenTableCellConditionalFormatting(config.Cell)
+		}
+		if config.Row != nil {
+			tfMap["row"] = flattenTableRowConditionalFormatting(config.Row)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenTableCellConditionalFormatting(apiObject *quicksight.TableCellConditionalFormatting) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.FieldId != nil {
+		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
+	}
+	if apiObject.TextFormat != nil {
+		tfMap["text_format"] = flattenTextConditionalFormat(apiObject.TextFormat)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTableRowConditionalFormatting(apiObject *quicksight.TableRowConditionalFormatting) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.BackgroundColor != nil {
+		tfMap["background_color"] = flattenConditionalFormattingColor(apiObject.BackgroundColor)
+	}
+	if apiObject.TextColor != nil {
+		tfMap["text_color"] = flattenConditionalFormattingColor(apiObject.TextColor)
+	}
+
+	return []interface{}{tfMap}
+}
