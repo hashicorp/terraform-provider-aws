@@ -326,3 +326,169 @@ func expandDonutCenterOptions(tfList []interface{}) *quicksight.DonutCenterOptio
 
 	return options
 }
+
+func flattenPieChartVisual(apiObject *quicksight.PieChartVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"visual_id": aws.StringValue(apiObject.VisualId),
+	}
+	if apiObject.Actions != nil {
+		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
+	}
+	if apiObject.ChartConfiguration != nil {
+		tfMap["chart_configuration"] = flattenPieChartConfiguration(apiObject.ChartConfiguration)
+	}
+	if apiObject.ColumnHierarchies != nil {
+		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+	}
+	if apiObject.Subtitle != nil {
+		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
+	}
+	if apiObject.Title != nil {
+		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenPieChartConfiguration(apiObject *quicksight.PieChartConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CategoryLabelOptions != nil {
+		tfMap["category_label_options"] = flattenChartAxisLabelOptions(apiObject.CategoryLabelOptions)
+	}
+	if apiObject.ContributionAnalysisDefaults != nil {
+		tfMap["contribution_analysis_defaults"] = flattenContributionAnalysisDefault(apiObject.ContributionAnalysisDefaults)
+	}
+	if apiObject.DataLabels != nil {
+		tfMap["data_labels"] = flattenDataLabelOptions(apiObject.DataLabels)
+	}
+	if apiObject.DonutOptions != nil {
+		tfMap["donut_options"] = flattenDonutOptions(apiObject.DonutOptions)
+	}
+	if apiObject.FieldWells != nil {
+		tfMap["field_wells"] = flattenPieChartFieldWells(apiObject.FieldWells)
+	}
+	if apiObject.Legend != nil {
+		tfMap["legend"] = flattenLegendOptions(apiObject.Legend)
+	}
+	if apiObject.SmallMultiplesOptions != nil {
+		tfMap["small_multiples_options"] = flattenSmallMultiplesOptions(apiObject.SmallMultiplesOptions)
+	}
+	if apiObject.SortConfiguration != nil {
+		tfMap["sort_configuration"] = flattenPieChartSortConfiguration(apiObject.SortConfiguration)
+	}
+	if apiObject.Tooltip != nil {
+		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)
+	}
+	if apiObject.ValueLabelOptions != nil {
+		tfMap["value_label_options"] = flattenChartAxisLabelOptions(apiObject.ValueLabelOptions)
+	}
+	if apiObject.VisualPalette != nil {
+		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenDonutOptions(apiObject *quicksight.DonutOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ArcOptions != nil {
+		tfMap["arc_options"] = flattenArcOptions(apiObject.ArcOptions)
+	}
+	if apiObject.DonutCenterOptions != nil {
+		tfMap["donut_center_options"] = flattenDonutCenterOptions(apiObject.DonutCenterOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenArcOptions(apiObject *quicksight.ArcOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ArcThickness != nil {
+		tfMap["arc_thickness"] = aws.StringValue(apiObject.ArcThickness)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenDonutCenterOptions(apiObject *quicksight.DonutCenterOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.LabelVisibility != nil {
+		tfMap["label_visibility"] = aws.StringValue(apiObject.LabelVisibility)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenPieChartFieldWells(apiObject *quicksight.PieChartFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.PieChartAggregatedFieldWells != nil {
+		tfMap["pie_chart_aggregated_field_wells"] = flattenPieChartAggregatedFieldWells(apiObject.PieChartAggregatedFieldWells)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenPieChartAggregatedFieldWells(apiObject *quicksight.PieChartAggregatedFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Category != nil {
+		tfMap["category"] = flattenDimensionFields(apiObject.Category)
+	}
+	if apiObject.SmallMultiples != nil {
+		tfMap["small_multiples"] = flattenDimensionFields(apiObject.SmallMultiples)
+	}
+	if apiObject.Values != nil {
+		tfMap["values"] = flattenMeasureFields(apiObject.Values)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenPieChartSortConfiguration(apiObject *quicksight.PieChartSortConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CategoryItemsLimit != nil {
+		tfMap["category_items_limit"] = flattenItemsLimitConfiguration(apiObject.CategoryItemsLimit)
+	}
+	if apiObject.CategorySort != nil {
+		tfMap["category_sort"] = flattenFieldSortOptions(apiObject.CategorySort)
+	}
+	if apiObject.SmallMultiplesLimitConfiguration != nil {
+		tfMap["small_multiples_limit_configuration"] = flattenItemsLimitConfiguration(apiObject.SmallMultiplesLimitConfiguration)
+	}
+	if apiObject.SmallMultiplesSort != nil {
+		tfMap["small_multiples_sort"] = flattenFieldSortOptions(apiObject.SmallMultiplesSort)
+	}
+
+	return []interface{}{tfMap}
+}
