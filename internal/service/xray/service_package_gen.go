@@ -30,7 +30,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_xray_encryption_config",
 		},
 		{
-			Factory:  ResourceGroup,
+			Factory:  resourceGroup,
 			TypeName: "aws_xray_group",
 			Name:     "Group",
 			Tags: &types.ServicePackageResourceTags{
