@@ -218,3 +218,115 @@ func expandTreeMapSortConfiguration(tfList []interface{}) *quicksight.TreeMapSor
 
 	return config
 }
+
+func flattenTreeMapVisual(apiObject *quicksight.TreeMapVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"visual_id": aws.StringValue(apiObject.VisualId),
+	}
+	if apiObject.Actions != nil {
+		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
+	}
+	if apiObject.ChartConfiguration != nil {
+		tfMap["chart_configuration"] = flattenTreeMapConfiguration(apiObject.ChartConfiguration)
+	}
+	if apiObject.ColumnHierarchies != nil {
+		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+	}
+	if apiObject.Subtitle != nil {
+		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
+	}
+	if apiObject.Title != nil {
+		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTreeMapConfiguration(apiObject *quicksight.TreeMapConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.ColorLabelOptions != nil {
+		tfMap["color_label_options"] = flattenChartAxisLabelOptions(apiObject.ColorLabelOptions)
+	}
+	if apiObject.ColorScale != nil {
+		tfMap["color_scale"] = flattenColorScale(apiObject.ColorScale)
+	}
+	if apiObject.DataLabels != nil {
+		tfMap["data_labels"] = flattenDataLabelOptions(apiObject.DataLabels)
+	}
+	if apiObject.FieldWells != nil {
+		tfMap["field_wells"] = flattenTreeMapFieldWells(apiObject.FieldWells)
+	}
+	if apiObject.GroupLabelOptions != nil {
+		tfMap["group_label_options"] = flattenChartAxisLabelOptions(apiObject.GroupLabelOptions)
+	}
+	if apiObject.Legend != nil {
+		tfMap["legend"] = flattenLegendOptions(apiObject.Legend)
+	}
+	if apiObject.SizeLabelOptions != nil {
+		tfMap["size_label_options"] = flattenChartAxisLabelOptions(apiObject.SizeLabelOptions)
+	}
+	if apiObject.SortConfiguration != nil {
+		tfMap["sort_configuration"] = flattenTreeMapSortConfiguration(apiObject.SortConfiguration)
+	}
+	if apiObject.Tooltip != nil {
+		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTreeMapFieldWells(apiObject *quicksight.TreeMapFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.TreeMapAggregatedFieldWells != nil {
+		tfMap["tree_map_aggregated_field_wells"] = flattenTreeMapAggregatedFieldWells(apiObject.TreeMapAggregatedFieldWells)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTreeMapAggregatedFieldWells(apiObject *quicksight.TreeMapAggregatedFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Colors != nil {
+		tfMap["colors"] = flattenMeasureFields(apiObject.Colors)
+	}
+	if apiObject.Groups != nil {
+		tfMap["groups"] = flattenDimensionFields(apiObject.Groups)
+	}
+	if apiObject.Sizes != nil {
+		tfMap["sizes"] = flattenMeasureFields(apiObject.Sizes)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenTreeMapSortConfiguration(apiObject *quicksight.TreeMapSortConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.TreeMapGroupItemsLimitConfiguration != nil {
+		tfMap["tree_map_group_items_limit_configuration"] = flattenItemsLimitConfiguration(apiObject.TreeMapGroupItemsLimitConfiguration)
+	}
+	if apiObject.TreeMapSort != nil {
+		tfMap["tree_map_sort"] = flattenFieldSortOptions(apiObject.TreeMapSort)
+	}
+
+	return []interface{}{tfMap}
+}
