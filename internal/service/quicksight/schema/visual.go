@@ -1451,17 +1451,6 @@ func flattenVisuals(apiObject []*quicksight.Visual) []interface{} {
 	return tfList
 }
 
-func flattenSankeyDiagramVisual(apiObject *quicksight.SankeyDiagramVisual) []interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-	// TODO
-
-	return []interface{}{tfMap}
-}
-
 func flattenScatterPlotVisual(apiObject *quicksight.ScatterPlotVisual) []interface{} {
 	if apiObject == nil {
 		return nil

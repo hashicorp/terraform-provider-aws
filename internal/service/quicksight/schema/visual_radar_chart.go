@@ -420,7 +420,7 @@ func flattenRadarChartFieldWells(apiObject *quicksight.RadarChartFieldWells) []i
 
 	tfMap := map[string]interface{}{}
 	if apiObject.RadarChartAggregatedFieldWells != nil {
-		tfMap["bar_chart_aggregated_field_wells"] = flattenRadarChartAggregatedFieldWells(apiObject.RadarChartAggregatedFieldWells)
+		tfMap["radar_chart_aggregated_field_wells"] = flattenRadarChartAggregatedFieldWells(apiObject.RadarChartAggregatedFieldWells)
 	}
 
 	return []interface{}{tfMap}

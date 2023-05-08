@@ -194,3 +194,97 @@ func expandSankeyDiagramSortConfiguration(tfList []interface{}) *quicksight.Sank
 
 	return config
 }
+
+func flattenSankeyDiagramVisual(apiObject *quicksight.SankeyDiagramVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"visual_id": aws.StringValue(apiObject.VisualId),
+	}
+	if apiObject.Actions != nil {
+		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
+	}
+	if apiObject.ChartConfiguration != nil {
+		tfMap["chart_configuration"] = flattenSankeyDiagramChartConfiguration(apiObject.ChartConfiguration)
+	}
+	if apiObject.Subtitle != nil {
+		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
+	}
+	if apiObject.Title != nil {
+		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenSankeyDiagramChartConfiguration(apiObject *quicksight.SankeyDiagramChartConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.DataLabels != nil {
+		tfMap["data_labels"] = flattenDataLabelOptions(apiObject.DataLabels)
+	}
+	if apiObject.FieldWells != nil {
+		tfMap["field_wells"] = flattenSankeyDiagramFieldWells(apiObject.FieldWells)
+	}
+	if apiObject.SortConfiguration != nil {
+		tfMap["sort_configuration"] = flattenSankeyDiagramSortConfiguration(apiObject.SortConfiguration)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenSankeyDiagramFieldWells(apiObject *quicksight.SankeyDiagramFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.SankeyDiagramAggregatedFieldWells != nil {
+		tfMap["sankey_diagram_aggregated_field_wells"] = flattenSankeyDiagramAggregatedFieldWells(apiObject.SankeyDiagramAggregatedFieldWells)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenSankeyDiagramAggregatedFieldWells(apiObject *quicksight.SankeyDiagramAggregatedFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Destination != nil {
+		tfMap["destination"] = flattenDimensionFields(apiObject.Destination)
+	}
+	if apiObject.Source != nil {
+		tfMap["source"] = flattenDimensionFields(apiObject.Source)
+	}
+	if apiObject.Weight != nil {
+		tfMap["weight"] = flattenMeasureFields(apiObject.Weight)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenSankeyDiagramSortConfiguration(apiObject *quicksight.SankeyDiagramSortConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.DestinationItemsLimit != nil {
+		tfMap["destination_items_limit"] = flattenItemsLimitConfiguration(apiObject.DestinationItemsLimit)
+	}
+	if apiObject.SourceItemsLimit != nil {
+		tfMap["source_items_limit"] = flattenItemsLimitConfiguration(apiObject.SourceItemsLimit)
+	}
+	if apiObject.WeightSort != nil {
+		tfMap["weight_sort"] = flattenFieldSortOptions(apiObject.WeightSort)
+	}
+
+	return []interface{}{tfMap}
+}
