@@ -124,6 +124,8 @@ func TestAccConnect_serial(t *testing.T) {
 			"phoneConfig":        testAccUser_updatePhoneConfig,
 			"routingProfileId":   testAccUser_updateRoutingProfileId,
 			"securityProfileIds": testAccUser_updateSecurityProfileIds,
+			"dataSource_id":      testAccUserDataSource_userID,
+			"dataSource_name":    testAccUserDataSource_name,
 		},
 		"UserHierarchyGroup": {
 			"basic":           testAccUserHierarchyGroup_basic,

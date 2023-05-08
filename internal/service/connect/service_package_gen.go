@@ -70,6 +70,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_connect_security_profile",
 		},
 		{
+			Factory:  DataSourceUser,
+			TypeName: "aws_connect_user",
+		},
+		{
 			Factory:  DataSourceUserHierarchyGroup,
 			TypeName: "aws_connect_user_hierarchy_group",
 		},
