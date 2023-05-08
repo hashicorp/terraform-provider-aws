@@ -21,3 +21,18 @@ func suppressOpenIDURL(k, old, new string, d *schema.ResourceData) bool {
 
 	return oldUrl.String() == newUrl.String()
 }
+
+func suppressOpenIDClientList(k, old, new string, d *schema.ResourceData) bool {
+	if d.GetRawState().IsNull() {
+		return false
+	}
+
+	clientIdList := d.GetRawState().AsValueMap()["client_id_list"].AsValueSlice()
+
+	for _, clientId := range clientIdList {
+		if clientId.AsString() == new {
+			return true
+		}
+	}
+	return false
+}

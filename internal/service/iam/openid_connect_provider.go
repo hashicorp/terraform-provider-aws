@@ -44,6 +44,7 @@ func ResourceOpenIDConnectProvider() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: validation.StringLenBetween(1, 255),
 				},
+				DiffSuppressFunc: suppressOpenIDClientList,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
