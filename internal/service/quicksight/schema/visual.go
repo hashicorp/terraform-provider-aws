@@ -1451,17 +1451,6 @@ func flattenVisuals(apiObject []*quicksight.Visual) []interface{} {
 	return tfList
 }
 
-func flattenWordCloudVisual(apiObject *quicksight.WordCloudVisual) []interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-	// TODO
-
-	return []interface{}{tfMap}
-}
-
 func flattenDataLabelOptions(apiObject *quicksight.DataLabelOptions) []interface{} {
 	if apiObject == nil {
 		return nil

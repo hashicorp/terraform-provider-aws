@@ -244,3 +244,125 @@ func expandWordCloudOptions(tfList []interface{}) *quicksight.WordCloudOptions {
 
 	return options
 }
+
+func flattenWordCloudVisual(apiObject *quicksight.WordCloudVisual) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"visual_id": aws.StringValue(apiObject.VisualId),
+	}
+	if apiObject.Actions != nil {
+		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
+	}
+	if apiObject.ChartConfiguration != nil {
+		tfMap["chart_configuration"] = flattenWordCloudChartConfiguration(apiObject.ChartConfiguration)
+	}
+	if apiObject.ColumnHierarchies != nil {
+		tfMap["column_hierarchies"] = flattenColumnHierarchy(apiObject.ColumnHierarchies)
+	}
+	if apiObject.Subtitle != nil {
+		tfMap["subtitle"] = flattenVisualSubtitleLabelOptions(apiObject.Subtitle)
+	}
+	if apiObject.Title != nil {
+		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenWordCloudChartConfiguration(apiObject *quicksight.WordCloudChartConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CategoryLabelOptions != nil {
+		tfMap["category_label_options"] = flattenChartAxisLabelOptions(apiObject.CategoryLabelOptions)
+	}
+	if apiObject.FieldWells != nil {
+		tfMap["field_wells"] = flattenWordCloudFieldWells(apiObject.FieldWells)
+	}
+	if apiObject.SortConfiguration != nil {
+		tfMap["sort_configuration"] = flattenWordCloudSortConfiguration(apiObject.SortConfiguration)
+	}
+	if apiObject.WordCloudOptions != nil {
+		tfMap["word_cloud_options"] = flattenWordCloudOptions(apiObject.WordCloudOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenWordCloudFieldWells(apiObject *quicksight.WordCloudFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.WordCloudAggregatedFieldWells != nil {
+		tfMap["word_cloud_aggregated_field_wells"] = flattenWordCloudAggregatedFieldWells(apiObject.WordCloudAggregatedFieldWells)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenWordCloudAggregatedFieldWells(apiObject *quicksight.WordCloudAggregatedFieldWells) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.GroupBy != nil {
+		tfMap["group_by"] = flattenDimensionFields(apiObject.GroupBy)
+	}
+	if apiObject.Size != nil {
+		tfMap["size"] = flattenMeasureFields(apiObject.Size)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenWordCloudSortConfiguration(apiObject *quicksight.WordCloudSortConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CategoryItemsLimit != nil {
+		tfMap["category_items_limit"] = flattenItemsLimitConfiguration(apiObject.CategoryItemsLimit)
+	}
+	if apiObject.CategorySort != nil {
+		tfMap["category_sort"] = flattenFieldSortOptions(apiObject.CategorySort)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenWordCloudOptions(apiObject *quicksight.WordCloudOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.CloudLayout != nil {
+		tfMap["cloud_layout"] = aws.StringValue(apiObject.CloudLayout)
+	}
+	if apiObject.MaximumStringLength != nil {
+		tfMap["maximum_string_length"] = aws.Int64Value(apiObject.MaximumStringLength)
+	}
+	if apiObject.WordCasing != nil {
+		tfMap["word_casing"] = aws.StringValue(apiObject.WordCasing)
+	}
+	if apiObject.WordOrientation != nil {
+		tfMap["work_orientation"] = aws.StringValue(apiObject.WordOrientation)
+	}
+	if apiObject.WordPadding != nil {
+		tfMap["word_padding"] = aws.StringValue(apiObject.WordPadding)
+	}
+	if apiObject.WordScaling != nil {
+		tfMap["word_scaling"] = aws.StringValue(apiObject.WordScaling)
+	}
+
+	return []interface{}{tfMap}
+}
