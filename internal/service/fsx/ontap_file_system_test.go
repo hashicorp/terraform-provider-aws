@@ -288,7 +288,7 @@ func TestAccFSxOntapFileSystem_routeTableIDs(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test[0]", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.0", "id"),
 				),
 			},
 			{
@@ -302,8 +302,8 @@ func TestAccFSxOntapFileSystem_routeTableIDs(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "2"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test[0]", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test[1]", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.0", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.1", "id"),
 				),
 			},
 			{
