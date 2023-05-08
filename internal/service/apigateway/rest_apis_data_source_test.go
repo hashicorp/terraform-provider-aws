@@ -13,6 +13,7 @@ import (
 )
 
 func TestAccAPIGatewayRestAPIsDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_api_gateway_rest_apis.test"
 
