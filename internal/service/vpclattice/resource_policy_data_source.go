@@ -30,6 +30,7 @@ func DataSourceResourcePolicy() *schema.Resource {
 			"policy": {
 				Type:     schema.TypeString,
 				Computed: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -61,12 +62,12 @@ func dataSourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, m
 	p, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.ToString(out.Policy))
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionSetting, DSNameAuthPolicy, d.Id(), err)
+		return create.DiagError(names.VPCLattice, create.ErrActionSetting, DSNameResourcePolicy, d.Id(), err)
 	}
 
 	p, err = structure.NormalizeJsonString(p)
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, DSNameAuthPolicy, d.Id(), err)
+		return create.DiagError(names.VPCLattice, create.ErrActionReading, DSNameResourcePolicy, d.Id(), err)
 	}
 
 	d.Set("policy", p)
