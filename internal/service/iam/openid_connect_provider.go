@@ -37,14 +37,13 @@ func ResourceOpenIDConnectProvider() *schema.Resource {
 				Computed: true,
 			},
 			"client_id_list": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validation.StringLenBetween(1, 255),
 				},
-				DiffSuppressFunc: suppressOpenIDClientList,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
