@@ -903,8 +903,8 @@ func expandRelativeDatesFilter(tfList []interface{}) *quicksight.RelativeDatesFi
 	if v, ok := tfMap["parameter_name"].(string); ok && v != "" {
 		filter.ParameterName = aws.String(v)
 	}
-	if v, ok := tfMap["relative_date_value"].(int64); ok {
-		filter.RelativeDateValue = aws.Int64(v)
+	if v, ok := tfMap["relative_date_value"].(int); ok {
+		filter.RelativeDateValue = aws.Int64(int64(v))
 	}
 	if v, ok := tfMap["anchor_date_configuration"].([]interface{}); ok && len(v) > 0 {
 		filter.AnchorDateConfiguration = expandAnchorDateConfiguration(v)
@@ -950,8 +950,8 @@ func expandExcludePeriodConfiguration(tfList []interface{}) *quicksight.ExcludeP
 
 	config := &quicksight.ExcludePeriodConfiguration{}
 
-	if v, ok := tfMap["amount"].(int64); ok {
-		config.Amount = aws.Int64(v)
+	if v, ok := tfMap["amount"].(int); ok {
+		config.Amount = aws.Int64(int64(v))
 	}
 	if v, ok := tfMap["granularity"].(string); ok && v != "" {
 		config.Granularity = aws.String(v)
@@ -1082,8 +1082,8 @@ func expandTopBottomFilter(tfList []interface{}) *quicksight.TopBottomFilter {
 	if v, ok := tfMap["column"].([]interface{}); ok && len(v) > 0 {
 		filter.Column = expandColumnIdentifier(v)
 	}
-	if v, ok := tfMap["limit"].(int64); ok {
-		filter.Limit = aws.Int64(v)
+	if v, ok := tfMap["limit"].(int); ok {
+		filter.Limit = aws.Int64(int64(v))
 	}
 	if v, ok := tfMap["parameter_name"].(string); ok && v != "" {
 		filter.ParameterName = aws.String(v)

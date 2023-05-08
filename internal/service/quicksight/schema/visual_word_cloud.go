@@ -226,8 +226,8 @@ func expandWordCloudOptions(tfList []interface{}) *quicksight.WordCloudOptions {
 	if v, ok := tfMap["cloud_layout"].(string); ok && v != "" {
 		options.CloudLayout = aws.String(v)
 	}
-	if v, ok := tfMap["maximum_string_length"].(int64); ok {
-		options.MaximumStringLength = aws.Int64(v)
+	if v, ok := tfMap["maximum_string_length"].(int); ok {
+		options.MaximumStringLength = aws.Int64(int64(v))
 	}
 	if v, ok := tfMap["word_casing"].(string); ok && v != "" {
 		options.WordCasing = aws.String(v)

@@ -260,8 +260,8 @@ func expandBinCountOptions(tfList []interface{}) *quicksight.BinCountOptions {
 
 	options := &quicksight.BinCountOptions{}
 
-	if v, ok := tfMap["value"].(int64); ok {
-		options.Value = aws.Int64(v)
+	if v, ok := tfMap["value"].(int); ok {
+		options.Value = aws.Int64(int64(v))
 	}
 
 	return options
@@ -279,8 +279,8 @@ func expandBinWidthOptions(tfList []interface{}) *quicksight.BinWidthOptions {
 
 	options := &quicksight.BinWidthOptions{}
 
-	if v, ok := tfMap["bin_count_limit"].(int64); ok {
-		options.BinCountLimit = aws.Int64(v)
+	if v, ok := tfMap["bin_count_limit"].(int); ok {
+		options.BinCountLimit = aws.Int64(int64(v))
 	}
 	if v, ok := tfMap["value"].(float64); ok {
 		options.Value = aws.Float64(v)

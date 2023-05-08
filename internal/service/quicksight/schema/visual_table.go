@@ -1300,6 +1300,9 @@ func flattenTableSortConfiguration(apiObject *quicksight.TableSortConfiguration)
 	if apiObject.PaginationConfiguration != nil {
 		tfMap["pagination_configuration"] = flattenPaginationConfiguration(apiObject.PaginationConfiguration)
 	}
+	if apiObject.RowSort != nil {
+		tfMap["row_sort"] = flattenFieldSortOptions(apiObject.RowSort)
+	}
 
 	return []interface{}{tfMap}
 }

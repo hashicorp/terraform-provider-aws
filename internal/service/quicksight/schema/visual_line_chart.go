@@ -252,10 +252,11 @@ func lineChartVisualSchema() *schema.Schema {
 							},
 							"small_multiples_options": smallMultiplesOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SmallMultiplesOptions.html
 							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartSortConfiguration.html
-								Type:     schema.TypeList,
-								Optional: true,
-								MinItems: 1,
-								MaxItems: 1,
+								Type:             schema.TypeList,
+								Optional:         true,
+								MinItems:         1,
+								MaxItems:         1,
+								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"category_items_limit_configuration":  itemsLimitConfigurationSchema(),                     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
@@ -265,7 +266,6 @@ func lineChartVisualSchema() *schema.Schema {
 										"small_multiples_sort":                fieldSortOptionsSchema(fieldSortOptionsMaxItems100), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
 									},
 								},
-								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 							},
 							"tooltip":                tooltipOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
 							"type":                   stringOptionalComputedSchema(validation.StringInSlice(quicksight.LineChartType_Values(), false)),
@@ -644,17 +644,17 @@ func expandTimeBasedForecastProperties(tfList []interface{}) *quicksight.TimeBas
 	if v, ok := tfMap["lower_boundary"].(float64); ok {
 		options.LowerBoundary = aws.Float64(v)
 	}
-	if v, ok := tfMap["periods_backward"].(int64); ok {
-		options.PeriodsBackward = aws.Int64(v)
+	if v, ok := tfMap["periods_backward"].(int); ok {
+		options.PeriodsBackward = aws.Int64(int64(v))
 	}
-	if v, ok := tfMap["periods_forward"].(int64); ok {
-		options.PeriodsForward = aws.Int64(v)
+	if v, ok := tfMap["periods_forward"].(int); ok {
+		options.PeriodsForward = aws.Int64(int64(v))
 	}
-	if v, ok := tfMap["prediction_interval"].(int64); ok {
-		options.PredictionInterval = aws.Int64(v)
+	if v, ok := tfMap["prediction_interval"].(int); ok {
+		options.PredictionInterval = aws.Int64(int64(v))
 	}
-	if v, ok := tfMap["seasonality"].(int64); ok {
-		options.Seasonality = aws.Int64(v)
+	if v, ok := tfMap["seasonality"].(int); ok {
+		options.Seasonality = aws.Int64(int64(v))
 	}
 	if v, ok := tfMap["upper_boundary"].(float64); ok {
 		options.UpperBoundary = aws.Float64(v)

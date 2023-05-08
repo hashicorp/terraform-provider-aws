@@ -324,11 +324,11 @@ func expandPaginationConfiguration(tfList []interface{}) *quicksight.PaginationC
 
 	config := &quicksight.PaginationConfiguration{}
 
-	if v, ok := tfMap["page_number"].(int64); ok {
-		config.PageNumber = aws.Int64(v)
+	if v, ok := tfMap["page_number"].(int); ok {
+		config.PageNumber = aws.Int64(int64(v))
 	}
-	if v, ok := tfMap["page_size"].(int64); ok {
-		config.PageSize = aws.Int64(v)
+	if v, ok := tfMap["page_size"].(int); ok {
+		config.PageSize = aws.Int64(int64(v))
 	}
 
 	return config

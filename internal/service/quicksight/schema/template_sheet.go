@@ -322,6 +322,7 @@ func gridLayoutConfigurationSchema() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GridLayoutConfiguration.html
 		Type:     schema.TypeList,
 		Optional: true,
+		Computed: true,
 		MinItems: 1,
 		MaxItems: 1,
 		Elem: &schema.Resource{
@@ -1269,17 +1270,17 @@ func expandGridLayoutElement(tfMap map[string]interface{}) *quicksight.GridLayou
 	if v, ok := tfMap["element_type"].(string); ok && v != "" {
 		layout.ElementType = aws.String(v)
 	}
-	if v, ok := tfMap["column_span"].(int64); ok {
-		layout.ColumnSpan = aws.Int64(v)
+	if v, ok := tfMap["column_span"].(int); ok {
+		layout.ColumnSpan = aws.Int64(int64(v))
 	}
-	if v, ok := tfMap["row_span"].(int64); ok {
-		layout.RowSpan = aws.Int64(v)
+	if v, ok := tfMap["row_span"].(int); ok {
+		layout.RowSpan = aws.Int64(int64(v))
 	}
-	if v, ok := tfMap["column_index"].(int64); ok {
-		layout.ColumnIndex = aws.Int64(v)
+	if v, ok := tfMap["column_index"].(int); ok {
+		layout.ColumnIndex = aws.Int64(int64(v))
 	}
-	if v, ok := tfMap["row_index"].(int64); ok {
-		layout.RowIndex = aws.Int64(v)
+	if v, ok := tfMap["row_index"].(int); ok {
+		layout.RowIndex = aws.Int64(int64(v))
 	}
 
 	return layout

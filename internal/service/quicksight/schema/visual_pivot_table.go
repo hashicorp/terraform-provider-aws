@@ -805,8 +805,8 @@ func expandTableCellStyle(tfList []interface{}) *quicksight.TableCellStyle {
 	if v, ok := tfMap["background_color"].(string); ok && v != "" {
 		style.BackgroundColor = aws.String(v)
 	}
-	if v, ok := tfMap["height"].(int64); ok {
-		style.Height = aws.Int64(v)
+	if v, ok := tfMap["height"].(int); ok {
+		style.Height = aws.Int64(int64(v))
 	}
 	if v, ok := tfMap["horizontal_text_alignment"].(string); ok && v != "" {
 		style.HorizontalTextAlignment = aws.String(v)
@@ -904,8 +904,8 @@ func expandTableBorderOptions(tfList []interface{}) *quicksight.TableBorderOptio
 	if v, ok := tfMap["style"].(string); ok && v != "" {
 		options.Style = aws.String(v)
 	}
-	if v, ok := tfMap["thickness"].(int64); ok {
-		options.Thickness = aws.Int64(v)
+	if v, ok := tfMap["thickness"].(int); ok {
+		options.Thickness = aws.Int64(int64(v))
 	}
 
 	return options

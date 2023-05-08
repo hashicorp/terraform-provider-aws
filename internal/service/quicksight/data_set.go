@@ -1681,8 +1681,8 @@ func expandDataSetUploadSettings(tfMap map[string]interface{}) *quicksight.Uploa
 	if v, ok := tfMap["format"].(string); ok {
 		uploadSettings.Format = aws.String(v)
 	}
-	if v, ok := tfMap["start_from_row"].(int64); ok {
-		uploadSettings.StartFromRow = aws.Int64(v)
+	if v, ok := tfMap["start_from_row"].(int); ok {
+		uploadSettings.StartFromRow = aws.Int64(int64(v))
 	}
 	if v, ok := tfMap["text_qualifier"].(string); ok {
 		uploadSettings.TextQualifier = aws.String(v)

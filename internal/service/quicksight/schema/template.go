@@ -15,6 +15,7 @@ func DefinitionSchema() *schema.Schema {
 		Type:     schema.TypeList,
 		MaxItems: 1,
 		Optional: true,
+		Computed: true,
 		ExactlyOneOf: []string{
 			"definition",
 			"source_entity",

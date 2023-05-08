@@ -382,8 +382,8 @@ func expandForecastComputation(tfList []interface{}) *quicksight.ForecastComputa
 	if v, ok := tfMap["computation_id"].(string); ok && v != "" {
 		computation.ComputationId = aws.String(v)
 	}
-	if v, ok := tfMap["custom_seasonality_value"].(int64); ok {
-		computation.CustomSeasonalityValue = aws.Int64(v)
+	if v, ok := tfMap["custom_seasonality_value"].(int); ok {
+		computation.CustomSeasonalityValue = aws.Int64(int64(v))
 	}
 	if v, ok := tfMap["lower_boundary"].(float64); ok {
 		computation.LowerBoundary = aws.Float64(v)
@@ -391,14 +391,14 @@ func expandForecastComputation(tfList []interface{}) *quicksight.ForecastComputa
 	if v, ok := tfMap["name"].(string); ok && v != "" {
 		computation.Name = aws.String(v)
 	}
-	if v, ok := tfMap["periods_backward"].(int64); ok {
-		computation.PeriodsBackward = aws.Int64(v)
+	if v, ok := tfMap["periods_backward"].(int); ok {
+		computation.PeriodsBackward = aws.Int64(int64(v))
 	}
-	if v, ok := tfMap["periods_forward"].(int64); ok {
-		computation.PeriodsForward = aws.Int64(v)
+	if v, ok := tfMap["periods_forward"].(int); ok {
+		computation.PeriodsForward = aws.Int64(int64(v))
 	}
-	if v, ok := tfMap["prediction_interval"].(int64); ok {
-		computation.PredictionInterval = aws.Int64(v)
+	if v, ok := tfMap["prediction_interval"].(int); ok {
+		computation.PredictionInterval = aws.Int64(int64(v))
 	}
 	if v, ok := tfMap["seasonality"].(string); ok && v != "" {
 		computation.Seasonality = aws.String(v)
@@ -434,8 +434,8 @@ func expandGrowthRateComputation(tfList []interface{}) *quicksight.GrowthRateCom
 	if v, ok := tfMap["name"].(string); ok && v != "" {
 		computation.Name = aws.String(v)
 	}
-	if v, ok := tfMap["period_size"].(int64); ok {
-		computation.PeriodSize = aws.Int64(v)
+	if v, ok := tfMap["period_size"].(int); ok {
+		computation.PeriodSize = aws.Int64(int64(v))
 	}
 	if v, ok := tfMap["time"].([]interface{}); ok && len(v) > 0 {
 		computation.Time = expandDimensionField(v)
@@ -592,8 +592,8 @@ func expandTopBottomMoversComputation(tfList []interface{}) *quicksight.TopBotto
 	if v, ok := tfMap["type"].(string); ok && v != "" {
 		computation.Type = aws.String(v)
 	}
-	if v, ok := tfMap["mover_size"].(int64); ok {
-		computation.MoverSize = aws.Int64(v)
+	if v, ok := tfMap["mover_size"].(int); ok {
+		computation.MoverSize = aws.Int64(int64(v))
 	}
 	if v, ok := tfMap["category"].([]interface{}); ok && len(v) > 0 {
 		computation.Category = expandDimensionField(v)
@@ -629,8 +629,8 @@ func expandTopBottomRankedComputation(tfList []interface{}) *quicksight.TopBotto
 	if v, ok := tfMap["type"].(string); ok && v != "" {
 		computation.Type = aws.String(v)
 	}
-	if v, ok := tfMap["result_size"].(int64); ok {
-		computation.ResultSize = aws.Int64(v)
+	if v, ok := tfMap["result_size"].(int); ok {
+		computation.ResultSize = aws.Int64(int64(v))
 	}
 	if v, ok := tfMap["category"].([]interface{}); ok && len(v) > 0 {
 		computation.Category = expandDimensionField(v)

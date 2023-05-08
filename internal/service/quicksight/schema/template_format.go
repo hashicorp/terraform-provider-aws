@@ -411,8 +411,8 @@ func expandDecimalPlacesConfiguration(tfList []interface{}) *quicksight.DecimalP
 
 	config := &quicksight.DecimalPlacesConfiguration{}
 
-	if v, ok := tfMap["decimal_places"].(int64); ok {
-		config.DecimalPlaces = aws.Int64(v)
+	if v, ok := tfMap["decimal_places"].(int); ok {
+		config.DecimalPlaces = aws.Int64(int64(v))
 	}
 
 	return config

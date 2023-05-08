@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func barCharVisualSchema() *schema.Schema {
@@ -24,7 +25,7 @@ func barCharVisualSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"bars_arrangement":               stringSchema(false, validation.StringInSlice(quicksight.BarsArrangement_Values(), false)),
+							"bars_arrangement":               stringOptionalComputedSchema(validation.StringInSlice(quicksight.BarsArrangement_Values(), false)),
 							"category_axis":                  axisDisplayOptionsSchema(),           // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
 							"category_label_options":         chartAxisLabelOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
 							"color_label_options":            chartAxisLabelOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
@@ -55,14 +56,15 @@ func barCharVisualSchema() *schema.Schema {
 								},
 							},
 							"legend":                  legendOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
-							"orientation":             stringSchema(false, validation.StringInSlice(quicksight.BarChartOrientation_Values(), false)),
+							"orientation":             stringOptionalComputedSchema(validation.StringInSlice(quicksight.BarChartOrientation_Values(), false)),
 							"reference_lines":         referenceLineSchema(referenceLinesMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLine.html
 							"small_multiples_options": smallMultiplesOptionsSchema(),               // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SmallMultiplesOptions.html
 							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BarChartSortConfiguration.html
-								Type:     schema.TypeList,
-								Optional: true,
-								MinItems: 1,
-								MaxItems: 1,
+								Type:             schema.TypeList,
+								Optional:         true,
+								MinItems:         1,
+								MaxItems:         1,
+								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"category_items_limit":                itemsLimitConfigurationSchema(),                     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html

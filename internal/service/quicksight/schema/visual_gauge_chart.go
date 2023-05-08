@@ -407,8 +407,8 @@ func expandArcAxisConfiguration(tfList []interface{}) *quicksight.ArcAxisConfigu
 	if v, ok := tfMap["range"].([]interface{}); ok && len(v) > 0 {
 		config.Range = expandArcAxisDisplayRange(v)
 	}
-	if v, ok := tfMap["reserve_range"].(int64); ok {
-		config.ReserveRange = aws.Int64(v)
+	if v, ok := tfMap["reserve_range"].(int); ok {
+		config.ReserveRange = aws.Int64(int64(v))
 	}
 
 	return config

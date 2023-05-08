@@ -623,8 +623,8 @@ func expandIntegerValueWhenUnsetConfiguration(tfList []interface{}) *quicksight.
 
 	config := &quicksight.IntegerValueWhenUnsetConfiguration{}
 
-	if v, ok := tfMap["custom_value"].(int64); ok {
-		config.CustomValue = aws.Int64(v)
+	if v, ok := tfMap["custom_value"].(int); ok {
+		config.CustomValue = aws.Int64(int64(v))
 	}
 	if v, ok := tfMap["value_when_unset_option"].(string); ok && v != "" {
 		config.ValueWhenUnsetOption = aws.String(v)

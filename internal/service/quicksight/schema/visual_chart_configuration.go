@@ -623,8 +623,8 @@ func expandAxisLinearScale(tfList []interface{}) *quicksight.AxisLinearScale {
 
 	options := &quicksight.AxisLinearScale{}
 
-	if v, ok := tfMap["step_count"].(int64); ok {
-		options.StepCount = aws.Int64(v)
+	if v, ok := tfMap["step_count"].(int); ok {
+		options.StepCount = aws.Int64(int64(v))
 	}
 	if v, ok := tfMap["step_size"].(float64); ok {
 		options.StepSize = aws.Float64(v)
@@ -1091,11 +1091,11 @@ func expandSmallMultiplesOptions(tfList []interface{}) *quicksight.SmallMultiple
 
 	options := &quicksight.SmallMultiplesOptions{}
 
-	if v, ok := tfMap["max_visible_columns"].(int64); ok {
-		options.MaxVisibleColumns = aws.Int64(v)
+	if v, ok := tfMap["max_visible_columns"].(int); ok {
+		options.MaxVisibleColumns = aws.Int64(int64(v))
 	}
-	if v, ok := tfMap["max_visible_rows"].(int64); ok {
-		options.MaxVisibleRows = aws.Int64(v)
+	if v, ok := tfMap["max_visible_rows"].(int); ok {
+		options.MaxVisibleRows = aws.Int64(int64(v))
 	}
 	if v, ok := tfMap["panel_configuration"].([]interface{}); ok && len(v) > 0 {
 		options.PanelConfiguration = expandPanelConfiguration(v)
@@ -1184,8 +1184,8 @@ func expandItemsLimitConfiguration(tfList []interface{}) *quicksight.ItemsLimitC
 
 	config := &quicksight.ItemsLimitConfiguration{}
 
-	if v, ok := tfMap["items_limit"].(int64); ok {
-		config.ItemsLimit = aws.Int64(v)
+	if v, ok := tfMap["items_limit"].(int); ok {
+		config.ItemsLimit = aws.Int64(int64(v))
 	}
 	if v, ok := tfMap["other_categories"].(string); ok && v != "" {
 		config.OtherCategories = aws.String(v)
