@@ -113,6 +113,10 @@ func DataSourceCertificateAuthority() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"key_storage_security_standard": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"usage_mode": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -152,6 +156,7 @@ func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceD
 	d.Set("serial", certificateAuthority.Serial)
 	d.Set("status", certificateAuthority.Status)
 	d.Set("type", certificateAuthority.Type)
+	d.Set("key_storage_security_standard", certificateAuthority.KeyStorageSecurityStandard)
 	d.Set("usage_mode", certificateAuthority.UsageMode)
 
 	getCertificateAuthorityCertificateInput := &acmpca.GetCertificateAuthorityCertificateInput{

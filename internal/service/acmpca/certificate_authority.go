@@ -335,6 +335,13 @@ func ResourceCertificateAuthority() *schema.Resource {
 				Default:      acmpca.CertificateAuthorityTypeSubordinate,
 				ValidateFunc: validation.StringInSlice(acmpca.CertificateAuthorityType_Values(), false),
 			},
+			"key_storage_security_standard": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      acmpca.KeyStorageSecurityStandardFips1402Level3OrHigher,
+				ValidateFunc: validation.StringInSlice(acmpca.KeyStorageSecurityStandard_Values(), false),
+			},
 			"usage_mode": {
 				Type:         schema.TypeString,
 				Computed:     true,
@@ -355,6 +362,7 @@ func resourceCertificateAuthorityCreate(ctx context.Context, d *schema.ResourceD
 		CertificateAuthorityConfiguration: expandCertificateAuthorityConfiguration(d.Get("certificate_authority_configuration").([]interface{})),
 		CertificateAuthorityType:          aws.String(d.Get("type").(string)),
 		IdempotencyToken:                  aws.String(id.UniqueId()),
+		KeyStorageSecurityStandard:        aws.String(d.Get("key_storage_security_standard").(string)),
 		RevocationConfiguration:           expandRevocationConfiguration(d.Get("revocation_configuration").([]interface{})),
 		Tags:                              GetTagsIn(ctx),
 	}
@@ -410,6 +418,7 @@ func resourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("serial", certificateAuthority.Serial)
 	d.Set("status", certificateAuthority.Status)
 	d.Set("type", certificateAuthority.Type)
+	d.Set("key_storage_security_standard", certificateAuthority.KeyStorageSecurityStandard)
 	d.Set("usage_mode", certificateAuthority.UsageMode)
 
 	getCertificateAuthorityCertificateInput := &acmpca.GetCertificateAuthorityCertificateInput{
