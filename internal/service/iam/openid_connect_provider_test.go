@@ -283,9 +283,9 @@ resource "aws_iam_openid_connect_provider" "test" {
   url = "https://accounts.testle.com/%s"
 
   client_id_list = [
-	"abc.testle.com",
-	"def.testle.com",
-	"ghi.testle.com",
+    "abc.testle.com",
+    "def.testle.com",
+    "ghi.testle.com",
 	]
 
   thumbprint_list = ["oif8192f189fa2178f-testle.thumbprint.com"]
