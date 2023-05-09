@@ -4,14 +4,13 @@ import (
 	"context"
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -23,6 +22,19 @@ func tagsUpdateFunc(ctx context.Context, d schemaResourceData, sp conns.ServiceP
 
 	tagsInContext, ok := tftags.FromContext(ctx)
 	if !ok {
+		return ctx, diags
+	}
+
+	var identifier string
+	if identifierAttribute := spt.IdentifierAttribute; identifierAttribute == "id" {
+		identifier = d.Id()
+	} else {
+		identifier = d.Get(identifierAttribute).(string)
+	}
+
+	// Some old resources may not have the required attribute set after Read:
+	// https://github.com/hashicorp/terraform-provider-aws/issues/31180
+	if identifier == "" {
 		return ctx, diags
 	}
 
@@ -54,12 +66,6 @@ func tagsUpdateFunc(ctx context.Context, d schemaResourceData, sp conns.ServiceP
 	toAdd := configAll.Difference(tagsAll)
 	toRemove := tagsAll.Difference(configAll)
 
-	var identifier string
-	if identifierAttribute := spt.IdentifierAttribute; identifierAttribute == "id" {
-		identifier = d.Id()
-	} else {
-		identifier = d.Get(identifierAttribute).(string)
-	}
 	// If the service package has a generic resource update tags methods, call it.
 	var err error
 
@@ -73,13 +79,8 @@ func tagsUpdateFunc(ctx context.Context, d schemaResourceData, sp conns.ServiceP
 		err = v.UpdateTags(ctx, meta, identifier, spt.ResourceType, toRemove, toAdd)
 	}
 
-	if verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
-		// ISO partitions may not support tagging, giving error
-		tflog.Warn(ctx, "failed updating tags for resource", map[string]interface{}{
-			spt.IdentifierAttribute: identifier,
-			"error":                 err.Error(),
-		})
-
+	// ISO partitions may not support tagging, giving error.
+	if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
 		return ctx, diags
 	}
 
@@ -107,35 +108,36 @@ func tagsReadFunc(ctx context.Context, d schemaResourceData, sp conns.ServicePac
 		identifier = d.Get(identifierAttribute).(string)
 	}
 
-	var err error
-	if v, ok := sp.(interface {
-		ListTags(context.Context, any, string) error
-	}); ok {
-		err = v.ListTags(ctx, meta, identifier) // Sets tags in Context
-	} else if v, ok := sp.(interface {
-		ListTags(context.Context, any, string, string) error
-	}); ok && spt.ResourceType != "" {
-		err = v.ListTags(ctx, meta, identifier, spt.ResourceType) // Sets tags in Context
-	}
+	// Some old resources may not have the required attribute set after Read:
+	// https://github.com/hashicorp/terraform-provider-aws/issues/31180
+	if identifier != "" {
+		var err error
 
-	if verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
-		// ISO partitions may not support tagging, giving error
-		tflog.Warn(ctx, "failed listing tags for resource", map[string]interface{}{
-			spt.IdentifierAttribute: d.Id(),
-			"error":                 err.Error(),
-		})
-		return ctx, diags
-	}
-
-	if inContext.ServicePackageName == names.DynamoDB && err != nil {
-		// When a DynamoDB Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`.
-		if tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
-			err = nil
+		if v, ok := sp.(interface {
+			ListTags(context.Context, any, string) error
+		}); ok {
+			err = v.ListTags(ctx, meta, identifier) // Sets tags in Context
+		} else if v, ok := sp.(interface {
+			ListTags(context.Context, any, string, string) error
+		}); ok && spt.ResourceType != "" {
+			err = v.ListTags(ctx, meta, identifier, spt.ResourceType) // Sets tags in Context
 		}
-	}
 
-	if err != nil {
-		return ctx, sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
+		// ISO partitions may not support tagging, giving error.
+		if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+			return ctx, diags
+		}
+
+		if inContext.ServicePackageName == names.DynamoDB && err != nil {
+			// When a DynamoDB Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`.
+			if tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
+				err = nil
+			}
+		}
+
+		if err != nil {
+			return ctx, sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
+		}
 	}
 
 	// Remove any provider configured ignore_tags and system tags from those returned from the service API.
