@@ -1072,7 +1072,8 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("server_side_encryption") {
-		if replicas := d.Get("replica").(*schema.Set); replicas.Len() > 0 {
+		KMSMasterKeyId := expandEncryptAtRestOptions(d.Get("server_side_encryption").([]interface{})).KMSMasterKeyId
+		if replicas := d.Get("replica").(*schema.Set); replicas.Len() > 0 && KMSMasterKeyId != nil {
 			log.Printf("[DEBUG] Using SSE update on replicas")
 			var replicaInputs []awstypes.ReplicationGroupUpdate
 			var replicaRegions []string
