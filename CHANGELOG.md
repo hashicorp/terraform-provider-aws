@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_connect_user` ([#26156](https://github.com/hashicorp/terraform-provider-aws/issues/26156))
+* **New Data Source:** `aws_connect_vocabulary` ([#26158](https://github.com/hashicorp/terraform-provider-aws/issues/26158))
 * **New Data Source:** `aws_organizations_policy` ([#30920](https://github.com/hashicorp/terraform-provider-aws/issues/30920))
 * **New Data Source:** `aws_redshiftserverless_namespace` ([#31250](https://github.com/hashicorp/terraform-provider-aws/issues/31250))
 
@@ -17,6 +18,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_appintegrations_data_integration: Correctly read `tags` into state ([#31241](https://github.com/hashicorp/terraform-provider-aws/issues/31241))
+* resource/aws_iam_openid_connect_provider: Change `client_id_list` from `TypeList` to `TypeSet` as order is not significant ([#31253](https://github.com/hashicorp/terraform-provider-aws/issues/31253))
 
 ## 4.66.1 (May  5, 2023)
 
