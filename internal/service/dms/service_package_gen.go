@@ -38,6 +38,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_dms_replication_subnet_group",
 		},
 		{
+			Factory:  DataSourceReplicationSubnetGroups,
+			TypeName: "aws_dms_replication_subnet_groups",
+		},
+		{
 			Factory:  DataSourceReplicationTask,
 			TypeName: "aws_dms_replication_task",
 		},

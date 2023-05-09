@@ -13,6 +13,7 @@ import (
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
+	databasemigrationservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -346,6 +347,7 @@ type AWSClient struct {
 
 	httpClient *http.Client
 
+	dmsClient       lazyClient[*databasemigrationservice_sdkv2.Client]
 	dsClient        lazyClient[*directoryservice_sdkv2.Client]
 	ec2Client       lazyClient[*ec2_sdkv2.Client]
 	lambdaClient    lazyClient[*lambda_sdkv2.Client]
@@ -976,6 +978,10 @@ func (client *AWSClient) DLMConn() *dlm.DLM {
 
 func (client *AWSClient) DMSConn() *databasemigrationservice.DatabaseMigrationService {
 	return client.dmsConn
+}
+
+func (client *AWSClient) DMSClient() *databasemigrationservice_sdkv2.Client {
+	return client.dmsClient.Client()
 }
 
 func (client *AWSClient) DRSConn() *drs.Drs {

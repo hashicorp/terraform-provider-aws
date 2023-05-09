@@ -12,6 +12,7 @@ import (
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
+	databasemigrationservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -761,6 +762,14 @@ func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
 
 // sdkv2LazyConns initializes AWS SDK for Go v2 lazy-load clients.
 func (c *Config) sdkv2LazyConns(client *AWSClient, cfg aws_sdkv2.Config) {
+	client.dmsClient.init(&cfg, func() *databasemigrationservice_sdkv2.Client {
+		return databasemigrationservice_sdkv2.NewFromConfig(cfg, func(o *databasemigrationservice_sdkv2.Options) {
+			if endpoint := c.Endpoints[names.DMS]; endpoint != "" {
+				o.EndpointResolver = databasemigrationservice_sdkv2.EndpointResolverFromURL(endpoint)
+			}
+		})
+	})
+
 	client.dsClient.init(&cfg, func() *directoryservice_sdkv2.Client {
 		return directoryservice_sdkv2.NewFromConfig(cfg, func(o *directoryservice_sdkv2.Options) {
 			if endpoint := c.Endpoints[names.DS]; endpoint != "" {
