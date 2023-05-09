@@ -47,6 +47,8 @@ github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.19.12 h1:4jgaIiXEPwMogu89
 github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.19.12/go.mod h1:05NIzmwCjR1k1Hhx3RPSkKFRdO9AyHuEJCEgTZG8Ta4=
 github.com/aws/aws-sdk-go-v2/service/account v1.10.6 h1:u1B79rnwVrbXUvPXHz42GYq29/U/5TV/H6Fb5Ie4leM=
 github.com/aws/aws-sdk-go-v2/service/account v1.10.6/go.mod h1:sxLUXrqYXCfOBPBBk0azv+UOoFsnrQ9G1ZcICrb9O+0=
+github.com/aws/aws-sdk-go-v2/service/acm v1.17.11 h1:n/iAVMTf0VN8m0APSXKlTIFnpumXCrZNUiiVHb74z+w=
+github.com/aws/aws-sdk-go-v2/service/acm v1.17.11/go.mod h1:DPf8lxAWIM/y21N36FGUUoG7KH5dzW20sk/l1yGsLt8=
 github.com/aws/aws-sdk-go-v2/service/auditmanager v1.24.7 h1:QKbTGDu2xnH4YVN9soA2V4PJqbbv7lp5rXgSgw1u/nc=
 github.com/aws/aws-sdk-go-v2/service/auditmanager v1.24.7/go.mod h1:HtY67X+mN8oq2UMidOuIcXn+XWFyGYnpTvEoNGQBxc0=
 github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.1.4 h1:rUKIsoew72A/gZkBrSApQSjvksEKLRWkUE7jlK7YkpE=
