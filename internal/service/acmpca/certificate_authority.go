@@ -189,6 +189,13 @@ func ResourceCertificateAuthority() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
+			"key_storage_security_standard": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(acmpca.KeyStorageSecurityStandard_Values(), false),
+			},
 			"not_after": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -335,13 +342,6 @@ func ResourceCertificateAuthority() *schema.Resource {
 				Default:      acmpca.CertificateAuthorityTypeSubordinate,
 				ValidateFunc: validation.StringInSlice(acmpca.CertificateAuthorityType_Values(), false),
 			},
-			"key_storage_security_standard": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      acmpca.KeyStorageSecurityStandardFips1402Level3OrHigher,
-				ValidateFunc: validation.StringInSlice(acmpca.KeyStorageSecurityStandard_Values(), false),
-			},
 			"usage_mode": {
 				Type:         schema.TypeString,
 				Computed:     true,
@@ -362,9 +362,12 @@ func resourceCertificateAuthorityCreate(ctx context.Context, d *schema.ResourceD
 		CertificateAuthorityConfiguration: expandCertificateAuthorityConfiguration(d.Get("certificate_authority_configuration").([]interface{})),
 		CertificateAuthorityType:          aws.String(d.Get("type").(string)),
 		IdempotencyToken:                  aws.String(id.UniqueId()),
-		KeyStorageSecurityStandard:        aws.String(d.Get("key_storage_security_standard").(string)),
 		RevocationConfiguration:           expandRevocationConfiguration(d.Get("revocation_configuration").([]interface{})),
 		Tags:                              GetTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("key_storage_security_standard"); ok {
+		input.KeyStorageSecurityStandard = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("usage_mode"); ok {
@@ -410,6 +413,7 @@ func resourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "setting certificate_authority_configuration: %s", err)
 	}
 	d.Set("enabled", (aws.StringValue(certificateAuthority.Status) != acmpca.CertificateAuthorityStatusDisabled))
+	d.Set("key_storage_security_standard", certificateAuthority.KeyStorageSecurityStandard)
 	d.Set("not_after", aws.TimeValue(certificateAuthority.NotAfter).Format(time.RFC3339))
 	d.Set("not_before", aws.TimeValue(certificateAuthority.NotBefore).Format(time.RFC3339))
 	if err := d.Set("revocation_configuration", flattenRevocationConfiguration(certificateAuthority.RevocationConfiguration)); err != nil {
@@ -418,7 +422,6 @@ func resourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("serial", certificateAuthority.Serial)
 	d.Set("status", certificateAuthority.Status)
 	d.Set("type", certificateAuthority.Type)
-	d.Set("key_storage_security_standard", certificateAuthority.KeyStorageSecurityStandard)
 	d.Set("usage_mode", certificateAuthority.UsageMode)
 
 	getCertificateAuthorityCertificateInput := &acmpca.GetCertificateAuthorityCertificateInput{
