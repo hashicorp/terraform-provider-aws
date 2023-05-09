@@ -1,0 +1,2 @@
+```release-note:note
+resource/aws_eks_addon: The `resolve_conflicts` argument has been deprecated. Use the `resolve_conflicts_on_create` and/or `resolve_conflicts_on_update` arguments instead
