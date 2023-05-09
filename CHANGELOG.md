@@ -22,6 +22,7 @@ BUG FIXES:
 
 * resource/aws_appintegrations_data_integration: Correctly read `tags` into state ([#31241](https://github.com/hashicorp/terraform-provider-aws/issues/31241))
 * resource/aws_iam_openid_connect_provider: Change `client_id_list` from `TypeList` to `TypeSet` as order is not significant ([#31253](https://github.com/hashicorp/terraform-provider-aws/issues/31253))
+* resource/aws_servicecatalog_provisioned_product: Fix to properly set `stack_set_provisioned_preferences` integer types `failure_tolerance_count`, `failure_tolerance_percentage`, `max_concurrency_count`, `max_concurrency_percentage` ([#31289](https://github.com/hashicorp/terraform-provider-aws/issues/31289))
 
 ## 4.66.1 (May  5, 2023)
 
