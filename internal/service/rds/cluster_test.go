@@ -525,7 +525,7 @@ func TestAccRDSCluster_availabilityZones(t *testing.T) {
 	})
 }
 
-func TestAccRDSCluster_storageType(t *testing.T) {
+func TestAccRDSCluster_StorageTypeIo1(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -542,10 +542,68 @@ func TestAccRDSCluster_storageType(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_storageType(rName),
+				Config: testAccClusterConfig_StorageTypeIo1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "io1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_storageTypeAurora(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var dbCluster rds.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	storageType := "aurora"
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_auroraStorageType(rName, storageType),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", storageType),
+				),
+			},
+		},
+	})
+}
+
+// For backwards compatability, the control plane should always return a blank string even if sennding "aurora" as the storage type
+func TestAccRDSCluster_storageTypeAuroraReturnsBlank(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var dbCluster1 rds.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	storageType1 := "aurora"
+	storageType2 := ""
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_auroraStorageType(rName, storageType1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", storageType2),
 				),
 			},
 		},
@@ -2562,6 +2620,7 @@ func testAccCheckClusterRecreated(i, j *rds.DBCluster) resource.TestCheckFunc {
 		return nil
 	}
 }
+
 func testAccCheckClusterNotRecreated(i, j *rds.DBCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !aws.TimeValue(i.ClusterCreateTime).Equal(aws.TimeValue(j.ClusterCreateTime)) {
@@ -2875,7 +2934,7 @@ resource "aws_rds_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterConfig_storageType(rName string) string {
+func testAccClusterConfig_StorageTypeIo1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   apply_immediately         = true
