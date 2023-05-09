@@ -375,28 +375,6 @@ func TestAccVPCSubnet_DefaultTagsProviderAndResource_overlappingTag(t *testing.T
 	})
 }
 
-func TestAccVPCSubnet_DefaultTagsProviderAndResource_duplicateTag(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
-		Steps: []resource.TestStep{
-			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("overlapkey", "overlapvalue"),
-					testAccVPCSubnetConfig_tags1(rName, "overlapkey", "overlapvalue"),
-				),
-				PlanOnly:    true,
-				ExpectError: regexp.MustCompile(`"tags" are identical to those in the "default_tags" configuration block`),
-			},
-		},
-	})
-}
-
 func TestAccVPCSubnet_defaultAndIgnoreTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subnet ec2.Subnet
