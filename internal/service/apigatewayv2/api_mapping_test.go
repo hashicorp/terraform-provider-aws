@@ -6,8 +6,8 @@ import (
 	"log"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -167,9 +167,9 @@ func testAccCheckAPIMappingCreateCertificate(ctx context.Context, t *testing.T, 
 		privateKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 		certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKey, fmt.Sprintf("%s.example.com", rName))
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient()
 
-		output, err := conn.ImportCertificateWithContext(ctx, &acm.ImportCertificateInput{
+		output, err := conn.ImportCertificate(ctx, &acm.ImportCertificateInput{
 			Certificate: []byte(certificate),
 			PrivateKey:  []byte(privateKey),
 			Tags: tfacm.Tags(tftags.New(ctx, map[string]interface{}{
