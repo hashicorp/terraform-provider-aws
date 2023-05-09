@@ -5414,26 +5414,6 @@ func TestInstanceHostIDSchema(t *testing.T) {
 	}
 }
 
-func TestInstanceCPUThreadsPerCoreSchema(t *testing.T) {
-	t.Parallel()
-
-	actualSchema := tfec2.ResourceInstance().Schema["cpu_threads_per_core"]
-	expectedSchema := &schema.Schema{
-		Type:          schema.TypeInt,
-		Optional:      true,
-		Computed:      true,
-		ForceNew:      true,
-		Deprecated:    "use 'cpu_options' argument instead",
-		ConflictsWith: []string{"cpu_options.0.threads_per_core"},
-	}
-	if !reflect.DeepEqual(actualSchema, expectedSchema) {
-		t.Fatalf(
-			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			actualSchema,
-			expectedSchema)
-	}
-}
-
 func driftTags(ctx context.Context, instance *ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
