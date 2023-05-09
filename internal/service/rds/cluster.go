@@ -510,9 +510,23 @@ func ResourceCluster() *schema.Resource {
 				if !strings.HasPrefix(engine, "aurora") {
 					return true
 				}
-
 				return false
 			}),
+			func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+				if diff.Id() == "" {
+					return nil
+				}
+				// The control plane will always return an empty string if a cluster is created with a storage_type of aurora
+				old, new := diff.GetChange("storage_type")
+
+				if new.(string) == "aurora" && old.(string) == "" {
+					if err := diff.SetNew("storage_type", ""); err != nil {
+						return err
+					}
+					return nil
+				}
+				return nil
+			},
 		),
 	}
 }
