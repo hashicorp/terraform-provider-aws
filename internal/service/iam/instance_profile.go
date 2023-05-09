@@ -144,6 +144,111 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceInstanceProfileUpdate(ctx, d, meta)...)
 }
 
+func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
+
+	request := &iam.GetInstanceProfileInput{
+		InstanceProfileName: aws.String(d.Id()),
+	}
+
+	result, err := conn.GetInstanceProfileWithContext(ctx, request)
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		log.Printf("[WARN] IAM Instance Profile (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading IAM Instance Profile (%s): %s", d.Id(), err)
+	}
+
+	instanceProfile := result.InstanceProfile
+	if instanceProfile.Roles != nil && len(instanceProfile.Roles) > 0 {
+		roleName := aws.StringValue(instanceProfile.Roles[0].RoleName)
+		input := &iam.GetRoleInput{
+			RoleName: aws.String(roleName),
+		}
+
+		_, err := conn.GetRoleWithContext(ctx, input)
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+				err := instanceProfileRemoveRole(ctx, conn, d.Id(), roleName)
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "removing role %s to IAM Instance Profile (%s): %s", roleName, d.Id(), err)
+				}
+			}
+			return sdkdiag.AppendErrorf(diags, "reading IAM Role %s attached to IAM Instance Profile (%s): %s", roleName, d.Id(), err)
+		}
+	}
+
+	flattenInstanceProfile(ctx, d, instanceProfile)
+
+	return diags
+}
+
+func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
+
+	if d.HasChange("role") {
+		oldRole, newRole := d.GetChange("role")
+
+		if oldRole.(string) != "" {
+			err := instanceProfileRemoveRole(ctx, conn, d.Id(), oldRole.(string))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "removing role %s to IAM Instance Profile (%s): %s", oldRole.(string), d.Id(), err)
+			}
+		}
+
+		if newRole.(string) != "" {
+			err := instanceProfileAddRole(ctx, conn, d.Id(), newRole.(string))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "adding role %s to IAM Instance Profile (%s): %s", newRole.(string), d.Id(), err)
+			}
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		err := instanceProfileUpdateTags(ctx, conn, d.Id(), o, n)
+
+		// Some partitions (i.e., ISO) may not support tagging, giving error
+		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
+			log.Printf("[WARN] failed updating tags for IAM Instance Profile (%s): %s", d.Id(), err)
+			return diags
+		}
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags for IAM Instance Profile (%s): %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceInstanceProfileRead(ctx, d, meta)...)
+}
+
+func resourceInstanceProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
+
+	if err := instanceProfileRemoveAllRoles(ctx, d, conn); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting IAM Instance Profile (%s): %s", d.Id(), err)
+	}
+
+	request := &iam.DeleteInstanceProfileInput{
+		InstanceProfileName: aws.String(d.Id()),
+	}
+	_, err := conn.DeleteInstanceProfileWithContext(ctx, request)
+	if err != nil {
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+			return diags
+		}
+		return sdkdiag.AppendErrorf(diags, "deleting IAM Instance Profile (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
 func instanceProfileAddRole(ctx context.Context, conn *iam.IAM, profileName, roleName string) error {
 	request := &iam.AddRoleToInstanceProfileInput{
 		InstanceProfileName: aws.String(profileName),
@@ -195,111 +300,6 @@ func instanceProfileRemoveAllRoles(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	return nil
-}
-
-func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
-
-	if d.HasChange("role") {
-		oldRole, newRole := d.GetChange("role")
-
-		if oldRole.(string) != "" {
-			err := instanceProfileRemoveRole(ctx, conn, d.Id(), oldRole.(string))
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "removing role %s to IAM Instance Profile (%s): %s", oldRole.(string), d.Id(), err)
-			}
-		}
-
-		if newRole.(string) != "" {
-			err := instanceProfileAddRole(ctx, conn, d.Id(), newRole.(string))
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "adding role %s to IAM Instance Profile (%s): %s", newRole.(string), d.Id(), err)
-			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := instanceProfileUpdateTags(ctx, conn, d.Id(), o, n)
-
-		// Some partitions (i.e., ISO) may not support tagging, giving error
-		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
-			log.Printf("[WARN] failed updating tags for IAM Instance Profile (%s): %s", d.Id(), err)
-			return diags
-		}
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags for IAM Instance Profile (%s): %s", d.Id(), err)
-		}
-	}
-
-	return append(diags, resourceInstanceProfileRead(ctx, d, meta)...)
-}
-
-func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
-
-	request := &iam.GetInstanceProfileInput{
-		InstanceProfileName: aws.String(d.Id()),
-	}
-
-	result, err := conn.GetInstanceProfileWithContext(ctx, request)
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		log.Printf("[WARN] IAM Instance Profile (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading IAM Instance Profile (%s): %s", d.Id(), err)
-	}
-
-	instanceProfile := result.InstanceProfile
-	if instanceProfile.Roles != nil && len(instanceProfile.Roles) > 0 {
-		roleName := aws.StringValue(instanceProfile.Roles[0].RoleName)
-		input := &iam.GetRoleInput{
-			RoleName: aws.String(roleName),
-		}
-
-		_, err := conn.GetRoleWithContext(ctx, input)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-				err := instanceProfileRemoveRole(ctx, conn, d.Id(), roleName)
-				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "removing role %s to IAM Instance Profile (%s): %s", roleName, d.Id(), err)
-				}
-			}
-			return sdkdiag.AppendErrorf(diags, "reading IAM Role %s attached to IAM Instance Profile (%s): %s", roleName, d.Id(), err)
-		}
-	}
-
-	flattenInstanceProfile(ctx, d, instanceProfile)
-
-	return diags
-}
-
-func resourceInstanceProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
-
-	if err := instanceProfileRemoveAllRoles(ctx, d, conn); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting IAM Instance Profile (%s): %s", d.Id(), err)
-	}
-
-	request := &iam.DeleteInstanceProfileInput{
-		InstanceProfileName: aws.String(d.Id()),
-	}
-	_, err := conn.DeleteInstanceProfileWithContext(ctx, request)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "deleting IAM Instance Profile (%s): %s", d.Id(), err)
-	}
-
-	return diags
 }
 
 func flattenInstanceProfile(ctx context.Context, d *schema.ResourceData, result *iam.InstanceProfile) {
