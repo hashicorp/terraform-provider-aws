@@ -192,6 +192,8 @@ func TestAccCloudWatchMetricStream_includeFiltersWithMetricNames(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
 					resource.TestCheckResourceAttr(resourceName, "include_filter.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "include_filter.0.metric_names.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "include_filter.0.metric_names.0", "CPUUtilization"),
 				),
 			},
 			{
@@ -250,6 +252,8 @@ func TestAccCloudWatchMetricStream_excludeFiltersWithMetricNames(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
 					resource.TestCheckResourceAttr(resourceName, "exclude_filter.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "exclude_filter.0.metric_names.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "exclude_filter.0.metric_names.0", "CPUUtilization"),
 				),
 			},
 			{
