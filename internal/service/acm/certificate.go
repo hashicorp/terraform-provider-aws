@@ -12,8 +12,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/acm"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/acm"
+	"github.com/aws/aws-sdk-go-v2/service/acm/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -23,6 +24,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdktypes"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -783,10 +786,10 @@ func isChangeNormalizeCertRemoval(oldRaw, newRaw interface{}) bool {
 	return hex.EncodeToString(newCleanVal[:]) == old
 }
 
-func findCertificate(ctx context.Context, conn *acm.ACM, input *acm.DescribeCertificateInput) (*acm.CertificateDetail, error) {
-	output, err := conn.DescribeCertificateWithContext(ctx, input)
+func findCertificate(ctx context.Context, conn *acm.Client, input *acm.DescribeCertificateInput) (*types.CertificateDetail, error) {
+	output, err := conn.DescribeCertificate(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, acm.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -804,7 +807,7 @@ func findCertificate(ctx context.Context, conn *acm.ACM, input *acm.DescribeCert
 	return output.Certificate, nil
 }
 
-func FindCertificateByARN(ctx context.Context, conn *acm.ACM, arn string) (*acm.CertificateDetail, error) {
+func findCertificateByARN(ctx context.Context, conn *acm.Client, arn string) (*types.CertificateDetail, error) {
 	input := &acm.DescribeCertificateInput{
 		CertificateArn: aws.String(arn),
 	}
@@ -815,9 +818,9 @@ func FindCertificateByARN(ctx context.Context, conn *acm.ACM, arn string) (*acm.
 		return nil, err
 	}
 
-	if status := aws.StringValue(output.Status); status == acm.CertificateStatusValidationTimedOut {
+	if status := output.Status; status == types.CertificateStatusValidationTimedOut {
 		return nil, &retry.NotFoundError{
-			Message:     status,
+			Message:     string(status),
 			LastRequest: input,
 		}
 	}
@@ -825,8 +828,8 @@ func FindCertificateByARN(ctx context.Context, conn *acm.ACM, arn string) (*acm.
 	return output, nil
 }
 
-func findCertificateRenewalByARN(ctx context.Context, conn *acm.ACM, arn string) (*acm.RenewalSummary, error) {
-	certificate, err := FindCertificateByARN(ctx, conn, arn)
+func findCertificateRenewalByARN(ctx context.Context, conn *acm.Client, arn string) (*types.RenewalSummary, error) {
+	certificate, err := findCertificateByARN(ctx, conn, arn)
 
 	if err != nil {
 		return nil, err
@@ -839,9 +842,9 @@ func findCertificateRenewalByARN(ctx context.Context, conn *acm.ACM, arn string)
 	return certificate.RenewalSummary, nil
 }
 
-func statusCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.ACM, arn string) retry.StateRefreshFunc {
+func statusCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.Client, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		certificate, err := FindCertificateByARN(ctx, conn, arn)
+		certificate, err := findCertificateByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -853,22 +856,22 @@ func statusCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.
 
 		domainValidationsAvailable := true
 
-		switch aws.StringValue(certificate.Type) {
-		case acm.CertificateTypeAmazonIssued:
+		switch certificate.Type {
+		case types.CertificateTypeAmazonIssued:
 			domainValidationsAvailable = false
 
 			for _, v := range certificate.DomainValidationOptions {
-				if v.ResourceRecord != nil || len(v.ValidationEmails) > 0 || (aws.StringValue(v.ValidationStatus) == acm.DomainStatusSuccess) {
+				if v.ResourceRecord != nil || len(v.ValidationEmails) > 0 || (v.ValidationStatus == types.DomainStatusSuccess) {
 					domainValidationsAvailable = true
 
 					break
 				}
 			}
 
-		case acm.CertificateTypePrivate:
+		case types.CertificateTypePrivate:
 			// While ACM PRIVATE certificates do not need to be validated, there is a slight delay for
 			// the API to fill in all certificate details, which is during the PENDING_VALIDATION status.
-			if aws.StringValue(certificate.Status) == acm.DomainStatusPendingValidation {
+			if certificate.Status == types.CertificateStatusPendingValidation {
 				domainValidationsAvailable = false
 			}
 		}
@@ -877,7 +880,7 @@ func statusCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.
 	}
 }
 
-func waitCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.ACM, arn string, timeout time.Duration) (*acm.CertificateDetail, error) {
+func waitCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.Client, arn string, timeout time.Duration) (*types.CertificateDetail, error) {
 	stateConf := &retry.StateChangeConf{
 		Target:  []string{strconv.FormatBool(true)},
 		Refresh: statusCertificateDomainValidationsAvailable(ctx, conn, arn),
@@ -886,14 +889,14 @@ func waitCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.AC
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*acm.CertificateDetail); ok {
+	if output, ok := outputRaw.(*types.CertificateDetail); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func statusCertificateRenewal(ctx context.Context, conn *acm.ACM, arn string) retry.StateRefreshFunc {
+func statusCertificateRenewal(ctx context.Context, conn *acm.Client, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findCertificateRenewalByARN(ctx, conn, arn)
 
@@ -905,23 +908,23 @@ func statusCertificateRenewal(ctx context.Context, conn *acm.ACM, arn string) re
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.RenewalStatus), nil
+		return output, string(output.RenewalStatus), nil
 	}
 }
 
-func WaitCertificateRenewed(ctx context.Context, conn *acm.ACM, arn string, timeout time.Duration) (*acm.RenewalSummary, error) {
+func waitCertificateRenewed(ctx context.Context, conn *acm.Client, arn string, timeout time.Duration) (*types.RenewalSummary, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{acm.RenewalStatusPendingAutoRenewal},
-		Target:  []string{acm.RenewalStatusSuccess},
+		Pending: enum.Slice(types.RenewalStatusPendingAutoRenewal),
+		Target:  enum.Slice(types.RenewalStatusSuccess),
 		Refresh: statusCertificateRenewal(ctx, conn, arn),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*acm.RenewalSummary); ok {
-		if aws.StringValue(output.RenewalStatus) == acm.RenewalStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.RenewalStatusReason)))
+	if output, ok := outputRaw.(*types.RenewalSummary); ok {
+		if output.RenewalStatus == types.RenewalStatusFailed {
+			tfresource.SetLastError(err, errors.New(string(output.RenewalStatusReason)))
 		}
 
 		return output, err
