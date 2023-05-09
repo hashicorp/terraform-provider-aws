@@ -21,6 +21,7 @@ import (
 
 const mutexLayerKey = `aws_lambda_layer_version`
 
+// @SDKResource("aws_lambda_layer_version")
 func ResourceLayerVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLayerVersionPublish,

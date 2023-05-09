@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKResource("aws_cur_report_definition")
 func ResourceReportDefinition() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReportDefinitionCreate,

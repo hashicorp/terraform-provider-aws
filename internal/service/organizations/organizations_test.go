@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -54,6 +54,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"concurrent":             testAccPolicy_concurrent,
 			"Description":            testAccPolicy_description,
 			"Tags":                   testAccPolicy_tags,
+			"SkipDestroy":            testAccPolicy_skipDestroy,
 			"disappears":             testAccPolicy_disappears,
 			"Type_AI_OPT_OUT":        testAccPolicy_type_AI_OPT_OUT,
 			"Type_Backup":            testAccPolicy_type_Backup,
@@ -65,6 +66,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"Account":            testAccPolicyAttachment_Account,
 			"OrganizationalUnit": testAccPolicyAttachment_OrganizationalUnit,
 			"Root":               testAccPolicyAttachment_Root,
+			"SkipDestroy":        testAccPolicyAttachment_skipDestroy,
 			"disappears":         testAccPolicyAttachment_disappears,
 		},
 		"DelegatedAdministrator": {

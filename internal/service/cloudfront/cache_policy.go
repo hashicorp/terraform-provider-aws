@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_cloudfront_cache_policy")
 func ResourceCachePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCachePolicyCreate,

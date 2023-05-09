@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
@@ -20,7 +20,7 @@ func testAccOrganizationAdminAccount_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
@@ -110,7 +110,7 @@ resource "aws_organizations_organization" "test" {
 resource "aws_guardduty_detector" "test" {}
 
 resource "aws_guardduty_organization_admin_account" "test" {
-  depends_on = [aws_organizations_organization.test]
+  depends_on = [aws_organizations_organization.test, aws_guardduty_detector.test]
 
   admin_account_id = data.aws_caller_identity.current.account_id
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -30,7 +30,7 @@ func waitRoleARNIsNotUniqueID(ctx context.Context, conn *iam.IAM, id string, rol
 		return role, nil
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{RoleStatusARNIsUniqueID, RoleStatusNotFound},
 		Target:                    []string{RoleStatusARNIsARN},
 		Refresh:                   statusRoleCreate(ctx, conn, id),
@@ -48,7 +48,7 @@ func waitRoleARNIsNotUniqueID(ctx context.Context, conn *iam.IAM, id string, rol
 	return nil, err
 }
 
-func statusRoleCreate(ctx context.Context, conn *iam.IAM, id string) resource.StateRefreshFunc {
+func statusRoleCreate(ctx context.Context, conn *iam.IAM, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		role, err := FindRoleByName(ctx, conn, id)
 
@@ -69,7 +69,7 @@ func statusRoleCreate(ctx context.Context, conn *iam.IAM, id string) resource.St
 }
 
 func waitDeleteServiceLinkedRole(ctx context.Context, conn *iam.IAM, deletionTaskID string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{iam.DeletionTaskStatusTypeInProgress, iam.DeletionTaskStatusTypeNotStarted},
 		Target:  []string{iam.DeletionTaskStatusTypeSucceeded},
 		Refresh: statusDeleteServiceLinkedRole(ctx, conn, deletionTaskID),
@@ -88,7 +88,7 @@ func waitDeleteServiceLinkedRole(ctx context.Context, conn *iam.IAM, deletionTas
 	return nil
 }
 
-func statusDeleteServiceLinkedRole(ctx context.Context, conn *iam.IAM, deletionTaskId string) resource.StateRefreshFunc {
+func statusDeleteServiceLinkedRole(ctx context.Context, conn *iam.IAM, deletionTaskId string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		params := &iam.GetServiceLinkedRoleDeletionStatusInput{
 			DeletionTaskId: aws.String(deletionTaskId),

@@ -37,6 +37,7 @@ resource "aws_eks_addon" "example" {
 ```
 
 ## Example add-on usage with custom configuration_values
+
 Custom add-on configuration can be passed using `configuration_values` as a single JSON string while creating or updating the add-on.
 
 ~> **Note:** `configuration_values` is a single JSON string should match the valid JSON schema for each add-on with specific version.

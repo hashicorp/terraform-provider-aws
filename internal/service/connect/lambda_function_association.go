@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_connect_lambda_function_association")
 func ResourceLambdaFunctionAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLambdaFunctionAssociationCreate,

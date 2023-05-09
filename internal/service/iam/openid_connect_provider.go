@@ -15,14 +15,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_iam_openid_connect_provider", name="OIDC Provider")
+// @Tags
 func ResourceOpenIDConnectProvider() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOpenIDConnectProviderCreate,
 		ReadWithoutTimeout:   resourceOpenIDConnectProviderRead,
 		UpdateWithoutTimeout: resourceOpenIDConnectProviderUpdate,
 		DeleteWithoutTimeout: resourceOpenIDConnectProviderDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -32,6 +36,25 @@ func ResourceOpenIDConnectProvider() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"client_id_list": {
+				Type:     schema.TypeList,
+				Required: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"thumbprint_list": {
+				Type:     schema.TypeList,
+				Required: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringLenBetween(40, 40),
+				},
+			},
 			"url": {
 				Type:             schema.TypeString,
 				Required:         true,
@@ -39,25 +62,6 @@ func ResourceOpenIDConnectProvider() *schema.Resource {
 				ValidateFunc:     validOpenIDURL,
 				DiffSuppressFunc: suppressOpenIDURL,
 			},
-			"client_id_list": {
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringLenBetween(1, 255),
-				},
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-			},
-			"thumbprint_list": {
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringLenBetween(40, 40),
-				},
-				Type:     schema.TypeList,
-				Required: true,
-			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -67,38 +71,34 @@ func ResourceOpenIDConnectProvider() *schema.Resource {
 func resourceOpenIDConnectProviderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
+	tags := GetTagsIn(ctx)
 	input := &iam.CreateOpenIDConnectProviderInput{
-		Url:            aws.String(d.Get("url").(string)),
 		ClientIDList:   flex.ExpandStringList(d.Get("client_id_list").([]interface{})),
+		Url:            aws.String(d.Get("url").(string)),
+		Tags:           tags,
 		ThumbprintList: flex.ExpandStringList(d.Get("thumbprint_list").([]interface{})),
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	out, err := conn.CreateOpenIDConnectProviderWithContext(ctx, input)
+	output, err := conn.CreateOpenIDConnectProviderWithContext(ctx, input)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
 	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating IAM OIDC Provider with tags: %s. Trying create without tags.", err)
 		input.Tags = nil
 
-		out, err = conn.CreateOpenIDConnectProviderWithContext(ctx, input)
+		output, err = conn.CreateOpenIDConnectProviderWithContext(ctx, input)
 	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IAM OIDC Provider: %s", err)
 	}
 
-	d.SetId(aws.StringValue(out.OpenIDConnectProviderArn))
+	d.SetId(aws.StringValue(output.OpenIDConnectProviderArn))
 
 	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
 	if input.Tags == nil && len(tags) > 0 {
-		err := openIDConnectProviderUpdateTags(ctx, conn, d.Id(), nil, tags)
+		err := openIDConnectProviderUpdateTags(ctx, conn, d.Id(), nil, KeyValueTags(ctx, tags))
 
 		// If default tags only, log and continue. Otherwise, error.
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
@@ -117,8 +117,6 @@ func resourceOpenIDConnectProviderCreate(ctx context.Context, d *schema.Resource
 func resourceOpenIDConnectProviderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &iam.GetOpenIDConnectProviderInput{
 		OpenIDConnectProviderArn: aws.String(d.Id()),
@@ -138,16 +136,7 @@ func resourceOpenIDConnectProviderRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("client_id_list", flex.FlattenStringList(out.ClientIDList))
 	d.Set("thumbprint_list", flex.FlattenStringList(out.ThumbprintList))
 
-	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, out.Tags)
 
 	return diags
 }

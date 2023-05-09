@@ -15,24 +15,22 @@ Provides a resource-based access control mechanism for a KMS customer master key
 ```terraform
 resource "aws_kms_key" "a" {}
 
-resource "aws_iam_role" "a" {
-  name = "iam-role-for-grant"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+    principals {
+      type        = "Service"
+      identifiers = "lambda.amazonaws.com"
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-EOF
+
+resource "aws_iam_role" "a" {
+  name               = "iam-role-for-grant"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 resource "aws_kms_grant" "a" {

@@ -91,26 +91,29 @@ resource "aws_gamelift_game_server_group" "example" {
 
 ```terraform
 data "aws_partition" "current" {}
-resource "aws_iam_role" "example" {
-  assume_role_policy = <<-EOF
-    {
-      "Version": "2012-10-17",
-      "Statement": [
-        {
-          "Effect": "Allow",
-          "Principal": {
-            "Service": [
-              "autoscaling.amazonaws.com",
-              "gamelift.amazonaws.com"
-            ]
-          },
-          "Action": "sts:AssumeRole"
-        }
+
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type = "Service"
+
+      identifiers = [
+        "autoscaling.amazonaws.com",
+        "gamelift.amazonaws.com",
       ]
     }
-  EOF
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+resource "aws_iam_role" "example" {
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
   name               = "gamelift-game-server-group-example"
 }
+
 resource "aws_iam_role_policy_attachment" "example" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/GameLiftGameServerGroupPolicy"
   role       = aws_iam_role.example.name

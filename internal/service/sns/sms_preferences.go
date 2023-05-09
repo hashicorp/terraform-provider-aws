@@ -125,6 +125,7 @@ var (
 	}, smsPreferencesSchema).WithMissingSetToNil("*")
 )
 
+// @SDKResource("aws_sns_sms_preferences")
 func ResourceSMSPreferences() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSMSPreferencesSet,

@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/managedgrafana"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfgrafana "github.com/hashicorp/terraform-provider-aws/internal/service/grafana"
@@ -32,9 +32,9 @@ func testAccRoleAssociation_usersAdmin(t *testing.T) {
 	resource.Test(t,
 		resource.TestCase{
 			PreCheck: func() {
-				acctest.PreCheck(t)
-				acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t)
-				acctest.PreCheckSSOAdminInstances(t)
+				acctest.PreCheck(ctx, t)
+				acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID)
+				acctest.PreCheckSSOAdminInstances(ctx, t)
 			},
 			ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
 			CheckDestroy:             testAccCheckRoleAssociationDestroy(ctx),
@@ -70,9 +70,9 @@ func testAccRoleAssociation_usersEditor(t *testing.T) {
 	resource.Test(t,
 		resource.TestCase{
 			PreCheck: func() {
-				acctest.PreCheck(t)
-				acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t)
-				acctest.PreCheckSSOAdminInstances(t)
+				acctest.PreCheck(ctx, t)
+				acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID)
+				acctest.PreCheckSSOAdminInstances(ctx, t)
 			},
 			ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
 			CheckDestroy:             testAccCheckRoleAssociationDestroy(ctx),
@@ -108,9 +108,9 @@ func testAccRoleAssociation_groupsAdmin(t *testing.T) {
 	resource.Test(t,
 		resource.TestCase{
 			PreCheck: func() {
-				acctest.PreCheck(t)
-				acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t)
-				acctest.PreCheckSSOAdminInstances(t)
+				acctest.PreCheck(ctx, t)
+				acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID)
+				acctest.PreCheckSSOAdminInstances(ctx, t)
 			},
 			ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
 			CheckDestroy:             testAccCheckRoleAssociationDestroy(ctx),
@@ -146,9 +146,9 @@ func testAccRoleAssociation_groupsEditor(t *testing.T) {
 	resource.Test(t,
 		resource.TestCase{
 			PreCheck: func() {
-				acctest.PreCheck(t)
-				acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t)
-				acctest.PreCheckSSOAdminInstances(t)
+				acctest.PreCheck(ctx, t)
+				acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID)
+				acctest.PreCheckSSOAdminInstances(ctx, t)
 			},
 			ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
 			CheckDestroy:             testAccCheckRoleAssociationDestroy(ctx),
@@ -189,9 +189,9 @@ func testAccRoleAssociation_usersAndGroupsAdmin(t *testing.T) {
 	resource.Test(t,
 		resource.TestCase{
 			PreCheck: func() {
-				acctest.PreCheck(t)
-				acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t)
-				acctest.PreCheckSSOAdminInstances(t)
+				acctest.PreCheck(ctx, t)
+				acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID)
+				acctest.PreCheckSSOAdminInstances(ctx, t)
 			},
 			ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
 			CheckDestroy:             testAccCheckRoleAssociationDestroy(ctx),
@@ -234,9 +234,9 @@ func testAccRoleAssociation_usersAndGroupsEditor(t *testing.T) {
 	resource.Test(t,
 		resource.TestCase{
 			PreCheck: func() {
-				acctest.PreCheck(t)
-				acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t)
-				acctest.PreCheckSSOAdminInstances(t)
+				acctest.PreCheck(ctx, t)
+				acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID)
+				acctest.PreCheckSSOAdminInstances(ctx, t)
 			},
 			ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
 			CheckDestroy:             testAccCheckRoleAssociationDestroy(ctx),

@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,8 +20,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_networkfirewall_firewall", name="Firewall")
+// @Tags(identifierAttribute="id")
 func ResourceFirewall() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFirewallCreate,
@@ -127,8 +130,8 @@ func ResourceFirewall() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"update_token": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -144,14 +147,13 @@ func ResourceFirewall() *schema.Resource {
 
 func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &networkfirewall.CreateFirewallInput{
 		FirewallName:      aws.String(name),
 		FirewallPolicyArn: aws.String(d.Get("firewall_policy_arn").(string)),
 		SubnetMappings:    expandSubnetMappings(d.Get("subnet_mapping").(*schema.Set).List()),
+		Tags:              GetTagsIn(ctx),
 		VpcId:             aws.String(d.Get("vpc_id").(string)),
 	}
 
@@ -175,10 +177,6 @@ func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.SubnetChangeProtection = aws.Bool(v.(bool))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	output, err := conn.CreateFirewallWithContext(ctx, input)
 
 	if err != nil {
@@ -196,8 +194,6 @@ func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceFirewallRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := FindFirewallByARN(ctx, conn, d.Id())
 
@@ -231,16 +227,7 @@ func resourceFirewallRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("update_token", output.UpdateToken)
 	d.Set("vpc_id", firewall.VpcId)
 
-	tags := KeyValueTags(firewall.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, firewall.Tags)
 
 	return nil
 }
@@ -393,14 +380,6 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("updating NetworkFirewall Firewall (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return resourceFirewallRead(ctx, d, meta)
 }
 
@@ -435,7 +414,7 @@ func FindFirewallByARN(ctx context.Context, conn *networkfirewall.NetworkFirewal
 	output, err := conn.DescribeFirewallWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -452,7 +431,7 @@ func FindFirewallByARN(ctx context.Context, conn *networkfirewall.NetworkFirewal
 	return output, nil
 }
 
-func statusFirewall(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) resource.StateRefreshFunc {
+func statusFirewall(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindFirewallByARN(ctx, conn, arn)
 
@@ -473,7 +452,7 @@ const (
 )
 
 func waitFirewallCreated(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.Firewall, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkfirewall.FirewallStatusValueProvisioning},
 		Target:  []string{networkfirewall.FirewallStatusValueReady},
 		Refresh: statusFirewall(ctx, conn, arn),
@@ -490,7 +469,7 @@ func waitFirewallCreated(ctx context.Context, conn *networkfirewall.NetworkFirew
 }
 
 func waitFirewallUpdated(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (string, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkfirewall.FirewallStatusValueProvisioning},
 		Target:  []string{networkfirewall.FirewallStatusValueReady},
 		Refresh: statusFirewall(ctx, conn, arn),
@@ -511,7 +490,7 @@ func waitFirewallUpdated(ctx context.Context, conn *networkfirewall.NetworkFirew
 }
 
 func waitFirewallDeleted(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.Firewall, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkfirewall.FirewallStatusValueDeleting},
 		Target:  []string{},
 		Refresh: statusFirewall(ctx, conn, arn),

@@ -6,11 +6,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusKinesisStreamingDestination(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) resource.StateRefreshFunc {
+func statusKinesisStreamingDestination(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		result, err := FindKinesisDataStreamDestination(ctx, conn, streamArn, tableName)
 
@@ -26,7 +26,7 @@ func statusKinesisStreamingDestination(ctx context.Context, conn *dynamodb.Dynam
 	}
 }
 
-func statusTable(ctx context.Context, conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
+func statusTable(ctx context.Context, conn *dynamodb.DynamoDB, tableName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		table, err := FindTableByName(ctx, conn, tableName)
 
@@ -46,7 +46,7 @@ func statusTable(ctx context.Context, conn *dynamodb.DynamoDB, tableName string)
 	}
 }
 
-func statusReplicaUpdate(ctx context.Context, conn *dynamodb.DynamoDB, tableName, region string) resource.StateRefreshFunc {
+func statusReplicaUpdate(ctx context.Context, conn *dynamodb.DynamoDB, tableName, region string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		result, err := conn.DescribeTableWithContext(ctx, &dynamodb.DescribeTableInput{
 			TableName: aws.String(tableName),
@@ -71,7 +71,7 @@ func statusReplicaUpdate(ctx context.Context, conn *dynamodb.DynamoDB, tableName
 	}
 }
 
-func statusReplicaDelete(ctx context.Context, conn *dynamodb.DynamoDB, tableName, region string) resource.StateRefreshFunc {
+func statusReplicaDelete(ctx context.Context, conn *dynamodb.DynamoDB, tableName, region string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		result, err := conn.DescribeTableWithContext(ctx, &dynamodb.DescribeTableInput{
 			TableName: aws.String(tableName),
@@ -96,7 +96,7 @@ func statusReplicaDelete(ctx context.Context, conn *dynamodb.DynamoDB, tableName
 	}
 }
 
-func statusGSI(ctx context.Context, conn *dynamodb.DynamoDB, tableName, indexName string) resource.StateRefreshFunc {
+func statusGSI(ctx context.Context, conn *dynamodb.DynamoDB, tableName, indexName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		gsi, err := findGSIByTwoPartKey(ctx, conn, tableName, indexName)
 
@@ -116,7 +116,7 @@ func statusGSI(ctx context.Context, conn *dynamodb.DynamoDB, tableName, indexNam
 	}
 }
 
-func statusPITR(ctx context.Context, conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
+func statusPITR(ctx context.Context, conn *dynamodb.DynamoDB, tableName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		pitr, err := findPITRDescriptionByTableName(ctx, conn, tableName)
 
@@ -136,7 +136,7 @@ func statusPITR(ctx context.Context, conn *dynamodb.DynamoDB, tableName string) 
 	}
 }
 
-func statusTTL(ctx context.Context, conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
+func statusTTL(ctx context.Context, conn *dynamodb.DynamoDB, tableName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		ttl, err := findTTLRDescriptionByTableName(ctx, conn, tableName)
 
@@ -156,7 +156,7 @@ func statusTTL(ctx context.Context, conn *dynamodb.DynamoDB, tableName string) r
 	}
 }
 
-func statusTableSES(ctx context.Context, conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
+func statusTableSES(ctx context.Context, conn *dynamodb.DynamoDB, tableName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		table, err := FindTableByName(ctx, conn, tableName)
 
@@ -181,7 +181,7 @@ func statusTableSES(ctx context.Context, conn *dynamodb.DynamoDB, tableName stri
 	}
 }
 
-func statusContributorInsights(ctx context.Context, conn *dynamodb.DynamoDB, tableName, indexName string) resource.StateRefreshFunc {
+func statusContributorInsights(ctx context.Context, conn *dynamodb.DynamoDB, tableName, indexName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		insight, err := FindContributorInsights(ctx, conn, tableName, indexName)
 

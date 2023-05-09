@@ -64,10 +64,12 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - ARN of the task definition
-* `arn` - ARN of the task definition
-* `family` - Family of this task definition
+* `id` - ARN of the task definition.
+* `arn` - ARN of the task definition.
+* `arn_without_revision` - ARN of the Task Definition with the trailing `revision` removed. This may be useful for situations where the latest task definition is always desired. If a revision isn't specified, the latest ACTIVE revision is used. See the [AWS documentation](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_StartTask.html#ECS-StartTask-request-taskDefinition) for details.
+* `execution_role_arn` - ARN of the task execution role that the Amazon ECS container agent and the Docker.
+* `family` - Family of this task definition.
 * `network_mode` - Docker networking mode to use for the containers in this task.
-* `revision` - Revision of this task definition
-* `status` - Status of this task definition
-* `task_role_arn` - ARN of the IAM role that containers in this task can assume
+* `revision` - Revision of this task definition.
+* `status` - Status of this task definition.
+* `task_role_arn` - ARN of the IAM role that containers in this task can assume.

@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -21,7 +21,7 @@ const (
 )
 
 // StatusResourceShareInvitation fetches the ResourceShareInvitation and its Status
-func StatusResourceShareInvitation(ctx context.Context, conn *ram.RAM, arn string) resource.StateRefreshFunc {
+func StatusResourceShareInvitation(ctx context.Context, conn *ram.RAM, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		invitation, err := FindResourceShareInvitationByARN(ctx, conn, arn)
 
@@ -38,7 +38,7 @@ func StatusResourceShareInvitation(ctx context.Context, conn *ram.RAM, arn strin
 }
 
 // StatusResourceShareOwnerSelf fetches the ResourceShare and its Status
-func StatusResourceShareOwnerSelf(ctx context.Context, conn *ram.RAM, arn string) resource.StateRefreshFunc {
+func StatusResourceShareOwnerSelf(ctx context.Context, conn *ram.RAM, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		share, err := FindResourceShareOwnerSelfByARN(ctx, conn, arn)
 
@@ -58,7 +58,7 @@ func StatusResourceShareOwnerSelf(ctx context.Context, conn *ram.RAM, arn string
 	}
 }
 
-func StatusResourceSharePrincipalAssociation(ctx context.Context, conn *ram.RAM, resourceShareArn, principal string) resource.StateRefreshFunc {
+func StatusResourceSharePrincipalAssociation(ctx context.Context, conn *ram.RAM, resourceShareArn, principal string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		association, err := FindResourceSharePrincipalAssociationByShareARNPrincipal(ctx, conn, resourceShareArn, principal)
 

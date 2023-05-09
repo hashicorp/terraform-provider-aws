@@ -6,12 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
 func waitLoggingConfigurationCreated(ctx context.Context, conn *ivschat.Client, id string, timeout time.Duration) (*ivschat.GetLoggingConfigurationOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.LoggingConfigurationStateCreating),
 		Target:                    enum.Slice(types.LoggingConfigurationStateActive),
 		Refresh:                   statusLoggingConfiguration(ctx, conn, id),
@@ -29,7 +29,7 @@ func waitLoggingConfigurationCreated(ctx context.Context, conn *ivschat.Client, 
 }
 
 func waitLoggingConfigurationUpdated(ctx context.Context, conn *ivschat.Client, id string, timeout time.Duration) (*ivschat.GetLoggingConfigurationOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.LoggingConfigurationStateUpdating),
 		Target:                    enum.Slice(types.LoggingConfigurationStateActive),
 		Refresh:                   statusLoggingConfiguration(ctx, conn, id),
@@ -47,7 +47,7 @@ func waitLoggingConfigurationUpdated(ctx context.Context, conn *ivschat.Client, 
 }
 
 func waitLoggingConfigurationDeleted(ctx context.Context, conn *ivschat.Client, id string, timeout time.Duration) (*ivschat.GetLoggingConfigurationOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.LoggingConfigurationStateDeleting, types.LoggingConfigurationStateActive),
 		Target:  []string{},
 		Refresh: statusLoggingConfiguration(ctx, conn, id),
@@ -63,7 +63,7 @@ func waitLoggingConfigurationDeleted(ctx context.Context, conn *ivschat.Client, 
 }
 
 func waitRoomUpdated(ctx context.Context, conn *ivschat.Client, id string, timeout time.Duration, updateDetails *ivschat.UpdateRoomInput) (*ivschat.GetRoomOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusChangePending},
 		Target:                    []string{statusUpdated},
 		Refresh:                   statusRoom(ctx, conn, id, updateDetails),
@@ -81,7 +81,7 @@ func waitRoomUpdated(ctx context.Context, conn *ivschat.Client, id string, timeo
 }
 
 func waitRoomDeleted(ctx context.Context, conn *ivschat.Client, id string, timeout time.Duration) (*ivschat.GetRoomOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusNormal},
 		Target:  []string{},
 		Refresh: statusRoom(ctx, conn, id, nil),
@@ -97,7 +97,7 @@ func waitRoomDeleted(ctx context.Context, conn *ivschat.Client, id string, timeo
 }
 
 func waitRoomCreated(ctx context.Context, conn *ivschat.Client, id string, timeout time.Duration) (*ivschat.GetRoomOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
 		Refresh:                   statusRoom(ctx, conn, id, nil),

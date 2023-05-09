@@ -26,6 +26,11 @@ const (
 )
 
 const (
+	ClusterSnapshotStatusAvailable = "available"
+	ClusterSnapshotStatusCreating  = "creating"
+)
+
+const (
 	storageTypeStandard = "standard"
 	storageTypeGP2      = "gp2"
 	storageTypeGP3      = "gp3"
@@ -64,6 +69,7 @@ const (
 	InstanceStatusConfiguringLogExports                        = "configuring-log-exports"
 	InstanceStatusConvertingToVPC                              = "converting-to-vpc"
 	InstanceStatusCreating                                     = "creating"
+	InstanceStatusDeletePreCheck                               = "delete-precheck"
 	InstanceStatusDeleting                                     = "deleting"
 	InstanceStatusFailed                                       = "failed"
 	InstanceStatusInaccessibleEncryptionCredentials            = "inaccessible-encryption-credentials"
@@ -102,7 +108,11 @@ const (
 )
 
 const (
-	ClusterEngineAurora           = "aurora"
+	DBSnapshotAvailable = "available"
+	DBSnapshotCreating  = "creating"
+)
+
+const (
 	ClusterEngineAuroraMySQL      = "aurora-mysql"
 	ClusterEngineAuroraPostgreSQL = "aurora-postgresql"
 	ClusterEngineMySQL            = "mysql"
@@ -111,7 +121,6 @@ const (
 
 func ClusterEngine_Values() []string {
 	return []string{
-		ClusterEngineAurora,
 		ClusterEngineAuroraMySQL,
 		ClusterEngineAuroraPostgreSQL,
 		ClusterEngineMySQL,

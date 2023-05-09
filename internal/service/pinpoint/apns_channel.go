@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_pinpoint_apns_channel")
 func ResourceAPNSChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAPNSChannelUpsert,

@@ -20,6 +20,7 @@ const (
 	engineNameAuroraPostgresqlServerless = "aurora-postgresql-serverless"
 	engineNameAuroraServerless           = "aurora-serverless"
 	engineNameAzuredb                    = "azuredb"
+	engineNameAzureSQLManagedInstance    = "azure-sql-managed-instance"
 	engineNameDB2                        = "db2"
 	engineNameTransfer                   = "dms-transfer"
 	engineNameDocDB                      = "docdb"
@@ -48,6 +49,7 @@ func engineName_Values() []string {
 		engineNameAuroraPostgresqlServerless,
 		engineNameAuroraServerless,
 		engineNameAzuredb,
+		engineNameAzureSQLManagedInstance,
 		engineNameDB2,
 		engineNameTransfer,
 		engineNameDocDB,

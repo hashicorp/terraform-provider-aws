@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_iot_role_alias")
 func ResourceRoleAlias() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRoleAliasCreate,

@@ -53,7 +53,7 @@ func (r *ResourceWithConfigure) Configure(_ context.Context, request resource.Co
 
 // ExpandTags returns the API tags for the specified "tags" value.
 func (r *ResourceWithConfigure) ExpandTags(ctx context.Context, tags types.Map) tftags.KeyValueTags {
-	return r.Meta().DefaultTagsConfig.MergeTags(tftags.New(tags))
+	return r.Meta().DefaultTagsConfig.MergeTags(tftags.New(ctx, tags))
 }
 
 // FlattenTags returns the "tags" value from the specified API tags.
@@ -90,17 +90,15 @@ func (r *ResourceWithConfigure) SetTagsAll(ctx context.Context, request resource
 	}
 
 	if !planTags.IsUnknown() {
-		resourceTags := tftags.New(planTags)
+		if !mapHasUnknownElements(planTags) {
+			resourceTags := tftags.New(ctx, planTags)
 
-		if defaultTagsConfig.TagsEqual(resourceTags) {
-			response.Diagnostics.AddError(
-				`"tags" are identical to those in the "default_tags" configuration block of the provider`,
-				"please de-duplicate and try again")
+			allTags := defaultTagsConfig.MergeTags(resourceTags).IgnoreConfig(ignoreTagsConfig)
+
+			response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("tags_all"), flex.FlattenFrameworkStringValueMapLegacy(ctx, allTags.Map()))...)
+		} else {
+			response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("tags_all"), tftags.Unknown)...)
 		}
-
-		allTags := defaultTagsConfig.MergeTags(resourceTags).IgnoreConfig(ignoreTagsConfig)
-
-		response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("tags_all"), flex.FlattenFrameworkStringValueMapLegacy(ctx, allTags.Map()))...)
 	} else {
 		response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("tags_all"), tftags.Unknown)...)
 	}
@@ -209,4 +207,14 @@ func (w *WithTimeouts) DeleteTimeout(ctx context.Context, timeouts timeouts.Valu
 	}
 
 	return timeout
+}
+
+func mapHasUnknownElements(m types.Map) bool {
+	for _, v := range m.Elements() {
+		if v.IsUnknown() {
+			return true
+		}
+	}
+
+	return false
 }

@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -18,7 +18,7 @@ const (
 )
 
 func WaitChangeSetCreated(ctx context.Context, conn *cloudformation.CloudFormation, stackID, changeSetName string) (*cloudformation.DescribeChangeSetOutput, error) {
-	stateConf := resource.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: []string{cloudformation.ChangeSetStatusCreateInProgress, cloudformation.ChangeSetStatusCreatePending},
 		Target:  []string{cloudformation.ChangeSetStatusCreateComplete},
 		Timeout: ChangeSetCreatedTimeout,
@@ -57,7 +57,7 @@ const (
 )
 
 func WaitStackSetOperationSucceeded(ctx context.Context, conn *cloudformation.CloudFormation, stackSetName, operationID, callAs string, timeout time.Duration) (*cloudformation.StackSetOperation, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{cloudformation.StackSetOperationStatusRunning, cloudformation.StackSetOperationStatusQueued},
 		Target:  []string{cloudformation.StackSetOperationStatusSucceeded},
 		Refresh: StatusStackSetOperation(ctx, conn, stackSetName, operationID, callAs),
@@ -117,7 +117,7 @@ const (
 )
 
 func WaitStackCreated(ctx context.Context, conn *cloudformation.CloudFormation, stackID, requestToken string, timeout time.Duration) (*cloudformation.Stack, error) {
-	stateConf := resource.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: []string{
 			cloudformation.StackStatusCreateInProgress,
 			cloudformation.StackStatusDeleteInProgress,
@@ -179,7 +179,7 @@ func WaitStackCreated(ctx context.Context, conn *cloudformation.CloudFormation, 
 }
 
 func WaitStackUpdated(ctx context.Context, conn *cloudformation.CloudFormation, stackID, requestToken string, timeout time.Duration) (*cloudformation.Stack, error) {
-	stateConf := resource.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: []string{
 			cloudformation.StackStatusUpdateCompleteCleanupInProgress,
 			cloudformation.StackStatusUpdateInProgress,
@@ -222,7 +222,7 @@ func WaitStackUpdated(ctx context.Context, conn *cloudformation.CloudFormation, 
 }
 
 func WaitStackDeleted(ctx context.Context, conn *cloudformation.CloudFormation, stackID, requestToken string, timeout time.Duration) (*cloudformation.Stack, error) {
-	stateConf := resource.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: []string{
 			cloudformation.StackStatusDeleteInProgress,
 			cloudformation.StackStatusRollbackInProgress,
@@ -265,7 +265,7 @@ const (
 )
 
 func WaitTypeRegistrationProgressStatusComplete(ctx context.Context, conn *cloudformation.CloudFormation, registrationToken string) (*cloudformation.DescribeTypeRegistrationOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{cloudformation.RegistrationStatusInProgress},
 		Target:  []string{cloudformation.RegistrationStatusComplete},
 		Refresh: StatusTypeRegistrationProgress(ctx, conn, registrationToken),

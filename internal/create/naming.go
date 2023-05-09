@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 )
 
 // Name returns in order the name if non-empty, a prefix generated name if non-empty, or fully generated name prefixed with terraform-
@@ -20,15 +20,15 @@ func NameWithSuffix(name string, namePrefix string, nameSuffix string) string {
 	}
 
 	if namePrefix != "" {
-		return resource.PrefixedUniqueId(namePrefix) + nameSuffix
+		return id.PrefixedUniqueId(namePrefix) + nameSuffix
 	}
 
-	return resource.UniqueId() + nameSuffix
+	return id.UniqueId() + nameSuffix
 }
 
 // hasResourceUniqueIDPlusAdditionalSuffix returns true if the string has the built-in unique ID suffix plus an additional suffix
 func hasResourceUniqueIDPlusAdditionalSuffix(s string, additionalSuffix string) bool {
-	re := regexp.MustCompile(fmt.Sprintf("[[:xdigit:]]{%d}%s$", resource.UniqueIDSuffixLength, additionalSuffix))
+	re := regexp.MustCompile(fmt.Sprintf("[[:xdigit:]]{%d}%s$", id.UniqueIDSuffixLength, additionalSuffix))
 	return re.MatchString(s)
 }
 
@@ -49,7 +49,7 @@ func NamePrefixFromNameWithSuffix(name, nameSuffix string) *string {
 		return nil
 	}
 
-	namePrefixIndex := len(name) - resource.UniqueIDSuffixLength - len(nameSuffix)
+	namePrefixIndex := len(name) - id.UniqueIDSuffixLength - len(nameSuffix)
 
 	if namePrefixIndex <= 0 {
 		return nil

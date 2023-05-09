@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_memorydb_acl")
 func DataSourceACL() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceACLRead,

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_mskconnect_connector")
 func DataSourceConnector() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConnectorRead,

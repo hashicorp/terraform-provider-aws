@@ -28,11 +28,7 @@ import (
 	{{- end}}
 )
 
-func init() {
-    _sp.registerFrameworkResourceFactory(newResource{{ .Name }})
-}
-
-// newResource{{ .Name }} instantiates a new Resource for the {{ .TFTypeName }} resource.
+// @FrameworkResource
 func newResource{{ .Name }}(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resource{{ .Name }}{}
 	r.SetMigratedFromPluginSDK(true)

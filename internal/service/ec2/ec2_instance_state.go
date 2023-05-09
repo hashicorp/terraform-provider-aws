@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ec2_instance_state")
 func ResourceInstanceState() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceStateCreate,

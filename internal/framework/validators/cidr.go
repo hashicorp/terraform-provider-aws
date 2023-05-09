@@ -3,7 +3,7 @@ package validators
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -28,10 +28,10 @@ func (validator ipv4CIDRNetworkAddressValidator) ValidateString(ctx context.Cont
 	}
 
 	if err := verify.ValidateIPv4CIDRBlock(request.ConfigValue.ValueString()); err != nil {
-		response.Diagnostics.Append(diag.NewAttributeErrorDiagnostic(
+		response.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
 			request.Path,
 			validator.Description(ctx),
-			err.Error(),
+			request.ConfigValue.ValueString(),
 		))
 		return
 	}
@@ -67,10 +67,10 @@ func (validator ipv6CIDRNetworkAddressValidator) ValidateString(ctx context.Cont
 	}
 
 	if err := verify.ValidateIPv6CIDRBlock(request.ConfigValue.ValueString()); err != nil {
-		response.Diagnostics.Append(diag.NewAttributeErrorDiagnostic(
+		response.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
 			request.Path,
 			validator.Description(ctx),
-			err.Error(),
+			request.ConfigValue.ValueString(),
 		))
 
 		return

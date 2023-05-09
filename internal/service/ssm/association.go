@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_ssm_association")
 func ResourceAssociation() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

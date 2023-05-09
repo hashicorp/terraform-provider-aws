@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -26,6 +26,7 @@ const (
 	recordSetSyncMaxDelay = 30
 )
 
+// @SDKResource("aws_route53_record")
 func ResourceRecord() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -738,7 +739,7 @@ func FindResourceRecordSetByFourPartKey(ctx context.Context, conn *route53.Route
 	}
 
 	if output == nil {
-		return nil, "", &resource.NotFoundError{}
+		return nil, "", &retry.NotFoundError{}
 	}
 
 	return output, fqdn, nil
@@ -759,7 +760,7 @@ func ChangeResourceRecordSets(ctx context.Context, conn *route53.Route53, input 
 func WaitForRecordSetToSync(ctx context.Context, conn *route53.Route53, requestId string) error {
 	rand.Seed(time.Now().UTC().UnixNano())
 
-	wait := resource.StateChangeConf{
+	wait := retry.StateChangeConf{
 		Pending:      []string{route53.ChangeStatusPending},
 		Target:       []string{route53.ChangeStatusInsync},
 		Delay:        time.Duration(rand.Int63n(recordSetSyncMaxDelay-recordSetSyncMinDelay)+recordSetSyncMinDelay) * time.Second,
@@ -936,7 +937,7 @@ func ParseRecordID(id string) [4]string {
 		recZone = parts[0]
 	}
 	if len(parts) >= 3 {
-		var recTypeIndex int = -1
+		recTypeIndex := -1
 		for i, maybeRecType := range parts[1:] {
 			if validRecordType(maybeRecType) {
 				recTypeIndex = i + 1

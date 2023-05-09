@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_config_delivery_channel")
 func ResourceDeliveryChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeliveryChannelPut,
@@ -108,17 +109,17 @@ func resourceDeliveryChannelPut(ctx context.Context, d *schema.ResourceData, met
 
 	input := configservice.PutDeliveryChannelInput{DeliveryChannel: &channel}
 
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err := conn.PutDeliveryChannelWithContext(ctx, &input)
 		if err == nil {
 			return nil
 		}
 
 		if tfawserr.ErrCodeEquals(err, "InsufficientDeliveryPolicyException") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
-		return resource.NonRetryableError(err)
+		return retry.NonRetryableError(err)
 	})
 	if tfresource.TimedOut(err) {
 		_, err = conn.PutDeliveryChannelWithContext(ctx, &input)
@@ -188,14 +189,14 @@ func resourceDeliveryChannelDelete(ctx context.Context, d *schema.ResourceData, 
 		DeliveryChannelName: aws.String(d.Id()),
 	}
 
-	err := resource.RetryContext(ctx, 30*time.Second, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 30*time.Second, func() *retry.RetryError {
 		_, err := conn.DeleteDeliveryChannelWithContext(ctx, &input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, configservice.ErrCodeLastDeliveryChannelDeleteFailedException, "there is a running configuration recorder") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})

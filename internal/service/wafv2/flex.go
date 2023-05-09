@@ -30,9 +30,10 @@ func expandRule(m map[string]interface{}) *wafv2.Rule {
 	}
 
 	rule := &wafv2.Rule{
+		Action:           expandRuleAction(m["action"].([]interface{})),
+		CaptchaConfig:    expandCaptchaConfig(m["captcha_config"].([]interface{})),
 		Name:             aws.String(m["name"].(string)),
 		Priority:         aws.Int64(int64(m["priority"].(int))),
-		Action:           expandRuleAction(m["action"].([]interface{})),
 		Statement:        expandRuleGroupRootStatement(m["statement"].([]interface{})),
 		VisibilityConfig: expandVisibilityConfig(m["visibility_config"].([]interface{})),
 	}
@@ -42,6 +43,32 @@ func expandRule(m map[string]interface{}) *wafv2.Rule {
 	}
 
 	return rule
+}
+
+func expandCaptchaConfig(l []interface{}) *wafv2.CaptchaConfig {
+	configuration := &wafv2.CaptchaConfig{}
+
+	if len(l) == 0 || l[0] == nil {
+		return configuration
+	}
+
+	m := l[0].(map[string]interface{})
+	if v, ok := m["immunity_time_property"]; ok {
+		inner := v.([]interface{})
+		if len(inner) == 0 || inner[0] == nil {
+			return configuration
+		}
+
+		m = inner[0].(map[string]interface{})
+
+		if v, ok := m["immunity_time"]; ok {
+			configuration.ImmunityTimeProperty = &wafv2.ImmunityTimeProperty{
+				ImmunityTime: aws.Int64(int64(v.(int))),
+			}
+		}
+	}
+
+	return configuration
 }
 
 func expandRuleLabels(l []interface{}) []*wafv2.Label {
@@ -848,10 +875,11 @@ func expandWebACLRule(m map[string]interface{}) *wafv2.Rule {
 	}
 
 	rule := &wafv2.Rule{
-		Name:             aws.String(m["name"].(string)),
-		Priority:         aws.Int64(int64(m["priority"].(int))),
 		Action:           expandRuleAction(m["action"].([]interface{})),
+		CaptchaConfig:    expandCaptchaConfig(m["captcha_config"].([]interface{})),
+		Name:             aws.String(m["name"].(string)),
 		OverrideAction:   expandOverrideAction(m["override_action"].([]interface{})),
+		Priority:         aws.Int64(int64(m["priority"].(int))),
 		Statement:        expandWebACLRootStatement(m["statement"].([]interface{})),
 		VisibilityConfig: expandVisibilityConfig(m["visibility_config"].([]interface{})),
 	}
@@ -1024,6 +1052,9 @@ func expandManagedRuleGroupConfigs(tfList []interface{}) []*wafv2.ManagedRuleGro
 		if v, ok := m["aws_managed_rules_bot_control_rule_set"].([]interface{}); ok && len(v) > 0 {
 			r.AWSManagedRulesBotControlRuleSet = expandManagedRulesBotControlRuleSet(v)
 		}
+		if v, ok := m["aws_managed_rules_atp_rule_set"].([]interface{}); ok && len(v) > 0 {
+			r.AWSManagedRulesATPRuleSet = expandManagedRulesATPRuleSet(v)
+		}
 		if v, ok := m["login_path"].(string); ok && v != "" {
 			r.LoginPath = aws.String(v)
 		}
@@ -1077,6 +1108,122 @@ func expandManagedRulesBotControlRuleSet(tfList []interface{}) *wafv2.AWSManaged
 	m := tfList[0].(map[string]interface{})
 	out := wafv2.AWSManagedRulesBotControlRuleSet{
 		InspectionLevel: aws.String(m["inspection_level"].(string)),
+	}
+
+	return &out
+}
+
+func expandManagedRulesATPRuleSet(tfList []interface{}) *wafv2.AWSManagedRulesATPRuleSet {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+	out := wafv2.AWSManagedRulesATPRuleSet{
+		LoginPath: aws.String(m["login_path"].(string)),
+	}
+
+	if v, ok := m["request_inspection"].([]interface{}); ok && len(v) > 0 {
+		out.RequestInspection = expandRequestInspection(v)
+	}
+	if v, ok := m["response_inspection"].([]interface{}); ok && len(v) > 0 {
+		out.ResponseInspection = expandResponseInspection(v)
+	}
+
+	return &out
+}
+
+func expandRequestInspection(tfList []interface{}) *wafv2.RequestInspection {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+	out := wafv2.RequestInspection{
+		PasswordField: expandPasswordField(m["password_field"].([]interface{})),
+		PayloadType:   aws.String(m["payload_type"].(string)),
+		UsernameField: expandUsernameField(m["username_field"].([]interface{})),
+	}
+
+	return &out
+}
+
+func expandResponseInspection(tfList []interface{}) *wafv2.ResponseInspection {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+	out := wafv2.ResponseInspection{}
+	if v, ok := m["body_contains"].([]interface{}); ok && len(v) > 0 {
+		out.BodyContains = expandBodyContains(v)
+	}
+	if v, ok := m["header"].([]interface{}); ok && len(v) > 0 {
+		out.Header = expandHeader(v)
+	}
+	if v, ok := m["json"].([]interface{}); ok && len(v) > 0 {
+		out.Json = expandResponseInspectionJSON(v)
+	}
+	if v, ok := m["status_code"].([]interface{}); ok && len(v) > 0 {
+		out.StatusCode = expandStatusCode(v)
+	}
+
+	return &out
+}
+
+func expandBodyContains(tfList []interface{}) *wafv2.ResponseInspectionBodyContains {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+	out := wafv2.ResponseInspectionBodyContains{
+		FailureStrings: flex.ExpandStringSet(m["failure_strings"].(*schema.Set)),
+		SuccessStrings: flex.ExpandStringSet(m["success_strings"].(*schema.Set)),
+	}
+
+	return &out
+}
+
+func expandHeader(tfList []interface{}) *wafv2.ResponseInspectionHeader {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+	out := wafv2.ResponseInspectionHeader{
+		Name:          aws.String(m["name"].(string)),
+		FailureValues: flex.ExpandStringSet(m["failure_values"].(*schema.Set)),
+		SuccessValues: flex.ExpandStringSet(m["success_values"].(*schema.Set)),
+	}
+
+	return &out
+}
+
+func expandResponseInspectionJSON(tfList []interface{}) *wafv2.ResponseInspectionJson {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+	out := wafv2.ResponseInspectionJson{
+		FailureValues: flex.ExpandStringSet(m["failure_values"].(*schema.Set)),
+		Identifier:    aws.String(m["identifier"].(string)),
+		SuccessValues: flex.ExpandStringSet(m["success_values"].(*schema.Set)),
+	}
+
+	return &out
+}
+
+func expandStatusCode(tfList []interface{}) *wafv2.ResponseInspectionStatusCode {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+	out := wafv2.ResponseInspectionStatusCode{
+		FailureCodes: flex.ExpandInt64Set(m["failure_codes"].(*schema.Set)),
+		SuccessCodes: flex.ExpandInt64Set(m["success_codes"].(*schema.Set)),
 	}
 
 	return &out
@@ -1204,6 +1351,7 @@ func flattenRules(r []*wafv2.Rule) interface{} {
 	for i, rule := range r {
 		m := make(map[string]interface{})
 		m["action"] = flattenRuleAction(rule.Action)
+		m["captcha_config"] = flattenCaptchaConfig(rule.CaptchaConfig)
 		m["name"] = aws.StringValue(rule.Name)
 		m["priority"] = int(aws.Int64Value(rule.Priority))
 		m["rule_label"] = flattenRuleLabels(rule.RuleLabels)
@@ -1281,6 +1429,23 @@ func flattenCaptcha(a *wafv2.CaptchaAction) []interface{} {
 
 	if a.CustomRequestHandling != nil {
 		m["custom_request_handling"] = flattenCustomRequestHandling(a.CustomRequestHandling)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCaptchaConfig(config *wafv2.CaptchaConfig) interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+	if config.ImmunityTimeProperty == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"immunity_time_property": []interface{}{map[string]interface{}{
+			"immunity_time": aws.Int64Value(config.ImmunityTimeProperty.ImmunityTime),
+		}},
 	}
 
 	return []interface{}{m}
@@ -1955,6 +2120,7 @@ func flattenWebACLRules(r []*wafv2.Rule) interface{} {
 	for i, rule := range r {
 		m := make(map[string]interface{})
 		m["action"] = flattenRuleAction(rule.Action)
+		m["captcha_config"] = flattenCaptchaConfig(rule.CaptchaConfig)
 		m["override_action"] = flattenOverrideAction(rule.OverrideAction)
 		m["name"] = aws.StringValue(rule.Name)
 		m["priority"] = int(aws.Int64Value(rule.Priority))
@@ -2053,6 +2219,9 @@ func flattenManagedRuleGroupConfigs(c []*wafv2.ManagedRuleGroupConfig) []interfa
 		if config.AWSManagedRulesBotControlRuleSet != nil {
 			m["aws_managed_rules_bot_control_rule_set"] = flattenManagedRulesBotControlRuleSet(config.AWSManagedRulesBotControlRuleSet)
 		}
+		if config.AWSManagedRulesATPRuleSet != nil {
+			m["aws_managed_rules_atp_rule_set"] = flattenManagedRulesATPRuleSet(config.AWSManagedRulesATPRuleSet)
+		}
 		if config.LoginPath != nil {
 			m["login_path"] = aws.StringValue(config.LoginPath)
 		}
@@ -2103,6 +2272,113 @@ func flattenManagedRulesBotControlRuleSet(apiObject *wafv2.AWSManagedRulesBotCon
 
 	m := map[string]interface{}{
 		"inspection_level": aws.StringValue(apiObject.InspectionLevel),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenManagedRulesATPRuleSet(apiObject *wafv2.AWSManagedRulesATPRuleSet) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"login_path": aws.StringValue(apiObject.LoginPath),
+	}
+	if apiObject.RequestInspection != nil {
+		m["request_inspection"] = flattenRequestInspection(apiObject.RequestInspection)
+	}
+	if apiObject.ResponseInspection != nil {
+		m["response_inspection"] = flattenResponseInspection(apiObject.ResponseInspection)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenRequestInspection(apiObject *wafv2.RequestInspection) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"password_field": flattenPasswordField(apiObject.PasswordField),
+		"payload_type":   aws.StringValue(apiObject.PayloadType),
+		"username_field": flattenUsernameField(apiObject.UsernameField),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenResponseInspection(apiObject *wafv2.ResponseInspection) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+	if apiObject.BodyContains != nil {
+		m["body_contains"] = flattenBodyContains(apiObject.BodyContains)
+	}
+	if apiObject.Header != nil {
+		m["header"] = flattenHeader(apiObject.Header)
+	}
+	if apiObject.Json != nil {
+		m["json"] = flattenResponseInspectionJSON(apiObject.Json)
+	}
+	if apiObject.StatusCode != nil {
+		m["status_code"] = flattenStatusCode(apiObject.StatusCode)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenBodyContains(apiObject *wafv2.ResponseInspectionBodyContains) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"failure_strings": flex.FlattenStringSet(apiObject.FailureStrings),
+		"succeed_strings": flex.FlattenStringSet(apiObject.SuccessStrings),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenHeader(apiObject *wafv2.ResponseInspectionHeader) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"failure_values": flex.FlattenStringSet(apiObject.FailureValues),
+		"succeed_values": flex.FlattenStringSet(apiObject.SuccessValues),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenResponseInspectionJSON(apiObject *wafv2.ResponseInspectionJson) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"failure_values": flex.FlattenStringSet(apiObject.FailureValues),
+		"identifier":     aws.StringValue(apiObject.Identifier),
+		"succeed_values": flex.FlattenStringSet(apiObject.SuccessValues),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenStatusCode(apiObject *wafv2.ResponseInspectionStatusCode) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"failure_codes": flex.FlattenInt64Set(apiObject.FailureCodes),
+		"success_codes": flex.FlattenInt64Set(apiObject.SuccessCodes),
 	}
 
 	return []interface{}{m}

@@ -11,7 +11,11 @@ func TestAccSecurityHub_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Account": {
-			"basic": testAccAccount_basic,
+			"basic":                       testAccAccount_basic,
+			"disappears":                  testAccAccount_disappears,
+			"EnableDefaultStandardsFalse": testAccAccount_enableDefaultStandardsFalse,
+			"MigrateV0":                   testAccAccount_migrateV0,
+			"full":                        testAccAccount_full,
 		},
 		"Member": {
 			"basic":  testAccMember_basic,
@@ -45,7 +49,8 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			"MultiRegion": testAccOrganizationAdminAccount_MultiRegion,
 		},
 		"OrganizationConfiguration": {
-			"basic": testAccOrganizationConfiguration_basic,
+			"basic":               testAccOrganizationConfiguration_basic,
+			"AutoEnableStandards": testAccOrganizationConfiguration_autoEnableStandards,
 		},
 		"ProductSubscription": {
 			"basic": testAccProductSubscription_basic,
