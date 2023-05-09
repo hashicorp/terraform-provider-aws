@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	"github.com/aws/aws-sdk-go-v2/service/account"
+	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	"github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
@@ -41,7 +42,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/alexaforbusiness"
 	"github.com/aws/aws-sdk-go/service/amplify"
@@ -354,7 +354,7 @@ type AWSClient struct {
 	s3controlClient lazyClient[*s3control_sdkv2.Client]
 	ssmClient       lazyClient[*ssm_sdkv2.Client]
 
-	acmConn                          *acm.ACM
+	acmClient                        *acm.Client
 	acmpcaConn                       *acmpca.ACMPCA
 	ampConn                          *prometheusservice.PrometheusService
 	apigatewayConn                   *apigateway.APIGateway
@@ -674,8 +674,8 @@ type AWSClient struct {
 	s3ConnURICleaningDisabled *s3.S3
 }
 
-func (client *AWSClient) ACMConn() *acm.ACM {
-	return client.acmConn
+func (client *AWSClient) ACMClient() *acm.Client {
+	return client.acmClient
 }
 
 func (client *AWSClient) ACMPCAConn() *acmpca.ACMPCA {
