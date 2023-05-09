@@ -28,7 +28,6 @@ func init() {
 			"aws_apigatewayv2_api",
 			"aws_apigatewayv2_api_mapping",
 			"aws_apigatewayv2_domain_name",
-			"aws_apigatewayv2_stage",
 			"aws_apigatewayv2_vpc_link",
 			"aws_elb",
 			"aws_iam_server_certificate",
