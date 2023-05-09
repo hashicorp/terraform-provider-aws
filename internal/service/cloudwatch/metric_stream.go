@@ -65,7 +65,7 @@ func ResourceMetricStream() *schema.Resource {
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
 						"metric_names": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							MaxItems: 999,
 							Elem: &schema.Schema{
@@ -93,7 +93,7 @@ func ResourceMetricStream() *schema.Resource {
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
 						"metric_names": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							MaxItems: 999,
 							Elem: &schema.Schema{
@@ -459,12 +459,8 @@ func expandMetricStreamFilters(s *schema.Set) []*cloudwatch.MetricStreamFilter {
 		if v, ok := mFilter["namespace"].(string); ok && v != "" {
 			filter.Namespace = aws.String(v)
 		}
-		if v, ok := mFilter["metric_names"].([]interface{}); ok && len(v) != 0 {
-			filter.MetricNames = make([]*string, len(v))
-			for i, metricName := range v {
-				str := metricName.(string)
-				filter.MetricNames[i] = &str
-			}
+		if v, ok := mFilter["metric_names"].(*schema.Set); ok && v.Len() > 0 {
+			filter.MetricNames = flex.ExpandStringSet(v)
 		}
 		filters = append(filters, filter)
 	}
