@@ -1,7 +1,7 @@
 AWSCLIV2Command,AWSCLIV2CommandNoDashes,GoV1Package,GoV2Package,ProviderPackageActual,ProviderPackageCorrect,SplitPackageRealPackage,Aliases,ProviderNameUpper,GoV1ClientTypeName,SkipClientGenerate,ClientSDKV1,ClientSDKV2,ResourcePrefixActual,ResourcePrefixCorrect,FilePrefix,DocPrefix,HumanFriendly,Brand,Exclude,AllowedSubcategory,DeprecatedEnvVar,EnvVar,Note
 accessanalyzer,accessanalyzer,accessanalyzer,accessanalyzer,,accessanalyzer,,,AccessAnalyzer,AccessAnalyzer,,,2,,aws_accessanalyzer_,,accessanalyzer_,IAM Access Analyzer,AWS,,,,,
 account,account,account,account,,account,,,Account,Account,,,2,,aws_account_,,account_,Account Management,AWS,,,,,
-acm,acm,acm,acm,,acm,,,ACM,ACM,,1,,,aws_acm_,,acm_,ACM (Certificate Manager),AWS,,,,,
+acm,acm,acm,acm,,acm,,,ACM,ACM,,,2,,aws_acm_,,acm_,ACM (Certificate Manager),AWS,,,,,
 acm-pca,acmpca,acmpca,acmpca,,acmpca,,,ACMPCA,ACMPCA,,1,,,aws_acmpca_,,acmpca_,ACM PCA (Certificate Manager Private Certificate Authority),AWS,,,,,
 alexaforbusiness,alexaforbusiness,alexaforbusiness,alexaforbusiness,,alexaforbusiness,,,AlexaForBusiness,AlexaForBusiness,,1,,,aws_alexaforbusiness_,,alexaforbusiness_,Alexa for Business,,,,,,
 amp,amp,prometheusservice,amp,,amp,,prometheus;prometheusservice,AMP,PrometheusService,,1,,aws_prometheus_,aws_amp_,,prometheus_,AMP (Managed Prometheus),Amazon,,,,,
