@@ -24,6 +24,7 @@ import (
 const (
 	AccessAnalyzerEndpointID             = "access-analyzer"
 	AccountEndpointID                    = "account"
+	ACMEndpointID                        = "acm"
 	AuditManagerEndpointID               = "auditmanager"
 	CloudWatchLogsEndpointID             = "logs"
 	ComprehendEndpointID                 = "comprehend"
