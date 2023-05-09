@@ -42,6 +42,7 @@ func TestAccACMPCACertificateAuthority_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "certificate_chain", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_signing_request"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "key_storage_security_standard", "FIPS_140_2_LEVEL_3_OR_HIGHER"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "not_after"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "not_before"),
 					resource.TestCheckResourceAttr(resourceName, "permanent_deletion_time_in_days", "30"),
@@ -52,7 +53,6 @@ func TestAccACMPCACertificateAuthority_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "status", "PENDING_CERTIFICATE"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "type", "SUBORDINATE"),
-					resource.TestCheckResourceAttr(resourceName, "key_storage_security_standard", "FIPS_140_2_LEVEL_3_OR_HIGHER"),
 					resource.TestCheckResourceAttr(resourceName, "usage_mode", "SHORT_LIVED_CERTIFICATE"),
 				),
 			},
@@ -255,6 +255,7 @@ func TestAccACMPCACertificateAuthority_RevocationConfiguration_empty(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "certificate_chain", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_signing_request"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "key_storage_security_standard", "FIPS_140_2_LEVEL_3_OR_HIGHER"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "not_after"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "not_before"),
 					resource.TestCheckResourceAttr(resourceName, "permanent_deletion_time_in_days", "30"),
@@ -265,7 +266,6 @@ func TestAccACMPCACertificateAuthority_RevocationConfiguration_empty(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "status", "PENDING_CERTIFICATE"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "type", "SUBORDINATE"),
-					resource.TestCheckResourceAttr(resourceName, "key_storage_security_standard", "FIPS_140_2_LEVEL_3_OR_HIGHER"),
 					resource.TestCheckResourceAttr(resourceName, "usage_mode", "SHORT_LIVED_CERTIFICATE"),
 				),
 			},
@@ -923,7 +923,11 @@ resource "aws_acmpca_certificate_authority" "test" {
     }
   }
 
-  depends_on = [aws_s3_bucket_policy.test]
+  depends_on = [
+    aws_s3_bucket_policy.test,
+    aws_s3_bucket_public_access_block.test,
+    aws_s3_bucket_ownership_controls.test,
+  ]
 }
 `, commonName, customCname))
 }
@@ -952,6 +956,12 @@ resource "aws_acmpca_certificate_authority" "test" {
       s3_bucket_name     = aws_s3_bucket.test.id
     }
   }
+
+  depends_on = [
+    aws_s3_bucket_policy.test,
+    aws_s3_bucket_public_access_block.test,
+    aws_s3_bucket_ownership_controls.test,
+  ]
 }
 `, commonName, enabled))
 }
@@ -980,6 +990,12 @@ resource "aws_acmpca_certificate_authority" "test" {
       s3_bucket_name     = aws_s3_bucket.test.id
     }
   }
+
+  depends_on = [
+    aws_s3_bucket_policy.test,
+    aws_s3_bucket_public_access_block.test,
+    aws_s3_bucket_ownership_controls.test,
+  ]
 }
 `, commonName, expirationInDays))
 }
@@ -1010,7 +1026,11 @@ resource "aws_acmpca_certificate_authority" "test" {
     }
   }
 
-  depends_on = [aws_s3_bucket_policy.test]
+  depends_on = [
+    aws_s3_bucket_policy.test,
+    aws_s3_bucket_public_access_block.test,
+    aws_s3_bucket_ownership_controls.test,
+  ]
 }
 `, commonName, s3ObjectAcl))
 }
@@ -1069,6 +1089,23 @@ func testAccCertificateAuthorityConfig_S3Bucket(rName string) string {
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
+}
+
+resource "aws_s3_bucket_ownership_controls" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
 }
 
 data "aws_iam_policy_document" "acmpca_bucket_access" {
@@ -1144,7 +1181,7 @@ resource "aws_acmpca_certificate_authority" "test" {
 `, commonName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccCertificateAuthorityConfig_keyStorageSecurityStandard(commonName, certificateAuthorityType string, keyStorageSecurityStandard string) string {
+func testAccCertificateAuthorityConfig_keyStorageSecurityStandard(commonName, certificateAuthorityType, keyStorageSecurityStandard string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   enabled                         = true
