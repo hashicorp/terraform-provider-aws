@@ -6,11 +6,14 @@ FEATURES:
 * **New Data Source:** `aws_connect_vocabulary` ([#26158](https://github.com/hashicorp/terraform-provider-aws/issues/26158))
 * **New Data Source:** `aws_organizations_policy` ([#30920](https://github.com/hashicorp/terraform-provider-aws/issues/30920))
 * **New Data Source:** `aws_redshiftserverless_namespace` ([#31250](https://github.com/hashicorp/terraform-provider-aws/issues/31250))
+* **New Resource:** `aws_quicksight_template` ([#30453](https://github.com/hashicorp/terraform-provider-aws/issues/30453))
 
 ENHANCEMENTS:
 
+* data-source/aws_acmpca_certificate_authority: Add `key_storage_security_standard` attribute ([#31280](https://github.com/hashicorp/terraform-provider-aws/issues/31280))
 * data-source/aws_elastic_beanstalk_hosted_zone: Add hosted zone ID for `ap-southeast-3` AWS Region ([#31248](https://github.com/hashicorp/terraform-provider-aws/issues/31248))
 * data-source/aws_s3_bucket: Set `hosted_zone_id` for `cn-north-1` AWS China Region ([#31247](https://github.com/hashicorp/terraform-provider-aws/issues/31247))
+* resource/aws_acmpca_certificate_authority: Add `key_storage_security_standard` argument ([#31280](https://github.com/hashicorp/terraform-provider-aws/issues/31280))
 * resource/aws_fsx_ontap_file_system: Allow in-place update of `route_table_ids` ([#31251](https://github.com/hashicorp/terraform-provider-aws/issues/31251))
 * resource/aws_fsx_ontap_file_system: Support setting `throughput_capacity` to `4096` ([#31251](https://github.com/hashicorp/terraform-provider-aws/issues/31251))
 * resource/aws_s3_bucket: Set `hosted_zone_id` for `cn-north-1` AWS China Region ([#31247](https://github.com/hashicorp/terraform-provider-aws/issues/31247))
