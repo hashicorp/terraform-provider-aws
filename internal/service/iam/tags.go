@@ -16,76 +16,6 @@ import (
 
 // Custom IAM tag service update functions using the same format as generated code.
 
-// roleUpdateTags updates IAM role tags.
-// The identifier is the role name.
-func roleUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, oldTagsMap, newTagsMap any) error {
-	oldTags := tftags.New(ctx, oldTagsMap)
-	newTags := tftags.New(ctx, newTagsMap)
-
-	if removedTags := oldTags.Removed(newTags).IgnoreSystem(names.IAM); len(removedTags) > 0 {
-		input := &iam.UntagRoleInput{
-			RoleName: aws.String(identifier),
-			TagKeys:  aws.StringSlice(removedTags.Keys()),
-		}
-
-		_, err := conn.UntagRoleWithContext(ctx, input)
-
-		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
-		}
-	}
-
-	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
-		input := &iam.TagRoleInput{
-			RoleName: aws.String(identifier),
-			Tags:     Tags(updatedTags),
-		}
-
-		_, err := conn.TagRoleWithContext(ctx, input)
-
-		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
-		}
-	}
-
-	return nil
-}
-
-// userUpdateTags updates IAM user tags.
-// The identifier is the user name.
-func userUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, oldTagsMap, newTagsMap any) error {
-	oldTags := tftags.New(ctx, oldTagsMap)
-	newTags := tftags.New(ctx, newTagsMap)
-
-	if removedTags := oldTags.Removed(newTags).IgnoreSystem(names.IAM); len(removedTags) > 0 {
-		input := &iam.UntagUserInput{
-			UserName: aws.String(identifier),
-			TagKeys:  aws.StringSlice(removedTags.Keys()),
-		}
-
-		_, err := conn.UntagUserWithContext(ctx, input)
-
-		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
-		}
-	}
-
-	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
-		input := &iam.TagUserInput{
-			UserName: aws.String(identifier),
-			Tags:     Tags(updatedTags),
-		}
-
-		_, err := conn.TagUserWithContext(ctx, input)
-
-		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
-		}
-	}
-
-	return nil
-}
-
 // instanceProfileUpdateTags updates IAM Instance Profile tags.
 // The identifier is the Instance Profile name.
 func instanceProfileUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, oldTagsMap, newTagsMap any) error {
@@ -191,6 +121,41 @@ func policyUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier stri
 	return nil
 }
 
+// roleUpdateTags updates IAM role tags.
+// The identifier is the role name.
+func roleUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, oldTagsMap, newTagsMap any) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags).IgnoreSystem(names.IAM); len(removedTags) > 0 {
+		input := &iam.UntagRoleInput{
+			RoleName: aws.String(identifier),
+			TagKeys:  aws.StringSlice(removedTags.Keys()),
+		}
+
+		_, err := conn.UntagRoleWithContext(ctx, input)
+
+		if err != nil {
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
+		input := &iam.TagRoleInput{
+			RoleName: aws.String(identifier),
+			Tags:     Tags(updatedTags),
+		}
+
+		_, err := conn.TagRoleWithContext(ctx, input)
+
+		if err != nil {
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
 // samlProviderUpdateTags updates IAM SAML Provider tags.
 // The identifier is the SAML Provider ARN.
 func samlProviderUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, oldTagsMap, newTagsMap any) error {
@@ -252,6 +217,41 @@ func serverCertificateUpdateTags(ctx context.Context, conn iamiface.IAMAPI, iden
 		}
 
 		_, err := conn.TagServerCertificateWithContext(ctx, input)
+
+		if err != nil {
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// userUpdateTags updates IAM user tags.
+// The identifier is the user name.
+func userUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, oldTagsMap, newTagsMap any) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags).IgnoreSystem(names.IAM); len(removedTags) > 0 {
+		input := &iam.UntagUserInput{
+			UserName: aws.String(identifier),
+			TagKeys:  aws.StringSlice(removedTags.Keys()),
+		}
+
+		_, err := conn.UntagUserWithContext(ctx, input)
+
+		if err != nil {
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
+		input := &iam.TagUserInput{
+			UserName: aws.String(identifier),
+			Tags:     Tags(updatedTags),
+		}
+
+		_, err := conn.TagUserWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
