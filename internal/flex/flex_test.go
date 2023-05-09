@@ -3,6 +3,7 @@ package flex
 import (
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/google/go-cmp/cmp"
@@ -32,6 +33,36 @@ func TestExpandStringListEmptyItems(t *testing.T) {
 		aws.String("foo"),
 		aws.String("bar"),
 		aws.String("baz"),
+	}
+
+	if !cmp.Equal(got, want) {
+		t.Errorf("expanded = %v, want = %v", got, want)
+	}
+}
+
+func TestExpandStringTimeList(t *testing.T) {
+	t.Parallel()
+
+	configured := []interface{}{"2006-01-02T15:04:05+07:00", "2023-04-13T10:25:05+01:00"}
+	got := ExpandStringTimeList(configured, time.RFC3339)
+	want := []*time.Time{
+		aws.Time(time.Date(2006, 1, 2, 15, 4, 5, 0, time.FixedZone("UTC-7", 7*60*60))),
+		aws.Time(time.Date(2023, 4, 13, 10, 25, 5, 0, time.FixedZone("UTC-1", 60*60))),
+	}
+
+	if !cmp.Equal(got, want) {
+		t.Errorf("expanded = %v, want = %v", got, want)
+	}
+}
+
+func TestExpandStringTimeListEmptyItems(t *testing.T) {
+	t.Parallel()
+
+	configured := []interface{}{"2006-01-02T15:04:05+07:00", "", "2023-04-13T10:25:05+01:00"}
+	got := ExpandStringTimeList(configured, time.RFC3339)
+	want := []*time.Time{
+		aws.Time(time.Date(2006, 1, 2, 15, 4, 5, 0, time.FixedZone("UTC+7", 7*60*60))),
+		aws.Time(time.Date(2023, 4, 13, 10, 25, 5, 0, time.FixedZone("UTC+1", 60*60))),
 	}
 
 	if !cmp.Equal(got, want) {
@@ -154,5 +185,20 @@ func TestFlattenResourceIdSinglePart(t *testing.T) {
 
 	if !strings.Contains(err.Error(), "unexpected format for ID parts ([foo]), expected more than one part") {
 		t.Fatalf("Expected an error when parsing ResourceId with single part count")
+	}
+}
+
+func TestFlattenTimeStringList(t *testing.T) {
+	t.Parallel()
+
+	configured := []*time.Time{
+		aws.Time(time.Date(2006, 1, 2, 15, 4, 5, 0, time.FixedZone("UTC-7", 7*60*60))),
+		aws.Time(time.Date(2023, 4, 13, 10, 25, 5, 0, time.FixedZone("UTC-1", 60*60))),
+	}
+	got := FlattenTimeStringList(configured, time.RFC3339)
+	want := []interface{}{"2006-01-02T15:04:05+07:00", "2023-04-13T10:25:05+01:00"}
+
+	if !cmp.Equal(got, want) {
+		t.Errorf("expanded = %v, want = %v", got, want)
 	}
 }

@@ -225,6 +225,26 @@ func TestAccQuickSightDataSet_logicalTableMap(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.alias", "Group1"),
 					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.0.physical_table_id", rId),
+					resource.TestCheckResourceAttr(resourceName, "output_columns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "output_columns.0.name", "Column1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDataSetConfigUpdateLogicalTableMap(rId, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.alias", "Group1"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.0.physical_table_id", rId),
+					resource.TestCheckResourceAttr(resourceName, "output_columns.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "output_columns.0.name", "Column1"),
+					resource.TestCheckResourceAttr(resourceName, "output_columns.1.name", "Column2"),
 				),
 			},
 			{
@@ -657,9 +677,7 @@ resource "aws_quicksight_data_set" "test" {
         name = "Column1"
         type = "STRING"
       }
-      upload_settings {
-        format = "JSON"
-      }
+      upload_settings {}
     }
   }
   logical_table_map {
@@ -667,6 +685,46 @@ resource "aws_quicksight_data_set" "test" {
     alias                = "Group1"
     source {
       physical_table_id = %[1]q
+    }
+  }
+}
+`, rId, rName))
+}
+
+func testAccDataSetConfigUpdateLogicalTableMap(rId, rName string) string {
+	return acctest.ConfigCompose(
+		testAccDataSetConfigBase(rId, rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_data_set" "test" {
+  data_set_id = %[1]q
+  name        = %[2]q
+  import_mode = "SPICE"
+
+  physical_table_map {
+    physical_table_map_id = %[1]q
+    s3_source {
+      data_source_arn = aws_quicksight_data_source.test.arn
+      input_columns {
+        name = "Column1"
+        type = "STRING"
+      }
+      upload_settings {}
+    }
+  }
+  logical_table_map {
+    logical_table_map_id = %[1]q
+    alias                = "Group1"
+    source {
+      physical_table_id = %[1]q
+    }
+    data_transforms {
+      create_columns_operation {
+        columns {
+          column_id   = "Column2"
+          column_name = "Column2"
+          expression  = "Column1"
+        }
+      }
     }
   }
 }
