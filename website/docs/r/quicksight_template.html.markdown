@@ -146,6 +146,7 @@ In addition to all arguments above, the following attributes are exported:
 * `created_time` - The time that the template was created.
 * `id` - A comma-delimited string joining AWS account ID and template ID.
 * `last_updated_time` - The time that the template was last updated.
+* `source_entity_arn` - Amazon Resource Name (ARN) of an analysis or template that was used to create this template.
 * `status` - The template creation status.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `version_number` - The version number of the template version.
@@ -160,4 +161,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Importing is currently not supported on this resource.
+A QuickSight Template can be imported using the AWS account ID and template ID separated by a comma (`,`) e.g.,
+
+```
+$ terraform import aws_quicksight_template.example 123456789012,example-id
+```

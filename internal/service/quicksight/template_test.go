@@ -45,9 +45,9 @@ func TestAccQuickSightTemplate_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName: resourceName,
-				ImportState:  false,
-				RefreshState: true,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -107,9 +107,9 @@ func TestAccQuickSightTemplate_BarChart(t *testing.T) {
 				),
 			},
 			{
-				ResourceName: resourceName,
-				ImportState:  false,
-				RefreshState: true,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -155,9 +155,9 @@ func TestAccQuickSightTemplate_Table(t *testing.T) {
 				),
 			},
 			{
-				ResourceName: resourceName,
-				ImportState:  false,
-				RefreshState: true,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -192,9 +192,10 @@ func TestAccQuickSightTemplate_TemplateSourceEntity(t *testing.T) {
 				),
 			},
 			{
-				ResourceName: resourceName,
-				ImportState:  false,
-				RefreshState: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"source_entity"},
 			},
 		},
 	})
@@ -259,6 +260,7 @@ func testAccCheckTemplateNotRecreated(before, after *quicksight.Template) resour
 		return nil
 	}
 }
+
 func testAccTemplateConfigBase(rId string, rName string) string {
 	return acctest.ConfigCompose(
 		testAccDataSetConfigBase(rId, rName),

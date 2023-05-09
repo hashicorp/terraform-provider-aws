@@ -37,6 +37,10 @@ func ResourceTemplate() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -86,6 +90,10 @@ func ResourceTemplate() *schema.Resource {
 				},
 			},
 			"source_entity": quicksightschema.SourceEntitySchema(),
+			"source_entity_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -192,6 +200,7 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("last_updated_time", out.LastUpdatedTime.Format(time.RFC3339))
 	d.Set("name", out.Name)
 	d.Set("status", out.Version.Status)
+	d.Set("source_entity_arn", out.Version.SourceEntityArn)
 	d.Set("template_id", out.TemplateId)
 	d.Set("version_description", out.Version.Description)
 	d.Set("version_number", out.Version.VersionNumber)
