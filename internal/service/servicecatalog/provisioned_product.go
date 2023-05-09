@@ -657,20 +657,20 @@ func expandProvisioningPreferences(tfMap map[string]interface{}) *servicecatalog
 		apiObject.StackSetAccounts = flex.ExpandStringList(v)
 	}
 
-	if v, ok := tfMap["failure_tolerance_count"].(int64); ok && v != 0 {
-		apiObject.StackSetFailureToleranceCount = aws.Int64(v)
+	if v, ok := tfMap["failure_tolerance_count"].(int); ok && v != 0 {
+		apiObject.StackSetFailureToleranceCount = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["failure_tolerance_percentage"].(int64); ok && v != 0 {
-		apiObject.StackSetFailureTolerancePercentage = aws.Int64(v)
+	if v, ok := tfMap["failure_tolerance_percentage"].(int); ok && v != 0 {
+		apiObject.StackSetFailureTolerancePercentage = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["max_concurrency_count"].(int64); ok && v != 0 {
-		apiObject.StackSetMaxConcurrencyCount = aws.Int64(v)
+	if v, ok := tfMap["max_concurrency_count"].(int); ok && v != 0 {
+		apiObject.StackSetMaxConcurrencyCount = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["max_concurrency_percentage"].(int64); ok && v != 0 {
-		apiObject.StackSetMaxConcurrencyPercentage = aws.Int64(v)
+	if v, ok := tfMap["max_concurrency_percentage"].(int); ok && v != 0 {
+		apiObject.StackSetMaxConcurrencyPercentage = aws.Int64(int64(v))
 	}
 
 	if v, ok := tfMap["regions"].([]interface{}); ok && len(v) > 0 {
@@ -739,20 +739,20 @@ func expandUpdateProvisioningPreferences(tfMap map[string]interface{}) *servicec
 		apiObject.StackSetAccounts = flex.ExpandStringList(v)
 	}
 
-	if v, ok := tfMap["failure_tolerance_count"].(int64); ok && v != 0 {
-		apiObject.StackSetFailureToleranceCount = aws.Int64(v)
+	if v, ok := tfMap["failure_tolerance_count"].(int); ok && v != 0 {
+		apiObject.StackSetFailureToleranceCount = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["failure_tolerance_percentage"].(int64); ok && v != 0 {
-		apiObject.StackSetFailureTolerancePercentage = aws.Int64(v)
+	if v, ok := tfMap["failure_tolerance_percentage"].(int); ok && v != 0 {
+		apiObject.StackSetFailureTolerancePercentage = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["max_concurrency_count"].(int64); ok && v != 0 {
-		apiObject.StackSetMaxConcurrencyCount = aws.Int64(v)
+	if v, ok := tfMap["max_concurrency_count"].(int); ok && v != 0 {
+		apiObject.StackSetMaxConcurrencyCount = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["max_concurrency_percentage"].(int64); ok && v != 0 {
-		apiObject.StackSetMaxConcurrencyPercentage = aws.Int64(v)
+	if v, ok := tfMap["max_concurrency_percentage"].(int); ok && v != 0 {
+		apiObject.StackSetMaxConcurrencyPercentage = aws.Int64(int64(v))
 	}
 
 	if v, ok := tfMap["regions"].([]interface{}); ok && len(v) > 0 {
