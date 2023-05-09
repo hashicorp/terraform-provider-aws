@@ -51,7 +51,7 @@ const (
 
 // @SDKResource("aws_acm_certificate", name="Certificate")
 // @Tags(identifierAttribute="id")
-func ResourceCertificate() *schema.Resource {
+func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,
 		ReadWithoutTimeout:   resourceCertificateRead,

@@ -31,7 +31,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceCertificate,
+			Factory:  resourceCertificate,
 			TypeName: "aws_acm_certificate",
 			Name:     "Certificate",
 			Tags: &types.ServicePackageResourceTags{
@@ -39,7 +39,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceCertificateValidation,
+			Factory:  resourceCertificateValidation,
 			TypeName: "aws_acm_certificate_validation",
 		},
 	}
