@@ -81,7 +81,7 @@ func TestAccQuickSightTemplate_disappears(t *testing.T) {
 	})
 }
 
-func TestAccQuickSightTemplate_BarChart(t *testing.T) {
+func TestAccQuickSightTemplate_barChart(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var template quicksight.Template
@@ -115,7 +115,7 @@ func TestAccQuickSightTemplate_BarChart(t *testing.T) {
 	})
 }
 
-func TestAccQuickSightTemplate_Table(t *testing.T) {
+func TestAccQuickSightTemplate_table(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v1, v2 quicksight.Template
@@ -163,7 +163,7 @@ func TestAccQuickSightTemplate_Table(t *testing.T) {
 	})
 }
 
-func TestAccQuickSightTemplate_TemplateSourceEntity(t *testing.T) {
+func TestAccQuickSightTemplate_sourceEntity(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var template quicksight.Template
