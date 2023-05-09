@@ -1495,7 +1495,6 @@ func flattenContributionAnalysisDefault(apiObject []*quicksight.ContributionAnal
 		}
 		if config.ContributorDimensions != nil {
 			tfMap["contribution_dimensions"] = flattenColumnIdentifiers(config.ContributorDimensions)
-
 		}
 
 		tfList = append(tfList, tfMap)
