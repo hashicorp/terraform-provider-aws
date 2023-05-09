@@ -163,6 +163,8 @@ func TestAccServiceCatalogProvisionedProduct_stackSetProvisioningPreferences(t *
 					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.failure_tolerance_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.max_concurrency_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.accounts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.regions.#", "1"),
 				),
 			},
 			{
@@ -186,6 +188,8 @@ func TestAccServiceCatalogProvisionedProduct_stackSetProvisioningPreferences(t *
 					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.failure_tolerance_count", "3"),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.max_concurrency_count", "4"),
+					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.accounts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.regions.#", "1"),
 				),
 			},
 			{
@@ -786,6 +790,8 @@ resource "aws_servicecatalog_provisioned_product" "test" {
 func testAccProvisionedProductConfig_stackSetprovisioningPreferences(rName, domain, email, vpcCidr string, failureToleranceCount, maxConcurrencyCount int) string {
 	return acctest.ConfigCompose(testAccProvisionedProductTemplateURLBaseConfig(rName, domain, email),
 		fmt.Sprintf(`
+data "aws_region" "current" {}
+
 resource "aws_servicecatalog_provisioned_product" "test" {
   name                       = %[1]q
   product_id                 = aws_servicecatalog_product.test.id
@@ -793,6 +799,8 @@ resource "aws_servicecatalog_provisioned_product" "test" {
   path_id                    = data.aws_servicecatalog_launch_paths.test.summaries[0].path_id
 
   stack_set_provisioning_preferences {
+    accounts                = [data.aws_caller_identity.current.account_id]
+    regions                 = [data.aws_region.current.name]
     failure_tolerance_count = %[3]d
     max_concurrency_count   = %[4]d
   }
