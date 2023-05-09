@@ -51,6 +51,14 @@ func instanceProfileUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identi
 	return nil
 }
 
+func instanceProfileCreateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, tags []*iam.Tag) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return instanceProfileUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+}
+
 // openIDConnectProviderUpdateTags updates IAM OpenID Connect Provider tags.
 // The identifier is the OpenID Connect Provider ARN.
 func openIDConnectProviderUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, oldTagsMap, newTagsMap any) error {
