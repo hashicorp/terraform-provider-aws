@@ -26,7 +26,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAlternateContact,
+			Factory:  resourceAlternateContact,
 			TypeName: "aws_account_alternate_contact",
 		},
 		{

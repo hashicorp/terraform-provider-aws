@@ -24,7 +24,7 @@ import (
 )
 
 // @SDKResource("aws_account_alternate_contact")
-func ResourceAlternateContact() *schema.Resource {
+func resourceAlternateContact() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAlternateContactCreate,
 		ReadWithoutTimeout:   resourceAlternateContactRead,
@@ -83,7 +83,7 @@ func resourceAlternateContactCreate(ctx context.Context, d *schema.ResourceData,
 
 	accountID := d.Get("account_id").(string)
 	contactType := d.Get("alternate_contact_type").(string)
-	id := AlternateContactCreateResourceID(accountID, contactType)
+	id := alternateContactCreateResourceID(accountID, contactType)
 	input := &account.PutAlternateContactInput{
 		AlternateContactType: types.AlternateContactType(contactType),
 		EmailAddress:         aws.String(d.Get("email_address").(string)),
@@ -108,7 +108,7 @@ func resourceAlternateContactCreate(ctx context.Context, d *schema.ResourceData,
 		inARow = 2
 	)
 	_, err = retry.Operation(func(ctx context.Context) (*types.AlternateContact, error) {
-		return FindAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
+		return findAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
 	}).UntilFoundN(inARow).Run(ctx, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
@@ -121,13 +121,13 @@ func resourceAlternateContactCreate(ctx context.Context, d *schema.ResourceData,
 func resourceAlternateContactRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AccountClient()
 
-	accountID, contactType, err := AlternateContactParseResourceID(d.Id())
+	accountID, contactType, err := alternateContactParseResourceID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	output, err := FindAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
+	output, err := findAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Account Alternate Contact (%s) not found, removing from state", d.Id())
@@ -152,7 +152,7 @@ func resourceAlternateContactRead(ctx context.Context, d *schema.ResourceData, m
 func resourceAlternateContactUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AccountClient()
 
-	accountID, contactType, err := AlternateContactParseResourceID(d.Id())
+	accountID, contactType, err := alternateContactParseResourceID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -182,7 +182,7 @@ func resourceAlternateContactUpdate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	_, err = retry.Operation(func(ctx context.Context) (*types.AlternateContact, error) {
-		return FindAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
+		return findAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
 	}).If(func(v *types.AlternateContact, err error) (bool, error) {
 		if err != nil {
 			return false, err
@@ -203,7 +203,7 @@ func resourceAlternateContactUpdate(ctx context.Context, d *schema.ResourceData,
 func resourceAlternateContactDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AccountClient()
 
-	accountID, contactType, err := AlternateContactParseResourceID(d.Id())
+	accountID, contactType, err := alternateContactParseResourceID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -228,7 +228,7 @@ func resourceAlternateContactDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	_, err = retry.Operation(func(ctx context.Context) (*types.AlternateContact, error) {
-		return FindAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
+		return findAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
 	}).UntilNotFound().Run(ctx, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
@@ -238,7 +238,7 @@ func resourceAlternateContactDelete(ctx context.Context, d *schema.ResourceData,
 	return nil
 }
 
-func FindAlternateContactByTwoPartKey(ctx context.Context, conn *account.Client, accountID, contactType string) (*types.AlternateContact, error) {
+func findAlternateContactByTwoPartKey(ctx context.Context, conn *account.Client, accountID, contactType string) (*types.AlternateContact, error) {
 	input := &account.GetAlternateContactInput{
 		AlternateContactType: types.AlternateContactType(contactType),
 	}
@@ -268,14 +268,14 @@ func FindAlternateContactByTwoPartKey(ctx context.Context, conn *account.Client,
 
 const alternateContactResourceIDSeparator = "/"
 
-func AlternateContactCreateResourceID(accountID, contactType string) string {
+func alternateContactCreateResourceID(accountID, contactType string) string {
 	parts := []string{accountID, contactType}
 	id := strings.Join(parts, alternateContactResourceIDSeparator)
 
 	return id
 }
 
-func AlternateContactParseResourceID(id string) (string, string, error) {
+func alternateContactParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, alternateContactResourceIDSeparator)
 
 	switch len(parts) {
