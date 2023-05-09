@@ -23,7 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_quicksight_template")
+// @SDKResource("aws_quicksight_template", name="Template")
+// @Tags(identifierAttribute="arn")
 func ResourceTemplate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTemplateCreate,
@@ -98,8 +99,8 @@ func ResourceTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"template_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -125,7 +126,6 @@ const (
 
 func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QuickSightConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("aws_account_id"); ok {
@@ -139,6 +139,7 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta in
 		AwsAccountId: aws.String(awsAccountId),
 		TemplateId:   aws.String(templateId),
 		Name:         aws.String(d.Get("name").(string)),
+		Tags:         GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("version_description"); ok {
@@ -155,11 +156,6 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if v, ok := d.GetOk("permissions"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Permissions = expandResourcePermissions(v.([]interface{}))
-	}
-
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	_, err := conn.CreateTemplateWithContext(ctx, input)
@@ -219,23 +215,6 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("error setting definition: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, aws.StringValue(out.Arn))
-	if err != nil {
-		return create.DiagError(names.QuickSight, create.ErrActionReading, ResNameTemplate, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.QuickSight, create.ErrActionSetting, ResNameTemplate, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.QuickSight, create.ErrActionSetting, ResNameTemplate, d.Id(), err)
-	}
-
 	permsResp, err := conn.DescribeTemplatePermissionsWithContext(ctx, &quicksight.DescribeTemplatePermissionsInput{
 		AwsAccountId: aws.String(awsAccountId),
 		TemplateId:   aws.String(templateId),
@@ -260,7 +239,7 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.FromErr(err)
 	}
 
-	if d.HasChangesExcept("permission", "tags", "tags_all") {
+	if d.HasChangesExcept("permissions", "tags", "tags_all") {
 		in := &quicksight.UpdateTemplateInput{
 			AwsAccountId:       aws.String(awsAccountId),
 			TemplateId:         aws.String(templateId),
@@ -311,14 +290,6 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if err != nil {
 			return diag.Errorf("error updating QuickSight Template (%s) permissions: %s", templateId, err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("error updating QuickSight Template (%s) tags: %s", d.Id(), err)
 		}
 	}
 

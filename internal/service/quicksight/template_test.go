@@ -201,6 +201,65 @@ func TestAccQuickSightTemplate_TemplateSourceEntity(t *testing.T) {
 	})
 }
 
+func TestAccQuickSightTemplate_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var template quicksight.Template
+	resourceName := "aws_quicksight_template.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTemplateConfig_tags1(rId, rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "template_id", rId),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTemplateConfig_tags2(rId, rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "template_id", rId),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccTemplateConfig_tags1(rId, rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "template_id", rId),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
@@ -539,4 +598,139 @@ resource "aws_quicksight_template" "copy" {
   }
 }
 `, rId, rName))
+}
+
+func testAccTemplateConfig_tags1(rId, rName, key1, value1 string) string {
+	return acctest.ConfigCompose(
+		testAccTemplateConfigBase(rId, rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_template" "test" {
+  template_id         = %[1]q
+  name                = %[2]q
+  version_description = "test"
+  definition {
+    data_set_configuration {
+      data_set_schema {
+        column_schema_list {
+          name      = "Column1"
+          data_type = "STRING"
+        }
+        column_schema_list {
+          name      = "Column2"
+          data_type = "INTEGER"
+        }
+      }
+      placeholder = "1"
+    }
+    sheets {
+      title    = "Test"
+      sheet_id = "Test1"
+      visuals {
+        bar_chart_visual {
+          visual_id = "BarChart"
+          chart_configuration {
+            field_wells {
+              bar_chart_aggregated_field_wells {
+                category {
+                  categorical_dimension_field {
+                    field_id = "1"
+                    column {
+                      column_name         = "Column1"
+                      data_set_identifier = "1"
+                    }
+                  }
+                }
+                values {
+                  numerical_measure_field {
+                    field_id = "2"
+                    column {
+                      column_name         = "Column2"
+                      data_set_identifier = "1"
+                    }
+                    aggregation_function {
+                      simple_numerical_aggregation = "SUM"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  tags = {
+    %[3]q = %[4]q
+  }
+}
+`, rId, rName, key1, value1))
+}
+
+func testAccTemplateConfig_tags2(rId, rName, key1, value1, key2, value2 string) string {
+	return acctest.ConfigCompose(
+		testAccTemplateConfigBase(rId, rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_template" "test" {
+  template_id         = %[1]q
+  name                = %[2]q
+  version_description = "test"
+  definition {
+    data_set_configuration {
+      data_set_schema {
+        column_schema_list {
+          name      = "Column1"
+          data_type = "STRING"
+        }
+        column_schema_list {
+          name      = "Column2"
+          data_type = "INTEGER"
+        }
+      }
+      placeholder = "1"
+    }
+    sheets {
+      title    = "Test"
+      sheet_id = "Test1"
+      visuals {
+        bar_chart_visual {
+          visual_id = "BarChart"
+          chart_configuration {
+            field_wells {
+              bar_chart_aggregated_field_wells {
+                category {
+                  categorical_dimension_field {
+                    field_id = "1"
+                    column {
+                      column_name         = "Column1"
+                      data_set_identifier = "1"
+                    }
+                  }
+                }
+                values {
+                  numerical_measure_field {
+                    field_id = "2"
+                    column {
+                      column_name         = "Column2"
+                      data_set_identifier = "1"
+                    }
+                    aggregation_function {
+                      simple_numerical_aggregation = "SUM"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  tags = {
+    %[3]q = %[4]q
+    %[5]q = %[6]q
+  }
+}
+`, rId, rName, key1, value1, key2, value2))
 }
