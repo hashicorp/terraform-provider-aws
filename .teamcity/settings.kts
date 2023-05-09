@@ -99,12 +99,8 @@ project {
         }
 
         // Assume Role credentials
-        if (awsAccessKeyID != "") {
-            password("AWS_ACCESS_KEY_ID", awsAccessKeyID, display = ParameterDisplay.HIDDEN)
-        }
-        if (awsSecretAccessKey != "") {
-            password("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey, display = ParameterDisplay.HIDDEN)
-        }
+        password("AWS_ACCESS_KEY_ID", awsAccessKeyID, display = ParameterDisplay.HIDDEN)
+        password("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey, display = ParameterDisplay.HIDDEN)
         text("ACCTEST_ROLE_ARN", accTestRoleARN, display = ParameterDisplay.HIDDEN)
 
         // Alternate Assume Role credentials
