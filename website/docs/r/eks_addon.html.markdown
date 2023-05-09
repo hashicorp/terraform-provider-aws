@@ -25,6 +25,7 @@ resource "aws_eks_addon" "example" {
 ```
 
 ## Example Update add-on usage with resolve_conflicts_on_update and PRESERVE
+
 `resolve_conflicts_on_update` with `PRESERVE` can be used to retain the config changes applied to the add-on with kubectl while upgrading to a newer version of the add-on.
 
 ```terraform
