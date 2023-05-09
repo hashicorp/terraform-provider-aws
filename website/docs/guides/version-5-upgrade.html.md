@@ -18,9 +18,11 @@ Upgrade topics:
 
 - [Provider Version Configuration](#provider-version-configuration)
 - [Provider Arguments](#provider-arguments)
+- [Data Source: aws_api_gateway_rest_api](#data-source-aws_api_gateway_rest_api)
 - [Data Source: aws_redshift_service_account](#data-source-aws_redshift_service_account)
 - [Data Source: aws_subnet_ids](#data-source-aws_subnet_ids)
 - [Resource: aws_acmpca_certificate_authority](#resource-aws_acmpca_certificate_authority)
+- [Resource: aws_api_gateway_rest_api](#resource-aws_api_gateway_rest_api)
 - [Resource: aws_autoscaling_group](#resource-aws_autoscaling_group)
 - [Resource: aws_ce_anomaly_subscription](#resource-aws_ce_anomaly_subscription)
 - [Resource: aws_cloudwatch_event_target](#resource-aws_cloudwatch_event_target)
@@ -95,6 +97,10 @@ Version 5.0.0 removes these `provider` arguments:
 
 The `status` attribute is superfluous and sometimes incorrect. It has been removed.
 
+## Resource: aws_api_gateway_rest_api
+
+The `minimum_compression_size` attribute is now a String type, allowing it to be computed when set via the `body` attribute. Valid values remain the same.
+
 ## Resource: aws_autoscaling_group
 
 The `tags` attribute has been removed. Use the `tag` attribute instead. For use cases requiring dynamic tags, see the [Dynamic Tagging example](../r/autoscaling_group.html.markdown#dynamic-tagging).
@@ -132,6 +138,10 @@ Automated snapshots **should not** be used for this attribute, unless from a dif
 Changes to the `snapshot_identifier` attribute will now correctly force re-creation of the resource. Previously, changing this attribute would result in a successful apply, but without the cluster being restored (only the resource state was changed). This change brings behavior of the cluster `snapshot_identifier` attribute into alignment with other RDS resources, such as `aws_db_instance`.
 
 Automated snapshots **should not** be used for this attribute, unless from a different cluster. Automated snapshots are deleted as part of cluster destruction when the resource is replaced.
+
+## Data Source: aws_api_gateway_rest_api
+
+The `minimum_compression_size` attribute is now a String type, allowing it to be computed when set via the `body` attribute.
 
 ## Data Source: aws_redshift_service_account
 
