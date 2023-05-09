@@ -4,6 +4,8 @@ package account
 var (
 	AlternateContactParseResourceID  = alternateContactParseResourceID
 	FindAlternateContactByTwoPartKey = findAlternateContactByTwoPartKey
+	FindContactInformation           = findContactInformation
 
 	ResourceAlternateContact = resourceAlternateContact
+	ResourcePrimaryContact   = resourcePrimaryContact
 )
