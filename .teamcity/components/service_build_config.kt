@@ -91,10 +91,10 @@ class Service(name: String, spec: ServiceSpec) {
                                 addStatusText = true
                             }
                         }
-                        buildStarted = true
+                        buildStarted = false // With the number of tests, this would be too noisy
                         buildFailedToStart = true
                         buildFailed = true
-                        buildFinishedSuccessfully = true
+                        buildFinishedSuccessfully = false // With the number of tests, this would be too noisy
                         firstSuccessAfterFailure = true
                         buildProbablyHanging = true
                         // Ideally we'd have this enabled, but we have too many failures and this would get very noisy
