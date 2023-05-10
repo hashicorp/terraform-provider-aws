@@ -220,31 +220,6 @@ func FindSigningCertificate(ctx context.Context, conn *iam.IAM, userName, certId
 	return cert, nil
 }
 
-func FindSAMLProviderByARN(ctx context.Context, conn *iam.IAM, arn string) (*iam.GetSAMLProviderOutput, error) {
-	input := &iam.GetSAMLProviderInput{
-		SAMLProviderArn: aws.String(arn),
-	}
-
-	output, err := conn.GetSAMLProviderWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
 func FindAccessKey(ctx context.Context, conn *iam.IAM, username, id string) (*iam.AccessKeyMetadata, error) {
 	accessKeys, err := FindAccessKeys(ctx, conn, username)
 	if err != nil {
