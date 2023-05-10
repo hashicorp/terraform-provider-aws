@@ -29,6 +29,10 @@ func init() {
 		Name: "aws_quicksight_folder",
 		F:    sweepFolders,
 	})
+	resource.AddTestSweepers("aws_quicksight_template", &resource.Sweeper{
+		Name: "aws_quicksight_template",
+		F:    sweepTemplates,
+	})
 	resource.AddTestSweepers("aws_quicksight_user", &resource.Sweeper{
 		Name: "aws_quicksight_user",
 		F:    sweepUsers,
@@ -188,6 +192,60 @@ func sweepFolders(region string) error {
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping QuickSight Folder sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
+
+func sweepTemplates(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*conns.AWSClient).QuickSightConn()
+	sweepResources := make([]sweep.Sweepable, 0)
+	var errs *multierror.Error
+
+	awsAccountId := client.(*conns.AWSClient).AccountID
+
+	input := &quicksight.ListTemplatesInput{
+		AwsAccountId: aws.String(awsAccountId),
+	}
+
+	err = conn.ListTemplatesPagesWithContext(ctx, input, func(page *quicksight.ListTemplatesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, tmpl := range page.TemplateSummaryList {
+			if tmpl == nil {
+				continue
+			}
+
+			r := ResourceTemplate()
+			d := r.Data(nil)
+			d.SetId(fmt.Sprintf("%s,%s", awsAccountId, aws.StringValue(tmpl.TemplateId)))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("listing QuickSight Templates: %w", err))
+	}
+
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("sweeping QuickSight Templates for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping QuickSight Template sweep for %s: %s", region, errs)
 		return nil
 	}
 
