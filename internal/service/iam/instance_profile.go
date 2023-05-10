@@ -93,11 +93,10 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).IAMConn()
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
-	tags := GetTagsIn(ctx)
 	input := &iam.CreateInstanceProfileInput{
 		InstanceProfileName: aws.String(name),
 		Path:                aws.String(d.Get("path").(string)),
-		Tags:                tags,
+		Tags:                GetTagsIn(ctx),
 	}
 
 	output, err := conn.CreateInstanceProfileWithContext(ctx, input)
