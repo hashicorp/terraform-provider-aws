@@ -137,6 +137,14 @@ func policyUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier stri
 	return nil
 }
 
+func policyCreateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, tags []*iam.Tag) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return policyUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+}
+
 // roleUpdateTags updates IAM role tags.
 // The identifier is the role name.
 func roleUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, oldTagsMap, newTagsMap any) error {
