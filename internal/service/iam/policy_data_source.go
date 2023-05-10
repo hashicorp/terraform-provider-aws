@@ -77,7 +77,7 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if arn == "" {
 		raw, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout,
 			func() (interface{}, error) {
-				return FindPolicyByName(ctx, conn, name, pathPrefix)
+				return findPolicyByTwoPartKey(ctx, conn, name, pathPrefix)
 			},
 		)
 
