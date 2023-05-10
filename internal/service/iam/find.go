@@ -111,31 +111,6 @@ func FindUsers(ctx context.Context, conn *iam.IAM, nameRegex, pathPrefix string)
 	return results, err
 }
 
-func FindRoleByName(ctx context.Context, conn *iam.IAM, name string) (*iam.Role, error) {
-	input := &iam.GetRoleInput{
-		RoleName: aws.String(name),
-	}
-
-	output, err := conn.GetRoleWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Role == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Role, nil
-}
-
 func FindVirtualMFADevice(ctx context.Context, conn *iam.IAM, serialNum string) (*iam.VirtualMFADevice, error) {
 	input := &iam.ListVirtualMFADevicesInput{}
 
