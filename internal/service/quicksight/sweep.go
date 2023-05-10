@@ -18,11 +18,15 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_quicksight_data_source", &resource.Sweeper{
 		Name: "aws_quicksight_data_source",
-		F:    sweepsDataSource,
+		F:    sweepDataSources,
+	})
+	resource.AddTestSweepers("aws_quicksight_folder", &resource.Sweeper{
+		Name: "aws_quicksight_folder",
+		F:    sweepFolders,
 	})
 }
 
-func sweepsDataSource(region string) error {
+func sweepDataSources(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
@@ -51,9 +55,7 @@ func sweepsDataSource(region string) error {
 			}
 
 			r := ResourceDataSource()
-
 			d := r.Data(nil)
-
 			d.SetId(fmt.Sprintf("%s/%s", awsAccountId, aws.StringValue(ds.DataSourceId)))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
@@ -72,6 +74,52 @@ func sweepsDataSource(region string) error {
 
 	if sweep.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping QuickSight Data Source sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
+
+func sweepFolders(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
+
+	if err != nil {
+		return fmt.Errorf("getting client: %w", err)
+	}
+
+	conn := client.(*conns.AWSClient).QuickSightConn()
+	awsAccountId := client.(*conns.AWSClient).AccountID
+	sweepResources := make([]sweep.Sweepable, 0)
+	var errs *multierror.Error
+
+	input := &quicksight.ListFoldersInput{
+		AwsAccountId: aws.String(awsAccountId),
+	}
+
+	out, err := conn.ListFoldersWithContext(ctx, input)
+	for _, folder := range out.FolderSummaryList {
+		if folder.FolderId == nil {
+			continue
+		}
+
+		r := ResourceFolder()
+		d := r.Data(nil)
+		d.SetId(fmt.Sprintf("%s,%s", awsAccountId, aws.StringValue(folder.FolderId)))
+
+		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+	}
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("listing QuickSight Folder for %s: %w", region, err))
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("sweeping QuickSight Folder for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping QuickSight Folder sweep for %s: %s", region, errs)
 		return nil
 	}
 
