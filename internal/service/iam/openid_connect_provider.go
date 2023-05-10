@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -72,19 +73,17 @@ func resourceOpenIDConnectProviderCreate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn()
 
-	tags := GetTagsIn(ctx)
 	input := &iam.CreateOpenIDConnectProviderInput{
 		ClientIDList:   flex.ExpandStringSet(d.Get("client_id_list").(*schema.Set)),
-		Url:            aws.String(d.Get("url").(string)),
-		Tags:           tags,
+		Tags:           GetTagsIn(ctx),
 		ThumbprintList: flex.ExpandStringList(d.Get("thumbprint_list").([]interface{})),
+		Url:            aws.String(d.Get("url").(string)),
 	}
 
 	output, err := conn.CreateOpenIDConnectProviderWithContext(ctx, input)
 
-	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] failed creating IAM OIDC Provider with tags: %s. Trying create without tags.", err)
+	// Some partitions (e.g. ISO) may not support tag-on-create.
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		input.Tags = nil
 
 		output, err = conn.CreateOpenIDConnectProviderWithContext(ctx, input)
@@ -96,18 +95,17 @@ func resourceOpenIDConnectProviderCreate(ctx context.Context, d *schema.Resource
 
 	d.SetId(aws.StringValue(output.OpenIDConnectProviderArn))
 
-	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
-	if input.Tags == nil && len(tags) > 0 {
-		err := openIDConnectProviderUpdateTags(ctx, conn, d.Id(), nil, KeyValueTags(ctx, tags))
+	// For partitions not supporting tag-on-create, attempt tag after create.
+	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+		err := openIDConnectProviderCreateTags(ctx, conn, d.Id(), tags)
 
-		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-			log.Printf("[WARN] failed adding tags after create for IAM OIDC Provider (%s): %s", d.Id(), err)
+		// If default tags only, continue. Otherwise, error.
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 			return append(diags, resourceOpenIDConnectProviderRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "adding tags after create for IAM OIDC Provider (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting IAM OIDC Provider (%s) tags: %s", d.Id(), err)
 		}
 	}
 
