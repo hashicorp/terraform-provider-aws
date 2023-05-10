@@ -623,6 +623,18 @@ func ResourceInstance() *schema.Resource {
 				}
 				return nil
 			},
+			customdiff.ComputedIf("address", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("identifier")
+			}),
+			customdiff.ComputedIf("arn", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("identifier")
+			}),
+			customdiff.ComputedIf("endpoint", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("identifier")
+			}),
+			customdiff.ComputedIf("tags_all", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("identifier")
+			}),
 		),
 	}
 }
@@ -998,9 +1010,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (restore from S3) (%s): %s", identifier, err)
 		}
 
-		output := outputRaw.(*rds.RestoreDBInstanceFromS3Output)
-
-		resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
+		if outputRaw != nil {
+			output := outputRaw.(*rds.RestoreDBInstanceFromS3Output)
+			resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
+		}
 	} else if v, ok := d.GetOk("snapshot_identifier"); ok {
 		input := &rds.RestoreDBInstanceFromDBSnapshotInput{
 			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
@@ -1196,10 +1209,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			},
 		)
 
-		output := outputRaw.(*rds.RestoreDBInstanceFromDBSnapshotOutput)
-
-		resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
-
 		// When using SQL Server engine with MultiAZ enabled, its not
 		// possible to immediately enable mirroring since
 		// BackupRetentionPeriod is not available as a parameter to
@@ -1217,6 +1226,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (restore from snapshot) (%s): %s", identifier, err)
+		}
+
+		if outputRaw != nil {
+			output := outputRaw.(*rds.RestoreDBInstanceFromDBSnapshotOutput)
+			resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
 		}
 	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
@@ -1363,9 +1377,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (restore to point-in-time) (%s): %s", identifier, err)
 		}
 
-		output := outputRaw.(*rds.RestoreDBInstanceToPointInTimeOutput)
-
-		resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
+		if outputRaw != nil {
+			output := outputRaw.(*rds.RestoreDBInstanceToPointInTimeOutput)
+			resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
+		}
 	} else {
 		if _, ok := d.GetOk("allocated_storage"); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"allocated_storage": required field is not set`)
@@ -1549,7 +1564,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		output := outputRaw.(*rds.CreateDBInstanceOutput)
-
 		resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
 
 		// This is added here to avoid unnecessary modification when ca_cert_identifier is the default one
@@ -1559,11 +1573,17 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	d.SetId(resourceID)
-
-	if _, err := waitDBInstanceAvailableSDKv1(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	var instance *rds.DBInstance
+	var err error
+	if instance, err = waitDBInstanceAvailableSDKv1(ctx, conn, d.Get("identifier").(string), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Instance (%s) create: %s", identifier, err)
 	}
+
+	if resourceID == "" {
+		resourceID = aws.StringValue(instance.DbiResourceId)
+	}
+
+	d.SetId(resourceID)
 
 	if requiresModifyDbInstance {
 		modifyDbInstanceInput.DBInstanceIdentifier = aws.String(identifier)
@@ -2319,17 +2339,33 @@ func parseDBInstanceARN(s string) (dbInstanceARN, error) {
 	return result, nil
 }
 
+// findDBInstanceByIDSDKv1 in general should be called with a DbiResourceId of the form
+// "db-BE6UI2KLPQP3OVDYD74ZEV6NUM" rather than a DB identifier. However, in some cases only
+// the identifier is available, and can be used.
 func findDBInstanceByIDSDKv1(ctx context.Context, conn *rds.RDS, id string) (*rds.DBInstance, error) {
-	input := &rds.DescribeDBInstancesInput{
-		Filters: []*rds.Filter{
+	input := &rds.DescribeDBInstancesInput{}
+
+	if regexp.MustCompile(`^db-[a-zA-Z0-9]{2,255}$`).MatchString(id) {
+		input.Filters = []*rds.Filter{
 			{
 				Name:   aws.String("dbi-resource-id"),
 				Values: aws.StringSlice([]string{id}),
 			},
-		},
+		}
+	} else {
+		input.DBInstanceIdentifier = aws.String(id)
 	}
 
 	output, err := conn.DescribeDBInstancesWithContext(ctx, input)
+
+	// in case a DB has an *identifier* starting with "db-""
+	if regexp.MustCompile(`^db-[a-zA-Z0-9]{2,255}$`).MatchString(id) && (output == nil || len(output.DBInstances) == 0) {
+		input = &rds.DescribeDBInstancesInput{
+			DBInstanceIdentifier: aws.String(id),
+		}
+		output, err = conn.DescribeDBInstancesWithContext(ctx, input)
+	}
+
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
@@ -2349,17 +2385,33 @@ func findDBInstanceByIDSDKv1(ctx context.Context, conn *rds.RDS, id string) (*rd
 	return dbInstance, nil
 }
 
+// findDBInstanceByIDSDKv2 in general should be called with a DbiResourceId of the form
+// "db-BE6UI2KLPQP3OVDYD74ZEV6NUM" rather than a DB identifier. However, in some cases only
+// the identifier is available, and can be used.
 func findDBInstanceByIDSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id string) (*types.DBInstance, error) {
-	input := &rds_sdkv2.DescribeDBInstancesInput{
-		Filters: []types.Filter{
+	input := &rds_sdkv2.DescribeDBInstancesInput{}
+
+	if regexp.MustCompile(`^db-[a-zA-Z0-9]{2,255}$`).MatchString(id) {
+		input.Filters = []types.Filter{
 			{
 				Name:   aws.String("dbi-resource-id"),
 				Values: []string{id},
 			},
-		},
+		}
+	} else {
+		input.DBInstanceIdentifier = aws.String(id)
 	}
 
 	output, err := conn.DescribeDBInstances(ctx, input)
+
+	// in case a DB has an *identifier* starting with "db-""
+	if regexp.MustCompile(`^db-[a-zA-Z0-9]{2,255}$`).MatchString(id) && (output == nil || len(output.DBInstances) == 0) {
+		input = &rds_sdkv2.DescribeDBInstancesInput{
+			DBInstanceIdentifier: aws.String(id),
+		}
+		output, err = conn.DescribeDBInstances(ctx, input)
+	}
+
 	if errs.IsA[*types.DBInstanceNotFoundFault](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,

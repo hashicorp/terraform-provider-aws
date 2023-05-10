@@ -636,7 +636,7 @@ func TestAccRDSInstance_dbSubnetGroupName(t *testing.T) {
 				Config: testAccInstanceConfig_dbSubnetGroupName(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					testAccCheckSubnetGroupExists(ctx, resourceName, &dbSubnetGroup),
+					testAccCheckSubnetGroupExists(ctx, dbSubnetGroupResourceName, &dbSubnetGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
 				),
 			},
@@ -698,7 +698,7 @@ func TestAccRDSInstance_DBSubnetGroupName_vpcSecurityGroupIDs(t *testing.T) {
 				Config: testAccInstanceConfig_DBSubnetGroupName_vpcSecurityGroupIDs(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					testAccCheckSubnetGroupExists(ctx, resourceName, &dbSubnetGroup),
+					testAccCheckSubnetGroupExists(ctx, dbSubnetGroupResourceName, &dbSubnetGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
 				),
 			},
@@ -1530,7 +1530,7 @@ func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupName(t *testing.T) {
 				Config: testAccInstanceConfig_ReplicateSourceDB_dbSubnetGroupName(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					testAccCheckSubnetGroupExists(ctx, resourceName, &dbSubnetGroup),
+					testAccCheckSubnetGroupExists(ctx, dbSubnetGroupResourceName, &dbSubnetGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
 				),
 			},
@@ -1600,7 +1600,7 @@ func TestAccRDSInstance_ReplicateSourceDBDBSubnetGroupName_vpcSecurityGroupIDs(t
 				Config: testAccInstanceConfig_ReplicateSourceDB_DBSubnetGroupName_vpcSecurityGroupIDs(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					testAccCheckSubnetGroupExists(ctx, resourceName, &dbSubnetGroup),
+					testAccCheckSubnetGroupExists(ctx, dbSubnetGroupResourceName, &dbSubnetGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
 				),
 			},
@@ -2700,7 +2700,7 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupName(t *testing.T) {
 					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					testAccCheckSubnetGroupExists(ctx, resourceName, &dbSubnetGroup),
+					testAccCheckSubnetGroupExists(ctx, dbSubnetGroupResourceName, &dbSubnetGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
 				),
 			},
@@ -2776,7 +2776,7 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupNameVPCSecurityGroupIDs(
 					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					testAccCheckSubnetGroupExists(ctx, resourceName, &dbSubnetGroup),
+					testAccCheckSubnetGroupExists(ctx, dbSubnetGroupResourceName, &dbSubnetGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
 				),
 			},
@@ -3653,8 +3653,8 @@ func TestAccRDSInstance_MySQL_snapshotRestoreWithEngineVersion(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, restoreResourceName, &vRestoredInstance),
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					// Hardcoded older version. Will to update when no longer compatible to upgrade from this to the default version.
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "8.0.25"),
+					// Hardcoded older version. Will need to update when no longer compatible to upgrade from this to the default version.
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "8.0.31"),
 					resource.TestCheckResourceAttrPair(restoreResourceName, "engine_version", "data.aws_rds_engine_version.default", "version"),
 				),
 			},
@@ -5404,17 +5404,17 @@ func testAccCheckInstanceAutomatedBackupsDelete(ctx context.Context) resource.Te
 
 			log.Printf("[INFO] Trying to locate the DBInstance Automated Backup")
 			describeOutput, err := conn.DescribeDBInstanceAutomatedBackupsWithContext(ctx, &rds.DescribeDBInstanceAutomatedBackupsInput{
-				DBInstanceIdentifier: aws.String(rs.Primary.ID),
+				DBInstanceIdentifier: aws.String(rs.Primary.Attributes["identifier"]),
 			})
 			if err != nil {
 				return err
 			}
 
 			if describeOutput == nil || len(describeOutput.DBInstanceAutomatedBackups) == 0 {
-				return fmt.Errorf("Automated backup for %s not found", rs.Primary.ID)
+				return fmt.Errorf("Automated backup for %s not found", rs.Primary.Attributes["identifier"])
 			}
 
-			log.Printf("[INFO] Deleting automated backup for %s", rs.Primary.ID)
+			log.Printf("[INFO] Deleting automated backup for %s", rs.Primary.Attributes["identifier"])
 			_, err = conn.DeleteDBInstanceAutomatedBackupWithContext(ctx, &rds.DeleteDBInstanceAutomatedBackupInput{
 				DbiResourceId: describeOutput.DBInstanceAutomatedBackups[0].DbiResourceId,
 			})
@@ -5436,7 +5436,7 @@ func testAccCheckInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
+			_, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.Attributes["identifier"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -5446,7 +5446,7 @@ func testAccCheckInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("RDS DB Instance %s still exists", rs.Primary.ID)
+			return fmt.Errorf("RDS DB Instance %s still exists", rs.Primary.Attributes["identifier"])
 		}
 
 		return nil
@@ -5566,7 +5566,7 @@ func testAccCheckInstanceDestroyWithFinalSnapshot(ctx context.Context) resource.
 				return err
 			}
 
-			_, err = tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
+			_, err = tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.Attributes["identifier"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -5576,7 +5576,7 @@ func testAccCheckInstanceDestroyWithFinalSnapshot(ctx context.Context) resource.
 				return err
 			}
 
-			return fmt.Errorf("RDS DB Instance %s still exists", rs.Primary.ID)
+			return fmt.Errorf("RDS DB Instance %s still exists", rs.Primary.Attributes["identifier"])
 		}
 
 		return nil
@@ -5606,7 +5606,7 @@ func testAccCheckInstanceDestroyWithoutFinalSnapshot(ctx context.Context) resour
 				return fmt.Errorf("RDS DB Snapshot %s exists", finalSnapshotID)
 			}
 
-			_, err = tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
+			_, err = tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.Attributes["identifier"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -5616,7 +5616,7 @@ func testAccCheckInstanceDestroyWithoutFinalSnapshot(ctx context.Context) resour
 				return err
 			}
 
-			return fmt.Errorf("RDS DB Instance %s still exists", rs.Primary.ID)
+			return fmt.Errorf("RDS DB Instance %s still exists", rs.Primary.Attributes["identifier"])
 		}
 
 		return nil
@@ -5656,13 +5656,13 @@ func testAccCheckInstanceExists(ctx context.Context, n string, v *rds.DBInstance
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
+		if rs.Primary.Attributes["identifier"] == "" {
 			return fmt.Errorf("No RDS DB Instance ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
-		output, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
+		output, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.Attributes["identifier"])
 		if err != nil {
 			return err
 		}
@@ -6910,7 +6910,7 @@ func testAccInstanceConfig_mySQLSnapshotRestoreEngineVersion(rName string) strin
 resource "aws_db_instance" "test" {
   allocated_storage   = 20
   engine              = data.aws_rds_engine_version.default.engine
-  engine_version      = "8.0.25" # test is from older to newer version, update when restore from this to current default version is incompatible
+  engine_version      = "8.0.31" # test is from older to newer version, update when restore from this to current default version is incompatible
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   skip_final_snapshot = true
@@ -8894,7 +8894,7 @@ func testAccInstanceConfig_SnapshotID_io1Storage(rName string, iops int) string 
 	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine         = "mariadb"
-  engine_version = "10.5.12"
+  engine_version = "10.6.12"
   license_model  = "general-public-license"
   storage_type   = "io1"
 
@@ -10220,7 +10220,7 @@ data "aws_rds_orderable_db_instance" "test" {
 
 data "aws_rds_engine_version" "initial" {
   engine             = "mysql"
-  preferred_versions = ["8.0.27", "8.0.26", "8.0.25"]
+  preferred_versions = ["8.0.32", "8.0.31", "8.0.30"]
 }
 
 data "aws_rds_engine_version" "updated" {
