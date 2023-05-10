@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -106,43 +107,40 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
-	tags := GetTagsIn(ctx)
 	input := &iam.CreatePolicyInput{
 		Description:    aws.String(d.Get("description").(string)),
 		Path:           aws.String(d.Get("path").(string)),
 		PolicyDocument: aws.String(policy),
 		PolicyName:     aws.String(name),
-		Tags:           tags,
+		Tags:           GetTagsIn(ctx),
 	}
 
 	output, err := conn.CreatePolicyWithContext(ctx, input)
 
-	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] failed creating IAM Policy (%s) with tags: %s. Trying create without tags.", name, err)
+	// Some partitions (e.g. ISO) may not support tag-on-create.
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		input.Tags = nil
 
 		output, err = conn.CreatePolicyWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating IAM Policy %s: %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating IAM Policy (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.Policy.Arn))
 
-	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
-	if input.Tags == nil && len(tags) > 0 {
-		err := policyUpdateTags(ctx, conn, d.Id(), nil, KeyValueTags(ctx, tags))
+	// For partitions not supporting tag-on-create, attempt tag after create.
+	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+		err := policyCreateTags(ctx, conn, d.Id(), tags)
 
-		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-			log.Printf("[WARN] failed adding tags after create for IAM Policy (%s): %s", d.Id(), err)
+		// If default tags only, continue. Otherwise, error.
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 			return append(diags, resourcePolicyRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "adding tags after create for IAM Policy (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting IAM Policy (%s) tags: %s", d.Id(), err)
 		}
 	}
 
