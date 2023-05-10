@@ -76,7 +76,7 @@ func TestAccIdentityStoreGroupDataSource_groupIDConflictsWithUniqueAttribute(t *
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGroupDataSourceConfig_groupIDConflictsWithUniqueAttribute(name),
-				ExpectError: regexp.MustCompile(`Conflicting configuration arguments`),
+				ExpectError: regexp.MustCompile(`Invalid combination of arguments`),
 			},
 		},
 	})
@@ -97,7 +97,7 @@ func TestAccIdentityStoreGroupDataSource_groupIDConflictsWithExternalID(t *testi
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGroupDataSourceConfig_groupIDConflictsWithExternalID(name),
-				ExpectError: regexp.MustCompile(`Conflicting configuration arguments`),
+				ExpectError: regexp.MustCompile(`Invalid combination of arguments`),
 			},
 		},
 	})

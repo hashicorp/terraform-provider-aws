@@ -152,7 +152,7 @@ func TestAccIdentityStoreUserDataSource_userIDConflictsWithExternalID(t *testing
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccUserDataSourceConfig_userIDConflictsWithUniqueAttribute(name, email),
-				ExpectError: regexp.MustCompile(`Conflicting configuration arguments`),
+				ExpectError: regexp.MustCompile(`Invalid combination of arguments`),
 			},
 		},
 	})
