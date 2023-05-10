@@ -20,6 +20,7 @@ Upgrade topics:
 - [Provider Arguments](#provider-arguments)
 - [Data Source: aws_api_gateway_rest_api](#data-source-aws_api_gateway_rest_api)
 - [Data Source: aws_identitystore_group](#data-source-aws_identitystore_group)
+- [Data Source: aws_identitystore_user](#data-source-aws_identitystore_user)
 - [Data Source: aws_redshift_service_account](#data-source-aws_redshift_service_account)
 - [Data Source: aws_subnet_ids](#data-source-aws_subnet_ids)
 - [Resource: aws_acmpca_certificate_authority](#resource-aws_acmpca_certificate_authority)
@@ -145,6 +146,10 @@ Automated snapshots **should not** be used for this attribute, unless from a dif
 The `minimum_compression_size` attribute is now a String type, allowing it to be computed when set via the `body` attribute.
 
 ## Data Source: aws_identitystore_group
+
+The `filter` argument has been removed.
+
+## Data Source: aws_identitystore_user
 
 The `filter` argument has been removed.
 
