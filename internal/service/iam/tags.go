@@ -94,6 +94,14 @@ func openIDConnectProviderUpdateTags(ctx context.Context, conn iamiface.IAMAPI, 
 	return nil
 }
 
+func openIDConnectProviderCreateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, tags []*iam.Tag) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return openIDConnectProviderUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+}
+
 // policyUpdateTags updates IAM Policy tags.
 // The identifier is the Policy ARN.
 func policyUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, oldTagsMap, newTagsMap any) error {
