@@ -6,6 +6,7 @@ package quicksight
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
@@ -28,8 +29,16 @@ func init() {
 		Name: "aws_quicksight_folder",
 		F:    sweepFolders,
 	})
-
+	resource.AddTestSweepers("aws_quicksight_user", &resource.Sweeper{
+		Name: "aws_quicksight_user",
+		F:    sweepUsers,
+	})
 }
+
+const (
+	// Defined locally to avoid cyclic import from internal/acctest
+	acctestResourcePrefix = "tf-acc-test"
+)
 
 func sweepDataSets(region string) error {
 	ctx := sweep.Context(region)
@@ -179,6 +188,54 @@ func sweepFolders(region string) error {
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping QuickSight Folder sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
+
+func sweepUsers(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
+
+	if err != nil {
+		return fmt.Errorf("getting client: %w", err)
+	}
+
+	conn := client.(*conns.AWSClient).QuickSightConn()
+	awsAccountId := client.(*conns.AWSClient).AccountID
+	sweepResources := make([]sweep.Sweepable, 0)
+	var errs *multierror.Error
+
+	input := &quicksight.ListUsersInput{
+		AwsAccountId: aws.String(awsAccountId),
+		Namespace:    aws.String(DefaultUserNamespace),
+	}
+
+	out, err := conn.ListUsersWithContext(ctx, input)
+	for _, user := range out.UserList {
+		username := aws.StringValue(user.UserName)
+		if !strings.HasPrefix(username, acctestResourcePrefix) {
+			continue
+		}
+
+		r := ResourceUser()
+		d := r.Data(nil)
+		d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountId, DefaultUserNamespace, username))
+
+		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+	}
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("listing QuickSight Users for %s: %w", region, err))
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("sweeping QuickSight Users for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping QuickSight User sweep for %s: %s", region, errs)
 		return nil
 	}
 
