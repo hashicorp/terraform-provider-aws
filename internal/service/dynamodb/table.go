@@ -1072,8 +1072,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("server_side_encryption") {
-		KMSMasterKeyId := expandEncryptAtRestOptions(d.Get("server_side_encryption").([]interface{})).KMSMasterKeyId
-		if replicas := d.Get("replica").(*schema.Set); replicas.Len() > 0 && KMSMasterKeyId != nil {
+		if replicas, sseSpecification := d.Get("replica").(*schema.Set), expandEncryptAtRestOptions(d.Get("server_side_encryption").([]interface{})); replicas.Len() > 0 && sseSpecification.KMSMasterKeyId != nil {
 			log.Printf("[DEBUG] Using SSE update on replicas")
 			var replicaInputs []awstypes.ReplicationGroupUpdate
 			var replicaRegions []string
@@ -1083,23 +1082,23 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 					continue
 				}
 				var regionName string
-				var KMSMasterKeyId string
+				var kmsMasterKeyID string
 				if v, ok := tfMap["region_name"].(string); ok {
 					regionName = v
 					replicaRegions = append(replicaRegions, v)
 				}
 				if v, ok := tfMap[names.AttrKMSKeyARN].(string); ok && v != "" {
-					KMSMasterKeyId = v
+					kmsMasterKeyID = v
 				}
 				var input = &awstypes.UpdateReplicationGroupMemberAction{
 					RegionName:     aws.String(regionName),
-					KMSMasterKeyId: aws.String(KMSMasterKeyId),
+					KMSMasterKeyId: aws.String(kmsMasterKeyID),
 				}
 				var update = awstypes.ReplicationGroupUpdate{Update: input}
 				replicaInputs = append(replicaInputs, update)
 			}
-			var input = &awstypes.UpdateReplicationGroupMemberAction{
-				KMSMasterKeyId: expandEncryptAtRestOptions(d.Get("server_side_encryption").([]interface{})).KMSMasterKeyId,
+			var input = &dynamodb.UpdateReplicationGroupMemberAction{
+				KMSMasterKeyId: sseSpecification.KMSMasterKeyId,
 				RegionName:     aws.String(meta.(*conns.AWSClient).Region),
 			}
 			var update = awstypes.ReplicationGroupUpdate{Update: input}
@@ -1123,7 +1122,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			log.Printf("[DEBUG] Using normal update for SSE")
 			_, err := conn.UpdateTable(ctx, &dynamodb.UpdateTableInput{
 				TableName:        aws.String(d.Id()),
-				SSESpecification: expandEncryptAtRestOptions(d.Get("server_side_encryption").([]interface{})),
+				SSESpecification: sseSpecification,
 			})
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating DynamoDB Table (%s) SSE: %s", d.Id(), err)
