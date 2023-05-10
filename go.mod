@@ -9,6 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.3
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.19.12
 	github.com/aws/aws-sdk-go-v2/service/account v1.10.6
+	github.com/aws/aws-sdk-go-v2/service/acm v1.17.11
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.24.7
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.1.4
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.11
