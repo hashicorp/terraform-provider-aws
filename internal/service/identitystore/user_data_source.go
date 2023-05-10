@@ -433,3 +433,31 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	return nil
 }
+
+func expandFilters(l []interface{}) []types.Filter {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	filters := make([]types.Filter, 0, len(l))
+	for _, v := range l {
+		tfMap, ok := v.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		filter := types.Filter{}
+
+		if v, ok := tfMap["attribute_path"].(string); ok && v != "" {
+			filter.AttributePath = aws.String(v)
+		}
+
+		if v, ok := tfMap["attribute_value"].(string); ok && v != "" {
+			filter.AttributeValue = aws.String(v)
+		}
+
+		filters = append(filters, filter)
+	}
+
+	return filters
+}

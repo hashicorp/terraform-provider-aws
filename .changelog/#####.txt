@@ -1,0 +1,3 @@
+```release-note:note
+data-source/aws_identitystore_group: The `filter` argument has been removed
+```
