@@ -226,7 +226,7 @@ func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 
 		// Some partitions (e.g. ISO) may not support tagging.
 		if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
-			return diags
+			return append(diags, resourceInstanceProfileRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
