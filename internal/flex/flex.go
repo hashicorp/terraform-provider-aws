@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -22,6 +23,20 @@ func ExpandStringList(configured []interface{}) []*string {
 		val, ok := v.(string)
 		if ok && val != "" {
 			vs = append(vs, aws.String(v.(string)))
+		}
+	}
+	return vs
+}
+
+// Takes the result of flatmap.Expand for an array of strings
+// and returns a []*time.Time
+func ExpandStringTimeList(configured []interface{}, format string) []*time.Time {
+	vs := make([]*time.Time, 0, len(configured))
+	for _, v := range configured {
+		val, ok := v.(string)
+		if ok && val != "" {
+			t, _ := time.Parse(format, v.(string))
+			vs = append(vs, aws.Time(t))
 		}
 	}
 	return vs
@@ -50,6 +65,16 @@ func FlattenStringList(list []*string) []interface{} {
 	vs := make([]interface{}, 0, len(list))
 	for _, v := range list {
 		vs = append(vs, *v)
+	}
+	return vs
+}
+
+// Takes list of pointers to time.Time. Expand to an array
+// of strings and returns a []interface{}
+func FlattenTimeStringList(list []*time.Time, format string) []interface{} {
+	vs := make([]interface{}, 0, len(list))
+	for _, v := range list {
+		vs = append(vs, v.Format(format))
 	}
 	return vs
 }
@@ -150,6 +175,16 @@ func ExpandInt64List(configured []interface{}) []*int64 {
 	return vs
 }
 
+// Takes the result of flatmap.Expand for an array of float64
+// and returns a []*float64
+func ExpandFloat64List(configured []interface{}) []*float64 {
+	vs := make([]*float64, 0, len(configured))
+	for _, v := range configured {
+		vs = append(vs, aws.Float64(v.(float64)))
+	}
+	return vs
+}
+
 // Takes list of pointers to int64s. Expand to an array
 // of raw ints and returns a []interface{}
 // to keep compatibility w/ schema.NewSet
@@ -157,6 +192,17 @@ func FlattenInt64List(list []*int64) []interface{} {
 	vs := make([]interface{}, 0, len(list))
 	for _, v := range list {
 		vs = append(vs, int(aws.Int64Value(v)))
+	}
+	return vs
+}
+
+// Takes list of pointers to float64s. Expand to an array
+// of raw floats and returns a []interface{}
+// to keep compatibility w/ schema.NewSet
+func FlattenFloat64List(list []*float64) []interface{} {
+	vs := make([]interface{}, 0, len(list))
+	for _, v := range list {
+		vs = append(vs, int(aws.Float64Value(v)))
 	}
 	return vs
 }

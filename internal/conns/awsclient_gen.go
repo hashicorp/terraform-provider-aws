@@ -41,6 +41,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
+	"github.com/aws/aws-sdk-go-v2/service/xray"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/alexaforbusiness"
@@ -327,7 +328,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/workmailmessageflow"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/aws/aws-sdk-go/service/workspacesweb"
-	"github.com/aws/aws-sdk-go/service/xray"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -669,7 +669,7 @@ type AWSClient struct {
 	workmailmessageflowConn          *workmailmessageflow.WorkMailMessageFlow
 	workspacesConn                   *workspaces.WorkSpaces
 	workspaceswebConn                *workspacesweb.WorkSpacesWeb
-	xrayConn                         *xray.XRay
+	xrayClient                       *xray.Client
 
 	s3ConnURICleaningDisabled *s3.S3
 }
@@ -1962,6 +1962,6 @@ func (client *AWSClient) WorkSpacesWebConn() *workspacesweb.WorkSpacesWeb {
 	return client.workspaceswebConn
 }
 
-func (client *AWSClient) XRayConn() *xray.XRay {
-	return client.xrayConn
+func (client *AWSClient) XRayClient() *xray.Client {
+	return client.xrayClient
 }

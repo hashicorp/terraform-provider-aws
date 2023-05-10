@@ -141,9 +141,11 @@ func TestAccConnect_serial(t *testing.T) {
 			"dataSource_id": testAccUserHierarchyStructureDataSource_instanceID,
 		},
 		"Vocabulary": {
-			"basic":      testAccVocabulary_basic,
-			"disappears": testAccVocabulary_disappears,
-			"tags":       testAccVocabulary_updateTags,
+			"basic":           testAccVocabulary_basic,
+			"disappears":      testAccVocabulary_disappears,
+			"tags":            testAccVocabulary_updateTags,
+			"dataSource_id":   testAccVocabularyDataSource_vocabularyID,
+			"dataSource_name": testAccVocabularyDataSource_name,
 		},
 	}
 
