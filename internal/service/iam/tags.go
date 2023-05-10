@@ -180,6 +180,14 @@ func roleUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string
 	return nil
 }
 
+func roleCreateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, tags []*iam.Tag) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return roleUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+}
+
 // samlProviderUpdateTags updates IAM SAML Provider tags.
 // The identifier is the SAML Provider ARN.
 func samlProviderUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, oldTagsMap, newTagsMap any) error {
