@@ -223,6 +223,14 @@ func samlProviderUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifie
 	return nil
 }
 
+func samlProviderCreateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, tags []*iam.Tag) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return samlProviderUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+}
+
 // serverCertificateUpdateTags updates IAM Server Certificate tags.
 // The identifier is the Server Certificate name.
 func serverCertificateUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, oldTagsMap, newTagsMap any) error {
