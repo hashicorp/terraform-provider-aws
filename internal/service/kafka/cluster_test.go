@@ -72,15 +72,15 @@ func TestAccKafkaCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.az_distribution", kafka.BrokerAZDistributionDefault),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.client_subnets.#", "3"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az1", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az2", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az3", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.test.0", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.test.1", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.test.2", "id"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.public_access.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.public_access.0.type", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.instance_type", "kafka.m5.large"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.security_groups.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.security_groups.*", "aws_security_group.example_sg", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.security_groups.*", "aws_security_group.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.#", "1"),
@@ -825,9 +825,9 @@ func TestAccKafkaCluster_numberOfBrokerNodes(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", clusterBoostrapBrokersTLSRegexp),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.client_subnets.#", "3"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az1", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az2", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az3", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.test.0", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.test.1", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.test.2", "id"),
 					resource.TestCheckResourceAttr(resourceName, "number_of_broker_nodes", "3"),
 					testAccCheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers_tls"),
 				),
@@ -850,9 +850,9 @@ func TestAccKafkaCluster_numberOfBrokerNodes(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", clusterBoostrapBrokersTLSRegexp),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.client_subnets.#", "3"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az1", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az2", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az3", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.test.0", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.test.1", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.test.2", "id"),
 					resource.TestCheckResourceAttr(resourceName, "number_of_broker_nodes", "6"),
 					testAccCheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers_tls"),
 				),
@@ -1231,47 +1231,10 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 }
 
 func testAccClusterConfig_base(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_vpc" "example_vpc" {
-  cidr_block = "192.168.0.0/22"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "example_subnet_az1" {
-  vpc_id            = aws_vpc.example_vpc.id
-  cidr_block        = "192.168.0.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "example_subnet_az2" {
-  vpc_id            = aws_vpc.example_vpc.id
-  cidr_block        = "192.168.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "example_subnet_az3" {
-  vpc_id            = aws_vpc.example_vpc.id
-  cidr_block        = "192.168.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[2]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "example_sg" {
-  vpc_id = aws_vpc.example_vpc.id
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
@@ -1280,58 +1243,22 @@ resource "aws_security_group" "example_sg" {
 `, rName))
 }
 
-func testAccClusterBasePublicAccessConfig(rName string) string {
+func testAccClusterConfig_basePublicAccess(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_vpc" "example_vpc" {
-  cidr_block = "192.168.0.0/21"
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
 
   tags = {
     Name = %[1]q
   }
 }
 
-resource "aws_subnet" "example_subnet_az1" {
-  vpc_id            = aws_vpc.example_vpc.id
-  cidr_block        = "192.168.0.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
+resource "aws_subnet" "test" {
+  count = 3
 
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "example_subnet_az2" {
-  vpc_id            = aws_vpc.example_vpc.id
-  cidr_block        = "192.168.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "example_subnet_az3" {
-  vpc_id            = aws_vpc.example_vpc.id
-  cidr_block        = "192.168.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[2]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "example_sg" {
-  vpc_id = aws_vpc.example_vpc.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "example_public_subnet_az1" {
-  vpc_id                  = aws_vpc.example_vpc.id
-  cidr_block              = "192.168.3.0/24"
-  availability_zone       = data.aws_availability_zones.available.names[0]
+  vpc_id                  = aws_vpc.test.id
+  availability_zone       = data.aws_availability_zones.available.names[count.index]
+  cidr_block              = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
   map_public_ip_on_launch = true
 
   tags = {
@@ -1339,42 +1266,29 @@ resource "aws_subnet" "example_public_subnet_az1" {
   }
 }
 
-resource "aws_subnet" "example_public_subnet_az2" {
-  vpc_id                  = aws_vpc.example_vpc.id
-  cidr_block              = "192.168.4.0/24"
-  availability_zone       = data.aws_availability_zones.available.names[1]
-  map_public_ip_on_launch = true
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
   }
 }
 
-resource "aws_subnet" "example_public_subnet_az3" {
-  vpc_id                  = aws_vpc.example_vpc.id
-  cidr_block              = "192.168.5.0/24"
-  availability_zone       = data.aws_availability_zones.available.names[2]
-  map_public_ip_on_launch = true
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
   }
 }
 
-resource "aws_internet_gateway" "example_igw" {
-  vpc_id = aws_vpc.example_vpc.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_route_table" "example_route_tbl" {
-  vpc_id = aws_vpc.example_vpc.id
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.example_igw.id
+    gateway_id = aws_internet_gateway.test.id
   }
 
   tags = {
@@ -1382,19 +1296,11 @@ resource "aws_route_table" "example_route_tbl" {
   }
 }
 
-resource "aws_route_table_association" "route_tbl_assoc_1" {
-  subnet_id      = aws_subnet.example_public_subnet_az1.id
-  route_table_id = aws_route_table.example_route_tbl.id
-}
+resource "aws_route_table_association" "test" {
+  count = 3
 
-resource "aws_route_table_association" "route_tbl_assoc_2" {
-  subnet_id      = aws_subnet.example_public_subnet_az2.id
-  route_table_id = aws_route_table.example_route_tbl.id
-}
-
-resource "aws_route_table_association" "route_tbl_assoc_3" {
-  subnet_id      = aws_subnet.example_public_subnet_az3.id
-  route_table_id = aws_route_table.example_route_tbl.id
+  subnet_id      = aws_subnet.test[count.index].id
+  route_table_id = aws_route_table.test.id
 }
 `, rName))
 }
@@ -1407,9 +1313,9 @@ resource "aws_msk_cluster" "test" {
   number_of_broker_nodes = 3
 
   broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+    client_subnets  = aws_subnet.test[*].id
     instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
+    security_groups = [aws_security_group.test.id]
 
     storage_info {
       ebs_storage_info {
@@ -1429,9 +1335,9 @@ resource "aws_msk_cluster" "test" {
   number_of_broker_nodes = 3
 
   broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+    client_subnets  = aws_subnet.test[*].id
     instance_type   = %[3]q
-    security_groups = [aws_security_group.example_sg.id]
+    security_groups = [aws_security_group.test.id]
     storage_info {
       ebs_storage_info {
         volume_size = %[2]d
@@ -1450,9 +1356,9 @@ resource "aws_msk_cluster" "test" {
   number_of_broker_nodes = 3
 
   broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+    client_subnets  = aws_subnet.test[*].id
     instance_type   = %[3]q
-    security_groups = [aws_security_group.example_sg.id]
+    security_groups = [aws_security_group.test.id]
     storage_info {
       ebs_storage_info {
         provisioned_throughput {
@@ -1474,9 +1380,9 @@ resource "aws_msk_cluster" "test" {
   number_of_broker_nodes = 3
 
   broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+    client_subnets  = aws_subnet.test[*].id
     instance_type   = %[3]q
-    security_groups = [aws_security_group.example_sg.id]
+    security_groups = [aws_security_group.test.id]
     storage_info {
       ebs_storage_info {
         provisioned_throughput {
@@ -1499,9 +1405,9 @@ resource "aws_msk_cluster" "test" {
   number_of_broker_nodes = 3
 
   broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+    client_subnets  = aws_subnet.test[*].id
     instance_type   = %[2]q
-    security_groups = [aws_security_group.example_sg.id]
+    security_groups = [aws_security_group.test.id]
 
     storage_info {
       ebs_storage_info {
@@ -1513,7 +1419,7 @@ resource "aws_msk_cluster" "test" {
 `, rName, t))
 }
 
-func testAccConfigurationAllowEveryoneNoACLFoundFalse(rName string) string {
+func testAccClusterConfig_allowEveryoneNoACLFoundFalse(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_msk_configuration" "test" {
   kafka_versions = ["2.7.1"]
@@ -1527,8 +1433,8 @@ resource "aws_msk_configuration" "test" {
 
 func testAccClusterConfig_brokerNodeGroupInfoNoPublicAccessSASLIAM(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBasePublicAccessConfig(rName),
-		testAccConfigurationAllowEveryoneNoACLFoundFalse(rName),
+		testAccClusterConfig_basePublicAccess(rName),
+		testAccClusterConfig_allowEveryoneNoACLFoundFalse(rName),
 		fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
@@ -1536,9 +1442,9 @@ resource "aws_msk_cluster" "test" {
   number_of_broker_nodes = 3
 
   broker_node_group_info {
-    client_subnets  = [aws_subnet.example_public_subnet_az1.id, aws_subnet.example_public_subnet_az2.id, aws_subnet.example_public_subnet_az3.id]
+    client_subnets  = aws_subnet.test[*].id
     instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
+    security_groups = [aws_security_group.test.id]
 
     storage_info {
       ebs_storage_info {
@@ -1563,8 +1469,8 @@ resource "aws_msk_cluster" "test" {
 
 func testAccClusterConfig_brokerNodeGroupInfoPublicAccessSASLIAM(rName string, pa string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBasePublicAccessConfig(rName),
-		testAccConfigurationAllowEveryoneNoACLFoundFalse(rName),
+		testAccClusterConfig_basePublicAccess(rName),
+		testAccClusterConfig_allowEveryoneNoACLFoundFalse(rName),
 		fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
@@ -1572,9 +1478,9 @@ resource "aws_msk_cluster" "test" {
   number_of_broker_nodes = 3
 
   broker_node_group_info {
-    client_subnets  = [aws_subnet.example_public_subnet_az1.id, aws_subnet.example_public_subnet_az2.id, aws_subnet.example_public_subnet_az3.id]
+    client_subnets  = aws_subnet.test[*].id
     instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
+    security_groups = [aws_security_group.test.id]
 
     storage_info {
       ebs_storage_info {
@@ -1632,9 +1538,9 @@ resource "aws_msk_cluster" "test" {
   number_of_broker_nodes = 3
 
   broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+    client_subnets  = aws_subnet.test[*].id
     instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
+    security_groups = [aws_security_group.test.id]
 
     storage_info {
       ebs_storage_info {
@@ -1674,9 +1580,9 @@ resource "aws_msk_cluster" "test" {
   number_of_broker_nodes = 3
 
   broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+    client_subnets  = aws_subnet.test[*].id
     instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
+    security_groups = [aws_security_group.test.id]
 
     storage_info {
       ebs_storage_info {
@@ -1703,9 +1609,9 @@ resource "aws_msk_cluster" "test" {
   number_of_broker_nodes = 3
 
   broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+    client_subnets  = aws_subnet.test[*].id
     instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
+    security_groups = [aws_security_group.test.id]
 
     storage_info {
       ebs_storage_info {
@@ -1733,9 +1639,9 @@ resource "aws_msk_cluster" "test" {
   number_of_broker_nodes = 3
 
   broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+    client_subnets  = aws_subnet.test[*].id
     instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
+    security_groups = [aws_security_group.test.id]
 
     storage_info {
       ebs_storage_info {
@@ -1772,9 +1678,9 @@ resource "aws_msk_cluster" "test" {
   number_of_broker_nodes = 3
 
   broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+    client_subnets  = aws_subnet.test[*].id
     instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
+    security_groups = [aws_security_group.test.id]
 
     storage_info {
       ebs_storage_info {
@@ -1817,9 +1723,9 @@ resource "aws_msk_cluster" "test" {
   number_of_broker_nodes = 3
 
   broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+    client_subnets  = aws_subnet.test[*].id
     instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
+    security_groups = [aws_security_group.test.id]
 
     storage_info {
       ebs_storage_info {
@@ -1852,9 +1758,9 @@ resource "aws_msk_cluster" "test" {
   number_of_broker_nodes = 3
 
   broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+    client_subnets  = aws_subnet.test[*].id
     instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
+    security_groups = [aws_security_group.test.id]
 
     storage_info {
       ebs_storage_info {
@@ -1878,9 +1784,9 @@ resource "aws_msk_cluster" "test" {
   number_of_broker_nodes = 3
 
   broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+    client_subnets  = aws_subnet.test[*].id
     instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
+    security_groups = [aws_security_group.test.id]
 
     storage_info {
       ebs_storage_info {
@@ -1906,9 +1812,9 @@ resource "aws_msk_cluster" "test" {
   number_of_broker_nodes = 3
 
   broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+    client_subnets  = aws_subnet.test[*].id
     instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
+    security_groups = [aws_security_group.test.id]
 
     storage_info {
       ebs_storage_info {
@@ -1935,9 +1841,9 @@ resource "aws_msk_cluster" "test" {
   number_of_broker_nodes = 3
 
   broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+    client_subnets  = aws_subnet.test[*].id
     instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
+    security_groups = [aws_security_group.test.id]
 
     storage_info {
       ebs_storage_info {
@@ -1958,9 +1864,9 @@ resource "aws_msk_cluster" "test" {
   number_of_broker_nodes = 3
 
   broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+    client_subnets  = aws_subnet.test[*].id
     instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
+    security_groups = [aws_security_group.test.id]
 
     storage_info {
       ebs_storage_info {
@@ -1980,9 +1886,9 @@ resource "aws_msk_cluster" "test" {
   number_of_broker_nodes = %[2]d
 
   broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+    client_subnets  = aws_subnet.test[*].id
     instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
+    security_groups = [aws_security_group.test.id]
 
     storage_info {
       ebs_storage_info {
@@ -2002,9 +1908,9 @@ resource "aws_msk_cluster" "test" {
   number_of_broker_nodes = 3
 
   broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+    client_subnets  = aws_subnet.test[*].id
     instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
+    security_groups = [aws_security_group.test.id]
 
     storage_info {
       ebs_storage_info {
@@ -2105,9 +2011,9 @@ resource "aws_msk_cluster" "test" {
   number_of_broker_nodes = 3
 
   broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+    client_subnets  = aws_subnet.test[*].id
     instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
+    security_groups = [aws_security_group.test.id]
 
     storage_info {
       ebs_storage_info {
@@ -2153,9 +2059,9 @@ resource "aws_msk_cluster" "test" {
   }
 
   broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+    client_subnets  = aws_subnet.test[*].id
     instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
+    security_groups = [aws_security_group.test.id]
 
     storage_info {
       ebs_storage_info {
@@ -2197,9 +2103,9 @@ resource "aws_msk_cluster" "test" {
   }
 
   broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+    client_subnets  = aws_subnet.test[*].id
     instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
+    security_groups = [aws_security_group.test.id]
 
     storage_info {
       ebs_storage_info {
@@ -2224,9 +2130,9 @@ resource "aws_msk_cluster" "test" {
   number_of_broker_nodes = 3
 
   broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+    client_subnets  = aws_subnet.test[*].id
     instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
+    security_groups = [aws_security_group.test.id]
 
     storage_info {
       ebs_storage_info {
@@ -2250,9 +2156,9 @@ resource "aws_msk_cluster" "test" {
   number_of_broker_nodes = 3
 
   broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+    client_subnets  = aws_subnet.test[*].id
     instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
+    security_groups = [aws_security_group.test.id]
 
     storage_info {
       ebs_storage_info {

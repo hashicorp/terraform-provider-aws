@@ -53,9 +53,9 @@ resource "aws_msk_cluster" "test" {
   number_of_broker_nodes = 3
 
   broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+    client_subnets  = aws_subnet.test[*].id
     instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
+    security_groups = [aws_security_group.test.id]
 
     storage_info {
       ebs_storage_info {
