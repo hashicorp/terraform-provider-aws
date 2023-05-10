@@ -363,6 +363,12 @@ func TestAccQuickSightDataSet_rowLevelPermissionTagConfiguration(t *testing.T) {
 
 func TestAccQuickSightDataSet_refreshProperties(t *testing.T) {
 	ctx := acctest.Context(t)
+	// This test requires additional configuration of the QuickSight service role. Ensure
+	// the role has the AWS managed "AmazonS3ReadOnlyAccess" and "AWSQuicksightAthenaAccess"
+	// identity policies attached. The default LakeFormation data catalog settings may also
+	// need adjusted, depending on the current configuration.
+	//
+	// Ref: https://docs.aws.amazon.com/lake-formation/latest/dg/change-settings.html
 	if os.Getenv("QUICKSIGHT_ATHENA_TESTING_ENABLED") == "" {
 		t.Skip("Environment variable QUICKSIGHT_ATHENA_TESTING_ENABLED is not set")
 	}
@@ -890,7 +896,6 @@ func testAccDataSetConfigRefreshProperties(rId, rName string) string {
 	return acctest.ConfigCompose(
 		testAccBaseDataSourceConfig(rName),
 		fmt.Sprintf(`
-
 resource "aws_glue_catalog_database" "test" {
   name = %[2]q
 }
