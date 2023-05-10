@@ -54,11 +54,18 @@ func ResourceMetricStream() *schema.Resource {
 				Computed: true,
 			},
 			"exclude_filter": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				ConflictsWith: []string{"include_filter"},
+				Type:     schema.TypeSet,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"metric_names": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(1, 255),
+							},
+						},
 						"namespace": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -66,6 +73,7 @@ func ResourceMetricStream() *schema.Resource {
 						},
 					},
 				},
+				ConflictsWith: []string{"include_filter"},
 			},
 			"firehose_arn": {
 				Type:         schema.TypeString,
@@ -73,11 +81,18 @@ func ResourceMetricStream() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			"include_filter": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				ConflictsWith: []string{"exclude_filter"},
+				Type:     schema.TypeSet,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"metric_names": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(1, 255),
+							},
+						},
 						"namespace": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -85,6 +100,7 @@ func ResourceMetricStream() *schema.Resource {
 						},
 					},
 				},
+				ConflictsWith: []string{"exclude_filter"},
 			},
 			"include_linked_accounts_metrics": {
 				Type:     schema.TypeBool,
@@ -438,10 +454,12 @@ func expandMetricStreamFilters(s *schema.Set) []*cloudwatch.MetricStreamFilter {
 		filter := &cloudwatch.MetricStreamFilter{}
 		mFilter := filterRaw.(map[string]interface{})
 
+		if v, ok := mFilter["metric_names"].(*schema.Set); ok && v.Len() > 0 {
+			filter.MetricNames = flex.ExpandStringSet(v)
+		}
 		if v, ok := mFilter["namespace"].(string); ok && v != "" {
 			filter.Namespace = aws.String(v)
 		}
-
 		filters = append(filters, filter)
 	}
 
@@ -454,8 +472,8 @@ func flattenMetricStreamFilters(s []*cloudwatch.MetricStreamFilter) []map[string
 	for _, bd := range s {
 		if bd.Namespace != nil {
 			stage := make(map[string]interface{})
+			stage["metric_names"] = aws.StringValueSlice(bd.MetricNames)
 			stage["namespace"] = aws.StringValue(bd.Namespace)
-
 			filters = append(filters, stage)
 		}
 	}
