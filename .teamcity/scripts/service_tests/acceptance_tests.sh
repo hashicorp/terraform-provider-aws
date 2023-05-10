@@ -2,6 +2,10 @@
 
 set -euo pipefail
 
+echo "GOCACHE: ${GOCACHE}"
+
+mkdir -p "${GOCACHE}"
+
 TEST_LIST=$(./test-binary -test.list="%TEST_PATTERN%" 2>/dev/null)
 
 read -r -a split <<<"${TEST_LIST}"

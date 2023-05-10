@@ -216,7 +216,7 @@ object FullBuild : BuildType({
         val testType = DslContext.getParameter("test_type", "")
         val serviceList = if (testType == "orgacct") orgacctServices else services
         serviceList.forEach { (serviceName, displayName) ->
-            snapshot(Service(serviceName, displayName).buildType(notifier)) {
+            snapshot(Service(serviceName, displayName).buildType(SetUp, notifier)) {
                 reuseBuilds = ReuseBuilds.NO
                 onDependencyFailure = FailureAction.ADD_PROBLEM
                 onDependencyCancel = FailureAction.IGNORE
@@ -297,6 +297,8 @@ object SetUp : BuildType({
         cleanCheckout = true
     }
 
+    artifactRules = "+:go-build-cache"
+
     steps {
         script {
             name = "Setup GOENV"
@@ -364,6 +366,10 @@ object Services : Project({
         null
     }
 
+    params {
+        text("env.GOCACHE","%teamcity.build.checkoutDir%/go-build-cache", display = ParameterDisplay.HIDDEN)
+    }
+
     val buildChain = sequential {
         buildType(SetUp)
 
@@ -371,7 +377,7 @@ object Services : Project({
         val serviceList = if (testType == "orgacct") orgacctServices else services
         parallel(options = { onDependencyFailure = FailureAction.IGNORE }) {
             serviceList.forEach { (serviceName, displayName) ->
-                buildType(Service(serviceName, displayName).buildType(notifier))
+                buildType(Service(serviceName, displayName).buildType(SetUp, notifier))
             }
         }
 

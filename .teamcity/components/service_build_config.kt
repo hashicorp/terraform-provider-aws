@@ -23,7 +23,7 @@ class Service(name: String, spec: ServiceSpec) {
     val packageName = name
     val spec = spec
 
-    fun buildType(notifier: Notifier?): BuildType {
+    fun buildType(artifactSource: BuildType, notifier: Notifier?): BuildType {
         return BuildType {
             id = DslContext.createId("ServiceTest_$packageName")
 
@@ -101,6 +101,13 @@ class Service(name: String, spec: ServiceSpec) {
                         // firstBuildErrorOccurs = true
                     }
                 }
+            }
+
+            dependencies {
+                    artifacts(artifactSource) {
+                        cleanDestination = true
+                        artifactRules = "+:go-build-cache"
+                    }
             }
         }
     }

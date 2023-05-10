@@ -3,6 +3,10 @@
 
 set -euo pipefail
 
+echo "GOCACHE: ${GOCACHE}"
+
+mkdir -p "${GOCACHE}"
+
 # Go doesn't support negative lookahead regexes, so we have to fake it
 TEST_LIST=$(./test-binary -test.list='Test([^A]|A[^c]|Ac[^c])' 2>/dev/null)
 

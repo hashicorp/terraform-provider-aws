@@ -4,6 +4,10 @@
 
 set -euo pipefail
 
+echo "GOCACHE: ${GOCACHE}"
+
+mkdir -p "${GOCACHE}"
+
 go test \
     ./internal/acctest/... \
     ./internal/attrmap/... \

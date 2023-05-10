@@ -4,6 +4,10 @@
 
 set -euo pipefail
 
+echo "GOCACHE: ${GOCACHE}"
+
+mkdir -p "${GOCACHE}"
+
 # shellcheck disable=2157 # This isn't a constant string, it's a TeamCity variable substitution
 if [[ -n "%ACCTEST_ROLE_ARN%" ]]; then
     conf=$(pwd)/aws.conf

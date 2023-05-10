@@ -2,6 +2,10 @@
 
 set -euo pipefail
 
+echo "GOCACHE: ${GOCACHE}"
+
+mkdir -p "${GOCACHE}"
+
 go_version="$(goenv version)"
 echo "Go version: ${go_version}"
 echo "go env:"
