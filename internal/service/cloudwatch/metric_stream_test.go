@@ -735,13 +735,13 @@ resource "aws_cloudwatch_metric_stream" "test" {
   output_format = "json"
 
   include_filter {
-    namespace = "AWS/EC2"
-	metric_names = ["CPUUtilization", "NetworkOut"]
+    namespace    = "AWS/EC2"
+    metric_names = ["CPUUtilization", "NetworkOut"]
   }
 
   include_filter {
-    namespace = "AWS/EBS"
-	metric_names = []
+    namespace    = "AWS/EBS"
+    metric_names = []
   }
 }
 `, rName)
@@ -783,13 +783,13 @@ resource "aws_cloudwatch_metric_stream" "test" {
   output_format = "json"
 
   exclude_filter {
-    namespace = "AWS/EC2"
-	metric_names = ["CPUUtilization", "NetworkOut"]
+    namespace    = "AWS/EC2"
+    metric_names = ["CPUUtilization", "NetworkOut"]
   }
 
   exclude_filter {
-    namespace = "AWS/EBS"
-	metric_names = []
+    namespace    = "AWS/EBS"
+    metric_names = []
   }
 }
 `, rName)
