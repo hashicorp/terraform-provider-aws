@@ -22,12 +22,12 @@ resource "aws_cloudwatch_metric_stream" "main" {
   output_format = "json"
 
   include_filter {
-    namespace = "AWS/EC2"
+    namespace    = "AWS/EC2"
     metric_names = ["CPUUtilization", "NetworkOut"]
   }
 
   include_filter {
-    namespace = "AWS/EBS"
+    namespace    = "AWS/EBS"
     metric_names = []
   }
 }
