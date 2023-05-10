@@ -71,7 +71,6 @@ func TestAccKafkaCluster_basic(t *testing.T) {
 					testAccCheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers_tls"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.az_distribution", kafka.BrokerAZDistributionDefault),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.ebs_volume_size", "10"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.client_subnets.#", "3"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az1", "id"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az2", "id"),
@@ -82,6 +81,11 @@ func TestAccKafkaCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.instance_type", "kafka.m5.large"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.security_groups.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.security_groups.*", "aws_security_group.example_sg", "id"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.volume_size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_info.#", "1"),
@@ -185,48 +189,6 @@ func TestAccKafkaCluster_tags(t *testing.T) {
 	})
 }
 
-func TestAccKafkaCluster_BrokerNodeGroupInfo_ebsVolumeSize(t *testing.T) {
-	ctx := acctest.Context(t)
-	var cluster1, cluster2 kafka.ClusterInfo
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, kafka.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_deprecatedBrokerNodeGroupInfoEBSVolumeSize(rName, 11),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.ebs_volume_size", "11"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"current_version",
-				},
-			},
-			{
-				// BadRequestException: The minimum increase in storage size of the cluster should be atleast 100GB
-				Config: testAccClusterConfig_deprecatedBrokerNodeGroupInfoEBSVolumeSize(rName, 112),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster2),
-					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.ebs_volume_size", "112"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccKafkaCluster_BrokerNodeGroupInfo_storageInfo(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster1, cluster2 kafka.ClusterInfo
@@ -246,7 +208,6 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_storageInfo(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.ebs_volume_size", strconv.Itoa(original_volume_size)),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.volume_size", strconv.Itoa(original_volume_size)),
@@ -264,54 +225,6 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_storageInfo(t *testing.T) {
 			},
 			{
 				// update broker_node_group_info.0.storage_info.0.ebs_storage_info.0.volume_size
-				Config: testAccClusterConfig_brokerNodeGroupInfoStorageInfoVolumeSizeSetAndProvThroughputEnabled(rName, updated_volume_size, "kafka.m5.4xlarge"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster2),
-					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.ebs_volume_size", strconv.Itoa(updated_volume_size)),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.volume_size", strconv.Itoa(updated_volume_size)),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.0.volume_throughput", "250"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccKafkaCluster_BrokerNodeGroupInfo_modifyEBSVolumeSizeToStorageInfo(t *testing.T) {
-	ctx := acctest.Context(t)
-	var cluster1, cluster2 kafka.ClusterInfo
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_cluster.test"
-	original_volume_size := 11
-	updated_volume_size := 112
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, kafka.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				// init with the deprecated ebs_volume_size
-				Config: testAccClusterConfig_deprecatedBrokerNodeGroupInfoEBSVolumeSize(rName, original_volume_size),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.ebs_volume_size", strconv.Itoa(original_volume_size)),
-				),
-			},
-			{
-				// refactor deprecated ebs_volume_size to storage_info
-				Config:   testAccClusterConfig_brokerNodeGroupInfoStorageInfoVolumeSizeOnly(rName, original_volume_size, "kafka.m5.large"),
-				PlanOnly: true,
-			},
-			{
-				// upgrade the instance type, update storage, and enable provisioned throughput
 				Config: testAccClusterConfig_brokerNodeGroupInfoStorageInfoVolumeSizeSetAndProvThroughputEnabled(rName, updated_volume_size, "kafka.m5.4xlarge"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
@@ -1317,7 +1230,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccClusterBaseConfig(rName string) string {
+func testAccClusterConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "example_vpc" {
   cidr_block = "192.168.0.0/22"
@@ -1487,7 +1400,7 @@ resource "aws_route_table_association" "route_tbl_assoc_3" {
 }
 
 func testAccClusterConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
@@ -1495,33 +1408,21 @@ resource "aws_msk_cluster" "test" {
 
   broker_node_group_info {
     client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
   }
 }
 `, rName))
 }
 
-func testAccClusterConfig_deprecatedBrokerNodeGroupInfoEBSVolumeSize(rName string, ebsVolumeSize int) string {
-	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
-resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = 3
-
-  broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = %[2]d
-    instance_type   = "kafka.m5.large"
-    security_groups = [aws_security_group.example_sg.id]
-  }
-}
-`, rName, ebsVolumeSize))
-}
-
 func testAccClusterConfig_brokerNodeGroupInfoStorageInfoVolumeSizeOnly(rName string, ebsVolumeSize int, instanceType string) string {
-	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
@@ -1542,7 +1443,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccClusterConfig_brokerNodeGroupInfoStorageInfoVolumeSizeSetAndProvThroughputNotEnabled(rName string, ebsVolumeSize int, instanceType string) string {
-	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
@@ -1566,7 +1467,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccClusterConfig_brokerNodeGroupInfoStorageInfoVolumeSizeSetAndProvThroughputEnabled(rName string, ebsVolumeSize int, instanceType string) string {
-	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
@@ -1591,7 +1492,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccClusterConfig_brokerNodeGroupInfoInstanceType(rName string, t string) string {
-	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
@@ -1599,9 +1500,14 @@ resource "aws_msk_cluster" "test" {
 
   broker_node_group_info {
     client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
     instance_type   = %[2]q
     security_groups = [aws_security_group.example_sg.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
   }
 }
 `, rName, t))
@@ -1631,9 +1537,14 @@ resource "aws_msk_cluster" "test" {
 
   broker_node_group_info {
     client_subnets  = [aws_subnet.example_public_subnet_az1.id, aws_subnet.example_public_subnet_az2.id, aws_subnet.example_public_subnet_az3.id]
-    ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
   }
 
   configuration_info {
@@ -1662,9 +1573,14 @@ resource "aws_msk_cluster" "test" {
 
   broker_node_group_info {
     client_subnets  = [aws_subnet.example_public_subnet_az1.id, aws_subnet.example_public_subnet_az2.id, aws_subnet.example_public_subnet_az3.id]
-    ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
 
     connectivity_info {
       public_access {
@@ -1707,7 +1623,7 @@ resource "aws_acmpca_certificate_authority" "test" {
 
 func testAccClusterConfig_clientAuthenticationTLSCertificateAuthorityARNs(rName, commonName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseConfig(rName),
+		testAccClusterConfig_base(rName),
 		testAccClusterConfig_rootCA(commonName),
 		fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
@@ -1717,9 +1633,14 @@ resource "aws_msk_cluster" "test" {
 
   broker_node_group_info {
     client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
   }
 
   client_authentication {
@@ -1744,7 +1665,7 @@ resource "aws_msk_cluster" "test" {
 
 func testAccClusterConfig_rootCANoClientAuthentication(rName, commonName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseConfig(rName),
+		testAccClusterConfig_base(rName),
 		testAccClusterConfig_rootCA(commonName),
 		fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
@@ -1754,9 +1675,14 @@ resource "aws_msk_cluster" "test" {
 
   broker_node_group_info {
     client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
   }
 
   encryption_info {
@@ -1770,7 +1696,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccClusterConfig_clientAuthenticationSASLScram(rName string, scramEnabled bool) string {
-	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
@@ -1778,9 +1704,14 @@ resource "aws_msk_cluster" "test" {
 
   broker_node_group_info {
     client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
   }
 
   client_authentication {
@@ -1795,7 +1726,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccClusterConfig_clientAuthenticationSASLIAM(rName string, saslEnabled bool) string {
-	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
@@ -1803,9 +1734,14 @@ resource "aws_msk_cluster" "test" {
 
   broker_node_group_info {
     client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
   }
 
   client_authentication {
@@ -1820,7 +1756,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccClusterConfig_configurationInfoRevision1(rName string) string {
-	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_msk_configuration" "test1" {
   kafka_versions = ["2.7.1"]
   name           = "%[1]s-1"
@@ -1837,9 +1773,14 @@ resource "aws_msk_cluster" "test" {
 
   broker_node_group_info {
     client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
   }
 
   configuration_info {
@@ -1851,7 +1792,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccClusterConfig_configurationInfoRevision2(rName string) string {
-	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_msk_configuration" "test1" {
   kafka_versions = ["2.7.1"]
   name           = "%[1]s-1"
@@ -1877,9 +1818,14 @@ resource "aws_msk_cluster" "test" {
 
   broker_node_group_info {
     client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
   }
 
   configuration_info {
@@ -1891,7 +1837,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccClusterConfig_encryptionInfoEncryptionAtRestKMSKeyARN(rName string) string { // nosemgrep:ci.msk-in-func-name
-	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_key" "example_key" {
   description = %[1]q
 
@@ -1907,9 +1853,14 @@ resource "aws_msk_cluster" "test" {
 
   broker_node_group_info {
     client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
   }
 
   encryption_info {
@@ -1920,7 +1871,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccClusterConfig_encryptionInfoEncryptionInTransitClientBroker(rName, clientBroker string) string {
-	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
@@ -1928,9 +1879,14 @@ resource "aws_msk_cluster" "test" {
 
   broker_node_group_info {
     client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
   }
 
   encryption_info {
@@ -1943,7 +1899,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccClusterConfig_encryptionInfoEncryptionInTransitIn(rName string, inCluster bool) string {
-	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
@@ -1951,9 +1907,14 @@ resource "aws_msk_cluster" "test" {
 
   broker_node_group_info {
     client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
   }
 
   encryption_info {
@@ -1966,7 +1927,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccClusterConfig_enhancedMonitoring(rName, enhancedMonitoring string) string {
-	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   enhanced_monitoring    = %[2]q
@@ -1975,16 +1936,21 @@ resource "aws_msk_cluster" "test" {
 
   broker_node_group_info {
     client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
   }
 }
 `, rName, enhancedMonitoring))
 }
 
 func testAccClusterConfig_storageMode(rName string, storageMode string, kafkaVersion string) string {
-	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   storage_mode           = %[2]q
@@ -1993,16 +1959,21 @@ resource "aws_msk_cluster" "test" {
 
   broker_node_group_info {
     client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
   }
 }
 `, rName, storageMode, kafkaVersion))
 }
 
 func testAccClusterConfig_numberOfBrokerNodes(rName string, brokerCount int) string {
-	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
@@ -2010,16 +1981,21 @@ resource "aws_msk_cluster" "test" {
 
   broker_node_group_info {
     client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
   }
 }
 `, rName, brokerCount))
 }
 
 func testAccClusterConfig_openMonitoring(rName string, jmxExporterEnabled bool, nodeExporterEnabled bool) string {
-	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
@@ -2027,9 +2003,14 @@ resource "aws_msk_cluster" "test" {
 
   broker_node_group_info {
     client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
   }
 
   open_monitoring {
@@ -2062,7 +2043,7 @@ func testAccClusterConfig_loggingInfo(rName string, cloudwatchLogsEnabled bool, 
 		s3Bucket = "aws_s3_bucket.bucket.id"
 	}
 
-	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
@@ -2125,9 +2106,14 @@ resource "aws_msk_cluster" "test" {
 
   broker_node_group_info {
     client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
   }
 
   logging_info {
@@ -2154,7 +2140,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccClusterConfig_version(rName string, kafkaVersion string) string {
-	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = %[2]q
@@ -2168,16 +2154,21 @@ resource "aws_msk_cluster" "test" {
 
   broker_node_group_info {
     client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
   }
 }
 `, rName, kafkaVersion))
 }
 
 func testAccClusterConfig_versionConfigurationInfo(rName string, kafkaVersion string, configResourceName string) string {
-	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_msk_configuration" "config1" {
   kafka_versions    = ["2.7.1"]
   name              = "%[1]s-1"
@@ -2207,9 +2198,14 @@ resource "aws_msk_cluster" "test" {
 
   broker_node_group_info {
     client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
   }
 
   configuration_info {
@@ -2221,7 +2217,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccClusterConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
@@ -2229,9 +2225,14 @@ resource "aws_msk_cluster" "test" {
 
   broker_node_group_info {
     client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
   }
 
   tags = {
@@ -2242,7 +2243,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccClusterConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
@@ -2250,9 +2251,14 @@ resource "aws_msk_cluster" "test" {
 
   broker_node_group_info {
     client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
   }
 
   tags = {

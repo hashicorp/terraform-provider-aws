@@ -37,7 +37,7 @@ func TestAccKafkaBrokerNodesDataSource_basic(t *testing.T) {
 }
 
 func testAccBrokerNodesDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccClusterBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.2.1"
@@ -45,9 +45,14 @@ resource "aws_msk_cluster" "test" {
 
   broker_node_group_info {
     client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
     instance_type   = "kafka.t3.small"
     security_groups = [aws_security_group.example_sg.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
   }
 
   tags = {
