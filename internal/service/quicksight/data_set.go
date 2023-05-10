@@ -1112,6 +1112,7 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceDataSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QuickSightConn()
 
+	log.Printf("[INFO] Deleting QuickSight Data Set %s", d.Id())
 	awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
@@ -2701,11 +2702,11 @@ func flattenTagRules(apiObject []*quicksight.RowLevelPermissionTagRule) []interf
 func ParseDataSetID(id string) (string, string, error) {
 	parts := strings.SplitN(id, ",", 2)
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%s), expected AWS_ACCOUNT_ID,DATA_SOURCE_ID", id)
+		return "", "", fmt.Errorf("unexpected format of ID (%s), expected AWS_ACCOUNT_ID,DATA_SET_ID", id)
 	}
 	return parts[0], parts[1], nil
 }
 
-func createDataSetID(awsAccountID, dataSourceID string) string {
-	return fmt.Sprintf("%s,%s", awsAccountID, dataSourceID)
+func createDataSetID(awsAccountID, dataSetID string) string {
+	return fmt.Sprintf("%s,%s", awsAccountID, dataSetID)
 }
