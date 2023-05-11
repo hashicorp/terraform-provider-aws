@@ -1327,27 +1327,6 @@ resource "aws_msk_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterConfig_brokerNodeGroupInfoStorageInfoVolumeSizeOnly(rName string, ebsVolumeSize int, instanceType string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
-resource "aws_msk_cluster" "test" {
-  cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
-  number_of_broker_nodes = 3
-
-  broker_node_group_info {
-    client_subnets  = aws_subnet.test[*].id
-    instance_type   = %[3]q
-    security_groups = [aws_security_group.test.id]
-    storage_info {
-      ebs_storage_info {
-        volume_size = %[2]d
-      }
-    }
-  }
-}
-`, rName, ebsVolumeSize, instanceType))
-}
-
 func testAccClusterConfig_brokerNodeGroupInfoStorageInfoVolumeSizeSetAndProvThroughputNotEnabled(rName string, ebsVolumeSize int, instanceType string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
