@@ -506,11 +506,7 @@ func ResourceCluster() *schema.Resource {
 			verify.SetTagsDiff,
 			customdiff.ForceNewIf("storage_type", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 				// Aurora supports mutation of the storage_type parameter, other engines do not
-				engine := d.Get("engine").(string)
-				if !strings.HasPrefix(engine, "aurora") {
-					return true
-				}
-				return false
+				return !strings.HasPrefix(d.Get("engine").(string), "aurora")
 			}),
 			func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 				if diff.Id() == "" {

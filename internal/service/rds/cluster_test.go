@@ -552,7 +552,7 @@ func TestAccRDSCluster_storageTypeIo1(t *testing.T) {
 	})
 }
 
-// For backwards compatability, the control plane should always return a blank string even if sending "aurora" as the storage type
+// For backwards compatibility, the control plane should always return a blank string even if sending "aurora" as the storage type
 func TestAccRDSCluster_storageTypeAuroraReturnsBlank(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
