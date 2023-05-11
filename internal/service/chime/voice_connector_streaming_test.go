@@ -3,10 +3,12 @@ package chime_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/chime"
+	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -92,6 +94,12 @@ func TestAccChimeVoiceConnectorStreaming_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "data_retention", "2"),
 					resource.TestCheckResourceAttr(resourceName, "disabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "streaming_notification_targets.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "media_insights_configuration.0.disabled", "false"),
+					acctest.MatchResourceAttrRegionalARN(resourceName,
+						"media_insights_configuration.0.configuration_arn",
+						"chime",
+						regexp.MustCompile(fmt.Sprintf(`media-insights-pipeline-configuration/test-config-%s`, name)),
+					),
 				),
 			},
 			{
@@ -133,6 +141,51 @@ resource "aws_chime_voice_connector_streaming" "test" {
   disabled                       = false
   data_retention                 = 2
   streaming_notification_targets = ["SQS", "SNS"]
+  media_insights_configuration {
+    disabled          = false
+    configuration_arn = aws_chimesdkmediapipelines_media_insights_pipeline_configuration.test.arn
+  }
+}
+
+resource "aws_chimesdkmediapipelines_media_insights_pipeline_configuration" "test" {
+  name                     = "test-config-%[1]s"
+  resource_access_role_arn = aws_iam_role.test.arn
+  elements {
+    type = "AmazonTranscribeCallAnalyticsProcessor"
+    amazon_transcribe_call_analytics_processor_configuration {
+      language_code = "en-US"
+    }
+  }
+
+  elements {
+    type = "KinesisDataStreamSink"
+    kinesis_data_stream_sink_configuration {
+      insights_target = aws_kinesis_stream.test.arn
+    }
+  }
+}
+
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["mediapipelines.chime.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = "resource_access_role-%[1]s"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+resource "aws_kinesis_stream" "test" {
+  name        = "kvs-%[1]s"
+  shard_count = 2
 }
 `, name)
 }
@@ -148,8 +201,8 @@ func testAccCheckVoiceConnectorStreamingExists(ctx context.Context, name string)
 			return fmt.Errorf("no Chime Voice Connector streaming configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn()
-		input := &chime.GetVoiceConnectorStreamingConfigurationInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn()
+		input := &chimesdkvoice.GetVoiceConnectorStreamingConfigurationInput{
 			VoiceConnectorId: aws.String(rs.Primary.ID),
 		}
 
@@ -172,13 +225,13 @@ func testAccCheckVoiceConnectorStreamingDestroy(ctx context.Context) resource.Te
 			if rs.Type != "aws_chime_voice_connector_termination" {
 				continue
 			}
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn()
-			input := &chime.GetVoiceConnectorStreamingConfigurationInput{
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn()
+			input := &chimesdkvoice.GetVoiceConnectorStreamingConfigurationInput{
 				VoiceConnectorId: aws.String(rs.Primary.ID),
 			}
 			resp, err := conn.GetVoiceConnectorStreamingConfigurationWithContext(ctx, input)
 
-			if tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
+			if tfawserr.ErrCodeEquals(err, chimesdkvoice.ErrCodeNotFoundException) {
 				continue
 			}
 

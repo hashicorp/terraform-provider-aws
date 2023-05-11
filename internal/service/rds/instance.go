@@ -1740,6 +1740,8 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	dbSetResourceDataEngineVersionFromInstance(d, v)
 
+	SetTagsOut(ctx, v.TagList)
+
 	return diags
 }
 
@@ -2384,6 +2386,38 @@ func findDBInstanceByIDSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id str
 	return &output.DBInstances[0], nil
 }
 
+func statusDBInstanceSDKv1(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findDBInstanceByIDSDKv1(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.DBInstanceStatus), nil
+	}
+}
+
+func statusDBInstanceSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findDBInstanceByIDSDKv2(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.DBInstanceStatus), nil
+	}
+}
+
 func waitDBInstanceAvailableSDKv1(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*rds.DBInstance, error) { //nolint:unparam
 	options := tfresource.Options{
 		PollInterval:              10 * time.Second,
@@ -2487,6 +2521,7 @@ func waitDBInstanceDeleted(ctx context.Context, conn *rds.RDS, id string, timeou
 			InstanceStatusConfiguringEnhancedMonitoring,
 			InstanceStatusConfiguringLogExports,
 			InstanceStatusCreating,
+			InstanceStatusDeletePreCheck,
 			InstanceStatusDeleting,
 			InstanceStatusIncompatibleParameters,
 			InstanceStatusIncompatibleRestore,
@@ -2509,38 +2544,6 @@ func waitDBInstanceDeleted(ctx context.Context, conn *rds.RDS, id string, timeou
 	}
 
 	return nil, err
-}
-
-func statusDBInstanceSDKv1(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findDBInstanceByIDSDKv1(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.DBInstanceStatus), nil
-	}
-}
-
-func statusDBInstanceSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findDBInstanceByIDSDKv2(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.DBInstanceStatus), nil
-	}
 }
 
 func findBlueGreenDeploymentByID(ctx context.Context, conn *rds_sdkv2.Client, id string) (*types.BlueGreenDeployment, error) {
@@ -2573,6 +2576,20 @@ func findBlueGreenDeploymentByID(ctx context.Context, conn *rds_sdkv2.Client, id
 	}
 
 	return &deployment, nil
+}
+
+func statusBlueGreenDeployment(ctx context.Context, conn *rds_sdkv2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findBlueGreenDeploymentByID(ctx, conn, id)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
 }
 
 func waitBlueGreenDeploymentAvailable(ctx context.Context, conn *rds_sdkv2.Client, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*types.BlueGreenDeployment, error) {
@@ -2655,20 +2672,6 @@ func waitBlueGreenDeploymentDeleted(ctx context.Context, conn *rds_sdkv2.Client,
 	}
 
 	return nil, err
-}
-
-func statusBlueGreenDeployment(ctx context.Context, conn *rds_sdkv2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findBlueGreenDeploymentByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.Status), nil
-	}
 }
 
 func dbInstanceValidBlueGreenEngines() []string {

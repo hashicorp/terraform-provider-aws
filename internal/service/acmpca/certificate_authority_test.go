@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -42,6 +43,7 @@ func TestAccACMPCACertificateAuthority_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "certificate_chain", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_signing_request"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "key_storage_security_standard", "FIPS_140_2_LEVEL_3_OR_HIGHER"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "not_after"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "not_before"),
 					resource.TestCheckResourceAttr(resourceName, "permanent_deletion_time_in_days", "30"),
@@ -170,6 +172,41 @@ func TestAccACMPCACertificateAuthority_usageMode(t *testing.T) {
 	})
 }
 
+func TestAccACMPCACertificateAuthority_keyStorageSecurityStandard(t *testing.T) {
+	ctx := acctest.Context(t)
+	var certificateAuthority acmpca.CertificateAuthority
+	resourceName := "aws_acmpca_certificate_authority.test"
+	commonName := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			// See https://docs.aws.amazon.com/privateca/latest/userguide/data-protection.html#private-keys.
+			acctest.PreCheckRegion(t, endpoints.ApSouth2RegionID, endpoints.ApSoutheast3RegionID, endpoints.ApSoutheast4RegionID, endpoints.EuCentral2RegionID, endpoints.EuSouth2RegionID, endpoints.MeCentral1RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateAuthorityConfig_keyStorageSecurityStandard(commonName, acmpca.CertificateAuthorityTypeRoot, "FIPS_140_2_LEVEL_2_OR_HIGHER"),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
+					resource.TestCheckResourceAttr(resourceName, "key_storage_security_standard", "FIPS_140_2_LEVEL_2_OR_HIGHER"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"permanent_deletion_time_in_days",
+				},
+			},
+		},
+	})
+}
+
 func TestAccACMPCACertificateAuthority_deleteFromActiveState(t *testing.T) {
 	ctx := acctest.Context(t)
 	var certificateAuthority acmpca.CertificateAuthority
@@ -223,6 +260,7 @@ func TestAccACMPCACertificateAuthority_RevocationConfiguration_empty(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "certificate_chain", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_signing_request"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "key_storage_security_standard", "FIPS_140_2_LEVEL_3_OR_HIGHER"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "not_after"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "not_before"),
 					resource.TestCheckResourceAttr(resourceName, "permanent_deletion_time_in_days", "30"),
@@ -890,7 +928,11 @@ resource "aws_acmpca_certificate_authority" "test" {
     }
   }
 
-  depends_on = [aws_s3_bucket_policy.test]
+  depends_on = [
+    aws_s3_bucket_policy.test,
+    aws_s3_bucket_public_access_block.test,
+    aws_s3_bucket_ownership_controls.test,
+  ]
 }
 `, commonName, customCname))
 }
@@ -919,6 +961,12 @@ resource "aws_acmpca_certificate_authority" "test" {
       s3_bucket_name     = aws_s3_bucket.test.id
     }
   }
+
+  depends_on = [
+    aws_s3_bucket_policy.test,
+    aws_s3_bucket_public_access_block.test,
+    aws_s3_bucket_ownership_controls.test,
+  ]
 }
 `, commonName, enabled))
 }
@@ -947,6 +995,12 @@ resource "aws_acmpca_certificate_authority" "test" {
       s3_bucket_name     = aws_s3_bucket.test.id
     }
   }
+
+  depends_on = [
+    aws_s3_bucket_policy.test,
+    aws_s3_bucket_public_access_block.test,
+    aws_s3_bucket_ownership_controls.test,
+  ]
 }
 `, commonName, expirationInDays))
 }
@@ -977,7 +1031,11 @@ resource "aws_acmpca_certificate_authority" "test" {
     }
   }
 
-  depends_on = [aws_s3_bucket_policy.test]
+  depends_on = [
+    aws_s3_bucket_policy.test,
+    aws_s3_bucket_public_access_block.test,
+    aws_s3_bucket_ownership_controls.test,
+  ]
 }
 `, commonName, s3ObjectAcl))
 }
@@ -1036,6 +1094,23 @@ func testAccCertificateAuthorityConfig_S3Bucket(rName string) string {
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
+}
+
+resource "aws_s3_bucket_ownership_controls" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
 }
 
 data "aws_iam_policy_document" "acmpca_bucket_access" {
@@ -1109,4 +1184,25 @@ resource "aws_acmpca_certificate_authority" "test" {
   }
 }
 `, commonName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccCertificateAuthorityConfig_keyStorageSecurityStandard(commonName, certificateAuthorityType, keyStorageSecurityStandard string) string {
+	return fmt.Sprintf(`
+resource "aws_acmpca_certificate_authority" "test" {
+  enabled                         = true
+  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
+  key_storage_security_standard   = %[1]q
+  permanent_deletion_time_in_days = 7
+  type                            = %[2]q
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = %[3]q
+    }
+  }
+}
+`, keyStorageSecurityStandard, certificateAuthorityType, commonName)
 }

@@ -102,6 +102,7 @@ home_directory_mappings {
 * `secondary_gids` - (Optional) The secondary POSIX group IDs used for all EFS operations by this user.
 
 ## Attributes Reference
+
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of Transfer User

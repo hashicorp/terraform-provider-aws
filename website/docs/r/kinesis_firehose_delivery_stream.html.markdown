@@ -95,6 +95,7 @@ resource "aws_lambda_function" "lambda_processor" {
 ```
 
 ### Extended S3 Destination with dynamic partitioning
+
 These examples use built-in Firehose functionality, rather than requiring a lambda.
 
 ```terraform

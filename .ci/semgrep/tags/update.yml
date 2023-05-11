@@ -1,0 +1,18 @@
+rules:
+  - id: calling-UpdateTags-in-resource-create
+    languages: [go]
+    message: Do not call `UpdateTags` inside a resource create function, use `createTags` instead
+    paths:
+      include:
+        - internal/service/
+    patterns:
+      - pattern: |
+          func $FUNC(...) {
+            ...
+            UpdateTags(...)
+            ...
+          }
+      - metavariable-regex:
+          metavariable: "$FUNC"
+          regex: "^resource\\w*(Create|Put|Set|Upsert|Enable)$"
+    severity: WARNING

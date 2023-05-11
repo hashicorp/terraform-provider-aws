@@ -139,6 +139,7 @@ The following arguments are supported:
 * `workflow_id` - (Required)  A unique identifier for the workflow.
 
 ## Attributes Reference
+
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of Transfer Server

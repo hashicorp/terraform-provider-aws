@@ -309,7 +309,7 @@ func testAccCheckClusterParameterGroupDestroy(ctx context.Context) resource.Test
 			if err == nil {
 				if len(resp.DBClusterParameterGroups) != 0 &&
 					aws.StringValue(resp.DBClusterParameterGroups[0].DBClusterParameterGroupName) == rs.Primary.ID {
-					return errors.New("DocDB Cluster Parameter Group still exists")
+					return errors.New("DocumentDB Cluster Parameter Group still exists")
 				}
 			}
 
@@ -364,7 +364,7 @@ func testAccCheckClusterParameterGroupExists(ctx context.Context, n string, v *d
 		}
 
 		if rs.Primary.ID == "" {
-			return errors.New("No DocDB Cluster Parameter Group ID is set")
+			return errors.New("No DocumentDB Cluster Parameter Group ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn()
@@ -381,7 +381,7 @@ func testAccCheckClusterParameterGroupExists(ctx context.Context, n string, v *d
 
 		if len(resp.DBClusterParameterGroups) != 1 ||
 			aws.StringValue(resp.DBClusterParameterGroups[0].DBClusterParameterGroupName) != rs.Primary.ID {
-			return fmt.Errorf("DocDB Cluster Parameter Group not found: %s", rs.Primary.ID)
+			return fmt.Errorf("DocumentDB Cluster Parameter Group not found: %s", rs.Primary.ID)
 		}
 
 		*v = *resp.DBClusterParameterGroups[0]

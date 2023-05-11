@@ -112,7 +112,7 @@ func FindCognitoUserPoolClientByName(ctx context.Context, conn *cognitoidentityp
 		return nil, err
 	}
 
-	client, err := tfresource.AssertSingleResult(clientDescs)
+	client, err := tfresource.AssertSinglePtrResult(clientDescs)
 	if err != nil {
 		return nil, err
 	}

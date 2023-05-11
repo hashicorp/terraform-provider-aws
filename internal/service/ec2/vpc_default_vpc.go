@@ -161,7 +161,7 @@ func ResourceDefaultVPC() *schema.Resource {
 	}
 }
 
-func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
@@ -304,7 +304,7 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 	// Configure tags.
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	newTags := KeyValueTags(ctx, GetTagsIn(ctx))
-	oldTags := KeyValueTags(ctx, vpc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	oldTags := KeyValueTags(ctx, vpc.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
 
 	if !oldTags.Equal(newTags) {
 		if err := UpdateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,7 +11,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -47,10 +45,11 @@ func ResourceConditionalForwarder() *schema.Resource {
 			},
 
 			"remote_domain_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^([a-zA-Z0-9]+[\.-])+([a-zA-Z0-9])+[.]?$`), "invalid value, see the RemoteDomainName attribute documentation: https://docs.aws.amazon.com/directoryservice/latest/devguide/API_ConditionalForwarder.html"),
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				// Documentation is incorrect, the API call fails if a trailing period is included
+				ValidateFunc: domainValidator,
 			},
 		},
 	}

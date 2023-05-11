@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/inspector/inspectoriface"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Custom Inspector Classic tag service update functions using the same format as generated code.
@@ -20,12 +21,12 @@ import (
 // The identifier is the resource ARN.
 func updateTags(ctx context.Context, conn inspectoriface.InspectorAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
-	newTags := tftags.New(ctx, newTagsMap)
+	newTags := tftags.New(ctx, newTagsMap).IgnoreSystem(names.Inspector)
 
 	if len(newTags) > 0 {
 		input := &inspector.SetTagsForResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(newTags.IgnoreAWS()),
+			Tags:        Tags(newTags),
 		}
 
 		_, err := conn.SetTagsForResourceWithContext(ctx, input)

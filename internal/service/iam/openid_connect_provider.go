@@ -37,7 +37,7 @@ func ResourceOpenIDConnectProvider() *schema.Resource {
 				Computed: true,
 			},
 			"client_id_list": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
 				Elem: &schema.Schema{
@@ -74,7 +74,7 @@ func resourceOpenIDConnectProviderCreate(ctx context.Context, d *schema.Resource
 
 	tags := GetTagsIn(ctx)
 	input := &iam.CreateOpenIDConnectProviderInput{
-		ClientIDList:   flex.ExpandStringList(d.Get("client_id_list").([]interface{})),
+		ClientIDList:   flex.ExpandStringSet(d.Get("client_id_list").(*schema.Set)),
 		Url:            aws.String(d.Get("url").(string)),
 		Tags:           tags,
 		ThumbprintList: flex.ExpandStringList(d.Get("thumbprint_list").([]interface{})),
@@ -121,7 +121,7 @@ func resourceOpenIDConnectProviderRead(ctx context.Context, d *schema.ResourceDa
 	input := &iam.GetOpenIDConnectProviderInput{
 		OpenIDConnectProviderArn: aws.String(d.Id()),
 	}
-	out, err := conn.GetOpenIDConnectProviderWithContext(ctx, input)
+	output, err := conn.GetOpenIDConnectProviderWithContext(ctx, input)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		log.Printf("[WARN] IAM OIDC Provider (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -132,11 +132,11 @@ func resourceOpenIDConnectProviderRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.Set("arn", d.Id())
-	d.Set("url", out.Url)
-	d.Set("client_id_list", flex.FlattenStringList(out.ClientIDList))
-	d.Set("thumbprint_list", flex.FlattenStringList(out.ThumbprintList))
+	d.Set("url", output.Url)
+	d.Set("client_id_list", aws.StringValueSlice(output.ClientIDList))
+	d.Set("thumbprint_list", aws.StringValueSlice(output.ThumbprintList))
 
-	SetTagsOut(ctx, out.Tags)
+	SetTagsOut(ctx, output.Tags)
 
 	return diags
 }

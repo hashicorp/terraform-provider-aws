@@ -11,6 +11,7 @@ description: |-
 Provides details about a specific Amazon Connect Instance.
 
 ## Example Usage
+
 By instance_alias
 
 ```hcl

@@ -22,14 +22,61 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
+			Factory:  DataSourceAuthPolicy,
+			TypeName: "aws_vpclattice_auth_policy",
+			Name:     "Auth Policy",
+		},
+		{
+			Factory:  DataSourceListener,
+			TypeName: "aws_vpclattice_listener",
+			Name:     "Listener",
+		},
+		{
 			Factory:  DataSourceService,
 			TypeName: "aws_vpclattice_service",
+		},
+		{
+			Factory:  DataSourceServiceNetwork,
+			TypeName: "aws_vpclattice_service_network",
 		},
 	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceAccessLogSubscription,
+			TypeName: "aws_vpclattice_access_log_subscription",
+			Name:     "Access Log Subscription",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceAuthPolicy,
+			TypeName: "aws_vpclattice_auth_policy",
+		},
+		{
+			Factory:  ResourceListener,
+			TypeName: "aws_vpclattice_listener",
+			Name:     "Listener",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceListenerRule,
+			TypeName: "aws_vpclattice_listener_rule",
+			Name:     "Listener Rule",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceResourcePolicy,
+			TypeName: "aws_vpclattice_resource_policy",
+			Name:     "Resource Policy",
+		},
 		{
 			Factory:  ResourceService,
 			TypeName: "aws_vpclattice_service",
@@ -69,6 +116,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "arn",
 			},
+		},
+		{
+			Factory:  resourceTargetGroupAttachment,
+			TypeName: "aws_vpclattice_target_group_attachment",
+			Name:     "Target Group Attachment",
 		},
 	}
 }

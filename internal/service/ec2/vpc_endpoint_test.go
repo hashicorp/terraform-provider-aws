@@ -695,7 +695,7 @@ resource "aws_vpc_endpoint" "test" {
 }
 
 func testAccVPCEndpointConfig_ipAddressType(rName, addressType string) string {
-	return acctest.ConfigCompose(testAccVPCEndpointServiceConfig_supportedIPAddressTypesBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccVPCEndpointServiceConfig_baseSupportedIPAddressTypes(rName), fmt.Sprintf(`
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required        = false
   network_load_balancer_arns = aws_lb.test[*].arn

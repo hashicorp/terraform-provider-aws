@@ -57,6 +57,25 @@ func TestAccEC2AMIIDsDataSource_sorted(t *testing.T) {
 	})
 }
 
+func TestAccEC2AMIIDsDataSource_includeDeprecated(t *testing.T) {
+	ctx := acctest.Context(t)
+	datasourceName := "data.aws_ami_ids.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAMIIDsDataSourceConfig_includeDeprecated(true),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "ids.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 const testAccAMIIDsDataSourceConfig_basic = `
 data "aws_ami_ids" "test" {
   owners = ["099720109477"]
@@ -99,4 +118,18 @@ data "aws_ami_ids" "test" {
   sort_ascending = %[1]t
 }
 `, sortAscending)
+}
+
+func testAccAMIIDsDataSourceConfig_includeDeprecated(includeDeprecated bool) string {
+	return fmt.Sprintf(`
+data "aws_ami_ids" "test" {
+  owners             = ["099720109477"]
+  include_deprecated = %[1]t
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/ubuntu-*-*-amd64-server-*"]
+  }
+}
+`, includeDeprecated)
 }

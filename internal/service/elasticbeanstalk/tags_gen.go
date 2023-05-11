@@ -98,14 +98,15 @@ func SetTagsOut(ctx context.Context, tags []*elasticbeanstalk.Tag) {
 // UpdateTags updates elasticbeanstalk service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-
 func UpdateTags(ctx context.Context, conn elasticbeanstalkiface.ElasticBeanstalkAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.ElasticBeanstalk)
 	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.ElasticBeanstalk)
 
-	// Ensure we do not send empty requests
+	// Ensure we do not send empty requests.
 	if len(removedTags) == 0 && len(updatedTags) == 0 {
 		return nil
 	}
@@ -115,7 +116,7 @@ func UpdateTags(ctx context.Context, conn elasticbeanstalkiface.ElasticBeanstalk
 	}
 
 	if len(updatedTags) > 0 {
-		input.TagsToAdd = Tags(updatedTags.IgnoreSystem(names.ElasticBeanstalk))
+		input.TagsToAdd = Tags(updatedTags)
 	}
 
 	if len(removedTags) > 0 {

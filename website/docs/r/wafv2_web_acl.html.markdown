@@ -65,6 +65,8 @@ resource "aws_wafv2_web_acl" "example" {
       }
     }
 
+    token_domains = ["mywebsite.com", "myotherwebsite.com"]
+
     visibility_config {
       cloudwatch_metrics_enabled = false
       metric_name                = "friendly-rule-metric-name"
@@ -153,6 +155,7 @@ resource "aws_wafv2_web_acl" "atp-example" {
 ```
 
 ### Rate Based
+
 Rate-limit US and NL-based clients to 10,000 requests for every 5 minutes.
 
 ```terraform
@@ -345,6 +348,7 @@ The following arguments are supported:
 * `rule` - (Optional) Rule blocks used to identify the web requests that you want to `allow`, `block`, or `count`. See [`rule`](#rule) below for details.
 * `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
 * `tags` - (Optional) Map of key-value pairs to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `token_domains` - (Optional) Specifies the domains that AWS WAF should accept in a web request token. This enables the use of tokens across multiple protected websites. When AWS WAF provides a token, it uses the domain of the AWS resource that the web ACL is protecting. If you don't specify a list of token domains, AWS WAF accepts tokens only for the domain of the protected resource. With a token domain list, AWS WAF accepts the resource's host domain plus all domains in the token domain list, including their prefixed subdomains.
 * `visibility_config` - (Required) Defines and enables Amazon CloudWatch metrics and web request sample collection. See [`visibility_config`](#visibility_config) below for details.
 
 ### `custom_response_body`
@@ -371,6 +375,7 @@ The `default_action` block supports the following arguments:
 Each `rule` supports the following arguments:
 
 * `action` - (Optional) Action that AWS WAF should take on a web request when it matches the rule's statement. This is used only for rules whose **statements do not reference a rule group**. See [`action`](#action) below for details.
+* `captcha_config` - (Optional) Specifies how AWS WAF should handle CAPTCHA evaluations. See [Captcha Configuration](#captcha-configuration) below for details.
 * `name` - (Required) Friendly name of the rule. **NOTE:** The provider assumes that rules with names matching this pattern, `^ShieldMitigationRuleGroup_<account-id>_<web-acl-guid>_.*`, are AWS-added for [automatic application layer DDoS mitigation activities](https://docs.aws.amazon.com/waf/latest/developerguide/ddos-automatic-app-layer-response-rg.html). Such rules will be ignored by the provider unless you explicitly include them in your configuration (for example, by using the AWS CLI to discover their properties and creating matching configuration). However, since these rules are owned and managed by AWS, you may get permission errors.
 * `override_action` - (Optional) Override action to apply to the rules in a rule group. Used only for rule **statements that reference a rule group**, like `rule_group_reference_statement` and `managed_rule_group_statement`. See [`override_action`](#override_action) below for details.
 * `priority` - (Required) If you define more than one Rule in a WebACL, AWS WAF evaluates each request against the `rules` in order based on the value of `priority`. AWS WAF processes rules with lower priority first.
@@ -834,6 +839,18 @@ The `visibility_config` block supports the following arguments:
 * `cloudwatch_metrics_enabled` - (Required) Whether the associated resource sends metrics to CloudWatch. For the list of available metrics, see [AWS WAF Metrics](https://docs.aws.amazon.com/waf/latest/developerguide/monitoring-cloudwatch.html#waf-metrics).
 * `metric_name` - (Required) A friendly name of the CloudWatch metric. The name can contain only alphanumeric characters (A-Z, a-z, 0-9) hyphen(-) and underscore (\_), with length from one to 128 characters. It can't contain whitespace or metric names reserved for AWS WAF, for example `All` and `Default_Action`.
 * `sampled_requests_enabled` - (Required) Whether AWS WAF should store a sampling of the web requests that match the rules. You can view the sampled requests through the AWS WAF console.
+
+### Captcha Configuration
+
+The `captcha_config` block supports the following arguments:
+
+* `immunity_time_property` - (Optional) Defines custom immunity time. See [Immunity Time Property](#immunity-time-property) below for details.
+
+### Immunity Time Property
+
+The `immunity_time_property` block supports the following arguments:
+
+* `immunity_time` - (Optional) The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
 
 ## Attributes Reference
 
