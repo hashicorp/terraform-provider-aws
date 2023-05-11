@@ -623,18 +623,6 @@ func ResourceInstance() *schema.Resource {
 				}
 				return nil
 			},
-			customdiff.ComputedIf("address", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-				return diff.HasChange("identifier")
-			}),
-			customdiff.ComputedIf("arn", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-				return diff.HasChange("identifier")
-			}),
-			customdiff.ComputedIf("endpoint", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-				return diff.HasChange("identifier")
-			}),
-			customdiff.ComputedIf("tags_all", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-				return diff.HasChange("identifier")
-			}),
 		),
 	}
 }
@@ -1814,6 +1802,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get("identifier").(string), err)
 			}
+
 			deploymentIdentifier := dep.BlueGreenDeploymentIdentifier
 			defer func() {
 				log.Printf("[DEBUG] Updating RDS DB Instance (%s): Deleting Blue/Green Deployment", d.Get("identifier").(string))
@@ -1869,6 +1858,15 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get("identifier").(string), err)
 			}
+
+			target, err := findDBInstanceByIDSDKv2(ctx, conn, d.Get("identifier").(string))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get("identifier").(string), err)
+			}
+
+			// id changes here
+			d.SetId(aws.StringValue(target.DbiResourceId))
+			d.Set("resource_id", target.DbiResourceId)
 
 			log.Printf("[DEBUG] Updating RDS DB Instance (%s): Deleting Blue/Green Deployment source", d.Get("identifier").(string))
 

@@ -5656,13 +5656,15 @@ func testAccCheckInstanceExists(ctx context.Context, n string, v *rds.DBInstance
 			return fmt.Errorf("Not found: %s", n)
 		}
 
+		fmt.Printf("identifier: %s, id: %s\n", rs.Primary.Attributes["identifier"], rs.Primary.ID)
+
 		if rs.Primary.Attributes["identifier"] == "" {
 			return fmt.Errorf("No RDS DB Instance ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
-		output, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.Attributes["identifier"])
+		output, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -10220,7 +10222,7 @@ data "aws_rds_orderable_db_instance" "test" {
 
 data "aws_rds_engine_version" "initial" {
   engine             = "mysql"
-  preferred_versions = ["8.0.32", "8.0.31", "8.0.30"]
+  preferred_versions = ["8.0.31", "8.0.30", "8.0.28"]
 }
 
 data "aws_rds_engine_version" "updated" {
