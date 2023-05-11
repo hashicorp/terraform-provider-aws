@@ -1,5 +1,9 @@
 ## 4.67.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_lightsail_domain_entry: The `id` attribute is now comma-delimited ([#30820](https://github.com/hashicorp/terraform-provider-aws/issues/30820))
+
 FEATURES:
 
 * **New Data Source:** `aws_connect_user` ([#26156](https://github.com/hashicorp/terraform-provider-aws/issues/26156))
