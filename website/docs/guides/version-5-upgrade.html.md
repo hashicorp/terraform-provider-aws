@@ -18,6 +18,7 @@ Upgrade topics:
 
 - [Provider Version Configuration](#provider-version-configuration)
 - [Provider Arguments](#provider-arguments)
+- [Default Tags](#default-tags)
 - [Data Source: aws_api_gateway_rest_api](#data-source-aws_api_gateway_rest_api)
 - [Data Source: aws_identitystore_group](#data-source-aws_identitystore_group)
 - [Data Source: aws_identitystore_user](#data-source-aws_identitystore_user)
@@ -166,6 +167,14 @@ The [`aws_redshift_service_account`](/docs/providers/aws/d/redshift_service_acco
 ## Data Source: aws_subnet_ids
 
 The `aws_subnet_ids` data source has been removed. Use the [`aws_subnets`](/docs/providers/aws/d/subnets.html) data source instead.
+
+## Default Tags
+
+The following enhancements are included:
+
+* Duplicate `default_tags` can now be included and will be overwritten by resource `tags`.
+* Zero value tags, `""`, can now be included in both `default_tags` and resource `tags`.
+* Tags can now be `computed`.
 
 ## EC2-Classic Retirement
 
