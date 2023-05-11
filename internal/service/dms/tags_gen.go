@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 
-	// dmstypesv2 "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/aws/aws-sdk-go/service/databasemigrationservice/databasemigrationserviceiface"
