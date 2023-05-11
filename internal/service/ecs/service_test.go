@@ -2746,7 +2746,7 @@ func testAccServiceConfig_lbChangesModified(rName string) string {
 
 func testAccServiceConfig_familyAndRevision(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "default" {
+resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
 
