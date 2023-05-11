@@ -7,6 +7,7 @@ FEATURES:
 * **New Data Source:** `aws_organizations_policy` ([#30920](https://github.com/hashicorp/terraform-provider-aws/issues/30920))
 * **New Data Source:** `aws_redshiftserverless_namespace` ([#31250](https://github.com/hashicorp/terraform-provider-aws/issues/31250))
 * **New Resource:** `aws_quicksight_template` ([#30453](https://github.com/hashicorp/terraform-provider-aws/issues/30453))
+* **New Resource:** `aws_quicksight_template_alias` ([#31310](https://github.com/hashicorp/terraform-provider-aws/issues/31310))
 
 ENHANCEMENTS:
 
@@ -22,6 +23,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_appintegrations_data_integration: Correctly read `tags` into state ([#31241](https://github.com/hashicorp/terraform-provider-aws/issues/31241))
+* resource/aws_config_remediation_configuration: Change `parameter` attribute to `TypeList` for better diff calculation ([#31315](https://github.com/hashicorp/terraform-provider-aws/issues/31315))
 * resource/aws_iam_openid_connect_provider: Change `client_id_list` from `TypeList` to `TypeSet` as order is not significant ([#31253](https://github.com/hashicorp/terraform-provider-aws/issues/31253))
 * resource/aws_servicecatalog_provisioned_product: Fix to properly send `stack_set_provisioned_preferences.0.accounts` on create and update ([#31293](https://github.com/hashicorp/terraform-provider-aws/issues/31293))
 * resource/aws_servicecatalog_provisioned_product: Fix to properly set `stack_set_provisioned_preferences` integer types `failure_tolerance_count`, `failure_tolerance_percentage`, `max_concurrency_count`, `max_concurrency_percentage` ([#31289](https://github.com/hashicorp/terraform-provider-aws/issues/31289))
