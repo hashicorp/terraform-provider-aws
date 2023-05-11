@@ -7,7 +7,6 @@ import (
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
@@ -138,33 +137,11 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn()
 
-	request := &iam.GetUserInput{
-		UserName: aws.String(d.Id()),
-	}
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindUserByName(ctx, conn, d.Id())
+	}, d.IsNewResource())
 
-	var output *iam.GetUserOutput
-
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		var err error
-
-		output, err = conn.GetUserWithContext(ctx, request)
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.GetUserWithContext(ctx, request)
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM User (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -174,19 +151,17 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "reading IAM User (%s): %s", d.Id(), err)
 	}
 
-	if output == nil || output.User == nil {
-		return sdkdiag.AppendErrorf(diags, "reading IAM User (%s): empty response", d.Id())
-	}
+	user := outputRaw.(*iam.User)
 
-	d.Set("arn", output.User.Arn)
-	d.Set("name", output.User.UserName)
-	d.Set("path", output.User.Path)
-	if output.User.PermissionsBoundary != nil {
-		d.Set("permissions_boundary", output.User.PermissionsBoundary.PermissionsBoundaryArn)
+	d.Set("arn", user.Arn)
+	d.Set("name", user.UserName)
+	d.Set("path", user.Path)
+	if user.PermissionsBoundary != nil {
+		d.Set("permissions_boundary", user.PermissionsBoundary.PermissionsBoundaryArn)
 	}
-	d.Set("unique_id", output.User.UserId)
+	d.Set("unique_id", user.UserId)
 
-	SetTagsOut(ctx, output.User.Tags)
+	SetTagsOut(ctx, user.Tags)
 
 	return diags
 }
@@ -196,42 +171,42 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).IAMConn()
 
 	if d.HasChanges("name", "path") {
-		on, nn := d.GetChange("name")
-		_, np := d.GetChange("path")
-
-		request := &iam.UpdateUserInput{
-			UserName:    aws.String(on.(string)),
-			NewUserName: aws.String(nn.(string)),
-			NewPath:     aws.String(np.(string)),
+		o, n := d.GetChange("name")
+		input := &iam.UpdateUserInput{
+			UserName:    aws.String(o.(string)),
+			NewUserName: aws.String(n.(string)),
+			NewPath:     aws.String(d.Get("path").(string)),
 		}
 
-		log.Println("[DEBUG] Update IAM User request:", request)
-		_, err := conn.UpdateUserWithContext(ctx, request)
+		_, err := conn.UpdateUserWithContext(ctx, input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating IAM User %s: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating IAM User (%s): %s", d.Id(), err)
 		}
 
-		d.SetId(nn.(string))
+		d.SetId(n.(string))
 	}
 
 	if d.HasChange("permissions_boundary") {
-		permissionsBoundary := d.Get("permissions_boundary").(string)
-		if permissionsBoundary != "" {
+		if v, ok := d.GetOk("permissions_boundary"); ok {
 			input := &iam.PutUserPermissionsBoundaryInput{
-				PermissionsBoundary: aws.String(permissionsBoundary),
+				PermissionsBoundary: aws.String(v.(string)),
 				UserName:            aws.String(d.Id()),
 			}
+
 			_, err := conn.PutUserPermissionsBoundaryWithContext(ctx, input)
+
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating IAM User permissions boundary: %s", err)
+				return sdkdiag.AppendErrorf(diags, "setting IAM User (%s) permissions boundary: %s", d.Id(), err)
 			}
 		} else {
 			input := &iam.DeleteUserPermissionsBoundaryInput{
 				UserName: aws.String(d.Id()),
 			}
 			_, err := conn.DeleteUserPermissionsBoundaryWithContext(ctx, input)
+
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "deleting IAM User permissions boundary: %s", err)
+				return sdkdiag.AppendErrorf(diags, "deleting IAM User (%s) permissions boundary: %s", d.Id(), err)
 			}
 		}
 	}
@@ -241,9 +216,8 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 		err := userUpdateTags(ctx, conn, d.Id(), o, n)
 
-		// Some partitions may not support tagging, giving error
-		if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-			log.Printf("[WARN] failed updating tags for IAM User (%s): %s", d.Id(), err)
+		// Some partitions (e.g. ISO) may not support tagging.
+		if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 			return append(diags, resourceUserRead(ctx, d, meta)...)
 		}
 
@@ -295,22 +269,44 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	deleteUserInput := &iam.DeleteUserInput{
+	log.Println("[DEBUG] Deleting IAM User:", d.Id())
+	_, err := conn.DeleteUserWithContext(ctx, &iam.DeleteUserInput{
 		UserName: aws.String(d.Id()),
-	}
-
-	log.Println("[DEBUG] Delete IAM User request:", deleteUserInput)
-	_, err := conn.DeleteUserWithContext(ctx, deleteUserInput)
+	})
 
 	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting IAM User %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting IAM User (%s): %s", d.Id(), err)
 	}
 
 	return diags
+}
+
+func FindUserByName(ctx context.Context, conn *iam.IAM, name string) (*iam.User, error) {
+	input := &iam.GetUserInput{
+		UserName: aws.String(name),
+	}
+
+	output, err := conn.GetUserWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.User == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.User, nil
 }
 
 func DeleteUserGroupMemberships(ctx context.Context, conn *iam.IAM, username string) error {
