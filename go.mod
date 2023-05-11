@@ -4,11 +4,12 @@ go 1.19
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230201104953-d1d05f4e2bfb
-	github.com/aws/aws-sdk-go v1.44.258
+	github.com/aws/aws-sdk-go v1.44.260
 	github.com/aws/aws-sdk-go-v2 v1.18.0
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.3
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.19.12
 	github.com/aws/aws-sdk-go-v2/service/account v1.10.6
+	github.com/aws/aws-sdk-go-v2/service/acm v1.17.11
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.24.7
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.1.4
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.11
@@ -45,7 +46,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.0.5
 	github.com/aws/aws-sdk-go-v2/service/xray v1.16.11
 	github.com/aws/smithy-go v1.13.5
-	github.com/beevik/etree v1.1.3
+	github.com/beevik/etree v1.1.4
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.20.0
 	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.25
@@ -73,7 +74,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pquerna/otp v1.4.0
 	github.com/shopspring/decimal v1.3.1
-	golang.org/x/crypto v0.8.0
+	golang.org/x/crypto v0.9.0
 	golang.org/x/exp v0.0.0-20230206171751-46f607a40771
 	golang.org/x/tools v0.6.0
 	gopkg.in/dnaeon/go-vcr.v3 v3.1.2
@@ -139,8 +140,8 @@ require (
 	go.opentelemetry.io/otel v1.14.0 // indirect
 	go.opentelemetry.io/otel/trace v1.14.0 // indirect
 	golang.org/x/mod v0.8.0 // indirect
-	golang.org/x/net v0.9.0 // indirect
-	golang.org/x/sys v0.7.0 // indirect
+	golang.org/x/net v0.10.0 // indirect
+	golang.org/x/sys v0.8.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230202175211-008b39050e57 // indirect

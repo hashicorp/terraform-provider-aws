@@ -14,6 +14,7 @@ ENHANCEMENTS:
 * data-source/aws_elastic_beanstalk_hosted_zone: Add hosted zone ID for `ap-southeast-3` AWS Region ([#31248](https://github.com/hashicorp/terraform-provider-aws/issues/31248))
 * data-source/aws_s3_bucket: Set `hosted_zone_id` for `cn-north-1` AWS China Region ([#31247](https://github.com/hashicorp/terraform-provider-aws/issues/31247))
 * resource/aws_acmpca_certificate_authority: Add `key_storage_security_standard` argument ([#31280](https://github.com/hashicorp/terraform-provider-aws/issues/31280))
+* resource/aws_cloudwatch_metric_stream: Add `metric_names` to `include_filter` and `exclude_filter` configuration blocks ([#31288](https://github.com/hashicorp/terraform-provider-aws/issues/31288))
 * resource/aws_fsx_ontap_file_system: Allow in-place update of `route_table_ids` ([#31251](https://github.com/hashicorp/terraform-provider-aws/issues/31251))
 * resource/aws_fsx_ontap_file_system: Support setting `throughput_capacity` to `4096` ([#31251](https://github.com/hashicorp/terraform-provider-aws/issues/31251))
 * resource/aws_s3_bucket: Set `hosted_zone_id` for `cn-north-1` AWS China Region ([#31247](https://github.com/hashicorp/terraform-provider-aws/issues/31247))
@@ -22,6 +23,7 @@ BUG FIXES:
 
 * resource/aws_appintegrations_data_integration: Correctly read `tags` into state ([#31241](https://github.com/hashicorp/terraform-provider-aws/issues/31241))
 * resource/aws_iam_openid_connect_provider: Change `client_id_list` from `TypeList` to `TypeSet` as order is not significant ([#31253](https://github.com/hashicorp/terraform-provider-aws/issues/31253))
+* resource/aws_servicecatalog_provisioned_product: Fix to properly send `stack_set_provisioned_preferences.0.accounts` on create and update ([#31293](https://github.com/hashicorp/terraform-provider-aws/issues/31293))
 * resource/aws_servicecatalog_provisioned_product: Fix to properly set `stack_set_provisioned_preferences` integer types `failure_tolerance_count`, `failure_tolerance_percentage`, `max_concurrency_count`, `max_concurrency_percentage` ([#31289](https://github.com/hashicorp/terraform-provider-aws/issues/31289))
 
 ## 4.66.1 (May  5, 2023)

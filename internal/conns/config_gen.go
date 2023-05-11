@@ -5,6 +5,7 @@ import (
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	"github.com/aws/aws-sdk-go-v2/service/account"
+	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	"github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
@@ -41,7 +42,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/xray"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/alexaforbusiness"
 	"github.com/aws/aws-sdk-go/service/amplify"
@@ -325,7 +325,6 @@ import (
 
 // sdkv1Conns initializes AWS SDK for Go v1 clients.
 func (c *Config) sdkv1Conns(client *AWSClient, sess *session.Session) {
-	client.acmConn = acm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ACM])}))
 	client.acmpcaConn = acmpca.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ACMPCA])}))
 	client.ampConn = prometheusservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.AMP])}))
 	client.apigatewayConn = apigateway.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.APIGateway])}))
@@ -608,6 +607,11 @@ func (c *Config) sdkv1Conns(client *AWSClient, sess *session.Session) {
 
 // sdkv2Conns initializes AWS SDK for Go v2 clients.
 func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
+	client.acmClient = acm.NewFromConfig(cfg, func(o *acm.Options) {
+		if endpoint := c.Endpoints[names.ACM]; endpoint != "" {
+			o.EndpointResolver = acm.EndpointResolverFromURL(endpoint)
+		}
+	})
 	client.accessanalyzerClient = accessanalyzer.NewFromConfig(cfg, func(o *accessanalyzer.Options) {
 		if endpoint := c.Endpoints[names.AccessAnalyzer]; endpoint != "" {
 			o.EndpointResolver = accessanalyzer.EndpointResolverFromURL(endpoint)

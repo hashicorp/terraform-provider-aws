@@ -653,7 +653,7 @@ func expandProvisioningPreferences(tfMap map[string]interface{}) *servicecatalog
 
 	apiObject := &servicecatalog.ProvisioningPreferences{}
 
-	if v, ok := tfMap["account"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["accounts"].([]interface{}); ok && len(v) > 0 {
 		apiObject.StackSetAccounts = flex.ExpandStringList(v)
 	}
 
@@ -735,7 +735,7 @@ func expandUpdateProvisioningPreferences(tfMap map[string]interface{}) *servicec
 
 	apiObject := &servicecatalog.UpdateProvisioningPreferences{}
 
-	if v, ok := tfMap["account"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["accounts"].([]interface{}); ok && len(v) > 0 {
 		apiObject.StackSetAccounts = flex.ExpandStringList(v)
 	}
 
