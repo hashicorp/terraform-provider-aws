@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -91,10 +92,9 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	name := d.Get("name").(string)
 	path := d.Get("path").(string)
-	tags := GetTagsIn(ctx)
 	input := &iam.CreateUserInput{
 		Path:     aws.String(path),
-		Tags:     tags,
+		Tags:     GetTagsIn(ctx),
 		UserName: aws.String(name),
 	}
 
@@ -104,9 +104,8 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	output, err := conn.CreateUserWithContext(ctx, input)
 
-	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] failed creating IAM User (%s) with tags: %s. Trying create without tags.", name, err)
+	// Some partitions (e.g. ISO) may not support tag-on-create.
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		input.Tags = nil
 
 		output, err = conn.CreateUserWithContext(ctx, input)
@@ -118,18 +117,17 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.SetId(aws.StringValue(output.User.UserName))
 
-	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
-	if input.Tags == nil && len(tags) > 0 && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID {
-		err := userUpdateTags(ctx, conn, d.Id(), nil, KeyValueTags(ctx, tags))
+	// For partitions not supporting tag-on-create, attempt tag after create.
+	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+		err := userCreateTags(ctx, conn, d.Id(), tags)
 
-		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-			log.Printf("[WARN] failed adding tags after create for IAM User (%s): %s", d.Id(), err)
+		// If default tags only, continue. Otherwise, error.
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 			return append(diags, resourceUserRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "adding tags after create for IAM User (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting IAM User (%s) tags: %s", d.Id(), err)
 		}
 	}
 
