@@ -175,33 +175,10 @@ func testAccCheckVPCConnectionDestroy(ctx context.Context) resource.TestCheckFun
 	}
 }
 
-func testAccBaseVPCConnectionConfig() string {
-	return `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "test1" {
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id            = aws_vpc.test.id
-}
-
-resource "aws_subnet" "test2" {
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-  vpc_id            = aws_vpc.test.id
-}
-
+func testAccBaseVPCConnectionConfig(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		`
 resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
 }
@@ -239,12 +216,12 @@ resource "aws_iam_role" "test" {
     })
   }
 }
-`
+`)
 }
 
 func testAccVPCConnectionConfig_basic(rId string, rName string) string {
 	return acctest.ConfigCompose(
-		testAccBaseVPCConnectionConfig(),
+		testAccBaseVPCConnectionConfig(rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_vpc_connection" "test" {
   vpc_connection_id = %[1]q
@@ -253,17 +230,14 @@ resource "aws_quicksight_vpc_connection" "test" {
   security_group_ids = [
     aws_security_group.test.id,
   ]
-  subnet_ids = [
-    aws_subnet.test1.id,
-    aws_subnet.test2.id,
-  ]
+  subnet_ids = aws_subnet.test[*].id
 }
 `, rId, rName))
 }
 
 func testAccVPCConnectionConfig_tags1(rId, rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		testAccBaseVPCConnectionConfig(),
+		testAccBaseVPCConnectionConfig(rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_vpc_connection" "test" {
   vpc_connection_id = %[1]q
@@ -272,10 +246,8 @@ resource "aws_quicksight_vpc_connection" "test" {
   security_group_ids = [
     aws_security_group.test.id,
   ]
-  subnet_ids = [
-    aws_subnet.test1.id,
-    aws_subnet.test2.id,
-  ]
+  subnet_ids = aws_subnet.test[*].id
+
   tags = {
     %[3]q = %[4]q
   }
@@ -285,7 +257,7 @@ resource "aws_quicksight_vpc_connection" "test" {
 
 func testAccVPCConnectionConfig_tags2(rId, rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		testAccBaseVPCConnectionConfig(),
+		testAccBaseVPCConnectionConfig(rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_vpc_connection" "test" {
   vpc_connection_id = %[1]q
@@ -294,10 +266,8 @@ resource "aws_quicksight_vpc_connection" "test" {
   security_group_ids = [
     aws_security_group.test.id,
   ]
-  subnet_ids = [
-    aws_subnet.test1.id,
-    aws_subnet.test2.id,
-  ]
+  subnet_ids = aws_subnet.test[*].id
+
   tags = {
     %[3]q = %[4]q
     %[5]q = %[6]q
