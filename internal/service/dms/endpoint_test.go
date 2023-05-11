@@ -1425,7 +1425,7 @@ func TestAccDMSEndpoint_SQLServer_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
 					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "require"),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`UseThirdPartyBackupDevice=false;`)),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`TlogAccessMode=PreferTlog;`)),
 				),
 			},
 			{
@@ -3704,7 +3704,7 @@ resource "aws_dms_endpoint" "test" {
   password                    = "tftest-new-password"
   database_name               = "tftest-new-database_name"
   ssl_mode                    = "require"
-  extra_connection_attributes = "UseThirdPartyBackupDevice=false;"
+  extra_connection_attributes = "TlogAccessMode=PreferTlog;"
 
   tags = {
     Name   = %[1]q
