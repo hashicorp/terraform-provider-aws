@@ -184,8 +184,8 @@ func testAccCheckScramSecretAssociationExists(ctx context.Context, resourceName 
 	}
 }
 
-func testAccScramSecretAssociationBaseConfig(rName string, count int) string {
-	return fmt.Sprintf(`
+func testAccScramSecretAssociationConfig_base(rName string, count int) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_msk_cluster" "test" {
@@ -194,10 +194,15 @@ resource "aws_msk_cluster" "test" {
   number_of_broker_nodes = 3
 
   broker_node_group_info {
-    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
-    ebs_volume_size = 10
+    client_subnets  = aws_subnet.test[*].id
     instance_type   = "kafka.t3.small"
-    security_groups = [aws_security_group.example_sg.id]
+    security_groups = [aws_security_group.test.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
   }
 
   client_authentication {
@@ -242,13 +247,11 @@ resource "aws_secretsmanager_secret_policy" "test" {
 }
 POLICY
 }
-`, rName, count)
+`, rName, count))
 }
 
 func testAccScramSecretAssociationConfig_basic(rName string, count int) string {
-	return acctest.ConfigCompose(
-		testAccClusterBaseConfig(rName),
-		testAccScramSecretAssociationBaseConfig(rName, count), `
+	return acctest.ConfigCompose(testAccScramSecretAssociationConfig_base(rName, count), `
 resource "aws_msk_scram_secret_association" "test" {
   cluster_arn     = aws_msk_cluster.test.arn
   secret_arn_list = aws_secretsmanager_secret.test[*].arn

@@ -2199,9 +2199,14 @@ resource "aws_msk_cluster" "test" {
 
   broker_node_group_info {
     client_subnets  = aws_subnet.test[*].id
-    ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.test.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
   }
 }
 
@@ -2231,9 +2236,14 @@ resource "aws_msk_cluster" "test" {
 
   broker_node_group_info {
     client_subnets  = aws_subnet.test[*].id
-    ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.test.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
   }
 }
 
