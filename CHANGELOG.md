@@ -21,6 +21,7 @@ ENHANCEMENTS:
 * data-source/aws_s3_bucket: Set `hosted_zone_id` for `cn-north-1` AWS China Region ([#31247](https://github.com/hashicorp/terraform-provider-aws/issues/31247))
 * resource/aws_acmpca_certificate_authority: Add `key_storage_security_standard` argument ([#31280](https://github.com/hashicorp/terraform-provider-aws/issues/31280))
 * resource/aws_cloudwatch_metric_stream: Add `metric_names` to `include_filter` and `exclude_filter` configuration blocks ([#31288](https://github.com/hashicorp/terraform-provider-aws/issues/31288))
+* resource/aws_dms_endpoint: Add ability to use the `db2-zos` IBM DB2 for z/OS engine ([#31291](https://github.com/hashicorp/terraform-provider-aws/issues/31291))
 * resource/aws_fsx_ontap_file_system: Allow in-place update of `route_table_ids` ([#31251](https://github.com/hashicorp/terraform-provider-aws/issues/31251))
 * resource/aws_fsx_ontap_file_system: Support setting `throughput_capacity` to `4096` ([#31251](https://github.com/hashicorp/terraform-provider-aws/issues/31251))
 * resource/aws_s3_bucket: Set `hosted_zone_id` for `cn-north-1` AWS China Region ([#31247](https://github.com/hashicorp/terraform-provider-aws/issues/31247))
