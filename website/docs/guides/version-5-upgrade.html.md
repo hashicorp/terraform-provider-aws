@@ -32,6 +32,7 @@ Upgrade topics:
 - [Resource: aws_docdb_cluster](#resource-aws_docdb_cluster)
 - [Resource: aws_ec2_client_vpn_endpoint](#resource-aws_ec2_client_vpn_endpoint)
 - [Resource: aws_ec2_client_vpn_network_association](#resource-aws_ec2_client_vpn_network_association)
+- [Resource: aws_ecs_cluster](#resource-aws_ecs_cluster)
 - [Resource: aws_msk_cluster](#resource-aws_msk_cluster)
 - [Resource: aws_neptune_cluster](#resource-aws_neptune_cluster)
 - [Resource: aws_rds_cluster](#resource-aws_rds_cluster)
@@ -130,6 +131,10 @@ The `status` attribute has been removed.
 ## Resource: aws_ec2_client_vpn_network_association
 
 The `status` attribute has been removed.
+
+## Resource: aws_ecs_cluster
+
+The `capacity_providers` and `default_capacity_provider_strategy` attributes have been removed.
 
 ## Resource: aws_msk_cluster
 
