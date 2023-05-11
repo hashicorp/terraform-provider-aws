@@ -552,7 +552,7 @@ func TestAccRDSCluster_storageTypeIo1(t *testing.T) {
 	})
 }
 
-// For backwards compatability, the control plane should always return a blank string even if sennding "aurora" as the storage type
+// For backwards compatability, the control plane should always return a blank string even if sending "aurora" as the storage type
 func TestAccRDSCluster_storageTypeAuroraReturnsBlank(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -561,8 +561,8 @@ func TestAccRDSCluster_storageTypeAuroraReturnsBlank(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster1 rds.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	storageType1 := "aurora"
-	storageType2 := ""
+	storageTypeAurora := "aurora"
+	storageTypeEmpty := ""
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -572,10 +572,10 @@ func TestAccRDSCluster_storageTypeAuroraReturnsBlank(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_auroraStorageType(rName, storageType1),
+				Config: testAccClusterConfig_auroraStorageType(rName, storageTypeAurora),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", storageType2),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", storageTypeEmpty),
 				),
 			},
 		},
@@ -618,8 +618,8 @@ func TestAccRDSCluster_storageTypeAuroraUpdateAuroraIopt1(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster1, dbCluster2 rds.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	storageType1 := ""
-	storageType2 := "aurora-iopt1"
+	storageTypeEmpty := ""
+	storageTypeAuroraIOPT1 := "aurora-iopt1"
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -632,15 +632,15 @@ func TestAccRDSCluster_storageTypeAuroraUpdateAuroraIopt1(t *testing.T) {
 				Config: testAccClusterConfig_auroraStorageTypeNotDefined(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", storageType1),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", storageTypeEmpty),
 				),
 			},
 			{
-				Config: testAccClusterConfig_auroraStorageType(rName, storageType2),
+				Config: testAccClusterConfig_auroraStorageType(rName, storageTypeAuroraIOPT1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
 					testAccCheckClusterNotRecreated(&dbCluster1, &dbCluster2),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", storageType2),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", storageTypeAuroraIOPT1),
 				),
 			},
 		},
@@ -683,9 +683,9 @@ func TestAccRDSCluster_storageTypeAuroraIopt1UpdateAurora(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster1, dbCluster2 rds.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	storageType1 := "aurora-iopt1"
-	storageType2 := "aurora"
-	storageType3 := ""
+	storageTypeAuroraIOPT1 := "aurora-iopt1"
+	storageTypeAurora := "aurora"
+	storageTypeEmpty := ""
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -695,18 +695,18 @@ func TestAccRDSCluster_storageTypeAuroraIopt1UpdateAurora(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_auroraStorageType(rName, storageType1),
+				Config: testAccClusterConfig_auroraStorageType(rName, storageTypeAuroraIOPT1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", storageType1),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", storageTypeAuroraIOPT1),
 				),
 			},
 			{
-				Config: testAccClusterConfig_auroraStorageType(rName, storageType2),
+				Config: testAccClusterConfig_auroraStorageType(rName, storageTypeAurora),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
 					testAccCheckClusterNotRecreated(&dbCluster1, &dbCluster2),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", storageType3),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", storageTypeEmpty),
 				),
 			},
 		},
