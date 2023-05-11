@@ -23,6 +23,7 @@ Upgrade topics:
 - [Data Source: aws_identitystore_user](#data-source-aws_identitystore_user)
 - [Data Source: aws_redshift_service_account](#data-source-aws_redshift_service_account)
 - [Data Source: aws_subnet_ids](#data-source-aws_subnet_ids)
+- [Default Tags](#default-tags)
 - [Resource: aws_acmpca_certificate_authority](#resource-aws_acmpca_certificate_authority)
 - [Resource: aws_api_gateway_rest_api](#resource-aws_api_gateway_rest_api)
 - [Resource: aws_autoscaling_group](#resource-aws_autoscaling_group)
@@ -161,6 +162,14 @@ The [`aws_redshift_service_account`](/docs/providers/aws/d/redshift_service_acco
 ## Data Source: aws_subnet_ids
 
 The `aws_subnet_ids` data source has been removed. Use the [`aws_subnets`](/docs/providers/aws/d/subnets.html) data source instead.
+
+## Default Tags
+
+The following enhancements are included:
+
+* Duplicate `default_tags` can now be included and will be overwritten by resource `tags`.
+* Zero value tags, `""`, can now be included in both `default_tags` and resource `tags`.
+* Tags can now be `computed`.
 
 ## EC2-Classic Retirement
 
