@@ -311,6 +311,7 @@ func testAccCheckServiceLinkedRoleDestroy(ctx context.Context) resource.TestChec
 			}
 
 			_, roleName, _, err := tfiam.DecodeServiceLinkedRoleID(rs.Primary.ID)
+
 			if err != nil {
 				return err
 			}
@@ -340,7 +341,9 @@ func testAccCheckServiceLinkedRoleExists(ctx context.Context, n string) resource
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+
 		_, roleName, _, err := tfiam.DecodeServiceLinkedRoleID(rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
@@ -354,7 +357,7 @@ func testAccCheckServiceLinkedRoleExists(ctx context.Context, n string) resource
 func testAccServiceLinkedRoleConfig_basic(awsServiceName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_service_linked_role" "test" {
-  aws_service_name = "%s"
+  aws_service_name = %[1]q
 }
 `, awsServiceName)
 }
@@ -362,8 +365,8 @@ resource "aws_iam_service_linked_role" "test" {
 func testAccServiceLinkedRoleConfig_customSuffix(awsServiceName, customSuffix string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_service_linked_role" "test" {
-  aws_service_name = "%s"
-  custom_suffix    = "%s"
+  aws_service_name = %[1]q
+  custom_suffix    = %[2]q
 }
 `, awsServiceName, customSuffix)
 }
@@ -371,9 +374,9 @@ resource "aws_iam_service_linked_role" "test" {
 func testAccServiceLinkedRoleConfig_description(awsServiceName, customSuffix, description string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_service_linked_role" "test" {
-  aws_service_name = "%s"
-  custom_suffix    = "%s"
-  description      = "%s"
+  aws_service_name = %[1]q
+  custom_suffix    = %[2]q
+  description      = %[3]q
 }
 `, awsServiceName, customSuffix, description)
 }

@@ -326,6 +326,7 @@ func FindInstanceProfileByName(ctx context.Context, conn *iam.IAM, name string) 
 			LastRequest: input,
 		}
 	}
+
 	if err != nil {
 		return nil, err
 	}
