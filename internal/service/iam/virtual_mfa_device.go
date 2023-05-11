@@ -103,7 +103,7 @@ func resourceVirtualMFADeviceCreate(ctx context.Context, d *schema.ResourceData,
 
 	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
 	if request.Tags == nil && len(tags) > 0 {
-		err := virtualMFAUpdateTags(ctx, conn, d.Id(), nil, KeyValueTags(ctx, tags))
+		err := virtualMFADeviceUpdateTags(ctx, conn, d.Id(), nil, KeyValueTags(ctx, tags))
 
 		// If default tags only, log and continue. Otherwise, error.
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
@@ -157,7 +157,7 @@ func resourceVirtualMFADeviceUpdate(ctx context.Context, d *schema.ResourceData,
 
 	o, n := d.GetChange("tags_all")
 
-	err := virtualMFAUpdateTags(ctx, conn, d.Id(), o, n)
+	err := virtualMFADeviceUpdateTags(ctx, conn, d.Id(), o, n)
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
 	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
