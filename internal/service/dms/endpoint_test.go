@@ -141,7 +141,7 @@ func TestAccDMSEndpoint_Aurora_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
 					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "none"),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`TargetDbType=specific-database;`)),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`EventsPollInterval=40;`)),
 				),
 			},
 			{
@@ -2271,7 +2271,7 @@ resource "aws_dms_endpoint" "test" {
   password                    = "tftest-new-password"
   database_name               = "tftest-new-database_name"
   ssl_mode                    = "none"
-  extra_connection_attributes = "TargetDbType=specific-database;"
+  extra_connection_attributes = "EventsPollInterval=40;"
 
   tags = {
     Name   = %[1]q
