@@ -906,7 +906,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 			// Set connection info in top-level namespace as well
 			expandTopLevelConnectionInfo(d, input)
 		}
-	case engineNameDB2:
+	case engineNameDB2, engineNameDB2zOS:
 		if _, ok := d.GetOk("secrets_manager_arn"); ok {
 			input.IBMDb2Settings = &dms.IBMDb2Settings{
 				SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
@@ -1252,7 +1252,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 					expandTopLevelConnectionInfoModify(d, input)
 				}
 			}
-		case engineNameDB2:
+		case engineNameDB2, engineNameDB2zOS:
 			if d.HasChanges(
 				"username", "password", "server_name", "port", "database_name", "secrets_manager_access_role_arn",
 				"secrets_manager_arn") {
@@ -1552,7 +1552,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
-	case engineNameDB2:
+	case engineNameDB2, engineNameDB2zOS:
 		if endpoint.IBMDb2Settings != nil {
 			d.Set("username", endpoint.IBMDb2Settings.Username)
 			d.Set("server_name", endpoint.IBMDb2Settings.ServerName)
