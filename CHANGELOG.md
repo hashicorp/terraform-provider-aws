@@ -25,6 +25,7 @@ ENHANCEMENTS:
 * resource/aws_dms_endpoint: Add ability to use the `db2-zos` IBM DB2 for z/OS engine ([#31291](https://github.com/hashicorp/terraform-provider-aws/issues/31291))
 * resource/aws_fsx_ontap_file_system: Allow in-place update of `route_table_ids` ([#31251](https://github.com/hashicorp/terraform-provider-aws/issues/31251))
 * resource/aws_fsx_ontap_file_system: Support setting `throughput_capacity` to `4096` ([#31251](https://github.com/hashicorp/terraform-provider-aws/issues/31251))
+* resource/aws_rds_cluster: Add ability to specify Aurora IO Optimized `storage_type` ([#31336](https://github.com/hashicorp/terraform-provider-aws/issues/31336))
 * resource/aws_s3_bucket: Set `hosted_zone_id` for `cn-north-1` AWS China Region ([#31247](https://github.com/hashicorp/terraform-provider-aws/issues/31247))
 
 BUG FIXES:
