@@ -576,10 +576,9 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 			},
 			"storage_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(StorageType_Values(), false),
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
