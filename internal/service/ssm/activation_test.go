@@ -20,6 +20,7 @@ func TestAccSSMActivation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ssmActivation ssm.Activation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_activation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -29,7 +30,7 @@ func TestAccSSMActivation_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckActivationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccActivationConfig_basic(rName),
+				Config: testAccActivationConfig_basic(rName, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActivationExists(ctx, resourceName, &ssmActivation),
 					resource.TestCheckResourceAttrSet(resourceName, "activation_code"),
@@ -53,6 +54,7 @@ func TestAccSSMActivation_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ssmActivation ssm.Activation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_activation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -62,7 +64,7 @@ func TestAccSSMActivation_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckActivationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccActivationConfig_tags(rName),
+				Config: testAccActivationConfig_tags(rName, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActivationExists(ctx, resourceName, &ssmActivation),
 					resource.TestCheckResourceAttrSet(resourceName, "activation_code"),
@@ -87,6 +89,7 @@ func TestAccSSMActivation_expirationDate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ssmActivation ssm.Activation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	expirationDate := time.Now().Add(48 * time.Hour).UTC().Format(time.RFC3339)
 	resourceName := "aws_ssm_activation.test"
 
@@ -97,7 +100,7 @@ func TestAccSSMActivation_expirationDate(t *testing.T) {
 		CheckDestroy:             testAccCheckActivationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccActivationConfig_expirationDate(rName, expirationDate),
+				Config: testAccActivationConfig_expirationDate(rName, expirationDate, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActivationExists(ctx, resourceName, &ssmActivation),
 					resource.TestCheckResourceAttr(resourceName, "expiration_date", expirationDate),
@@ -119,6 +122,7 @@ func TestAccSSMActivation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ssmActivation ssm.Activation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_activation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -128,7 +132,7 @@ func TestAccSSMActivation_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckActivationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccActivationConfig_basic(rName),
+				Config: testAccActivationConfig_basic(rName, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActivationExists(ctx, resourceName, &ssmActivation),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssm.ResourceActivation(), resourceName),
@@ -190,7 +194,7 @@ func testAccCheckActivationDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccActivationConfig_base(rName string) string {
+func testAccActivationConfig_base(roleName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -218,11 +222,11 @@ resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
-`, rName)
+`, roleName)
 }
 
-func testAccActivationConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccActivationConfig_base(rName), fmt.Sprintf(`
+func testAccActivationConfig_basic(rName string, roleName string) string {
+	return acctest.ConfigCompose(testAccActivationConfig_base(roleName), fmt.Sprintf(`
 resource "aws_ssm_activation" "test" {
   name               = %[1]q
   description        = "Test"
@@ -234,8 +238,8 @@ resource "aws_ssm_activation" "test" {
 `, rName))
 }
 
-func testAccActivationConfig_tags(rName string) string {
-	return acctest.ConfigCompose(testAccActivationConfig_base(rName), fmt.Sprintf(`
+func testAccActivationConfig_tags(rName string, roleName string) string {
+	return acctest.ConfigCompose(testAccActivationConfig_base(roleName), fmt.Sprintf(`
 resource "aws_ssm_activation" "test" {
   name               = %[1]q
   description        = "Test"
@@ -251,8 +255,8 @@ resource "aws_ssm_activation" "test" {
 `, rName))
 }
 
-func testAccActivationConfig_expirationDate(rName, expirationDate string) string {
-	return acctest.ConfigCompose(testAccActivationConfig_base(rName), fmt.Sprintf(`
+func testAccActivationConfig_expirationDate(rName string, expirationDate string, roleName string) string {
+	return acctest.ConfigCompose(testAccActivationConfig_base(roleName), fmt.Sprintf(`
 resource "aws_ssm_activation" "test" {
   name               = %[1]q
   description        = "Test"

@@ -40,6 +40,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newResourceRefreshSchedule,
 			Name:    "Refresh Schedule",
 		},
+		{
+			Factory: newResourceTemplateAlias,
+			Name:    "Template Alias",
+		},
+		{
+			Factory: newResourceVPCConnection,
+			Name:    "VPC Connection",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
 	}
 }
 
@@ -103,6 +114,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceGroupMembership,
 			TypeName: "aws_quicksight_group_membership",
 			Name:     "Group Membership",
+		},
+		{
+			Factory:  ResourceTemplate,
+			TypeName: "aws_quicksight_template",
+			Name:     "Template",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceUser,

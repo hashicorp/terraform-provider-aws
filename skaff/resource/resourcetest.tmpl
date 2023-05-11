@@ -245,7 +245,7 @@ func TestAcc{{ .Service }}{{ .Resource }}_disappears(t *testing.T) {
 			{
 				Config: testAcc{{ .Resource }}Config_basic(rName, testAcc{{ .Resource }}VersionNewer),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheck{{ .Resource }}Exists(resourceName, &{{ .ResourceLower }}),
+					testAccCheck{{ .Resource }}Exists(ctx, resourceName, &{{ .ResourceLower }}),
 					{{- if .PluginFramework }}
 					{{- if .IncludeComments }}
 					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,

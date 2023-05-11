@@ -99,7 +99,46 @@ BUG FIXES:
 * resource/aws_servicecatalog_product: Changes to `provisioning_artifact_parameters` arguments now properly trigger a replacement ([#31061](https://github.com/hashicorp/terraform-provider-aws/issues/31061))
 * resource/aws_vpc_peering_connection: Fix crash in `vpcPeeringConnectionOptionsEqual` ([#30966](https://github.com/hashicorp/terraform-provider-aws/issues/30966))
 
-## 4.66.1 (May 5, 2023)
+## 4.67.0 (May 11, 2023)
+
+NOTES:
+
+* resource/aws_lightsail_domain_entry: The `id` attribute is now comma-delimited ([#30820](https://github.com/hashicorp/terraform-provider-aws/issues/30820))
+
+FEATURES:
+
+* **New Data Source:** `aws_connect_user` ([#26156](https://github.com/hashicorp/terraform-provider-aws/issues/26156))
+* **New Data Source:** `aws_connect_vocabulary` ([#26158](https://github.com/hashicorp/terraform-provider-aws/issues/26158))
+* **New Data Source:** `aws_organizations_policy` ([#30920](https://github.com/hashicorp/terraform-provider-aws/issues/30920))
+* **New Data Source:** `aws_redshiftserverless_namespace` ([#31250](https://github.com/hashicorp/terraform-provider-aws/issues/31250))
+* **New Resource:** `aws_quicksight_template` ([#30453](https://github.com/hashicorp/terraform-provider-aws/issues/30453))
+* **New Resource:** `aws_quicksight_template_alias` ([#31310](https://github.com/hashicorp/terraform-provider-aws/issues/31310))
+* **New Resource:** `aws_quicksight_vpc_connection` ([#31309](https://github.com/hashicorp/terraform-provider-aws/issues/31309))
+
+ENHANCEMENTS:
+
+* aws_quicksight_data_set: Add support for configuring refresh properties ([#30744](https://github.com/hashicorp/terraform-provider-aws/issues/30744))
+* data-source/aws_acmpca_certificate_authority: Add `key_storage_security_standard` attribute ([#31280](https://github.com/hashicorp/terraform-provider-aws/issues/31280))
+* data-source/aws_elastic_beanstalk_hosted_zone: Add hosted zone ID for `ap-southeast-3` AWS Region ([#31248](https://github.com/hashicorp/terraform-provider-aws/issues/31248))
+* data-source/aws_s3_bucket: Set `hosted_zone_id` for `cn-north-1` AWS China Region ([#31247](https://github.com/hashicorp/terraform-provider-aws/issues/31247))
+* resource/aws_acmpca_certificate_authority: Add `key_storage_security_standard` argument ([#31280](https://github.com/hashicorp/terraform-provider-aws/issues/31280))
+* resource/aws_cloudwatch_metric_stream: Add `metric_names` to `include_filter` and `exclude_filter` configuration blocks ([#31288](https://github.com/hashicorp/terraform-provider-aws/issues/31288))
+* resource/aws_dms_endpoint: Add ability to use the `db2-zos` IBM DB2 for z/OS engine ([#31291](https://github.com/hashicorp/terraform-provider-aws/issues/31291))
+* resource/aws_fsx_ontap_file_system: Allow in-place update of `route_table_ids` ([#31251](https://github.com/hashicorp/terraform-provider-aws/issues/31251))
+* resource/aws_fsx_ontap_file_system: Support setting `throughput_capacity` to `4096` ([#31251](https://github.com/hashicorp/terraform-provider-aws/issues/31251))
+* resource/aws_rds_cluster: Add ability to specify Aurora IO Optimized `storage_type` ([#31336](https://github.com/hashicorp/terraform-provider-aws/issues/31336))
+* resource/aws_s3_bucket: Set `hosted_zone_id` for `cn-north-1` AWS China Region ([#31247](https://github.com/hashicorp/terraform-provider-aws/issues/31247))
+
+BUG FIXES:
+
+* resource/aws_appintegrations_data_integration: Correctly read `tags` into state ([#31241](https://github.com/hashicorp/terraform-provider-aws/issues/31241))
+* resource/aws_config_remediation_configuration: Change `parameter` attribute to `TypeList` for better diff calculation ([#31315](https://github.com/hashicorp/terraform-provider-aws/issues/31315))
+* resource/aws_iam_openid_connect_provider: Change `client_id_list` from `TypeList` to `TypeSet` as order is not significant ([#31253](https://github.com/hashicorp/terraform-provider-aws/issues/31253))
+* resource/aws_servicecatalog_provisioned_product: Fix to properly send `stack_set_provisioned_preferences.0.accounts` on create and update ([#31293](https://github.com/hashicorp/terraform-provider-aws/issues/31293))
+* resource/aws_servicecatalog_provisioned_product: Fix to properly set `stack_set_provisioned_preferences` integer types `failure_tolerance_count`, `failure_tolerance_percentage`, `max_concurrency_count`, `max_concurrency_percentage` ([#31289](https://github.com/hashicorp/terraform-provider-aws/issues/31289))
+* resource/aws_ssm_activation: Fix various `ValidationException` errors on resource Create ([#31340](https://github.com/hashicorp/terraform-provider-aws/issues/31340))
+
+## 4.66.1 (May  5, 2023)
 
 BUG FIXES:
 
