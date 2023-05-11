@@ -57,7 +57,6 @@ resource "aws_ecs_cluster" "test" {
 The following arguments are supported:
 
 * `configuration` - (Optional) The execute command configuration for the cluster. Detailed below.
-* `default_capacity_provider_strategy` - (Optional, **Deprecated** use the `aws_ecs_cluster_capacity_providers` resource instead) Configuration block for capacity provider strategy to use by default for the cluster. Can be one or more. Detailed below.
 * `name` - (Required) Name of the cluster (up to 255 letters, numbers, hyphens, and underscores)
 * `service_connect_defaults` - (Optional) Configures a default Service Connect namespace. Detailed below.
 * `setting` - (Optional) Configuration block(s) with cluster settings. For example, this can be used to enable CloudWatch Container Insights for a cluster. Detailed below.
@@ -80,12 +79,6 @@ The following arguments are supported:
 * `s3_bucket_name` - (Optional) The name of the S3 bucket to send logs to.
 * `s3_bucket_encryption_enabled` - (Optional) Whether or not to enable encryption on the logs sent to S3. If not specified, encryption will be disabled.
 * `s3_key_prefix` - (Optional) An optional folder in the S3 bucket to place logs in.
-
-### `default_capacity_provider_strategy`
-
-* `capacity_provider` - (Required) The short name of the capacity provider.
-* `weight` - (Optional) The relative percentage of the total number of launched tasks that should use the specified capacity provider.
-* `base` - (Optional) The number of tasks, at a minimum, to run on the specified capacity provider. Only one capacity provider in a capacity provider strategy can have a base defined.
 
 ### `setting`
 

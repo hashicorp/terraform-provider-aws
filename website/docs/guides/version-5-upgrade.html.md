@@ -133,7 +133,7 @@ The `status` attribute has been removed.
 
 ## Resource: aws_ecs_cluster
 
-The `capacity_providers` attribute has been removed.
+The `capacity_providers` and `default_capacity_provider_strategy` attributes have been removed.
 
 ## Resource: aws_msk_cluster
 

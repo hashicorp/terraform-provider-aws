@@ -98,30 +98,6 @@ func ResourceCluster() *schema.Resource {
 					},
 				},
 			},
-			"default_capacity_provider_strategy": {
-				Type:       schema.TypeSet,
-				Optional:   true,
-				Computed:   true,
-				Deprecated: "Use the aws_ecs_cluster_capacity_providers resource instead",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"base": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 100000),
-						},
-						"capacity_provider": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"weight": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 1000),
-						},
-					},
-				},
-			},
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -184,9 +160,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	clusterName := d.Get("name").(string)
 	input := &ecs.CreateClusterInput{
-		ClusterName:                     aws.String(clusterName),
-		DefaultCapacityProviderStrategy: expandCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").(*schema.Set)),
-		Tags:                            GetTagsIn(ctx),
+		ClusterName: aws.String(clusterName),
+		Tags:        GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 {
@@ -261,10 +236,6 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("arn", cluster.ClusterArn)
 	d.Set("name", cluster.ClusterName)
 
-	if err := d.Set("default_capacity_provider_strategy", flattenCapacityProviderStrategy(cluster.DefaultCapacityProviderStrategy)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting default_capacity_provider_strategy: %s", err)
-	}
-
 	if cluster.ServiceConnectDefaults != nil {
 		if err := d.Set("service_connect_defaults", []interface{}{flattenClusterServiceConnectDefaults(cluster.ServiceConnectDefaults)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting service_connect_defaults: %s", err)
@@ -316,23 +287,6 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if _, err := waitClusterAvailable(ctx, conn, d.Id()); err != nil {
 			return diag.Errorf("waiting for ECS Cluster (%s) update: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChanges("default_capacity_provider_strategy") {
-		input := ecs.PutClusterCapacityProvidersInput{
-			Cluster:                         aws.String(d.Id()),
-			DefaultCapacityProviderStrategy: expandCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").(*schema.Set)),
-		}
-
-		err := retryClusterCapacityProvidersPut(ctx, conn, &input)
-
-		if err != nil {
-			return diag.Errorf("updating ECS Cluster (%s) capacity providers: %s", d.Id(), err)
-		}
-
-		if _, err := waitClusterAvailable(ctx, conn, d.Id()); err != nil {
-			return diag.Errorf("waiting for ECS Cluster (%s) capacity providers update: %s", d.Id(), err)
 		}
 	}
 
