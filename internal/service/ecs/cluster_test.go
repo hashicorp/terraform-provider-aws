@@ -363,18 +363,6 @@ resource "aws_ecs_cluster" "test" {
 `, rName, ns, idx)
 }
 
-func testAccClusterCapacityProviderConfig_base(rName string) string {
-	return acctest.ConfigCompose(testAccCapacityProviderConfig_base(rName), fmt.Sprintf(`
-resource "aws_ecs_capacity_provider" "test" {
-  name = %[1]q
-
-  auto_scaling_group_provider {
-    auto_scaling_group_arn = aws_autoscaling_group.test.arn
-  }
-}
-`, rName))
-}
-
 func testAccClusterConfig_containerInsights(rName, value string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
