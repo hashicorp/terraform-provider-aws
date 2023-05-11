@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -42,15 +41,6 @@ func ResourceCluster() *schema.Resource {
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"capacity_providers": {
-				Type:       schema.TypeSet,
-				Optional:   true,
-				Computed:   true,
-				Deprecated: "Use the aws_ecs_cluster_capacity_providers resource instead",
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
 			},
 			"configuration": {
 				Type:     schema.TypeList,
@@ -199,10 +189,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Tags:                            GetTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("capacity_providers"); ok {
-		input.CapacityProviders = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
 	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 {
 		input.Configuration = expandClusterConfiguration(v.([]interface{}))
 	}
@@ -275,9 +261,6 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("arn", cluster.ClusterArn)
 	d.Set("name", cluster.ClusterName)
 
-	if err := d.Set("capacity_providers", aws.StringValueSlice(cluster.CapacityProviders)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting capacity_providers: %s", err)
-	}
 	if err := d.Set("default_capacity_provider_strategy", flattenCapacityProviderStrategy(cluster.DefaultCapacityProviderStrategy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting default_capacity_provider_strategy: %s", err)
 	}
@@ -336,10 +319,9 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if d.HasChanges("capacity_providers", "default_capacity_provider_strategy") {
+	if d.HasChanges("default_capacity_provider_strategy") {
 		input := ecs.PutClusterCapacityProvidersInput{
 			Cluster:                         aws.String(d.Id()),
-			CapacityProviders:               flex.ExpandStringSet(d.Get("capacity_providers").(*schema.Set)),
 			DefaultCapacityProviderStrategy: expandCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").(*schema.Set)),
 		}
 

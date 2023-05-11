@@ -303,29 +303,6 @@ func TestAccECSService_CapacityProviderStrategy_update(t *testing.T) {
 	})
 }
 
-func TestAccECSService_CapacityProviderStrategy_multiple(t *testing.T) {
-	ctx := acctest.Context(t)
-	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ecs_service.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceConfig_multipleCapacityProviderStrategies(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.#", "2"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccECSService_familyAndRevision(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service ecs.Service
@@ -2072,83 +2049,6 @@ resource "aws_ecs_service" "test" {
   task_definition      = aws_ecs_task_definition.test2.arn
   desired_count        = 1
   force_new_deployment = true
-}
-`, rName))
-}
-
-func testAccServiceConfig_multipleCapacityProviderStrategies(rName string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_capacityProviders(rName), fmt.Sprintf(`
-resource "aws_ecs_service" "test" {
-  name            = %[1]q
-  cluster         = aws_ecs_cluster.test.id
-  task_definition = aws_ecs_task_definition.test.arn
-  desired_count   = 1
-
-  network_configuration {
-    security_groups  = [aws_security_group.allow_all.id]
-    subnets          = [aws_subnet.test.id]
-    assign_public_ip = false
-  }
-
-  capacity_provider_strategy {
-    capacity_provider = "FARGATE"
-    weight            = 1
-  }
-  capacity_provider_strategy {
-    capacity_provider = "FARGATE_SPOT"
-    weight            = 1
-  }
-}
-
-resource "aws_ecs_task_definition" "test" {
-  family                   = %[1]q
-  network_mode             = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
-  cpu                      = "256"
-  memory                   = "512"
-
-  container_definitions = <<DEFINITION
-[
-  {
-    "cpu": 256,
-    "essential": true,
-    "image": "mongo:latest",
-    "memory": 512,
-    "name": "mongodb",
-    "networkMode": "awsvpc"
-  }
-]
-DEFINITION
-}
-
-resource "aws_security_group" "allow_all" {
-  name        = %[1]q
-  description = "Allow all inbound traffic"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    protocol    = "tcp"
-    from_port   = 80
-    to_port     = 8000
-    cidr_blocks = [aws_vpc.test.cidr_block]
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block = cidrsubnet(aws_vpc.test.cidr_block, 8, 1)
-  vpc_id     = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
 }
 `, rName))
 }

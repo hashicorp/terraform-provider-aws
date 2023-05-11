@@ -198,36 +198,6 @@ func TestAccECSTaskSet_withCapacityProviderStrategy(t *testing.T) {
 	})
 }
 
-func TestAccECSTaskSet_withMultipleCapacityProviderStrategies(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ecs_task_set.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskSetDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTaskSetConfig_multipleCapacityProviderStrategies(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.#", "2"),
-				),
-			},
-			{
-				ResourceName: resourceName,
-				ImportState:  true,
-				ImportStateVerifyIgnore: []string{
-					"wait_until_stable",
-					"wait_until_stable_timeout",
-				},
-			},
-		},
-	})
-}
-
 func TestAccECSTaskSet_withAlb(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -515,102 +485,6 @@ resource "aws_ecs_task_set" "test" {
   }
 }
 `, rName, weight, base))
-}
-
-func testAccTaskSetConfig_multipleCapacityProviderStrategies(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.0.0/16"
-  tags = {
-    Name = "tf-acc-ecs-service-with-multiple-capacity-providers"
-  }
-}
-
-resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Allow all inbound traffic"
-  vpc_id      = aws_vpc.test.id
-  ingress {
-    protocol    = "tcp"
-    from_port   = 80
-    to_port     = 8000
-    cidr_blocks = [aws_vpc.test.cidr_block]
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block = cidrsubnet(aws_vpc.test.cidr_block, 8, 1)
-  vpc_id     = aws_vpc.test.id
-  tags = {
-    Name = "tf-acc-ecs-service-with-multiple-capacity-providers"
-  }
-}
-
-resource "aws_ecs_cluster" "test" {
-  name = %[1]q
-
-  capacity_providers = ["FARGATE_SPOT", "FARGATE"]
-
-  default_capacity_provider_strategy {
-    capacity_provider = "FARGATE_SPOT"
-    weight            = 1
-    base              = 1
-  }
-
-  default_capacity_provider_strategy {
-    capacity_provider = "FARGATE"
-    weight            = 1
-  }
-}
-
-resource "aws_ecs_service" "test" {
-  name          = %[1]q
-  cluster       = aws_ecs_cluster.test.id
-  desired_count = 1
-  deployment_controller {
-    type = "EXTERNAL"
-  }
-}
-
-resource "aws_ecs_task_definition" "test" {
-  family                   = %[1]q
-  network_mode             = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
-  cpu                      = "256"
-  memory                   = "512"
-  container_definitions    = <<DEFINITION
-[
-  {
-    "cpu": 256,
-    "essential": true,
-    "image": "mongo:latest",
-    "memory": 512,
-    "name": "mongodb",
-    "networkMode": "awsvpc"
-  }
-]
-DEFINITION
-}
-
-resource "aws_ecs_task_set" "test" {
-  service         = aws_ecs_service.test.id
-  cluster         = aws_ecs_cluster.test.id
-  task_definition = aws_ecs_task_definition.test.arn
-  network_configuration {
-    security_groups  = [aws_security_group.test.id]
-    subnets          = [aws_subnet.test.id]
-    assign_public_ip = false
-  }
-  capacity_provider_strategy {
-    capacity_provider = "FARGATE"
-    weight            = 1
-  }
-  capacity_provider_strategy {
-    capacity_provider = "FARGATE_SPOT"
-    weight            = 1
-  }
-}
-`, rName)
 }
 
 func testAccTaskSetConfig_alb(rName string) string {
