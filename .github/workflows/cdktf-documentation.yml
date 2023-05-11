@@ -1,0 +1,73 @@
+name: CDKTF Documentation
+on:
+  schedule:
+    - cron: "0 0 * * WED"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  releasedVersion:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.remove-leading-v.outputs.version }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions-ecosystem/action-get-latest-tag@v1
+        id: get-latest-tag
+        with:
+          semver_only: true
+
+      - name: Remove leading v from tag
+        id: remove-leading-v
+        run: |
+          VERSION='${{ steps.get-latest-tag.outputs.tag }}'
+          echo "VERSION=${VERSION:1}" >> $GITHUB_OUTPUT
+
+  cdktfDocs:
+    needs:
+      - releasedVersion
+    runs-on: ubuntu-latest
+    container:
+      image: docker.mirror.hashicorp.services/hashicorp/jsii-terraform
+    env:
+      CHECKPOINT_DISABLE: "1"
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v3.1.0
+      - run: git config --global user.email "github-team-tf-cdk@hashicorp.com"
+      - run: git config --global user.name "team-tf-cdk"
+      - name: Get yarn cache directory path
+        id: global-cache-dir-path
+        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+      - uses: actions/cache@v3.0.11
+        id: global-cache
+        with:
+          path: ${{ steps.global-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-integration-yarn-${{ hashFiles('**/yarn.lock') }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18.x"
+      - name: Install cdktf-registry-docs
+        run: npm install -g cdktf-registry-docs@1.7.8
+      - name: Run conversion
+        run: |
+          cdktf-registry-docs convert \
+            --files='*/ec2_*.html.markdown' \
+            --languages='typescript,python' \
+            --parallel-conversions-per-document=1 \
+            --provider-from-registry="hashicorp/aws@~> ${{ needs.releasedVersion.outputs.version }}" \
+            .
+        env:
+          TF_PLUGIN_CACHE_DIR: ${{ steps.global-cache-dir-path.outputs.dir }}/terraform-plugins
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          commit-message: "docs: update cdktf documentation"
+          title: "docs: update cdktf documentation"
+          body: "This PR updates the cdktf related documentation based on the current HCL-based documentation. It is automatically created by the cdktf-documentation GitHub action."
