@@ -309,6 +309,14 @@ func userUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string
 	return nil
 }
 
+func userCreateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, tags []*iam.Tag) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return userUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+}
+
 // virtualMFAUpdateTags updates IAM Virtual MFA Device tags.
 // The identifier is the Virtual MFA Device ARN.
 func virtualMFAUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, oldTagsMap, newTagsMap any) error {
