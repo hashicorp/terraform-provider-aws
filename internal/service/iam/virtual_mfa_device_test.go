@@ -131,7 +131,7 @@ func testAccCheckVirtualMFADeviceDestroy(ctx context.Context) resource.TestCheck
 				continue
 			}
 
-			output, err := tfiam.FindVirtualMFADevice(ctx, conn, rs.Primary.ID)
+			output, err := tfiam.FindVirtualMFADeviceBySerialNumber(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -146,7 +146,7 @@ func testAccCheckVirtualMFADeviceDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckVirtualMFADeviceExists(ctx context.Context, n string, res *iam.VirtualMFADevice) resource.TestCheckFunc {
+func testAccCheckVirtualMFADeviceExists(ctx context.Context, n string, v *iam.VirtualMFADevice) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -154,17 +154,18 @@ func testAccCheckVirtualMFADeviceExists(ctx context.Context, n string, res *iam.
 		}
 
 		if rs.Primary.ID == "" {
-			return errors.New("No Virtual MFA Device name is set")
+			return errors.New("No Virtual MFA Device ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
-		output, err := tfiam.FindVirtualMFADevice(ctx, conn, rs.Primary.ID)
+		output, err := tfiam.FindVirtualMFADeviceBySerialNumber(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*res = *output
+		*v = *output
 
 		return nil
 	}

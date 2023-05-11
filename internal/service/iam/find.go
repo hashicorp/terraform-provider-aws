@@ -111,35 +111,6 @@ func FindUsers(ctx context.Context, conn *iam.IAM, nameRegex, pathPrefix string)
 	return results, err
 }
 
-func FindVirtualMFADevice(ctx context.Context, conn *iam.IAM, serialNum string) (*iam.VirtualMFADevice, error) {
-	input := &iam.ListVirtualMFADevicesInput{}
-
-	output, err := conn.ListVirtualMFADevicesWithContext(ctx, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if len(output.VirtualMFADevices) == 0 || output.VirtualMFADevices[0] == nil {
-		return nil, tfresource.NewEmptyResultError(output)
-	}
-
-	var device *iam.VirtualMFADevice
-
-	for _, dvs := range output.VirtualMFADevices {
-		if aws.StringValue(dvs.SerialNumber) == serialNum {
-			device = dvs
-			break
-		}
-	}
-
-	if device == nil {
-		return nil, tfresource.NewEmptyResultError(device)
-	}
-
-	return device, nil
-}
-
 func FindServiceSpecificCredential(ctx context.Context, conn *iam.IAM, serviceName, userName, credID string) (*iam.ServiceSpecificCredentialMetadata, error) {
 	input := &iam.ListServiceSpecificCredentialsInput{
 		ServiceName: aws.String(serviceName),
