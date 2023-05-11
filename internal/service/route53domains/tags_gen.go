@@ -122,10 +122,12 @@ func UpdateTags(ctx context.Context, conn *route53domains.Client, identifier str
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.Route53Domains)
+	if len(removedTags) > 0 {
 		input := &route53domains.DeleteTagsForDomainInput{
 			DomainName:   aws.String(identifier),
-			TagsToDelete: removedTags.IgnoreSystem(names.Route53Domains).Keys(),
+			TagsToDelete: removedTags.Keys(),
 		}
 
 		_, err := conn.DeleteTagsForDomain(ctx, input)
@@ -135,10 +137,12 @@ func UpdateTags(ctx context.Context, conn *route53domains.Client, identifier str
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.Route53Domains)
+	if len(updatedTags) > 0 {
 		input := &route53domains.UpdateTagsForDomainInput{
 			DomainName:   aws.String(identifier),
-			TagsToUpdate: Tags(updatedTags.IgnoreSystem(names.Route53Domains)),
+			TagsToUpdate: Tags(updatedTags),
 		}
 
 		_, err := conn.UpdateTagsForDomain(ctx, input)

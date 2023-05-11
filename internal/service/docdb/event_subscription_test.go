@@ -252,7 +252,7 @@ func testAccCheckEventSubscriptionDestroy(ctx context.Context) resource.TestChec
 				return err
 			}
 
-			return fmt.Errorf("DocDB Event Subscription %s still exists", rs.Primary.ID)
+			return fmt.Errorf("DocumentDB Event Subscription %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -267,7 +267,7 @@ func testAccCheckEventSubscriptionExists(ctx context.Context, n string, eventSub
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No DocDB Event Subscription ID is set")
+			return fmt.Errorf("No DocumentDB Event Subscription ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn()

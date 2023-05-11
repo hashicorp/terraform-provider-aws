@@ -28,3 +28,14 @@ func SetTagsOut(ctx context.Context, tags map[string]*string) {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}
 }
+
+{{- if ne .CreateTagsFunc "" }}
+// {{ .CreateTagsFunc }} creates {{ .ServicePackage }} service tags for new resources.
+func {{ .CreateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, tags map[string]*string) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return  {{ .UpdateTagsFunc }}(ctx, conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, nil, tags)
+}
+{{- end }}

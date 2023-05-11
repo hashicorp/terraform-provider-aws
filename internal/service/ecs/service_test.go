@@ -1300,6 +1300,41 @@ func TestAccECSService_ServiceRegistries_changes(t *testing.T) {
 	})
 }
 
+func TestAccECSService_ServiceRegistries_removal(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service ecs.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	serviceDiscoveryName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_registriesRemoval(rName, serviceDiscoveryName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "1"),
+				),
+			},
+			{
+				Config: testAccServiceConfig_registriesRemoval(rName, serviceDiscoveryName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECSService_ServiceConnect_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service ecs.Service
@@ -3456,6 +3491,141 @@ resource "aws_ecs_service" "test" {
 }
 
 func testAccServiceConfig_registriesChanges(rName, discoveryName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = [aws_vpc.test.cidr_block]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_service_discovery_private_dns_namespace" "test" {
+  name        = "%[2]s.terraform.local"
+  description = "test"
+  vpc         = aws_vpc.test.id
+}
+
+resource "aws_service_discovery_service" "test" {
+  name = %[2]q
+
+  dns_config {
+    namespace_id = aws_service_discovery_private_dns_namespace.test.id
+
+    dns_records {
+      ttl  = 5
+      type = "SRV"
+    }
+  }
+}
+
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family       = %[1]q
+  network_mode = "awsvpc"
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb"
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 1
+
+  service_registries {
+    port         = 34567
+    registry_arn = aws_service_discovery_service.test.arn
+  }
+
+  network_configuration {
+    security_groups = [aws_security_group.test.id]
+    subnets         = aws_subnet.test[*].id
+  }
+}
+`, rName, discoveryName))
+}
+
+func testAccServiceConfig_registriesRemoval(rName, discoveryName string, removed bool) string {
+	if removed {
+		return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = [aws_vpc.test.cidr_block]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_service_discovery_private_dns_namespace" "test" {
+  name        = "%[2]s.terraform.local"
+  description = "test"
+  vpc         = aws_vpc.test.id
+}
+
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family       = %[1]q
+  network_mode = "awsvpc"
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb"
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 1
+
+  network_configuration {
+    security_groups = [aws_security_group.test.id]
+    subnets         = aws_subnet.test[*].id
+  }
+}
+`, rName, discoveryName))
+	}
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = %[1]q

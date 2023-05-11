@@ -2,10 +2,10 @@ package validators
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"regexp"
 
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
@@ -25,10 +25,10 @@ func (validator clusterIdentifierValidator) ValidateString(ctx context.Context, 
 	}
 
 	if err := validateClusterIdentifier(request.ConfigValue.ValueString()); err != nil {
-		response.Diagnostics.Append(diag.NewAttributeErrorDiagnostic(
+		response.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
 			request.Path,
-			validator.Description(ctx),
-			err.Error(),
+			validator.Description(ctx)+": "+err.Error(),
+			request.ConfigValue.ValueString(),
 		))
 		return
 	}
@@ -54,10 +54,10 @@ func (validator clusterIdentifierPrefixValidator) ValidateString(ctx context.Con
 	}
 
 	if err := validateClusterIdentifierPrefix(request.ConfigValue.ValueString()); err != nil {
-		response.Diagnostics.Append(diag.NewAttributeErrorDiagnostic(
+		response.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
 			request.Path,
-			validator.Description(ctx),
-			err.Error(),
+			validator.Description(ctx)+": "+err.Error(),
+			request.ConfigValue.ValueString(),
 		))
 		return
 	}
@@ -83,10 +83,10 @@ func (validator clusterFinalSnapshotIdentifierValidator) ValidateString(ctx cont
 	}
 
 	if err := validateFinalSnapshotIdentifier(request.ConfigValue.ValueString()); err != nil {
-		response.Diagnostics.Append(diag.NewAttributeErrorDiagnostic(
+		response.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
 			request.Path,
-			validator.Description(ctx),
-			err.Error(),
+			validator.Description(ctx)+": "+err.Error(),
+			request.ConfigValue.ValueString(),
 		))
 		return
 	}
@@ -104,7 +104,7 @@ type evaluate struct {
 
 func (e evaluate) match(value string) error {
 	if e.regex(value) == e.isMatch {
-		return fmt.Errorf(e.message, value)
+		return errors.New(e.message)
 	}
 
 	return nil
@@ -112,28 +112,28 @@ func (e evaluate) match(value string) error {
 
 var (
 	firstCharacterIsLetter = evaluate{
-		regex:   regexp.MustCompile(`^[a-z]`).MatchString,
-		message: "first character of %q must be a letter",
+		regex:   regexp.MustCompile(`^[a-zA-Z]`).MatchString,
+		message: "first character must be a letter",
 		isMatch: false,
 	}
 	onlyAlphanumeric = evaluate{
 		regex:   regexp.MustCompile(`^[0-9A-Za-z-]+$`).MatchString,
-		message: "only alphanumeric characters and hyphens allowed in %q",
+		message: "must contain only alphanumeric characters and hyphens",
 		isMatch: false,
 	}
 	onlyLowercaseAlphanumeric = evaluate{
 		regex:   regexp.MustCompile(`^[0-9a-z-]+$`).MatchString,
-		message: "only lowercase alphanumeric characters and hyphens allowed in %q",
+		message: "must contain only lowercase alphanumeric characters and hyphens",
 		isMatch: false,
 	}
 	noConsecutiveHyphens = evaluate{
 		regex:   regexp.MustCompile(`--`).MatchString,
-		message: "%q cannot contain two consecutive hyphens",
+		message: "cannot contain two consecutive hyphens",
 		isMatch: true,
 	}
 	cannotEndWithHyphen = evaluate{
 		regex:   regexp.MustCompile(`-$`).MatchString,
-		message: "%q cannot end with a hyphen",
+		message: "cannot end with a hyphen",
 		isMatch: true,
 	}
 )
@@ -178,5 +178,10 @@ func validateFinalSnapshotIdentifier(value string) error {
 		return err
 	}
 
-	return noConsecutiveHyphens.match(value)
+	err = noConsecutiveHyphens.match(value)
+	if err != nil {
+		return err
+	}
+
+	return firstCharacterIsLetter.match(value)
 }

@@ -98,15 +98,16 @@ func SetTagsOut(ctx context.Context, tags []*cloudtrail.Tag) {
 // UpdateTags updates cloudtrail service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-
 func UpdateTags(ctx context.Context, conn cloudtrailiface.CloudTrailAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.CloudTrail)
+	if len(removedTags) > 0 {
 		input := &cloudtrail.RemoveTagsInput{
 			ResourceId: aws.String(identifier),
-			TagsList:   Tags(removedTags.IgnoreSystem(names.CloudTrail)),
+			TagsList:   Tags(removedTags),
 		}
 
 		_, err := conn.RemoveTagsWithContext(ctx, input)
@@ -116,10 +117,12 @@ func UpdateTags(ctx context.Context, conn cloudtrailiface.CloudTrailAPI, identif
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.CloudTrail)
+	if len(updatedTags) > 0 {
 		input := &cloudtrail.AddTagsInput{
 			ResourceId: aws.String(identifier),
-			TagsList:   Tags(updatedTags.IgnoreSystem(names.CloudTrail)),
+			TagsList:   Tags(updatedTags),
 		}
 
 		_, err := conn.AddTagsWithContext(ctx, input)

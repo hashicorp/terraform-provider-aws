@@ -11,6 +11,7 @@ description: |-
 Provides a Step Function State Machine resource
 
 ## Example Usage
+
 ### Basic (Standard Workflow)
 
 ```terraform
@@ -127,6 +128,14 @@ In addition to all arguments above, the following attributes are exported:
 * `creation_date` - The date the state machine was created.
 * `status` - The current status of the state machine. Either `ACTIVE` or `DELETING`.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `5m`)
+* `update` - (Default `1m`)
+* `delete` - (Default `5m`)
 
 ## Import
 

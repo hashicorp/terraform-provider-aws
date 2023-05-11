@@ -2,7 +2,6 @@ package docdb
 
 import (
 	"context"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
@@ -90,7 +89,6 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 		input.Vpc = aws.Bool(v.(bool))
 	}
 
-	log.Printf("[DEBUG] Reading DocDB Orderable DB Instance Classes: %v", input)
 	var instanceClassResults []*docdb.OrderableDBInstanceOption
 
 	err := conn.DescribeOrderableDBInstanceOptionsPagesWithContext(ctx, input, func(resp *docdb.DescribeOrderableDBInstanceOptionsOutput, lastPage bool) bool {
@@ -105,11 +103,11 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading DocDB orderable DB instance options: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading DocumentDB orderable DB instance options: %s", err)
 	}
 
 	if len(instanceClassResults) == 0 {
-		return sdkdiag.AppendErrorf(diags, "no DocDB Orderable DB Instance options found matching criteria; try different search")
+		return sdkdiag.AppendErrorf(diags, "no DocumentDB Orderable DB Instance options found matching criteria; try different search")
 	}
 
 	// preferred classes
@@ -136,7 +134,7 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if found == nil && len(instanceClassResults) > 1 {
-		return sdkdiag.AppendErrorf(diags, "multiple DocDB DB Instance Classes (%v) match the criteria; try a different search", instanceClassResults)
+		return sdkdiag.AppendErrorf(diags, "multiple DocumentDB DB Instance Classes (%v) match the criteria; try a different search", instanceClassResults)
 	}
 
 	if found == nil && len(instanceClassResults) == 1 {
@@ -144,7 +142,7 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if found == nil {
-		return sdkdiag.AppendErrorf(diags, "no DocDB DB Instance Classes match the criteria; try a different search")
+		return sdkdiag.AppendErrorf(diags, "no DocumentDB DB Instance Classes match the criteria; try a different search")
 	}
 
 	d.SetId(aws.StringValue(found.DBInstanceClass))

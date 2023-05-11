@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -192,8 +193,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).ECSConn()
 
 	clusterName := d.Get("name").(string)
-	log.Printf("[DEBUG] Creating ECS cluster %s", clusterName)
-
 	input := &ecs.CreateClusterInput{
 		ClusterName:                     aws.String(clusterName),
 		DefaultCapacityProviderStrategy: expandCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").(*schema.Set)),
@@ -204,6 +203,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.CapacityProviders = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
+	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 {
+		input.Configuration = expandClusterConfiguration(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("service_connect_defaults"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.ServiceConnectDefaults = expandClusterServiceConnectDefaultsRequest(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -212,46 +215,38 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.Settings = expandClusterSettings(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 {
-		input.Configuration = expandClusterConfiguration(v.([]interface{}))
-	}
-
 	// CreateCluster will create the ECS IAM Service Linked Role on first ECS provision
 	// This process does not complete before the initial API call finishes.
-	out, err := retryClusterCreate(ctx, conn, input)
+	output, err := retryClusterCreate(ctx, conn, input)
 
-	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] ECS tagging failed creating Cluster (%s) with tags: %s. Trying create without tags.", clusterName, err)
+	// Some partitions (e.g. ISO) may not support tag-on-create.
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		input.Tags = nil
 
-		out, err = retryClusterCreate(ctx, conn, input)
+		output, err = retryClusterCreate(ctx, conn, input)
 	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ECS Cluster (%s): %s", clusterName, err)
 	}
 
-	log.Printf("[DEBUG] ECS cluster %s created", aws.StringValue(out.Cluster.ClusterArn))
-
-	d.SetId(aws.StringValue(out.Cluster.ClusterArn))
+	d.SetId(aws.StringValue(output.Cluster.ClusterArn))
 
 	if _, err := waitClusterAvailable(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for ECS Cluster (%s) to become Available while creating: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for ECS Cluster (%s) create: %s", d.Id(), err)
 	}
 
-	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
-	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); input.Tags == nil && len(tags) > 0 {
-		err := UpdateTags(ctx, conn, d.Id(), nil, tags)
+	// For partitions not supporting tag-on-create, attempt tag after create.
+	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+		err := createTags(ctx, conn, d.Id(), tags)
 
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-			// If default tags only, log and continue. Otherwise, error.
-			log.Printf("[WARN] ECS tagging failed adding tags after create for Cluster (%s): %s", d.Id(), err)
+		// If default tags only, continue. Otherwise, error.
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 			return append(diags, resourceClusterRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "ECS tagging failed adding tags after create for Cluster (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting ECS Cluster (%s) tags: %s", d.Id(), err)
 		}
 	}
 

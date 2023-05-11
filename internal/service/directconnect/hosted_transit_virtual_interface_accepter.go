@@ -88,10 +88,8 @@ func resourceHostedTransitVirtualInterfaceAccepterCreate(ctx context.Context, d 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
-		if err := UpdateTags(ctx, conn, arn, nil, tags); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Direct Connect hosted transit virtual interface (%s) tags: %s", arn, err)
-		}
+	if err := createTags(ctx, conn, arn, GetTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting Direct Connect hosted transit virtual interface (%s) tags: %s", arn, err)
 	}
 
 	return append(diags, resourceHostedTransitVirtualInterfaceAccepterUpdate(ctx, d, meta)...)

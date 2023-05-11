@@ -3,6 +3,7 @@ package quicksight_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"regexp"
 	"testing"
 
@@ -225,6 +226,26 @@ func TestAccQuickSightDataSet_logicalTableMap(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.alias", "Group1"),
 					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.0.physical_table_id", rId),
+					resource.TestCheckResourceAttr(resourceName, "output_columns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "output_columns.0.name", "Column1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDataSetConfigUpdateLogicalTableMap(rId, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.alias", "Group1"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.0.physical_table_id", rId),
+					resource.TestCheckResourceAttr(resourceName, "output_columns.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "output_columns.0.name", "Column1"),
+					resource.TestCheckResourceAttr(resourceName, "output_columns.1.name", "Column2"),
 				),
 			},
 			{
@@ -329,6 +350,51 @@ func TestAccQuickSightDataSet_rowLevelPermissionTagConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.0.tag_rules.0.match_all_value", "*"),
 					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.0.tag_rules.0.tag_multi_value_delimiter", ","),
 					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.0.status", quicksight.StatusEnabled),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccQuickSightDataSet_refreshProperties(t *testing.T) {
+	ctx := acctest.Context(t)
+	// This test requires additional configuration of the QuickSight service role. Ensure
+	// the role has the AWS managed "AmazonS3ReadOnlyAccess" and "AWSQuicksightAthenaAccess"
+	// identity policies attached. The default LakeFormation data catalog settings may also
+	// need adjusted, depending on the current configuration.
+	//
+	// Ref: https://docs.aws.amazon.com/lake-formation/latest/dg/change-settings.html
+	if os.Getenv("QUICKSIGHT_ATHENA_TESTING_ENABLED") == "" {
+		t.Skip("Environment variable QUICKSIGHT_ATHENA_TESTING_ENABLED is not set")
+	}
+
+	var dataSet quicksight.DataSet
+	resourceName := "aws_quicksight_data_set.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSetConfigRefreshProperties(rId, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
+					resource.TestCheckResourceAttr(resourceName, "refresh_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "refresh_properties.0.refresh_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "refresh_properties.0.refresh_configuration.0.incremental_refresh.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "refresh_properties.0.refresh_configuration.0.incremental_refresh.0.lookback_window.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "refresh_properties.0.refresh_configuration.0.incremental_refresh.0.lookback_window.0.column_name", "column1"),
+					resource.TestCheckResourceAttr(resourceName, "refresh_properties.0.refresh_configuration.0.incremental_refresh.0.lookback_window.0.size", "1"),
+					resource.TestCheckResourceAttr(resourceName, "refresh_properties.0.refresh_configuration.0.incremental_refresh.0.lookback_window.0.size_unit", "DAY"),
 				),
 			},
 			{
@@ -657,9 +723,7 @@ resource "aws_quicksight_data_set" "test" {
         name = "Column1"
         type = "STRING"
       }
-      upload_settings {
-        format = "JSON"
-      }
+      upload_settings {}
     }
   }
   logical_table_map {
@@ -667,6 +731,46 @@ resource "aws_quicksight_data_set" "test" {
     alias                = "Group1"
     source {
       physical_table_id = %[1]q
+    }
+  }
+}
+`, rId, rName))
+}
+
+func testAccDataSetConfigUpdateLogicalTableMap(rId, rName string) string {
+	return acctest.ConfigCompose(
+		testAccDataSetConfigBase(rId, rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_data_set" "test" {
+  data_set_id = %[1]q
+  name        = %[2]q
+  import_mode = "SPICE"
+
+  physical_table_map {
+    physical_table_map_id = %[1]q
+    s3_source {
+      data_source_arn = aws_quicksight_data_source.test.arn
+      input_columns {
+        name = "Column1"
+        type = "STRING"
+      }
+      upload_settings {}
+    }
+  }
+  logical_table_map {
+    logical_table_map_id = %[1]q
+    alias                = "Group1"
+    source {
+      physical_table_id = %[1]q
+    }
+    data_transforms {
+      create_columns_operation {
+        columns {
+          column_id   = "Column2"
+          column_name = "Column2"
+          expression  = "Column1"
+        }
+      }
     }
   }
 }
@@ -781,6 +885,91 @@ resource "aws_quicksight_data_set" "test" {
       tag_key                   = "uniquetagkey"
       match_all_value           = "*"
       tag_multi_value_delimiter = ","
+    }
+  }
+}
+`, rId, rName))
+}
+
+func testAccDataSetConfigRefreshProperties(rId, rName string) string {
+	// NOTE: Must use Athena data source here as incremental refresh is not supported by S3
+	return acctest.ConfigCompose(
+		testAccBaseDataSourceConfig(rName),
+		fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[2]q
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = %[2]q
+  database_name = aws_glue_catalog_database.test.name
+  table_type    = "EXTERNAL_TABLE"
+
+  parameters = {
+    EXTERNAL       = "TRUE"
+    classification = "json"
+  }
+
+  storage_descriptor {
+    location      = "s3://${aws_s3_bucket.test.id}/data/"
+    input_format  = "org.apache.hadoop.mapred.TextInputFormat"
+    output_format = "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
+
+    ser_de_info {
+      name                  = "jsonserde"
+      serialization_library = "org.openx.data.jsonserde.JsonSerDe"
+      parameters = {
+        "serialization.format" = "1"
+      }
+    }
+    columns {
+      name = "column1"
+      type = "date"
+    }
+  }
+}
+
+resource "aws_quicksight_data_source" "test" {
+  data_source_id = %[1]q
+  name           = %[2]q
+  type           = "ATHENA"
+  parameters {
+    athena {
+      work_group = "primary"
+    }
+  }
+  ssl_properties {
+    disable_ssl = false
+  }
+}
+
+resource "aws_quicksight_data_set" "test" {
+  data_set_id = %[1]q
+  name        = %[2]q
+  import_mode = "SPICE"
+
+  physical_table_map {
+    physical_table_map_id = %[1]q
+    relational_table {
+      data_source_arn = aws_quicksight_data_source.test.arn
+      catalog         = "AwsDataCatalog"
+      schema          = aws_glue_catalog_database.test.name
+      name            = aws_glue_catalog_table.test.name
+      input_columns {
+        name = "column1"
+        type = "DATETIME"
+      }
+    }
+  }
+  refresh_properties {
+    refresh_configuration {
+      incremental_refresh {
+        lookback_window {
+          column_name = "column1"
+          size        = 1
+          size_unit   = "DAY"
+        }
+      }
     }
   }
 }

@@ -141,6 +141,7 @@ variable "service_labels" {
     "imagebuilder",
     "inspector",
     "inspector2",
+    "internetmonitor",
     "iot",
     "iot1clickdevices",
     "iot1clickprojects",

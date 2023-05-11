@@ -142,6 +142,7 @@ const (
 	ImageBuilder                 = "imagebuilder"
 	Inspector                    = "inspector"
 	Inspector2                   = "inspector2"
+	InternetMonitor              = "internetmonitor"
 	IoT                          = "iot"
 	IoT1ClickDevices             = "iot1clickdevices"
 	IoT1ClickProjects            = "iot1clickprojects"

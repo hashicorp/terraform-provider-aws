@@ -900,6 +900,24 @@ func waitSubnetAssignIPv6AddressOnCreationUpdated(ctx context.Context, conn *ec2
 	return nil, err
 }
 
+func waitSubnetEnableLniAtDeviceIndexUpdated(ctx context.Context, conn *ec2.EC2, subnetID string, expectedValue int64) (*ec2.Subnet, error) {
+	stateConf := &retry.StateChangeConf{
+		Target:     []string{strconv.FormatInt(expectedValue, 10)},
+		Refresh:    StatusSubnetEnableLniAtDeviceIndex(ctx, conn, subnetID),
+		Timeout:    SubnetAttributePropagationTimeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.Subnet); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitSubnetEnableDNS64Updated(ctx context.Context, conn *ec2.EC2, subnetID string, expectedValue bool) (*ec2.Subnet, error) {
 	stateConf := &retry.StateChangeConf{
 		Target:     []string{strconv.FormatBool(expectedValue)},

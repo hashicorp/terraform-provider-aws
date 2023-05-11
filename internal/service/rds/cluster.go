@@ -1193,6 +1193,8 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
+	SetTagsOut(ctx, dbc.TagList)
+
 	return nil
 }
 
@@ -1621,6 +1623,22 @@ func FindDBClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBCl
 	return dbCluster, nil
 }
 
+func statusDBCluster(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindDBClusterByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
 func waitDBClusterCreated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBCluster, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
@@ -1696,20 +1714,4 @@ func waitDBClusterDeleted(ctx context.Context, conn *rds.RDS, id string, timeout
 	}
 
 	return nil, err
-}
-
-func statusDBCluster(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindDBClusterByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.Status), nil
-	}
 }

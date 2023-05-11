@@ -18,6 +18,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
+			Factory: newResourceFolderMembership,
+			Name:    "Folder Membership",
+		},
+		{
 			Factory: newResourceIAMPolicyAssignment,
 			Name:    "IAM Policy Assignment",
 		},
@@ -28,6 +32,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		{
 			Factory: newResourceNamespace,
 			Name:    "Namespace",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory: newResourceRefreshSchedule,
+			Name:    "Refresh Schedule",
+		},
+		{
+			Factory: newResourceTemplateAlias,
+			Name:    "Template Alias",
+		},
+		{
+			Factory: newResourceVPCConnection,
+			Name:    "VPC Connection",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "arn",
 			},
@@ -95,6 +114,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceGroupMembership,
 			TypeName: "aws_quicksight_group_membership",
 			Name:     "Group Membership",
+		},
+		{
+			Factory:  ResourceTemplate,
+			TypeName: "aws_quicksight_template",
+			Name:     "Template",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceUser,

@@ -26,6 +26,11 @@ const (
 )
 
 const (
+	ClusterSnapshotStatusAvailable = "available"
+	ClusterSnapshotStatusCreating  = "creating"
+)
+
+const (
 	storageTypeStandard    = "standard"
 	storageTypeGP2         = "gp2"
 	storageTypeGP3         = "gp3"
@@ -66,6 +71,7 @@ const (
 	InstanceStatusConfiguringLogExports                        = "configuring-log-exports"
 	InstanceStatusConvertingToVPC                              = "converting-to-vpc"
 	InstanceStatusCreating                                     = "creating"
+	InstanceStatusDeletePreCheck                               = "delete-precheck"
 	InstanceStatusDeleting                                     = "deleting"
 	InstanceStatusFailed                                       = "failed"
 	InstanceStatusInaccessibleEncryptionCredentials            = "inaccessible-encryption-credentials"

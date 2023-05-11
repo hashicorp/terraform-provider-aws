@@ -189,7 +189,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Add(t *testing.T) {
 	resourceName := "aws_docdb_cluster.test"
 
 	if acctest.Partition() == "aws-us-gov" {
-		t.Skip("DocDB Global Cluster is not supported in GovCloud partition")
+		t.Skip("DocumentDB Global Cluster is not supported in GovCloud partition")
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -219,7 +219,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Add(t *testing.T) {
 			},
 			{
 				Config:      testAccClusterConfig_globalIdentifier(rName),
-				ExpectError: regexp.MustCompile(`existing DocDB Clusters cannot be added to an existing DocDB Global Cluster`),
+				ExpectError: regexp.MustCompile(`existing DocumentDB Clusters cannot be added to an existing DocumentDB Global Cluster`),
 			},
 		},
 	})
@@ -305,7 +305,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Update(t *testing.T) {
 			},
 			{
 				Config:      testAccClusterConfig_globalIdentifierUpdate(rName, globalClusterResourceName2),
-				ExpectError: regexp.MustCompile(`existing DocDB Clusters cannot be migrated between existing DocDB Global Clusters`),
+				ExpectError: regexp.MustCompile(`existing DocumentDB Clusters cannot be migrated between existing DocumentDB Global Clusters`),
 			},
 		},
 	})
@@ -909,7 +909,7 @@ func testAccCheckClusterExistsProvider(ctx context.Context, n string, v *docdb.D
 func testAccCheckClusterRecreated(i, j *docdb.DBCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.TimeValue(i.ClusterCreateTime).Equal(aws.TimeValue(j.ClusterCreateTime)) {
-			return errors.New("DocDB Cluster was not recreated")
+			return errors.New("DocumentDB Cluster was not recreated")
 		}
 
 		return nil

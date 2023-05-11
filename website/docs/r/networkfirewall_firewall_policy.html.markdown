@@ -98,6 +98,7 @@ In addition, you can specify custom actions that are compatible with your standa
 * `stateless_rule_group_reference` - (Optional) Set of configuration blocks containing references to the stateless rule groups that are used in the policy. See [Stateless Rule Group Reference](#stateless-rule-group-reference) below for details.
 
 ### Stateful Engine Options
+
 The `stateful_engine_options` block supports the following argument:
 
 ~> **NOTE:** If the `STRICT_ORDER` rule order is specified, this firewall policy can only reference stateful rule groups that utilize `STRICT_ORDER`.

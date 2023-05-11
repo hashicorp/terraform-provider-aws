@@ -539,7 +539,7 @@ EOF
 }
 
 func testAccResolverConfig_dataSourceLambda(rName string) string {
-	return testAccDatasourceConfig_lambdaBase(rName) + fmt.Sprintf(`
+	return testAccDatasourceConfig_baseLambda(rName) + fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
   name                = %q
@@ -820,7 +820,7 @@ EOF
 }
 
 func testAccResolverConfig_sync(rName string) string {
-	return testAccDatasourceConfig_dynamoDBBase(rName) + fmt.Sprintf(`
+	return testAccDatasourceConfig_baseDynamoDB(rName) + fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
   name                = %[1]q

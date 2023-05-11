@@ -22,13 +22,14 @@ const (
 )
 
 var (
-	createTags         = flag.Bool("CreateTags", false, "whether to generate CreateTags")
-	getTag             = flag.Bool("GetTag", false, "whether to generate GetTag")
-	listTags           = flag.Bool("ListTags", false, "whether to generate ListTags")
-	serviceTagsMap     = flag.Bool("ServiceTagsMap", false, "whether to generate service tags for map")
-	serviceTagsSlice   = flag.Bool("ServiceTagsSlice", false, "whether to generate service tags for slice")
-	untagInNeedTagType = flag.Bool("UntagInNeedTagType", false, "whether Untag input needs tag type")
-	updateTags         = flag.Bool("UpdateTags", false, "whether to generate UpdateTags")
+	createTags               = flag.Bool("CreateTags", false, "whether to generate CreateTags")
+	getTag                   = flag.Bool("GetTag", false, "whether to generate GetTag")
+	listTags                 = flag.Bool("ListTags", false, "whether to generate ListTags")
+	serviceTagsMap           = flag.Bool("ServiceTagsMap", false, "whether to generate service tags for map")
+	serviceTagsSlice         = flag.Bool("ServiceTagsSlice", false, "whether to generate service tags for slice")
+	untagInNeedTagType       = flag.Bool("UntagInNeedTagType", false, "whether Untag input needs tag type")
+	updateTags               = flag.Bool("UpdateTags", false, "whether to generate UpdateTags")
+	updateTagsNoIgnoreSystem = flag.Bool("UpdateTagsNoIgnoreSystem", false, "whether to not ignore system tags in UpdateTags")
 
 	createTagsFunc        = flag.String("CreateTagsFunc", "createTags", "createTagsFunc")
 	getTagFunc            = flag.String("GetTagFunc", "GetTag", "getTagFunc")
@@ -158,6 +159,7 @@ type TemplateData struct {
 	UntagInTagsElem         string
 	UntagOp                 string
 	UpdateTagsFunc          string
+	UpdateTagsIgnoreSystem  bool
 
 	// The following are specific to writing import paths in the `headerBody`;
 	// to include the package, set the corresponding field's value to true
@@ -282,6 +284,7 @@ func main() {
 		UntagInTagsElem:         *untagInTagsElem,
 		UntagOp:                 *untagOp,
 		UpdateTagsFunc:          *updateTagsFunc,
+		UpdateTagsIgnoreSystem:  !*updateTagsNoIgnoreSystem,
 	}
 
 	templateBody := newTemplateBody(*sdkVersion, *kvtValues)

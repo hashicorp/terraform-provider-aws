@@ -22,10 +22,22 @@ resource "aws_inspector2_member_association" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+The following argument is required:
 
 * `account_id` - (Required) ID of the account to associate
 
 ## Attributes Reference
 
-No additional attributes are exported.
+In addition to all arguments above, the following attributes are exported:
+
+* `delegated_admin_account_id` - Account ID of the delegated administrator account
+* `relationship_status` - Status of the member relationship
+* `updated_at` - Date and time of the last update of the relationship
+
+## Import
+
+Amazon Inspector Member Association can be imported using the `account_id`, e.g.,
+
+```
+$ terraform import aws_inspector2_member_association.example 123456789012
+```
