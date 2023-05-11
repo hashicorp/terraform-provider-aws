@@ -31,7 +31,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.2.4
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.2.6
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.8.11
-	github.com/aws/aws-sdk-go-v2/service/rds v1.43.3
+	github.com/aws/aws-sdk-go-v2/service/rds v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.13
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.1.11
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.14.10
