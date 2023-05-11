@@ -14,6 +14,7 @@ import (
 )
 
 const (
+	iamPropagationTimeout   = 2 * time.Minute
 	dataSourceCreateTimeout = 5 * time.Minute
 	dataSourceUpdateTimeout = 5 * time.Minute
 )
