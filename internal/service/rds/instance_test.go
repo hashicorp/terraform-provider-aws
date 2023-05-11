@@ -4887,11 +4887,12 @@ func TestAccRDSInstance_BlueGreenDeployment_updateAndPromoteReplica(t *testing.T
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
+					"blue_green_update",
+					"delete_automated_backups",
 					"final_snapshot_identifier",
+					"latest_restorable_time",
 					"password",
 					"skip_final_snapshot",
-					"delete_automated_backups",
-					"blue_green_update",
 				},
 			},
 		},
@@ -5655,8 +5656,6 @@ func testAccCheckInstanceExists(ctx context.Context, n string, v *rds.DBInstance
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
-
-		fmt.Printf("identifier: %s, id: %s\n", rs.Primary.Attributes["identifier"], rs.Primary.ID)
 
 		if rs.Primary.Attributes["identifier"] == "" {
 			return fmt.Errorf("No RDS DB Instance ID is set")
