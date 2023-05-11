@@ -2221,11 +2221,6 @@ resource "aws_s3_bucket" "website" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.website.id
-  acl    = "public-read"
-}
-
 resource "aws_s3_bucket_website_configuration" "test" {
   bucket = aws_s3_bucket.website.id
   index_document {

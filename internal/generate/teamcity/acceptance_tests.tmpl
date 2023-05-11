@@ -33,25 +33,7 @@ EOF
 fi
 
 TF_ACC=1 go test \
-    ./internal/acctest/... \
-    ./internal/attrmap/... \
-    ./internal/conns/... \
-    ./internal/create/... \
-    ./internal/enum/... \
-    ./internal/envvar/... \
-    ./internal/errs/... \
-    ./internal/experimental/... \
-    ./internal/flex/... \
-    ./internal/framework/... \
-    ./internal/generate/... \
-    ./internal/maps/... \
-    ./internal/provider/... \
-    ./internal/sdktypes/... \
-    ./internal/slices/... \
-    ./internal/sweep/... \
-    ./internal/tags/... \
-    ./internal/tfresource/... \
-    ./internal/types/... \
-    ./internal/vault/... \
-    ./internal/verify/... \
+{{- range . }}
+    ./internal/{{ . }}/... \
+{{- end }}
     -json -v -count=1 -parallel "%ACCTEST_PARALLELISM%" -timeout=0 -run=TestAcc
