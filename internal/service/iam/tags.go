@@ -266,6 +266,14 @@ func serverCertificateUpdateTags(ctx context.Context, conn iamiface.IAMAPI, iden
 	return nil
 }
 
+func serverCertificateCreateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, tags []*iam.Tag) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return serverCertificateUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+}
+
 // userUpdateTags updates IAM user tags.
 // The identifier is the user name.
 func userUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, oldTagsMap, newTagsMap any) error {
