@@ -1305,7 +1305,7 @@ func TestAccDMSEndpoint_PostgreSQL_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
 					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "require"),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`key=value;`)),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`HeartbeatFrequency=180;`)),
 				),
 			},
 			{
@@ -3658,7 +3658,7 @@ resource "aws_dms_endpoint" "test" {
   password                    = "tftest-new-password"
   database_name               = "tftest-new-database_name"
   ssl_mode                    = "require"
-  extra_connection_attributes = "key=value;"
+  extra_connection_attributes = "HeartbeatFrequency=180;"
 
   tags = {
     Name   = %[1]q
