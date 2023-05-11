@@ -8,4 +8,5 @@ var (
 	ResourceNamespace           = newResourceNamespace
 	ResourceRefreshSchedule     = newResourceRefreshSchedule
 	ResourceTemplateAlias       = newResourceTemplateAlias
+	ResourceVPCConnection       = newResourceVPCConnection
 )
