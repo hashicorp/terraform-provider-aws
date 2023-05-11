@@ -215,9 +215,9 @@ func PointersMapToStringList(pointers map[string]*string) map[string]interface{}
 	return list
 }
 
-// Takes a string of resource attributes separated by the ResourceIdSeparator constant and an expected number of Id Parts
+// Takes a string of resource attributes separated by the ResourceIdSeparator constant, an expected number of Id Parts, and a boolean specifying if empty parts are to be allowed
 // Returns a list of the resource attributes strings used to construct the unique Id or an error message if the resource id does not parse properly
-func ExpandResourceId(id string, partCount int) ([]string, error) {
+func ExpandResourceId(id string, partCount int, allowEmptyPart bool) ([]string, error) {
 	idParts := strings.Split(id, ResourceIdSeparator)
 
 	if len(idParts) <= 1 {
@@ -228,25 +228,26 @@ func ExpandResourceId(id string, partCount int) ([]string, error) {
 		return nil, fmt.Errorf("unexpected format for ID (%s), expected (%d) parts separated by (%s)", id, partCount, ResourceIdSeparator)
 	}
 
-	var emptyPart bool
-	emptyParts := make([]int, 0, partCount)
-	for index, part := range idParts {
-		if part == "" {
-			emptyPart = true
-			emptyParts = append(emptyParts, index)
+	if !allowEmptyPart {
+		var emptyPart bool
+		emptyParts := make([]int, 0, partCount)
+		for index, part := range idParts {
+			if part == "" {
+				emptyPart = true
+				emptyParts = append(emptyParts, index)
+			}
+		}
+
+		if emptyPart {
+			return nil, fmt.Errorf("unexpected format for ID (%[1]s), the following id parts indexes are blank (%v)", id, emptyParts)
 		}
 	}
-
-	if emptyPart {
-		return nil, fmt.Errorf("unexpected format for ID (%[1]s), the following id parts indexes are blank (%v)", id, emptyParts)
-	}
-
 	return idParts, nil
 }
 
-// Takes a list of the resource attributes as strings used to construct the unique Id and an expected number of Id Parts
+// Takes a list of the resource attributes as strings used to construct the unique Id, an expected number of Id Parts, and a boolean specifying if empty parts are to be allowed
 // Returns a string of resource attributes separated by the ResourceIdSeparator constant or an error message if the id parts do not parse properly
-func FlattenResourceId(idParts []string, partCount int) (string, error) {
+func FlattenResourceId(idParts []string, partCount int, allowEmptyPart bool) (string, error) {
 	if len(idParts) <= 1 {
 		return "", fmt.Errorf("unexpected format for ID parts (%v), expected more than one part", idParts)
 	}
@@ -255,17 +256,19 @@ func FlattenResourceId(idParts []string, partCount int) (string, error) {
 		return "", fmt.Errorf("unexpected format for ID parts (%v), expected (%d) parts", idParts, partCount)
 	}
 
-	var emptyPart bool
-	emptyParts := make([]int, 0, len(idParts))
-	for index, part := range idParts {
-		if part == "" {
-			emptyPart = true
-			emptyParts = append(emptyParts, index)
+	if !allowEmptyPart {
+		var emptyPart bool
+		emptyParts := make([]int, 0, len(idParts))
+		for index, part := range idParts {
+			if part == "" {
+				emptyPart = true
+				emptyParts = append(emptyParts, index)
+			}
 		}
-	}
 
-	if emptyPart {
-		return "", fmt.Errorf("unexpected format for ID parts (%v), the following id parts indexes are blank (%v)", idParts, emptyParts)
+		if emptyPart {
+			return "", fmt.Errorf("unexpected format for ID parts (%v), the following id parts indexes are blank (%v)", idParts, emptyParts)
+		}
 	}
 
 	return strings.Join(idParts, ResourceIdSeparator), nil
@@ -275,4 +278,11 @@ func FlattenResourceId(idParts []string, partCount int) (string, error) {
 // Only the string "true" is converted to true, all other values return false.
 func StringToBoolValue(v *string) bool {
 	return aws.StringValue(v) == strconv.FormatBool(true)
+}
+
+// Takes a string of resource attributes separated by the ResourceIdSeparator constant
+// returns the number of parts
+func ResourceIdPartCount(id string) int {
+	idParts := strings.Split(id, ResourceIdSeparator)
+	return len(idParts)
 }
