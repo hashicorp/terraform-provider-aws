@@ -12,6 +12,7 @@ FEATURES:
 * **New Data Source:** `aws_redshiftserverless_namespace` ([#31250](https://github.com/hashicorp/terraform-provider-aws/issues/31250))
 * **New Resource:** `aws_quicksight_template` ([#30453](https://github.com/hashicorp/terraform-provider-aws/issues/30453))
 * **New Resource:** `aws_quicksight_template_alias` ([#31310](https://github.com/hashicorp/terraform-provider-aws/issues/31310))
+* **New Resource:** `aws_quicksight_vpc_connection` ([#31309](https://github.com/hashicorp/terraform-provider-aws/issues/31309))
 
 ENHANCEMENTS:
 
@@ -33,6 +34,7 @@ BUG FIXES:
 * resource/aws_iam_openid_connect_provider: Change `client_id_list` from `TypeList` to `TypeSet` as order is not significant ([#31253](https://github.com/hashicorp/terraform-provider-aws/issues/31253))
 * resource/aws_servicecatalog_provisioned_product: Fix to properly send `stack_set_provisioned_preferences.0.accounts` on create and update ([#31293](https://github.com/hashicorp/terraform-provider-aws/issues/31293))
 * resource/aws_servicecatalog_provisioned_product: Fix to properly set `stack_set_provisioned_preferences` integer types `failure_tolerance_count`, `failure_tolerance_percentage`, `max_concurrency_count`, `max_concurrency_percentage` ([#31289](https://github.com/hashicorp/terraform-provider-aws/issues/31289))
+* resource/aws_ssm_activation: Fix various `ValidationException` errors on resource Create ([#31340](https://github.com/hashicorp/terraform-provider-aws/issues/31340))
 
 ## 4.66.1 (May  5, 2023)
 
