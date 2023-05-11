@@ -22,8 +22,6 @@ Enable CloudTrail to capture all compatible management events in region.
 For capturing events from services like IAM, `include_global_service_events` must be enabled.
 
 ```terraform
-data "aws_caller_identity" "current" {}
-
 resource "aws_cloudtrail" "foobar" {
   name                          = "tf-trail-foobar"
   s3_bucket_name                = aws_s3_bucket.foo.id
@@ -48,6 +46,11 @@ data "aws_iam_policy_document" "foo" {
 
     actions   = ["s3:GetBucketAcl"]
     resources = [aws_s3_bucket.foo.arn]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceArn"
+      values   = ["arn:${data.aws_partition.current.partition}:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/tf-trail-foobar"]
+    }
   }
 
   statement {
@@ -67,12 +70,23 @@ data "aws_iam_policy_document" "foo" {
       variable = "s3:x-amz-acl"
       values   = ["bucket-owner-full-control"]
     }
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceArn"
+      values   = ["arn:${data.aws_partition.current.partition}:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/tf-trail-foobar"]
+    }
   }
 }
 resource "aws_s3_bucket_policy" "foo" {
   bucket = aws_s3_bucket.foo.id
   policy = data.aws_iam_policy_document.foo.json
 }
+
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
 ```
 
 ### Data Event Logging
