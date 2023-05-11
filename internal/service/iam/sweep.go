@@ -424,7 +424,7 @@ func sweepPolicies(region string) error {
 			d := r.Data(nil)
 			d.SetId(arn)
 
-			err := sweep.NewSweepResource(r, d, client).Delete(ctx, sweep.ThrottlingRetryTimeout)
+			err := sweep.NewSweepResource(r, d, client).Delete(ctx, sweep.ThrottlingRetryTimeout) // nosemgrep:ci.semgrep.migrate.direct-CRUD-calls
 
 			// Treat this sweeper as best effort for now. There are a lot of edge cases
 			// with lingering aws_iam_role resources in the HashiCorp testing accounts.
