@@ -4,7 +4,6 @@ package autoscaling
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
