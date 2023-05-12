@@ -54,5 +54,4 @@ data "aws_replication_subnet_groups" "example" {
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - ARN of the Replication Subnet Groups. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `ids` - List of all the Replication Subnet Group IDs found.
