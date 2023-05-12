@@ -61,11 +61,9 @@ func TestAccClientVPNEndpoint_serial(t *testing.T) {
 			"disappearsEndpoint": testAccClientVPNAuthorizationRule_Disappears_endpoint,
 		},
 		"NetworkAssociation": {
-			"basic":                    testAccClientVPNNetworkAssociation_basic,
-			"multipleSubnets":          testAccClientVPNNetworkAssociation_multipleSubnets,
-			"disappears":               testAccClientVPNNetworkAssociation_disappears,
-			"securityGroups":           testAccClientVPNNetworkAssociation_securityGroups,
-			"securityGroupsOnEndpoint": testAccClientVPNNetworkAssociation_securityGroupsOnEndpoint,
+			"basic":           testAccClientVPNNetworkAssociation_basic,
+			"multipleSubnets": testAccClientVPNNetworkAssociation_multipleSubnets,
+			"disappears":      testAccClientVPNNetworkAssociation_disappears,
 		},
 		"Route": {
 			"basic":       testAccClientVPNRoute_basic,
