@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -20,13 +19,11 @@ import (
 func testAccClientVPNNetworkAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var assoc ec2.TargetNetwork
-	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_network_association.test"
 	endpointResourceName := "aws_ec2_client_vpn_endpoint.test"
 	subnetResourceName := "aws_subnet.test.0"
 	vpcResourceName := "aws_vpc.test"
-	defaultSecurityGroupResourceName := "aws_default_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
@@ -42,9 +39,6 @@ func testAccClientVPNNetworkAssociation_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "id", resourceName, "association_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "client_vpn_endpoint_id", endpointResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", subnetResourceName, "id"),
-					testAccCheckSecurityGroupExists(ctx, defaultSecurityGroupResourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
-					testAccCheckClientVPNNetworkAssociationSecurityGroupID(resourceName, "security_groups.*", &group),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
 				),
 			},
@@ -61,13 +55,11 @@ func testAccClientVPNNetworkAssociation_basic(t *testing.T) {
 func testAccClientVPNNetworkAssociation_multipleSubnets(t *testing.T) {
 	ctx := acctest.Context(t)
 	var assoc ec2.TargetNetwork
-	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceNames := []string{"aws_ec2_client_vpn_network_association.test.0", "aws_ec2_client_vpn_network_association.test.1"}
 	endpointResourceName := "aws_ec2_client_vpn_endpoint.test"
 	subnetResourceNames := []string{"aws_subnet.test.0", "aws_subnet.test.1"}
 	vpcResourceName := "aws_vpc.test"
-	defaultSecurityGroupResourceName := "aws_default_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
@@ -85,9 +77,6 @@ func testAccClientVPNNetworkAssociation_multipleSubnets(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceNames[0], "client_vpn_endpoint_id", endpointResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceNames[0], "subnet_id", subnetResourceNames[0], "id"),
 					resource.TestCheckResourceAttrPair(resourceNames[1], "subnet_id", subnetResourceNames[1], "id"),
-					testAccCheckSecurityGroupExists(ctx, defaultSecurityGroupResourceName, &group),
-					resource.TestCheckResourceAttr(resourceNames[0], "security_groups.#", "1"),
-					testAccCheckClientVPNNetworkAssociationSecurityGroupID(resourceNames[0], "security_groups.*", &group),
 					resource.TestCheckResourceAttrPair(resourceNames[0], "vpc_id", vpcResourceName, "id"),
 				),
 			},
@@ -182,12 +171,6 @@ func testAccCheckClientVPNNetworkAssociationExists(ctx context.Context, name str
 	}
 }
 
-func testAccCheckClientVPNNetworkAssociationSecurityGroupID(name, key string, group *ec2.SecurityGroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		return resource.TestCheckTypeSetElemAttr(name, key, aws.StringValue(group.GroupId))(s)
-	}
-}
-
 func testAccClientVPNNetworkAssociationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -207,10 +190,6 @@ resource "aws_vpc" "test" {
   tags = {
     Name = %[1]q
   }
-}
-
-resource "aws_default_security_group" "test" {
-  vpc_id = aws_vpc.test.id
 }
 
 resource "aws_subnet" "test" {
