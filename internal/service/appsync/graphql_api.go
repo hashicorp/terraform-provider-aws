@@ -384,44 +384,47 @@ func resourceGraphQLAPIUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncConn()
 
-	input := &appsync.UpdateGraphqlApiInput{
-		ApiId:              aws.String(d.Id()),
-		AuthenticationType: aws.String(d.Get("authentication_type").(string)),
-		Name:               aws.String(d.Get("name").(string)),
-	}
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &appsync.UpdateGraphqlApiInput{
+			ApiId:              aws.String(d.Id()),
+			AuthenticationType: aws.String(d.Get("authentication_type").(string)),
+			Name:               aws.String(d.Get("name").(string)),
+		}
 
-	if v, ok := d.GetOk("log_config"); ok {
-		input.LogConfig = expandGraphQLAPILogConfig(v.([]interface{}))
-	}
+		if v, ok := d.GetOk("additional_authentication_provider"); ok {
+			input.AdditionalAuthenticationProviders = expandGraphQLAPIAdditionalAuthProviders(v.([]interface{}), meta.(*conns.AWSClient).Region)
+		}
 
-	if v, ok := d.GetOk("openid_connect_config"); ok {
-		input.OpenIDConnectConfig = expandGraphQLAPIOpenIDConnectConfig(v.([]interface{}))
-	}
+		if v, ok := d.GetOk("lambda_authorizer_config"); ok {
+			input.LambdaAuthorizerConfig = expandGraphQLAPILambdaAuthorizerConfig(v.([]interface{}))
+		}
 
-	if v, ok := d.GetOk("user_pool_config"); ok {
-		input.UserPoolConfig = expandGraphQLAPIUserPoolConfig(v.([]interface{}), meta.(*conns.AWSClient).Region)
-	}
+		if v, ok := d.GetOk("log_config"); ok {
+			input.LogConfig = expandGraphQLAPILogConfig(v.([]interface{}))
+		}
 
-	if v, ok := d.GetOk("lambda_authorizer_config"); ok {
-		input.LambdaAuthorizerConfig = expandGraphQLAPILambdaAuthorizerConfig(v.([]interface{}))
-	}
+		if v, ok := d.GetOk("openid_connect_config"); ok {
+			input.OpenIDConnectConfig = expandGraphQLAPIOpenIDConnectConfig(v.([]interface{}))
+		}
 
-	if v, ok := d.GetOk("additional_authentication_provider"); ok {
-		input.AdditionalAuthenticationProviders = expandGraphQLAPIAdditionalAuthProviders(v.([]interface{}), meta.(*conns.AWSClient).Region)
-	}
+		if v, ok := d.GetOk("user_pool_config"); ok {
+			input.UserPoolConfig = expandGraphQLAPIUserPoolConfig(v.([]interface{}), meta.(*conns.AWSClient).Region)
+		}
 
-	if v, ok := d.GetOk("xray_enabled"); ok {
-		input.XrayEnabled = aws.Bool(v.(bool))
-	}
+		if v, ok := d.GetOk("xray_enabled"); ok {
+			input.XrayEnabled = aws.Bool(v.(bool))
+		}
 
-	_, err := conn.UpdateGraphqlApiWithContext(ctx, input)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating AppSync GraphQL API (%s): %s", d.Id(), err)
-	}
+		_, err := conn.UpdateGraphqlApiWithContext(ctx, input)
 
-	if d.HasChange("schema") {
-		if err := resourceSchemaPut(ctx, d, meta); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating AppSync GraphQL API (%s) Schema: %s", d.Id(), err)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating AppSync GraphQL API (%s): %s", d.Id(), err)
+		}
+
+		if d.HasChange("schema") {
+			if err := resourceSchemaPut(ctx, d, meta); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating AppSync GraphQL API (%s) Schema: %s", d.Id(), err)
+			}
 		}
 	}
 
