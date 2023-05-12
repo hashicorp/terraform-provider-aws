@@ -71,8 +71,7 @@ resource "aws_vpclattice_resource_policy" "test" {
 func testAccResourcePolicyDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccResourcePolicyDataSourceConfig_create(rName), fmt.Sprintf(`
 data "aws_vpclattice_resource_policy" "test" {
-	resource_arn = aws_vpclattice_service_network.test.arn
-	depends_on = [aws_vpclattice_service_network.test]
+  resource_arn = aws_vpclattice_service_network.test.arn
 }
 `))
 }
