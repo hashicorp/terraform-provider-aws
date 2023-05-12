@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_appsync_graphql_api: Add `visibility` argument
+```
+
+```release-note:enhancement
+resource/aws_appsync_graphql_api: Add plan time validation for `log_config.cloudwatch_logs_role_arn`
+```
