@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccDataSourceResourcePolicy_basic(t *testing.T) {
+func TestAccVPCLatticeResourcePolicyDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -28,7 +28,7 @@ func TestAccDataSourceResourcePolicy_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceResourcePolicyConfig_basic(rName),
+				Config: testAccResourcePolicyDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					//resource.TestMatchResourceAttr(dataSourceName, "policy", regexp.MustCompile(`"vpc-lattice:CreateServiceNetworkVpcAssociation","vpc-lattice:CreateServiceNetworkServiceAssociation","vpc-lattice:GetServiceNetwork"`)),
 					resource.TestCheckResourceAttrPair(dataSourceName, "resource_arn", "aws_vpclattice_service_network.test", "arn"),
@@ -37,7 +37,7 @@ func TestAccDataSourceResourcePolicy_basic(t *testing.T) {
 		},
 	})
 }
-func testAccResourcePolicyConfig_create(rName string) string {
+func testAccResourcePolicyDataSourceConfig_create(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
@@ -69,8 +69,8 @@ resource "aws_vpclattice_resource_policy" "test" {
 `, rName)
 }
 
-func testAccDataSourceResourcePolicyConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccResourcePolicyConfig_create(rName), fmt.Sprintf(`
+func testAccResourcePolicyDataSourceConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccResourcePolicyDataSourceConfig_create(rName), fmt.Sprintf(`
 data "aws_vpclattice_resource_policy" "test" {
 	resource_arn = aws_vpclattice_service_network.test.arn
 	depends_on = [aws_vpclattice_service_network.test]
