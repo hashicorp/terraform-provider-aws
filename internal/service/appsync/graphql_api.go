@@ -272,10 +272,19 @@ func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncConn()
 
+	name := d.Get("name").(string)
 	input := &appsync.CreateGraphqlApiInput{
 		AuthenticationType: aws.String(d.Get("authentication_type").(string)),
-		Name:               aws.String(d.Get("name").(string)),
+		Name:               aws.String(name),
 		Tags:               GetTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("additional_authentication_provider"); ok {
+		input.AdditionalAuthenticationProviders = expandGraphQLAPIAdditionalAuthProviders(v.([]interface{}), meta.(*conns.AWSClient).Region)
+	}
+
+	if v, ok := d.GetOk("lambda_authorizer_config"); ok {
+		input.LambdaAuthorizerConfig = expandGraphQLAPILambdaAuthorizerConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("log_config"); ok {
@@ -290,14 +299,6 @@ func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.UserPoolConfig = expandGraphQLAPIUserPoolConfig(v.([]interface{}), meta.(*conns.AWSClient).Region)
 	}
 
-	if v, ok := d.GetOk("lambda_authorizer_config"); ok {
-		input.LambdaAuthorizerConfig = expandGraphQLAPILambdaAuthorizerConfig(v.([]interface{}))
-	}
-
-	if v, ok := d.GetOk("additional_authentication_provider"); ok {
-		input.AdditionalAuthenticationProviders = expandGraphQLAPIAdditionalAuthProviders(v.([]interface{}), meta.(*conns.AWSClient).Region)
-	}
-
 	if v, ok := d.GetOk("xray_enabled"); ok {
 		input.XrayEnabled = aws.Bool(v.(bool))
 	}
@@ -306,12 +307,13 @@ func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.Visibility = aws.String(v.(string))
 	}
 
-	resp, err := conn.CreateGraphqlApiWithContext(ctx, input)
+	output, err := conn.CreateGraphqlApiWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating AppSync GraphQL API: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating AppSync GraphQL API (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.GraphqlApi.ApiId))
+	d.SetId(aws.StringValue(output.GraphqlApi.ApiId))
 
 	if err := resourceSchemaPut(ctx, d, meta); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating AppSync GraphQL API (%s) Schema: %s", d.Id(), err)
