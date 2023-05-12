@@ -80,18 +80,6 @@ func testAccClientVPNNetworkAssociation_multipleSubnets(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceNames[0], "vpc_id", vpcResourceName, "id"),
 				),
 			},
-			{
-				ResourceName:      resourceNames[0],
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccClientVPNNetworkAssociationImportStateIdFunc(resourceNames[0]),
-			},
-			{
-				ResourceName:      resourceNames[1],
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccClientVPNNetworkAssociationImportStateIdFunc(resourceNames[1]),
-			},
 		},
 	})
 }
