@@ -2,9 +2,11 @@ package appsync
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
@@ -316,8 +318,10 @@ func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(aws.StringValue(output.GraphqlApi.ApiId))
 
-	if err := resourceSchemaPut(ctx, d, meta); err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating AppSync GraphQL API (%s) Schema: %s", d.Id(), err)
+	if v, ok := d.GetOk("schema"); ok {
+		if err := putSchema(ctx, conn, d.Id(), v.(string), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
 	}
 
 	return append(diags, resourceGraphQLAPIRead(ctx, d, meta)...)
@@ -410,8 +414,10 @@ func resourceGraphQLAPIUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if d.HasChange("schema") {
-			if err := resourceSchemaPut(ctx, d, meta); err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating AppSync GraphQL API (%s) Schema: %s", d.Id(), err)
+			if v, ok := d.GetOk("schema"); ok {
+				if err := putSchema(ctx, conn, d.Id(), v.(string), d.Timeout(schema.TimeoutCreate)); err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
+				}
 			}
 		}
 	}
@@ -439,6 +445,25 @@ func resourceGraphQLAPIDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
+func putSchema(ctx context.Context, conn *appsync.AppSync, apiID, definition string, timeout time.Duration) error {
+	input := &appsync.StartSchemaCreationInput{
+		ApiId:      aws.String(apiID),
+		Definition: ([]byte)(definition),
+	}
+
+	_, err := conn.StartSchemaCreationWithContext(ctx, input)
+
+	if err != nil {
+		return fmt.Errorf("creating AppSync GraphQL API (%s) schema: %w", apiID, err)
+	}
+
+	if err := waitSchemaCreated(ctx, conn, apiID, timeout); err != nil {
+		return fmt.Errorf("waiting for AppSync GraphQL API (%s) schema create: %w", apiID, err)
+	}
+
+	return nil
+}
+
 func FindGraphQLAPIByID(ctx context.Context, conn *appsync.AppSync, id string) (*appsync.GraphqlApi, error) {
 	input := &appsync.GetGraphqlApiInput{
 		ApiId: aws.String(id),
@@ -462,6 +487,64 @@ func FindGraphQLAPIByID(ctx context.Context, conn *appsync.AppSync, id string) (
 	}
 
 	return output.GraphqlApi, nil
+}
+
+func findSchemaCreationStatusByID(ctx context.Context, conn *appsync.AppSync, id string) (*appsync.GetSchemaCreationStatusOutput, error) {
+	input := &appsync.GetSchemaCreationStatusInput{
+		ApiId: aws.String(id),
+	}
+
+	output, err := conn.GetSchemaCreationStatusWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func statusSchemaCreation(ctx context.Context, conn *appsync.AppSync, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findSchemaCreationStatusByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitSchemaCreated(ctx context.Context, conn *appsync.AppSync, id string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{appsync.SchemaStatusProcessing},
+		Target:  []string{appsync.SchemaStatusActive, appsync.SchemaStatusSuccess},
+		Refresh: statusSchemaCreation(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*appsync.GetSchemaCreationStatusOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Details)))
+	}
+
+	return err
 }
 
 func expandGraphQLAPILogConfig(l []interface{}) *appsync.LogConfig {
@@ -708,40 +791,4 @@ func flattenGraphQLAPICognitoUserPoolConfig(userPoolConfig *appsync.CognitoUserP
 	}
 
 	return []interface{}{m}
-}
-
-func resourceSchemaPut(ctx context.Context, d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn()
-
-	if v, ok := d.GetOk("schema"); ok {
-		input := &appsync.StartSchemaCreationInput{
-			ApiId:      aws.String(d.Id()),
-			Definition: ([]byte)(v.(string)),
-		}
-		if _, err := conn.StartSchemaCreationWithContext(ctx, input); err != nil {
-			return err
-		}
-
-		activeSchemaConfig := &retry.StateChangeConf{
-			Pending: []string{appsync.SchemaStatusProcessing},
-			Target:  []string{"SUCCESS", appsync.SchemaStatusActive}, // should be only appsync.SchemaStatusActive . I think this is a problem in documentation: https://docs.aws.amazon.com/appsync/latest/APIReference/API_GetSchemaCreationStatus.html
-			Refresh: func() (interface{}, string, error) {
-				result, err := conn.GetSchemaCreationStatusWithContext(ctx, &appsync.GetSchemaCreationStatusInput{
-					ApiId: aws.String(d.Id()),
-				})
-				if err != nil {
-					return 0, "", err
-				}
-				// TODO Details
-				return result, *result.Status, nil
-			},
-			Timeout: d.Timeout(schema.TimeoutCreate),
-		}
-
-		if _, err := activeSchemaConfig.WaitForStateContext(ctx); err != nil {
-			return fmt.Errorf("waiting for completion: %s", err)
-		}
-	}
-
-	return nil
 }
