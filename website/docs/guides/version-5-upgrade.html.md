@@ -29,6 +29,8 @@ Upgrade topics:
 - [Resource: aws_autoscaling_group](#resource-aws_autoscaling_group)
 - [Resource: aws_ce_anomaly_subscription](#resource-aws_ce_anomaly_subscription)
 - [Resource: aws_cloudwatch_event_target](#resource-aws_cloudwatch_event_target)
+- [Resource: aws_connect_routing_profile](#resource-aws_connect_queue)
+- [Resource: aws_connect_routing_profile](#resource-aws_connect_routing_profile)
 - [Resource: aws_docdb_cluster](#resource-aws_docdb_cluster)
 - [Resource: aws_ec2_client_vpn_endpoint](#resource-aws_ec2_client_vpn_endpoint)
 - [Resource: aws_ec2_client_vpn_network_association](#resource-aws_ec2_client_vpn_network_association)
@@ -118,6 +120,14 @@ The `threshold` attribute has been removed.
 ## Resource: aws_cloudwatch_event_target
 
 The `ecs_target.propagate_tags` attribute now has no default value. If no value is specified, the tags are not propagated.
+
+## Resource: aws_connect_queue
+
+The `quick_connect_ids_associated` attribute has been removed.
+
+## Resource: aws_connect_routing_profile
+
+The `queue_configs_associated` attribute has been removed.
 
 ## Resource: aws_docdb_cluster
 
