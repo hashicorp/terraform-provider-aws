@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -489,7 +490,7 @@ func ResourceCluster() *schema.Resource {
 			"storage_type": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
+				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -501,7 +502,28 @@ func ResourceCluster() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.Sequence(
+			verify.SetTagsDiff,
+			customdiff.ForceNewIf("storage_type", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				// Aurora supports mutation of the storage_type parameter, other engines do not
+				return !strings.HasPrefix(d.Get("engine").(string), "aurora")
+			}),
+			func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+				if diff.Id() == "" {
+					return nil
+				}
+				// The control plane will always return an empty string if a cluster is created with a storage_type of aurora
+				old, new := diff.GetChange("storage_type")
+
+				if new.(string) == "aurora" && old.(string) == "" {
+					if err := diff.SetNew("storage_type", ""); err != nil {
+						return err
+					}
+					return nil
+				}
+				return nil
+			},
+		),
 	}
 }
 

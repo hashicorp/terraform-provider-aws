@@ -124,6 +124,8 @@ func TestAccConnect_serial(t *testing.T) {
 			"phoneConfig":        testAccUser_updatePhoneConfig,
 			"routingProfileId":   testAccUser_updateRoutingProfileId,
 			"securityProfileIds": testAccUser_updateSecurityProfileIds,
+			"dataSource_id":      testAccUserDataSource_userID,
+			"dataSource_name":    testAccUserDataSource_name,
 		},
 		"UserHierarchyGroup": {
 			"basic":           testAccUserHierarchyGroup_basic,
@@ -139,9 +141,11 @@ func TestAccConnect_serial(t *testing.T) {
 			"dataSource_id": testAccUserHierarchyStructureDataSource_instanceID,
 		},
 		"Vocabulary": {
-			"basic":      testAccVocabulary_basic,
-			"disappears": testAccVocabulary_disappears,
-			"tags":       testAccVocabulary_updateTags,
+			"basic":           testAccVocabulary_basic,
+			"disappears":      testAccVocabulary_disappears,
+			"tags":            testAccVocabulary_updateTags,
+			"dataSource_id":   testAccVocabularyDataSource_vocabularyID,
+			"dataSource_name": testAccVocabularyDataSource_name,
 		},
 	}
 

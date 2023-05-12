@@ -37,6 +37,10 @@ func DataSourceCertificateAuthority() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"key_storage_security_standard": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"not_after": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -144,6 +148,7 @@ func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceD
 	certificateAuthority := describeCertificateAuthorityOutput.CertificateAuthority
 
 	d.Set("arn", certificateAuthority.Arn)
+	d.Set("key_storage_security_standard", certificateAuthority.KeyStorageSecurityStandard)
 	d.Set("not_after", aws.TimeValue(certificateAuthority.NotAfter).Format(time.RFC3339))
 	d.Set("not_before", aws.TimeValue(certificateAuthority.NotBefore).Format(time.RFC3339))
 	if err := d.Set("revocation_configuration", flattenRevocationConfiguration(certificateAuthority.RevocationConfiguration)); err != nil {

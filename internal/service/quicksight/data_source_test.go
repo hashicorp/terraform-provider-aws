@@ -296,6 +296,26 @@ resource "aws_s3_bucket_acl" "test" {
   acl    = "public-read"
 }
 
+resource "aws_s3_object" "test_data" {
+  depends_on = [aws_s3_bucket_acl.test]
+
+  bucket  = aws_s3_bucket.test.bucket
+  key     = "%[1]s-test-data"
+  content = <<EOF
+[
+	{
+		"Column1": "aaa",
+		"Column2": 1
+	},
+	{
+		"Column1": "bbb",
+		"Column2": 1
+	}
+]
+  EOF
+  acl     = "public-read"
+}
+
 resource "aws_s3_object" "test" {
   depends_on = [aws_s3_bucket_acl.test]
 
@@ -306,7 +326,7 @@ resource "aws_s3_object" "test" {
   "fileLocations": [
       {
           "URIs": [
-              "https://${aws_s3_bucket.test.bucket}.s3.${data.aws_partition.current.dns_suffix}/%[1]s"
+              "https://${aws_s3_bucket.test.bucket}.s3.${data.aws_partition.current.dns_suffix}/%[1]s-test-data"
           ]
       }
   ],

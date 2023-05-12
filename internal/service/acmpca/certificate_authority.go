@@ -189,6 +189,13 @@ func ResourceCertificateAuthority() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
+			"key_storage_security_standard": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(acmpca.KeyStorageSecurityStandard_Values(), false),
+			},
 			"not_after": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -359,6 +366,10 @@ func resourceCertificateAuthorityCreate(ctx context.Context, d *schema.ResourceD
 		Tags:                              GetTagsIn(ctx),
 	}
 
+	if v, ok := d.GetOk("key_storage_security_standard"); ok {
+		input.KeyStorageSecurityStandard = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("usage_mode"); ok {
 		input.UsageMode = aws.String(v.(string))
 	}
@@ -402,6 +413,7 @@ func resourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "setting certificate_authority_configuration: %s", err)
 	}
 	d.Set("enabled", (aws.StringValue(certificateAuthority.Status) != acmpca.CertificateAuthorityStatusDisabled))
+	d.Set("key_storage_security_standard", certificateAuthority.KeyStorageSecurityStandard)
 	d.Set("not_after", aws.TimeValue(certificateAuthority.NotAfter).Format(time.RFC3339))
 	d.Set("not_before", aws.TimeValue(certificateAuthority.NotBefore).Format(time.RFC3339))
 	if err := d.Set("revocation_configuration", flattenRevocationConfiguration(certificateAuthority.RevocationConfiguration)); err != nil {

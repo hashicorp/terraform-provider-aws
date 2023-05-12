@@ -4,7 +4,9 @@ package conns
 import (
 	"net/http"
 
+	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	"github.com/aws/aws-sdk-go-v2/service/account"
+	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	"github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
@@ -39,9 +41,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
+	"github.com/aws/aws-sdk-go-v2/service/xray"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/accessanalyzer"
-	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/alexaforbusiness"
 	"github.com/aws/aws-sdk-go/service/amplify"
@@ -327,7 +328,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/workmailmessageflow"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/aws/aws-sdk-go/service/workspacesweb"
-	"github.com/aws/aws-sdk-go/service/xray"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -354,13 +354,13 @@ type AWSClient struct {
 	s3controlClient lazyClient[*s3control_sdkv2.Client]
 	ssmClient       lazyClient[*ssm_sdkv2.Client]
 
-	acmConn                          *acm.ACM
+	acmClient                        *acm.Client
 	acmpcaConn                       *acmpca.ACMPCA
 	ampConn                          *prometheusservice.PrometheusService
 	apigatewayConn                   *apigateway.APIGateway
 	apigatewaymanagementapiConn      *apigatewaymanagementapi.ApiGatewayManagementApi
 	apigatewayv2Conn                 *apigatewayv2.ApiGatewayV2
-	accessanalyzerConn               *accessanalyzer.AccessAnalyzer
+	accessanalyzerClient             *accessanalyzer.Client
 	accountClient                    *account.Client
 	alexaforbusinessConn             *alexaforbusiness.AlexaForBusiness
 	amplifyConn                      *amplify.Amplify
@@ -669,13 +669,13 @@ type AWSClient struct {
 	workmailmessageflowConn          *workmailmessageflow.WorkMailMessageFlow
 	workspacesConn                   *workspaces.WorkSpaces
 	workspaceswebConn                *workspacesweb.WorkSpacesWeb
-	xrayConn                         *xray.XRay
+	xrayClient                       *xray.Client
 
 	s3ConnURICleaningDisabled *s3.S3
 }
 
-func (client *AWSClient) ACMConn() *acm.ACM {
-	return client.acmConn
+func (client *AWSClient) ACMClient() *acm.Client {
+	return client.acmClient
 }
 
 func (client *AWSClient) ACMPCAConn() *acmpca.ACMPCA {
@@ -698,8 +698,8 @@ func (client *AWSClient) APIGatewayV2Conn() *apigatewayv2.ApiGatewayV2 {
 	return client.apigatewayv2Conn
 }
 
-func (client *AWSClient) AccessAnalyzerConn() *accessanalyzer.AccessAnalyzer {
-	return client.accessanalyzerConn
+func (client *AWSClient) AccessAnalyzerClient() *accessanalyzer.Client {
+	return client.accessanalyzerClient
 }
 
 func (client *AWSClient) AccountClient() *account.Client {
@@ -1962,6 +1962,6 @@ func (client *AWSClient) WorkSpacesWebConn() *workspacesweb.WorkSpacesWeb {
 	return client.workspaceswebConn
 }
 
-func (client *AWSClient) XRayConn() *xray.XRay {
-	return client.xrayConn
+func (client *AWSClient) XRayClient() *xray.Client {
+	return client.xrayClient
 }

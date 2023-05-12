@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
@@ -39,7 +38,6 @@ const (
 	ResNameIAMPolicyAssignment = "IAM Policy Assignment"
 
 	DefaultIAMPolicyAssignmentNamespace = "default"
-	iamPropagationTimeout               = 2 * time.Minute
 	identitiesUserKey                   = "user"
 	identitiesGroupKey                  = "group"
 )

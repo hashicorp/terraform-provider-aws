@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -118,10 +119,10 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	arn, err := retryPutRule(ctx, conn, input)
 
-	// Some partitions may not support tag-on-create
-	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] EventBridge Rule (%s) create failed (%s) with tags. Trying create without tags.", name, err)
+	// Some partitions (e.g. ISO) may not support tag-on-create.
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		input.Tags = nil
+
 		arn, err = retryPutRule(ctx, conn, input)
 	}
 
@@ -140,17 +141,17 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "waiting for EventBridge Rule (%s) create: %s", d.Id(), err)
 	}
 
-	// Post-create tagging supported in some partitions
-	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); input.Tags == nil && len(tags) > 0 {
-		err := UpdateTags(ctx, conn, arn, nil, tags)
+	// For partitions not supporting tag-on-create, attempt tag after create.
+	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+		err := createTags(ctx, conn, arn, tags)
 
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-			log.Printf("[WARN] error adding tags after create for EventBridge Rule (%s): %s", d.Id(), err)
+		// If default tags only, continue. Otherwise, error.
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 			return append(diags, resourceRuleRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating EventBridge Rule (%s) tags: %s", name, err)
+			return sdkdiag.AppendErrorf(diags, "setting EventBridge Rule (%s) tags: %s", name, err)
 		}
 	}
 
@@ -203,17 +204,19 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsConn()
 
-	_, ruleName, err := RuleParseResourceID(d.Id())
+	if d.HasChangesExcept("tags", "tags_all") {
+		_, ruleName, err := RuleParseResourceID(d.Id())
 
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
 
-	input := expandPutRuleInput(d, ruleName)
-	_, err = retryPutRule(ctx, conn, input)
+		input := expandPutRuleInput(d, ruleName)
+		_, err = retryPutRule(ctx, conn, input)
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating EventBridge Rule (%s): %s", d.Id(), err)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EventBridge Rule (%s): %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceRuleRead(ctx, d, meta)...)

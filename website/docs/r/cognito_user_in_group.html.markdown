@@ -26,12 +26,12 @@ resource "aws_cognito_user_pool" "example" {
 }
 
 resource "aws_cognito_user" "example" {
-  user_pool_id = aws_cognito_user_pool.test.id
+  user_pool_id = aws_cognito_user_pool.example.id
   username     = "example"
 }
 
 resource "aws_cognito_user_group" "example" {
-  user_pool_id = aws_cognito_user_pool.test.id
+  user_pool_id = aws_cognito_user_pool.example.id
   name         = "example"
 }
 

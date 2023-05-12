@@ -95,7 +95,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_ecs_task_set",
 			Name:     "Task Set",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
+				IdentifierAttribute: "arn",
 			},
 		},
 	}

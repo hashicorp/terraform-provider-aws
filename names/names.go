@@ -22,7 +22,9 @@ import (
 
 // This "should" be defined by the AWS Go SDK v2, but currently isn't.
 const (
+	AccessAnalyzerEndpointID             = "access-analyzer"
 	AccountEndpointID                    = "account"
+	ACMEndpointID                        = "acm"
 	AuditManagerEndpointID               = "auditmanager"
 	CloudWatchLogsEndpointID             = "logs"
 	ComprehendEndpointID                 = "comprehend"
@@ -47,6 +49,7 @@ const (
 	SSMIncidentsEndpointID               = "ssm-incidents"
 	TranscribeEndpointID                 = "transcribe"
 	VPCLatticeEndpointID                 = "vpc-lattice"
+	XRayEndpointID                       = "xray"
 )
 
 // Type ServiceDatum corresponds closely to columns in `names_data.csv` and are
