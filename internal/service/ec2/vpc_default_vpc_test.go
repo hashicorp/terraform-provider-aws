@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -98,8 +98,6 @@ func testAccDefaultVPC_Existing_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "default_route_table_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dhcp_options_id"),
-					resource.TestCheckResourceAttr(resourceName, "enable_classiclink", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_classiclink_dns_support", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", "false"),
@@ -147,8 +145,6 @@ func testAccDefaultVPC_Existing_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "default_route_table_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dhcp_options_id"),
-					resource.TestCheckResourceAttr(resourceName, "enable_classiclink", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_classiclink_dns_support", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", "false"),
@@ -224,8 +220,6 @@ func testAccDefaultVPC_NotFound_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "default_route_table_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dhcp_options_id"),
-					resource.TestCheckResourceAttr(resourceName, "enable_classiclink", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_classiclink_dns_support", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", "false"),
@@ -273,8 +267,6 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "default_route_table_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dhcp_options_id"),
-					resource.TestCheckResourceAttr(resourceName, "enable_classiclink", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_classiclink_dns_support", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", "false"),
@@ -351,8 +343,6 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlockAdoption(t *testing.
 					resource.TestCheckResourceAttrSet(resourceName, "default_route_table_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dhcp_options_id"),
-					resource.TestCheckResourceAttr(resourceName, "enable_classiclink", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_classiclink_dns_support", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", "false"),
@@ -395,8 +385,6 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlockAdoption(t *testing.
 					resource.TestCheckResourceAttrSet(resourceName, "default_route_table_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dhcp_options_id"),
-					resource.TestCheckResourceAttr(resourceName, "enable_classiclink", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_classiclink_dns_support", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", "false"),
