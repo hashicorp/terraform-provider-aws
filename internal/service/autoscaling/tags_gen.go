@@ -115,27 +115,6 @@ func ListOfMap(tags tftags.KeyValueTags) []any {
 	return result
 }
 
-// ListOfStringMap returns a list of autoscaling tags in flattened map of only string values.
-//
-// Compatible with setting Terraform state for legacy []map[string]string schema.
-// Deprecated: Will be removed in a future major version without replacement.
-func ListOfStringMap(tags tftags.KeyValueTags) []any {
-	var result []any
-
-	for _, key := range tags.Keys() {
-		m := map[string]string{
-			"key":   key,
-			"value": aws.StringValue(tags.KeyValue(key)),
-
-			"propagate_at_launch": strconv.FormatBool(aws.BoolValue(tags.KeyAdditionalBoolValue(key, "PropagateAtLaunch"))),
-		}
-
-		result = append(result, m)
-	}
-
-	return result
-}
-
 // Tags returns autoscaling service tags.
 func Tags(tags tftags.KeyValueTags) []*autoscaling.Tag {
 	var result []*autoscaling.Tag
@@ -226,12 +205,6 @@ func KeyValueTags(ctx context.Context, tags any, identifier, resourceType string
 			tagData.AdditionalBoolFields = make(map[string]*bool)
 			if v, ok := tfMap["propagate_at_launch"].(bool); ok {
 				tagData.AdditionalBoolFields["PropagateAtLaunch"] = &v
-			}
-
-			// Deprecated: Legacy map handling
-			if v, ok := tfMap["propagate_at_launch"].(string); ok {
-				b, _ := strconv.ParseBool(v)
-				tagData.AdditionalBoolFields["PropagateAtLaunch"] = &b
 			}
 
 			tagData.AdditionalStringFields = make(map[string]*string)
