@@ -16,7 +16,7 @@ Terraform data source for managing an AWS VPC Lattice Resource Policy.
 
 ```terraform
 data "aws_vpclattice_resource_policy" "example" {
-    resource_arn = ""
+  resource_arn = aws_vpclattice_service_network.example.arn
 }
 ```
 
