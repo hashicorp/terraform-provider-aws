@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elastictranscoder"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKResource("aws_elastictranscoder_preset")
 func ResourcePreset() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePresetCreate,
@@ -516,7 +517,7 @@ func resourcePresetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	if name, ok := d.GetOk("name"); ok {
 		req.Name = aws.String(name.(string))
 	} else {
-		name := resource.PrefixedUniqueId("tf-et-preset-")
+		name := id.PrefixedUniqueId("tf-et-preset-")
 		d.Set("name", name)
 		req.Name = aws.String(name)
 	}

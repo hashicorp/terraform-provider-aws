@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_ssm_patch_baseline")
 func DataSourcePatchBaseline() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataPatchBaselineRead,

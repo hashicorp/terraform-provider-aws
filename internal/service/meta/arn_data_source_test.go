@@ -10,11 +10,12 @@ import (
 )
 
 func TestAccMetaARNDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	arn := "arn:aws:rds:eu-west-1:123456789012:db:mysql-db" // lintignore:AWSAT003,AWSAT005
 	dataSourceName := "data.aws_arn.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -34,11 +35,12 @@ func TestAccMetaARNDataSource_basic(t *testing.T) {
 }
 
 func TestAccMetaARNDataSource_s3Bucket(t *testing.T) {
+	ctx := acctest.Context(t)
 	arn := "arn:aws:s3:::my_corporate_bucket/Development/*" // lintignore:AWSAT005
 	dataSourceName := "data.aws_arn.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{

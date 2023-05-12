@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/costandusagereportservice"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
+	cur "github.com/aws/aws-sdk-go/service/costandusagereportservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -20,15 +20,14 @@ func TestAccCURReportDefinitionDataSource_basic(t *testing.T) {
 	bucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, costandusagereportservice.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
+		ErrorCheck:               acctest.ErrorCheck(t, cur.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportDefinitionDataSourceConfig_basic(reportName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccReportDefinitionCheckExistsDataSource(datasourceName, resourceName),
 					resource.TestCheckResourceAttrPair(datasourceName, "report_name", resourceName, "report_name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "time_unit", resourceName, "time_unit"),
 					resource.TestCheckResourceAttrPair(datasourceName, "compression", resourceName, "compression"),
@@ -52,15 +51,14 @@ func TestAccCURReportDefinitionDataSource_additional(t *testing.T) {
 	bucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, costandusagereportservice.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
+		ErrorCheck:               acctest.ErrorCheck(t, cur.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportDefinitionDataSourceConfig_additional(reportName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccReportDefinitionCheckExistsDataSource(datasourceName, resourceName),
 					resource.TestCheckResourceAttrPair(datasourceName, "report_name", resourceName, "report_name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "time_unit", resourceName, "time_unit"),
 					resource.TestCheckResourceAttrPair(datasourceName, "compression", resourceName, "compression"),
@@ -77,24 +75,8 @@ func TestAccCURReportDefinitionDataSource_additional(t *testing.T) {
 	})
 }
 
-func testAccReportDefinitionCheckExistsDataSource(datasourceName, resourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[datasourceName]
-		if !ok {
-			return fmt.Errorf("root module has no data source called %s", datasourceName)
-		}
-		_, ok = s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("root module has no resource called %s", resourceName)
-		}
-		return nil
-	}
-}
-
 func testAccReportDefinitionDataSourceConfig_basic(reportName string, bucketName string) string {
-	return acctest.ConfigCompose(
-		testAccRegionProviderConfig(),
-		fmt.Sprintf(`
+	return fmt.Sprintf(`
 data "aws_billing_service_account" "test" {}
 
 data "aws_partition" "current" {}
@@ -160,13 +142,11 @@ resource "aws_cur_report_definition" "test" {
 data "aws_cur_report_definition" "test" {
   report_name = aws_cur_report_definition.test.report_name
 }
-`, reportName, bucketName))
+`, reportName, bucketName)
 }
 
 func testAccReportDefinitionDataSourceConfig_additional(reportName string, bucketName string) string {
-	return acctest.ConfigCompose(
-		testAccRegionProviderConfig(),
-		fmt.Sprintf(`
+	return fmt.Sprintf(`
 data "aws_billing_service_account" "test" {}
 
 data "aws_partition" "current" {}
@@ -234,5 +214,5 @@ resource "aws_cur_report_definition" "test" {
 data "aws_cur_report_definition" "test" {
   report_name = aws_cur_report_definition.test.report_name
 }
-`, reportName, bucketName))
+`, reportName, bucketName)
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_directory_service_log_subscription")
 func ResourceLogSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLogSubscriptionCreate,

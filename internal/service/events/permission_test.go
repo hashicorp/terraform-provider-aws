@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -27,7 +28,7 @@ func TestAccEventsPermission_basic(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_permission.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPermissionDestroy(ctx),
@@ -100,7 +101,7 @@ func TestAccEventsPermission_eventBusName(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_permission.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPermissionDestroy(ctx),
@@ -132,7 +133,7 @@ func TestAccEventsPermission_action(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_permission.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPermissionDestroy(ctx),
@@ -175,7 +176,7 @@ func TestAccEventsPermission_condition(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_permission.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPermissionDestroy(ctx),
@@ -219,7 +220,7 @@ func TestAccEventsPermission_multiple(t *testing.T) {
 	resourceName2 := "aws_cloudwatch_event_permission.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPermissionDestroy(ctx),
@@ -254,7 +255,7 @@ func TestAccEventsPermission_disappears(t *testing.T) {
 	statementID := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPermissionDestroy(ctx),
@@ -326,13 +327,13 @@ func testAccCheckPermissionDestroy(ctx context.Context) resource.TestCheckFunc {
 			input := &eventbridge.DescribeEventBusInput{
 				Name: aws.String(eventBusName),
 			}
-			err = resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+			err = retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
 				debo, err := conn.DescribeEventBusWithContext(ctx, input)
 				if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
 					return nil
 				}
 				if err != nil {
-					return resource.NonRetryableError(err)
+					return retry.NonRetryableError(err)
 				}
 				if debo.Policy == nil {
 					return nil
@@ -341,12 +342,12 @@ func testAccCheckPermissionDestroy(ctx context.Context) resource.TestCheckFunc {
 				var policyDoc tfevents.PermissionPolicyDoc
 				err = json.Unmarshal([]byte(*debo.Policy), &policyDoc)
 				if err != nil {
-					return resource.NonRetryableError(fmt.Errorf("Reading EventBridge permission '%s' failed: %w", rs.Primary.ID, err))
+					return retry.NonRetryableError(fmt.Errorf("Reading EventBridge permission '%s' failed: %w", rs.Primary.ID, err))
 				}
 
 				_, err = tfevents.FindPermissionPolicyStatementByID(&policyDoc, statementID)
 				if err == nil {
-					return resource.RetryableError(fmt.Errorf("EventBridge permission exists: %s", rs.Primary.ID))
+					return retry.RetryableError(fmt.Errorf("EventBridge permission exists: %s", rs.Primary.ID))
 				}
 
 				return nil

@@ -12,6 +12,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_qldb_ledger")
 func DataSourceLedger() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLedgerRead,

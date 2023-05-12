@@ -17,6 +17,7 @@ import (
 // AttachmentAccepter does not require AttachmentType. However, querying attachments for status updates requires knowing tyupe
 // To facilitate querying and waiters on specific attachment types, attachment_type set to required
 
+// @SDKResource("aws_networkmanager_attachment_accepter")
 func ResourceAttachmentAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAttachmentAccepterCreate,

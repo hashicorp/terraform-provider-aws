@@ -32,19 +32,26 @@ resource "aws_vpc_ipam" "main" {
 Shared with multiple operating_regions:
 
 ```terraform
+resource "aws_vpc_ipam" "main" {
+  description = "multi region ipam"
+  dynamic operating_regions {
+    for_each = local.all_ipam_regions
+    content {
+      region_name = operating_regions.value
+    }
+  }
+}
+
+data "aws_region" "current" {}
+
 variable "ipam_regions" {
   type    = list
   default = ["us-east-1", "us-west-2"]
 }
 
-resource "aws_vpc_ipam" "example" {
-  description = "test4"
-  dynamic operating_regions {
-    for_each = var.ipam_regions
-    content {
-      region_name = operating_regions.value
-    }
-  }
+locals {
+  # ensure current provider region is an operating_regions entry
+  all_ipam_regions = distinct(concat([data.aws_region.current.name], var.ipam_regions))
 }
 ```
 
@@ -67,6 +74,8 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of IPAM
 * `id` - The ID of the IPAM
+* `default_resource_discovery_id` - The IPAM's default resource discovery ID.
+* `default_resource_discovery_association_id` - The IPAM's default resource discovery association ID.
 * `private_default_scope_id` - The ID of the IPAM's private scope. A scope is a top-level container in IPAM. Each scope represents an IP-independent network. Scopes enable you to represent networks where you have overlapping IP space. When you create an IPAM, IPAM automatically creates two scopes: public and private. The private scope is intended for private IP space. The public scope is intended for all internet-routable IP space.
 * `public_default_scope_id` - The ID of the IPAM's public scope. A scope is a top-level container in IPAM. Each scope represents an IP-independent network. Scopes enable you to represent networks where you have overlapping IP space. When you create an IPAM, IPAM automatically creates two scopes: public and private. The private scope is intended for private
 IP space. The public scope is intended for all internet-routable IP space.

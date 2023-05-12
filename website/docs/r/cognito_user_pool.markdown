@@ -95,7 +95,7 @@ The following arguments are optional:
 
 ### account_recovery_setting
 
-* `recovery_mechanism` - (Required) List of Account Recovery Options of the following structure:
+* `recovery_mechanism` - (Optional) List of Account Recovery Options of the following structure:
     * `name` - (Required) Recovery method for a user. Can be of the following: `verified_email`, `verified_phone_number`, and `admin_only`.
     * `priority` - (Required) Positive integer specifying priority of a method with 1 being the highest priority.
 

@@ -14,8 +14,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_elastic_beanstalk_application_version", name="Application Version")
+// @Tags(identifierAttribute="arn")
 func ResourceApplicationVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceApplicationVersionCreate,
@@ -64,8 +67,8 @@ func ResourceApplicationVersion() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -73,8 +76,6 @@ func ResourceApplicationVersion() *schema.Resource {
 func resourceApplicationVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	application := d.Get("application").(string)
 	description := d.Get("description").(string)
@@ -92,7 +93,7 @@ func resourceApplicationVersionCreate(ctx context.Context, d *schema.ResourceDat
 		ApplicationName: aws.String(application),
 		Description:     aws.String(description),
 		SourceBundle:    &s3Location,
-		Tags:            Tags(tags.IgnoreElasticbeanstalk()),
+		Tags:            GetTagsIn(ctx),
 		VersionLabel:    aws.String(name),
 		Process:         aws.Bool(process),
 	}
@@ -110,8 +111,6 @@ func resourceApplicationVersionCreate(ctx context.Context, d *schema.ResourceDat
 func resourceApplicationVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeApplicationVersionsWithContext(ctx, &elasticbeanstalk.DescribeApplicationVersionsInput{
 		ApplicationName: aws.String(d.Get("application").(string)),
@@ -136,23 +135,6 @@ func resourceApplicationVersionRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("arn", arn)
 	d.Set("description", resp.ApplicationVersions[0].Description)
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Elastic Beanstalk Application version (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreElasticbeanstalk().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -163,15 +145,6 @@ func resourceApplicationVersionUpdate(ctx context.Context, d *schema.ResourceDat
 	if d.HasChange("description") {
 		if err := resourceApplicationVersionDescriptionUpdate(ctx, conn, d); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Application Version (%s): %s", d.Id(), err)
-		}
-	}
-
-	arn := d.Get("arn").(string)
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Application Version (%s): setting tags: %s", d.Id(), err)
 		}
 	}
 

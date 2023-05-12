@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccAPIGatewayResourceDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandString(8)
 	resourceName1 := "aws_api_gateway_resource.example_v1"
 	dataSourceName1 := "data.aws_api_gateway_resource.example_v1"
@@ -18,7 +19,7 @@ func TestAccAPIGatewayResourceDataSource_basic(t *testing.T) {
 	dataSourceName2 := "data.aws_api_gateway_resource.example_v1_endpoint"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{

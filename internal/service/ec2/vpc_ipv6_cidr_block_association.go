@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_vpc_ipv6_cidr_block_association")
 func ResourceVPCIPv6CIDRBlockAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCIPv6CIDRBlockAssociationCreate,

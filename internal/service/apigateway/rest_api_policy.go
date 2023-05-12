@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_api_gateway_rest_api_policy")
 func ResourceRestAPIPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRestAPIPolicyPut,

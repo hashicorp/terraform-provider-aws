@@ -13,11 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-func init() {
-	_sp.registerFrameworkDataSourceFactory(newDataSourceDefaultTags)
-}
-
-// newDataSourceDefaultTags instantiates a new DataSource for the aws_default_tags data source.
+// @FrameworkDataSource
 func newDataSourceDefaultTags(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceDefaultTags{}
 	d.SetMigratedFromPluginSDK(true)

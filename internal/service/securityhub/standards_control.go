@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_securityhub_standards_control")
 func ResourceStandardsControl() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStandardsControlPut,

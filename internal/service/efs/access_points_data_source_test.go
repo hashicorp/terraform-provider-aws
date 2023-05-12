@@ -13,7 +13,7 @@ func TestAccEFSAccessPointsDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_efs_access_points.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessPointDestroy(ctx),
@@ -34,7 +34,7 @@ func TestAccEFSAccessPointsDataSource_empty(t *testing.T) {
 	dataSourceName := "data.aws_efs_access_points.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessPointDestroy(ctx),

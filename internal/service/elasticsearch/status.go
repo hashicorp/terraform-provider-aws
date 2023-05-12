@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -16,7 +16,7 @@ const (
 	ConfigStatusExists   = "Exists"
 )
 
-func statusUpgradeStatus(ctx context.Context, conn *elasticsearch.ElasticsearchService, name string) resource.StateRefreshFunc {
+func statusUpgradeStatus(ctx context.Context, conn *elasticsearch.ElasticsearchService, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := conn.GetUpgradeStatusWithContext(ctx, &elasticsearch.GetUpgradeStatusInput{
 			DomainName: aws.String(name),
@@ -36,7 +36,7 @@ func statusUpgradeStatus(ctx context.Context, conn *elasticsearch.ElasticsearchS
 	}
 }
 
-func domainConfigStatus(ctx context.Context, conn *elasticsearch.ElasticsearchService, name string) resource.StateRefreshFunc {
+func domainConfigStatus(ctx context.Context, conn *elasticsearch.ElasticsearchService, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := conn.DescribeElasticsearchDomainConfigWithContext(ctx, &elasticsearch.DescribeElasticsearchDomainConfigInput{
 			DomainName: aws.String(name),

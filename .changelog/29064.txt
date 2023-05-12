@@ -1,0 +1,31 @@
+```release-note:enhancement
+resource/aws_appmesh_gateway_route: Add `port` to the `spec.grpc_route.action.target`, `spec.http_route.action.target` and `spec.http2_route.action.target` configuration blocks to support Virtual Services with multiple listeners
+```
+
+```release-note:new-data-source
+aws_appmesh_gateway_route
+```
+
+```release-note:enhancement
+resource/aws_appmesh_gateway_route: Add `priority` to the `spec` configuration block
+```
+
+```release-note:enhancement
+resource/aws_appmesh_virtual_node: Add `ip_preference` and `response_type` to the `spec.service_discovery.dns` configuration block
+```
+
+```release-note:enhancement
+resource/aws_appmesh_route: Add `path` and `query_parameter` to the `spec.http_route.match` and `spec.http2_route.match` configuration blocks
+```
+
+```release-note:enhancement
+resource/aws_appmesh_route: `spec.http_route.match.prefix` and `spec.http2_route.match.prefix` are Optional
+```
+
+```release-note:enhancement
+resource/aws_appmesh_gateway_route: Add `header`, `path` and `query_parameter` to the `spec.http_route.match` and `spec.http2_route.match` configuration blocks
+```
+
+```release-note:bug
+resource/aws_appmesh_virtual_router: `spec.listener` is Optional
+```

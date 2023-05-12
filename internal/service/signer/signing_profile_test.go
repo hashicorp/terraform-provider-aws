@@ -25,7 +25,10 @@ func TestAccSignerSigningProfile_basic(t *testing.T) {
 	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA") },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA")
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSigningProfileDestroy(ctx),
@@ -57,7 +60,10 @@ func TestAccSignerSigningProfile_generateNameWithNamePrefix(t *testing.T) {
 	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA") },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA")
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSigningProfileDestroy(ctx),
@@ -80,7 +86,10 @@ func TestAccSignerSigningProfile_generateName(t *testing.T) {
 	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA") },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA")
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSigningProfileDestroy(ctx),
@@ -104,7 +113,10 @@ func TestAccSignerSigningProfile_tags(t *testing.T) {
 	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA") },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA")
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSigningProfileDestroy(ctx),
@@ -136,7 +148,10 @@ func TestAccSignerSigningProfile_signatureValidityPeriod(t *testing.T) {
 	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA") },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA")
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSigningProfileDestroy(ctx),

@@ -20,7 +20,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	resourceHelper "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -28,10 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	_sp.registerFrameworkResourceFactory(newResourceMultiplexProgram)
-}
-
+// @FrameworkResource
 func newResourceMultiplexProgram(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &multiplexProgram{}, nil
 }
@@ -201,7 +199,7 @@ func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateReques
 	in := &medialive.CreateMultiplexProgramInput{
 		MultiplexId: aws.String(multiplexId),
 		ProgramName: aws.String(programName),
-		RequestId:   aws.String(resourceHelper.UniqueId()),
+		RequestId:   aws.String(id.UniqueId()),
 	}
 
 	mps := make([]multiplexProgramSettings, 1)
@@ -459,7 +457,7 @@ func FindMultiplexProgramByID(ctx context.Context, conn *medialive.Client, multi
 	if err != nil {
 		var nfe *mltypes.NotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &resourceHelper.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}

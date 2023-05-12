@@ -63,6 +63,7 @@ The following arguments are supported:
 
 The `subnet_mapping` block supports the following arguments:
 
+* `ip_address_type` - (Optional) The subnet's IP address type. Valida values: `"DUALSTACK"`, `"IPV4"`.
 * `subnet_id` - (Required) The unique identifier for the subnet.
 
 ## Attributes Reference

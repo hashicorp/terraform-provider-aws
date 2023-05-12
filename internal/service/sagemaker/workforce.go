@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_sagemaker_workforce")
 func ResourceWorkforce() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWorkforceCreate,

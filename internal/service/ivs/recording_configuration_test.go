@@ -29,8 +29,8 @@ func TestAccIVSRecordingConfiguration_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(ivs.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, ivs.EndpointsID)
 			testAccRecordingConfigurationPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ivs.EndpointsID),
@@ -71,8 +71,8 @@ func TestAccIVSRecordingConfiguration_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(ivs.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, ivs.EndpointsID)
 			testAccRecordingConfigurationPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ivs.EndpointsID),
@@ -116,8 +116,8 @@ func TestAccIVSRecordingConfiguration_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(ivs.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, ivs.EndpointsID)
 			testAccRecordingConfigurationPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ivs.EndpointsID),
@@ -145,8 +145,8 @@ func TestAccIVSRecordingConfiguration_disappears_S3Bucket(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(ivs.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, ivs.EndpointsID)
 			testAccRecordingConfigurationPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ivs.EndpointsID),
@@ -173,8 +173,8 @@ func TestAccIVSRecordingConfiguration_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(ivs.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, ivs.EndpointsID)
 			testAccRecordingConfigurationPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ivs.EndpointsID),

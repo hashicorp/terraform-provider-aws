@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_codecommit_trigger")
 func ResourceTrigger() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTriggerCreate,

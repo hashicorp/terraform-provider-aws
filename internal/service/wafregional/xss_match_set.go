@@ -17,6 +17,7 @@ import (
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 )
 
+// @SDKResource("aws_wafregional_xss_match_set")
 func ResourceXSSMatchSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceXSSMatchSetCreate,

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func init() {
@@ -33,6 +34,9 @@ func init() {
 	resource.AddTestSweepers("aws_neptune_cluster_instance", &resource.Sweeper{
 		Name: "aws_neptune_cluster_instance",
 		F:    sweepClusterInstances,
+		Dependencies: []string{
+			"aws_rds_global_cluster",
+		},
 	})
 }
 
@@ -120,11 +124,13 @@ func sweepClusters(region string) error {
 			d.Set("deletion_protection", false)
 			d.Set("skip_final_snapshot", true)
 
-			globalCluster, err := findGlobalClusterByARN(ctx, conn, arn)
+			globalCluster, err := findGlobalClusterByClusterARN(ctx, conn, arn)
 
 			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("reading Neptune Global Cluster information for Neptune Cluster (%s): %s", id, err))
-				continue
+				if !tfresource.NotFound(err) {
+					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("reading Neptune Global Cluster information for Neptune Cluster (%s): %s", id, err))
+					continue
+				}
 			}
 
 			if globalCluster != nil && globalCluster.GlobalClusterIdentifier != nil {

@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,8 +26,8 @@ func TestAccAuditManagerAssessmentReport_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.AuditManagerEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -58,8 +59,8 @@ func TestAccAuditManagerAssessmentReport_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.AuditManagerEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -69,7 +70,7 @@ func TestAccAuditManagerAssessmentReport_disappears(t *testing.T) {
 				Config: testAccAssessmentReportConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssessmentReportExists(ctx, resourceName, &assessmentReport),
-					acctest.CheckFrameworkResourceDisappears(acctest.Provider, tfauditmanager.ResourceAssessmentReport, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfauditmanager.ResourceAssessmentReport, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -85,8 +86,8 @@ func TestAccAuditManagerAssessmentReport_optional(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.AuditManagerEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -139,7 +140,7 @@ func testAccCheckAssessmentReportDestroy(ctx context.Context) resource.TestCheck
 
 			_, err := tfauditmanager.FindAssessmentReportByID(ctx, conn, rs.Primary.ID)
 			if err != nil {
-				var nfe *resource.NotFoundError
+				var nfe *retry.NotFoundError
 				if errors.As(err, &nfe) {
 					return nil
 				}
@@ -181,7 +182,8 @@ func testAccAssessmentReportConfigBase(rName string) string {
 data "aws_caller_identity" "current" {}
 
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
+  force_destroy = true
 }
 
 resource "aws_s3_bucket_acl" "test" {

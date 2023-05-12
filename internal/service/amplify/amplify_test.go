@@ -15,7 +15,7 @@ func TestAccAmplify_serial(t *testing.T) {
 		"App": {
 			"basic":                    testAccApp_basic,
 			"disappears":               testAccApp_disappears,
-			"Tags":                     testAccApp_Tags,
+			"tags":                     testAccApp_tags,
 			"AutoBranchCreationConfig": testAccApp_AutoBranchCreationConfig,
 			"BasicAuthCredentials":     testAccApp_BasicAuthCredentials,
 			"BuildSpec":                testAccApp_BuildSpec,
@@ -34,7 +34,7 @@ func TestAccAmplify_serial(t *testing.T) {
 		"Branch": {
 			"basic":                testAccBranch_basic,
 			"disappears":           testAccBranch_disappears,
-			"Tags":                 testAccBranch_Tags,
+			"tags":                 testAccBranch_tags,
 			"BasicAuthCredentials": testAccBranch_BasicAuthCredentials,
 			"EnvironmentVariables": testAccBranch_EnvironmentVariables,
 			"OptionalArguments":    testAccBranch_OptionalArguments,

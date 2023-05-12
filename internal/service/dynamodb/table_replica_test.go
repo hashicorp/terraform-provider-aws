@@ -30,9 +30,9 @@ func TestAccDynamoDBTableReplica_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
 		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -61,9 +61,9 @@ func TestAccDynamoDBTableReplica_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
 		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -88,9 +88,9 @@ func TestAccDynamoDBTableReplica_pitr(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
 		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -119,9 +119,9 @@ func TestAccDynamoDBTableReplica_pitrKMS(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
 		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -129,7 +129,7 @@ func TestAccDynamoDBTableReplica_pitrKMS(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.alternate", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.alternate", names.AttrARN),
 				),
 			},
 			{
@@ -137,7 +137,7 @@ func TestAccDynamoDBTableReplica_pitrKMS(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.alternate", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.alternate", names.AttrARN),
 				),
 			},
 			{
@@ -145,7 +145,7 @@ func TestAccDynamoDBTableReplica_pitrKMS(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.alternate", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.alternate", names.AttrARN),
 				),
 			},
 			{
@@ -167,9 +167,9 @@ func TestAccDynamoDBTableReplica_pitrDefault(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
 		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -177,7 +177,7 @@ func TestAccDynamoDBTableReplica_pitrDefault(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", "false"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
 				),
 			},
 			{
@@ -185,7 +185,7 @@ func TestAccDynamoDBTableReplica_pitrDefault(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", "true"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
 				),
 			},
 			{
@@ -193,7 +193,7 @@ func TestAccDynamoDBTableReplica_pitrDefault(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", "false"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
 				),
 			},
 			{
@@ -215,9 +215,9 @@ func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
 		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -277,9 +277,9 @@ func TestAccDynamoDBTableReplica_tableClass(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
 		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -315,16 +315,16 @@ func TestAccDynamoDBTableReplica_keys(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
 		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableReplicaConfig_keys(rName, "test1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.test1", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test1", names.AttrARN),
 				),
 			},
 			{
@@ -336,7 +336,7 @@ func TestAccDynamoDBTableReplica_keys(t *testing.T) {
 				Config: testAccTableReplicaConfig_keys(rName, "test2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.test2", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test2", names.AttrARN),
 				),
 			},
 		},

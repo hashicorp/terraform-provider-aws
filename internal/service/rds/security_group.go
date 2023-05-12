@@ -16,8 +16,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_db_security_group", name="DB Security Group")
+// @Tags(identifierAttribute="arn")
 func ResourceSecurityGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecurityGroupCreate,
@@ -79,8 +82,8 @@ func ResourceSecurityGroup() *schema.Resource {
 				Set: resourceSecurityGroupIngressHash,
 			},
 
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -96,8 +99,6 @@ func resourceSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	sg, err := resourceSecurityGroupRetrieve(ctx, d, meta)
 	if err != nil {
@@ -133,27 +134,8 @@ func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.Set("ingress", rules)
 
-	conn := meta.(*conns.AWSClient).RDSConn()
-
 	arn := aws.StringValue(sg.DBSecurityGroupArn)
 	d.Set("arn", arn)
-
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for RDS DB Security Group (%s): %s", d.Get("arn").(string), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
 
 	return diags
 }
@@ -161,14 +143,6 @@ func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta
 func resourceSecurityGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating RDS DB Security Group (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
 
 	if d.HasChange("ingress") {
 		sg, err := resourceSecurityGroupRetrieve(ctx, d, meta)
@@ -218,7 +192,6 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 	opts := rds.DeleteDBSecurityGroupInput{DBSecurityGroupName: aws.String(d.Id())}
 
 	_, err := conn.DeleteDBSecurityGroupWithContext(ctx, &opts)
-
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, "InvalidDBSecurityGroup.NotFound") {
 			return diags
@@ -239,7 +212,6 @@ func resourceSecurityGroupRetrieve(ctx context.Context, d *schema.ResourceData, 
 	log.Printf("[DEBUG] DB Security Group describe configuration: %#v", opts)
 
 	resp, err := conn.DescribeDBSecurityGroupsWithContext(ctx, &opts)
-
 	if err != nil {
 		return nil, fmt.Errorf("Error retrieving DB Security Groups: %s", err)
 	}
@@ -279,7 +251,6 @@ func resourceSecurityGroupAuthorizeRule(ctx context.Context, ingress interface{}
 	log.Printf("[DEBUG] Authorize ingress rule configuration: %#v", opts)
 
 	_, err := conn.AuthorizeDBSecurityGroupIngressWithContext(ctx, &opts)
-
 	if err != nil {
 		return fmt.Errorf("Error authorizing security group ingress: %s", err)
 	}
@@ -314,7 +285,6 @@ func resourceSecurityGroupRevokeRule(ctx context.Context, ingress interface{}, d
 	log.Printf("[DEBUG] Revoking ingress rule configuration: %#v", opts)
 
 	_, err := conn.RevokeDBSecurityGroupIngressWithContext(ctx, &opts)
-
 	if err != nil {
 		return fmt.Errorf("Error revoking security group ingress: %s", err)
 	}

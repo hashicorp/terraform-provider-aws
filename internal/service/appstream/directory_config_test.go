@@ -30,7 +30,7 @@ func TestAccAppStreamDirectoryConfig_basic(t *testing.T) {
 	orgUnitDN := orgUnitFromDomain("Test", domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDirectoryConfigDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
@@ -83,7 +83,7 @@ func TestAccAppStreamDirectoryConfig_disappears(t *testing.T) {
 	orgUnitDN := orgUnitFromDomain("Test", domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDirectoryConfigDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
@@ -112,7 +112,7 @@ func TestAccAppStreamDirectoryConfig_OrganizationalUnitDistinguishedNames(t *tes
 	orgUnitDN2 := orgUnitFromDomain("Two", domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDirectoryConfigDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),

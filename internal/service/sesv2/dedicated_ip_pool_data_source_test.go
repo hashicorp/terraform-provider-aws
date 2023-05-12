@@ -18,7 +18,7 @@ func TestAccSESV2DedicatedIPPoolDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckDedicatedIPPool(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),

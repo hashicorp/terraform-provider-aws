@@ -3,13 +3,13 @@ package comprehend
 import (
 	"regexp"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 const (
 	modelIdentifierMaxLen       = 63 // Documentation says 256, Console says 63
-	modelIdentifierPrefixMaxLen = modelIdentifierMaxLen - resource.UniqueIDSuffixLength
+	modelIdentifierPrefixMaxLen = modelIdentifierMaxLen - id.UniqueIDSuffixLength
 )
 
 var validModelName = validIdentifier

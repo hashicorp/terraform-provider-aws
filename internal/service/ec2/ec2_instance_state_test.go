@@ -21,7 +21,7 @@ func TestAccEC2InstanceState_basic(t *testing.T) {
 	force := "false"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -46,7 +46,7 @@ func TestAccEC2InstanceState_state(t *testing.T) {
 	force := "false"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -84,7 +84,7 @@ func TestAccEC2InstanceState_disappears_Instance(t *testing.T) {
 	force := "false"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
@@ -114,7 +114,7 @@ func testAccCheckInstanceStateExists(ctx context.Context, n string) resource.Tes
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-		out, err := tfec2.FindInstanceStateById(ctx, conn, rs.Primary.ID)
+		out, err := tfec2.FindInstanceStateByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

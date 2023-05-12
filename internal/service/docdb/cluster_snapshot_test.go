@@ -23,7 +23,7 @@ func TestAccDocDBClusterSnapshot_basic(t *testing.T) {
 	resourceName := "aws_docdb_cluster_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx),
@@ -76,7 +76,7 @@ func testAccCheckClusterSnapshotDestroy(ctx context.Context) resource.TestCheckF
 			}
 
 			if output != nil && len(output.DBClusterSnapshots) > 0 && output.DBClusterSnapshots[0] != nil && aws.StringValue(output.DBClusterSnapshots[0].DBClusterSnapshotIdentifier) == rs.Primary.ID {
-				return fmt.Errorf("DocDB Cluster Snapshot %q still exists", rs.Primary.ID)
+				return fmt.Errorf("DocumentDB Cluster Snapshot %q still exists", rs.Primary.ID)
 			}
 		}
 
@@ -107,7 +107,7 @@ func testAccCheckClusterSnapshotExists(ctx context.Context, resourceName string,
 		}
 
 		if response == nil || len(response.DBClusterSnapshots) == 0 || response.DBClusterSnapshots[0] == nil || aws.StringValue(response.DBClusterSnapshots[0].DBClusterSnapshotIdentifier) != rs.Primary.ID {
-			return fmt.Errorf("DocDB Cluster Snapshot %q not found", rs.Primary.ID)
+			return fmt.Errorf("DocumentDB Cluster Snapshot %q not found", rs.Primary.ID)
 		}
 
 		*dbClusterSnapshot = *response.DBClusterSnapshots[0]

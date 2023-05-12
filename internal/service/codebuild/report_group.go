@@ -19,6 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_codebuild_report_group", name="Report Group")
+// @Tags
 func ResourceReportGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReportGroupCreate,
@@ -102,8 +104,8 @@ func ResourceReportGroup() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -113,16 +115,15 @@ func ResourceReportGroup() *schema.Resource {
 func resourceReportGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeBuildConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-	createOpts := &codebuild.CreateReportGroupInput{
+
+	input := &codebuild.CreateReportGroupInput{
 		Name:         aws.String(d.Get("name").(string)),
 		Type:         aws.String(d.Get("type").(string)),
 		ExportConfig: expandReportGroupExportConfig(d.Get("export_config").([]interface{})),
-		Tags:         Tags(tags.IgnoreAWS()),
+		Tags:         GetTagsIn(ctx),
 	}
 
-	resp, err := conn.CreateReportGroupWithContext(ctx, createOpts)
+	resp, err := conn.CreateReportGroupWithContext(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CodeBuild Report Group: %s", err)
 	}
@@ -135,8 +136,6 @@ func resourceReportGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 func resourceReportGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeBuildConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	reportGroup, err := FindReportGroupByARN(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codebuild.ErrCodeResourceNotFoundException) {
@@ -171,16 +170,7 @@ func resourceReportGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting export config: %s", err)
 	}
 
-	tags := KeyValueTags(reportGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	SetTagsOut(ctx, reportGroup.Tags)
 
 	return diags
 }
@@ -188,8 +178,6 @@ func resourceReportGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 func resourceReportGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeBuildConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &codebuild.UpdateReportGroupInput{
 		Arn: aws.String(d.Id()),
@@ -200,7 +188,7 @@ func resourceReportGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if d.HasChange("tags_all") {
-		input.Tags = Tags(tags.IgnoreAWS())
+		input.Tags = GetTagsIn(ctx)
 	}
 
 	_, err := conn.UpdateReportGroupWithContext(ctx, input)

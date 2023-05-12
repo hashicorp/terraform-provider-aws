@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
 )
 
+// @SDKDataSource("aws_imagebuilder_infrastructure_configurations")
 func DataSourceInfrastructureConfigurations() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInfrastructureConfigurationsRead,

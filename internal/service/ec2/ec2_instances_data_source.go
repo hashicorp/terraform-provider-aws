@@ -15,6 +15,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_instances")
 func DataSourceInstances() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstancesRead,
@@ -38,6 +39,11 @@ func DataSourceInstances() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: validation.StringInSlice(ec2.InstanceStateName_Values(), false),
 				},
+			},
+			"ipv6_addresses": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"private_ips": {
 				Type:     schema.TypeList,
@@ -72,7 +78,7 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	input.Filters = append(input.Filters, BuildTagFilterList(
-		Tags(tftags.New(d.Get("instance_tags").(map[string]interface{}))),
+		Tags(tftags.New(ctx, d.Get("instance_tags").(map[string]interface{}))),
 	)...)
 
 	input.Filters = append(input.Filters, BuildFiltersDataSource(
@@ -89,7 +95,7 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Instances: %s", err)
 	}
 
-	var instanceIDs, privateIPs, publicIPs []string
+	var instanceIDs, privateIPs, publicIPs, ipv6Addresses []string
 
 	for _, v := range output {
 		instanceIDs = append(instanceIDs, aws.StringValue(v.InstanceId))
@@ -99,10 +105,14 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 		if publicIP := aws.StringValue(v.PublicIpAddress); publicIP != "" {
 			publicIPs = append(publicIPs, publicIP)
 		}
+		if ipv6Address := aws.StringValue(v.Ipv6Address); ipv6Address != "" {
+			ipv6Addresses = append(ipv6Addresses, ipv6Address)
+		}
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("ids", instanceIDs)
+	d.Set("ipv6_addresses", ipv6Addresses)
 	d.Set("private_ips", privateIPs)
 	d.Set("public_ips", publicIPs)
 

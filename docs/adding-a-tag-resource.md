@@ -25,7 +25,7 @@ func TestAcc{Service}Tag_basic(t *testing.T) {
 	resourceName := "aws_{service}_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, {Service}.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheck{Service}TagDestroy(ctx),
@@ -53,7 +53,7 @@ func TestAcc{Service}Tag_disappears(t *testing.T) {
 	resourceName := "aws_{service}_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, {Service}.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheck{Service}TagDestroy(ctx),
@@ -76,7 +76,7 @@ func TestAcc{Service}Tag_Value(t *testing.T) {
 	resourceName := "aws_{service}_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, {Service}.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheck{Service}TagDestroy(ctx),

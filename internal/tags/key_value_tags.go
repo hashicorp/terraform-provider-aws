@@ -12,13 +12,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
 	awsTagKeyPrefix                             = `aws:` // nosemgrep:ci.aws-in-const-name,ci.aws-in-var-name
 	ElasticbeanstalkTagKeyPrefix                = `elasticbeanstalk:`
 	NameTagKey                                  = `Name`
-	RDSTagKeyPrefix                             = `rds:`
 	ServerlessApplicationRepositoryTagKeyPrefix = `serverlessrepo:`
 )
 
@@ -38,19 +38,6 @@ type IgnoreConfig struct {
 // its own Go struct type representing a resource tag. To standardize logic
 // across all these Go types, we convert them into this Go type.
 type KeyValueTags map[string]*TagData
-
-// IgnoreAWS returns non-AWS tag keys.
-func (tags KeyValueTags) IgnoreAWS() KeyValueTags { // nosemgrep:ci.aws-in-func-name
-	result := make(KeyValueTags)
-
-	for k, v := range tags {
-		if !strings.HasPrefix(k, awsTagKeyPrefix) {
-			result[k] = v
-		}
-	}
-
-	return result
-}
 
 // GetTags is convenience method that returns the DefaultConfig's Tags, if any
 func (dc *DefaultConfig) GetTags() KeyValueTags {
@@ -89,6 +76,19 @@ func (dc *DefaultConfig) TagsEqual(tags KeyValueTags) bool {
 	}
 
 	return dc.Tags.ContainsAll(tags)
+}
+
+// IgnoreAWS returns non-AWS tag keys.
+func (tags KeyValueTags) IgnoreAWS() KeyValueTags { // nosemgrep:ci.aws-in-func-name
+	result := make(KeyValueTags)
+
+	for k, v := range tags {
+		if !strings.HasPrefix(k, awsTagKeyPrefix) {
+			result[k] = v
+		}
+	}
+
+	return result
 }
 
 // IgnoreConfig returns any tags not removed by a given configuration.
@@ -150,25 +150,6 @@ func (tags KeyValueTags) IgnorePrefixes(ignoreTagPrefixes KeyValueTags) KeyValue
 	return result
 }
 
-// IgnoreRDS returns non-AWS and non-RDS tag keys.
-func (tags KeyValueTags) IgnoreRDS() KeyValueTags {
-	result := make(KeyValueTags)
-
-	for k, v := range tags {
-		if strings.HasPrefix(k, awsTagKeyPrefix) {
-			continue
-		}
-
-		if strings.HasPrefix(k, RDSTagKeyPrefix) {
-			continue
-		}
-
-		result[k] = v
-	}
-
-	return result
-}
-
 // IgnoreServerlessApplicationRepository returns non-AWS and non-ServerlessApplicationRepository tag keys.
 func (tags KeyValueTags) IgnoreServerlessApplicationRepository() KeyValueTags {
 	result := make(KeyValueTags)
@@ -186,6 +167,19 @@ func (tags KeyValueTags) IgnoreServerlessApplicationRepository() KeyValueTags {
 	}
 
 	return result
+}
+
+// IgnoreAWS returns non-system tag keys.
+// The ignored keys vary on the specified service.
+func (tags KeyValueTags) IgnoreSystem(serviceName string) KeyValueTags {
+	switch serviceName {
+	case names.ElasticBeanstalk:
+		return tags.IgnoreElasticbeanstalk()
+	case names.ServerlessRepo:
+		return tags.IgnoreServerlessApplicationRepository()
+	default:
+		return tags.IgnoreAWS()
+	}
 }
 
 // Ignore returns non-matching tag keys.
@@ -555,7 +549,7 @@ func (tags KeyValueTags) URLQueryString() string {
 // map[string]string, map[string]*string, map[string]interface{}, []interface{}, and types.Map.
 // When passed []interface{}, all elements are treated as keys and assigned nil values.
 // When passed KeyValueTags or its underlying type implementation, returns itself.
-func New(i interface{}) KeyValueTags {
+func New(ctx context.Context, i interface{}) KeyValueTags {
 	switch value := i.(type) {
 	case KeyValueTags:
 		return make(KeyValueTags).Merge(value)
@@ -616,7 +610,7 @@ func New(i interface{}) KeyValueTags {
 
 		return kvtm
 	case types.Map:
-		return New(flex.ExpandFrameworkStringValueMap(context.TODO(), value))
+		return New(ctx, flex.ExpandFrameworkStringValueMap(ctx, value))
 	default:
 		return make(KeyValueTags)
 	}

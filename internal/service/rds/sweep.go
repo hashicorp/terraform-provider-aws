@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func init() {
@@ -50,15 +51,14 @@ func init() {
 	resource.AddTestSweepers("aws_rds_global_cluster", &resource.Sweeper{
 		Name: "aws_rds_global_cluster",
 		F:    sweepGlobalClusters,
-		Dependencies: []string{
-			"aws_rds_cluster",
-			"aws_neptune_cluster",
-		},
 	})
 
 	resource.AddTestSweepers("aws_db_instance", &resource.Sweeper{
 		Name: "aws_db_instance",
 		F:    sweepInstances,
+		Dependencies: []string{
+			"aws_rds_global_cluster",
+		},
 	})
 
 	resource.AddTestSweepers("aws_db_option_group", &resource.Sweeper{
@@ -238,10 +238,11 @@ func sweepClusters(region string) error {
 
 			if engineMode := aws.StringValue(v.EngineMode); engineMode == EngineModeGlobal || engineMode == EngineModeProvisioned {
 				globalCluster, err := DescribeGlobalClusterFromClusterARN(ctx, conn, arn)
-
 				if err != nil {
-					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("reading RDS Global Cluster information for DB Cluster (%s): %s", id, err))
-					continue
+					if !tfresource.NotFound(err) {
+						sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("reading RDS Global Cluster information for DB Cluster (%s): %s", id, err))
+						continue
+					}
 				}
 
 				if globalCluster != nil && globalCluster.GlobalClusterIdentifier != nil {
@@ -333,6 +334,8 @@ func sweepGlobalClusters(region string) error {
 			r := ResourceGlobalCluster()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.GlobalClusterIdentifier))
+			d.Set("force_destroy", true)
+			d.Set("global_cluster_members", flattenGlobalClusterMembers(v.GlobalClusterMembers))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

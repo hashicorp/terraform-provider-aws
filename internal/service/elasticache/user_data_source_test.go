@@ -11,12 +11,13 @@ import (
 )
 
 func TestAccElastiCacheUserDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_elasticache_user.test-basic"
 	dataSourceName := "data.aws_elasticache_user.test-basic"
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Steps: []resource.TestStep{

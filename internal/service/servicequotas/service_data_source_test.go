@@ -10,10 +10,11 @@ import (
 )
 
 func TestAccServiceQuotasServiceDataSource_serviceName(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_servicequotas_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicequotas.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, servicequotas.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, servicequotas.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{

@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -55,8 +56,8 @@ func TestAccAuditManagerFrameworkShare_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.AuditManagerEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -89,8 +90,8 @@ func TestAccAuditManagerFrameworkShare_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.AuditManagerEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -103,7 +104,7 @@ func TestAccAuditManagerFrameworkShare_disappears(t *testing.T) {
 					// Sleep briefly to prevent intermittent validation errors when revoking
 					// a new framework share request
 					acctest.CheckSleep(t, 10*time.Second),
-					acctest.CheckFrameworkResourceDisappears(acctest.Provider, tfauditmanager.ResourceFrameworkShare, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfauditmanager.ResourceFrameworkShare, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -119,8 +120,8 @@ func TestAccAuditManagerFrameworkShare_optional(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.AuditManagerEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -176,7 +177,7 @@ func testAccCheckFrameworkShareDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfauditmanager.FindFrameworkShareByID(ctx, conn, rs.Primary.ID)
 			if err != nil {
-				var nfe *resource.NotFoundError
+				var nfe *retry.NotFoundError
 				if errors.As(err, &nfe) {
 					return nil
 				}

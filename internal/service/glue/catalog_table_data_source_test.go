@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccGlueCatalogTableDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_glue_catalog_table.test"
 	datasourceName := "data.aws_glue_catalog_table.test"
 
@@ -18,7 +19,7 @@ func TestAccGlueCatalogTableDataSource_basic(t *testing.T) {
 	tName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{

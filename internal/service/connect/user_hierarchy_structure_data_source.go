@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_connect_user_hierarchy_structure")
 func DataSourceUserHierarchyStructure() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserHierarchyStructureRead,

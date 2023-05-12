@@ -26,7 +26,7 @@ func TestAccEMRStudioSessionMapping_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckUserID(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
@@ -71,7 +71,7 @@ func TestAccEMRStudioSessionMapping_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckUserID(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),

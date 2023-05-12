@@ -10,13 +10,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_route53_delegation_set")
 func ResourceDelegationSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDelegationSetCreate,
@@ -51,7 +52,7 @@ func resourceDelegationSetCreate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	r53 := meta.(*conns.AWSClient).Route53Conn()
 
-	callerRef := resource.UniqueId()
+	callerRef := id.UniqueId()
 	if v, ok := d.GetOk("reference_name"); ok {
 		callerRef = strings.Join([]string{
 			v.(string), "-", callerRef,

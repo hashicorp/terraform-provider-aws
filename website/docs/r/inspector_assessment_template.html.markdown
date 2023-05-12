@@ -1,14 +1,14 @@
 ---
-subcategory: "Inspector"
+subcategory: "Inspector Classic"
 layout: "aws"
 page_title: "AWS: aws_inspector_assessment_template"
 description: |-
-  Provides a Inspector assessment template.
+  Provides an Inspector Classic Assessment Template.
 ---
 
 # Resource: aws_inspector_assessment_template
 
-Provides a Inspector assessment template
+Provides an Inspector Classic Assessment Template
 
 ## Example Usage
 

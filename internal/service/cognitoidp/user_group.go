@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_cognito_user_group")
 func ResourceUserGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserGroupCreate,

@@ -14,9 +14,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	availabilityZoneKey = "TF_AWS_LIGHTSAIL_AVAILABILITY_ZONE"
+)
+
+const (
+	envVarAvailabilityZoneKeyError = "The availability zone that is outside the providers current region."
 )
 
 func TestAccLightsailInstance_basic(t *testing.T) {
@@ -26,8 +35,8 @@ func TestAccLightsailInstance_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
@@ -58,12 +67,13 @@ func TestAccLightsailInstance_name(t *testing.T) {
 	resourceName := "aws_lightsail_instance.test"
 	rNameWithSpaces := fmt.Sprint(rName, "string with spaces")
 	rNameWithStartingDigit := fmt.Sprintf("01-%s", rName)
+	rNameWithStartingHyphen := fmt.Sprintf("-%s", rName)
 	rNameWithUnderscore := fmt.Sprintf("%s_123456", rName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
@@ -75,8 +85,18 @@ func TestAccLightsailInstance_name(t *testing.T) {
 				ExpectError: regexp.MustCompile(`must contain only alphanumeric characters, underscores, hyphens, and dots`),
 			},
 			{
-				Config:      testAccInstanceConfig_basic(rNameWithStartingDigit),
-				ExpectError: regexp.MustCompile(`must begin with an alphabetic character`),
+				Config:      testAccInstanceConfig_basic(rNameWithStartingHyphen),
+				ExpectError: regexp.MustCompile(`must begin with an alphanumeric character`),
+			},
+			{
+				Config: testAccInstanceConfig_basic(rNameWithStartingDigit),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					resource.TestCheckResourceAttrSet(resourceName, "blueprint_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "bundle_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "key_pair_name"),
+				),
 			},
 			{
 				Config: testAccInstanceConfig_basic(rName),
@@ -109,8 +129,8 @@ func TestAccLightsailInstance_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
@@ -150,8 +170,8 @@ func TestAccLightsailInstance_IPAddressType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
@@ -192,8 +212,8 @@ func TestAccLightsailInstance_addOn(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
@@ -252,6 +272,29 @@ func TestAccLightsailInstance_addOn(t *testing.T) {
 	})
 }
 
+func TestAccLightsailInstance_availabilityZone(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	// This test is expecting a region to be set in an environment variable that it outside the current provider region
+	availabilityZone := envvar.SkipIfEmpty(t, availabilityZoneKey, envVarAvailabilityZoneKeyError)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccInstanceConfig_availabilityZone(rName, availabilityZone),
+				ExpectError: regexp.MustCompile(`availability_zone must be within the same region as provider region.`),
+			},
+		},
+	})
+}
+
 func TestAccLightsailInstance_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -259,8 +302,8 @@ func TestAccLightsailInstance_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
@@ -367,10 +410,23 @@ func testAccInstanceConfig_basic(rName string) string {
 resource "aws_lightsail_instance" "test" {
   name              = "%s"
   availability_zone = data.aws_availability_zones.available.names[0]
-  blueprint_id      = "amazon_linux"
+  blueprint_id      = "amazon_linux_2"
   bundle_id         = "nano_1_0"
 }
 `, rName))
+}
+
+func testAccInstanceConfig_availabilityZone(rName string, availabilityZone string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfigBase(),
+		fmt.Sprintf(`	
+resource "aws_lightsail_instance" "test" {
+  name              = %[1]q
+  availability_zone = %[2]q
+  blueprint_id      = "amazon_linux_2"
+  bundle_id         = "nano_1_0"
+}
+`, rName, availabilityZone))
 }
 
 func testAccInstanceConfig_tags1(rName string) string {
@@ -380,7 +436,7 @@ func testAccInstanceConfig_tags1(rName string) string {
 resource "aws_lightsail_instance" "test" {
   name              = "%s"
   availability_zone = data.aws_availability_zones.available.names[0]
-  blueprint_id      = "amazon_linux"
+  blueprint_id      = "amazon_linux_2"
   bundle_id         = "nano_1_0"
 
   tags = {
@@ -398,7 +454,7 @@ func testAccInstanceConfig_tags2(rName string) string {
 resource "aws_lightsail_instance" "test" {
   name              = "%s"
   availability_zone = data.aws_availability_zones.available.names[0]
-  blueprint_id      = "amazon_linux"
+  blueprint_id      = "amazon_linux_2"
   bundle_id         = "nano_1_0"
 
   tags = {
@@ -417,7 +473,7 @@ func testAccInstanceConfig_IPAddressType(rName string, rIPAddressType string) st
 resource "aws_lightsail_instance" "test" {
   name              = %[1]q
   availability_zone = data.aws_availability_zones.available.names[0]
-  blueprint_id      = "amazon_linux"
+  blueprint_id      = "amazon_linux_2"
   bundle_id         = "nano_1_0"
   ip_address_type   = %[2]q
 }
@@ -431,7 +487,7 @@ func testAccInstanceConfig_addOn(rName string, snapshotTime string, status strin
 resource "aws_lightsail_instance" "test" {
   name              = %[1]q
   availability_zone = data.aws_availability_zones.available.names[0]
-  blueprint_id      = "amazon_linux"
+  blueprint_id      = "amazon_linux_2"
   bundle_id         = "nano_1_0"
   add_on {
     type          = "AutoSnapshot"

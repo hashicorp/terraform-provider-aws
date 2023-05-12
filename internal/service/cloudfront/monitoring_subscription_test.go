@@ -20,7 +20,7 @@ func TestAccCloudFrontMonitoringSubscription_basic(t *testing.T) {
 	resourceName := "aws_cloudfront_monitoring_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMonitoringSubscriptionDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
@@ -50,7 +50,7 @@ func TestAccCloudFrontMonitoringSubscription_disappears(t *testing.T) {
 	resourceName := "aws_cloudfront_monitoring_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMonitoringSubscriptionDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
@@ -73,7 +73,7 @@ func TestAccCloudFrontMonitoringSubscription_update(t *testing.T) {
 	resourceName := "aws_cloudfront_monitoring_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMonitoringSubscriptionDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),

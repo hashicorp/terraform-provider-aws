@@ -115,7 +115,7 @@ The following arguments are supported:
 The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 5 mins) Used when creating the Global Cluster
-* `update` - (Defaults to 5 mins) Used when updating the Global Cluster members (time is per member)
+* `update` - (Defaults to 120 mins) Used when updating the Global Cluster members (time is per member)
 * `delete` - (Defaults to 5 mins) Used when deleting the Global Cluster members (time is per member)
 
 ## Attributes Reference

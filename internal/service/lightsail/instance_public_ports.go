@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_lightsail_instance_public_ports")
 func ResourceInstancePublicPorts() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstancePublicPortsCreate,

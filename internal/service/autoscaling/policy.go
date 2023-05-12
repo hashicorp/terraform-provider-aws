@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_autoscaling_policy")
 func ResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,
@@ -159,7 +160,7 @@ func ResourcePolicy() *schema.Resource {
 												},
 												"resource_label": {
 													Type:     schema.TypeString,
-													Required: true,
+													Optional: true,
 												},
 											},
 										},
@@ -177,7 +178,7 @@ func ResourcePolicy() *schema.Resource {
 												},
 												"resource_label": {
 													Type:     schema.TypeString,
-													Required: true,
+													Optional: true,
 												},
 											},
 										},
@@ -196,13 +197,13 @@ func ResourcePolicy() *schema.Resource {
 												},
 												"resource_label": {
 													Type:     schema.TypeString,
-													Required: true,
+													Optional: true,
 												},
 											},
 										},
 									},
 									"target_value": {
-										Type:     schema.TypeInt,
+										Type:     schema.TypeFloat,
 										Required: true,
 									},
 								},
@@ -263,8 +264,9 @@ func ResourcePolicy() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"metric_dimension": {
-										Type:     schema.TypeList,
-										Optional: true,
+										Type:          schema.TypeList,
+										Optional:      true,
+										ConflictsWith: []string{"target_tracking_configuration.0.customized_metric_specification.0.metrics"},
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"name": {
@@ -279,20 +281,104 @@ func ResourcePolicy() *schema.Resource {
 										},
 									},
 									"metric_name": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:          schema.TypeString,
+										Optional:      true,
+										ConflictsWith: []string{"target_tracking_configuration.0.customized_metric_specification.0.metrics"},
+									},
+									"metrics": {
+										Type:          schema.TypeSet,
+										Optional:      true,
+										ConflictsWith: []string{"target_tracking_configuration.0.customized_metric_specification.0.metric_dimension", "target_tracking_configuration.0.customized_metric_specification.0.metric_name", "target_tracking_configuration.0.customized_metric_specification.0.namespace", "target_tracking_configuration.0.customized_metric_specification.0.statistic", "target_tracking_configuration.0.customized_metric_specification.0.unit"},
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"expression": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringLenBetween(1, 2047),
+												},
+												"id": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringLenBetween(1, 255),
+												},
+												"label": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringLenBetween(1, 2047),
+												},
+												"metric_stat": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"metric": {
+																Type:     schema.TypeList,
+																Required: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"dimensions": {
+																			Type:     schema.TypeSet,
+																			Optional: true,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"name": {
+																						Type:     schema.TypeString,
+																						Required: true,
+																					},
+																					"value": {
+																						Type:     schema.TypeString,
+																						Required: true,
+																					},
+																				},
+																			},
+																		},
+																		"metric_name": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																		"namespace": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																	},
+																},
+															},
+															"stat": {
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validation.StringLenBetween(1, 100),
+															},
+															"unit": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+														},
+													},
+												},
+												"return_data": {
+													Type:     schema.TypeBool,
+													Optional: true,
+													Default:  true,
+												},
+											},
+										},
 									},
 									"namespace": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:          schema.TypeString,
+										Optional:      true,
+										ConflictsWith: []string{"target_tracking_configuration.0.customized_metric_specification.0.metrics"},
 									},
 									"statistic": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:          schema.TypeString,
+										Optional:      true,
+										ConflictsWith: []string{"target_tracking_configuration.0.customized_metric_specification.0.metrics"},
 									},
 									"unit": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:          schema.TypeString,
+										Optional:      true,
+										ConflictsWith: []string{"target_tracking_configuration.0.customized_metric_specification.0.metrics"},
 									},
 								},
 							},
@@ -560,7 +646,7 @@ func FindScalingPolicy(ctx context.Context, conn *autoscaling.AutoScaling, asgNa
 	})
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -596,7 +682,7 @@ func getPutScalingPolicyInput(d *schema.ResourceData) (*autoscaling.PutScalingPo
 	params.PolicyType = aws.String(policyType.(string))
 
 	// This parameter is supported if the policy type is SimpleScaling or StepScaling.
-	if v, ok := d.GetOk("adjustment_type"); ok && (policyType == "SimpleScaling" || policyType == "StepScaling") {
+	if v, ok := d.GetOk("adjustment_type"); ok && (policyType == PolicyTypeSimpleScaling || policyType == PolicyTypeStepScaling) {
 		params.AdjustmentType = aws.String(v.(string))
 	}
 
@@ -608,7 +694,7 @@ func getPutScalingPolicyInput(d *schema.ResourceData) (*autoscaling.PutScalingPo
 	if v, ok := d.GetOkExists("cooldown"); ok {
 		// 0 is allowed as placeholder even if policyType is not supported
 		params.Cooldown = aws.Int64(int64(v.(int)))
-		if v.(int) != 0 && policyType != "SimpleScaling" {
+		if v.(int) != 0 && policyType != PolicyTypeSimpleScaling {
 			return params, fmt.Errorf("cooldown is only supported for policy type SimpleScaling")
 		}
 	}
@@ -616,21 +702,21 @@ func getPutScalingPolicyInput(d *schema.ResourceData) (*autoscaling.PutScalingPo
 	// This parameter is supported if the policy type is StepScaling or TargetTrackingScaling.
 	if v, ok := d.GetOkExists("estimated_instance_warmup"); ok {
 		// 0 is NOT allowed as placeholder if policyType is not supported
-		if policyType == "StepScaling" || policyType == "TargetTrackingScaling" {
+		if policyType == PolicyTypeStepScaling || policyType == PolicyTypeTargetTrackingScaling {
 			params.EstimatedInstanceWarmup = aws.Int64(int64(v.(int)))
 		}
-		if v.(int) != 0 && policyType != "StepScaling" && policyType != "TargetTrackingScaling" {
+		if v.(int) != 0 && policyType != PolicyTypeStepScaling && policyType != PolicyTypeTargetTrackingScaling {
 			return params, fmt.Errorf("estimated_instance_warmup is only supported for policy type StepScaling and TargetTrackingScaling")
 		}
 	}
 
 	// This parameter is supported if the policy type is StepScaling.
-	if v, ok := d.GetOk("metric_aggregation_type"); ok && policyType == "StepScaling" {
+	if v, ok := d.GetOk("metric_aggregation_type"); ok && policyType == PolicyTypeStepScaling {
 		params.MetricAggregationType = aws.String(v.(string))
 	}
 
 	// MinAdjustmentMagnitude is supported if the policy type is SimpleScaling or StepScaling.
-	if v, ok := d.GetOkExists("min_adjustment_magnitude"); ok && v.(int) != 0 && (policyType == "SimpleScaling" || policyType == "StepScaling") {
+	if v, ok := d.GetOkExists("min_adjustment_magnitude"); ok && v.(int) != 0 && (policyType == PolicyTypeSimpleScaling || policyType == PolicyTypeStepScaling) {
 		params.MinAdjustmentMagnitude = aws.Int64(int64(v.(int)))
 	}
 
@@ -638,13 +724,13 @@ func getPutScalingPolicyInput(d *schema.ResourceData) (*autoscaling.PutScalingPo
 	//if policy_type=="SimpleScaling" then scaling_adjustment is required and 0 is allowed
 	if v, ok := d.GetOkExists("scaling_adjustment"); ok {
 		// 0 is NOT allowed as placeholder if policyType is not supported
-		if policyType == "SimpleScaling" {
+		if policyType == PolicyTypeSimpleScaling {
 			params.ScalingAdjustment = aws.Int64(int64(v.(int)))
 		}
-		if v.(int) != 0 && policyType != "SimpleScaling" {
+		if v.(int) != 0 && policyType != PolicyTypeSimpleScaling {
 			return params, fmt.Errorf("scaling_adjustment is only supported for policy type SimpleScaling")
 		}
-	} else if !ok && policyType == "SimpleScaling" {
+	} else if !ok && policyType == PolicyTypeSimpleScaling {
 		return params, fmt.Errorf("scaling_adjustment is required for policy type SimpleScaling")
 	}
 
@@ -655,20 +741,20 @@ func getPutScalingPolicyInput(d *schema.ResourceData) (*autoscaling.PutScalingPo
 			return params, fmt.Errorf("metric_interval_lower_bound and metric_interval_upper_bound must be strings!")
 		}
 		params.StepAdjustments = steps
-		if len(steps) != 0 && policyType != "StepScaling" {
+		if len(steps) != 0 && policyType != PolicyTypeStepScaling {
 			return params, fmt.Errorf("step_adjustment is only supported for policy type StepScaling")
 		}
-	} else if !ok && policyType == "StepScaling" {
+	} else if !ok && policyType == PolicyTypeStepScaling {
 		return params, fmt.Errorf("step_adjustment is required for policy type StepScaling")
 	}
 
 	// This parameter is required if the policy type is TargetTrackingScaling and not supported otherwise.
 	if v, ok := d.GetOk("target_tracking_configuration"); ok {
 		params.TargetTrackingConfiguration = expandTargetTrackingConfiguration(v.([]interface{}))
-		if policyType != "TargetTrackingScaling" {
+		if policyType != PolicyTypeTargetTrackingScaling {
 			return params, fmt.Errorf("target_tracking_configuration is only supported for policy type TargetTrackingScaling")
 		}
-	} else if !ok && policyType == "TargetTrackingScaling" {
+	} else if !ok && policyType == PolicyTypeTargetTrackingScaling {
 		return params, fmt.Errorf("target_tracking_configuration is required for policy type TargetTrackingScaling")
 	}
 
@@ -714,30 +800,87 @@ func expandTargetTrackingConfiguration(configs []interface{}) *autoscaling.Targe
 	}
 	if v, ok := config["customized_metric_specification"]; ok && len(v.([]interface{})) > 0 {
 		spec := v.([]interface{})[0].(map[string]interface{})
-		customSpec := &autoscaling.CustomizedMetricSpecification{
-			Namespace:  aws.String(spec["namespace"].(string)),
-			MetricName: aws.String(spec["metric_name"].(string)),
-			Statistic:  aws.String(spec["statistic"].(string)),
-		}
-		if val, ok := spec["unit"]; ok && len(val.(string)) > 0 {
-			customSpec.Unit = aws.String(val.(string))
-		}
-		if val, ok := spec["metric_dimension"]; ok {
-			dims := val.([]interface{})
-			metDimList := make([]*autoscaling.MetricDimension, len(dims))
-			for i := range metDimList {
-				dim := dims[i].(map[string]interface{})
-				md := &autoscaling.MetricDimension{
-					Name:  aws.String(dim["name"].(string)),
-					Value: aws.String(dim["value"].(string)),
-				}
-				metDimList[i] = md
+		customSpec := &autoscaling.CustomizedMetricSpecification{}
+		if val, ok := spec["metrics"].(*schema.Set); ok && val.Len() > 0 {
+			customSpec.Metrics = expandTargetTrackingMetricDataQueries(val.List())
+		} else {
+			customSpec.Namespace = aws.String(spec["namespace"].(string))
+			customSpec.MetricName = aws.String(spec["metric_name"].(string))
+			customSpec.Statistic = aws.String(spec["statistic"].(string))
+			if val, ok := spec["unit"]; ok && len(val.(string)) > 0 {
+				customSpec.Unit = aws.String(val.(string))
 			}
-			customSpec.Dimensions = metDimList
+			if val, ok := spec["metric_dimension"]; ok {
+				dims := val.([]interface{})
+				metDimList := make([]*autoscaling.MetricDimension, len(dims))
+				for i := range metDimList {
+					dim := dims[i].(map[string]interface{})
+					md := &autoscaling.MetricDimension{
+						Name:  aws.String(dim["name"].(string)),
+						Value: aws.String(dim["value"].(string)),
+					}
+					metDimList[i] = md
+				}
+				customSpec.Dimensions = metDimList
+			}
 		}
 		result.CustomizedMetricSpecification = customSpec
 	}
 	return result
+}
+
+func expandTargetTrackingMetricDataQueries(metricDataQuerySlices []interface{}) []*autoscaling.TargetTrackingMetricDataQuery {
+	if metricDataQuerySlices == nil || len(metricDataQuerySlices) < 1 {
+		return nil
+	}
+	metricDataQueries := make([]*autoscaling.TargetTrackingMetricDataQuery, len(metricDataQuerySlices))
+
+	for i := range metricDataQueries {
+		metricDataQueryFlat := metricDataQuerySlices[i].(map[string]interface{})
+		metricDataQuery := &autoscaling.TargetTrackingMetricDataQuery{
+			Id: aws.String(metricDataQueryFlat["id"].(string)),
+		}
+		if val, ok := metricDataQueryFlat["metric_stat"]; ok && len(val.([]interface{})) > 0 {
+			metricStatSpec := val.([]interface{})[0].(map[string]interface{})
+			metricSpec := metricStatSpec["metric"].([]interface{})[0].(map[string]interface{})
+			metric := &autoscaling.Metric{
+				MetricName: aws.String(metricSpec["metric_name"].(string)),
+				Namespace:  aws.String(metricSpec["namespace"].(string)),
+			}
+			if v, ok := metricSpec["dimensions"]; ok {
+				dims := v.(*schema.Set).List()
+				dimList := make([]*autoscaling.MetricDimension, len(dims))
+				for i := range dimList {
+					dim := dims[i].(map[string]interface{})
+					md := &autoscaling.MetricDimension{
+						Name:  aws.String(dim["name"].(string)),
+						Value: aws.String(dim["value"].(string)),
+					}
+					dimList[i] = md
+				}
+				metric.Dimensions = dimList
+			}
+			metricStat := &autoscaling.TargetTrackingMetricStat{
+				Metric: metric,
+				Stat:   aws.String(metricStatSpec["stat"].(string)),
+			}
+			if v, ok := metricStatSpec["unit"]; ok && len(v.(string)) > 0 {
+				metricStat.Unit = aws.String(v.(string))
+			}
+			metricDataQuery.MetricStat = metricStat
+		}
+		if val, ok := metricDataQueryFlat["expression"]; ok && val.(string) != "" {
+			metricDataQuery.Expression = aws.String(val.(string))
+		}
+		if val, ok := metricDataQueryFlat["label"]; ok && val.(string) != "" {
+			metricDataQuery.Label = aws.String(val.(string))
+		}
+		if val, ok := metricDataQueryFlat["return_data"]; ok {
+			metricDataQuery.ReturnData = aws.Bool(val.(bool))
+		}
+		metricDataQueries[i] = metricDataQuery
+	}
+	return metricDataQueries
 }
 
 func expandPredictiveScalingConfig(predictiveScalingConfigSlice []interface{}) *autoscaling.PredictiveScalingConfiguration {
@@ -771,7 +914,7 @@ func expandPredictiveScalingMetricSpecifications(metricSpecificationsSlice []int
 		PredefinedLoadMetricSpecification:     expandPredefinedLoadMetricSpecification(metricSpecificationsFlat["predefined_load_metric_specification"].([]interface{})),
 		PredefinedMetricPairSpecification:     expandPredefinedMetricPairSpecification(metricSpecificationsFlat["predefined_metric_pair_specification"].([]interface{})),
 		PredefinedScalingMetricSpecification:  expandPredefinedScalingMetricSpecification(metricSpecificationsFlat["predefined_scaling_metric_specification"].([]interface{})),
-		TargetValue:                           aws.Float64(float64(metricSpecificationsFlat["target_value"].(int))),
+		TargetValue:                           aws.Float64(metricSpecificationsFlat["target_value"].(float64)),
 	}
 	return []*autoscaling.PredictiveScalingMetricSpecification{metricSpecification}
 }
@@ -783,7 +926,9 @@ func expandPredefinedLoadMetricSpecification(predefinedLoadMetricSpecificationSl
 	predefinedLoadMetricSpecificationFlat := predefinedLoadMetricSpecificationSlice[0].(map[string]interface{})
 	predefinedLoadMetricSpecification := &autoscaling.PredictiveScalingPredefinedLoadMetric{
 		PredefinedMetricType: aws.String(predefinedLoadMetricSpecificationFlat["predefined_metric_type"].(string)),
-		ResourceLabel:        aws.String(predefinedLoadMetricSpecificationFlat["resource_label"].(string)),
+	}
+	if label, ok := predefinedLoadMetricSpecificationFlat["resource_label"].(string); ok && label != "" {
+		predefinedLoadMetricSpecification.ResourceLabel = aws.String(label)
 	}
 	return predefinedLoadMetricSpecification
 }
@@ -795,7 +940,9 @@ func expandPredefinedMetricPairSpecification(predefinedMetricPairSpecificationSl
 	predefinedMetricPairSpecificationFlat := predefinedMetricPairSpecificationSlice[0].(map[string]interface{})
 	predefinedMetricPairSpecification := &autoscaling.PredictiveScalingPredefinedMetricPair{
 		PredefinedMetricType: aws.String(predefinedMetricPairSpecificationFlat["predefined_metric_type"].(string)),
-		ResourceLabel:        aws.String(predefinedMetricPairSpecificationFlat["resource_label"].(string)),
+	}
+	if label, ok := predefinedMetricPairSpecificationFlat["resource_label"].(string); ok && label != "" {
+		predefinedMetricPairSpecification.ResourceLabel = aws.String(label)
 	}
 	return predefinedMetricPairSpecification
 }
@@ -807,7 +954,9 @@ func expandPredefinedScalingMetricSpecification(predefinedScalingMetricSpecifica
 	predefinedScalingMetricSpecificationFlat := predefinedScalingMetricSpecificationSlice[0].(map[string]interface{})
 	predefinedScalingMetricSpecification := &autoscaling.PredictiveScalingPredefinedScalingMetric{
 		PredefinedMetricType: aws.String(predefinedScalingMetricSpecificationFlat["predefined_metric_type"].(string)),
-		ResourceLabel:        aws.String(predefinedScalingMetricSpecificationFlat["resource_label"].(string)),
+	}
+	if label, ok := predefinedScalingMetricSpecificationFlat["resource_label"].(string); ok && label != "" {
+		predefinedScalingMetricSpecification.ResourceLabel = aws.String(label)
 	}
 	return predefinedScalingMetricSpecification
 }
@@ -917,26 +1066,75 @@ func flattenTargetTrackingConfiguration(config *autoscaling.TargetTrackingConfig
 	}
 	if config.CustomizedMetricSpecification != nil {
 		spec := map[string]interface{}{}
-		spec["metric_name"] = aws.StringValue(config.CustomizedMetricSpecification.MetricName)
-		spec["namespace"] = aws.StringValue(config.CustomizedMetricSpecification.Namespace)
-		spec["statistic"] = aws.StringValue(config.CustomizedMetricSpecification.Statistic)
-		if config.CustomizedMetricSpecification.Unit != nil {
-			spec["unit"] = aws.StringValue(config.CustomizedMetricSpecification.Unit)
-		}
-		if config.CustomizedMetricSpecification.Dimensions != nil {
-			dimSpec := make([]interface{}, len(config.CustomizedMetricSpecification.Dimensions))
-			for i := range dimSpec {
-				dim := map[string]interface{}{}
-				rawDim := config.CustomizedMetricSpecification.Dimensions[i]
-				dim["name"] = aws.StringValue(rawDim.Name)
-				dim["value"] = aws.StringValue(rawDim.Value)
-				dimSpec[i] = dim
+		if config.CustomizedMetricSpecification.Metrics != nil {
+			spec["metrics"] = flattenTargetTrackingMetricDataQueries(config.CustomizedMetricSpecification.Metrics)
+		} else {
+			spec["metric_name"] = aws.StringValue(config.CustomizedMetricSpecification.MetricName)
+			spec["namespace"] = aws.StringValue(config.CustomizedMetricSpecification.Namespace)
+			spec["statistic"] = aws.StringValue(config.CustomizedMetricSpecification.Statistic)
+			if config.CustomizedMetricSpecification.Unit != nil {
+				spec["unit"] = aws.StringValue(config.CustomizedMetricSpecification.Unit)
 			}
-			spec["metric_dimension"] = dimSpec
+			if config.CustomizedMetricSpecification.Dimensions != nil {
+				dimSpec := make([]interface{}, len(config.CustomizedMetricSpecification.Dimensions))
+				for i := range dimSpec {
+					dim := map[string]interface{}{}
+					rawDim := config.CustomizedMetricSpecification.Dimensions[i]
+					dim["name"] = aws.StringValue(rawDim.Name)
+					dim["value"] = aws.StringValue(rawDim.Value)
+					dimSpec[i] = dim
+				}
+				spec["metric_dimension"] = dimSpec
+			}
 		}
 		result["customized_metric_specification"] = []map[string]interface{}{spec}
 	}
 	return []interface{}{result}
+}
+
+func flattenTargetTrackingMetricDataQueries(metricDataQueries []*autoscaling.TargetTrackingMetricDataQuery) []interface{} {
+	metricDataQueriesSpec := make([]interface{}, len(metricDataQueries))
+	for i := range metricDataQueriesSpec {
+		metricDataQuery := map[string]interface{}{}
+		rawMetricDataQuery := metricDataQueries[i]
+		metricDataQuery["id"] = aws.StringValue(rawMetricDataQuery.Id)
+		if rawMetricDataQuery.Expression != nil {
+			metricDataQuery["expression"] = aws.StringValue(rawMetricDataQuery.Expression)
+		}
+		if rawMetricDataQuery.Label != nil {
+			metricDataQuery["label"] = aws.StringValue(rawMetricDataQuery.Label)
+		}
+		if rawMetricDataQuery.MetricStat != nil {
+			metricStatSpec := map[string]interface{}{}
+			rawMetricStat := rawMetricDataQuery.MetricStat
+			rawMetric := rawMetricStat.Metric
+			metricSpec := map[string]interface{}{}
+			if rawMetric.Dimensions != nil {
+				dimSpec := make([]interface{}, len(rawMetric.Dimensions))
+				for i := range dimSpec {
+					dim := map[string]interface{}{}
+					rawDim := rawMetric.Dimensions[i]
+					dim["name"] = aws.StringValue(rawDim.Name)
+					dim["value"] = aws.StringValue(rawDim.Value)
+					dimSpec[i] = dim
+				}
+				metricSpec["dimensions"] = dimSpec
+			}
+			metricSpec["metric_name"] = aws.StringValue(rawMetric.MetricName)
+			metricSpec["namespace"] = aws.StringValue(rawMetric.Namespace)
+			metricStatSpec["metric"] = []map[string]interface{}{metricSpec}
+			metricStatSpec["stat"] = aws.StringValue(rawMetricStat.Stat)
+			if rawMetricStat.Unit != nil {
+				metricStatSpec["unit"] = aws.StringValue(rawMetricStat.Unit)
+			}
+			metricDataQuery["metric_stat"] = []map[string]interface{}{metricStatSpec}
+		}
+		if rawMetricDataQuery.ReturnData != nil {
+			metricDataQuery["return_data"] = aws.BoolValue(rawMetricDataQuery.ReturnData)
+		}
+		metricDataQueriesSpec[i] = metricDataQuery
+	}
+	return metricDataQueriesSpec
 }
 
 func flattenPredictiveScalingConfig(predictiveScalingConfig *autoscaling.PredictiveScalingConfiguration) []map[string]interface{} {

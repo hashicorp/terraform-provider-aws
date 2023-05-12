@@ -109,6 +109,11 @@ For example, the Route 53 service uses the field `Keys`, so the flag is `-UntagI
 For more details on flags for generating tag updating functions, see the
 [documentation for the tag generator](https://github.com/hashicorp/terraform-provider-aws/tree/main/internal/generate/tags/README.md)
 
+#### Generating Standalone Post-Creation Tag Updating Functions
+
+When creating a resource, some AWS APIs support passing tags in the Create call while others require setting the tags after the initial creation.
+If the API does not support tagging on creation, pass the `-CreateTags` flag to generate a `createTags` function that can be called from the resource Create handler function.
+
 ### Specifying the AWS SDK for Go version
 
 The vast majority of the Terraform AWS Provider is implemented using [version 1 of the AWS SDK for Go](https://github.com/aws/aws-sdk-go).
@@ -135,10 +140,11 @@ imports (
   /* ... other imports ... */
   tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 ```
 
-Add the `tags` parameter and `tags_all` attribute to the schema.
+Add the `tags` parameter and `tags_all` attribute to the schema, using constants defined in the `names` package.
 The `tags` parameter contains the tags set directly on the resource.
 The `tags_all` attribute contains union of the tags set directly on the resource and default tags configured on the provider.
 
@@ -148,8 +154,8 @@ func ResourceCluster() *schema.Resource {
     /* ... other configuration ... */
 		Schema: map[string]*schema.Schema{
       /* ... other configuration ... */
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
     },
   }
 }
@@ -183,7 +189,84 @@ func ResourceExample() *schema.Resource {
 }
 ```
 
-### Resource Create Operation
+### Transparent Tagging
+
+Most services can use a facility we call _transparent_ (or _implicit_) _tagging_, where the majority of resource tagging functionality is implemented using code located in the provider's runtime packages (see `internal/provider/intercept.go` and `internal/provider/fwprovider/intercept.go` for details) and not in the resource's CRUD handler functions. Resource implementers opt-in to transparent tagging by adding an _annotation_ (a specially formatted Go comment) to the resource's factory function (similar to the [resource self-registration mechanism](add-a-new-resource.md)).
+
+```go
+// @SDKResource("aws_accessanalyzer_analyzer", name="Analyzer")
+// @Tags(identifierAttribute="arn")
+func ResourceAnalyzer() *schema.Resource {
+  return &schema.Resource{
+    ...
+  }
+}
+```
+
+The `identifierAttribute` argument to the `@Tags` annotation identifies the attribute in the resource's schema whose value is used in tag listing and updating API calls. Common values are `"arn"` and "`id`".
+Once the annotation has been added to the resource's code, run `make servicepackages` to register the resource for transparent tagging. This will add an entry to the `service_package_gen.go` file located in the service package folder.
+
+#### Resource Create Operation
+
+When creating a resource, some AWS APIs support passing tags in the Create call
+while others require setting the tags after the initial creation.
+
+If the API supports tagging on creation (e.g., the `Input` struct accepts a `Tags` field),
+use the `GetTagsIn` function to get any configured tags, e.g., with EKS Clusters:
+
+```go
+input := &eks.CreateClusterInput{
+  /* ... other configuration ... */
+  Tags: GetTagsIn(ctx),
+}
+```
+
+Otherwise, if the API does not support tagging on creation, call `createTags` after the resource has been created, e.g., with Device Farm device pools:
+
+```go
+if err := createTags(ctx, conn, d.Id(), GetTagsIn(ctx)); err != nil {
+  return sdkdiag.AppendErrorf(diags, "setting DeviceFarm Device Pool (%s) tags: %s", d.Id(), err)
+}
+```
+
+#### Resource Read Operation
+
+In the resource `Read` operation, use the `SetTagsOut` function to signal to the transparent tagging mechanism that the resource has tags that should be saved into Terraform state, e.g., with EKS Clusters:
+
+```go
+/* ... other d.Set(...) logic ... */
+
+SetTagsOut(ctx, cluster.Tags)
+```
+
+If the service API does not return the tags directly from reading the resource and requires use of the generated `ListTags` function, do nothing and the transparent tagging mechanism will make the `ListTags` call and save any tags into Terraform state.
+
+#### Resource Update Operation
+
+In the resource `Update` operation, only non-`tags` updates need be done as the transparent tagging mechanism makes the `UpdateTags` call.
+
+```go
+if d.HasChangesExcept("tags", "tags_all") {
+  ...
+}
+```
+
+Ensure that the `Update` operation always calls the resource `Read` operation before returning so that the transparent tagging mechanism correctly saves any tags into Terraform state, e.g., with Access Analyzer analyzers:
+
+```go
+func resourceAnalyzerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+  var diags diag.Diagnostics
+  // Tags only.
+  return append(diags, resourceAnalyzerRead(ctx, d, meta)...)
+}
+```
+
+### Explicit Tagging
+
+If the resource cannot opt-in to transparent tagging, more boilerplate code must be explicitly added to the resource CRUD handler functions.
+This section describes how to do this.
+
+#### Resource Create Operation
 
 When creating a resource, some AWS APIs support passing tags in the Create call
 while others require setting the tags after the initial creation.
@@ -194,7 +277,7 @@ implement the logic to convert the configuration tags into the service tags, e.g
 ```go
 // Typically declared near conn := /* ... */
 defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 input := &eks.CreateClusterInput{
   /* ... other configuration ... */
@@ -207,7 +290,7 @@ If the service API does not allow passing an empty list, the logic can be adjust
 ```go
 // Typically declared near conn := /* ... */
 defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 input := &eks.CreateClusterInput{
   /* ... other configuration ... */
@@ -224,12 +307,12 @@ implement the logic to convert the configuration tags into the service API call 
 ```go
 // Typically declared near conn := /* ... */
 defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 /* ... creation steps ... */
 
 if len(tags) > 0 {
-  if err := UpdateTags(conn, d.Id(), nil, tags); err != nil {
+  if err := UpdateTags(ctx, conn, d.Id(), nil, tags); err != nil {
     return fmt.Errorf("adding DeviceFarm Device Pool (%s) tags: %w", d.Id(), err)
   }
 }
@@ -242,7 +325,7 @@ This example shows using `TagSpecifications`:
   ```go
   // Typically declared near conn := /* ... */
   defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-  tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+  tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
   
   input := &ec2.CreateFleetInput{
     /* ... other configuration ... */
@@ -250,7 +333,7 @@ This example shows using `TagSpecifications`:
   }
   ```
 
-### Resource Read Operation
+#### Resource Read Operation
 
 In the resource `Read` operation, implement the logic to convert the service tags to save them into the Terraform state for drift detection, e.g., with EKS Clusters:
 
@@ -261,7 +344,7 @@ ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 /* ... other d.Set(...) logic ... */
 
-tags := KeyValueTags(cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+tags := KeyValueTags(ctx, cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
   return fmt.Errorf("setting tags: %w", err)
@@ -282,7 +365,7 @@ ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 /* ... other d.Set(...) logic ... */
 
-tags, err := ListTags(conn, arn.String())
+tags, err := ListTags(ctx, conn, arn.String())
 
 if err != nil {
   return fmt.Errorf("listing tags for resource (%s): %w", arn, err)
@@ -299,14 +382,14 @@ if err := d.Set("tags_all", tags.Map()); err != nil {
 }
 ```
 
-### Resource Update Operation
+#### Resource Update Operation
 
 In the resource `Update` operation, implement the logic to handle tagging updates, e.g., with EKS Clusters:
 
 ```go
 if d.HasChange("tags_all") {
   o, n := d.GetChange("tags_all")
-  if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+  if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
     return fmt.Errorf("updating tags: %w", err)
   }
 }
@@ -323,7 +406,7 @@ if d.HasChangesExcept("tags", "tags_all") {
     SetAsDefault:   aws.Bool(true),
   }
 
-  if _, err := conn.CreatePolicyVersion(request); err != nil {
+  if _, err := conn.CreatePolicyVersionWithContext(ctx, request); err != nil {
       return fmt.Errorf("updating IAM policy (%s): %w", d.Id(), err)
   }
 }
@@ -337,20 +420,21 @@ In the resource testing, implement a new test named `_tags` with associated conf
 
 ```go
 func TestAccEKSCluster_tags(t *testing.T) {
+	ctx := acctest.Context(t)
   var cluster1, cluster2, cluster3 eks.Cluster
   rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
   resourceName := "aws_eks_cluster.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+    PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
     ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
     ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    CheckDestroy:             testAccCheckClusterDestroy,
+    CheckDestroy:             testAccCheckClusterDestroy(ctx),
     Steps: []resource.TestStep{
       {
-        Config: testAccClusterConfigTags1(rName, "key1", "value1"),
+        Config: testAccClusterConfig_tags1(rName, "key1", "value1"),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckClusterExists(resourceName, &cluster1),
+          testAccCheckClusterExists(ctx, resourceName, &cluster1),
           resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
           resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
         ),
@@ -361,18 +445,18 @@ func TestAccEKSCluster_tags(t *testing.T) {
         ImportStateVerify: true,
       },
       {
-        Config: testAccClusterConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+        Config: testAccClusterConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckClusterExists(resourceName, &cluster2),
+          testAccCheckClusterExists(ctx, resourceName, &cluster2),
           resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
           resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
           resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
         ),
       },
       {
-        Config: testAccClusterConfigTags1(rName, "key2", "value2"),
+        Config: testAccClusterConfig_tags1(rName, "key2", "value2"),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckClusterExists(resourceName, &cluster3),
+          testAccCheckClusterExists(ctx, resourceName, &cluster3),
           resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
           resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
         ),
@@ -381,7 +465,7 @@ func TestAccEKSCluster_tags(t *testing.T) {
   })
 }
 
-func testAccClusterConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccClusterConfig_tags1(rName, tagKey1, tagValue1 string) string {
   return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
@@ -400,7 +484,7 @@ resource "aws_eks_cluster" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccClusterConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccClusterConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
   return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q

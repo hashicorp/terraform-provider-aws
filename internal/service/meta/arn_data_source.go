@@ -12,11 +12,7 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
-func init() {
-	_sp.registerFrameworkDataSourceFactory(newDataSourceARN)
-}
-
-// newDataSourceARN instantiates a new DataSource for the aws_arn data source.
+// @FrameworkDataSource
 func newDataSourceARN(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceARN{}
 	d.SetMigratedFromPluginSDK(true)

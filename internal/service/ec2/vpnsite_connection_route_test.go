@@ -22,7 +22,7 @@ func TestAccSiteVPNConnectionRoute_basic(t *testing.T) {
 	resourceName := "aws_vpn_connection_route.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionRouteDestroy(ctx),
@@ -44,7 +44,7 @@ func TestAccSiteVPNConnectionRoute_disappears(t *testing.T) {
 	resourceName := "aws_vpn_connection_route.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNConnectionRouteDestroy(ctx),

@@ -20,7 +20,7 @@ func TestAccCloudFormationTypeDataSource_ARN_private(t *testing.T) {
 	dataSourceName := "data.aws_cloudformation_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTypeDestroy(ctx),
@@ -48,10 +48,11 @@ func TestAccCloudFormationTypeDataSource_ARN_private(t *testing.T) {
 }
 
 func TestAccCloudFormationTypeDataSource_ARN_public(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_cloudformation_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -86,7 +87,7 @@ func TestAccCloudFormationTypeDataSource_TypeName_private(t *testing.T) {
 	dataSourceName := "data.aws_cloudformation_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTypeDestroy(ctx),
@@ -114,10 +115,11 @@ func TestAccCloudFormationTypeDataSource_TypeName_private(t *testing.T) {
 }
 
 func TestAccCloudFormationTypeDataSource_TypeName_public(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_cloudformation_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,

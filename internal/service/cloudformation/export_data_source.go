@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_cloudformation_export")
 func DataSourceExport() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceExportRead,

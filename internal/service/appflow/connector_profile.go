@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_appflow_connector_profile")
 func ResourceConnectorProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectorProfileCreate,
@@ -1176,7 +1177,7 @@ func ResourceConnectorProfile() *schema.Resource {
 													Optional: true,
 													ValidateFunc: validation.All(
 														validation.StringLenBetween(0, 2),
-														validation.StringMatch(regexp.MustCompile(` ^[a-zA-Z0-9_]*$`), "must contain only alphanumeric characters and the underscore (_) character"),
+														validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_]*$`), "must contain only alphanumeric characters and the underscore (_) character"),
 													),
 												},
 												"oauth_properties": {

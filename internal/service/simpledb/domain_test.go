@@ -21,7 +21,7 @@ func TestAccSimpleDBDomain_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(simpledb.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, simpledb.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, simpledb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
@@ -48,7 +48,7 @@ func TestAccSimpleDBDomain_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(simpledb.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, simpledb.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, simpledb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
@@ -57,7 +57,7 @@ func TestAccSimpleDBDomain_disappears(t *testing.T) {
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(acctest.Provider, tfsimpledb.ResourceDomain, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsimpledb.ResourceDomain, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -71,7 +71,7 @@ func TestAccSimpleDBDomain_MigrateFromPluginSDK(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(simpledb.EndpointsID, t) },
+		PreCheck:     func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, simpledb.EndpointsID) },
 		ErrorCheck:   acctest.ErrorCheck(t, simpledb.EndpointsID),
 		CheckDestroy: testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{

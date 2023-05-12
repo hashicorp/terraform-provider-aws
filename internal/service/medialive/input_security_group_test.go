@@ -30,8 +30,8 @@ func TestAccMediaLiveInputSecurityGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccInputSecurityGroupsPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
@@ -69,8 +69,8 @@ func TestAccMediaLiveInputSecurityGroup_updateCIDR(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccInputSecurityGroupsPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
@@ -112,8 +112,8 @@ func TestAccMediaLiveInputSecurityGroup_updateTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccInputSecurityGroupsPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
@@ -161,8 +161,8 @@ func TestAccMediaLiveInputSecurityGroup_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccInputSecurityGroupsPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),

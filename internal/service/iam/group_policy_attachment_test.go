@@ -27,7 +27,7 @@ func TestAccIAMGroupPolicyAttachment_basic(t *testing.T) {
 	policyName3 := fmt.Sprintf("tf-acc-policy-gpa-basic-3-%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupPolicyAttachmentDestroy,
@@ -43,7 +43,7 @@ func TestAccIAMGroupPolicyAttachment_basic(t *testing.T) {
 				ResourceName:      "aws_iam_group_policy_attachment.test-attach",
 				ImportState:       true,
 				ImportStateIdFunc: testAccGroupPolicyAttachmentImportStateIdFunc("aws_iam_group_policy_attachment.test-attach"),
-				// We do not have a way to align IDs since the Create function uses resource.PrefixedUniqueId()
+				// We do not have a way to align IDs since the Create function uses id.PrefixedUniqueId()
 				// Failed state verification, resource with ID GROUP-POLICYARN not found
 				// ImportStateVerify: true,
 				ImportStateCheck: func(s []*terraform.InstanceState) error {

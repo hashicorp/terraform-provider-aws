@@ -11,6 +11,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_eks_node_group")
 func DataSourceNodeGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceNodeGroupRead,
@@ -46,6 +47,26 @@ func DataSourceNodeGroup() *schema.Resource {
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"launch_template": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"version": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"node_group_name": {
 				Type:         schema.TypeString,
@@ -169,7 +190,7 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	nodeGroup, err := FindNodegroupByClusterNameAndNodegroupName(ctx, conn, clusterName, nodeGroupName)
 
 	if err != nil {
-		return diag.Errorf("error reading EKS Node Group (%s): %s", id, err)
+		return diag.Errorf("reading EKS Node Group (%s): %s", id, err)
 	}
 
 	d.SetId(id)
@@ -181,41 +202,35 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("disk_size", nodeGroup.DiskSize)
 	d.Set("instance_types", nodeGroup.InstanceTypes)
 	d.Set("labels", nodeGroup.Labels)
+	if err := d.Set("launch_template", flattenLaunchTemplateSpecification(nodeGroup.LaunchTemplate)); err != nil {
+		return diag.Errorf("setting launch_template: %s", err)
+	}
 	d.Set("node_group_name", nodeGroup.NodegroupName)
 	d.Set("node_role_arn", nodeGroup.NodeRole)
 	d.Set("release_version", nodeGroup.ReleaseVersion)
-
 	if err := d.Set("remote_access", flattenRemoteAccessConfig(nodeGroup.RemoteAccess)); err != nil {
-		return diag.Errorf("error setting remote_access: %s", err)
+		return diag.Errorf("setting remote_access: %s", err)
 	}
-
 	if err := d.Set("resources", flattenNodeGroupResources(nodeGroup.Resources)); err != nil {
-		return diag.Errorf("error setting resources: %s", err)
+		return diag.Errorf("setting resources: %s", err)
 	}
-
 	if nodeGroup.ScalingConfig != nil {
 		if err := d.Set("scaling_config", []interface{}{flattenNodeGroupScalingConfig(nodeGroup.ScalingConfig)}); err != nil {
-			return diag.Errorf("error setting scaling_config: %s", err)
+			return diag.Errorf("setting scaling_config: %s", err)
 		}
 	} else {
 		d.Set("scaling_config", nil)
 	}
-
 	d.Set("status", nodeGroup.Status)
-
-	if err := d.Set("subnet_ids", aws.StringValueSlice(nodeGroup.Subnets)); err != nil {
-		return diag.Errorf("error setting subnets: %s", err)
-	}
-
-	if err := d.Set("tags", KeyValueTags(nodeGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
-	}
-
+	d.Set("subnet_ids", aws.StringValueSlice(nodeGroup.Subnets))
 	if err := d.Set("taints", flattenTaints(nodeGroup.Taints)); err != nil {
-		return diag.Errorf("error setting taint: %s", err)
+		return diag.Errorf("setting taints: %s", err)
 	}
-
 	d.Set("version", nodeGroup.Version)
+
+	if err := d.Set("tags", KeyValueTags(ctx, nodeGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return diag.Errorf("setting tags: %s", err)
+	}
 
 	return nil
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_pinpoint_email_channel")
 func ResourceEmailChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEmailChannelUpsert,

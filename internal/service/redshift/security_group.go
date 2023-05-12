@@ -8,10 +8,10 @@ import (
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_redshift_security_group")
 func ResourceSecurityGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecurityGroupCreate,
@@ -170,11 +171,11 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 
 	_, err := conn.DeleteClusterSecurityGroupWithContext(ctx, &opts)
 
+	if tfawserr.ErrCodeEquals(err, "InvalidRedshiftSecurityGroup.NotFound") {
+		return diags
+	}
+
 	if err != nil {
-		newerr, ok := err.(awserr.Error)
-		if ok && newerr.Code() == "InvalidRedshiftSecurityGroup.NotFound" {
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "deleting Redshift Security Group (%s): %s", d.Id(), err)
 	}
 
@@ -190,7 +191,7 @@ func resourceSecurityGroupRetrieve(ctx context.Context, d *schema.ResourceData, 
 
 	resp, err := conn.DescribeClusterSecurityGroupsWithContext(ctx, &opts)
 	if err != nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: opts,
 		}
@@ -206,7 +207,7 @@ func resourceSecurityGroupRetrieve(ctx context.Context, d *schema.ResourceData, 
 
 	result := resp.ClusterSecurityGroups[0]
 	if aws.StringValue(result.ClusterSecurityGroupName) != d.Id() {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: opts,
 		}
 	}

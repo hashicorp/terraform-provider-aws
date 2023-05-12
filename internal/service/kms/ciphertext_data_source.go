@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKDataSource("aws_kms_ciphertext")
 func DataSourceCiphertext() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCiphertextRead,

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_redshift_authentication_profile")
 func ResourceAuthenticationProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAuthenticationProfileCreate,

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKDataSource("aws_api_gateway_sdk")
 func DataSourceSdk() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSdkRead,

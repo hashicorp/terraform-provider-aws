@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_autoscalingplans_scaling_plan")
 func ResourceScalingPlan() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceScalingPlanCreate,

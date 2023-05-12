@@ -17,32 +17,34 @@ resource "aws_cognito_user_pool" "main" {
   name = "identity pool"
 }
 
-resource "aws_iam_role" "group_role" {
-  name = "user-group-role"
+data "aws_iam_policy_document" "group_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Federated": "cognito-identity.amazonaws.com"
-      },
-      "Action": "sts:AssumeRoleWithWebIdentity",
-      "Condition": {
-        "StringEquals": {
-          "cognito-identity.amazonaws.com:aud": "us-east-1:12345678-dead-beef-cafe-123456790ab"
-        },
-        "ForAnyValue:StringLike": {
-          "cognito-identity.amazonaws.com:amr": "authenticated"
-        }
-      }
+    principals {
+      type        = "Federated"
+      identifiers = ["cognito-identity.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "cognito-identity.amazonaws.com:aud"
+      values   = ["us-east-1:12345678-dead-beef-cafe-123456790ab"]
+    }
+
+    condition {
+      test     = "ForAnyValue:StringLike"
+      variable = "cognito-identity.amazonaws.com:amr"
+      values   = ["authenticated"]
+    }
+  }
 }
-EOF
+
+resource "aws_iam_role" "group_role" {
+  name               = "user-group-role"
+  assume_role_policy = data.aws_iam_policy_document.group_role.json
 }
 
 resource "aws_cognito_user_group" "main" {

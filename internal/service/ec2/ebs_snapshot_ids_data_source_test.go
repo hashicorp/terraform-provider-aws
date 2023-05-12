@@ -11,11 +11,12 @@ import (
 )
 
 func TestAccEC2EBSSnapshotIDsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ebs_snapshot_ids.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -31,13 +32,14 @@ func TestAccEC2EBSSnapshotIDsDataSource_basic(t *testing.T) {
 }
 
 func TestAccEC2EBSSnapshotIDsDataSource_sorted(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ebs_snapshot_ids.test"
 	resource1Name := "aws_ebs_snapshot.a"
 	resource2Name := "aws_ebs_snapshot.b"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -54,8 +56,9 @@ func TestAccEC2EBSSnapshotIDsDataSource_sorted(t *testing.T) {
 }
 
 func TestAccEC2EBSSnapshotIDsDataSource_empty(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{

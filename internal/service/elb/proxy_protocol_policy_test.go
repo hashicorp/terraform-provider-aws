@@ -19,7 +19,7 @@ func TestAccELBProxyProtocolPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	lbName := fmt.Sprintf("tf-test-lb-%s", sdkacctest.RandString(5))
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProxyProtocolPolicyDestroy(ctx),

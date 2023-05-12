@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -13,6 +12,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_api_gateway_api_key")
 func DataSourceAPIKey() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAPIKeyRead,
@@ -56,13 +56,11 @@ func dataSourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	apiKey, err := conn.GetApiKeyWithContext(ctx, &apigateway.GetApiKeyInput{
-		ApiKey:       aws.String(d.Get("id").(string)),
-		IncludeValue: aws.Bool(true),
-	})
+	id := d.Get("id").(string)
+	apiKey, err := FindAPIKeyByID(ctx, conn, id)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading API Gateway API Key (%s): %s", d.Get("id").(string), err)
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway API Key (%s): %s", id, err)
 	}
 
 	d.SetId(aws.StringValue(apiKey.Id))
@@ -73,8 +71,9 @@ func dataSourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("enabled", apiKey.Enabled)
 	d.Set("last_updated_date", aws.TimeValue(apiKey.LastUpdatedDate).Format(time.RFC3339))
 
-	if err := d.Set("tags", KeyValueTags(apiKey.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, apiKey.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
+
 	return diags
 }

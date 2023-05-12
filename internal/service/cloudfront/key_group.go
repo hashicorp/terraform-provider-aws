@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKResource("aws_cloudfront_key_group")
 func ResourceKeyGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceKeyGroupCreate,

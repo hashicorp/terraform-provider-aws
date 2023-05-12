@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -14,7 +14,7 @@ const (
 	capacityProviderUpdateTimeout = 10 * time.Minute
 
 	serviceCreateTimeout      = 2 * time.Minute
-	serviceInactiveTimeoutMin = 1 * time.Second
+	serviceInactiveMinTimeout = 1 * time.Second
 	serviceDescribeTimeout    = 2 * time.Minute
 	serviceUpdateTimeout      = 2 * time.Minute
 
@@ -29,7 +29,7 @@ const (
 )
 
 func waitCapacityProviderDeleted(ctx context.Context, conn *ecs.ECS, arn string) (*ecs.CapacityProvider, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{ecs.CapacityProviderStatusActive},
 		Target:  []string{},
 		Refresh: statusCapacityProvider(ctx, conn, arn),
@@ -46,7 +46,7 @@ func waitCapacityProviderDeleted(ctx context.Context, conn *ecs.ECS, arn string)
 }
 
 func waitCapacityProviderUpdated(ctx context.Context, conn *ecs.ECS, arn string) (*ecs.CapacityProvider, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{ecs.CapacityProviderUpdateStatusUpdateInProgress},
 		Target:  []string{ecs.CapacityProviderUpdateStatusUpdateComplete},
 		Refresh: statusCapacityProviderUpdate(ctx, conn, arn),
@@ -63,7 +63,7 @@ func waitCapacityProviderUpdated(ctx context.Context, conn *ecs.ECS, arn string)
 }
 
 // waitServiceStable waits for an ECS Service to reach the status "ACTIVE" and have all desired tasks running. Does not return tags.
-func waitServiceStable(ctx context.Context, conn *ecs.ECS, id, cluster string, timeout time.Duration) (*ecs.Service, error) { //nolint:unparam
+func waitServiceStable(ctx context.Context, conn *ecs.ECS, id, cluster string, timeout time.Duration) (*ecs.Service, error) {
 	input := &ecs.DescribeServicesInput{
 		Services: aws.StringSlice([]string{id}),
 	}
@@ -72,7 +72,7 @@ func waitServiceStable(ctx context.Context, conn *ecs.ECS, id, cluster string, t
 		input.Cluster = aws.String(cluster)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{serviceStatusInactive, serviceStatusDraining, serviceStatusPending},
 		Target:  []string{serviceStatusStable},
 		Refresh: statusServiceWaitForStable(ctx, conn, id, cluster),
@@ -98,12 +98,12 @@ func waitServiceInactive(ctx context.Context, conn *ecs.ECS, id, cluster string,
 		input.Cluster = aws.String(cluster)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{serviceStatusActive, serviceStatusDraining},
 		Target:     []string{serviceStatusInactive},
 		Refresh:    statusServiceNoTags(ctx, conn, id, cluster),
 		Timeout:    timeout,
-		MinTimeout: serviceInactiveTimeoutMin,
+		MinTimeout: serviceInactiveMinTimeout,
 	}
 
 	_, err := stateConf.WaitForStateContext(ctx)
@@ -112,8 +112,8 @@ func waitServiceInactive(ctx context.Context, conn *ecs.ECS, id, cluster string,
 }
 
 // waitServiceActive waits for an ECS Service to reach the status "ACTIVE". Does not return tags.
-func waitServiceActive(ctx context.Context, conn *ecs.ECS, id, cluster string, timeout time.Duration) (*ecs.Service, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+func waitServiceActive(ctx context.Context, conn *ecs.ECS, id, cluster string, timeout time.Duration) (*ecs.Service, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{serviceStatusInactive, serviceStatusDraining},
 		Target:  []string{serviceStatusActive},
 		Refresh: statusServiceNoTags(ctx, conn, id, cluster),
@@ -130,9 +130,9 @@ func waitServiceActive(ctx context.Context, conn *ecs.ECS, id, cluster string, t
 }
 
 func waitClusterAvailable(ctx context.Context, conn *ecs.ECS, arn string) (*ecs.Cluster, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PROVISIONING"},
-		Target:  []string{"ACTIVE"},
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{clusterStatusProvisioning},
+		Target:  []string{clusterStatusActive},
 		Refresh: statusCluster(ctx, conn, arn),
 		Timeout: clusterAvailableTimeout,
 		Delay:   clusterAvailableDelay,
@@ -148,9 +148,9 @@ func waitClusterAvailable(ctx context.Context, conn *ecs.ECS, arn string) (*ecs.
 }
 
 func waitClusterDeleted(ctx context.Context, conn *ecs.ECS, arn string) (*ecs.Cluster, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"ACTIVE", "DEPROVISIONING"},
-		Target:  []string{"INACTIVE"},
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{clusterStatusActive, clusterStatusDeprovisioning},
+		Target:  []string{},
 		Refresh: statusCluster(ctx, conn, arn),
 		Timeout: clusterDeleteTimeout,
 	}
@@ -165,7 +165,7 @@ func waitClusterDeleted(ctx context.Context, conn *ecs.ECS, arn string) (*ecs.Cl
 }
 
 func waitTaskSetStable(ctx context.Context, conn *ecs.ECS, timeout time.Duration, taskSetID, service, cluster string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{ecs.StabilityStatusStabilizing},
 		Target:  []string{ecs.StabilityStatusSteadyState},
 		Refresh: stabilityStatusTaskSet(ctx, conn, taskSetID, service, cluster),
@@ -178,7 +178,7 @@ func waitTaskSetStable(ctx context.Context, conn *ecs.ECS, timeout time.Duration
 }
 
 func waitTaskSetDeleted(ctx context.Context, conn *ecs.ECS, taskSetID, service, cluster string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{taskSetStatusActive, taskSetStatusPrimary, taskSetStatusDraining},
 		Target:  []string{},
 		Refresh: statusTaskSet(ctx, conn, taskSetID, service, cluster),

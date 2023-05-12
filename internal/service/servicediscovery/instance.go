@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_service_discovery_instance")
 func ResourceInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstancePut,
@@ -67,7 +68,7 @@ func resourceInstancePut(ctx context.Context, d *schema.ResourceData, meta inter
 	instanceID := d.Get("instance_id").(string)
 	input := &servicediscovery.RegisterInstanceInput{
 		Attributes:       flex.ExpandStringMap(d.Get("attributes").(map[string]interface{})),
-		CreatorRequestId: aws.String(resource.UniqueId()),
+		CreatorRequestId: aws.String(id.UniqueId()),
 		InstanceId:       aws.String(instanceID),
 		ServiceId:        aws.String(d.Get("service_id").(string)),
 	}

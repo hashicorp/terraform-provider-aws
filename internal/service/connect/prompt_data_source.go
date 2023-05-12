@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_connect_prompt")
 func DataSourcePrompt() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePromptRead,

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -17,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ec2_client_vpn_route")
 func ResourceClientVPNRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClientVPNRouteCreate,
@@ -27,8 +29,8 @@ func ResourceClientVPNRoute() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(ClientVPNRouteCreatedTimeout),
-			Delete: schema.DefaultTimeout(ClientVPNRouteDeletedTimeout),
+			Create: schema.DefaultTimeout(4 * time.Minute),
+			Delete: schema.DefaultTimeout(4 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
