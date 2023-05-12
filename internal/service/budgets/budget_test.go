@@ -68,7 +68,7 @@ func TestAccBudgetsBudget_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cost_filter.*", map[string]string{
 						"name":     "Service",
 						"values.#": "1",
-						"values.0": "Amazon Elasticsearch Service",
+						"values.0": "Amazon Redshift",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "limit_amount", "100.0"),
 					resource.TestCheckResourceAttr(resourceName, "limit_unit", "PERCENTAGE"),
