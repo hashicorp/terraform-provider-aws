@@ -12,10 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
@@ -303,29 +303,6 @@ func TestAccECSService_CapacityProviderStrategy_update(t *testing.T) {
 	})
 }
 
-func TestAccECSService_CapacityProviderStrategy_multiple(t *testing.T) {
-	ctx := acctest.Context(t)
-	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ecs_service.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceConfig_multipleCapacityProviderStrategies(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.#", "2"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccECSService_familyAndRevision(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service ecs.Service
@@ -349,38 +326,6 @@ func TestAccECSService_familyAndRevision(t *testing.T) {
 				Config: testAccServiceConfig_familyAndRevisionModified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-				),
-			},
-		},
-	})
-}
-
-// Regression for https://github.com/hashicorp/terraform/issues/2427
-func TestAccECSService_renamedCluster(t *testing.T) {
-	ctx := acctest.Context(t)
-	var service ecs.Service
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ecs_service.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceConfig_renamedCluster(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttrPair(resourceName, "cluster", "aws_ecs_cluster.default", "arn"),
-				),
-			},
-
-			{
-				Config: testAccServiceConfig_renamedCluster(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttrPair(resourceName, "cluster", "aws_ecs_cluster.default", "arn"),
 				),
 			},
 		},
@@ -1656,7 +1601,7 @@ func testAccCheckServiceNotRecreated(i, j *ecs.Service) resource.TestCheckFunc {
 
 func testAccServiceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "default" {
+resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
 
@@ -1678,7 +1623,7 @@ DEFINITION
 
 resource "aws_ecs_service" "test" {
   name            = %[1]q
-  cluster         = aws_ecs_cluster.default.id
+  cluster         = aws_ecs_cluster.test.id
   task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 1
 }
@@ -1687,7 +1632,7 @@ resource "aws_ecs_service" "test" {
 
 func testAccServiceConfig_modified(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "default" {
+resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
 
@@ -1709,7 +1654,7 @@ DEFINITION
 
 resource "aws_ecs_service" "test" {
   name            = %[1]q
-  cluster         = aws_ecs_cluster.default.id
+  cluster         = aws_ecs_cluster.test.id
   task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 2
 }
@@ -1879,7 +1824,7 @@ resource "aws_ecs_service" "test" {
 
 func testAccServiceConfig_interchangeablePlacementStrategy(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "default" {
+resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
 
@@ -1901,7 +1846,7 @@ DEFINITION
 
 resource "aws_ecs_service" "test" {
   name            = %[1]q
-  cluster         = aws_ecs_cluster.default.id
+  cluster         = aws_ecs_cluster.test.id
   task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 1
 
@@ -1923,7 +1868,7 @@ resource "aws_ecs_capacity_provider" "test" {
   }
 }
 
-resource "aws_ecs_cluster" "default" {
+resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
 
@@ -1945,7 +1890,7 @@ DEFINITION
 
 resource "aws_ecs_service" "test" {
   name                 = %[1]q
-  cluster              = aws_ecs_cluster.default.id
+  cluster              = aws_ecs_cluster.test.id
   task_definition      = aws_ecs_task_definition.test.arn
   desired_count        = 1
   force_new_deployment = %[4]t
@@ -2076,86 +2021,9 @@ resource "aws_ecs_service" "test" {
 `, rName))
 }
 
-func testAccServiceConfig_multipleCapacityProviderStrategies(rName string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_capacityProviders(rName), fmt.Sprintf(`
-resource "aws_ecs_service" "test" {
-  name            = %[1]q
-  cluster         = aws_ecs_cluster.test.id
-  task_definition = aws_ecs_task_definition.test.arn
-  desired_count   = 1
-
-  network_configuration {
-    security_groups  = [aws_security_group.allow_all.id]
-    subnets          = [aws_subnet.test.id]
-    assign_public_ip = false
-  }
-
-  capacity_provider_strategy {
-    capacity_provider = "FARGATE"
-    weight            = 1
-  }
-  capacity_provider_strategy {
-    capacity_provider = "FARGATE_SPOT"
-    weight            = 1
-  }
-}
-
-resource "aws_ecs_task_definition" "test" {
-  family                   = %[1]q
-  network_mode             = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
-  cpu                      = "256"
-  memory                   = "512"
-
-  container_definitions = <<DEFINITION
-[
-  {
-    "cpu": 256,
-    "essential": true,
-    "image": "mongo:latest",
-    "memory": 512,
-    "name": "mongodb",
-    "networkMode": "awsvpc"
-  }
-]
-DEFINITION
-}
-
-resource "aws_security_group" "allow_all" {
-  name        = %[1]q
-  description = "Allow all inbound traffic"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    protocol    = "tcp"
-    from_port   = 80
-    to_port     = 8000
-    cidr_blocks = [aws_vpc.test.cidr_block]
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block = cidrsubnet(aws_vpc.test.cidr_block, 8, 1)
-  vpc_id     = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName))
-}
-
 func testAccServiceConfig_forceNewDeployment(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "default" {
+resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
 
@@ -2176,7 +2044,7 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "test" {
-  cluster              = aws_ecs_cluster.default.id
+  cluster              = aws_ecs_cluster.test.id
   desired_count        = 1
   force_new_deployment = true
   name                 = %[1]q
@@ -2192,7 +2060,7 @@ resource "aws_ecs_service" "test" {
 
 func testAccServiceConfig_forceNewDeploymentTriggers(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "default" {
+resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
 
@@ -2213,7 +2081,7 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "test" {
-  cluster              = aws_ecs_cluster.default.id
+  cluster              = aws_ecs_cluster.test.id
   desired_count        = 1
   force_new_deployment = true
   name                 = %[1]q
@@ -2233,7 +2101,7 @@ resource "aws_ecs_service" "test" {
 
 func testAccServiceConfig_placementStrategy(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "default" {
+resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
 
@@ -2255,7 +2123,7 @@ DEFINITION
 
 resource "aws_ecs_service" "test" {
   name            = %[1]q
-  cluster         = aws_ecs_cluster.default.id
+  cluster         = aws_ecs_cluster.test.id
   task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 1
 
@@ -2304,7 +2172,7 @@ resource "aws_ecs_service" "test" {
 
 func testAccServiceConfig_randomPlacementStrategy(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "default" {
+resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
 
@@ -2326,7 +2194,7 @@ DEFINITION
 
 resource "aws_ecs_service" "test" {
   name            = %[1]q
-  cluster         = aws_ecs_cluster.default.id
+  cluster         = aws_ecs_cluster.test.id
   task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 1
 
@@ -2339,7 +2207,7 @@ resource "aws_ecs_service" "test" {
 
 func testAccServiceConfig_multiplacementStrategy(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "default" {
+resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
 
@@ -2361,7 +2229,7 @@ DEFINITION
 
 resource "aws_ecs_service" "test" {
   name            = %[1]q
-  cluster         = aws_ecs_cluster.default.id
+  cluster         = aws_ecs_cluster.test.id
   task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 1
 
@@ -2389,7 +2257,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_ecs_cluster" "default" {
+resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
 
@@ -2411,7 +2279,7 @@ DEFINITION
 
 resource "aws_ecs_service" "test" {
   name            = %[1]q
-  cluster         = aws_ecs_cluster.default.id
+  cluster         = aws_ecs_cluster.test.id
   task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 1
 
@@ -2425,7 +2293,7 @@ resource "aws_ecs_service" "test" {
 
 func testAccServiceConfig_placementConstraintEmptyExpression(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "default" {
+resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
 
@@ -2447,7 +2315,7 @@ DEFINITION
 
 resource "aws_ecs_service" "test" {
   name            = %[1]q
-  cluster         = aws_ecs_cluster.default.id
+  cluster         = aws_ecs_cluster.test.id
   task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 1
 
@@ -2459,35 +2327,7 @@ resource "aws_ecs_service" "test" {
 }
 
 func testAccServiceConfig_healthCheckGracePeriodSeconds(rName string, healthCheckGracePeriodSeconds int) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count             = 2
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
@@ -2599,40 +2439,11 @@ resource "aws_ecs_service" "test" {
 
   depends_on = [aws_iam_role_policy.ecs_service]
 }
-`, rName, healthCheckGracePeriodSeconds)
+`, rName, healthCheckGracePeriodSeconds))
 }
 
 func testAccServiceConfig_iamRole(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
@@ -2728,12 +2539,12 @@ resource "aws_ecs_service" "test" {
 
   depends_on = [aws_iam_role_policy.ecs_service]
 }
-`, rName)
+`, rName))
 }
 
 func testAccServiceConfig_alarms(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "default" {
+resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
 
@@ -2755,7 +2566,7 @@ DEFINITION
 
 resource "aws_ecs_service" "test" {
   name            = %[1]q
-  cluster         = aws_ecs_cluster.default.id
+  cluster         = aws_ecs_cluster.test.id
   task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 1
 
@@ -2784,7 +2595,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 
 func testAccServiceConfig_deploymentValues(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "default" {
+resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
 
@@ -2806,7 +2617,7 @@ DEFINITION
 
 resource "aws_ecs_service" "test" {
   name            = %[1]q
-  cluster         = aws_ecs_cluster.default.id
+  cluster         = aws_ecs_cluster.test.id
   task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 1
 }
@@ -2935,7 +2746,7 @@ func testAccServiceConfig_lbChangesModified(rName string) string {
 
 func testAccServiceConfig_familyAndRevision(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "default" {
+resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
 
@@ -2957,7 +2768,7 @@ DEFINITION
 
 resource "aws_ecs_service" "test" {
   name            = %[1]q
-  cluster         = aws_ecs_cluster.default.id
+  cluster         = aws_ecs_cluster.test.id
   task_definition = "${aws_ecs_task_definition.test.family}:${aws_ecs_task_definition.test.revision}"
   desired_count   = 1
 }
@@ -2966,7 +2777,7 @@ resource "aws_ecs_service" "test" {
 
 func testAccServiceConfig_familyAndRevisionModified(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "default" {
+resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
 
@@ -2988,38 +2799,7 @@ DEFINITION
 
 resource "aws_ecs_service" "test" {
   name            = %[1]q
-  cluster         = aws_ecs_cluster.default.id
-  task_definition = "${aws_ecs_task_definition.test.family}:${aws_ecs_task_definition.test.revision}"
-  desired_count   = 1
-}
-`, rName)
-}
-
-func testAccServiceConfig_renamedCluster(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "default" {
-  name = %[1]q
-}
-
-resource "aws_ecs_task_definition" "test" {
-  family = %[1]q
-
-  container_definitions = <<DEFINITION
-[
-  {
-    "cpu": 128,
-    "essential": true,
-    "image": "ghost:latest",
-    "memory": 128,
-    "name": "ghost"
-  }
-]
-DEFINITION
-}
-
-resource "aws_ecs_service" "test" {
-  name            = %[1]q
-  cluster         = aws_ecs_cluster.default.id
+  cluster         = aws_ecs_cluster.test.id
   task_definition = "${aws_ecs_task_definition.test.family}:${aws_ecs_task_definition.test.revision}"
   desired_count   = 1
 }
@@ -3028,7 +2808,7 @@ resource "aws_ecs_service" "test" {
 
 func testAccServiceConfig_clusterName(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "default" {
+resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
 
@@ -3050,7 +2830,7 @@ DEFINITION
 
 resource "aws_ecs_service" "test" {
   name            = %[1]q
-  cluster         = aws_ecs_cluster.default.name
+  cluster         = aws_ecs_cluster.test.name
   task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 1
 }
@@ -3704,7 +3484,7 @@ resource "aws_ecs_service" "test" {
 
 func testAccServiceConfig_daemonSchedulingStrategy(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "default" {
+resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
 
@@ -3726,7 +3506,7 @@ DEFINITION
 
 resource "aws_ecs_service" "test" {
   name                = %[1]q
-  cluster             = aws_ecs_cluster.default.id
+  cluster             = aws_ecs_cluster.test.id
   task_definition     = "${aws_ecs_task_definition.test.family}:${aws_ecs_task_definition.test.revision}"
   scheduling_strategy = "DAEMON"
 }
@@ -3735,7 +3515,7 @@ resource "aws_ecs_service" "test" {
 
 func testAccServiceConfig_daemonSchedulingStrategySetDeploymentMinimum(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "default" {
+resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
 
@@ -3757,7 +3537,7 @@ DEFINITION
 
 resource "aws_ecs_service" "test" {
   name                               = %[1]q
-  cluster                            = aws_ecs_cluster.default.id
+  cluster                            = aws_ecs_cluster.test.id
   task_definition                    = "${aws_ecs_task_definition.test.family}:${aws_ecs_task_definition.test.revision}"
   scheduling_strategy                = "DAEMON"
   deployment_minimum_healthy_percent = "50"
@@ -4213,7 +3993,7 @@ resource "aws_ecs_service" "test" {
 
 func testAccServiceConfig_replicaSchedulingStrategy(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "default" {
+resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
 
@@ -4235,7 +4015,7 @@ DEFINITION
 
 resource "aws_ecs_service" "test" {
   name                = %[1]q
-  cluster             = aws_ecs_cluster.default.id
+  cluster             = aws_ecs_cluster.test.id
   task_definition     = "${aws_ecs_task_definition.test.family}:${aws_ecs_task_definition.test.revision}"
   scheduling_strategy = "REPLICA"
   desired_count       = 1

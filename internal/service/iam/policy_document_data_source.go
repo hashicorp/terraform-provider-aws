@@ -36,12 +36,6 @@ func DataSourcePolicyDocument() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"override_json": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringIsJSON,
-				Deprecated:   "Use the attribute \"override_policy_documents\" instead.",
-			},
 			"override_policy_documents": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -53,12 +47,6 @@ func DataSourcePolicyDocument() *schema.Resource {
 			"policy_id": {
 				Type:     schema.TypeString,
 				Optional: true,
-			},
-			"source_json": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringIsJSON,
-				Deprecated:   "Use the attribute \"source_policy_documents\" instead.",
 			},
 			"source_policy_documents": {
 				Type:     schema.TypeList,
@@ -131,12 +119,6 @@ func DataSourcePolicyDocument() *schema.Resource {
 func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	mergedDoc := &IAMPolicyDoc{}
-
-	if v, ok := d.GetOk("source_json"); ok {
-		if err := json.Unmarshal([]byte(v.(string)), mergedDoc); err != nil {
-			return sdkdiag.AppendErrorf(diags, "writing IAM Policy Document: %s", err)
-		}
-	}
 
 	if v, ok := d.GetOk("source_policy_documents"); ok && len(v.([]interface{})) > 0 {
 		// generate sid map to assure there are no duplicates in source jsons
@@ -274,16 +256,6 @@ func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, m
 
 			mergedDoc.Merge(overrideDoc)
 		}
-	}
-
-	// merge in override_json
-	if v, ok := d.GetOk("override_json"); ok {
-		overrideDoc := &IAMPolicyDoc{}
-		if err := json.Unmarshal([]byte(v.(string)), overrideDoc); err != nil {
-			return sdkdiag.AppendErrorf(diags, "writing IAM Policy Document: merging override JSON: %s", err)
-		}
-
-		mergedDoc.Merge(overrideDoc)
 	}
 
 	jsonDoc, err := json.MarshalIndent(mergedDoc, "", "  ")
