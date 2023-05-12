@@ -522,9 +522,9 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_basic(t *testing.T) {
 						"statement.#":               "1",
 						"statement.0.managed_rule_group_statement.#":                        "1",
 						"statement.0.managed_rule_group_statement.0.name":                   "AWSManagedRulesCommonRuleSet",
-						"statement.0.managed_rule_group_statement.0.vendor_name":            "AWS",
-						"statement.0.managed_rule_group_statement.0.excluded_rule.#":        "0",
+						"statement.0.managed_rule_group_statement.0.rule_action_override.#": "0",
 						"statement.0.managed_rule_group_statement.0.scope_down_statement.#": "0",
+						"statement.0.managed_rule_group_statement.0.vendor_name":            "AWS",
 					}),
 				),
 			},
@@ -544,15 +544,15 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_basic(t *testing.T) {
 						"statement.#":               "1",
 						"statement.0.managed_rule_group_statement.#":                                                              "1",
 						"statement.0.managed_rule_group_statement.0.name":                                                         "AWSManagedRulesCommonRuleSet",
-						"statement.0.managed_rule_group_statement.0.vendor_name":                                                  "AWS",
-						"statement.0.managed_rule_group_statement.0.excluded_rule.#":                                              "2",
-						"statement.0.managed_rule_group_statement.0.excluded_rule.0.name":                                         "SizeRestrictions_QUERYSTRING",
-						"statement.0.managed_rule_group_statement.0.excluded_rule.1.name":                                         "NoUserAgent_HEADER",
+						"statement.0.managed_rule_group_statement.0.rule_action_override.#":                                       "2",
+						"statement.0.managed_rule_group_statement.0.rule_action_override.0.name":                                  "SizeRestrictions_QUERYSTRING",
+						"statement.0.managed_rule_group_statement.0.rule_action_override.1.name":                                  "NoUserAgent_HEADER",
 						"statement.0.managed_rule_group_statement.0.scope_down_statement.#":                                       "1",
 						"statement.0.managed_rule_group_statement.0.scope_down_statement.0.geo_match_statement.#":                 "1",
 						"statement.0.managed_rule_group_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.#": "2",
 						"statement.0.managed_rule_group_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.0": "US",
 						"statement.0.managed_rule_group_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.1": "NL",
+						"statement.0.managed_rule_group_statement.0.vendor_name":                                                  "AWS",
 					}),
 				),
 			},
@@ -610,10 +610,10 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_basic(t *testing.T) {
 						"statement.#":               "1",
 						"statement.0.managed_rule_group_statement.#":                        "1",
 						"statement.0.managed_rule_group_statement.0.name":                   "AWSManagedRulesCommonRuleSet",
+						"statement.0.managed_rule_group_statement.0.rule_action_override.#": "0",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.#": "0",
 						"statement.0.managed_rule_group_statement.0.vendor_name":            "AWS",
 						"statement.0.managed_rule_group_statement.0.version":                "Version_1.0",
-						"statement.0.managed_rule_group_statement.0.excluded_rule.#":        "0",
-						"statement.0.managed_rule_group_statement.0.scope_down_statement.#": "0",
 					}),
 				),
 			},
@@ -654,15 +654,14 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig(t *testing.T) {
 						"override_action.0.none.#":  "1",
 						"statement.#":               "1",
 						"statement.0.managed_rule_group_statement.#":                                                          "1",
-						"statement.0.managed_rule_group_statement.0.name":                                                     "AWSManagedRulesATPRuleSet",
-						"statement.0.managed_rule_group_statement.0.vendor_name":                                              "AWS",
-						"statement.0.managed_rule_group_statement.0.excluded_rule.#":                                          "0",
-						"statement.0.managed_rule_group_statement.0.scope_down_statement.#":                                   "0",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.login_path":                  "/login",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.1.payload_type":                "JSON",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.2.password_field.0.identifier": "/password",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.3.username_field.0.identifier": "/username",
-					}),
+						"statement.0.managed_rule_group_statement.0.name":                                                     "AWSManagedRulesATPRuleSet",
+						"statement.0.managed_rule_group_statement.0.rule_action_override.#":                                   "0",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.#":                                   "0",
+						"statement.0.managed_rule_group_statement.0.vendor_name":                                              "AWS"}),
 				),
 			},
 			{
@@ -680,14 +679,14 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig(t *testing.T) {
 						"override_action.0.none.#":  "1",
 						"statement.#":               "1",
 						"statement.0.managed_rule_group_statement.#":                                                          "1",
-						"statement.0.managed_rule_group_statement.0.name":                                                     "AWSManagedRulesATPRuleSet",
-						"statement.0.managed_rule_group_statement.0.vendor_name":                                              "AWS",
-						"statement.0.managed_rule_group_statement.0.excluded_rule.#":                                          "0",
-						"statement.0.managed_rule_group_statement.0.scope_down_statement.#":                                   "0",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.login_path":                  "/app-login",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.1.payload_type":                "JSON",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.2.password_field.0.identifier": "/app-password",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.3.username_field.0.identifier": "/app-username",
+						"statement.0.managed_rule_group_statement.0.name":                                                     "AWSManagedRulesATPRuleSet",
+						"statement.0.managed_rule_group_statement.0.rule_action_override.#":                                   "0",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.#":                                   "0",
+						"statement.0.managed_rule_group_statement.0.vendor_name":                                              "AWS",
 					}),
 				),
 			},
@@ -728,10 +727,6 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_ATPRuleSet(t *te
 						"override_action.0.none.#":  "1",
 						"statement.#":               "1",
 						"statement.0.managed_rule_group_statement.#":                                                                                                                "1",
-						"statement.0.managed_rule_group_statement.0.name":                                                                                                           "AWSManagedRulesATPRuleSet",
-						"statement.0.managed_rule_group_statement.0.vendor_name":                                                                                                    "AWS",
-						"statement.0.managed_rule_group_statement.0.excluded_rule.#":                                                                                                "0",
-						"statement.0.managed_rule_group_statement.0.scope_down_statement.#":                                                                                         "0",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.#":                                                  "1",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.login_path":                                       "/api/1/signin",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.request_inspection.#":                             "1",
@@ -741,6 +736,10 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_ATPRuleSet(t *te
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.request_inspection.0.username_field.#":            "1",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.request_inspection.0.username_field.0.identifier": "/username",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.response_inspection.#":                            "0",
+						"statement.0.managed_rule_group_statement.0.name":                                                                                                           "AWSManagedRulesATPRuleSet",
+						"statement.0.managed_rule_group_statement.0.rule_action_override.#":                                                                                         "0",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.#":                                                                                         "0",
+						"statement.0.managed_rule_group_statement.0.vendor_name":                                                                                                    "AWS",
 					}),
 				),
 			},
@@ -759,10 +758,6 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_ATPRuleSet(t *te
 						"override_action.0.none.#":  "1",
 						"statement.#":               "1",
 						"statement.0.managed_rule_group_statement.#":                                                                                                                "1",
-						"statement.0.managed_rule_group_statement.0.name":                                                                                                           "AWSManagedRulesATPRuleSet",
-						"statement.0.managed_rule_group_statement.0.vendor_name":                                                                                                    "AWS",
-						"statement.0.managed_rule_group_statement.0.excluded_rule.#":                                                                                                "0",
-						"statement.0.managed_rule_group_statement.0.scope_down_statement.#":                                                                                         "0",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.#":                                                  "1",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.login_path":                                       "/api/2/signin",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.request_inspection.#":                             "1",
@@ -772,6 +767,10 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_ATPRuleSet(t *te
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.request_inspection.0.username_field.#":            "1",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.request_inspection.0.username_field.0.identifier": "/user",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.response_inspection.#":                            "0",
+						"statement.0.managed_rule_group_statement.0.name":                                                                                                           "AWSManagedRulesATPRuleSet",
+						"statement.0.managed_rule_group_statement.0.rule_action_override.#":                                                                                         "0",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.#":                                                                                         "0",
+						"statement.0.managed_rule_group_statement.0.vendor_name":                                                                                                    "AWS",
 					}),
 				),
 			},
@@ -850,10 +849,10 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_specifyVersion(t *testing.T) {
 						"statement.#":               "1",
 						"statement.0.managed_rule_group_statement.#":                        "1",
 						"statement.0.managed_rule_group_statement.0.name":                   "AWSManagedRulesCommonRuleSet",
+						"statement.0.managed_rule_group_statement.0.rule_action_override.#": "0",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.#": "0",
 						"statement.0.managed_rule_group_statement.0.vendor_name":            "AWS",
 						"statement.0.managed_rule_group_statement.0.version":                "Version_1.0",
-						"statement.0.managed_rule_group_statement.0.excluded_rule.#":        "0",
-						"statement.0.managed_rule_group_statement.0.scope_down_statement.#": "0",
 					}),
 				),
 			},
@@ -873,9 +872,9 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_specifyVersion(t *testing.T) {
 						"statement.#":               "1",
 						"statement.0.managed_rule_group_statement.#":                        "1",
 						"statement.0.managed_rule_group_statement.0.name":                   "AWSManagedRulesCommonRuleSet",
-						"statement.0.managed_rule_group_statement.0.vendor_name":            "AWS",
-						"statement.0.managed_rule_group_statement.0.excluded_rule.#":        "0",
+						"statement.0.managed_rule_group_statement.0.rule_action_override.#": "0",
 						"statement.0.managed_rule_group_statement.0.scope_down_statement.#": "0",
+						"statement.0.managed_rule_group_statement.0.vendor_name":            "AWS",
 					}),
 				),
 			},
@@ -1669,8 +1668,8 @@ func TestAccWAFV2WebACL_RuleGroupReference_basic(t *testing.T) {
 						"override_action.0.count.#": "1",
 						"override_action.0.none.#":  "0",
 						"statement.#":               "1",
-						"statement.0.rule_group_reference_statement.#":                 "1",
-						"statement.0.rule_group_reference_statement.0.excluded_rule.#": "0",
+						"statement.0.rule_group_reference_statement.#":                        "1",
+						"statement.0.rule_group_reference_statement.0.rule_action_override.#": "0",
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]*regexp.Regexp{
 						"statement.0.rule_group_reference_statement.0.arn": regexp.MustCompile(`regional/rulegroup/.+$`),
@@ -1690,10 +1689,10 @@ func TestAccWAFV2WebACL_RuleGroupReference_basic(t *testing.T) {
 						"override_action.0.count.#": "1",
 						"override_action.0.none.#":  "0",
 						"statement.#":               "1",
-						"statement.0.rule_group_reference_statement.#":                      "1",
-						"statement.0.rule_group_reference_statement.0.excluded_rule.#":      "2",
-						"statement.0.rule_group_reference_statement.0.excluded_rule.0.name": "rule-to-exclude-b",
-						"statement.0.rule_group_reference_statement.0.excluded_rule.1.name": "rule-to-exclude-a",
+						"statement.0.rule_group_reference_statement.#":                             "1",
+						"statement.0.rule_group_reference_statement.0.rule_action_override.#":      "2",
+						"statement.0.rule_group_reference_statement.0.rule_action_override.0.name": "rule-to-exclude-b",
+						"statement.0.rule_group_reference_statement.0.rule_action_override.1.name": "rule-to-exclude-a",
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]*regexp.Regexp{
 						"statement.0.rule_group_reference_statement.0.arn": regexp.MustCompile(`regional/rulegroup/.+$`),
@@ -3755,11 +3754,19 @@ resource "aws_wafv2_web_acl" "test" {
         name        = "AWSManagedRulesCommonRuleSet"
         vendor_name = "AWS"
 
-        excluded_rule {
+        rule_action_override {
+          action_to_use {
+            count {}
+          }
+
           name = "SizeRestrictions_QUERYSTRING"
         }
 
-        excluded_rule {
+        rule_action_override {
+          action_to_use {
+            count {}
+          }
+
           name = "NoUserAgent_HEADER"
         }
 
@@ -4213,11 +4220,19 @@ resource "aws_wafv2_web_acl" "test" {
       rule_group_reference_statement {
         arn = aws_wafv2_rule_group.test.arn
 
-        excluded_rule {
+        rule_action_override {
+          action_to_use {
+            count {}
+          }
+
           name = "rule-to-exclude-b"
         }
 
-        excluded_rule {
+        rule_action_override {
+          action_to_use {
+            count {}
+          }
+
           name = "rule-to-exclude-a"
         }
       }
