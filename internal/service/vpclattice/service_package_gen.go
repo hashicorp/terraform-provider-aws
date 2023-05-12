@@ -34,6 +34,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceResourcePolicy,
 			TypeName: "aws_vpclattice_resource_policy",
+			Name:     "Resource Policy",
 		},
 		{
 			Factory:  DataSourceService,
