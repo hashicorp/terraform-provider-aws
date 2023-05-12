@@ -204,7 +204,7 @@ func ResourceTable() *schema.Resource {
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 48),
 											validation.StringMatch(
-												regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9_]{0,47}$`),
+												regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_]*$`),
 												"The name must consist of lower case alphanumerics and underscores.",
 											),
 										),
