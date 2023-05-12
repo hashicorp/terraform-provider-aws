@@ -64,7 +64,6 @@ func TestAccClientVPNEndpoint_serial(t *testing.T) {
 			"basic":                    testAccClientVPNNetworkAssociation_basic,
 			"multipleSubnets":          testAccClientVPNNetworkAssociation_multipleSubnets,
 			"disappears":               testAccClientVPNNetworkAssociation_disappears,
-			"securityGroups":           testAccClientVPNNetworkAssociation_securityGroups,
 			"securityGroupsOnEndpoint": testAccClientVPNNetworkAssociation_securityGroupsOnEndpoint,
 		},
 		"Route": {

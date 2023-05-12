@@ -30,7 +30,7 @@ Upgrade topics:
 - [Resource: aws_budgets_budget](#resource-aws_budgets_budget)
 - [Resource: aws_ce_anomaly_subscription](#resource-aws_ce_anomaly_subscription)
 - [Resource: aws_cloudwatch_event_target](#resource-aws_cloudwatch_event_target)
-- [Resource: aws_connect_routing_profile](#resource-aws_connect_queue)
+- [Resource: aws_connect_queue](#resource-aws_connect_queue)
 - [Resource: aws_connect_routing_profile](#resource-aws_connect_routing_profile)
 - [Resource: aws_docdb_cluster](#resource-aws_docdb_cluster)
 - [Resource: aws_ec2_client_vpn_endpoint](#resource-aws_ec2_client_vpn_endpoint)
@@ -142,7 +142,7 @@ Automated snapshots **should not** be used for this attribute, unless from a dif
 
 ## Resource: aws_ec2_client_vpn_endpoint
 
-The `status` attribute has been removed.
+The `security_groups` and `status` attributes have been removed.
 
 ## Resource: aws_ec2_client_vpn_network_association
 
