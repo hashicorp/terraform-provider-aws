@@ -70,6 +70,7 @@ func init() {
 			"aws_iot_topic_rule_destination",
 			"aws_lambda_function",
 			"aws_launch_configuration",
+			"aws_opensearch_domain",
 			"aws_redshift_cluster",
 			"aws_redshift_scheduled_action",
 			"aws_spot_fleet_request",
@@ -403,11 +404,9 @@ func sweepServiceSpecificCredentials(region string) error {
 func sweepPolicies(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
 	conn := client.(*conns.AWSClient).IAMConn()
 	input := &iam.ListPoliciesInput{
 		Scope: aws.String(iam.PolicyScopeTypeLocal),
@@ -419,30 +418,18 @@ func sweepPolicies(region string) error {
 			return !lastPage
 		}
 
-		for _, policy := range page.Policies {
-			arn := aws.StringValue(policy.Arn)
-			input := &iam.DeletePolicyInput{
-				PolicyArn: policy.Arn,
-			}
+		for _, v := range page.Policies {
+			arn := aws.StringValue(v.Arn)
+			r := ResourcePolicy()
+			d := r.Data(nil)
+			d.SetId(arn)
 
-			log.Printf("[INFO] Deleting IAM Policy: %s", arn)
-			if err := policyDeleteNonDefaultVersions(ctx, arn, conn); err != nil {
-				sweeperErr := fmt.Errorf("error deleting IAM Policy (%s) non-default versions: %w", arn, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-
-			_, err := conn.DeletePolicyWithContext(ctx, input)
+			err := sweep.NewSweepResource(r, d, client).Delete(ctx, sweep.ThrottlingRetryTimeout) // nosemgrep:ci.semgrep.migrate.direct-CRUD-calls
 
 			// Treat this sweeper as best effort for now. There are a lot of edge cases
 			// with lingering aws_iam_role resources in the HashiCorp testing accounts.
 			if tfawserr.ErrCodeEquals(err, iam.ErrCodeDeleteConflictException) {
 				log.Printf("[WARN] Ignoring IAM Policy (%s) deletion error: %s", arn, err)
-				continue
-			}
-
-			if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 				continue
 			}
 

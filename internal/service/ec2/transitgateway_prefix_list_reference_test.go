@@ -24,7 +24,7 @@ func testAccTransitGatewayPrefixListReference_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckTransitGateway(ctx, t)
 			testAccPreCheckManagedPrefixList(ctx, t)
 		},
@@ -59,7 +59,7 @@ func testAccTransitGatewayPrefixListReference_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckTransitGateway(ctx, t)
 			testAccPreCheckManagedPrefixList(ctx, t)
 		},
@@ -87,7 +87,7 @@ func testAccTransitGatewayPrefixListReference_disappears_TransitGateway(t *testi
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckTransitGateway(ctx, t)
 			testAccPreCheckManagedPrefixList(ctx, t)
 		},
@@ -116,7 +116,7 @@ func testAccTransitGatewayPrefixListReference_TransitGatewayAttachmentID(t *test
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckTransitGateway(ctx, t)
 			testAccPreCheckManagedPrefixList(ctx, t)
 		},

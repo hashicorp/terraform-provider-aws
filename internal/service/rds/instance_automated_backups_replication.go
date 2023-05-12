@@ -22,6 +22,7 @@ const (
 	InstanceAutomatedBackupsReplicationDeleteTimeout = 75 * time.Minute
 )
 
+// @SDKResource("aws_db_instance_automated_backups_replication")
 func ResourceInstanceAutomatedBackupsReplication() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceAutomatedBackupsReplicationCreate,
@@ -85,7 +86,6 @@ func resourceInstanceAutomatedBackupsReplicationCreate(ctx context.Context, d *s
 
 	log.Printf("[DEBUG] Starting RDS instance automated backups replication: %s", input)
 	output, err := conn.StartDBInstanceAutomatedBackupsReplicationWithContext(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "starting RDS instance automated backups replication: %s", err)
 	}
@@ -139,7 +139,6 @@ func resourceInstanceAutomatedBackupsReplicationDelete(ctx context.Context, d *s
 
 	dbInstanceID := aws.StringValue(backup.DBInstanceIdentifier)
 	sourceDatabaseARN, err := arn.Parse(aws.StringValue(backup.DBInstanceArn))
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting RDS DB Instance Automated Backup (%s): %s", d.Id(), err)
 	}

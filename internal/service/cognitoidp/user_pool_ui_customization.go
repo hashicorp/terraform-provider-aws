@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_cognito_user_pool_ui_customization")
 func ResourceUserPoolUICustomization() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserPoolUICustomizationPut,

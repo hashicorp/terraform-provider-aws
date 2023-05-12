@@ -1,5 +1,5 @@
 ---
-subcategory: "DS (Directory Service)"
+subcategory: "Directory Service"
 layout: "aws"
 page_title: "AWS: aws_directory_service_radius_settings"
 description: |-
@@ -9,6 +9,7 @@ description: |-
 # Resource: aws_directory_service_radius_settings
 
 Manages a directory's multi-factor authentication (MFA) using a Remote Authentication Dial In User Service (RADIUS) server.
+
 ## Example Usage
 
 ```terraform

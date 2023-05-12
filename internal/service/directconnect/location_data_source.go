@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_dx_location")
 func DataSourceLocation() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLocationRead,

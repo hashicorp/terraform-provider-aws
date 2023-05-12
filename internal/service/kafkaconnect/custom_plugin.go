@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_mskconnect_custom_plugin")
 func ResourceCustomPlugin() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomPluginCreate,

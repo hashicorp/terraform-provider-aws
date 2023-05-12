@@ -20,11 +20,11 @@ import (
 // to those configured at the provider-level to avoid non-empty plans
 // after resource READ operations as resource and provider-level tags
 // will be indistinguishable when returned from an AWS API.
-func SetTagsDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func SetTagsDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resourceTags := tftags.New(diff.Get("tags").(map[string]interface{}))
+	resourceTags := tftags.New(ctx, diff.Get("tags").(map[string]interface{}))
 
 	if defaultTagsConfig.TagsEqual(resourceTags) {
 		return fmt.Errorf(`"tags" are identical to those in the "default_tags" configuration block of the provider: please de-duplicate and try again`)

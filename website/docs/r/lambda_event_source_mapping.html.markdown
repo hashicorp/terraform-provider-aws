@@ -151,8 +151,9 @@ resource "aws_lambda_event_source_mapping" "example" {
 * `batch_size` - (Optional) The largest number of records that Lambda will retrieve from your event source at the time of invocation. Defaults to `100` for DynamoDB, Kinesis, MQ and MSK, `10` for SQS.
 * `bisect_batch_on_function_error`: - (Optional) If the function returns an error, split the batch in two and retry. Only available for stream sources (DynamoDB and Kinesis). Defaults to `false`.
 * `destination_config`: - (Optional) An Amazon SQS queue or Amazon SNS topic destination for failed records. Only available for stream sources (DynamoDB and Kinesis). Detailed below.
+* `document_db_event_source_config`: - (Optional) Configuration settings for a DocumentDB event source. Detailed below.
 * `enabled` - (Optional) Determines if the mapping will be enabled on creation. Defaults to `true`.
-* `event_source_arn` - (Optional) The event source ARN - this is required for Kinesis stream, DynamoDB stream, SQS queue, MQ broker or MSK cluster.  It is incompatible with a Self Managed Kafka source.
+* `event_source_arn` - (Optional) The event source ARN - this is required for Kinesis stream, DynamoDB stream, SQS queue, MQ broker, MSK cluster or DocumentDB change stream.  It is incompatible with a Self Managed Kafka source.
 * `filter_criteria` - (Optional) The criteria to use for [event filtering](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html) Kinesis stream, DynamoDB stream, SQS queue event sources. Detailed below.
 * `function_name` - (Required) The name or the ARN of the Lambda function that will be subscribing to events.
 * `function_response_types` - (Optional) A list of current response type enums applied to the event source mapping for [AWS Lambda checkpointing](https://docs.aws.amazon.com/lambda/latest/dg/with-ddb.html#services-ddb-batchfailurereporting). Only available for SQS and stream sources (DynamoDB and Kinesis). Valid values: `ReportBatchItemFailures`.
@@ -181,6 +182,12 @@ resource "aws_lambda_event_source_mapping" "example" {
 #### destination_config on_failure Configuration Block
 
 * `destination_arn` - (Required) The Amazon Resource Name (ARN) of the destination resource.
+
+### document_db_event_source_config Configuration Block
+
+* `collection_name` - (Optional) The name of the collection to consume within the database. If you do not specify a collection, Lambda consumes all collections.
+* `database_name` - (Required) The name of the database to consume within the DocumentDB cluster.
+* `full_document` - (Optional) Determines what DocumentDB sends to your event stream during document update operations. If set to `UpdateLookup`, DocumentDB sends a delta describing the changes, along with a copy of the entire document. Otherwise, DocumentDB sends only a partial document that contains the changes. Valid values: `UpdateLookup`, `Default`.
 
 ### filter_criteria Configuration Block
 

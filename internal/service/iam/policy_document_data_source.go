@@ -18,6 +18,7 @@ import (
 
 var dataSourcePolicyDocumentVarReplacer = strings.NewReplacer("&{", "${")
 
+// @SDKDataSource("aws_iam_policy_document")
 func DataSourcePolicyDocument() *schema.Resource {
 	setOfString := &schema.Schema{
 		Type:     schema.TypeSet,

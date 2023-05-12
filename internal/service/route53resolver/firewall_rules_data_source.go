@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_route53_resolver_firewall_rules")
 func DataSourceResolverFirewallRules() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResolverFirewallFirewallRulesRead,

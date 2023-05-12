@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_prometheus_alert_manager_definition")
 func ResourceAlertManagerDefinition() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAlertManagerDefinitionCreate,

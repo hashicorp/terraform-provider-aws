@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_lambda_function_event_invoke_config")
 func ResourceFunctionEventInvokeConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFunctionEventInvokeConfigCreate,
@@ -123,21 +124,21 @@ func resourceFunctionEventInvokeConfigCreate(ctx context.Context, d *schema.Reso
 	}
 
 	// Retry for destination validation eventual consistency errors
-	err := resource.RetryContext(ctx, 2*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 2*time.Minute, func() *retry.RetryError {
 		_, err := conn.PutFunctionEventInvokeConfigWithContext(ctx, input)
 
 		// InvalidParameterValueException: The destination ARN arn:PARTITION:SERVICE:REGION:ACCOUNT:RESOURCE is invalid.
 		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "destination ARN") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		// InvalidParameterValueException: The function's execution role does not have permissions to call Publish on arn:...
 		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "does not have permissions") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -223,21 +224,21 @@ func resourceFunctionEventInvokeConfigUpdate(ctx context.Context, d *schema.Reso
 	}
 
 	// Retry for destination validation eventual consistency errors
-	err = resource.RetryContext(ctx, 2*time.Minute, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, 2*time.Minute, func() *retry.RetryError {
 		_, err := conn.PutFunctionEventInvokeConfigWithContext(ctx, input)
 
 		// InvalidParameterValueException: The destination ARN arn:PARTITION:SERVICE:REGION:ACCOUNT:RESOURCE is invalid.
 		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "destination ARN") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		// InvalidParameterValueException: The function's execution role does not have permissions to call Publish on arn:...
 		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "does not have permissions") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil

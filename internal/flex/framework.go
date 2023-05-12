@@ -158,6 +158,19 @@ func FlattenFrameworkStringSet(_ context.Context, vs []*string) types.Set {
 	return types.SetValueMust(types.StringType, elems)
 }
 
+// FlattenFrameworkStringSetLegacy converts a slice of string pointers to a framework Set value.
+//
+// A nil slice is converted to an empty (non-null) Set.
+func FlattenFrameworkStringSetLegacy(_ context.Context, vs []*string) types.Set {
+	elems := make([]attr.Value, len(vs))
+
+	for i, v := range vs {
+		elems[i] = types.StringValue(aws.ToString(v))
+	}
+
+	return types.SetValueMust(types.StringType, elems)
+}
+
 // FlattenFrameworkStringValueSet converts a slice of string values to a framework Set value.
 //
 // A nil slice is converted to a null Set.

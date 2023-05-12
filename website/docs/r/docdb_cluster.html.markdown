@@ -1,16 +1,16 @@
 ---
-subcategory: "DocDB (DocumentDB)"
+subcategory: "DocumentDB"
 layout: "aws"
 page_title: "AWS: aws_docdb_cluster"
 description: |-
-  Manages a DocDB Aurora Cluster
+  Manages a DocumentDB Aurora Cluster
 ---
 
 # Resource: aws_docdb_cluster
 
-Manages a DocDB Cluster.
+Manages a DocumentDB Cluster.
 
-Changes to a DocDB Cluster can occur when you manually change a
+Changes to a DocumentDB Cluster can occur when you manually change a
 parameter, such as `port`, and are reflected in the next maintenance
 window. Because of this, Terraform may report a difference in its planning
 phase because a modification has not yet taken place. You can use the
@@ -63,7 +63,7 @@ The following arguments are supported:
 * `global_cluster_identifier` - (Optional) The global cluster identifier specified on [`aws_docdb_global_cluster`](/docs/providers/aws/r/docdb_global_cluster.html).
 * `kms_key_id` - (Optional) The ARN for the KMS encryption key. When specifying `kms_key_id`, `storage_encrypted` needs to be set to true.
 * `master_password` - (Required unless a `snapshot_identifier` or unless a `global_cluster_identifier` is provided when the cluster is the "secondary" cluster of a global database) Password for the master DB user. Note that this may
-    show up in logs, and it will be stored in the state file. Please refer to the DocDB Naming Constraints.
+    show up in logs, and it will be stored in the state file. Please refer to the DocumentDB Naming Constraints.
 * `master_username` - (Required unless a `snapshot_identifier` or unless a `global_cluster_identifier` is provided when the cluster is the "secondary" cluster of a global database) Username for the master DB user.
 * `port` - (Optional) The port on which the DB accepts connections
 * `preferred_backup_window` - (Optional) The daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter.Time in UTC
@@ -81,12 +81,12 @@ Default: A 30-minute window selected at random from an 8-hour block of time per 
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of cluster
-* `cluster_members` – List of DocDB Instances that are a part of this cluster
-* `cluster_resource_id` - The DocDB Cluster Resource ID
-* `endpoint` - The DNS address of the DocDB instance
+* `cluster_members` – List of DocumentDB Instances that are a part of this cluster
+* `cluster_resource_id` - The DocumentDB Cluster Resource ID
+* `endpoint` - The DNS address of the DocumentDB instance
 * `hosted_zone_id` - The Route53 Hosted Zone ID of the endpoint
-* `id` - The DocDB Cluster Identifier
-* `reader_endpoint` - A read-only endpoint for the DocDB cluster, automatically load-balanced across replicas
+* `id` - The DocumentDB Cluster Identifier
+* `reader_endpoint` - A read-only endpoint for the DocumentDB cluster, automatically load-balanced across replicas
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -100,7 +100,7 @@ any cleanup task during the destroying process.
 
 ## Import
 
-DocDB Clusters can be imported using the `cluster_identifier`, e.g.,
+DocumentDB Clusters can be imported using the `cluster_identifier`, e.g.,
 
 ```
 $ terraform import aws_docdb_cluster.docdb_cluster docdb-prod-cluster

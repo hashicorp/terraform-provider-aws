@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_appsync_domain_name_api_association")
 func ResourceDomainNameAPIAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainNameAPIAssociationCreate,

@@ -20,6 +20,10 @@ Basic usage:
 resource "aws_vpc_ipam_resource_discovery_association" "test" {
   ipam_id                    = aws_vpc_ipam.test.id
   ipam_resource_discovery_id = aws_vpc_ipam_resource_discovery.test.id
+
+  tags = {
+    "Name" = "test"
+  }
 }
 ```
 
@@ -27,21 +31,21 @@ resource "aws_vpc_ipam_resource_discovery_association" "test" {
 
 The following arguments are supported:
 
-* `description` - (Optional) A description for the IPAM Resource Discovery Association.
-* `ipam_id` - (Required) Id of the IPAM to associate
-* `resource_discovery_id` - (Required) Id of the Resource Discovery to associate
+* `ipam_id` - (Required) The ID of the IPAM to associate.
+* `ipam_resource_discovery_id` - (Required) The ID of the Resource Discovery to associate.
+* `tags` - (Optional) A map of tags to add to the IPAM resource discovery association resource.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - Amazon Resource Name (ARN) of IPAM Resource Discovery Association
-* `id` - The ID of the IPAM Resource Discovery Association
-* `is_default` - A boolean to identify if the Resource Discovery is the accounts default resource discovery
+* `arn` - The Amazon Resource Name (ARN) of IPAM Resource Discovery Association.
+* `id` - The ID of the IPAM Resource Discovery Association.
 * `owner_id` - The account ID for the account that manages the Resource Discovery
-* `ipam_resource_discovery_region` - The home region of the Resource Discovery Association
-* `ipam_region` - The home region of the IPAM
-* `ipam_arn` - The arn of the IPAM
+* `ipam_arn` - The Amazon Resource Name (ARN) of the IPAM.
+* `ipam_region` - The home region of the IPAM.
+* `is_default` - A boolean to identify if the Resource Discovery is the accounts default resource discovery.
+* `state` - The lifecycle state of the association when you associate or disassociate a resource discovery.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

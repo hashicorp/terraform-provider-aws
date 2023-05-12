@@ -25,7 +25,7 @@ func TestAccIAMUserGroupMembership_basic(t *testing.T) {
 	groupName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserGroupMembershipDestroy(ctx),
@@ -42,7 +42,7 @@ func TestAccIAMUserGroupMembership_basic(t *testing.T) {
 				ResourceName:      "aws_iam_user_group_membership.user1_test1",
 				ImportState:       true,
 				ImportStateIdFunc: testAccUserGroupMembershipImportStateIdFunc("aws_iam_user_group_membership.user1_test1"),
-				// We do not have a way to align IDs since the Create function uses resource.UniqueId()
+				// We do not have a way to align IDs since the Create function uses id.UniqueId()
 				// Failed state verification, resource with ID USER/GROUP not found
 				//ImportStateVerify: true,
 				ImportStateCheck: func(s []*terraform.InstanceState) error {

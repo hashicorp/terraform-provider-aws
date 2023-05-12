@@ -26,12 +26,18 @@
             {{- if eq .ServiceAlias "CloudTrail" }}
             - pattern-not-regex: ^testAccCloudTrailConfig_.*
             {{- end }}
+            {{- if eq .ServiceAlias "Pipes" }}
+            - pattern-not-regex: ^.+Pipe[sS].*$
+            {{- end }}
             {{- if eq .ServiceAlias "RAM" }}
             - pattern-not-regex: Framework
             {{- end }}
             {{- if eq .ServiceAlias "SSM" }}
             - pattern-not-regex: ^testAccSSMDefaultPatchBaseline_.+
             - pattern-not-regex: ^testAccSSMPatchBaseline_.+
+            {{- end }}
+            {{- if eq .ServiceAlias "WAF" }}
+            - pattern-not-regex: ^testAccWAFRateBasedRule.+
             {{- end }}
             - pattern-not-regex: ^TestAcc.*
     severity: WARNING
@@ -70,6 +76,9 @@
             {{- if eq .ServiceAlias "Connect" }}
             - pattern-not-regex: .*uickConnect.*
             {{- end }}
+            {{- if eq .ServiceAlias "Pipes" }}
+            - pattern-not-regex: ^pipeS.*
+            {{- end }}
     severity: WARNING
   - id: {{ .LowerAlias }}-in-var-name
     languages:
@@ -89,6 +98,9 @@
             {{- end }}
             {{- if eq .ServiceAlias "Connect" }}
             - pattern-not-regex: .*uickConnect.*
+            {{- end }}
+            {{- if eq .ServiceAlias "Pipes" }}
+            - pattern-not-regex: ^pipeS.*
             {{- end }}
     severity: WARNING
 {{- end }}

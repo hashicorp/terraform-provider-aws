@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_kinesisanalyticsv2_application_snapshot")
 func ResourceApplicationSnapshot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceApplicationSnapshotCreate,

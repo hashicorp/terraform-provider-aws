@@ -14,7 +14,7 @@ The following example retrieves a list of VPC Ids with a custom tag of `service`
 
 ## Example Usage
 
-The following shows outputing all VPC Ids.
+The following shows outputting all VPC Ids.
 
 ```terraform
 data "aws_vpcs" "foo" {

@@ -11,16 +11,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccLightsailLoadBalancerCertificateAttachment_basic(t *testing.T) {
+func testAccLoadBalancerCertificateAttachment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	lbName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	cName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	domainName := acctest.ACMCertificateRandomSubDomain(acctest.RandomDomainName())
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),

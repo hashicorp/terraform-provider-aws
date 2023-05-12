@@ -139,7 +139,8 @@ resource "aws_cloudwatch_event_bus_policy" "test" {
 The following arguments are supported:
 
 * `policy` - (Required) The text of the policy. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
-* `event_bus_name` - (Optional) The event bus to set the permissions on. If you omit this, the permissions are set on the `default` event bus.
+* `event_bus_name` - (Optional) The name of the event bus to set the permissions on.
+  If you omit this, the permissions are set on the `default` event bus.
 
 ## Attributes Reference
 

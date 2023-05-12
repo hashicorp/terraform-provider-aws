@@ -16,11 +16,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-func init() {
-	_sp.registerFrameworkDataSourceFactory(newDataSourceAccelerator)
-}
-
-// newDataSourceAccelerator instantiates a new DataSource for the aws_globalaccelerator_accelerator data source.
+// @FrameworkDataSource
 func newDataSourceAccelerator(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceAccelerator{}
 	d.SetMigratedFromPluginSDK(true)
@@ -58,6 +54,9 @@ func (d *dataSourceAccelerator) Schema(ctx context.Context, req datasource.Schem
 				Computed: true,
 			},
 			"dns_name": schema.StringAttribute{
+				Computed: true,
+			},
+			"dual_stack_dns_name": schema.StringAttribute{
 				Computed: true,
 			},
 			"enabled": schema.BoolAttribute{
@@ -154,8 +153,9 @@ func (d *dataSourceAccelerator) Read(ctx context.Context, request datasource.Rea
 		data.ARN = fwtypes.ARNValue(v)
 	}
 	data.DnsName = flex.StringToFrameworkLegacy(ctx, accelerator.DnsName)
+	data.DualStackDNSName = flex.StringToFrameworkLegacy(ctx, accelerator.DualStackDnsName)
 	data.Enabled = flex.BoolToFrameworkLegacy(ctx, accelerator.Enabled)
-	data.HostedZoneID = types.StringValue(route53ZoneID)
+	data.HostedZoneID = types.StringValue(d.Meta().GlobalAcceleratorHostedZoneID())
 	data.ID = types.StringValue(acceleratorARN)
 	data.IpAddressType = flex.StringToFrameworkLegacy(ctx, accelerator.IpAddressType)
 	data.IpSets = d.flattenIPSetsFramework(ctx, accelerator.IpSets)
@@ -244,14 +244,15 @@ func (d *dataSourceAccelerator) flattenAcceleratorAttributesFramework(ctx contex
 }
 
 type dataSourceAcceleratorData struct {
-	ARN           fwtypes.ARN  `tfsdk:"arn"`
-	Attributes    types.List   `tfsdk:"attributes"`
-	DnsName       types.String `tfsdk:"dns_name"`
-	Enabled       types.Bool   `tfsdk:"enabled"`
-	HostedZoneID  types.String `tfsdk:"hosted_zone_id"`
-	ID            types.String `tfsdk:"id"`
-	IpAddressType types.String `tfsdk:"ip_address_type"`
-	IpSets        types.List   `tfsdk:"ip_sets"`
-	Name          types.String `tfsdk:"name"`
-	Tags          types.Map    `tfsdk:"tags"`
+	ARN              fwtypes.ARN  `tfsdk:"arn"`
+	Attributes       types.List   `tfsdk:"attributes"`
+	DnsName          types.String `tfsdk:"dns_name"`
+	DualStackDNSName types.String `tfsdk:"dual_stack_dns_name"`
+	Enabled          types.Bool   `tfsdk:"enabled"`
+	HostedZoneID     types.String `tfsdk:"hosted_zone_id"`
+	ID               types.String `tfsdk:"id"`
+	IpAddressType    types.String `tfsdk:"ip_address_type"`
+	IpSets           types.List   `tfsdk:"ip_sets"`
+	Name             types.String `tfsdk:"name"`
+	Tags             types.Map    `tfsdk:"tags"`
 }

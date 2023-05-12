@@ -9,6 +9,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_networkmanager_device")
 func DataSourceDevice() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDeviceRead,
@@ -127,7 +128,7 @@ func dataSourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("type", device.Type)
 	d.Set("vendor", device.Vendor)
 
-	if err := d.Set("tags", KeyValueTags(device.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, device.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("error setting tags: %s", err)
 	}
 

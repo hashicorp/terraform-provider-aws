@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_lex_slot_type")
 func DataSourceSlotType() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSlotTypeRead,

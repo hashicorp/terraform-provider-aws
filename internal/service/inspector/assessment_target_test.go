@@ -22,7 +22,7 @@ func TestAccInspectorAssessmentTarget_basic(t *testing.T) {
 	resourceName := "aws_inspector_assessment_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, inspector.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetAssessmentDestroy(ctx),
@@ -52,7 +52,7 @@ func TestAccInspectorAssessmentTarget_disappears(t *testing.T) {
 	resourceName := "aws_inspector_assessment_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, inspector.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetAssessmentDestroy(ctx),
@@ -77,7 +77,7 @@ func TestAccInspectorAssessmentTarget_name(t *testing.T) {
 	resourceName := "aws_inspector_assessment_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, inspector.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetAssessmentDestroy(ctx),
@@ -114,7 +114,7 @@ func TestAccInspectorAssessmentTarget_resourceGroupARN(t *testing.T) {
 	resourceName := "aws_inspector_assessment_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, inspector.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetAssessmentDestroy(ctx),
@@ -168,11 +168,11 @@ func testAccCheckTargetAssessmentDestroy(ctx context.Context) resource.TestCheck
 			assessmentTarget, err := tfinspector.DescribeAssessmentTarget(ctx, conn, rs.Primary.ID)
 
 			if err != nil {
-				return fmt.Errorf("Error finding Inspector Assessment Target: %s", err)
+				return fmt.Errorf("finding Inspector Classic Assessment Target: %s", err)
 			}
 
 			if assessmentTarget != nil {
-				return fmt.Errorf("Inspector Assessment Target (%s) still exists", rs.Primary.ID)
+				return fmt.Errorf("Inspector Classic Assessment Target (%s) still exists", rs.Primary.ID)
 			}
 		}
 
@@ -192,11 +192,11 @@ func testAccCheckTargetExists(ctx context.Context, name string, target *inspecto
 		assessmentTarget, err := tfinspector.DescribeAssessmentTarget(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("Error finding Inspector Assessment Target: %s", err)
+			return fmt.Errorf("finding Inspector Classic Assessment Target: %s", err)
 		}
 
 		if assessmentTarget == nil {
-			return fmt.Errorf("Inspector Assessment Target (%s) not found", rs.Primary.ID)
+			return fmt.Errorf("Inspector Classic Assessment Target (%s) not found", rs.Primary.ID)
 		}
 
 		*target = *assessmentTarget

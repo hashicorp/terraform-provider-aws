@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_elastic_beanstalk_solution_stack")
 func DataSourceSolutionStack() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSolutionStackRead,

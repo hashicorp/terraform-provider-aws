@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_amplify_backend_environment")
 func ResourceBackendEnvironment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBackendEnvironmentCreate,

@@ -22,7 +22,7 @@ func TestAccRUMMetricsDestination_basic(t *testing.T) {
 	resourceName := "aws_rum_metrics_destination.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchrum.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricsDestinationDestroy(ctx),
@@ -51,7 +51,7 @@ func TestAccRUMMetricsDestination_disappears(t *testing.T) {
 	resourceName := "aws_rum_metrics_destination.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchrum.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricsDestinationDestroy(ctx),
@@ -76,7 +76,7 @@ func TestAccRUMMetricsDestination_disappears_appMonitor(t *testing.T) {
 	resourceName := "aws_rum_metrics_destination.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchrum.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricsDestinationDestroy(ctx),

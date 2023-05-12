@@ -32,7 +32,25 @@ Attribute names are to specified in `snake_case` as opposed to the AWS API which
 
 These will map the AWS API response to the data source schema. You will also need to handle different response types (including errors correctly). For complex attributes you will need to implement Flattener or Expander functions. The [Data Handling and Conversion Guide](data-handling-and-conversion.md) covers everything you need to know for mapping AWS API responses to Terraform State and vice-versa. The [Error Handling Guide](error-handling.md) covers everything you need to know about handling AWS API responses consistently.
 
+### Register Data Source to the provider
+
+Data Sources use a self registration process that adds them to the provider using the `@SDKDataSource()` annotation in the datasource's comments. Run `make servicepackages` to register the datasource. This will add an entry to the `service_package_gen.go` file located in the service package folder.
+
+```
+package something
+
+import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+// @SDKDataSource("aws_something_example", name="Example")
+func DataSourceExample() *schema.Resource {
+	return &schema.Resource{
+	    // some configuration
+	}
+}
+```
+
 ### Write Passing Acceptance Tests
+
 In order to adequately test the data source we will need to write a complete set of Acceptance Tests. You will need an AWS account for this which allows the provider to read to state of the associated resource. See [Writing Acceptance Tests](running-and-writing-acceptance-tests.md) for a detailed guide on how to approach these.
 
 You will need at minimum:

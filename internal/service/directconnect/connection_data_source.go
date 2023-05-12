@@ -14,6 +14,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_dx_connection")
 func DataSourceConnection() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConnectionRead,
@@ -40,6 +41,10 @@ func DataSourceConnection() *schema.Resource {
 				Required: true,
 			},
 			"owner_account_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"partner_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -103,6 +108,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("location", connection.Location)
 	d.Set("name", connection.ConnectionName)
 	d.Set("owner_account_id", connection.OwnerAccount)
+	d.Set("partner_name", connection.PartnerName)
 	d.Set("provider_name", connection.ProviderName)
 	d.Set("vlan_id", connection.Vlan)
 

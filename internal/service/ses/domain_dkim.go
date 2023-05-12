@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_ses_domain_dkim")
 func ResourceDomainDKIM() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainDKIMCreate,

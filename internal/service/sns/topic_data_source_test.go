@@ -11,12 +11,13 @@ import (
 )
 
 func TestAccSNSTopicDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_sns_topic.test"
 	datasourceName := "data.aws_sns_topic.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{

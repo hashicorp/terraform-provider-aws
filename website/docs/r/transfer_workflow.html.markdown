@@ -67,9 +67,10 @@ The following arguments are supported:
 
 * `copy_step_details` - (Optional) Details for a step that performs a file copy. See Copy Step Details below.
 * `custom_step_details` - (Optional) Details for a step that invokes a lambda function.
+* `decrypt_step_details` - (Optional) Details for a step that decrypts the file.
 * `delete_step_details` - (Optional) Details for a step that deletes the file.
 * `tag_step_details` - (Optional) Details for a step that creates one or more tags.
-* `type` - (Required) One of the following step types are supported. `COPY`, `CUSTOM`, `DELETE`, and `TAG`.
+* `type` - (Required) One of the following step types are supported. `COPY`, `CUSTOM`, `DECRYPT`, `DELETE`, and `TAG`.
 
 #### Copy Step Details
 
@@ -84,6 +85,14 @@ The following arguments are supported:
 * `source_file_location` - (Optional) Specifies which file to use as input to the workflow step: either the output from the previous step, or the originally uploaded file for the workflow. Enter ${previous.file} to use the previous file as the input. In this case, this workflow step uses the output file from the previous workflow step as input. This is the default value. Enter ${original.file} to use the originally-uploaded file location as input for this step.
 * `target` - (Optional) The ARN for the lambda function that is being called.
 * `timeout_seconds` - (Optional) Timeout, in seconds, for the step.
+
+#### Decrypt Step Details
+
+* `destination_file_location` - (Optional) Specifies the location for the file being copied. Use ${Transfer:username} in this field to parametrize the destination prefix by username.
+* `name` - (Optional) The name of the step, used as an identifier.
+* `overwrite_existing` - (Optional) A flag that indicates whether or not to overwrite an existing file of the same name. The default is `FALSE`. Valid values are `TRUE` and `FALSE`.
+* `source_file_location` - (Optional) Specifies which file to use as input to the workflow step: either the output from the previous step, or the originally uploaded file for the workflow. Enter ${previous.file} to use the previous file as the input. In this case, this workflow step uses the output file from the previous workflow step as input. This is the default value. Enter ${original.file} to use the originally-uploaded file location as input for this step.
+* `type` - (Required) The type of encryption used. Currently, this value must be `"PGP"`.
 
 #### Delete Step Details
 

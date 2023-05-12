@@ -30,8 +30,8 @@ func testAccMultiplex_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccMultiplexesPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
@@ -72,8 +72,8 @@ func testAccMultiplex_start(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccMultiplexesPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
@@ -112,8 +112,8 @@ func testAccMultiplex_update(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccMultiplexesPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
@@ -160,8 +160,8 @@ func testAccMultiplex_updateTags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccMultiplexesPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
@@ -209,8 +209,8 @@ func testAccMultiplex_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccMultiplexesPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
@@ -293,21 +293,13 @@ func testAccMultiplexesPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccMultiplexBaseConfig() string {
-	return `
-data "aws_availability_zones" "test" {
-  state = "available"
-}
-`
-}
-
 func testAccMultiplexConfig_basic(rName string, start bool) string {
 	return acctest.ConfigCompose(
-		testAccMultiplexBaseConfig(),
+		acctest.ConfigAvailableAZsNoOptInExclude("usw2-las1-az1"),
 		fmt.Sprintf(`
 resource "aws_medialive_multiplex" "test" {
   name               = %[1]q
-  availability_zones = [data.aws_availability_zones.test.names[0], data.aws_availability_zones.test.names[1]]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
 
   multiplex_settings {
     transport_stream_bitrate                = 1000000
@@ -327,11 +319,11 @@ resource "aws_medialive_multiplex" "test" {
 
 func testAccMultiplexConfig_update(rName string, start bool) string {
 	return acctest.ConfigCompose(
-		testAccMultiplexBaseConfig(),
+		acctest.ConfigAvailableAZsNoOptInExclude("usw2-las1-az1"),
 		fmt.Sprintf(`
 resource "aws_medialive_multiplex" "test" {
   name               = %[1]q
-  availability_zones = [data.aws_availability_zones.test.names[0], data.aws_availability_zones.test.names[1]]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
 
   multiplex_settings {
     transport_stream_bitrate                = 1000001
@@ -351,11 +343,11 @@ resource "aws_medialive_multiplex" "test" {
 
 func testAccMultiplexConfig_tags1(rName, key1, value1 string) string {
 	return acctest.ConfigCompose(
-		testAccMultiplexBaseConfig(),
+		acctest.ConfigAvailableAZsNoOptInExclude("usw2-las1-az1"),
 		fmt.Sprintf(`
 resource "aws_medialive_multiplex" "test" {
   name               = %[1]q
-  availability_zones = [data.aws_availability_zones.test.names[0], data.aws_availability_zones.test.names[1]]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
 
   multiplex_settings {
     transport_stream_bitrate                = 1000000
@@ -373,11 +365,11 @@ resource "aws_medialive_multiplex" "test" {
 
 func testAccMultiplexConfig_tags2(rName, key1, value1, key2, value2 string) string {
 	return acctest.ConfigCompose(
-		testAccMultiplexBaseConfig(),
+		acctest.ConfigAvailableAZsNoOptInExclude("usw2-las1-az1"),
 		fmt.Sprintf(`
 resource "aws_medialive_multiplex" "test" {
   name               = %[1]q
-  availability_zones = [data.aws_availability_zones.test.names[0], data.aws_availability_zones.test.names[1]]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
 
   multiplex_settings {
     transport_stream_bitrate                = 1000000

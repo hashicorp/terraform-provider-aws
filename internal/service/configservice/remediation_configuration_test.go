@@ -34,7 +34,7 @@ func testAccRemediationConfiguration_basic(t *testing.T) {
 	expectedName := fmt.Sprintf("%s-tf-acc-test-%d", prefix, rInt)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRemediationConfigurationDestroy(ctx),
@@ -76,7 +76,7 @@ func testAccRemediationConfiguration_basicBackwardCompatible(t *testing.T) {
 	expectedName := fmt.Sprintf("%s-tf-acc-test-%d", prefix, rInt)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRemediationConfigurationDestroy(ctx),
@@ -114,7 +114,7 @@ func testAccRemediationConfiguration_disappears(t *testing.T) {
 	sseAlgorithm := "AES256"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRemediationConfigurationDestroy(ctx),
@@ -148,7 +148,7 @@ func testAccRemediationConfiguration_recreates(t *testing.T) {
 	sseAlgorithm := "AES256"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRemediationConfigurationDestroy(ctx),
@@ -194,7 +194,7 @@ func testAccRemediationConfiguration_updates(t *testing.T) {
 	updatedSseAlgorithm := "aws:kms"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRemediationConfigurationDestroy(ctx),
@@ -247,7 +247,7 @@ func testAccRemediationConfiguration_values(t *testing.T) {
 	sseAlgorithm := "AES256"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRemediationConfigurationDestroy(ctx),
@@ -273,6 +273,47 @@ func testAccRemediationConfiguration_values(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccRemediationConfiguration_migrateParameters(t *testing.T) {
+	ctx := acctest.Context(t)
+	var rc configservice.RemediationConfiguration
+	resourceName := "aws_config_remediation_configuration.test"
+	rInt := sdkacctest.RandInt()
+	automatic := "false"
+	rAttempts := sdkacctest.RandIntRange(1, 25)
+	rSeconds := sdkacctest.RandIntRange(1, 2678000)
+	rExecPct := sdkacctest.RandIntRange(1, 100)
+	rErrorPct := sdkacctest.RandIntRange(1, 100)
+	prefix := "Original"
+	sseAlgorithm := "AES256"
+	expectedName := fmt.Sprintf("%s-tf-acc-test-%d", prefix, rInt)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
+		CheckDestroy: testAccCheckRemediationConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "4.66.0",
+					},
+				},
+				Config: testAccRemediationConfigurationConfig_basic(prefix, sseAlgorithm, rInt, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRemediationConfigurationExists(ctx, resourceName, &rc),
+					resource.TestCheckResourceAttr(resourceName, "config_rule_name", expectedName),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccRemediationConfigurationConfig_basic(prefix, sseAlgorithm, rInt, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
+				PlanOnly:                 true,
 			},
 		},
 	})

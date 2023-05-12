@@ -15,8 +15,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -187,13 +187,9 @@ func bucketRegion(ctx context.Context, conn *s3.S3, bucket string) (string, erro
 }
 
 func objectLockEnabled(ctx context.Context, conn *s3.S3, bucket string) (bool, error) {
-	input := &s3.GetObjectLockConfigurationInput{
-		Bucket: aws.String(bucket),
-	}
+	output, err := FindObjectLockConfiguration(ctx, conn, bucket, "")
 
-	output, err := conn.GetObjectLockConfigurationWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, ErrCodeObjectLockConfigurationNotFound) {
+	if tfresource.NotFound(err) {
 		return false, nil
 	}
 
@@ -201,7 +197,7 @@ func objectLockEnabled(ctx context.Context, conn *s3.S3, bucket string) (bool, e
 		return false, err
 	}
 
-	return aws.StringValue(output.ObjectLockConfiguration.ObjectLockEnabled) == s3.ObjectLockEnabledEnabled, nil
+	return aws.StringValue(output.ObjectLockEnabled) == s3.ObjectLockEnabledEnabled, nil
 }
 
 type bucketFilter func(*s3.Bucket) (bool, error)
@@ -245,7 +241,7 @@ func bucketNameFilter(bucket *s3.Bucket) (bool, error) {
 }
 
 var (
-	defaultNameRegexp = regexp.MustCompile(fmt.Sprintf(`^%s\d+$`, resource.UniqueIdPrefix))
+	defaultNameRegexp = regexp.MustCompile(fmt.Sprintf(`^%s\d+$`, id.UniqueIdPrefix))
 )
 
 func bucketRegionFilter(ctx context.Context, conn *s3.S3, region string) bucketFilter {

@@ -53,7 +53,7 @@ func (r *ResourceWithConfigure) Configure(_ context.Context, request resource.Co
 
 // ExpandTags returns the API tags for the specified "tags" value.
 func (r *ResourceWithConfigure) ExpandTags(ctx context.Context, tags types.Map) tftags.KeyValueTags {
-	return r.Meta().DefaultTagsConfig.MergeTags(tftags.New(tags))
+	return r.Meta().DefaultTagsConfig.MergeTags(tftags.New(ctx, tags))
 }
 
 // FlattenTags returns the "tags" value from the specified API tags.
@@ -90,7 +90,7 @@ func (r *ResourceWithConfigure) SetTagsAll(ctx context.Context, request resource
 	}
 
 	if !planTags.IsUnknown() {
-		resourceTags := tftags.New(planTags)
+		resourceTags := tftags.New(ctx, planTags)
 
 		if defaultTagsConfig.TagsEqual(resourceTags) {
 			response.Diagnostics.AddError(

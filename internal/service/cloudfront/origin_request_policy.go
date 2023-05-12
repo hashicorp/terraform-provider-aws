@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_cloudfront_origin_request_policy")
 func ResourceOriginRequestPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOriginRequestPolicyCreate,
