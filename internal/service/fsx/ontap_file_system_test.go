@@ -284,11 +284,11 @@ func TestAccFSxOntapFileSystem_routeTableIDs(t *testing.T) {
 		CheckDestroy:             testAccCheckOntapFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccONTAPFileSystemConfig_routeTable(rName),
+				Config: testAccONTAPFileSystemConfig_routeTable(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.0", "id"),
 				),
 			},
 			{
@@ -296,6 +296,23 @@ func TestAccFSxOntapFileSystem_routeTableIDs(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+			{
+				Config: testAccONTAPFileSystemConfig_routeTable(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem1),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.0", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.1", "id"),
+				),
+			},
+			{
+				Config: testAccONTAPFileSystemConfig_routeTable(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem1),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.0", "id"),
+				),
 			},
 		},
 	})
@@ -750,7 +767,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 `, rName, iops))
 }
 
-func testAccONTAPFileSystemConfig_routeTable(rName string) string {
+func testAccONTAPFileSystemConfig_routeTable(rName string, cnt int) string {
 	return acctest.ConfigCompose(testAccOntapFileSystemBaseConfig(rName), fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
@@ -761,6 +778,8 @@ resource "aws_internet_gateway" "test" {
 }
 
 resource "aws_route_table" "test" {
+  count = %[2]d
+
   vpc_id = aws_vpc.test.id
 
   route {
@@ -779,13 +798,13 @@ resource "aws_fsx_ontap_file_system" "test" {
   deployment_type     = "MULTI_AZ_1"
   throughput_capacity = 128
   preferred_subnet_id = aws_subnet.test1.id
-  route_table_ids     = [aws_route_table.test.id]
+  route_table_ids     = aws_route_table.test[*].id
 
   tags = {
     Name = %[1]q
   }
 }
-`, rName))
+`, rName, cnt))
 }
 
 func testAccONTAPFileSystemConfig_securityGroupIDs1(rName string) string {

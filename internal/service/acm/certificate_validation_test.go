@@ -7,12 +7,12 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfacm "github.com/hashicorp/terraform-provider-aws/internal/service/acm"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccACMCertificateValidation_basic(t *testing.T) {
@@ -24,7 +24,7 @@ func TestAccACMCertificateValidation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -47,7 +47,7 @@ func TestAccACMCertificateValidation_timeout(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -68,7 +68,7 @@ func TestAccACMCertificateValidation_validationRecordFQDNS(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -96,7 +96,7 @@ func TestAccACMCertificateValidation_validationRecordFQDNSEmail(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -116,7 +116,7 @@ func TestAccACMCertificateValidation_validationRecordFQDNSRoot(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -140,7 +140,7 @@ func TestAccACMCertificateValidation_validationRecordFQDNSRootAndWildcard(t *tes
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -165,7 +165,7 @@ func TestAccACMCertificateValidation_validationRecordFQDNSSan(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -189,7 +189,7 @@ func TestAccACMCertificateValidation_validationRecordFQDNSWildcard(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -214,7 +214,7 @@ func TestAccACMCertificateValidation_validationRecordFQDNSWildcardAndRoot(t *tes
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -241,7 +241,7 @@ func testAccCheckCertificateValidationExists(ctx context.Context, n string) reso
 			return fmt.Errorf("no ACM Certificate Validation ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient()
 
 		_, err := tfacm.FindCertificateValidationByARN(ctx, conn, rs.Primary.Attributes["certificate_arn"])
 
