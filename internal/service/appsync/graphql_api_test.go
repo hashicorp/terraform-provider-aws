@@ -46,6 +46,7 @@ func testAccGraphQLAPI_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "tags"),
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "xray_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility", "GLOBAL"),
 				),
 			},
 			{
@@ -1172,6 +1173,35 @@ func testAccGraphQLAPI_xrayEnabled(t *testing.T) {
 	})
 }
 
+func testAccGraphQLAPI_visibility(t *testing.T) {
+	ctx := acctest.Context(t)
+	var api1 appsync.GraphqlApi
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_appsync_graphql_api.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGraphQLAPIConfig_visibility(rName, "PRIVATE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "visibility", "PRIVATE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckGraphQLAPIDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
@@ -1249,6 +1279,16 @@ resource "aws_appsync_graphql_api" "test" {
   name                = %q
 }
 `, authenticationType, rName)
+}
+
+func testAccGraphQLAPIConfig_visibility(rName, visibility string) string {
+	return fmt.Sprintf(`
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "API_KEY"
+  name                = %[1]q
+  visibility          = %[2]q
+}
+`, rName, visibility)
 }
 
 func testAccGraphQLAPIConfig_logFieldLogLevel(rName, fieldLogLevel string) string {

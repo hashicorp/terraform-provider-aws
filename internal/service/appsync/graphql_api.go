@@ -148,17 +148,14 @@ func ResourceGraphQLAPI() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cloudwatch_logs_role_arn": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
 						},
 						"field_log_level": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								appsync.FieldLogLevelAll,
-								appsync.FieldLogLevelError,
-								appsync.FieldLogLevelNone,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(appsync.FieldLogLevel_Values(), false),
 						},
 						"exclude_verbose_content": {
 							Type:     schema.TypeBool,
@@ -209,12 +206,9 @@ func ResourceGraphQLAPI() *schema.Resource {
 							Computed: true,
 						},
 						"default_action": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								appsync.DefaultActionAllow,
-								appsync.DefaultActionDeny,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(appsync.DefaultAction_Values(), false),
 						},
 						"user_pool_id": {
 							Type:     schema.TypeString,
@@ -257,6 +251,13 @@ func ResourceGraphQLAPI() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"visibility": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      appsync.GraphQLApiVisibilityGlobal,
+				ValidateFunc: validation.StringInSlice(appsync.GraphQLApiVisibility_Values(), false),
+			},
 			"xray_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -301,6 +302,10 @@ func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.XrayEnabled = aws.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk("visibility"); ok {
+		input.Visibility = aws.String(v.(string))
+	}
+
 	resp, err := conn.CreateGraphqlApiWithContext(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating AppSync GraphQL API: %s", err)
@@ -338,6 +343,7 @@ func resourceGraphQLAPIRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("arn", resp.GraphqlApi.Arn)
 	d.Set("authentication_type", resp.GraphqlApi.AuthenticationType)
 	d.Set("name", resp.GraphqlApi.Name)
+	d.Set("visibility", resp.GraphqlApi.Visibility)
 
 	if err := d.Set("log_config", flattenGraphQLAPILogConfig(resp.GraphqlApi.LogConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting log_config: %s", err)
