@@ -36,6 +36,7 @@ Upgrade topics:
 - [Resource: aws_msk_cluster](#resource-aws_msk_cluster)
 - [Resource: aws_neptune_cluster](#resource-aws_neptune_cluster)
 - [Resource: aws_rds_cluster](#resource-aws_rds_cluster)
+- [Resource: aws_wafv2_web_acl](#resource-aws_wafv2_web_acl)
 
 <!-- /TOC -->
 
@@ -151,6 +152,12 @@ Automated snapshots **should not** be used for this attribute, unless from a dif
 Changes to the `snapshot_identifier` attribute will now correctly force re-creation of the resource. Previously, changing this attribute would result in a successful apply, but without the cluster being restored (only the resource state was changed). This change brings behavior of the cluster `snapshot_identifier` attribute into alignment with other RDS resources, such as `aws_db_instance`.
 
 Automated snapshots **should not** be used for this attribute, unless from a different cluster. Automated snapshots are deleted as part of cluster destruction when the resource is replaced.
+
+## Resource: aws_wafv2_web_acl
+
+The `statement.managed_rule_group_statement.excluded_rule` and `statement.rule_group_reference_statement.excluded_rule` attributes have been removed.
+
+The `statement.rule_group_reference_statement.rule_action_override` attribute has been added.
 
 ## Data Source: aws_api_gateway_rest_api
 
