@@ -194,15 +194,6 @@ func KeyValueTags(ctx context.Context, tags any{{ if .TagTypeIDElem }}, identifi
 				tagData.AdditionalBoolFields["{{ .TagTypeAddBoolElem }}"] = &v
 			}
 			{{- end }}
-			{{ if eq .ServicePackage "autoscaling" }}
-			// Deprecated: Legacy map handling
-			{{- if .TagTypeAddBoolElem }}
-			if v, ok := tfMap["{{ .TagTypeAddBoolElemSnake }}"].(string); ok {
-				b, _ := strconv.ParseBool(v)
-				tagData.AdditionalBoolFields["{{ .TagTypeAddBoolElem }}"] = &b
-			}
-			{{- end }}
-			{{- end }}
 			{{- end }}
 
 			{{ if .TagTypeIDElem }}
