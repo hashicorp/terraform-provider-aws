@@ -48,6 +48,29 @@ func ResourceGraphQLAPI() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(appsync.AuthenticationType_Values(), false),
 						},
+						"lambda_authorizer_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"authorizer_result_ttl_in_seconds": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      DefaultAuthorizerResultTTLInSeconds,
+										ValidateFunc: validateAuthorizerResultTTLInSeconds,
+									},
+									"authorizer_uri": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"identity_validation_expression": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
 						"openid_connect_config": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -95,50 +118,39 @@ func ResourceGraphQLAPI() *schema.Resource {
 								},
 							},
 						},
-						"lambda_authorizer_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"authorizer_result_ttl_in_seconds": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      DefaultAuthorizerResultTTLInSeconds,
-										ValidateFunc: validateAuthorizerResultTTLInSeconds,
-									},
-									"authorizer_uri": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"identity_validation_expression": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-						},
 					},
 				},
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"authentication_type": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(appsync.AuthenticationType_Values(), false),
 			},
-			"schema": {
-				Type:     schema.TypeString,
+			"lambda_authorizer_config": {
+				Type:     schema.TypeList,
 				Optional: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					if !regexp.MustCompile(`[_A-Za-z][_0-9A-Za-z]*`).MatchString(value) {
-						errors = append(errors, fmt.Errorf("%q must match [_A-Za-z][_0-9A-Za-z]*", k))
-					}
-					return
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"authorizer_result_ttl_in_seconds": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      DefaultAuthorizerResultTTLInSeconds,
+							ValidateFunc: validateAuthorizerResultTTLInSeconds,
+						},
+						"authorizer_uri": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"identity_validation_expression": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
 				},
 			},
 			"log_config": {
@@ -152,17 +164,28 @@ func ResourceGraphQLAPI() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"field_log_level": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(appsync.FieldLogLevel_Values(), false),
-						},
 						"exclude_verbose_content": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
 						},
+						"field_log_level": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(appsync.FieldLogLevel_Values(), false),
+						},
 					},
+				},
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+					value := v.(string)
+					if !regexp.MustCompile(`[_A-Za-z][_0-9A-Za-z]*`).MatchString(value) {
+						errors = append(errors, fmt.Errorf("%q must match [_A-Za-z][_0-9A-Za-z]*", k))
+					}
+					return
 				},
 			},
 			"openid_connect_config": {
@@ -189,6 +212,17 @@ func ResourceGraphQLAPI() *schema.Resource {
 						},
 					},
 				},
+			},
+			"schema": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"uris": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"user_pool_config": {
 				Type:     schema.TypeList,
@@ -217,40 +251,6 @@ func ResourceGraphQLAPI() *schema.Resource {
 					},
 				},
 			},
-			"lambda_authorizer_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"authorizer_result_ttl_in_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      DefaultAuthorizerResultTTLInSeconds,
-							ValidateFunc: validateAuthorizerResultTTLInSeconds,
-						},
-						"authorizer_uri": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"identity_validation_expression": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"uris": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"visibility": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -714,6 +714,7 @@ func resourceSchemaPut(ctx context.Context, d *schema.ResourceData, meta interfa
 				if err != nil {
 					return 0, "", err
 				}
+				// TODO Details
 				return result, *result.Status, nil
 			},
 			Timeout: d.Timeout(schema.TimeoutCreate),
