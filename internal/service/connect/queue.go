@@ -29,10 +29,13 @@ func ResourceQueue() *schema.Resource {
 		// Queues do not support deletion today. NoOp the Delete method.
 		// Users can rename their queues manually if they want.
 		DeleteWithoutTimeout: schema.NoopContext,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -92,14 +95,6 @@ func ResourceQueue() *schema.Resource {
 			"quick_connect_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"quick_connect_ids_associated": {
-				Deprecated: "Use the quick_connect_ids instead",
-				Type:       schema.TypeSet,
-				Computed:   true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -211,8 +206,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.FromErr(fmt.Errorf("error finding Connect Queue Quick Connect ID for Queue (%s): %w", queueID, err))
 	}
 
-	d.Set("quick_connect_ids", flex.FlattenStringSet(quickConnectIds))
-	d.Set("quick_connect_ids_associated", flex.FlattenStringSet(quickConnectIds))
+	d.Set("quick_connect_ids", aws.StringValueSlice(quickConnectIds))
 
 	SetTagsOut(ctx, resp.Queue.Tags)
 

@@ -34,10 +34,13 @@ func ResourceRoutingProfile() *schema.Resource {
 		// Routing profiles do not support deletion today. NoOp the Delete method.
 		// Users can rename their routing profiles manually if they want.
 		DeleteWithoutTimeout: schema.NoopContext,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -109,39 +112,6 @@ func ResourceRoutingProfile() *schema.Resource {
 						"queue_id": {
 							Type:     schema.TypeString,
 							Required: true,
-						},
-						"queue_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"queue_configs_associated": {
-				Deprecated: "Use the queue_configs instead",
-				Type:       schema.TypeSet,
-				Computed:   true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"channel": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"delay": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"priority": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"queue_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"queue_id": {
-							Type:     schema.TypeString,
-							Computed: true,
 						},
 						"queue_name": {
 							Type:     schema.TypeString,
@@ -254,7 +224,6 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("queue_configs", queueConfigs)
-	d.Set("queue_configs_associated", queueConfigs)
 
 	SetTagsOut(ctx, resp.RoutingProfile.Tags)
 

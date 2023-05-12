@@ -126,13 +126,6 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"cluster_security_groups": {
-				Type:       schema.TypeSet,
-				Optional:   true,
-				Computed:   true,
-				Elem:       &schema.Schema{Type: schema.TypeString},
-				Deprecated: `With the retirement of EC2-Classic the cluster_security_groups attribute has been deprecated and will be removed in a future version.`,
-			},
 			"cluster_subnet_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -392,10 +385,6 @@ func ResourceCluster() *schema.Resource {
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn()
-
-	if v, ok := d.GetOk("cluster_security_groups"); ok && v.(*schema.Set).Len() > 0 {
-		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic no new Redshift Clusters can be created referencing Redshift Security Groups`)
-	}
 
 	clusterID := d.Get("cluster_identifier").(string)
 	backupInput := &redshift.RestoreFromClusterSnapshotInput{
@@ -664,13 +653,6 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	var apiList []*string
 
-	for _, clusterSecurityGroup := range rsc.ClusterSecurityGroups {
-		apiList = append(apiList, clusterSecurityGroup.ClusterSecurityGroupName)
-	}
-	d.Set("cluster_security_groups", aws.StringValueSlice(apiList))
-
-	apiList = nil
-
 	for _, iamRole := range rsc.IamRoles {
 		apiList = append(apiList, iamRole.IamRoleArn)
 	}
@@ -711,10 +693,6 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("cluster_parameter_group_name") {
 			input.ClusterParameterGroupName = aws.String(d.Get("cluster_parameter_group_name").(string))
-		}
-
-		if d.HasChange("cluster_security_groups") {
-			input.ClusterSecurityGroups = flex.ExpandStringSet(d.Get("cluster_security_groups").(*schema.Set))
 		}
 
 		if d.HasChange("maintenance_track_name") {
