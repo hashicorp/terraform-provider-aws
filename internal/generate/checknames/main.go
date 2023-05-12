@@ -14,6 +14,7 @@ import (
 	"regexp"
 	"strings"
 
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -107,15 +108,15 @@ func main() {
 			}
 		}
 
-		if l[names.ColSDKVersion] != "1" && l[names.ColSDKVersion] != "2" && l[names.ColExclude] == "" {
-			log.Fatalf("in names_data.csv, for service %s, SDKVersion must have a value if Exclude is blank", l[names.ColHumanFriendly])
+		if l[names.ColClientSDKV1] == "" && l[names.ColClientSDKV2] == "" && l[names.ColExclude] == "" {
+			log.Fatalf("in names_data.csv, for service %s, at least one of ClientSDKV1 or ClientSDKV2 must have a value if Exclude is blank", l[names.ColHumanFriendly])
 		}
 
-		if l[names.ColSDKVersion] == "1" && (l[names.ColGoV1Package] == "" || l[names.ColGoV1ClientTypeName] == "") {
+		if l[names.ColClientSDKV1] != "" && (l[names.ColGoV1Package] == "" || l[names.ColGoV1ClientTypeName] == "") {
 			log.Fatalf("in names_data.csv, for service %s, SDKVersion is set to 1 so neither GoV1Package nor GoV1ClientTypeName can be blank", l[names.ColHumanFriendly])
 		}
 
-		if l[names.ColSDKVersion] == "2" && l[names.ColGoV2Package] == "" {
+		if l[names.ColClientSDKV2] != "" && l[names.ColGoV2Package] == "" {
 			log.Fatalf("in names_data.csv, for service %s, SDKVersion is set to 2 so GoV2Package cannot be blank", l[names.ColHumanFriendly])
 		}
 
@@ -188,15 +189,23 @@ func main() {
 	}
 	fmt.Printf("  Performed %d checks on names_data.csv, 0 errors.\n", (allChecks * 36))
 
+	var fileErrs bool
+
 	// DocPrefix needs to be reworked for compatibility with tfproviderdocs, in the meantime skip
 	err = checkDocDir("../../../website/docs/r/", docPrefixes)
 	if err != nil {
-		log.Fatalf("while checking resource doc dir: %s", err)
+		fileErrs = true
+		log.Printf("while checking resource doc dir: %s", err)
 	}
 
 	err = checkDocDir("../../../website/docs/d/", docPrefixes)
 	if err != nil {
-		log.Fatalf("while checking data source doc dir: %s", err)
+		fileErrs = true
+		log.Printf("while checking data source doc dir: %s", err)
+	}
+
+	if fileErrs {
+		os.Exit(1)
 	}
 
 	fmt.Printf("  Checked %d documentation files to ensure filename prefix, resource name, label regex, and subcategory match, 0 errors.\n", allDocs)
@@ -220,6 +229,7 @@ func checkDocDir(dir string, prefixes []DocPrefix) error {
 		log.Fatalf("reading directory (%s): %s", dir, err)
 	}
 
+	var errs error
 	for _, fh := range fs {
 		if fh.IsDir() {
 			continue
@@ -232,11 +242,11 @@ func checkDocDir(dir string, prefixes []DocPrefix) error {
 		allDocs++
 
 		if err := checkDocFile(dir, fh.Name(), prefixes); err != nil {
-			return err
+			errs = multierror.Append(errs, err)
 		}
 	}
 
-	return nil
+	return errs
 }
 
 func checkDocFile(dir, name string, prefixes []DocPrefix) error {

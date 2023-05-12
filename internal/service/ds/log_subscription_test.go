@@ -1,6 +1,7 @@
 package ds_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,23 +16,23 @@ import (
 )
 
 func TestAccDSLogSubscription_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_directory_service_log_subscription.subscription"
 	logGroupName := "ad-service-log-subscription-test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckDirectoryService(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckDirectoryService(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLogSubscriptionDestroy,
+		CheckDestroy:             testAccCheckLogSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			// test create
 			{
 				Config: testAccLogSubscriptionConfig_basic(rName, domainName, logGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLogSubscriptionExists(
-						resourceName,
+					testAccCheckLogSubscriptionExists(ctx, resourceName,
 						logGroupName,
 					),
 				),
@@ -46,35 +47,37 @@ func TestAccDSLogSubscription_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckLogSubscriptionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
+func testAccCheckLogSubscriptionDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_directory_service_log_subscription" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_directory_service_log_subscription" {
+				continue
+			}
+
+			res, err := conn.ListLogSubscriptionsWithContext(ctx, &directoryservice.ListLogSubscriptionsInput{
+				DirectoryId: aws.String(rs.Primary.ID),
+			})
+
+			if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if len(res.LogSubscriptions) > 0 {
+				return fmt.Errorf("Expected AWS Directory Service Log Subscription to be gone, but was still found")
+			}
 		}
 
-		res, err := conn.ListLogSubscriptions(&directoryservice.ListLogSubscriptionsInput{
-			DirectoryId: aws.String(rs.Primary.ID),
-		})
-
-		if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if len(res.LogSubscriptions) > 0 {
-			return fmt.Errorf("Expected AWS Directory Service Log Subscription to be gone, but was still found")
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckLogSubscriptionExists(name string, logGroupName string) resource.TestCheckFunc {
+func testAccCheckLogSubscriptionExists(ctx context.Context, name string, logGroupName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -85,9 +88,9 @@ func testAccCheckLogSubscriptionExists(name string, logGroupName string) resourc
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn()
 
-		res, err := conn.ListLogSubscriptions(&directoryservice.ListLogSubscriptionsInput{
+		res, err := conn.ListLogSubscriptionsWithContext(ctx, &directoryservice.ListLogSubscriptionsInput{
 			DirectoryId: aws.String(rs.Primary.ID),
 		})
 

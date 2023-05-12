@@ -2,28 +2,33 @@ package rds
 
 import (
 	"bytes"
-	"errors"
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_db_security_group", name="DB Security Group")
+// @Tags(identifierAttribute="arn")
 func ResourceSecurityGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSecurityGroupCreate,
-		Read:   resourceSecurityGroupRead,
-		Update: resourceSecurityGroupUpdate,
-		Delete: resourceSecurityGroupDelete,
+		CreateWithoutTimeout: resourceSecurityGroupCreate,
+		ReadWithoutTimeout:   resourceSecurityGroupRead,
+		UpdateWithoutTimeout: resourceSecurityGroupUpdate,
+		DeleteWithoutTimeout: resourceSecurityGroupDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -77,8 +82,8 @@ func ResourceSecurityGroup() *schema.Resource {
 				Set: resourceSecurityGroupIngressHash,
 			},
 
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -87,17 +92,17 @@ func ResourceSecurityGroup() *schema.Resource {
 	}
 }
 
-func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	return errors.New(`with the retirement of EC2-Classic no new RDS DB Security Groups can be created`)
+func resourceSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic no new RDS DB Security Groups can be created`)
 }
 
-func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	sg, err := resourceSecurityGroupRetrieve(d, meta)
+	sg, err := resourceSecurityGroupRetrieve(ctx, d, meta)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Security Group (%s): %s", d.Id(), err)
 	}
 
 	d.Set("name", sg.DBSecurityGroupName)
@@ -129,46 +134,20 @@ func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("ingress", rules)
 
-	conn := meta.(*conns.AWSClient).RDSConn
-
 	arn := aws.StringValue(sg.DBSecurityGroupArn)
 	d.Set("arn", arn)
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for RDS DB Security Group (%s): %s", d.Get("arn").(string), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating RDS DB Security Group (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
+func resourceSecurityGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	if d.HasChange("ingress") {
-		sg, err := resourceSecurityGroupRetrieve(d, meta)
+		sg, err := resourceSecurityGroupRetrieve(ctx, d, meta)
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "updating RDS DB Security Group (%s): %s", d.Id(), err)
 		}
 
 		oi, ni := d.GetChange("ingress")
@@ -186,46 +165,45 @@ func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error
 
 		// DELETE old Ingress rules
 		for _, ing := range removeIngress {
-			err := resourceSecurityGroupRevokeRule(ing, *sg.DBSecurityGroupName, conn)
+			err := resourceSecurityGroupRevokeRule(ctx, ing, *sg.DBSecurityGroupName, conn)
 			if err != nil {
-				return err
+				return sdkdiag.AppendErrorf(diags, "updating RDS DB Security Group (%s): revoking ingress: %s", d.Id(), err)
 			}
 		}
 
 		// ADD new/updated Ingress rules
 		for _, ing := range newIngress {
-			err := resourceSecurityGroupAuthorizeRule(ing, *sg.DBSecurityGroupName, conn)
+			err := resourceSecurityGroupAuthorizeRule(ctx, ing, *sg.DBSecurityGroupName, conn)
 			if err != nil {
-				return err
+				return sdkdiag.AppendErrorf(diags, "updating RDS DB Security Group (%s): authorizing ingress: %s", d.Id(), err)
 			}
 		}
 	}
 
-	return resourceSecurityGroupRead(d, meta)
+	return append(diags, resourceSecurityGroupRead(ctx, d, meta)...)
 }
 
-func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	log.Printf("[DEBUG] DB Security Group destroy: %v", d.Id())
 
 	opts := rds.DeleteDBSecurityGroupInput{DBSecurityGroupName: aws.String(d.Id())}
 
-	log.Printf("[DEBUG] DB Security Group destroy configuration: %v", opts)
-	_, err := conn.DeleteDBSecurityGroup(&opts)
-
+	_, err := conn.DeleteDBSecurityGroupWithContext(ctx, &opts)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, "InvalidDBSecurityGroup.NotFound") {
-			return nil
+			return diags
 		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting RDS DB Security Group (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceSecurityGroupRetrieve(d *schema.ResourceData, meta interface{}) (*rds.DBSecurityGroup, error) {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceSecurityGroupRetrieve(ctx context.Context, d *schema.ResourceData, meta interface{}) (*rds.DBSecurityGroup, error) {
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	opts := rds.DescribeDBSecurityGroupsInput{
 		DBSecurityGroupName: aws.String(d.Id()),
@@ -233,8 +211,7 @@ func resourceSecurityGroupRetrieve(d *schema.ResourceData, meta interface{}) (*r
 
 	log.Printf("[DEBUG] DB Security Group describe configuration: %#v", opts)
 
-	resp, err := conn.DescribeDBSecurityGroups(&opts)
-
+	resp, err := conn.DescribeDBSecurityGroupsWithContext(ctx, &opts)
 	if err != nil {
 		return nil, fmt.Errorf("Error retrieving DB Security Groups: %s", err)
 	}
@@ -248,7 +225,7 @@ func resourceSecurityGroupRetrieve(d *schema.ResourceData, meta interface{}) (*r
 }
 
 // Authorizes the ingress rule on the db security group
-func resourceSecurityGroupAuthorizeRule(ingress interface{}, dbSecurityGroupName string, conn *rds.RDS) error {
+func resourceSecurityGroupAuthorizeRule(ctx context.Context, ingress interface{}, dbSecurityGroupName string, conn *rds.RDS) error {
 	ing := ingress.(map[string]interface{})
 
 	opts := rds.AuthorizeDBSecurityGroupIngressInput{
@@ -273,8 +250,7 @@ func resourceSecurityGroupAuthorizeRule(ingress interface{}, dbSecurityGroupName
 
 	log.Printf("[DEBUG] Authorize ingress rule configuration: %#v", opts)
 
-	_, err := conn.AuthorizeDBSecurityGroupIngress(&opts)
-
+	_, err := conn.AuthorizeDBSecurityGroupIngressWithContext(ctx, &opts)
 	if err != nil {
 		return fmt.Errorf("Error authorizing security group ingress: %s", err)
 	}
@@ -283,7 +259,7 @@ func resourceSecurityGroupAuthorizeRule(ingress interface{}, dbSecurityGroupName
 }
 
 // Revokes the ingress rule on the db security group
-func resourceSecurityGroupRevokeRule(ingress interface{}, dbSecurityGroupName string, conn *rds.RDS) error {
+func resourceSecurityGroupRevokeRule(ctx context.Context, ingress interface{}, dbSecurityGroupName string, conn *rds.RDS) error {
 	ing := ingress.(map[string]interface{})
 
 	opts := rds.RevokeDBSecurityGroupIngressInput{
@@ -308,8 +284,7 @@ func resourceSecurityGroupRevokeRule(ingress interface{}, dbSecurityGroupName st
 
 	log.Printf("[DEBUG] Revoking ingress rule configuration: %#v", opts)
 
-	_, err := conn.RevokeDBSecurityGroupIngress(&opts)
-
+	_, err := conn.RevokeDBSecurityGroupIngressWithContext(ctx, &opts)
 	if err != nil {
 		return fmt.Errorf("Error revoking security group ingress: %s", err)
 	}

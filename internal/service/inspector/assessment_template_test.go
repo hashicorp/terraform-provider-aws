@@ -1,6 +1,7 @@
 package inspector_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -16,20 +17,21 @@ import (
 )
 
 func TestAccInspectorAssessmentTemplate_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v inspector.AssessmentTemplate
 	resourceName := "aws_inspector_assessment_template.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, inspector.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTemplateDestroy,
+		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAssessmentTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTemplateExists(resourceName, &v),
+					testAccCheckTemplateExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexp.MustCompile(`target/.+/template/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "duration", "3600"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -48,21 +50,22 @@ func TestAccInspectorAssessmentTemplate_basic(t *testing.T) {
 }
 
 func TestAccInspectorAssessmentTemplate_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v inspector.AssessmentTemplate
 	resourceName := "aws_inspector_assessment_template.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, inspector.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTemplateDestroy,
+		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAssessmentTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTemplateExists(resourceName, &v),
-					testAccCheckTemplateDisappears(&v),
+					testAccCheckTemplateExists(ctx, resourceName, &v),
+					testAccCheckTemplateDisappears(ctx, &v),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -71,20 +74,21 @@ func TestAccInspectorAssessmentTemplate_disappears(t *testing.T) {
 }
 
 func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v inspector.AssessmentTemplate
 	resourceName := "aws_inspector_assessment_template.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, inspector.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTemplateDestroy,
+		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAssessmentTemplateConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTemplateExists(resourceName, &v),
+					testAccCheckTemplateExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -97,7 +101,7 @@ func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
 			{
 				Config: testAccAssessmentTemplateConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTemplateExists(resourceName, &v),
+					testAccCheckTemplateExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -106,7 +110,7 @@ func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
 			{
 				Config: testAccAssessmentTemplateConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTemplateExists(resourceName, &v),
+					testAccCheckTemplateExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -114,7 +118,7 @@ func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
 			{
 				Config: testAccAssessmentTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTemplateExists(resourceName, &v),
+					testAccCheckTemplateExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -123,6 +127,7 @@ func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
 }
 
 func TestAccInspectorAssessmentTemplate_eventSubscription(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v inspector.AssessmentTemplate
 	resourceName := "aws_inspector_assessment_template.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -132,15 +137,15 @@ func TestAccInspectorAssessmentTemplate_eventSubscription(t *testing.T) {
 	event2 := "ASSESSMENT_RUN_STATE_CHANGED"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, inspector.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTemplateDestroy,
+		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAssessmentTemplateConfig_eventSubscription(rName, event1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTemplateExists(resourceName, &v),
+					testAccCheckTemplateExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "event_subscription.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_subscription.0.event", event1),
 				),
@@ -153,7 +158,7 @@ func TestAccInspectorAssessmentTemplate_eventSubscription(t *testing.T) {
 			{
 				Config: testAccAssessmentTemplateConfig_eventSubscription(rName, event1Updated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTemplateExists(resourceName, &v),
+					testAccCheckTemplateExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "event_subscription.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_subscription.0.event", event1Updated),
 				),
@@ -166,7 +171,7 @@ func TestAccInspectorAssessmentTemplate_eventSubscription(t *testing.T) {
 			{
 				Config: testAccAssessmentTemplateConfig_eventSubscriptionMultiple(rName, event1, event2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTemplateExists(resourceName, &v),
+					testAccCheckTemplateExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "event_subscription.#", "2"),
 				),
 			},
@@ -179,41 +184,43 @@ func TestAccInspectorAssessmentTemplate_eventSubscription(t *testing.T) {
 	})
 }
 
-func testAccCheckTemplateDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn
+func testAccCheckTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_inspector_assessment_template" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_inspector_assessment_template" {
+				continue
+			}
+
+			resp, err := conn.DescribeAssessmentTemplatesWithContext(ctx, &inspector.DescribeAssessmentTemplatesInput{
+				AssessmentTemplateArns: []*string{
+					aws.String(rs.Primary.ID),
+				},
+			})
+
+			if tfawserr.ErrCodeEquals(err, inspector.ErrCodeInvalidInputException) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("finding Inspector Classic Assessment Template: %s", err)
+			}
+
+			if len(resp.AssessmentTemplates) > 0 {
+				return fmt.Errorf("Found Template, expected none: %s", resp)
+			}
 		}
 
-		resp, err := conn.DescribeAssessmentTemplates(&inspector.DescribeAssessmentTemplatesInput{
-			AssessmentTemplateArns: []*string{
-				aws.String(rs.Primary.ID),
-			},
-		})
-
-		if tfawserr.ErrCodeEquals(err, inspector.ErrCodeInvalidInputException) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("Error finding Inspector Assessment Template: %s", err)
-		}
-
-		if len(resp.AssessmentTemplates) > 0 {
-			return fmt.Errorf("Found Template, expected none: %s", resp)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckTemplateDisappears(v *inspector.AssessmentTemplate) resource.TestCheckFunc {
+func testAccCheckTemplateDisappears(ctx context.Context, v *inspector.AssessmentTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn()
 
-		_, err := conn.DeleteAssessmentTemplate(&inspector.DeleteAssessmentTemplateInput{
+		_, err := conn.DeleteAssessmentTemplateWithContext(ctx, &inspector.DeleteAssessmentTemplateInput{
 			AssessmentTemplateArn: v.Arn,
 		})
 
@@ -221,7 +228,7 @@ func testAccCheckTemplateDisappears(v *inspector.AssessmentTemplate) resource.Te
 	}
 }
 
-func testAccCheckTemplateExists(name string, v *inspector.AssessmentTemplate) resource.TestCheckFunc {
+func testAccCheckTemplateExists(ctx context.Context, name string, v *inspector.AssessmentTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -229,12 +236,12 @@ func testAccCheckTemplateExists(name string, v *inspector.AssessmentTemplate) re
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Inspector assessment template ID is set")
+			return fmt.Errorf("No Inspector Classic Assessment template ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn()
 
-		resp, err := conn.DescribeAssessmentTemplates(&inspector.DescribeAssessmentTemplatesInput{
+		resp, err := conn.DescribeAssessmentTemplatesWithContext(ctx, &inspector.DescribeAssessmentTemplatesInput{
 			AssessmentTemplateArns: aws.StringSlice([]string{rs.Primary.ID}),
 		})
 		if err != nil {
@@ -242,7 +249,7 @@ func testAccCheckTemplateExists(name string, v *inspector.AssessmentTemplate) re
 		}
 
 		if resp.AssessmentTemplates == nil || len(resp.AssessmentTemplates) == 0 {
-			return fmt.Errorf("Inspector assessment template not found")
+			return fmt.Errorf("Inspector Classic Assessment template not found")
 		}
 
 		*v = *resp.AssessmentTemplates[0]

@@ -1,10 +1,10 @@
 package events_test
 
 import (
-	"context"
 	"reflect"
 	"testing"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
 )
 
@@ -46,8 +46,11 @@ func testResourceTargetStateDataV1EventBusName() map[string]interface{} {
 }
 
 func TestTargetStateUpgradeV0(t *testing.T) {
+	ctx := acctest.Context(t)
+	t.Parallel()
+
 	expected := testResourceTargetStateDataV1()
-	actual, err := tfevents.TargetStateUpgradeV0(context.Background(), testResourceTargetStateDataV0(), nil)
+	actual, err := tfevents.TargetStateUpgradeV0(ctx, testResourceTargetStateDataV0(), nil)
 	if err != nil {
 		t.Fatalf("error migrating state: %s", err)
 	}
@@ -58,8 +61,11 @@ func TestTargetStateUpgradeV0(t *testing.T) {
 }
 
 func TestTargetStateUpgradeV0EventBusName(t *testing.T) {
+	ctx := acctest.Context(t)
+	t.Parallel()
+
 	expected := testResourceTargetStateDataV1EventBusName()
-	actual, err := tfevents.TargetStateUpgradeV0(context.Background(), testResourceTargetStateDataV0EventBusName(), nil)
+	actual, err := tfevents.TargetStateUpgradeV0(ctx, testResourceTargetStateDataV0EventBusName(), nil)
 	if err != nil {
 		t.Fatalf("error migrating state: %s", err)
 	}

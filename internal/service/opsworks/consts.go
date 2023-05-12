@@ -1,6 +1,8 @@
 package opsworks
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	defaultBerkshelfVersion = "3.2.0"

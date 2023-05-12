@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -8,29 +9,29 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_iam_group")
 func ResourceGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceGroupCreate,
-		Read:   resourceGroupRead,
-		Update: resourceGroupUpdate,
-		Delete: resourceGroupDelete,
+		CreateWithoutTimeout: resourceGroupCreate,
+		ReadWithoutTimeout:   resourceGroupRead,
+		UpdateWithoutTimeout: resourceGroupUpdate,
+		DeleteWithoutTimeout: resourceGroupDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"unique_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -47,130 +48,145 @@ func ResourceGroup() *schema.Resource {
 				Optional: true,
 				Default:  "/",
 			},
+			"unique_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+		},
+
+		CustomizeDiff: func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+			if d.HasChanges("name", "path") {
+				return d.SetNewComputed("arn")
+			}
+
+			return nil
 		},
 	}
 }
 
-func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
-	name := d.Get("name").(string)
-	path := d.Get("path").(string)
+func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
 
-	request := &iam.CreateGroupInput{
-		Path:      aws.String(path),
+	name := d.Get("name").(string)
+	input := &iam.CreateGroupInput{
+		GroupName: aws.String(name),
+		Path:      aws.String(d.Get("path").(string)),
+	}
+
+	output, err := conn.CreateGroupWithContext(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating IAM Group (%s): %s", name, err)
+	}
+
+	d.SetId(aws.StringValue(output.Group.GroupName))
+
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindGroupByName(ctx, conn, d.Id())
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for IAM Group (%s) create: %s", d.Id(), err)
+	}
+
+	return append(diags, resourceGroupRead(ctx, d, meta)...)
+}
+
+func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
+
+	group, err := FindGroupByName(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] IAM Group (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading IAM Group (%s): %s", d.Id(), err)
+	}
+
+	d.Set("arn", group.Arn)
+	d.Set("name", group.GroupName)
+	d.Set("path", group.Path)
+	d.Set("unique_id", group.GroupId)
+
+	return diags
+}
+
+func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
+
+	o, n := d.GetChange("name")
+	input := &iam.UpdateGroupInput{
+		GroupName:    aws.String(o.(string)),
+		NewGroupName: aws.String(n.(string)),
+		NewPath:      aws.String(d.Get("path").(string)),
+	}
+
+	_, err := conn.UpdateGroupWithContext(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating IAM Group (%s): %s", d.Id(), err)
+	}
+
+	d.SetId(n.(string))
+
+	return append(diags, resourceGroupRead(ctx, d, meta)...)
+}
+
+func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
+
+	log.Printf("[DEBUG] Deleting IAM Group: %s", d.Id())
+	_, err := conn.DeleteGroupWithContext(ctx, &iam.DeleteGroupInput{
+		GroupName: aws.String(d.Id()),
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting IAM Group (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func FindGroupByName(ctx context.Context, conn *iam.IAM, name string) (*iam.Group, error) {
+	input := &iam.GetGroupInput{
 		GroupName: aws.String(name),
 	}
 
-	createResp, err := conn.CreateGroup(request)
-	if err != nil {
-		return fmt.Errorf("Error creating IAM Group %s: %s", name, err)
-	}
-	d.SetId(aws.StringValue(createResp.Group.GroupName))
+	output, err := conn.GetGroupWithContext(ctx, input)
 
-	return resourceGroupRead(d, meta)
-}
-
-func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
-
-	request := &iam.GetGroupInput{
-		GroupName: aws.String(d.Id()),
-	}
-
-	var getResp *iam.GetGroupOutput
-
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
-		var err error
-
-		getResp, err = conn.GetGroup(request)
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return resource.RetryableError(err)
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		getResp, err = conn.GetGroup(request)
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		log.Printf("[WARN] IAM Group (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IAM Group (%s): %w", d.Id(), err)
+		return nil, err
 	}
 
-	if getResp == nil || getResp.Group == nil {
-		return fmt.Errorf("error reading IAM Group (%s): empty response", d.Id())
+	if output == nil || output.Group == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	group := getResp.Group
-
-	if err := d.Set("name", group.GroupName); err != nil {
-		return err
-	}
-	if err := d.Set("arn", group.Arn); err != nil {
-		return err
-	}
-	if err := d.Set("path", group.Path); err != nil {
-		return err
-	}
-	if err := d.Set("unique_id", group.GroupId); err != nil {
-		return err
-	}
-	return nil
+	return output.Group, nil
 }
 
-func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	if d.HasChanges("name", "path") {
-		conn := meta.(*conns.AWSClient).IAMConn
-		on, nn := d.GetChange("name")
-		_, np := d.GetChange("path")
-
-		request := &iam.UpdateGroupInput{
-			GroupName:    aws.String(on.(string)),
-			NewGroupName: aws.String(nn.(string)),
-			NewPath:      aws.String(np.(string)),
-		}
-		_, err := conn.UpdateGroup(request)
-		if err != nil {
-			return fmt.Errorf("Error updating IAM Group %s: %s", d.Id(), err)
-		}
-		d.SetId(nn.(string))
-		return resourceGroupRead(d, meta)
-	}
-	return nil
-}
-
-func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
-
-	request := &iam.DeleteGroupInput{
-		GroupName: aws.String(d.Id()),
-	}
-
-	if _, err := conn.DeleteGroup(request); err != nil {
-		return fmt.Errorf("Error deleting IAM Group %s: %s", d.Id(), err)
-	}
-	return nil
-}
-
-func DeleteGroupPolicyAttachments(conn *iam.IAM, groupName string) error {
+func DeleteGroupPolicyAttachments(ctx context.Context, conn *iam.IAM, groupName string) error {
 	var attachedPolicies []*iam.AttachedPolicy
 	input := &iam.ListAttachedGroupPoliciesInput{
 		GroupName: aws.String(groupName),
 	}
 
-	err := conn.ListAttachedGroupPoliciesPages(input, func(page *iam.ListAttachedGroupPoliciesOutput, lastPage bool) bool {
+	err := conn.ListAttachedGroupPoliciesPagesWithContext(ctx, input, func(page *iam.ListAttachedGroupPoliciesOutput, lastPage bool) bool {
 		attachedPolicies = append(attachedPolicies, page.AttachedPolicies...)
 
 		return !lastPage
@@ -190,7 +206,7 @@ func DeleteGroupPolicyAttachments(conn *iam.IAM, groupName string) error {
 			PolicyArn: attachedPolicy.PolicyArn,
 		}
 
-		_, err := conn.DetachGroupPolicy(input)
+		_, err := conn.DetachGroupPolicyWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			continue
@@ -204,13 +220,13 @@ func DeleteGroupPolicyAttachments(conn *iam.IAM, groupName string) error {
 	return nil
 }
 
-func DeleteGroupPolicies(conn *iam.IAM, groupName string) error {
+func DeleteGroupPolicies(ctx context.Context, conn *iam.IAM, groupName string) error {
 	var inlinePolicies []*string
 	input := &iam.ListGroupPoliciesInput{
 		GroupName: aws.String(groupName),
 	}
 
-	err := conn.ListGroupPoliciesPages(input, func(page *iam.ListGroupPoliciesOutput, lastPage bool) bool {
+	err := conn.ListGroupPoliciesPagesWithContext(ctx, input, func(page *iam.ListGroupPoliciesOutput, lastPage bool) bool {
 		inlinePolicies = append(inlinePolicies, page.PolicyNames...)
 		return !lastPage
 	})
@@ -229,7 +245,7 @@ func DeleteGroupPolicies(conn *iam.IAM, groupName string) error {
 			PolicyName: policyName,
 		}
 
-		_, err := conn.DeleteGroupPolicy(input)
+		_, err := conn.DeleteGroupPolicyWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			continue

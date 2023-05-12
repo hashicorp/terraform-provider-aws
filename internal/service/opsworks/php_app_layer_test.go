@@ -1,6 +1,7 @@
 package opsworks_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/opsworks"
@@ -11,20 +12,21 @@ import (
 )
 
 func TestAccOpsWorksPHPAppLayer_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v opsworks.Layer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_php_app_layer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPHPAppLayerDestroy,
+		CheckDestroy:             testAccCheckPHPAppLayerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPHPAppLayerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLayerExists(resourceName, &v),
+					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", "PHP App Server"),
 				),
 			},
@@ -37,8 +39,8 @@ func TestAccOpsWorksPHPAppLayer_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckPHPAppLayerDestroy(s *terraform.State) error {
-	return testAccCheckLayerDestroy("aws_opsworks_php_app_layer", s)
+func testAccCheckPHPAppLayerDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error { return testAccCheckLayerDestroy(ctx, "aws_opsworks_php_app_layer", s) }
 }
 
 func testAccPHPAppLayerConfig_basic(rName string) string {

@@ -18,7 +18,7 @@ resource "aws_appstream_image_builder" "test_fleet" {
   description                    = "Description of a ImageBuilder"
   display_name                   = "Display name of a ImageBuilder"
   enable_default_internet_access = false
-  image_name                     = "AppStream-WinServer2012R2-07-19-2021"
+  image_name                     = "AppStream-WinServer2019-10-05-2022"
   instance_type                  = "stream.standard.large"
 
   vpc_config {

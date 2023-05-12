@@ -1,12 +1,16 @@
 package names
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"testing"
 )
 
 func TestProviderPackageForAlias(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName string
 		Input    string
@@ -34,7 +38,10 @@ func TestProviderPackageForAlias(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := ProviderPackageForAlias(testCase.Input)
 
 			if err != nil && !testCase.Error {
@@ -53,6 +60,8 @@ func TestProviderPackageForAlias(t *testing.T) {
 }
 
 func TestServicesForDirectories(t *testing.T) {
+	t.Parallel()
+
 	nonExisting := []string{
 		"alexaforbusiness",
 		"amplifybackend",
@@ -126,7 +135,6 @@ func TestServicesForDirectories(t *testing.T) {
 		"iotthingsgraph",
 		"iottwinmaker",
 		"iotwireless",
-		"ivs",
 		"kendra",
 		"kinesisvideoarchivedmedia",
 		"kinesisvideomedia",
@@ -210,13 +218,16 @@ func TestServicesForDirectories(t *testing.T) {
 	}
 
 	for _, testCase := range ProviderPackages() {
+		testCase := testCase
 		t.Run(testCase, func(t *testing.T) {
+			t.Parallel()
+
 			wd, err := os.Getwd()
 			if err != nil {
 				t.Errorf("error reading working directory: %s", err)
 			}
 
-			if _, err := os.Stat(fmt.Sprintf("%s/../internal/service/%s", wd, testCase)); os.IsNotExist(err) {
+			if _, err := os.Stat(fmt.Sprintf("%s/../internal/service/%s", wd, testCase)); errors.Is(err, fs.ErrNotExist) {
 				for _, service := range nonExisting {
 					if service == testCase {
 						t.Skipf("skipping %s because not yet implemented", testCase)
@@ -230,6 +241,8 @@ func TestServicesForDirectories(t *testing.T) {
 }
 
 func TestProviderNameUpper(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName string
 		Input    string
@@ -263,7 +276,10 @@ func TestProviderNameUpper(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := ProviderNameUpper(testCase.Input)
 
 			if err != nil && !testCase.Error {
@@ -282,6 +298,8 @@ func TestProviderNameUpper(t *testing.T) {
 }
 
 func TestFullHumanFriendly(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName string
 		Input    string
@@ -327,7 +345,10 @@ func TestFullHumanFriendly(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := FullHumanFriendly(testCase.Input)
 
 			if err != nil && !testCase.Error {
@@ -346,6 +367,8 @@ func TestFullHumanFriendly(t *testing.T) {
 }
 
 func TestAWSGoV1Package(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName string
 		Input    string
@@ -385,7 +408,10 @@ func TestAWSGoV1Package(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := AWSGoV1Package(testCase.Input)
 
 			if err != nil && !testCase.Error {
@@ -404,6 +430,8 @@ func TestAWSGoV1Package(t *testing.T) {
 }
 
 func TestAWSGoV1ClientName(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName string
 		Input    string
@@ -449,7 +477,10 @@ func TestAWSGoV1ClientName(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := AWSGoV1ClientTypeName(testCase.Input)
 
 			if err != nil && !testCase.Error {

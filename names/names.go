@@ -10,7 +10,6 @@
 // It is very important that information in the names_data.csv be exactly
 // correct because the Terrform AWS Provider relies on the information to
 // function correctly.
-
 package names
 
 import (
@@ -23,12 +22,34 @@ import (
 
 // This "should" be defined by the AWS Go SDK v2, but currently isn't.
 const (
-	ComprehendEndpointID     = "comprehend"
-	KendraEndpointID         = "kendra"
-	MediaLiveEndpointID      = "medialive"
-	RolesAnywhereEndpointID  = "rolesanywhere"
-	Route53DomainsEndpointID = "route53domains"
-	TranscribeEndpointID     = "transcribe"
+	AccessAnalyzerEndpointID             = "access-analyzer"
+	AccountEndpointID                    = "account"
+	ACMEndpointID                        = "acm"
+	AuditManagerEndpointID               = "auditmanager"
+	CloudWatchLogsEndpointID             = "logs"
+	ComprehendEndpointID                 = "comprehend"
+	ComputeOptimizerEndpointID           = "computeoptimizer"
+	DSEndpointID                         = "ds"
+	IdentityStoreEndpointID              = "identitystore"
+	Inspector2EndpointID                 = "inspector2"
+	IVSChatEndpointID                    = "ivschat"
+	KendraEndpointID                     = "kendra"
+	LambdaEndpointID                     = "lambda"
+	MediaLiveEndpointID                  = "medialive"
+	ObservabilityAccessManagerEndpointID = "oam"
+	OpenSearchServerlessEndpointID       = "aoss"
+	PipesEndpointID                      = "pipes"
+	ResourceExplorer2EndpointID          = "resource-explorer-2"
+	RolesAnywhereEndpointID              = "rolesanywhere"
+	Route53DomainsEndpointID             = "route53domains"
+	SchedulerEndpointID                  = "scheduler"
+	SESV2EndpointID                      = "sesv2"
+	SSMEndpointID                        = "ssm"
+	SSMContactsEndpointID                = "ssm-contacts"
+	SSMIncidentsEndpointID               = "ssm-incidents"
+	TranscribeEndpointID                 = "transcribe"
+	VPCLatticeEndpointID                 = "vpc-lattice"
+	XRayEndpointID                       = "xray"
 )
 
 // Type ServiceDatum corresponds closely to columns in `names_data.csv` and are
@@ -182,6 +203,18 @@ func FullHumanFriendly(service string) (string, error) {
 
 	if s, err := ProviderPackageForAlias(service); err == nil {
 		return FullHumanFriendly(s)
+	}
+
+	return "", fmt.Errorf("no service data found for %s", service)
+}
+
+func HumanFriendly(service string) (string, error) {
+	if v, ok := serviceData[service]; ok {
+		return v.HumanFriendly, nil
+	}
+
+	if s, err := ProviderPackageForAlias(service); err == nil {
+		return HumanFriendly(s)
 	}
 
 	return "", fmt.Errorf("no service data found for %s", service)

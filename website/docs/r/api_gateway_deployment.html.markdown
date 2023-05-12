@@ -134,7 +134,7 @@ The following arguments are supported:
 * `description` - (Optional) Description of the deployment
 * `stage_name` - (Optional) Name of the stage to create with this deployment. If the specified stage already exists, it will be updated to point to the new deployment. We recommend using the [`aws_api_gateway_stage` resource](api_gateway_stage.html) instead to manage stages.
 * `stage_description` - (Optional) Description to set on the stage managed by the `stage_name` argument.
-* `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger a redeployment. To force a redeployment without changing these keys/values, use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html).
+* `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger a redeployment. To force a redeployment without changing these keys/values, use the [`-replace` option](https://developer.hashicorp.com/terraform/cli/commands/plan#replace-address) with `terraform plan` or `terraform apply`.
 * `variables` - (Optional) Map to set on the stage managed by the `stage_name` argument.
 
 ## Attributes Reference
@@ -148,3 +148,15 @@ In addition to all arguments above, the following attributes are exported:
   when allowing API Gateway to invoke a Lambda function,
   e.g., `arn:aws:execute-api:eu-west-2:123456789012:z4675bid1j/prod`
 * `created_date` - Creation date of the deployment
+
+## Import
+
+`aws_api_gateway_deployment` can be imported using `REST-API-ID/DEPLOYMENT-ID`, e.g.,
+
+```
+$ terraform import aws_api_gateway_deployment.example aabbccddee/1122334
+```
+
+The `stage_name`, `stage_description`, and `variables` arguments cannot be imported. Use the [`aws_api_gateway_stage` resource](api_gateway_stage.html) to import and manage stages.
+
+The `triggers` argument cannot be imported.

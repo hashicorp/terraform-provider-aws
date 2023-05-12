@@ -1,6 +1,7 @@
 package autoscalingplans_test
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"sort"
@@ -19,20 +20,21 @@ import (
 )
 
 func TestAccAutoScalingPlansScalingPlan_basicDynamicScaling(t *testing.T) {
+	ctx := acctest.Context(t)
 	var scalingPlan autoscalingplans.ScalingPlan
 	resourceName := "aws_autoscalingplans_scaling_plan.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscalingplans.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScalingPlanDestroy,
+		CheckDestroy:             testAccCheckScalingPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScalingPlanConfig_basicDynamicScaling(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingPlanExists(resourceName, &scalingPlan),
+					testAccCheckScalingPlanExists(ctx, resourceName, &scalingPlan),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "scaling_plan_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.#", "1"),
@@ -75,23 +77,24 @@ func TestAccAutoScalingPlansScalingPlan_basicDynamicScaling(t *testing.T) {
 }
 
 func TestAccAutoScalingPlansScalingPlan_basicPredictiveScaling(t *testing.T) {
+	ctx := acctest.Context(t)
 	var scalingPlan autoscalingplans.ScalingPlan
 	resourceName := "aws_autoscalingplans_scaling_plan.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/autoscaling-plans")
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/autoscaling-plans")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, autoscalingplans.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScalingPlanDestroy,
+		CheckDestroy:             testAccCheckScalingPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScalingPlanConfig_basicPredictiveScaling(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingPlanExists(resourceName, &scalingPlan),
+					testAccCheckScalingPlanExists(ctx, resourceName, &scalingPlan),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "scaling_plan_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.#", "1"),
@@ -137,6 +140,7 @@ func TestAccAutoScalingPlansScalingPlan_basicPredictiveScaling(t *testing.T) {
 }
 
 func TestAccAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
 	var scalingPlan autoscalingplans.ScalingPlan
 	resourceName := "aws_autoscalingplans_scaling_plan.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -144,17 +148,17 @@ func TestAccAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/autoscaling-plans")
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/autoscaling-plans")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, autoscalingplans.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScalingPlanDestroy,
+		CheckDestroy:             testAccCheckScalingPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScalingPlanConfig_basicDynamicScaling(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingPlanExists(resourceName, &scalingPlan),
+					testAccCheckScalingPlanExists(ctx, resourceName, &scalingPlan),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "scaling_plan_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.#", "1"),
@@ -187,7 +191,7 @@ func TestAccAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 			{
 				Config: testAccScalingPlanConfig_basicPredictiveScaling(rName, rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingPlanExists(resourceName, &scalingPlan),
+					testAccCheckScalingPlanExists(ctx, resourceName, &scalingPlan),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "scaling_plan_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.#", "1"),
@@ -233,21 +237,22 @@ func TestAccAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 }
 
 func TestAccAutoScalingPlansScalingPlan_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var scalingPlan autoscalingplans.ScalingPlan
 	resourceName := "aws_autoscalingplans_scaling_plan.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscalingplans.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScalingPlanDestroy,
+		CheckDestroy:             testAccCheckScalingPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScalingPlanConfig_basicDynamicScaling(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingPlanExists(resourceName, &scalingPlan),
-					acctest.CheckResourceDisappears(acctest.Provider, tfautoscalingplans.ResourceScalingPlan(), resourceName),
+					testAccCheckScalingPlanExists(ctx, resourceName, &scalingPlan),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfautoscalingplans.ResourceScalingPlan(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -256,20 +261,21 @@ func TestAccAutoScalingPlansScalingPlan_disappears(t *testing.T) {
 }
 
 func TestAccAutoScalingPlansScalingPlan_DynamicScaling_customizedScalingMetricSpecification(t *testing.T) {
+	ctx := acctest.Context(t)
 	var scalingPlan autoscalingplans.ScalingPlan
 	resourceName := "aws_autoscalingplans_scaling_plan.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscalingplans.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScalingPlanDestroy,
+		CheckDestroy:             testAccCheckScalingPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScalingPlanConfig_dynamicScalingCustomizedScalingMetricSpecification(rName, rName, 90),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingPlanExists(resourceName, &scalingPlan),
+					testAccCheckScalingPlanExists(ctx, resourceName, &scalingPlan),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "scaling_plan_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.#", "1"),
@@ -308,7 +314,7 @@ func TestAccAutoScalingPlansScalingPlan_DynamicScaling_customizedScalingMetricSp
 			{
 				Config: testAccScalingPlanConfig_dynamicScalingCustomizedScalingMetricSpecification(rName, rName, 75),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingPlanExists(resourceName, &scalingPlan),
+					testAccCheckScalingPlanExists(ctx, resourceName, &scalingPlan),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "scaling_plan_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.#", "1"),
@@ -356,35 +362,37 @@ func TestAccAutoScalingPlansScalingPlan_DynamicScaling_customizedScalingMetricSp
 	})
 }
 
-func testAccCheckScalingPlanDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingPlansConn
+func testAccCheckScalingPlanDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingPlansConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_autoscalingplans_scaling_plan" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_autoscalingplans_scaling_plan" {
+				continue
+			}
+
+			scalingPlanVersion, err := strconv.Atoi(rs.Primary.Attributes["scaling_plan_version"])
+
+			if err != nil {
+				return err
+			}
+
+			_, err = tfautoscalingplans.FindScalingPlanByNameAndVersion(ctx, conn, rs.Primary.Attributes["name"], scalingPlanVersion)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			return fmt.Errorf("Auto Scaling Scaling Plan %s still exists", rs.Primary.ID)
 		}
 
-		scalingPlanVersion, err := strconv.Atoi(rs.Primary.Attributes["scaling_plan_version"])
-
-		if err != nil {
-			return err
-		}
-
-		_, err = tfautoscalingplans.FindScalingPlanByNameAndVersion(conn, rs.Primary.Attributes["name"], scalingPlanVersion)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		return fmt.Errorf("Auto Scaling Scaling Plan %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckScalingPlanExists(name string, v *autoscalingplans.ScalingPlan) resource.TestCheckFunc {
+func testAccCheckScalingPlanExists(ctx context.Context, name string, v *autoscalingplans.ScalingPlan) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingPlansConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingPlansConn()
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -401,7 +409,7 @@ func testAccCheckScalingPlanExists(name string, v *autoscalingplans.ScalingPlan)
 			return err
 		}
 
-		scalingPlan, err := tfautoscalingplans.FindScalingPlanByNameAndVersion(conn, rs.Primary.Attributes["name"], scalingPlanVersion)
+		scalingPlan, err := tfautoscalingplans.FindScalingPlanByNameAndVersion(ctx, conn, rs.Primary.Attributes["name"], scalingPlanVersion)
 
 		if err != nil {
 			return err

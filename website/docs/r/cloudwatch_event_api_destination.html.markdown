@@ -12,7 +12,6 @@ Provides an EventBridge event API Destination resource.
 
 ~> **Note:** EventBridge was formerly known as CloudWatch Events. The functionality is identical.
 
-
 ## Example Usage
 
 ```terraform
@@ -42,7 +41,6 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) of the event API Destination.
-
 
 ## Import
 

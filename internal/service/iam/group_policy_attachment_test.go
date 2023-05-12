@@ -1,10 +1,12 @@
 package iam_test
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -15,6 +17,7 @@ import (
 )
 
 func TestAccIAMGroupPolicyAttachment_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var out iam.ListAttachedGroupPoliciesOutput
 
 	rString := sdkacctest.RandString(8)
@@ -24,7 +27,7 @@ func TestAccIAMGroupPolicyAttachment_basic(t *testing.T) {
 	policyName3 := fmt.Sprintf("tf-acc-policy-gpa-basic-3-%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupPolicyAttachmentDestroy,
@@ -32,7 +35,7 @@ func TestAccIAMGroupPolicyAttachment_basic(t *testing.T) {
 			{
 				Config: testAccGroupPolicyAttachmentConfig_attach(groupName, policyName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupPolicyAttachmentExists("aws_iam_group_policy_attachment.test-attach", 1, &out),
+					testAccCheckGroupPolicyAttachmentExists(ctx, "aws_iam_group_policy_attachment.test-attach", 1, &out),
 					testAccCheckGroupPolicyAttachmentAttributes([]string{policyName}, &out),
 				),
 			},
@@ -40,7 +43,7 @@ func TestAccIAMGroupPolicyAttachment_basic(t *testing.T) {
 				ResourceName:      "aws_iam_group_policy_attachment.test-attach",
 				ImportState:       true,
 				ImportStateIdFunc: testAccGroupPolicyAttachmentImportStateIdFunc("aws_iam_group_policy_attachment.test-attach"),
-				// We do not have a way to align IDs since the Create function uses resource.PrefixedUniqueId()
+				// We do not have a way to align IDs since the Create function uses id.PrefixedUniqueId()
 				// Failed state verification, resource with ID GROUP-POLICYARN not found
 				// ImportStateVerify: true,
 				ImportStateCheck: func(s []*terraform.InstanceState) error {
@@ -48,7 +51,7 @@ func TestAccIAMGroupPolicyAttachment_basic(t *testing.T) {
 						return fmt.Errorf("expected 1 state: %#v", s)
 					}
 					rs := s[0]
-					if !strings.HasPrefix(rs.Attributes["policy_arn"], "arn:") {
+					if !arn.IsARN(rs.Attributes["policy_arn"]) {
 						return fmt.Errorf("expected policy_arn attribute to be set and begin with arn:, received: %s", rs.Attributes["policy_arn"])
 					}
 					return nil
@@ -57,7 +60,7 @@ func TestAccIAMGroupPolicyAttachment_basic(t *testing.T) {
 			{
 				Config: testAccGroupPolicyAttachmentConfig_attachUpdate(groupName, policyName, policyName2, policyName3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupPolicyAttachmentExists("aws_iam_group_policy_attachment.test-attach", 2, &out),
+					testAccCheckGroupPolicyAttachmentExists(ctx, "aws_iam_group_policy_attachment.test-attach", 2, &out),
 					testAccCheckGroupPolicyAttachmentAttributes([]string{policyName2, policyName3}, &out),
 				),
 			},
@@ -69,7 +72,7 @@ func testAccCheckGroupPolicyAttachmentDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckGroupPolicyAttachmentExists(n string, c int, out *iam.ListAttachedGroupPoliciesOutput) resource.TestCheckFunc {
+func testAccCheckGroupPolicyAttachmentExists(ctx context.Context, n string, c int, out *iam.ListAttachedGroupPoliciesOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -80,10 +83,10 @@ func testAccCheckGroupPolicyAttachmentExists(n string, c int, out *iam.ListAttac
 			return fmt.Errorf("No policy name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 		group := rs.Primary.Attributes["group"]
 
-		attachedPolicies, err := conn.ListAttachedGroupPolicies(&iam.ListAttachedGroupPoliciesInput{
+		attachedPolicies, err := conn.ListAttachedGroupPoliciesWithContext(ctx, &iam.ListAttachedGroupPoliciesInput{
 			GroupName: aws.String(group),
 		})
 		if err != nil {

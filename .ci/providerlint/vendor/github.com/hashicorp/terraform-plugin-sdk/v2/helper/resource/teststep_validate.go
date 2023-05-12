@@ -43,7 +43,10 @@ func (s TestStep) hasProviders(_ context.Context) bool {
 
 // validate ensures the TestStep is valid based on the following criteria:
 //
-//   - Config or ImportState is set.
+//   - Config or ImportState or RefreshState is set.
+//   - Config and RefreshState are not both set.
+//   - RefreshState and Destroy are not both set.
+//   - RefreshState is not the first TestStep.
 //   - Providers are not specified (ExternalProviders,
 //     ProtoV5ProviderFactories, ProtoV6ProviderFactories, ProviderFactories)
 //     if specified at the TestCase level.
@@ -58,8 +61,32 @@ func (s TestStep) validate(ctx context.Context, req testStepValidateRequest) err
 
 	logging.HelperResourceTrace(ctx, "Validating TestStep")
 
-	if s.Config == "" && !s.ImportState {
-		err := fmt.Errorf("TestStep missing Config or ImportState")
+	if s.Config == "" && !s.ImportState && !s.RefreshState {
+		err := fmt.Errorf("TestStep missing Config or ImportState or RefreshState")
+		logging.HelperResourceError(ctx, "TestStep validation error", map[string]interface{}{logging.KeyError: err})
+		return err
+	}
+
+	if s.Config != "" && s.RefreshState {
+		err := fmt.Errorf("TestStep cannot have Config and RefreshState")
+		logging.HelperResourceError(ctx, "TestStep validation error", map[string]interface{}{logging.KeyError: err})
+		return err
+	}
+
+	if s.RefreshState && s.Destroy {
+		err := fmt.Errorf("TestStep cannot have RefreshState and Destroy")
+		logging.HelperResourceError(ctx, "TestStep validation error", map[string]interface{}{logging.KeyError: err})
+		return err
+	}
+
+	if s.RefreshState && req.StepNumber == 1 {
+		err := fmt.Errorf("TestStep cannot have RefreshState as first step")
+		logging.HelperResourceError(ctx, "TestStep validation error", map[string]interface{}{logging.KeyError: err})
+		return err
+	}
+
+	if s.ImportState && s.RefreshState {
+		err := fmt.Errorf("TestStep cannot have ImportState and RefreshState in same step")
 		logging.HelperResourceError(ctx, "TestStep validation error", map[string]interface{}{logging.KeyError: err})
 		return err
 	}

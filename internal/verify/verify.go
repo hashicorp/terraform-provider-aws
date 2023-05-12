@@ -53,8 +53,18 @@ const (
 	ErrCodeValidationException         = "ValidationException"
 )
 
-func CheckISOErrorTagsUnsupported(partition string, err error) bool {
+// ErrorISOUnsupported checks the partition and specific error to make
+// an educated guess about whether the problem stems from a feature not being
+// available in ISO (or non standard partitions) that is normally available.
+// true means that there is an error AND it suggests a feature is not supported
+// in ISO. Be careful with false, which means either there is NO error or there
+// is an error but not one that suggests an unsupported feature in ISO.
+func ErrorISOUnsupported(partition string, err error) bool {
 	if partition == endpoints.AwsPartitionID {
+		return false
+	}
+
+	if err == nil { // not strictly necessary but make logic clearer
 		return false
 	}
 

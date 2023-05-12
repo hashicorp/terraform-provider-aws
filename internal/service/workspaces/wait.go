@@ -1,10 +1,11 @@
 package workspaces
 
 import (
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/workspaces"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -30,15 +31,15 @@ const (
 	WorkspaceTerminatedTimeout = 10 * time.Minute
 )
 
-func WaitDirectoryRegistered(conn *workspaces.WorkSpaces, directoryID string) (*workspaces.WorkspaceDirectory, error) {
-	stateConf := &resource.StateChangeConf{
+func WaitDirectoryRegistered(ctx context.Context, conn *workspaces.WorkSpaces, directoryID string) (*workspaces.WorkspaceDirectory, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{workspaces.WorkspaceDirectoryStateRegistering},
 		Target:  []string{workspaces.WorkspaceDirectoryStateRegistered},
-		Refresh: StatusDirectoryState(conn, directoryID),
+		Refresh: StatusDirectoryState(ctx, conn, directoryID),
 		Timeout: DirectoryRegisteredTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*workspaces.WorkspaceDirectory); ok {
 		return v, err
@@ -47,19 +48,19 @@ func WaitDirectoryRegistered(conn *workspaces.WorkSpaces, directoryID string) (*
 	return nil, err
 }
 
-func WaitDirectoryDeregistered(conn *workspaces.WorkSpaces, directoryID string) (*workspaces.WorkspaceDirectory, error) {
-	stateConf := &resource.StateChangeConf{
+func WaitDirectoryDeregistered(ctx context.Context, conn *workspaces.WorkSpaces, directoryID string) (*workspaces.WorkspaceDirectory, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			workspaces.WorkspaceDirectoryStateRegistering,
 			workspaces.WorkspaceDirectoryStateRegistered,
 			workspaces.WorkspaceDirectoryStateDeregistering,
 		},
 		Target:  []string{},
-		Refresh: StatusDirectoryState(conn, directoryID),
+		Refresh: StatusDirectoryState(ctx, conn, directoryID),
 		Timeout: DirectoryDeregisteredTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*workspaces.WorkspaceDirectory); ok {
 		return v, err
@@ -68,18 +69,18 @@ func WaitDirectoryDeregistered(conn *workspaces.WorkSpaces, directoryID string) 
 	return nil, err
 }
 
-func WaitWorkspaceAvailable(conn *workspaces.WorkSpaces, workspaceID string, timeout time.Duration) (*workspaces.Workspace, error) {
-	stateConf := &resource.StateChangeConf{
+func WaitWorkspaceAvailable(ctx context.Context, conn *workspaces.WorkSpaces, workspaceID string, timeout time.Duration) (*workspaces.Workspace, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			workspaces.WorkspaceStatePending,
 			workspaces.WorkspaceStateStarting,
 		},
 		Target:  []string{workspaces.WorkspaceStateAvailable},
-		Refresh: StatusWorkspaceState(conn, workspaceID),
+		Refresh: StatusWorkspaceState(ctx, conn, workspaceID),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*workspaces.Workspace); ok {
 		return v, err
@@ -88,8 +89,8 @@ func WaitWorkspaceAvailable(conn *workspaces.WorkSpaces, workspaceID string, tim
 	return nil, err
 }
 
-func WaitWorkspaceTerminated(conn *workspaces.WorkSpaces, workspaceID string, timeout time.Duration) (*workspaces.Workspace, error) {
-	stateConf := &resource.StateChangeConf{
+func WaitWorkspaceTerminated(ctx context.Context, conn *workspaces.WorkSpaces, workspaceID string, timeout time.Duration) (*workspaces.Workspace, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			workspaces.WorkspaceStatePending,
 			workspaces.WorkspaceStateAvailable,
@@ -109,11 +110,11 @@ func WaitWorkspaceTerminated(conn *workspaces.WorkSpaces, workspaceID string, ti
 			workspaces.WorkspaceStateError,
 		},
 		Target:  []string{workspaces.WorkspaceStateTerminated},
-		Refresh: StatusWorkspaceState(conn, workspaceID),
+		Refresh: StatusWorkspaceState(ctx, conn, workspaceID),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*workspaces.Workspace); ok {
 		return v, err
@@ -122,10 +123,10 @@ func WaitWorkspaceTerminated(conn *workspaces.WorkSpaces, workspaceID string, ti
 	return nil, err
 }
 
-func WaitWorkspaceUpdated(conn *workspaces.WorkSpaces, workspaceID string, timeout time.Duration) (*workspaces.Workspace, error) {
+func WaitWorkspaceUpdated(ctx context.Context, conn *workspaces.WorkSpaces, workspaceID string, timeout time.Duration) (*workspaces.Workspace, error) {
 	// OperationInProgressException: The properties of this WorkSpace are currently under modification. Please try again in a moment.
 	// AWS Workspaces service doesn't change instance status to "Updating" during property modification. Respective AWS Support feature request has been created. Meanwhile, artificial delay is placed here as a workaround.
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			workspaces.WorkspaceStateUpdating,
 		},
@@ -133,12 +134,12 @@ func WaitWorkspaceUpdated(conn *workspaces.WorkSpaces, workspaceID string, timeo
 			workspaces.WorkspaceStateAvailable,
 			workspaces.WorkspaceStateStopped,
 		},
-		Refresh: StatusWorkspaceState(conn, workspaceID),
+		Refresh: StatusWorkspaceState(ctx, conn, workspaceID),
 		Delay:   WorkspaceUpdatingDelay,
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*workspaces.Workspace); ok {
 		return v, err

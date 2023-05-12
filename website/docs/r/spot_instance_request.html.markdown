@@ -31,7 +31,6 @@ point in time. See the [AWS Spot Instance
 documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-spot-instances.html)
 for more information.
 
-
 ## Example Usage
 
 ```terraform
@@ -96,7 +95,7 @@ should only be used for informational purposes, not for resource dependencies:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `10m`)
 * `delete` - (Default `20m`)

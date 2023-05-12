@@ -10,13 +10,15 @@ This guide describes the behavior of the Terraform AWS Provider and provides cod
 
 ## Terraform Plugin SDK Functionality
 
-The [Terraform Plugin SDK](https://github.com/hashicorp/terraform-plugin-sdk/), which the AWS Provider uses, provides vital tools for handling consistency: the `resource.StateChangeConf{}` struct, and the retry functions, `resource.Retry()` and `resource.RetryContext()`. We will discuss these throughout the rest of this guide. Since they help keep the AWS Provider code consistent, we heavily prefer them over custom implementations.
+The [Terraform Plugin SDK](https://github.com/hashicorp/terraform-plugin-sdk/), which the AWS Provider uses, provides vital tools for handling consistency: the `retry.StateChangeConf{}` struct, and the retry function `retry.RetryContext()`.
+We will discuss these throughout the rest of this guide.
+Since they help keep the AWS Provider code consistent, we heavily prefer them over custom implementations.
 
 This guide goes beyond the [Terraform Plugin SDK v2 documentation](https://www.terraform.io/plugin/sdkv2/resources/retries-and-customizable-timeouts) by providing additional context and emergent implementations specific to the Terraform AWS Provider.
 
 ### State Change Configuration and Functions
 
-The [`resource.StateChangeConf` type](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#StateChangeConf) along with its receiver methods [`WaitForState()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#StateChangeConf.WaitForState) and [`WaitForStateContext()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#StateChangeConf.WaitForStateContext) is a generic primitive for repeating operations in Terraform resource logic until desired value(s) are received. The "state change" in this case is generic to any value and not specific to the Terraform State. Among other functionality, it supports some of these desirable optional properties:
+The [`retry.StateChangeConf` type](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry#StateChangeConf), along with its receiver methods [`WaitForState()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry#StateChangeConf.WaitForState) and [`WaitForStateContext()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry#StateChangeConf.WaitForStateContext) is a generic primitive for repeating operations in Terraform resource logic until desired value(s) are received. The "state change" in this case is generic to any value and not specific to the Terraform State. Among other functionality, it supports some of these desirable optional properties:
 
 - Expecting specific value(s) while waiting for the target value(s) to be reached. Unexpected values are returned as an error which can be augmented with additional details.
 - Expecting the target value(s) to be returned multiple times in succession.
@@ -24,7 +26,8 @@ The [`resource.StateChangeConf` type](https://pkg.go.dev/github.com/hashicorp/te
 
 ### Retry Functions
 
-The [`resource.Retry()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#Retry) and [`resource.RetryContext()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#RetryContext) functions provide a simplified retry implementation around `resource.StateChangeConf`. Their most common use is for simple error-based retries.
+The [`retry.RetryContext()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#RetryContext) function provides a simplified retry implementation around `retry.StateChangeConf`.
+The most common use is for simple error-based retries.
 
 ## AWS Request Handling
 
@@ -89,9 +92,15 @@ These two concepts conflict with each other and require additional handling in T
 
 ### Operation Specific Error Retries
 
-Even given a properly ordered Terraform configuration, eventual consistency can unexpectedly prevent downstream operations from succeeding. A simple retry after a few seconds resolves many of these issues. To reduce frustrating behavior for operators, wrap AWS Go SDK operations with the `resource.Retry()` or `resource.RetryContext()` functions. These retries should have a reasonably low timeout (typically two minutes but up to five minutes). Save them in a constant for reusability. These functions are preferably in line with the associated resource logic to remove any indirection with the code.
+Even given a properly ordered Terraform configuration, eventual consistency can unexpectedly prevent downstream operations from succeeding.
+A simple retry after a few seconds resolves many of these issues.
+To reduce frustrating behavior for operators, wrap AWS Go SDK operations with the `retry.RetryContext()` function.
+These retries should have a reasonably low timeout (typically two minutes but up to five minutes).
+Save them in a constant for reusability.
+These functions are preferably in line with the associated resource logic to remove any indirection with the code.
 
-Do not use this type of logic to overcome improperly ordered Terraform configurations. The approach may not work in larger environments.
+Do not use this type of logic to overcome improperly ordered Terraform configurations.
+The approach may not work in larger environments.
 
 ```go
 // internal/service/example/wait.go (created if does not exist)
@@ -106,17 +115,17 @@ const (
 // internal/service/{service}/{thing}.go
 
 // ... Create, Read, Update, or Delete function ...
-	err := resource.Retry(ThingOperationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, ThingOperationTimeout, func() *retry.RetryError {
 		_, err := conn./* ... AWS Go SDK operation with eventual consistency errors ... */
 
 		// Retryable conditions which can be checked.
 		// These must be updated to match the AWS service API error code and message.
 		if tfawserr.ErrMessageContains(err, /* error code */, /* error message */) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -162,17 +171,17 @@ import (
 )
 
 // ... Create and typically Update function ...
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, iamwaiter.PropagationTimeout, func() *retry.RetryError {
 		_, err := conn./* ... AWS Go SDK operation with IAM eventual consistency errors ... */
 
 		// Example retryable condition
 		// This must be updated to match the AWS service API error code and message.
 		if tfawserr.ErrMessageContains(err, /* error code */, /* error message */) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -210,24 +219,24 @@ import (
 	iamwaiterStopTime := time.Now().Add(tfiam.PropagationTimeout)
 
 	// Ensure to add IAM eventual consistency timeout in case of retries
-	err = resource.Retry(tfiam.PropagationTimeout+ThingOperationTimeout, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, tfiam.PropagationTimeout+ThingOperationTimeout, func() *retry.RetryError {
 		// Only retry IAM eventual consistency errors up to that timeout
 		iamwaiterRetry := time.Now().Before(iamwaiterStopTime)
 
 		_, err := conn./* ... AWS Go SDK operation without eventual consistency errors ... */
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		_, err = ThingOperation(conn, d.Id())
 
 		if err != nil {
 			if iamwaiterRetry && /* eventual consistency error checking */ {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -278,22 +287,22 @@ function ExampleThingCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 function ExampleThingRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).exampleconn
+	conn := meta.(*AWSClient).ExampleConn()
 
 	input := &example.OperationInput{/* ... */}
 
 	var output *example.OperationOutput
-	err := resource.Retry(ThingCreationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, ThingCreationTimeout, func() *retry.RetryError {
 		var err error
 		output, err = conn.Operation(input)
 
 		// Retry on any API "not found" errors, but only on new resources.
 		if d.IsNewResource() && tfawserr.ErrorCodeEquals(err, example.ErrCodeResourceNotFoundException) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -328,20 +337,20 @@ function ExampleThingRead(d *schema.ResourceData, meta interface{}) error {
 
 Some other general guidelines are:
 
-- If the `Create` function uses `resource.StateChangeConf`, the underlying `resource.RefreshStateFunc` should `return nil, "", nil` instead of the API "not found" error. This way the `StateChangeConf` logic will automatically retry.
-- If the `Create` function uses `resource.Retry()`, the API "not found" error should be caught and `return resource.RetryableError(err)` to automatically retry.
+- If the `Create` function uses `retry.StateChangeConf`, the underlying `resource.RefreshStateFunc` should `return nil, "", nil` instead of the API "not found" error. This way the `StateChangeConf` logic will automatically retry.
+- If the `Create` function uses `retry.RetryContext()`, the API "not found" error should be caught and `return retry.RetryableError(err)` to automatically retry.
 
 In rare cases, it may be easier to duplicate all `Read` function logic in the `Create` function to handle all retries in one place.
 
 ### Resource Attribute Value Waiters
 
-An emergent solution for handling eventual consistency with attribute values on updates is to introduce a custom `resource.StateChangeConf` and `resource.RefreshStateFunc` handlers. For example:
+An emergent solution for handling eventual consistency with attribute values on updates is to introduce a custom `retry.StateChangeConf` and `resource.RefreshStateFunc` handlers. For example:
 
 ```go
 // internal/service/example/status.go (created if does not exist)
 
 // ThingAttribute fetches the Thing and its Attribute
-func ThingAttribute(conn *example.Example, id string) resource.StateRefreshFunc {
+func ThingAttribute(conn *example.Example, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := /* ... AWS Go SDK operation to fetch resource/value ... */
 
@@ -371,7 +380,7 @@ const (
 
 // ThingAttributeUpdated is an attribute waiter for ThingAttribute
 func ThingAttributeUpdated(conn *example.Example, id string, expectedValue string) (*example.Thing, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:  []string{expectedValue},
 		Refresh: ThingAttribute(conn, id),
 		Timeout: ThingAttributePropagationTimeout,
@@ -425,13 +434,13 @@ If it is necessary to customize the timeouts and polling, we generally prefer us
 
 ### Resource Lifecycle Waiters
 
-Most of the codebase uses `resource.StateChangeConf` and `resource.RefreshStateFunc` handlers for tracking either component level status fields or explicit tracking identifiers. These should be placed in the `internal/service/{SERVICE}` package and split into separate functions. For example:
+Most of the codebase uses `retry.StateChangeConf` and `retry.StateRefreshFunc` handlers for tracking either component level status fields or explicit tracking identifiers. These should be placed in the `internal/service/{SERVICE}` package and split into separate functions. For example:
 
 ```go
 // internal/service/example/status.go (created if does not exist)
 
 // ThingStatus fetches the Thing and its Status
-func ThingStatus(conn *example.Example, id string) resource.StateRefreshFunc {
+func ThingStatus(conn *example.Example, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := /* ... AWS Go SDK operation to fetch resource/status ... */
 
@@ -462,7 +471,7 @@ const (
 
 // ThingCreated is a resource waiter for Thing creation
 func ThingCreated(conn *example.Example, id string) (*example.Thing, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{example.StatusCreating},
 		Target:  []string{example.StatusCreated},
 		Refresh: ThingStatus(conn, id),
@@ -480,7 +489,7 @@ func ThingCreated(conn *example.Example, id string) (*example.Thing, error) {
 
 // ThingDeleted is a resource waiter for Thing deletion
 func ThingDeleted(conn *example.Example, id string) (*example.Thing, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{example.StatusDeleting},
 		Target:  []string{}, // Use empty list if the resource disappears and does not have "deleted" status
 		Refresh: ThingStatus(conn, id),

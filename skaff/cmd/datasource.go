@@ -9,7 +9,7 @@ var datasourceCmd = &cobra.Command{
 	Use:   "datasource",
 	Short: "Create scaffolding for a data source",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return datasource.Create(name, snakeName, !clearComments, force, !v1)
+		return datasource.Create(name, snakeName, !clearComments, force, !v1, pluginFramework)
 	},
 }
 
@@ -20,4 +20,5 @@ func init() {
 	datasourceCmd.Flags().StringVarP(&name, "name", "n", "", "name of the entity")
 	datasourceCmd.Flags().BoolVarP(&force, "force", "f", false, "force creation, overwriting existing files")
 	datasourceCmd.Flags().BoolVarP(&v1, "v1", "o", false, "generate for AWS Go SDK v1 (some existing services)")
+	datasourceCmd.Flags().BoolVarP(&pluginFramework, "plugin-framework", "p", false, "generate for Terraform Plugin-Framework")
 }

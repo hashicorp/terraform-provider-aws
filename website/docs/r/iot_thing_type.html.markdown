@@ -27,7 +27,6 @@ resource "aws_iot_thing_type" "foo" {
     * `searchable_attributes` - (Optional, Forces New Resource) A list of searchable thing attribute names.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:

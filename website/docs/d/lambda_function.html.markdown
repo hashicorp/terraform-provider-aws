@@ -43,12 +43,13 @@ In addition to all arguments above, the following attributes are exported:
 * `file_system_config` - Connection settings for an Amazon EFS file system.
 * `handler` - Function entrypoint in your code.
 * `image_uri` - URI of the container image.
-* `invoke_arn` - ARN to be used for invoking Lambda Function from API Gateway.
+* `invoke_arn` - ARN to be used for invoking Lambda Function from API Gateway. **NOTE:** Starting with `v4.51.0` of the provider, this will *not* include the qualifier.
 * `kms_key_arn` - ARN for the KMS encryption key.
 * `last_modified` - Date this resource was last modified.
 * `layers` - List of Lambda Layer ARNs attached to your Lambda Function.
 * `memory_size` - Amount of memory in MB your Lambda Function can use at runtime.
 * `qualified_arn` - Qualified (`:QUALIFIER` or `:VERSION` suffix) ARN identifying your Lambda Function. See also `arn`.
+* `qualified_invoke_arn` - Qualified (`:QUALIFIER` or `:VERSION` suffix) ARN to be used for invoking Lambda Function from API Gateway. See also `invoke_arn`.
 * `reserved_concurrent_executions` - The amount of reserved concurrent executions for this lambda function or `-1` if unreserved.
 * `role` - IAM role attached to the Lambda Function.
 * `runtime` - Runtime environment for the Lambda function.

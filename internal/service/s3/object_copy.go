@@ -2,9 +2,9 @@ package s3
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
-	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
@@ -12,23 +12,27 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_s3_object_copy", name="Object")
+// @Tags
 func ResourceObjectCopy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceObjectCopyCreate,
-		Read:   resourceObjectCopyRead,
-		Update: resourceObjectCopyUpdate,
-		Delete: resourceObjectCopyDelete,
+		CreateWithoutTimeout: resourceObjectCopyCreate,
+		ReadWithoutTimeout:   resourceObjectCopyRead,
+		UpdateWithoutTimeout: resourceObjectCopyUpdate,
+		DeleteWithoutTimeout: resourceObjectCopyDelete,
 
 		Schema: map[string]*schema.Schema{
 			"acl": {
@@ -278,8 +282,8 @@ func ResourceObjectCopy() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(s3.TaggingDirective_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"version_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -295,47 +299,36 @@ func ResourceObjectCopy() *schema.Resource {
 	}
 }
 
-func resourceObjectCopyCreate(d *schema.ResourceData, meta interface{}) error {
-	return resourceObjectCopyDoCopy(d, meta)
+func resourceObjectCopyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	return append(diags, resourceObjectCopyDoCopy(ctx, d, meta)...)
 }
 
-func resourceObjectCopyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
+	output, err := FindObjectByThreePartKey(ctx, conn, bucket, key, "")
 
-	resp, err := conn.HeadObject(
-		&s3.HeadObjectInput{
-			Bucket: aws.String(bucket),
-			Key:    aws.String(key),
-		})
-
-	if !d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Object (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading S3 Object (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Object (%s): %s", d.Id(), err)
 	}
 
-	if resp == nil {
-		return fmt.Errorf("error reading S3 Object (%s): empty response", d.Id())
-	}
-
-	log.Printf("[DEBUG] Reading S3 Object meta: %s", resp)
-
-	d.Set("bucket_key_enabled", resp.BucketKeyEnabled)
-	d.Set("cache_control", resp.CacheControl)
-	d.Set("content_disposition", resp.ContentDisposition)
-	d.Set("content_encoding", resp.ContentEncoding)
-	d.Set("content_language", resp.ContentLanguage)
-	d.Set("content_type", resp.ContentType)
-	metadata := flex.PointersMapToStringList(resp.Metadata)
+	d.Set("bucket_key_enabled", output.BucketKeyEnabled)
+	d.Set("cache_control", output.CacheControl)
+	d.Set("content_disposition", output.ContentDisposition)
+	d.Set("content_encoding", output.ContentEncoding)
+	d.Set("content_language", output.ContentLanguage)
+	d.Set("content_type", output.ContentType)
+	metadata := flex.PointersMapToStringList(output.Metadata)
 
 	// AWS Go SDK capitalizes metadata, this is a workaround. https://github.com/aws/aws-sdk-go/issues/445
 	for k, v := range metadata {
@@ -344,60 +337,54 @@ func resourceObjectCopyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("metadata", metadata); err != nil {
-		return fmt.Errorf("error setting metadata: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting metadata: %s", err)
 	}
-	d.Set("version_id", resp.VersionId)
-	d.Set("server_side_encryption", resp.ServerSideEncryption)
-	d.Set("website_redirect", resp.WebsiteRedirectLocation)
-	d.Set("object_lock_legal_hold_status", resp.ObjectLockLegalHoldStatus)
-	d.Set("object_lock_mode", resp.ObjectLockMode)
-	d.Set("object_lock_retain_until_date", flattenObjectDate(resp.ObjectLockRetainUntilDate))
+	d.Set("version_id", output.VersionId)
+	d.Set("server_side_encryption", output.ServerSideEncryption)
+	d.Set("website_redirect", output.WebsiteRedirectLocation)
+	d.Set("object_lock_legal_hold_status", output.ObjectLockLegalHoldStatus)
+	d.Set("object_lock_mode", output.ObjectLockMode)
+	d.Set("object_lock_retain_until_date", flattenObjectDate(output.ObjectLockRetainUntilDate))
 
-	if err := resourceObjectSetKMS(d, meta, resp.SSEKMSKeyId); err != nil {
-		return fmt.Errorf("object KMS: %w", err)
+	if err := resourceObjectSetKMS(ctx, d, meta, output.SSEKMSKeyId); err != nil {
+		return sdkdiag.AppendErrorf(diags, "object KMS: %s", err)
 	}
 
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
-	d.Set("etag", strings.Trim(aws.StringValue(resp.ETag), `"`))
+	d.Set("etag", strings.Trim(aws.StringValue(output.ETag), `"`))
 
 	// The "STANDARD" (which is also the default) storage
 	// class when set would not be included in the results.
 	d.Set("storage_class", s3.ObjectStorageClassStandard)
-	if resp.StorageClass != nil {
-		d.Set("storage_class", resp.StorageClass)
+	if output.StorageClass != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
+		d.Set("storage_class", output.StorageClass)
 	}
 
 	// Retry due to S3 eventual consistency
-	tagsRaw, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
-		return ObjectListTags(conn, bucket, key)
+	tagsRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
+		return ObjectListTags(ctx, conn, bucket, key)
 	}, s3.ErrCodeNoSuchBucket)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for S3 Bucket (%s) Object (%s): %w", bucket, key, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
 
 	tags, ok := tagsRaw.(tftags.KeyValueTags)
 
 	if !ok {
-		return fmt.Errorf("error listing tags for S3 Bucket (%s) Object (%s): unable to convert tags", bucket, key)
+		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): unable to convert tags", bucket, key)
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	SetTagsOut(ctx, Tags(tags))
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceObjectCopyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceObjectCopyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var
 	// if any of these exist, let the API decide whether to copy
+	diags diag.Diagnostics
+
 	for _, key := range []string{
 		"copy_if_match",
 		"copy_if_modified_since",
@@ -405,7 +392,7 @@ func resourceObjectCopyUpdate(d *schema.ResourceData, meta interface{}) error {
 		"copy_if_unmodified_since",
 	} {
 		if _, ok := d.GetOk(key); ok {
-			return resourceObjectCopyDoCopy(d, meta)
+			return append(diags, resourceObjectCopyDoCopy(ctx, d, meta)...)
 		}
 	}
 
@@ -446,14 +433,15 @@ func resourceObjectCopyUpdate(d *schema.ResourceData, meta interface{}) error {
 		"website_redirect",
 	}
 	if d.HasChanges(args...) {
-		return resourceObjectCopyDoCopy(d, meta)
+		return append(diags, resourceObjectCopyDoCopy(ctx, d, meta)...)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceObjectCopyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+func resourceObjectCopyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
@@ -464,21 +452,22 @@ func resourceObjectCopyDelete(d *schema.ResourceData, meta interface{}) error {
 
 	var err error
 	if _, ok := d.GetOk("version_id"); ok {
-		_, err = DeleteAllObjectVersions(conn, bucket, key, d.Get("force_destroy").(bool), false)
+		_, err = DeleteAllObjectVersions(ctx, conn, bucket, key, d.Get("force_destroy").(bool), false)
 	} else {
-		err = deleteObjectVersion(conn, bucket, key, "", false)
+		err = deleteObjectVersion(ctx, conn, bucket, key, "", false)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting S3 Bucket (%s) Object (%s): %w", bucket, key, err)
+		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
-	return nil
+	return diags
 }
 
-func resourceObjectCopyDoCopy(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &s3.CopyObjectInput{
 		Bucket:     aws.String(d.Get("bucket").(string)),
@@ -629,9 +618,9 @@ func resourceObjectCopyDoCopy(d *schema.ResourceData, meta interface{}) error {
 		input.WebsiteRedirectLocation = aws.String(v.(string))
 	}
 
-	output, err := conn.CopyObject(input)
+	output, err := conn.CopyObjectWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error copying S3 object (bucket: %s; key: %s; source: %s): %w", aws.StringValue(input.Bucket), aws.StringValue(input.Key), aws.StringValue(input.CopySource), err)
+		return sdkdiag.AppendErrorf(diags, "copying S3 object (bucket: %s; key: %s; source: %s): %s", aws.StringValue(input.Bucket), aws.StringValue(input.Key), aws.StringValue(input.CopySource), err)
 	}
 
 	d.Set("customer_algorithm", output.SSECustomerAlgorithm)
@@ -651,7 +640,8 @@ func resourceObjectCopyDoCopy(d *schema.ResourceData, meta interface{}) error {
 	d.Set("version_id", output.VersionId)
 
 	d.SetId(d.Get("key").(string))
-	return resourceObjectRead(d, meta)
+
+	return append(diags, resourceObjectRead(ctx, d, meta)...)
 }
 
 type s3Grants struct {

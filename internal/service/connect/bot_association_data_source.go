@@ -11,9 +11,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_connect_bot_association")
 func DataSourceBotAssociation() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceBotAssociationRead,
+		ReadWithoutTimeout: dataSourceBotAssociationRead,
 		Schema: map[string]*schema.Schema{
 			"instance_id": {
 				Type:     schema.TypeString,
@@ -43,7 +44,7 @@ func DataSourceBotAssociation() *schema.Resource {
 }
 
 func dataSourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID := d.Get("instance_id").(string)
 

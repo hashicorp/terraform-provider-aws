@@ -14,7 +14,7 @@ Provides an SES email identity resource
 
 The following arguments are supported:
 
-* `email` - (Required) The email address to assign to SES
+* `email` - (Required) The email address to assign to SES.
 
 ## Attributes Reference
 

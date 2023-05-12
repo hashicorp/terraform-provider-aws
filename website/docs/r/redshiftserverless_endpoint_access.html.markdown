@@ -24,7 +24,6 @@ resource "aws_redshiftserverless_endpoint_access" "example" {
 The following arguments are supported:
 
 * `endpoint_name` - (Required) The name of the endpoint.
-* `security_group_ids` - (Optional) An array of security group IDs to associate with the endpoint.
 * `subnet_ids` - (Required) An array of VPC subnet IDs to associate with the endpoint.
 * `vpc_security_group_ids` - (Optional) An array of security group IDs to associate with the workgroup.
 * `workgroup_name` - (Required) The name of the workgroup.

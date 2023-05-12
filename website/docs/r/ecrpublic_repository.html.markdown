@@ -10,7 +10,7 @@ description: |-
 
 Provides a Public Elastic Container Registry Repository.
 
-~> **NOTE:** This resource can only be used with `us-east-1` region.
+~> **NOTE:** This resource can only be used in the `us-east-1` region.
 
 ## Example Usage
 
@@ -69,7 +69,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `delete` - (Default `20m`)
 

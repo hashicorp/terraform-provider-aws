@@ -42,8 +42,7 @@ In addition to all of the arguments above, the following attributes are exported
 * `server_side_encryption_configuration` - A block that specifies the identifier of the AWS KMS customer managed key (CMK) that's used to encrypt data indexed by Amazon Kendra. Amazon Kendra doesn't support asymmetric CMKs. Documented below.
 * `status` - Current status of the index. When the value is `ACTIVE`, the index is ready for use. If the Status field value is `FAILED`, the `error_message` field contains a message that explains why.
 * `updated_at` - Unix datetime that the index was last updated.
-* `user_context_policy` - User context policy. Valid values are `ATTRIBUTE_FILTER` or `USER_TOKEN`. For more information, refer to [UserContextPolicy](https://docs.aws.amazon.com/kendra/latest/dg/API_CreateIndex.
-html#Kendra-CreateIndex-request-UserContextPolicy).
+* `user_context_policy` - User context policy. Valid values are `ATTRIBUTE_FILTER` or `USER_TOKEN`. For more information, refer to [UserContextPolicy](https://docs.aws.amazon.com/kendra/latest/APIReference/API_CreateIndex.html#kendra-CreateIndex-request-UserContextPolicy).
 * `user_group_resolution_configuration` - A block that enables fetching access levels of groups and users from an AWS Single Sign-On identity source. Documented below.
 * `user_token_configurations` - A block that specifies the user token configuration. Documented below.
 * `tags` - Metadata that helps organize the Indices you create.

@@ -119,7 +119,6 @@ resource "aws_glue_catalog_table" "test" {
 }
 ```
 
-
 ## Argument Reference
 
 The following arguments are supported:

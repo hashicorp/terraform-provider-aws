@@ -64,9 +64,10 @@ resource "aws_sagemaker_workforce" "example" {
 The following arguments are supported:
 
 * `workforce_name` - (Required) The name of the Workforce (must be unique).
-* `cognito_config` - (Required) Use this parameter to configure an Amazon Cognito private workforce. A single Cognito workforce is created using and corresponds to a single Amazon Cognito user pool. Conflicts with `oidc_config`. see [Cognito Config](#cognito-config) details below.
-* `oidc_config` - (Required) Use this parameter to configure a private workforce using your own OIDC Identity Provider. Conflicts with `cognito_config`. see [OIDC Config](#oidc-config) details below.
-* `source_ip_config` - (Required) A list of IP address ranges Used to create an allow list of IP addresses for a private workforce. By default, a workforce isn't restricted to specific IP addresses. see [Source Ip Config](#source-ip-config) details below.
+* `cognito_config` - (Optional) Use this parameter to configure an Amazon Cognito private workforce. A single Cognito workforce is created using and corresponds to a single Amazon Cognito user pool. Conflicts with `oidc_config`. see [Cognito Config](#cognito-config) details below.
+* `oidc_config` - (Optional) Use this parameter to configure a private workforce using your own OIDC Identity Provider. Conflicts with `cognito_config`. see [OIDC Config](#oidc-config) details below.
+* `source_ip_config` - (Optional) A list of IP address ranges Used to create an allow list of IP addresses for a private workforce. By default, a workforce isn't restricted to specific IP addresses. see [Source Ip Config](#source-ip-config) details below.
+* `workforce_vpc_config` - (Optional) configure a workforce using VPC. see [Workforce VPC Config](#workforce-vpc-config) details below.
 
 ### Cognito Config
 
@@ -88,6 +89,12 @@ The following arguments are supported:
 
 * `cidrs` - (Required) A list of up to 10 CIDR values.
 
+### Workforce VPC Config
+
+* `security_group_ids` - (Optional) The VPC security group IDs. The security groups must be for the same VPC as specified in the subnet.
+* `subnets` - (Optional) The ID of the subnets in the VPC that you want to connect.
+* `vpc_id` - (Optional) The ID of the VPC that the workforce uses for communication.
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -95,6 +102,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Workforce.
 * `id` - The name of the Workforce.
 * `subdomain` - The subdomain for your OIDC Identity Provider.
+* `workforce_vpc_config.0.vpc_endpoint_id` - The IDs for the VPC service endpoints of your VPC workforce.
 
 ## Import
 

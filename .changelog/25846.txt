@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_cloudwatch_event_endpoint
+```
+
+```release-note:bug
+resource/aws_cloudwatch_event_rule: Add retry to read step, resolving `couldn't find resource` error
+```

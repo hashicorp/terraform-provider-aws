@@ -7,13 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/aws/aws-sdk-go/service/route53/route53iface"
 )
 
-func listTrafficPolicyVersionsPages(conn *route53.Route53, input *route53.ListTrafficPolicyVersionsInput, fn func(*route53.ListTrafficPolicyVersionsOutput, bool) bool) error {
-	return listTrafficPolicyVersionsPagesWithContext(context.Background(), conn, input, fn)
-}
-
-func listTrafficPolicyVersionsPagesWithContext(ctx context.Context, conn *route53.Route53, input *route53.ListTrafficPolicyVersionsInput, fn func(*route53.ListTrafficPolicyVersionsOutput, bool) bool) error {
+func listTrafficPolicyVersionsPages(ctx context.Context, conn route53iface.Route53API, input *route53.ListTrafficPolicyVersionsInput, fn func(*route53.ListTrafficPolicyVersionsOutput, bool) bool) error {
 	for {
 		output, err := conn.ListTrafficPolicyVersionsWithContext(ctx, input)
 		if err != nil {

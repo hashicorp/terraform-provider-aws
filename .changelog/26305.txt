@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_instance: Add ability to update `private_dns_name_options` in place
+```

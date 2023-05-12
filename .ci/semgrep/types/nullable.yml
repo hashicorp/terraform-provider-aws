@@ -1,0 +1,44 @@
+rules:
+  - id: valid-nullable-bool
+    languages: [go]
+    message: Uses of `nullable.TypeNullableBool` must be paired with `nullable.ValidateTypeStringNullableBool` unless they are strictly `Computed`.
+    patterns:
+      - pattern: |
+          {
+            ...,
+            Type: nullable.TypeNullableBool,
+            ...,
+          }
+      - pattern-not: |
+          {
+            ...,
+            Type: nullable.TypeNullableBool,
+            ...,
+            ValidateFunc: nullable.ValidateTypeStringNullableBool,
+            ...,
+          }
+      - pattern-not: |
+          {
+            Type: nullable.TypeNullableBool,
+            Computed: true,
+          }
+    severity: ERROR
+
+  - id: nullable-bool-parsing
+    languages: [go]
+    message: Prefer using `nullable.Bool(...).Value()` for checking nullable boolean values
+    patterns:
+      - pattern-either:
+          - pattern: |
+              if $V, $OK := $MAP["..."].(string); $OK && $V != "" {
+                $B, _ := strconv.ParseBool($V)
+                ...
+                $X = aws.Bool($B)
+              }
+          - pattern: |
+              if $V, $OK := d.GetOk("..."); $OK {
+                $B, _ := strconv.ParseBool($V.(string))
+                ...
+                $X = aws.Bool($B)
+              }
+    severity: ERROR

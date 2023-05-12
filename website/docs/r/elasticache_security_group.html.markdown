@@ -39,7 +39,6 @@ The following arguments are supported:
 * `security_group_names` – (Required) List of EC2 security group names to be
 authorized for ingress to the cache security group
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
