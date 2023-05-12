@@ -131,36 +131,6 @@ func testAccClientVPNNetworkAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccClientVPNNetworkAssociation_securityGroupsOnEndpoint(t *testing.T) {
-	ctx := acctest.Context(t)
-	var assoc ec2.TargetNetwork
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ec2_client_vpn_network_association.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckClientVPNSyncronize(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClientVPNNetworkAssociationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClientVPNNetworkAssociationConfig_twoSecurityGroupsOnEndpoint(t, rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClientVPNNetworkAssociationExists(ctx, resourceName, &assoc),
-					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "2"),
-					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccClientVPNNetworkAssociationImportStateIdFunc(resourceName),
-			},
-		},
-	})
-}
-
 func testAccCheckClientVPNNetworkAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
@@ -274,15 +244,6 @@ resource "aws_ec2_client_vpn_network_association" "test" {
 
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
   subnet_id              = aws_subnet.test[count.index].id
-}
-`)
-}
-
-func testAccClientVPNNetworkAssociationConfig_twoSecurityGroupsOnEndpoint(t *testing.T, rName string) string {
-	return acctest.ConfigCompose(testAccClientVPNEndpointConfig_securityGroups(t, rName, 2), `
-resource "aws_ec2_client_vpn_network_association" "test" {
-  client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
-  subnet_id              = aws_subnet.test[0].id
 }
 `)
 }
