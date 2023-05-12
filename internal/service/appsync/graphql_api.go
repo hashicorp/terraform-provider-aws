@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -326,56 +327,43 @@ func resourceGraphQLAPIRead(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncConn()
 
-	input := &appsync.GetGraphqlApiInput{
-		ApiId: aws.String(d.Id()),
-	}
+	api, err := FindGraphQLAPIByID(ctx, conn, d.Id())
 
-	resp, err := conn.GetGraphqlApiWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) && !d.IsNewResource() {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AppSync GraphQL API (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return diags
+		return nil
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting AppSync GraphQL API (%s): %s", d.Id(), err)
+		return diag.Errorf("reading AppSync GraphQL API (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", resp.GraphqlApi.Arn)
-	d.Set("authentication_type", resp.GraphqlApi.AuthenticationType)
-	d.Set("name", resp.GraphqlApi.Name)
-	d.Set("visibility", resp.GraphqlApi.Visibility)
-
-	if err := d.Set("log_config", flattenGraphQLAPILogConfig(resp.GraphqlApi.LogConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting log_config: %s", err)
-	}
-
-	if err := d.Set("openid_connect_config", flattenGraphQLAPIOpenIDConnectConfig(resp.GraphqlApi.OpenIDConnectConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting openid_connect_config: %s", err)
-	}
-
-	if err := d.Set("user_pool_config", flattenGraphQLAPIUserPoolConfig(resp.GraphqlApi.UserPoolConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting user_pool_config: %s", err)
-	}
-
-	if err := d.Set("lambda_authorizer_config", flattenGraphQLAPILambdaAuthorizerConfig(resp.GraphqlApi.LambdaAuthorizerConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting lambda_authorizer_config: %s", err)
-	}
-
-	if err := d.Set("additional_authentication_provider", flattenGraphQLAPIAdditionalAuthenticationProviders(resp.GraphqlApi.AdditionalAuthenticationProviders)); err != nil {
+	if err := d.Set("additional_authentication_provider", flattenGraphQLAPIAdditionalAuthenticationProviders(api.AdditionalAuthenticationProviders)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting additional_authentication_provider: %s", err)
 	}
-
-	if err := d.Set("uris", aws.StringValueMap(resp.GraphqlApi.Uris)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting uris: %s", err)
+	d.Set("arn", api.Arn)
+	d.Set("authentication_type", api.AuthenticationType)
+	if err := d.Set("lambda_authorizer_config", flattenGraphQLAPILambdaAuthorizerConfig(api.LambdaAuthorizerConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting lambda_authorizer_config: %s", err)
 	}
-
-	SetTagsOut(ctx, resp.GraphqlApi.Tags)
-
-	if err := d.Set("xray_enabled", resp.GraphqlApi.XrayEnabled); err != nil {
+	if err := d.Set("log_config", flattenGraphQLAPILogConfig(api.LogConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting log_config: %s", err)
+	}
+	if err := d.Set("openid_connect_config", flattenGraphQLAPIOpenIDConnectConfig(api.OpenIDConnectConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting openid_connect_config: %s", err)
+	}
+	d.Set("name", api.Name)
+	d.Set("uris", aws.StringValueMap(api.Uris))
+	if err := d.Set("user_pool_config", flattenGraphQLAPIUserPoolConfig(api.UserPoolConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting user_pool_config: %s", err)
+	}
+	d.Set("visibility", api.Visibility)
+	if err := d.Set("xray_enabled", api.XrayEnabled); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting xray_enabled: %s", err)
 	}
+
+	SetTagsOut(ctx, api.Tags)
 
 	return diags
 }
@@ -449,6 +437,31 @@ func resourceGraphQLAPIDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	return diags
+}
+
+func FindGraphQLAPIByID(ctx context.Context, conn *appsync.AppSync, id string) (*appsync.GraphqlApi, error) {
+	input := &appsync.GetGraphqlApiInput{
+		ApiId: aws.String(id),
+	}
+
+	output, err := conn.GetGraphqlApiWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.GraphqlApi == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.GraphqlApi, nil
 }
 
 func expandGraphQLAPILogConfig(l []interface{}) *appsync.LogConfig {
