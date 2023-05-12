@@ -1390,7 +1390,7 @@ resource "aws_appsync_graphql_api" "test" {
   name                = %[1]q
 
   openid_connect_config {
-    client_id = %[1]q
+    client_id = %[2]q
     issuer    = "https://example.com"
   }
 }
