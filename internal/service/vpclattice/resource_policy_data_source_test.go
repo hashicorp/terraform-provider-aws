@@ -2,6 +2,7 @@ package vpclattice_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -29,7 +30,7 @@ func TestAccVPCLatticeResourcePolicyDataSource_basic(t *testing.T) {
 			{
 				Config: testAccResourcePolicyDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					//resource.TestMatchResourceAttr(dataSourceName, "policy", regexp.MustCompile(`"vpc-lattice:CreateServiceNetworkVpcAssociation","vpc-lattice:CreateServiceNetworkServiceAssociation","vpc-lattice:GetServiceNetwork"`)),
+					resource.TestMatchResourceAttr(dataSourceName, "policy", regexp.MustCompile(`"vpc-lattice:CreateServiceNetworkVpcAssociation","vpc-lattice:CreateServiceNetworkServiceAssociation","vpc-lattice:GetServiceNetwork"`)),
 					resource.TestCheckResourceAttrPair(dataSourceName, "resource_arn", "aws_vpclattice_service_network.test", "arn"),
 				),
 			},
@@ -71,7 +72,7 @@ resource "aws_vpclattice_resource_policy" "test" {
 func testAccResourcePolicyDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccResourcePolicyDataSourceConfig_create(rName), `
 data "aws_vpclattice_resource_policy" "test" {
-  resource_arn = aws_vpclattice_service_network.test.arn
+  resource_arn = aws_vpclattice_resource_policy.test.resource_arn
 }
 `)
 }

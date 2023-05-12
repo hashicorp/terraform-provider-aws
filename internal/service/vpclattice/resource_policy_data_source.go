@@ -3,7 +3,6 @@ package vpclattice
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,15 +15,16 @@ import (
 func DataSourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResourcePolicyRead,
+
 		Schema: map[string]*schema.Schema{
+			"policy": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"resource_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
-			},
-			"policy": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
@@ -49,13 +49,7 @@ func dataSourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.SetId(resourceArn)
-
-	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.ToString(out.Policy))
-
-	if err != nil {
-		return diag.Errorf("setting policy %s: %s", aws.ToString(out.Policy), err)
-	}
-	d.Set("policy", policyToSet)
+	d.Set("policy", out.Policy)
 
 	return nil
 }
