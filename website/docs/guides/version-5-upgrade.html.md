@@ -27,6 +27,7 @@ Upgrade topics:
 - [Resource: aws_acmpca_certificate_authority](#resource-aws_acmpca_certificate_authority)
 - [Resource: aws_api_gateway_rest_api](#resource-aws_api_gateway_rest_api)
 - [Resource: aws_autoscaling_group](#resource-aws_autoscaling_group)
+- [Resource: aws_budgets_budget](#resource-aws_budgets_budget)
 - [Resource: aws_ce_anomaly_subscription](#resource-aws_ce_anomaly_subscription)
 - [Resource: aws_cloudwatch_event_target](#resource-aws_cloudwatch_event_target)
 - [Resource: aws_connect_routing_profile](#resource-aws_connect_queue)
@@ -112,6 +113,10 @@ The `minimum_compression_size` attribute is now a String type, allowing it to be
 ## Resource: aws_autoscaling_group
 
 The `tags` attribute has been removed. Use the `tag` attribute instead. For use cases requiring dynamic tags, see the [Dynamic Tagging example](../r/autoscaling_group.html.markdown#dynamic-tagging).
+
+## Resource: aws_budgets_budget
+
+The `cost_filters` attribute has been removed.
 
 ## Resource: aws_ce_anomaly_subscription
 
