@@ -19,6 +19,11 @@ func init() {
 		Name: "aws_emrcontainers_virtual_cluster",
 		F:    sweepVirtualClusters,
 	})
+
+	resource.AddTestSweepers("aws_emrcontainers_job_template", &resource.Sweeper{
+		Name: "aws_emrcontainers_job_template",
+		F:    sweepJobTemplates,
+	})
 }
 
 func sweepVirtualClusters(region string) error {
@@ -64,6 +69,50 @@ func sweepVirtualClusters(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping EMR Containers Virtual Clusters (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepJobTemplates(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).EMRContainersConn()
+	input := &emrcontainers.ListJobTemplatesInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.ListJobTemplatesPagesWithContext(ctx, input, func(page *emrcontainers.ListJobTemplatesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Templates {
+			r := ResourceJobTemplate()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.Id))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EMR Containers Job Template sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing EMR Containers Job Templates (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EMR Containers Job Templates (%s): %w", region, err)
 	}
 
 	return nil
