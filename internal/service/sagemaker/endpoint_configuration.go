@@ -930,7 +930,7 @@ func expandServerlessConfig(configured []interface{}) *sagemaker.ProductionVaria
 		c.MemorySizeInMB = aws.Int64(int64(v))
 	}
 
-	if v, ok := m["provisioned_concurrency"].(int); ok {
+	if v, ok := m["provisioned_concurrency"].(int); ok && v > 0 {
 		c.ProvisionedConcurrency = aws.Int64(int64(v))
 	}
 
