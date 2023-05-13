@@ -68,7 +68,7 @@ The following arguments are supported:
 
 * `max_concurrency` - (Required) The maximum number of concurrent invocations your serverless endpoint can process. Valid values are between `1` and `200`.
 * `memory_size_in_mb` - (Required) The memory size of your serverless endpoint. Valid values are in 1 GB increments: `1024` MB, `2048` MB, `3072` MB, `4096` MB, `5120` MB, or `6144` MB.
-* `provisioned_concurrency` - The amount of provisioned concurrency to allocate for the serverless endpoint.Should be less than or equal to `max_concurrency`. Valid values are between `1` and `200`.
+* `provisioned_concurrency` - The amount of provisioned concurrency to allocate for the serverless endpoint. Should be less than or equal to `max_concurrency`. Valid values are between `1` and `200`.
 
 ### data_capture_config
 
