@@ -497,7 +497,7 @@ func expandJobDriver(tfMap map[string]interface{}) *emrcontainers.JobDriver {
 	apiObject := &emrcontainers.JobDriver{}
 
 	if v, ok := tfMap["spark_sql_job_driver"].([]interface{}); ok && len(v) > 0 {
-		apiObject.SparkSqlJobDriver = expandSparkSqlJobDriver(v[0].(map[string]interface{}))
+		apiObject.SparkSqlJobDriver = expandSparkSQLJobDriver(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["spark_submit_job_driver"].([]interface{}); ok && len(v) > 0 {
@@ -507,7 +507,7 @@ func expandJobDriver(tfMap map[string]interface{}) *emrcontainers.JobDriver {
 	return apiObject
 }
 
-func expandSparkSqlJobDriver(tfMap map[string]interface{}) *emrcontainers.SparkSqlJobDriver {
+func expandSparkSQLJobDriver(tfMap map[string]interface{}) *emrcontainers.SparkSqlJobDriver {
 	if tfMap == nil {
 		return nil
 	}
@@ -693,7 +693,7 @@ func flattenJobDriver(apiObject *emrcontainers.JobDriver) map[string]interface{}
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.SparkSqlJobDriver; v != nil {
-		tfMap["spark_sql_job_driver"] = []interface{}{flattenSparkSqlJobDriver(v)}
+		tfMap["spark_sql_job_driver"] = []interface{}{flattenSparkSQLJobDriver(v)}
 	}
 
 	if v := apiObject.SparkSubmitJobDriver; v != nil {
@@ -703,7 +703,7 @@ func flattenJobDriver(apiObject *emrcontainers.JobDriver) map[string]interface{}
 	return tfMap
 }
 
-func flattenSparkSqlJobDriver(apiObject *emrcontainers.SparkSqlJobDriver) map[string]interface{} {
+func flattenSparkSQLJobDriver(apiObject *emrcontainers.SparkSqlJobDriver) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
