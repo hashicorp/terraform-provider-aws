@@ -113,7 +113,7 @@ resource "aws_db_instance" "test" {
   engine_version          = data.aws_rds_engine_version.default.version
   identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  name                    = "test"
+  db_name                 = "test"
   password                = "avoid-plaintext-passwords"
   skip_final_snapshot     = true
   username                = "tfacctest"
@@ -148,7 +148,7 @@ resource "aws_db_instance" "test" {
   identifier                  = %[1]q
   instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
   manage_master_user_password = true
-  name                        = "test"
+  db_name                     = "test"
   skip_final_snapshot         = true
   username                    = "tfacctest"
 

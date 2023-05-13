@@ -191,7 +191,7 @@ resource "aws_db_instance" "test" {
   engine                  = data.aws_rds_engine_version.default.engine
   engine_version          = data.aws_rds_engine_version.default.version
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  name                    = "test"
+  db_name                 = "test"
   identifier              = %[1]q
   password                = "avoid-plaintext-passwords"
   username                = "tfacctest"
@@ -202,7 +202,7 @@ resource "aws_db_instance" "test" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.test.id
+  db_instance_identifier = aws_db_instance.test.identifier
   db_snapshot_identifier = "%[1]s-source"
 }`, rName)
 }

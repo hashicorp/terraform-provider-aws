@@ -171,7 +171,7 @@ resource "aws_db_instance" "test" {
   engine                  = "postgres"
   engine_version          = "13.4"
   instance_class          = "db.t3.micro"
-  name                    = "mydb"
+  db_name                 = "mydb"
   username                = "masterusername"
   password                = "mustbeeightcharacters"
   backup_retention_period = 7

@@ -303,7 +303,7 @@ func testAccProxyTargetConfig_instance(rName string) string {
 	return acctest.ConfigCompose(testAccProxyTargetBaseConfig(rName), fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
   engine             = "mysql"
-  preferred_versions = ["5.7.31", "5.7.30"]
+  preferred_versions = ["8.0.33", "8.0.32", "8.0.31"]
 }
 
 data "aws_rds_orderable_db_instance" "test" {
@@ -330,7 +330,7 @@ resource "aws_db_instance" "test" {
 }
 
 resource "aws_db_proxy_target" "test" {
-  db_instance_identifier = aws_db_instance.test.id
+  db_instance_identifier = aws_db_instance.test.identifier
   db_proxy_name          = aws_db_proxy.test.name
   target_group_name      = "default"
 }

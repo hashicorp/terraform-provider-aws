@@ -673,7 +673,7 @@ resource "aws_db_instance" "test" {
   engine            = data.aws_rds_orderable_db_instance.test.engine
   engine_version    = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class    = data.aws_rds_orderable_db_instance.test.instance_class
-  name              = "baz"
+  db_name           = "baz"
   password          = "barbarbarbar"
   username          = "foo"
 
