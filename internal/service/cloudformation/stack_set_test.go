@@ -41,6 +41,8 @@ func TestAccCloudFormationStackSet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "call_as", "SELF"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "execution_role_name", "AWSCloudFormationStackSetExecutionRole"),
+					resource.TestCheckResourceAttr(resourceName, "managed_execution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_execution.0.active", "true"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
@@ -1128,6 +1130,10 @@ EOF
 resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
+
+  managed_execution {
+	active = true
+  }
 
   template_body = <<TEMPLATE
 %[2]s
