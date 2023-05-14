@@ -124,6 +124,15 @@ func SetTagsOut(ctx context.Context, tags []*ecs.Tag) {
 	}
 }
 
+// createTags creates ecs service tags for new resources.
+func createTags(ctx context.Context, conn ecsiface.ECSAPI, identifier string, tags []*ecs.Tag) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return UpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+}
+
 // UpdateTags updates ecs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.

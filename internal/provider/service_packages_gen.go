@@ -106,6 +106,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/inspector"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/inspector2"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/internetmonitor"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iotanalytics"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iotevents"
@@ -127,7 +128,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/location"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/logs"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/macie"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconvert"
@@ -312,6 +312,7 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		imagebuilder.ServicePackage,
 		inspector.ServicePackage,
 		inspector2.ServicePackage,
+		internetmonitor.ServicePackage,
 		iot.ServicePackage,
 		iotanalytics.ServicePackage,
 		iotevents.ServicePackage,
@@ -333,7 +334,6 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		lightsail.ServicePackage,
 		location.ServicePackage,
 		logs.ServicePackage,
-		macie.ServicePackage,
 		macie2.ServicePackage,
 		mediaconnect.ServicePackage,
 		mediaconvert.ServicePackage,

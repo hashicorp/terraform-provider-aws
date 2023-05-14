@@ -34,7 +34,6 @@ var routeTableValidTargets = []string{
 	"core_network_arn",
 	"egress_only_gateway_id",
 	"gateway_id",
-	"instance_id",
 	"local_gateway_id",
 	"nat_gateway_id",
 	"network_interface_id",
@@ -118,11 +117,6 @@ func ResourceRouteTable() *schema.Resource {
 						"gateway_id": {
 							Type:     schema.TypeString,
 							Optional: true,
-						},
-						"instance_id": {
-							Type:       schema.TypeString,
-							Optional:   true,
-							Deprecated: "Use network_interface_id instead",
 						},
 						"local_gateway_id": {
 							Type:     schema.TypeString,
@@ -424,12 +418,6 @@ func resourceRouteTableHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
-	instanceSet := false
-	if v, ok := m["instance_id"]; ok {
-		instanceSet = v.(string) != ""
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-
 	if v, ok := m["transit_gateway_id"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
@@ -446,7 +434,7 @@ func resourceRouteTableHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
-	if v, ok := m["network_interface_id"]; ok && !(instanceSet || natGatewaySet) {
+	if v, ok := m["network_interface_id"]; ok && !natGatewaySet {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
@@ -665,10 +653,6 @@ func expandCreateRouteInput(tfMap map[string]interface{}) *ec2.CreateRouteInput 
 		apiObject.GatewayId = aws.String(v)
 	}
 
-	if v, ok := tfMap["instance_id"].(string); ok && v != "" {
-		apiObject.InstanceId = aws.String(v)
-	}
-
 	if v, ok := tfMap["local_gateway_id"].(string); ok && v != "" {
 		apiObject.LocalGatewayId = aws.String(v)
 	}
@@ -729,10 +713,6 @@ func expandReplaceRouteInput(tfMap map[string]interface{}) *ec2.ReplaceRouteInpu
 
 	if v, ok := tfMap["gateway_id"].(string); ok && v != "" {
 		apiObject.GatewayId = aws.String(v)
-	}
-
-	if v, ok := tfMap["instance_id"].(string); ok && v != "" {
-		apiObject.InstanceId = aws.String(v)
 	}
 
 	if v, ok := tfMap["local_gateway_id"].(string); ok && v != "" {
@@ -799,10 +779,6 @@ func flattenRoute(apiObject *ec2.Route) map[string]interface{} {
 		} else {
 			tfMap["gateway_id"] = aws.StringValue(v)
 		}
-	}
-
-	if v := apiObject.InstanceId; v != nil {
-		tfMap["instance_id"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.LocalGatewayId; v != nil {

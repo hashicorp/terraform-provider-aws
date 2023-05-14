@@ -2,7 +2,6 @@ package docdb
 
 import (
 	"context"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
@@ -23,7 +22,6 @@ func findGlobalClusterByARN(ctx context.Context, conn *docdb.DocDB, dbClusterARN
 		},
 	}
 
-	log.Printf("[DEBUG] Reading DocDB Global Clusters: %s", input)
 	err := conn.DescribeGlobalClustersPagesWithContext(ctx, input, func(page *docdb.DescribeGlobalClustersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
@@ -68,7 +66,6 @@ func FindDBClusterById(ctx context.Context, conn *docdb.DocDB, dBClusterID strin
 		DBClusterIdentifier: aws.String(dBClusterID),
 	}
 
-	log.Printf("[DEBUG] Reading DocDB Cluster (%s): %s", dBClusterID, input)
 	err := conn.DescribeDBClustersPagesWithContext(ctx, input, func(page *docdb.DescribeDBClustersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
@@ -98,7 +95,6 @@ func FindDBClusterSnapshotById(ctx context.Context, conn *docdb.DocDB, dBCluster
 		DBClusterIdentifier: aws.String(dBClusterSnapshotID),
 	}
 
-	log.Printf("[DEBUG] Reading DocDB Cluster (%s): %s", dBClusterSnapshotID, input)
 	err := conn.DescribeDBClusterSnapshotsPagesWithContext(ctx, input, func(page *docdb.DescribeDBClusterSnapshotsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
@@ -128,7 +124,6 @@ func FindDBInstanceById(ctx context.Context, conn *docdb.DocDB, dBInstanceID str
 		DBInstanceIdentifier: aws.String(dBInstanceID),
 	}
 
-	log.Printf("[DEBUG] Reading DocDB Instance (%s): %s", dBInstanceID, input)
 	err := conn.DescribeDBInstancesPagesWithContext(ctx, input, func(page *docdb.DescribeDBInstancesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
@@ -158,7 +153,6 @@ func FindGlobalClusterById(ctx context.Context, conn *docdb.DocDB, globalCluster
 		GlobalClusterIdentifier: aws.String(globalClusterID),
 	}
 
-	log.Printf("[DEBUG] Reading DocDB Global Cluster (%s): %s", globalClusterID, input)
 	err := conn.DescribeGlobalClustersPagesWithContext(ctx, input, func(page *docdb.DescribeGlobalClustersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
@@ -188,7 +182,6 @@ func FindDBSubnetGroupByName(ctx context.Context, conn *docdb.DocDB, dBSubnetGro
 		DBSubnetGroupName: aws.String(dBSubnetGroupName),
 	}
 
-	log.Printf("[DEBUG] Reading DocDB Global Cluster (%s): %s", dBSubnetGroupName, input)
 	err := conn.DescribeDBSubnetGroupsPagesWithContext(ctx, input, func(page *docdb.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
@@ -218,7 +211,6 @@ func FindEventSubscriptionByID(ctx context.Context, conn *docdb.DocDB, id string
 		SubscriptionName: aws.String(id),
 	}
 
-	log.Printf("[DEBUG] Reading DocDB Event Subscription (%s): %s", id, input)
 	err := conn.DescribeEventSubscriptionsPagesWithContext(ctx, input, func(page *docdb.DescribeEventSubscriptionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
