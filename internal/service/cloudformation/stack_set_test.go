@@ -1132,7 +1132,7 @@ resource "aws_cloudformation_stack_set" "test" {
   name                    = %[1]q
 
   managed_execution {
-	active = true
+    active = true
   }
 
   template_body = <<TEMPLATE
