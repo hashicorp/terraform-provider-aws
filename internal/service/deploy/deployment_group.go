@@ -267,6 +267,8 @@ func ResourceDeploymentGroup() *schema.Resource {
 												"listener_arns": {
 													Type:     schema.TypeSet,
 													Required: true,
+													MinItems: 1,
+													MaxItems: 1,
 													Elem: &schema.Schema{
 														Type:         schema.TypeString,
 														ValidateFunc: verify.ValidARN,
@@ -299,6 +301,8 @@ func ResourceDeploymentGroup() *schema.Resource {
 												"listener_arns": {
 													Type:     schema.TypeSet,
 													Required: true,
+													MinItems: 1,
+													MaxItems: 1,
 													Elem: &schema.Schema{
 														Type:         schema.TypeString,
 														ValidateFunc: verify.ValidARN,
