@@ -126,9 +126,10 @@ func ResourceJobTemplate() *schema.Resource {
 													},
 												},
 												"persistent_app_ui": {
-													Type:     schema.TypeString,
-													Optional: true,
-													ForceNew: true,
+													Type:         schema.TypeString,
+													Optional:     true,
+													ForceNew:     true,
+													ValidateFunc: validation.StringInSlice(emrcontainers.PersistentAppUI_Values(), false),
 												},
 												"s3_monitoring_configuration": {
 													Type:     schema.TypeList,
