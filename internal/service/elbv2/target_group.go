@@ -752,6 +752,10 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 							&elbv2.TargetGroupAttribute{
 								Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
 								Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
+							},
+							&elbv2.TargetGroupAttribute{
+								Key:   aws.String("stickiness.app_cookie.cookie_name"),
+								Value: aws.String(stickiness["cookie_name"].(string)),
 							})
 					case "app_cookie":
 						attrs = append(attrs,
