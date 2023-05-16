@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -87,7 +88,7 @@ func ResourceRemediationConfiguration() *schema.Resource {
 				ValidateFunc: validation.IntBetween(1, 25),
 			},
 			"parameter": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				MaxItems: 25,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -108,6 +109,7 @@ func ResourceRemediationConfiguration() *schema.Resource {
 						"static_values": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
@@ -149,8 +151,8 @@ func resourceRemediationConfigurationPut(ctx context.Context, d *schema.Resource
 		ConfigRuleName: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("parameter"); ok && v.(*schema.Set).Len() > 0 {
-		input.Parameters = expandRemediationParameterValues(v.(*schema.Set).List())
+	if v, ok := d.GetOk("parameter"); ok && len(v.([]interface{})) > 0 {
+		input.Parameters = expandRemediationParameterValues(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("resource_type"); ok {
 		input.ResourceType = aws.String(v.(string))
@@ -380,15 +382,22 @@ func flattenRemediationParameterValues(parameters map[string]*configservice.Reme
 		if v := value.ResourceValue; v != nil {
 			item["resource_value"] = aws.StringValue(v.Value)
 		}
-		if v := value.StaticValue; v != nil && len(v.Values) > 1 {
-			item["static_values"] = aws.StringValueSlice(v.Values)
-		}
-		if v := value.StaticValue; v != nil && len(v.Values) == 1 {
-			item["static_value"] = aws.StringValue(v.Values[0])
+		if v := value.StaticValue; v != nil {
+			if len(v.Values) == 1 {
+				item["static_value"] = aws.StringValue(v.Values[0])
+			} else if len(v.Values) > 1 {
+				item["static_values"] = aws.StringValueSlice(v.Values)
+			}
+		} else {
+			item["static_values"] = make([]interface{}, 0)
 		}
 
 		items = append(items, item)
 	}
+
+	slices.SortFunc(items, func(a, b interface{}) bool {
+		return a.(map[string]interface{})["name"].(string) < b.(map[string]interface{})["name"].(string)
+	})
 
 	return items
 }

@@ -38,10 +38,6 @@ func resourceVPCPeeringConnectionOptionsCreate(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	if peeringConnectionOptionsAllowsClassicLink(d) {
-		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic no new VPC Peering Connection Options can be created with ClassicLink options enabled`)
-	}
-
 	vpcPeeringConnectionID := d.Get("vpc_peering_connection_id").(string)
 	vpcPeeringConnection, err := FindVPCPeeringConnectionByID(ctx, conn, vpcPeeringConnectionID)
 

@@ -68,7 +68,6 @@ type Config struct {
 	SharedConfigFiles              []string
 	SharedCredentialsFiles         []string
 	SkipCredsValidation            bool
-	SkipGetEC2Platforms            bool
 	SkipRegionValidation           bool
 	SkipRequestingAccountId        bool
 	STSRegion                      string

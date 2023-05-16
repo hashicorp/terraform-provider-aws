@@ -13,10 +13,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
@@ -2199,9 +2199,14 @@ resource "aws_msk_cluster" "test" {
 
   broker_node_group_info {
     client_subnets  = aws_subnet.test[*].id
-    ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.test.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
   }
 }
 
@@ -2231,9 +2236,14 @@ resource "aws_msk_cluster" "test" {
 
   broker_node_group_info {
     client_subnets  = aws_subnet.test[*].id
-    ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.test.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
   }
 }
 

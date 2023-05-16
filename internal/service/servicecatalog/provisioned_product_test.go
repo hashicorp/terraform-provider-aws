@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
@@ -137,6 +137,68 @@ func TestAccServiceCatalogProvisionedProduct_update(t *testing.T) {
 					"provisioning_parameters",
 					"retain_physical_resources",
 				},
+			},
+		},
+	})
+}
+
+func TestAccServiceCatalogProvisionedProduct_stackSetProvisioningPreferences(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_servicecatalog_provisioned_product.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
+	var pprod servicecatalog.ProvisionedProductDetail
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProvisionedProductConfig_stackSetprovisioningPreferences(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16", 1, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.failure_tolerance_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.max_concurrency_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.accounts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.regions.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"accept_language",
+					"ignore_errors",
+					"provisioning_artifact_name",
+					"provisioning_parameters",
+					"retain_physical_resources",
+					"stack_set_provisioning_preferences",
+				},
+			},
+			{
+				Config: testAccProvisionedProductConfig_stackSetprovisioningPreferences(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16", 3, 4),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.failure_tolerance_count", "3"),
+					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.max_concurrency_count", "4"),
+					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.accounts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.regions.#", "1"),
+				),
+			},
+			{
+				Config: testAccProvisionedProductConfig_basic(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.#", "0"),
+				),
 			},
 		},
 	})
@@ -723,6 +785,37 @@ resource "aws_servicecatalog_provisioned_product" "test" {
   }
 }
 `, rName, vpcCidr))
+}
+
+func testAccProvisionedProductConfig_stackSetprovisioningPreferences(rName, domain, email, vpcCidr string, failureToleranceCount, maxConcurrencyCount int) string {
+	return acctest.ConfigCompose(testAccProvisionedProductTemplateURLBaseConfig(rName, domain, email),
+		fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_servicecatalog_provisioned_product" "test" {
+  name                       = %[1]q
+  product_id                 = aws_servicecatalog_product.test.id
+  provisioning_artifact_name = %[1]q
+  path_id                    = data.aws_servicecatalog_launch_paths.test.summaries[0].path_id
+
+  stack_set_provisioning_preferences {
+    accounts                = [data.aws_caller_identity.current.account_id]
+    regions                 = [data.aws_region.current.name]
+    failure_tolerance_count = %[3]d
+    max_concurrency_count   = %[4]d
+  }
+
+  provisioning_parameters {
+    key   = "VPCPrimaryCIDR"
+    value = %[2]q
+  }
+
+  provisioning_parameters {
+    key   = "LeaveMeEmpty"
+    value = ""
+  }
+}
+`, rName, vpcCidr, failureToleranceCount, maxConcurrencyCount))
 }
 
 // func testAccProvisionedProductConfig_productName(rName, domain, email, vpcCidr, productName string) string {

@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -273,6 +273,47 @@ func testAccRemediationConfiguration_values(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccRemediationConfiguration_migrateParameters(t *testing.T) {
+	ctx := acctest.Context(t)
+	var rc configservice.RemediationConfiguration
+	resourceName := "aws_config_remediation_configuration.test"
+	rInt := sdkacctest.RandInt()
+	automatic := "false"
+	rAttempts := sdkacctest.RandIntRange(1, 25)
+	rSeconds := sdkacctest.RandIntRange(1, 2678000)
+	rExecPct := sdkacctest.RandIntRange(1, 100)
+	rErrorPct := sdkacctest.RandIntRange(1, 100)
+	prefix := "Original"
+	sseAlgorithm := "AES256"
+	expectedName := fmt.Sprintf("%s-tf-acc-test-%d", prefix, rInt)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
+		CheckDestroy: testAccCheckRemediationConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "4.66.0",
+					},
+				},
+				Config: testAccRemediationConfigurationConfig_basic(prefix, sseAlgorithm, rInt, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRemediationConfigurationExists(ctx, resourceName, &rc),
+					resource.TestCheckResourceAttr(resourceName, "config_rule_name", expectedName),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccRemediationConfigurationConfig_basic(prefix, sseAlgorithm, rInt, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
+				PlanOnly:                 true,
 			},
 		},
 	})
