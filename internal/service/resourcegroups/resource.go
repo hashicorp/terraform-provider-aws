@@ -83,7 +83,7 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ResourceGroupsConn()
 
-	out, err := FindResourceByArn(ctx, conn, d.Get("group_arn").(string), d.Get("resource_arn").(string))
+	out, err := FindResourceByARN(ctx, conn, d.Get("group_arn").(string), d.Get("resource_arn").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ResourceGroups Resource (%s) not found, removing from state", d.Id())
@@ -119,7 +119,7 @@ func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
-		return FindResourceByArn(ctx, conn, d.Get("group_arn").(string), d.Get("resource_arn").(string))
+		return FindResourceByARN(ctx, conn, d.Get("group_arn").(string), d.Get("resource_arn").(string))
 	})
 
 	if err != nil {
@@ -129,7 +129,7 @@ func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return nil
 }
 
-func FindResourceByArn(ctx context.Context, conn *resourcegroups.ResourceGroups, groupArn, resourceArn string) (*resourcegroups.ListGroupResourcesItem, error) {
+func FindResourceByARN(ctx context.Context, conn *resourcegroups.ResourceGroups, groupArn, resourceArn string) (*resourcegroups.ListGroupResourcesItem, error) {
 	input := &resourcegroups.ListGroupResourcesInput{
 		Group: aws.String(groupArn),
 	}

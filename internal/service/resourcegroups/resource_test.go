@@ -54,7 +54,7 @@ func testAccCheckResourceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfresourcegroups.FindResourceByArn(ctx, conn, rs.Primary.Attributes["group_arn"], rs.Primary.Attributes["resource_arn"])
+		_, err := tfresourcegroups.FindResourceByARN(ctx, conn, rs.Primary.Attributes["group_arn"], rs.Primary.Attributes["resource_arn"])
 
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, resourcegroups.ErrCodeNotFoundException) {
@@ -82,7 +82,7 @@ func testAccCheckResourceExists(ctx context.Context, name string, resource *reso
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsConn()
 
-		resp, err := tfresourcegroups.FindResourceByArn(ctx, conn, rs.Primary.Attributes["group_arn"], rs.Primary.Attributes["resource_arn"])
+		resp, err := tfresourcegroups.FindResourceByARN(ctx, conn, rs.Primary.Attributes["group_arn"], rs.Primary.Attributes["resource_arn"])
 
 		if err != nil {
 			return create.Error(names.ResourceGroups, create.ErrActionCheckingExistence, tfresourcegroups.ResNameResource, rs.Primary.ID, err)
