@@ -1313,8 +1313,8 @@ func expandDataSetLogicalTableSource(tfMap map[string]interface{}) *quicksight.L
 	if v, ok := tfMap["physical_table_id"].(string); ok && v != "" {
 		logicalTableSource.PhysicalTableId = aws.String(v)
 	}
-	if v, ok := tfMap["join_instruction"].(map[string]interface{}); ok && len(v) > 0 {
-		logicalTableSource.JoinInstruction = expandDataSetJoinInstruction(v)
+	if v, ok := tfMap["join_instruction"].([]interface{}); ok && len(v) > 0 {
+		logicalTableSource.JoinInstruction = expandDataSetJoinInstruction(v[0].(map[string]interface{}))
 	}
 
 	return logicalTableSource
@@ -2126,6 +2126,7 @@ func fieldFoldersHash(v interface{}) int {
 }
 
 func flattenLogicalTableMap(apiObject map[string]*quicksight.LogicalTable, resourceSchema *schema.Resource) *schema.Set {
+	log.Printf("[INFO] API OB %s", apiObject)
 	if len(apiObject) == 0 {
 		return nil
 	}
@@ -2145,6 +2146,7 @@ func flattenLogicalTableMap(apiObject map[string]*quicksight.LogicalTable, resou
 		if table.DataTransforms != nil {
 			tfMap["data_transforms"] = flattenDataTransforms(table.DataTransforms)
 		}
+		log.Printf("[INFO] TABLE %s", table)
 		if table.Source != nil {
 			tfMap["source"] = flattenLogicalTableSource(table.Source)
 		}
