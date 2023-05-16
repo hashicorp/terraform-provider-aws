@@ -1,0 +1,3 @@
+```release-note:breaking-change
+resource/aws_secretsmanager_secret: The `rotation_enabled`, `rotation_lambda_arn` and `rotation_rules` attributes have been removed
+```

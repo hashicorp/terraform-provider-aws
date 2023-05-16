@@ -39,6 +39,7 @@ Upgrade topics:
 - [Resource: aws_msk_cluster](#resource-aws_msk_cluster)
 - [Resource: aws_neptune_cluster](#resource-aws_neptune_cluster)
 - [Resource: aws_rds_cluster](#resource-aws_rds_cluster)
+- [Resource: aws_secretsmanager_secret](#resource-aws_secretsmanager_secret)
 - [Resource: aws_wafv2_web_acl](#resource-aws_wafv2_web_acl)
 
 <!-- /TOC -->
@@ -167,6 +168,10 @@ Automated snapshots **should not** be used for this attribute, unless from a dif
 Changes to the `snapshot_identifier` attribute will now correctly force re-creation of the resource. Previously, changing this attribute would result in a successful apply, but without the cluster being restored (only the resource state was changed). This change brings behavior of the cluster `snapshot_identifier` attribute into alignment with other RDS resources, such as `aws_db_instance`.
 
 Automated snapshots **should not** be used for this attribute, unless from a different cluster. Automated snapshots are deleted as part of cluster destruction when the resource is replaced.
+
+## Resource: aws_secretsmanager_secret
+
+The `rotation_enabled`, `rotation_lambda_arn` and `rotation_rules` attributes have been removed.
 
 ## Resource: aws_wafv2_web_acl
 
