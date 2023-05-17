@@ -40,6 +40,7 @@ Upgrade topics:
 - [Resource: aws_neptune_cluster](#resource-aws_neptune_cluster)
 - [Resource: aws_rds_cluster](#resource-aws_rds_cluster)
 - [Resource: aws_wafv2_web_acl](#resource-aws_wafv2_web_acl)
+- [Resource: aws_wafv2_web_acl_logging_configuration](#resource-aws_wafv2_web_acl_logging_configuration)
 
 <!-- /TOC -->
 
@@ -173,6 +174,10 @@ Automated snapshots **should not** be used for this attribute, unless from a dif
 The `statement.managed_rule_group_statement.excluded_rule` and `statement.rule_group_reference_statement.excluded_rule` attributes have been removed.
 
 The `statement.rule_group_reference_statement.rule_action_override` attribute has been added.
+
+## Resource: aws_wafv2_web_acl_logging_configuration
+
+The `redacted_fields.all_query_arguments`, `redacted_fields.body` and `redacted_fields.single_query_argument` attributes have been removed.
 
 ## Data Source: aws_api_gateway_rest_api
 

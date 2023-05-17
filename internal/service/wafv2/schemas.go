@@ -21,18 +21,6 @@ func emptySchema() *schema.Schema {
 	}
 }
 
-func emptyDeprecatedSchema() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		MaxItems: 1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{},
-		},
-		Deprecated: "Not supported by WAFv2 API",
-	}
-}
-
 func ruleLabelsSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
