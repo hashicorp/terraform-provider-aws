@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func DefinitionSchema() *schema.Schema {
+func TemplateDefinitionSchema() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TemplateVersionDefinition.html
 		Type:     schema.TypeList,
 		MaxItems: 1,
@@ -321,7 +321,7 @@ func rollingDateConfigurationSchema() *schema.Schema {
 	}
 }
 
-func SourceEntitySchema() *schema.Schema {
+func TemplateSourceEntitySchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		MaxItems: 1,
@@ -344,24 +344,7 @@ func SourceEntitySchema() *schema.Schema {
 								Required:     true,
 								ValidateFunc: verify.ValidARN,
 							},
-							"data_set_references": {
-								Type:     schema.TypeList,
-								Required: true,
-								MinItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"data_set_arn": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: verify.ValidARN,
-										},
-										"data_set_placeholder": {
-											Type:     schema.TypeString,
-											Required: true,
-										},
-									},
-								},
-							},
+							"data_set_references": dataSetReferencesSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetReference.html
 						},
 					},
 				},
@@ -385,7 +368,7 @@ func SourceEntitySchema() *schema.Schema {
 	}
 }
 
-func ExpandSourceEntity(tfList []interface{}) *quicksight.TemplateSourceEntity {
+func ExpandTemplateSourceEntity(tfList []interface{}) *quicksight.TemplateSourceEntity {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -400,7 +383,7 @@ func ExpandSourceEntity(tfList []interface{}) *quicksight.TemplateSourceEntity {
 	if v, ok := tfMap["source_analysis"].([]interface{}); ok && len(v) > 0 {
 		sourceEntity.SourceAnalysis = expandSourceAnalysis(v[0].(map[string]interface{}))
 	} else if v, ok := tfMap["source_template"].([]interface{}); ok && len(v) > 0 {
-		sourceEntity.SourceTemplate = expandSourceTemplate(v[0].(map[string]interface{}))
+		sourceEntity.SourceTemplate = expandTemplateSourceTemplate(v[0].(map[string]interface{}))
 	}
 
 	return sourceEntity
@@ -461,7 +444,7 @@ func expandDataSetReference(tfMap map[string]interface{}) *quicksight.DataSetRef
 	return dataSetReference
 }
 
-func expandSourceTemplate(tfMap map[string]interface{}) *quicksight.TemplateSourceTemplate {
+func expandTemplateSourceTemplate(tfMap map[string]interface{}) *quicksight.TemplateSourceTemplate {
 	if tfMap == nil {
 		return nil
 	}
@@ -474,7 +457,7 @@ func expandSourceTemplate(tfMap map[string]interface{}) *quicksight.TemplateSour
 	return sourceTemplate
 }
 
-func ExpandDefinition(tfList []interface{}) *quicksight.TemplateVersionDefinition {
+func ExpandTemplateDefinition(tfList []interface{}) *quicksight.TemplateVersionDefinition {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}

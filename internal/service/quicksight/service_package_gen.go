@@ -82,6 +82,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Account Subscription",
 		},
 		{
+			Factory:  ResourceDashboard,
+			TypeName: "aws_quicksight_dashboard",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceDataSet,
 			TypeName: "aws_quicksight_data_set",
 			Name:     "Data Set",

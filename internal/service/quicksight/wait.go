@@ -95,7 +95,7 @@ func waitTemplateCreated(ctx context.Context, conn *quicksight.QuickSight, id st
 
 func waitTemplateUpdated(ctx context.Context, conn *quicksight.QuickSight, id string, timeout time.Duration) (*quicksight.Template, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{quicksight.ResourceStatusUpdateInProgress},
+		Pending:                   []string{quicksight.ResourceStatusUpdateInProgress, quicksight.ResourceStatusCreationInProgress},
 		Target:                    []string{quicksight.ResourceStatusUpdateSuccessful, quicksight.ResourceStatusCreationSuccessful},
 		Refresh:                   statusTemplate(ctx, conn, id),
 		Timeout:                   timeout,
@@ -105,6 +105,66 @@ func waitTemplateUpdated(ctx context.Context, conn *quicksight.QuickSight, id st
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*quicksight.Template); ok {
+		if status, apiErrors := aws.StringValue(out.Version.Status), out.Version.Errors; status == quicksight.ResourceStatusCreationFailed && apiErrors != nil {
+			var errors *multierror.Error
+
+			for _, apiError := range apiErrors {
+				if apiError == nil {
+					continue
+				}
+				errors = multierror.Append(errors, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
+			}
+			tfresource.SetLastError(err, errors)
+		}
+
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitDashboardCreated(ctx context.Context, conn *quicksight.QuickSight, id string, timeout time.Duration) (*quicksight.Dashboard, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{quicksight.ResourceStatusCreationInProgress},
+		Target:                    []string{quicksight.ResourceStatusCreationSuccessful},
+		Refresh:                   statusDashboard(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*quicksight.Dashboard); ok {
+		if status, apiErrors := aws.StringValue(out.Version.Status), out.Version.Errors; status == quicksight.ResourceStatusCreationFailed && apiErrors != nil {
+			var errors *multierror.Error
+
+			for _, apiError := range apiErrors {
+				if apiError == nil {
+					continue
+				}
+				errors = multierror.Append(errors, awserr.New(aws.StringValue(apiError.Type), aws.StringValue(apiError.Message), nil))
+			}
+			tfresource.SetLastError(err, errors)
+		}
+
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitDashboardUpdated(ctx context.Context, conn *quicksight.QuickSight, id string, timeout time.Duration) (*quicksight.Dashboard, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{quicksight.ResourceStatusUpdateInProgress, quicksight.ResourceStatusCreationInProgress},
+		Target:                    []string{quicksight.ResourceStatusUpdateSuccessful, quicksight.ResourceStatusCreationSuccessful},
+		Refresh:                   statusDashboard(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*quicksight.Dashboard); ok {
 		if status, apiErrors := aws.StringValue(out.Version.Status), out.Version.Errors; status == quicksight.ResourceStatusCreationFailed && apiErrors != nil {
 			var errors *multierror.Error
 

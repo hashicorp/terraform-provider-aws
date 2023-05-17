@@ -58,7 +58,7 @@ func ResourceTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"definition": quicksightschema.DefinitionSchema(),
+			"definition": quicksightschema.TemplateDefinitionSchema(),
 			"last_updated_time": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -90,7 +90,7 @@ func ResourceTemplate() *schema.Resource {
 					},
 				},
 			},
-			"source_entity": quicksightschema.SourceEntitySchema(),
+			"source_entity": quicksightschema.TemplateSourceEntitySchema(),
 			"source_entity_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -147,11 +147,11 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("source_entity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.SourceEntity = quicksightschema.ExpandSourceEntity(v.([]interface{}))
+		input.SourceEntity = quicksightschema.ExpandTemplateSourceEntity(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("definition"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Definition = quicksightschema.ExpandDefinition(d.Get("definition").([]interface{}))
+		input.Definition = quicksightschema.ExpandTemplateDefinition(d.Get("definition").([]interface{}))
 	}
 
 	if v, ok := d.GetOk("permissions"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -246,13 +246,11 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			Name:               aws.String(d.Get("name").(string)),
 			VersionDescription: aws.String(d.Get("version_description").(string)),
 		}
-
-		if d.HasChange("source_entity") {
-			in.SourceEntity = quicksightschema.ExpandSourceEntity(d.Get("source_entity").([]interface{}))
-		}
-
-		if d.HasChange("definition") {
-			in.Definition = quicksightschema.ExpandDefinition(d.Get("definition").([]interface{}))
+		_, createdFromEntity := d.GetOk("source_entity")
+		if createdFromEntity {
+			in.SourceEntity = quicksightschema.ExpandTemplateSourceEntity(d.Get("source_entity").([]interface{}))
+		} else {
+			in.Definition = quicksightschema.ExpandTemplateDefinition(d.Get("definition").([]interface{}))
 		}
 
 		log.Printf("[DEBUG] Updating QuickSight Template (%s): %#v", d.Id(), in)

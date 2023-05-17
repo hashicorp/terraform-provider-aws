@@ -756,6 +756,9 @@ func expandGridLayoutScreenCanvasSizeOptions(tfList []interface{}) *quicksight.G
 	if v, ok := tfMap["optimized_view_port_width"].(string); ok && v != "" {
 		options.OptimizedViewPortWidth = aws.String(v)
 	}
+	if v, ok := tfMap["resize_option"].(string); ok && v != "" {
+		options.ResizeOption = aws.String(v)
+	}
 
 	return options
 }
@@ -1270,16 +1273,16 @@ func expandGridLayoutElement(tfMap map[string]interface{}) *quicksight.GridLayou
 	if v, ok := tfMap["element_type"].(string); ok && v != "" {
 		layout.ElementType = aws.String(v)
 	}
-	if v, ok := tfMap["column_span"].(int); ok {
+	if v, ok := tfMap["column_span"].(int); ok && v != 0 {
 		layout.ColumnSpan = aws.Int64(int64(v))
 	}
-	if v, ok := tfMap["row_span"].(int); ok {
+	if v, ok := tfMap["row_span"].(int); ok && v != 0 {
 		layout.RowSpan = aws.Int64(int64(v))
 	}
-	if v, ok := tfMap["column_index"].(int); ok {
+	if v, ok := tfMap["column_index"].(int); ok && v != 0 {
 		layout.ColumnIndex = aws.Int64(int64(v))
 	}
-	if v, ok := tfMap["row_index"].(int); ok {
+	if v, ok := tfMap["row_index"].(int); ok && v != 0 {
 		layout.RowIndex = aws.Int64(int64(v))
 	}
 
@@ -2089,6 +2092,8 @@ func flattenGridLayoutElement(apiObject []*quicksight.GridLayoutElement) []inter
 		}
 		if config.ColumnIndex != nil {
 			tfMap["column_index"] = aws.Int64Value(config.ColumnIndex)
+		} else {
+
 		}
 		if config.RowIndex != nil {
 			tfMap["row_index"] = aws.Int64Value(config.RowIndex)
