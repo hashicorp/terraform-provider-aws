@@ -133,10 +133,6 @@ func resourceRegistryScanningConfigurationDelete(ctx context.Context, d *schema.
 // Helper functions
 
 func expandScanningRegistryRules(l []interface{}) []*ecr.RegistryScanningRule {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
 	rules := make([]*ecr.RegistryScanningRule, 0)
 
 	for _, rule := range l {
