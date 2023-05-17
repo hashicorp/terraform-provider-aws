@@ -49,6 +49,12 @@ func ResourceTransitGatewayRouteTableAssociation() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
+			"remove_current_attachment_association": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+				Default:  false,
+			},
 		},
 	}
 }
@@ -60,6 +66,15 @@ func resourceTransitGatewayRouteTableAssociationCreate(ctx context.Context, d *s
 	transitGatewayAttachmentID := d.Get("transit_gateway_attachment_id").(string)
 	transitGatewayRouteTableID := d.Get("transit_gateway_route_table_id").(string)
 	id := TransitGatewayRouteTableAssociationCreateResourceID(transitGatewayRouteTableID, transitGatewayAttachmentID)
+
+	removeCurrentAttachmentAssociation := d.Get("remove_current_attachment_association").(bool)
+	if removeCurrentAttachmentAssociation {
+		err := transitGatewayDisassociateLinkedRouteTable(ctx, conn, transitGatewayAttachmentID)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "disassociating existing EC2 Transit Gateway Route Table from Gateway Attachment (%s %s): %s", transitGatewayAttachmentID, transitGatewayRouteTableID, err)
+		}
+	}
+
 	input := &ec2.AssociateTransitGatewayRouteTableInput{
 		TransitGatewayAttachmentId: aws.String(transitGatewayAttachmentID),
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
@@ -195,6 +210,40 @@ func transitGatewayRouteTableAssociationUpdate(ctx context.Context, conn *ec2.EC
 		if _, err := WaitTransitGatewayRouteTableAssociationDeleted(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
 			return fmt.Errorf("waiting for EC2 Transit Gateway Route Table Association (%s) delete: %w", id, err)
 		}
+	}
+
+	return nil
+}
+
+// transitGatewayDisassociateLinkedRouteTable is used to disassociate the currently linked route table to a Gateway Attachment without knowledge of the Route Table ID.
+func transitGatewayDisassociateLinkedRouteTable(ctx context.Context, conn *ec2.EC2, transitGatewayAttachmentID string) error {
+	transitGatewayAttachment, err := FindTransitGatewayAttachmentByID(ctx, conn, transitGatewayAttachmentID)
+	if err != nil {
+		return err
+	}
+
+	if transitGatewayAttachment.Association == nil {
+		return nil // If no Association object was found then Gateway Attachment is not linked to a Route Table
+	}
+	transitGatewayRouteTableID := *transitGatewayAttachment.Association.TransitGatewayRouteTableId
+
+	if *transitGatewayAttachment.Association.State != ec2.AssociationStatusCodeAssociated {
+		return fmt.Errorf("associated Route Table with Transit Gateway Attachment is not in correct state (%s): expected attachment in %s state got %s", transitGatewayAttachmentID, ec2.AssociationStatusCodeAssociated, *transitGatewayAttachment.Association.State)
+	}
+
+	disassociateInput := &ec2.DisassociateTransitGatewayRouteTableInput{
+		TransitGatewayAttachmentId: aws.String(transitGatewayAttachmentID),
+		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
+	}
+
+	_, err = conn.DisassociateTransitGatewayRouteTableWithContext(ctx, disassociateInput)
+	if err != nil {
+		return fmt.Errorf("failed to disassociate Route Table with Transit Gateway Attachment (%s %s): %w", transitGatewayRouteTableID, transitGatewayAttachmentID, err)
+	}
+
+	_, err = WaitTransitGatewayRouteTableAssociationDeleted(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
+	if err != nil {
+		return fmt.Errorf("waiting for EC2 Transit Gateway Route Table Association (%s %s) delete: %s", transitGatewayRouteTableID, transitGatewayAttachmentID, err)
 	}
 
 	return nil

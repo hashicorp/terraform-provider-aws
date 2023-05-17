@@ -37,6 +37,7 @@ func testAccTransitGatewayRouteTableAssociation_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "resource_type"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_attachment_id", transitGatewayVpcAttachmentResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_route_table_id", transitGatewayRouteTableResourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "remove_current_attachment_association"),
 				),
 			},
 			{
