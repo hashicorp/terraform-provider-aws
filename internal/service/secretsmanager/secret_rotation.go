@@ -128,7 +128,6 @@ func resourceSecretRotationRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.Set("secret_id", d.Id())
 	d.Set("rotation_enabled", output.RotationEnabled)
-
 	if aws.BoolValue(output.RotationEnabled) {
 		d.Set("rotation_lambda_arn", output.RotationLambdaARN)
 		if err := d.Set("rotation_rules", flattenRotationRules(output.RotationRules)); err != nil {
