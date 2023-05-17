@@ -20,6 +20,7 @@ Upgrade topics:
 - [Provider Arguments](#provider-arguments)
 - [Default Tags](#default-tags)
 - [Data Source: aws_api_gateway_rest_api](#data-source-aws_api_gateway_rest_api)
+- [Data Source: aws_connect_hours_of_operation](#resource-aws_connect_hours_of_operation)
 - [Data Source: aws_identitystore_group](#data-source-aws_identitystore_group)
 - [Data Source: aws_identitystore_user](#data-source-aws_identitystore_user)
 - [Data Source: aws_redshift_service_account](#data-source-aws_redshift_service_account)
@@ -182,6 +183,10 @@ The `statement.rule_group_reference_statement.rule_action_override` attribute ha
 ## Data Source: aws_api_gateway_rest_api
 
 The `minimum_compression_size` attribute is now a String type, allowing it to be computed when set via the `body` attribute.
+
+## Data Source: aws_connect_hours_of_operation
+
+The `hours_of_operation_arn` attribute has been removed.
 
 ## Data Source: aws_identitystore_group
 
