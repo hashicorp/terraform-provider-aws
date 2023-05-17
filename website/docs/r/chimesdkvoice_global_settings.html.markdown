@@ -12,9 +12,9 @@ Updates global settings for the Amazon Chime SDK Voice Connectors in an AWS acco
 
 ```terraform
 resource "aws_chimesdkvoice_global_settings" "test" {
-	voice_connector {
-		cdr_bucket = "test-bucket-name"
-    }
+  voice_connector {
+    cdr_bucket = "test-bucket-name"
+  }
 }
 ```
 

@@ -50,6 +50,21 @@ func TestAccChimeSdkVoiceGlobalSettings_basic(t *testing.T) {
 	})
 }
 
+func testAccChimeSdkVoiceGlobalSettingsConfig_basic(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_chimesdkvoice_global_settings" "test" {
+  voice_connector {
+    cdr_bucket = %[1]q
+  }
+  depends_on = [aws_s3_bucket.test]
+}
+`, bucketName)
+}
+
 func testAccCheckChimeSdkVoiceGlobalSettingsDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
@@ -78,19 +93,4 @@ func testAccCheckChimeSdkVoiceGlobalSettingsDestroy(ctx context.Context) resourc
 		}
 		return nil
 	}
-}
-
-func testAccChimeSdkVoiceGlobalSettingsConfig_basic(bucketName string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
-resource "aws_chimesdkvoice_global_settings" "test" {
-	voice_connector {
-		cdr_bucket = %[1]q
-    }
-	depends_on = [aws_s3_bucket.test]
-}
-`, bucketName)
 }

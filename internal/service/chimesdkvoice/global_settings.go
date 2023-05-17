@@ -39,24 +39,20 @@ func ResourceGlobalSettings() *schema.Resource {
 	}
 }
 
-func flattenVoiceConnectorSettings(settings *chimesdkvoice.VoiceConnectorSettings) []interface{} {
-	var voiceConnectorSettings []interface{}
-	r := map[string]interface{}{
-		"cdr_bucket": aws.StringValue(settings.CdrBucket),
-	}
-	voiceConnectorSettings = append(voiceConnectorSettings, r)
-	return voiceConnectorSettings
-}
+func resourceGlobalSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn()
+	createInput := &chimesdkvoice.GetGlobalSettingsInput{}
 
-func expandVoiceConnectorSettings(data []interface{}) *chimesdkvoice.VoiceConnectorSettings {
-	var voiceConnectorSettings *chimesdkvoice.VoiceConnectorSettings
-	for _, items := range data {
-		item := items.(map[string]interface{})
-		voiceConnectorSettings = &chimesdkvoice.VoiceConnectorSettings{
-			CdrBucket: aws.String(item["cdr_bucket"].(string)),
-		}
+	resp, err := conn.GetGlobalSettingsWithContext(ctx, createInput)
+
+	if err != nil {
+		return diag.Errorf("error getting the global settings : %s", err)
 	}
-	return voiceConnectorSettings
+
+	d.SetId(meta.(*conns.AWSClient).AccountID)
+
+	d.Set("voice_connector", flattenVoiceConnectorSettings(resp.VoiceConnector))
+	return nil
 }
 
 func resourceGlobalSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -76,22 +72,6 @@ func resourceGlobalSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 	return resourceGlobalSettingsRead(ctx, d, meta)
 }
 
-func resourceGlobalSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn()
-	createInput := &chimesdkvoice.GetGlobalSettingsInput{}
-
-	resp, err := conn.GetGlobalSettingsWithContext(ctx, createInput)
-
-	if err != nil {
-		return diag.Errorf("error getting the global settings : %s", err)
-	}
-
-	d.SetId(meta.(*conns.AWSClient).AccountID)
-
-	d.Set("voice_connector", flattenVoiceConnectorSettings(resp.VoiceConnector))
-	return nil
-}
-
 func resourceGlobalSettingsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn()
 	createInput := &chimesdkvoice.UpdateGlobalSettingsInput{
@@ -105,4 +85,24 @@ func resourceGlobalSettingsDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 	d.SetId(meta.(*conns.AWSClient).AccountID)
 	return resourceGlobalSettingsRead(ctx, d, meta)
+}
+
+func flattenVoiceConnectorSettings(settings *chimesdkvoice.VoiceConnectorSettings) []interface{} {
+	var voiceConnectorSettings []interface{}
+	r := map[string]interface{}{
+		"cdr_bucket": aws.StringValue(settings.CdrBucket),
+	}
+	voiceConnectorSettings = append(voiceConnectorSettings, r)
+	return voiceConnectorSettings
+}
+
+func expandVoiceConnectorSettings(data []interface{}) *chimesdkvoice.VoiceConnectorSettings {
+	var voiceConnectorSettings *chimesdkvoice.VoiceConnectorSettings
+	for _, items := range data {
+		item := items.(map[string]interface{})
+		voiceConnectorSettings = &chimesdkvoice.VoiceConnectorSettings{
+			CdrBucket: aws.String(item["cdr_bucket"].(string)),
+		}
+	}
+	return voiceConnectorSettings
 }
