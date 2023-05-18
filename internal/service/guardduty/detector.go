@@ -124,6 +124,40 @@ func ResourceDetector() *schema.Resource {
 				},
 			},
 
+			"features": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"enable": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+						"additional_configuration": {
+							Optional: true,
+							Type:     schema.TypeList,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"enable": {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+
 			"enable": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -161,6 +195,10 @@ func resourceDetectorCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if v, ok := d.GetOk("datasources"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.DataSources = expandDataSourceConfigurations(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("features"); ok && len(v.([]interface{})) > 0 {
+		input.Features = expandFeaturesConfigurations(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating GuardDuty Detector: %s", input)
@@ -211,6 +249,14 @@ func resourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("datasources", nil)
 	}
 
+	if gdo.Features != nil {
+		if err := d.Set("features", flattenFeaturesConfigurationsResult(gdo.Features)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting features: %s", err)
+		}
+	} else {
+		d.Set("features", nil)
+	}
+
 	d.Set("enable", aws.StringValue(gdo.Status) == guardduty.DetectorStatusEnabled)
 	d.Set("finding_publishing_frequency", gdo.FindingPublishingFrequency)
 
@@ -232,6 +278,10 @@ func resourceDetectorUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if d.HasChange("datasources") {
 			input.DataSources = expandDataSourceConfigurations(d.Get("datasources").([]interface{})[0].(map[string]interface{}))
+		}
+
+		if d.HasChange("features") {
+			input.Features = expandFeaturesConfigurations(d.Get("features").([]interface{}))
 		}
 
 		log.Printf("[DEBUG] Update GuardDuty Detector: %s", input)
@@ -399,6 +449,71 @@ func expandMalwareProtectionEBSVolumesConfiguration(tfMap map[string]interface{}
 	return apiObject
 }
 
+func expandFeaturesConfigurations(items []interface{}) []*guardduty.DetectorFeatureConfiguration {
+	if items == nil {
+		return nil
+	}
+
+	detectorFeatureConfigurations := make([]*guardduty.DetectorFeatureConfiguration, 0, len(items))
+	for _, l := range items {
+		if l == nil {
+			continue
+		}
+
+		m := l.(map[string]interface{})
+		detectorFeatureConfiguration := &guardduty.DetectorFeatureConfiguration{
+			Name: aws.String(m["name"].(string)),
+		}
+		if v, ok := m["enable"].(bool); ok {
+			if v {
+				enabled := guardduty.FeatureStatusEnabled
+				detectorFeatureConfiguration.Status = &enabled
+			} else {
+				disabled := guardduty.FeatureStatusDisabled
+				detectorFeatureConfiguration.Status = &disabled
+			}
+		}
+		if a, ok := m["additional_configuration"].([]interface{}); ok {
+			detectorFeatureConfiguration.AdditionalConfiguration = expandFeaturesAdditionalConfigurations(a)
+		}
+
+		detectorFeatureConfigurations = append(detectorFeatureConfigurations, detectorFeatureConfiguration)
+	}
+
+	return detectorFeatureConfigurations
+}
+
+func expandFeaturesAdditionalConfigurations(items []interface{}) []*guardduty.DetectorAdditionalConfiguration {
+	if items == nil {
+		return nil
+	}
+
+	detectorFeatureAdditionalConfigurations := make([]*guardduty.DetectorAdditionalConfiguration, 0, len(items))
+	for _, l := range items {
+		if l == nil {
+			continue
+		}
+
+		m := l.(map[string]interface{})
+		detectorFeatureAdditionalConfiguration := &guardduty.DetectorAdditionalConfiguration{
+			Name: aws.String(m["name"].(string)),
+		}
+		if v, ok := m["enable"].(bool); ok {
+			if v {
+				enabled := guardduty.FeatureStatusEnabled
+				detectorFeatureAdditionalConfiguration.Status = &enabled
+			} else {
+				disabled := guardduty.FeatureStatusDisabled
+				detectorFeatureAdditionalConfiguration.Status = &disabled
+			}
+		}
+
+		detectorFeatureAdditionalConfigurations = append(detectorFeatureAdditionalConfigurations, detectorFeatureAdditionalConfiguration)
+	}
+
+	return detectorFeatureAdditionalConfigurations
+}
+
 func flattenDataSourceConfigurationsResult(apiObject *guardduty.DataSourceConfigurationsResult) map[string]interface{} {
 	if apiObject == nil {
 		return nil
@@ -503,4 +618,36 @@ func flattenMalwareProtectionEBSVolumesConfigurationResult(apiObject *guardduty.
 	}
 
 	return tfMap
+}
+func flattenFeaturesConfigurationsResult(detectorFeatureConfigurations []*guardduty.DetectorFeatureConfigurationResult) []interface{} {
+	if len(detectorFeatureConfigurations) == 0 {
+		return []interface{}{}
+	}
+
+	result := make([]interface{}, len(detectorFeatureConfigurations))
+	for i, detectorFeatureConfiguration := range detectorFeatureConfigurations {
+		result[i] = map[string]interface{}{
+			"name":                     aws.StringValue(detectorFeatureConfiguration.Name),
+			"enable":                   aws.StringValue(detectorFeatureConfiguration.Status) == guardduty.FeatureStatusEnabled,
+			"additional_configuration": flattenFeaturesAdditionalConfigurationsResult(detectorFeatureConfiguration.AdditionalConfiguration),
+		}
+	}
+
+	return result
+}
+
+func flattenFeaturesAdditionalConfigurationsResult(detectorAdditionalFeatureConfigurations []*guardduty.DetectorAdditionalConfigurationResult) []interface{} {
+	if len(detectorAdditionalFeatureConfigurations) == 0 {
+		return []interface{}{}
+	}
+
+	result := make([]interface{}, len(detectorAdditionalFeatureConfigurations))
+	for i, detectorAdditionalFeatureConfiguration := range detectorAdditionalFeatureConfigurations {
+		result[i] = map[string]interface{}{
+			"name":   detectorAdditionalFeatureConfiguration.Name,
+			"enable": aws.StringValue(detectorAdditionalFeatureConfiguration.Status) == guardduty.FeatureStatusEnabled,
+		}
+	}
+
+	return result
 }
