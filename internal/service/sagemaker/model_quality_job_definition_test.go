@@ -45,6 +45,8 @@ func TestAccSageMakerModelQualityJobDefinition_endpoint(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "model_quality_job_input.0.endpoint_input.0.endpoint_name", "aws_sagemaker_endpoint.test", "name"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.s3_data_distribution_type", "FullyReplicated"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.s3_input_mode", "File"),
+					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.ground_truth_s3_input.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "model_quality_job_input.0.ground_truth_s3_input.0.s3_uri", regexp.MustCompile("ground_truth")),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_output_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_output_config.0.monitoring_outputs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_output_config.0.monitoring_outputs.0.s3_output.#", "1"),
@@ -86,7 +88,7 @@ func TestAccSageMakerModelQualityJobDefinition_appSpecificationOptional(t *testi
 					resource.TestCheckResourceAttrPair(resourceName, "model_quality_app_specification.0.image_uri", "data.aws_sagemaker_prebuilt_ecr_image.monitor", "registry_path"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_app_specification.0.environment.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_app_specification.0.environment.foo", "bar"),
-					resource.TestCheckResourceAttr(resourceName, "model_quality_app_specification.0.problem_type", "BinaryClassification"),
+					resource.TestCheckResourceAttr(resourceName, "model_quality_app_specification.0.problem_type", "Regression"),
 					resource.TestMatchResourceAttr(resourceName, "model_quality_app_specification.0.record_preprocessor_source_uri", regexp.MustCompile("pre.sh")),
 					resource.TestMatchResourceAttr(resourceName, "model_quality_app_specification.0.post_analytics_processor_source_uri", regexp.MustCompile("post.sh")),
 				),
@@ -820,6 +822,9 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
     endpoint_input {
       endpoint_name = aws_sagemaker_endpoint.test.name
     }
+	ground_truth_s3_input {
+		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
+	}
   }
   model_quality_job_output_config {
     monitoring_outputs {
@@ -851,6 +856,7 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
     }
     record_preprocessor_source_uri      = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/pre.sh"
     post_analytics_processor_source_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/post.sh"
+	problem_type = "Regression"
   }
   model_quality_job_input {
     batch_transform_input {
@@ -859,6 +865,9 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
         csv {}
       }
     }
+	ground_truth_s3_input {
+		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
+	}
   }
   model_quality_job_output_config {
     monitoring_outputs {
@@ -901,6 +910,9 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
         csv {}
       }
     }
+	ground_truth_s3_input {
+		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
+	}
   }
   model_quality_job_output_config {
     monitoring_outputs {
@@ -935,6 +947,9 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
         csv {}
       }
     }
+	ground_truth_s3_input {
+		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
+	}
   }
   model_quality_job_output_config {
     monitoring_outputs {
@@ -971,6 +986,9 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
         }
       }
     }
+	ground_truth_s3_input {
+		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
+	}
   }
   model_quality_job_output_config {
     monitoring_outputs {
@@ -1005,6 +1023,9 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
         json {}
       }
     }
+	ground_truth_s3_input {
+		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
+	}
   }
   model_quality_job_output_config {
     monitoring_outputs {
@@ -1041,6 +1062,9 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
         }
       }
     }
+	ground_truth_s3_input {
+		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
+	}
   }
   model_quality_job_output_config {
     monitoring_outputs {
@@ -1078,6 +1102,9 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
       s3_data_distribution_type = "ShardedByS3Key"
       s3_input_mode             = "Pipe"
     }
+	ground_truth_s3_input {
+		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
+	}
   }
   model_quality_job_output_config {
     monitoring_outputs {
@@ -1112,6 +1139,9 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
       s3_data_distribution_type = "ShardedByS3Key"
       s3_input_mode             = "Pipe"
     }
+	ground_truth_s3_input {
+		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
+	}
   }
   model_quality_job_output_config {
     monitoring_outputs {
@@ -1151,6 +1181,9 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
         csv {}
       }
     }
+	ground_truth_s3_input {
+		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
+	}
   }
   model_quality_job_output_config {
     kms_key_id = aws_kms_key.test.arn
@@ -1186,6 +1219,9 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
         csv {}
       }
     }
+	ground_truth_s3_input {
+		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
+	}
   }
   model_quality_job_output_config {
     monitoring_outputs {
@@ -1227,6 +1263,9 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
         csv {}
       }
     }
+	ground_truth_s3_input {
+		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
+	}
   }
   model_quality_job_output_config {
     monitoring_outputs {
@@ -1262,6 +1301,9 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
         csv {}
       }
     }
+	ground_truth_s3_input {
+		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
+	}
   }
   model_quality_job_output_config {
     monitoring_outputs {
@@ -1299,6 +1341,9 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
         csv {}
       }
     }
+	ground_truth_s3_input {
+		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
+	}
   }
   model_quality_job_output_config {
     monitoring_outputs {
@@ -1337,6 +1382,9 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
         csv {}
       }
     }
+	ground_truth_s3_input {
+		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
+	}
   }
   model_quality_job_output_config {
     monitoring_outputs {
@@ -1389,6 +1437,9 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
         csv {}
       }
     }
+	ground_truth_s3_input {
+		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
+	}
   }
   model_quality_job_output_config {
     monitoring_outputs {
@@ -1442,6 +1493,9 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
         csv {}
       }
     }
+	ground_truth_s3_input {
+		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
+	}
   }
   model_quality_job_output_config {
     monitoring_outputs {
@@ -1496,6 +1550,9 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
         csv {}
       }
     }
+	ground_truth_s3_input {
+		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
+	}
   }
   model_quality_job_output_config {
     monitoring_outputs {

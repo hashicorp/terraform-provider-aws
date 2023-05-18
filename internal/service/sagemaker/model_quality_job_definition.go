@@ -40,10 +40,12 @@ func ResourceModelQualityJobDefinition() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"job_definition_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				Computed: true,
+			"name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validName,
 			},
 			"job_resources": {
 				Type:     schema.TypeList,
@@ -402,6 +404,26 @@ func ResourceModelQualityJobDefinition() *schema.Resource {
 								},
 							},
 						},
+						"ground_truth_s3_input": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Required: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"s3_uri": {
+										Type:     schema.TypeString,
+										ForceNew: true,
+										Optional: true,
+										Computed: true,
+										ValidateFunc: validation.All(
+											validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+											validation.StringLenBetween(1, 512),
+										),
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -697,6 +719,20 @@ func FindModelQualityJobDefinitionByName(ctx context.Context, conn *sagemaker.Sa
 	return output, nil
 }
 
+func flattenMonitoringGroundTruthS3Input(config *sagemaker.MonitoringGroundTruthS3Input) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.S3Uri != nil {
+		m["s3_uri"] = aws.StringValue(config.S3Uri)
+	}
+
+	return []map[string]interface{}{m}
+}
+
 func flattenModelQualityAppSpecification(config *sagemaker.ModelQualityAppSpecification) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
@@ -718,6 +754,10 @@ func flattenModelQualityAppSpecification(config *sagemaker.ModelQualityAppSpecif
 
 	if config.RecordPreprocessorSourceUri != nil {
 		m["record_preprocessor_source_uri"] = aws.StringValue(config.RecordPreprocessorSourceUri)
+	}
+
+	if config.ProblemType != nil {
+		m["problem_type"] = aws.StringValue(config.ProblemType)
 	}
 
 	return []map[string]interface{}{m}
@@ -752,7 +792,27 @@ func flattenModelQualityJobInput(config *sagemaker.ModelQualityJobInput) []map[s
 		m["batch_transform_input"] = flattenBatchTransformInput(config.BatchTransformInput)
 	}
 
+	if config.GroundTruthS3Input != nil {
+		m["ground_truth_s3_input"] = flattenMonitoringGroundTruthS3Input(config.GroundTruthS3Input)
+	}
+
 	return []map[string]interface{}{m}
+}
+
+func expandMonitoringGroundTruthS3Input(configured []interface{}) *sagemaker.MonitoringGroundTruthS3Input {
+	if len(configured) == 0 {
+		return nil
+	}
+
+	m := configured[0].(map[string]interface{})
+
+	c := &sagemaker.MonitoringGroundTruthS3Input{}
+
+	if v, ok := m["s3_uri"].(string); ok && v != "" {
+		c.S3Uri = aws.String(v)
+	}
+
+	return c
 }
 
 func expandModelQualityAppSpecification(configured []interface{}) *sagemaker.ModelQualityAppSpecification {
@@ -778,6 +838,10 @@ func expandModelQualityAppSpecification(configured []interface{}) *sagemaker.Mod
 
 	if v, ok := m["record_preprocessor_source_uri"].(string); ok && v != "" {
 		c.RecordPreprocessorSourceUri = aws.String(v)
+	}
+
+	if v, ok := m["problem_type"].(string); ok && v != "" {
+		c.ProblemType = aws.String(v)
 	}
 
 	return c
@@ -814,6 +878,10 @@ func expandModelQualityJobInput(configured []interface{}) *sagemaker.ModelQualit
 
 	if v, ok := m["batch_transform_input"].([]interface{}); ok && len(v) > 0 {
 		c.BatchTransformInput = expandBatchTransformInput(v)
+	}
+
+	if v, ok := m["ground_truth_s3_input"].([]interface{}); ok && len(v) > 0 {
+		c.GroundTruthS3Input = expandMonitoringGroundTruthS3Input(v)
 	}
 
 	return c
