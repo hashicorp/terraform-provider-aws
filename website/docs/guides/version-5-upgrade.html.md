@@ -44,6 +44,7 @@ Upgrade topics:
 - [Resource: aws_ec2_client_vpn_network_association](#resource-aws_ec2_client_vpn_network_association)
 - [Resource: aws_ecs_cluster](#resource-aws_ecs_cluster)
 - [Resource: aws_eks_addon](#resource-aws_eks_addon)
+- [Resource: aws_flow_log](#resource-aws_flow_log)
 - [Resource: aws_lightsail_instance](#resource-aws_lightsail_instance)
 - [Resource: aws_msk_cluster](#resource-aws_msk_cluster)
 - [Resource: aws_neptune_cluster](#resource-aws_neptune_cluster)
@@ -178,6 +179,10 @@ The `capacity_providers` and `default_capacity_provider_strategy` attributes hav
 ## Resource: aws_eks_addon
 
 The `resolve_conflicts` argument has been deprecated. Use the `resolve_conflicts_on_create` and/or `resolve_conflicts_on_update` arguments instead.
+
+## Resource: aws_flow_log
+
+The `log_group_name` attribute has been deprecated. All configurations using `log_group_name` should be updated to use the `log_destination` attribute instead.
 
 ## Resource: aws_lightsail_instance
 
