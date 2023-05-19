@@ -23,6 +23,7 @@ Upgrade topics:
 - [Data Source: aws_connect_hours_of_operation](#data-source-aws_connect_hours_of_operation)
 - [Data Source: aws_identitystore_group](#data-source-aws_identitystore_group)
 - [Data Source: aws_identitystore_user](#data-source-aws_identitystore_user)
+- [Data Source: aws_opensearch_domain](#data-source-aws_opensearch_domain)
 - [Data Source: aws_quicksight_data_set](#data-source-aws_quicksight_data_set)
 - [Data Source: aws_redshift_service_account](#data-source-aws_redshift_service_account)
 - [Data Source: aws_secretsmanager_secret](#data-source-aws_secretsmanager_secret)
@@ -243,6 +244,10 @@ The `filter` argument has been removed.
 ## Data Source: aws_identitystore_user
 
 The `filter` argument has been removed.
+
+## Data Source: aws_opensearch_domain
+
+The `kibana_endpoint` attribute has been deprecated. All configurations using `kibana_endpoint` should be updated to use the `dashboard_endpoint` attribute instead.
 
 ## Data Source: aws_quicksight_data_set
 
