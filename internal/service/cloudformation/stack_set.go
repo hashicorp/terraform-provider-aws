@@ -111,6 +111,7 @@ func ResourceStackSet() *schema.Resource {
 						},
 					},
 				},
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
 			"name": {
 				Type:     schema.TypeString,
