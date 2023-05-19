@@ -381,6 +381,53 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"instance_lifecycle": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"instance_market_options": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"market_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "spot",
+							ValidateFunc: validation.StringInSlice(ec2.MarketType_Values(), false),
+						},
+						"spot_options": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"instance_interruption_behavior": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(ec2.InstanceInterruptionBehavior_Values(), false),
+									},
+									"max_price": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"spot_instance_type": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(ec2.SpotInstanceType_Values(), false),
+									},
+									"valid_until": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidUTCTimestamp,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"instance_state": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -694,6 +741,10 @@ func ResourceInstance() *schema.Resource {
 					return ok
 				},
 			},
+			"spot_instance_request_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"subnet_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -870,6 +921,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		IamInstanceProfile:                instanceOpts.IAMInstanceProfile,
 		ImageId:                           instanceOpts.ImageID,
 		InstanceInitiatedShutdownBehavior: instanceOpts.InstanceInitiatedShutdownBehavior,
+		InstanceMarketOptions:             instanceOpts.InstanceMarketOptions,
 		InstanceType:                      instanceOpts.InstanceType,
 		Ipv6AddressCount:                  instanceOpts.Ipv6AddressCount,
 		Ipv6Addresses:                     instanceOpts.Ipv6Addresses,
@@ -923,6 +975,9 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	instance := outputRaw.(*ec2.Reservation).Instances[0]
 
 	d.SetId(aws.StringValue(instance.InstanceId))
+
+	d.Set("spot_instance_request_id", instance.SpotInstanceRequestId)
+	d.Set("instance_lifecycle", instance.InstanceLifecycle)
 
 	instance, err = WaitInstanceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
@@ -1885,6 +1940,17 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
+	if v, ok := d.GetOk("instance_lifecycle"); ok && v == "spot" {
+		log.Printf("[INFO] Cancelling spot request: %s", d.Id())
+		_, err := conn.CancelSpotInstanceRequestsWithContext(ctx, &ec2.CancelSpotInstanceRequestsInput{
+			SpotInstanceRequestIds: []*string{aws.String(d.Get("spot_instance_request_id").(string))},
+		})
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "Error cancelling spot request (%s): %s", d.Id(), err)
+		}
+	}
+
 	if err := terminateInstance(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -2579,6 +2645,7 @@ type instanceOpts struct {
 	IAMInstanceProfile                *ec2.IamInstanceProfileSpecification
 	ImageID                           *string
 	InstanceInitiatedShutdownBehavior *string
+	InstanceMarketOptions             *ec2.InstanceMarketOptionsRequest
 	InstanceType                      *string
 	Ipv6AddressCount                  *int64
 	Ipv6Addresses                     []*ec2.InstanceIpv6Address
@@ -2824,6 +2891,10 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if v, ok := d.GetOk("private_dns_name_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		opts.PrivateDNSNameOptions = expandPrivateDNSNameOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("instance_market_options"); ok {
+		opts.InstanceMarketOptions = expandInstanceMarketOptionsRequest(v.(*schema.Set))
 	}
 
 	return opts, nil
@@ -3525,4 +3596,41 @@ func ParseInstanceType(s string) (*InstanceType, error) {
 		AdditionalCapabilities: matches[4],
 		Size:                   matches[5],
 	}, nil
+}
+
+func expandInstanceMarketOptionsRequest(tfMap *schema.Set) *ec2.InstanceMarketOptionsRequest {
+	apiObject := &ec2.InstanceMarketOptionsRequest{}
+
+	for _, v := range tfMap.List() {
+		if v, ok := v.(map[string]interface{})["market_type"].(string); ok {
+			apiObject.MarketType = aws.String(v)
+		}
+		apiObject.SpotOptions = expandSpotMarketOptions(v.(map[string]interface{})["spot_options"].(*schema.Set))
+	}
+
+	return apiObject
+}
+
+func expandSpotMarketOptions(tfMap *schema.Set) *ec2.SpotMarketOptions {
+	apiObject := &ec2.SpotMarketOptions{}
+
+	for _, v := range tfMap.List() {
+		if v, ok := v.(map[string]interface{})["instance_interruption_behavior"].(string); ok && v != "" {
+			apiObject.InstanceInterruptionBehavior = aws.String(v)
+		}
+		if v, ok := v.(map[string]interface{})["max_price"].(string); ok && v != "" {
+			apiObject.MaxPrice = aws.String(v)
+		}
+		if v, ok := v.(map[string]interface{})["spot_instance_type"].(string); ok && v != "" {
+			apiObject.SpotInstanceType = aws.String(v)
+		}
+		if v, ok := v.(map[string]interface{})["valid_until"].(string); ok {
+			validUntil, err := time.Parse(time.RFC3339, v)
+			if err == nil {
+				apiObject.ValidUntil = &validUntil
+			}
+		}
+	}
+
+	return apiObject
 }
