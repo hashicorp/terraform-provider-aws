@@ -2126,7 +2126,6 @@ func fieldFoldersHash(v interface{}) int {
 }
 
 func flattenLogicalTableMap(apiObject map[string]*quicksight.LogicalTable, resourceSchema *schema.Resource) *schema.Set {
-	log.Printf("[INFO] API OB %s", apiObject)
 	if len(apiObject) == 0 {
 		return nil
 	}
@@ -2146,7 +2145,6 @@ func flattenLogicalTableMap(apiObject map[string]*quicksight.LogicalTable, resou
 		if table.DataTransforms != nil {
 			tfMap["data_transforms"] = flattenDataTransforms(table.DataTransforms)
 		}
-		log.Printf("[INFO] TABLE %s", table)
 		if table.Source != nil {
 			tfMap["source"] = flattenLogicalTableSource(table.Source)
 		}
