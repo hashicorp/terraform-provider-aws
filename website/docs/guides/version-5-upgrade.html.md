@@ -48,6 +48,7 @@ Upgrade topics:
 - [Resource: aws_lightsail_instance](#resource-aws_lightsail_instance)
 - [Resource: aws_msk_cluster](#resource-aws_msk_cluster)
 - [Resource: aws_neptune_cluster](#resource-aws_neptune_cluster)
+- [Resource: aws_opensearch_domain](#resource-aws_opensearch_domain)
 - [Resource: aws_rds_cluster](#resource-aws_rds_cluster)
 - [Resource: aws_secretsmanager_secret](#resource-aws_secretsmanager_secret)
 - [Resource: aws_ssm_association](#resource-aws_ssm_association)
@@ -198,6 +199,10 @@ The `broker_node_group_info.ebs_volume_size` attribute has been removed.
 Changes to the `snapshot_identifier` attribute will now correctly force re-creation of the resource. Previously, changing this attribute would result in a successful apply, but without the cluster being restored (only the resource state was changed). This change brings behavior of the cluster `snapshot_identifier` attribute into alignment with other RDS resources, such as `aws_db_instance`.
 
 Automated snapshots **should not** be used for this attribute, unless from a different cluster. Automated snapshots are deleted as part of cluster destruction when the resource is replaced.
+
+## Resource: aws_opensearch_domain
+
+The `kibana_endpoint` attribute has been deprecated. All configurations using `kibana_endpoint` should be updated to use the `dashboard_endpoint` attribute instead.
 
 ## Resource: aws_rds_cluster
 
