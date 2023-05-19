@@ -31,6 +31,7 @@ Upgrade topics:
 - [Resource: aws_budgets_budget](#resource-aws_budgets_budget)
 - [Resource: aws_ce_anomaly_subscription](#resource-aws_ce_anomaly_subscription)
 - [Resource: aws_cloudwatch_event_target](#resource-aws_cloudwatch_event_target)
+- [Resource: aws_codebuild_project](#resource-aws_codebuild_project)
 - [Resource: aws_connect_hours_of_operation](#resource-aws_connect_hours_of_operation)
 - [Resource: aws_connect_queue](#resource-aws_connect_queue)
 - [Resource: aws_connect_routing_profile](#resource-aws_connect_routing_profile)
@@ -127,6 +128,10 @@ The `threshold` attribute has been removed.
 ## Resource: aws_cloudwatch_event_target
 
 The `ecs_target.propagate_tags` attribute now has no default value. If no value is specified, the tags are not propagated.
+
+## Resource: aws_codebuild_project
+
+The `secondary_sources.auth` and `source.auth` attributes have been removed.
 
 ## Resource: aws_connect_hours_of_operation
 
