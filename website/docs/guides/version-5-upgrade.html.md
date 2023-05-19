@@ -39,6 +39,7 @@ Upgrade topics:
 - [Resource: aws_connect_queue](#resource-aws_connect_queue)
 - [Resource: aws_connect_routing_profile](#resource-aws_connect_routing_profile)
 - [Resource: aws_docdb_cluster](#resource-aws_docdb_cluster)
+- [Resource: aws_dx_gateway_association](#resource-aws_dx_gateway_association)
 - [Resource: aws_ec2_client_vpn_endpoint](#resource-aws_ec2_client_vpn_endpoint)
 - [Resource: aws_ec2_client_vpn_network_association](#resource-aws_ec2_client_vpn_network_association)
 - [Resource: aws_ecs_cluster](#resource-aws_ecs_cluster)
@@ -157,6 +158,10 @@ The `queue_configs_associated` attribute has been removed.
 Changes to the `snapshot_identifier` attribute will now correctly force re-creation of the resource. Previously, changing this attribute would result in a successful apply, but without the cluster being restored (only the resource state was changed). This change brings behavior of the cluster `snapshot_identifier` attribute into alignment with other RDS resources, such as `aws_db_instance`.
 
 Automated snapshots **should not** be used for this attribute, unless from a different cluster. Automated snapshots are deleted as part of cluster destruction when the resource is replaced.
+
+## Resource: aws_dx_gateway_association
+
+The `vpn_gateway_id` attribute has been deprecated. All configurations using `vpn_gateway_id` should be updated to use the `associated_gateway_id` attribute instead.
 
 ## Resource: aws_ec2_client_vpn_endpoint
 
