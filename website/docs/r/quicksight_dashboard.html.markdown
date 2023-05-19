@@ -133,7 +133,7 @@ The following arguments are optional:
 * `export_to_csv_option` - (Optional) Export to .csv option. See [export_to_csv_option](#export_to_csv_option).
 * `export_with_hidden_fields_option` - (Optional) Determines if hidden fields are exported with a dashboard. See [export_with_hidden_fields_option](#export_with_hidden_fields_option).
 * `sheet_controls_option` - (Optional) Sheet controls option. See [sheet_controls_option](#sheet_controls_option).
-* `sheet_layout_element_maximization_option` - (Optional) The sheet layout maximization options of a dashbaord. See [sheet_layout_element_maximization_option](#sheet_layout_element_maximization_option).
+* `sheet_layout_element_maximization_option` - (Optional) The sheet layout maximization options of a dashboard. See [sheet_layout_element_maximization_option](#sheet_layout_element_maximization_option).
 * `visual_axis_sort_option` - (Optional) The axis sort options of a dashboard. See [visual_axis_sort_option](#visual_axis_sort_option).
 * `visual_menu_option` - (Optional) The menu options of a visual in a dashboard. See [visual_menu_option](#visual_menu_option).
 
