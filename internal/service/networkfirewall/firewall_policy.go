@@ -340,10 +340,10 @@ func expandStatefulEngineOptions(l []interface{}) *networkfirewall.StatefulEngin
 	options := &networkfirewall.StatefulEngineOptions{}
 
 	m := l[0].(map[string]interface{})
-	if v, ok := m["rule_order"].(string); ok {
+	if v, ok := m["rule_order"].(string); ok && v != "" {
 		options.RuleOrder = aws.String(v)
 	}
-	if v, ok := m["stream_exception_policy"].(string); ok {
+	if v, ok := m["stream_exception_policy"].(string); ok && v != "" {
 		options.StreamExceptionPolicy = aws.String(v)
 	}
 
@@ -484,9 +484,12 @@ func flattenStatefulEngineOptions(options *networkfirewall.StatefulEngineOptions
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"rule_order":              aws.StringValue(options.RuleOrder),
-		"stream_exception_policy": aws.StringValue(options.StreamExceptionPolicy),
+	m := map[string]interface{}{}
+	if options.RuleOrder != nil {
+		m["rule_order"] = aws.StringValue(options.RuleOrder)
+	}
+	if options.StreamExceptionPolicy != nil {
+		m["stream_exception_policy"] = aws.StringValue(options.StreamExceptionPolicy)
 	}
 
 	return []interface{}{m}
