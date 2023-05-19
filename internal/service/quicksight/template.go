@@ -246,12 +246,13 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			Name:               aws.String(d.Get("name").(string)),
 			VersionDescription: aws.String(d.Get("version_description").(string)),
 		}
-		//_, createdFromEntity := d.GetOk("source_entity")
-		//if createdFromEntity {
-		in.SourceEntity = quicksightschema.ExpandTemplateSourceEntity(d.Get("source_entity").([]interface{}))
-		//} else {
-		in.Definition = quicksightschema.ExpandTemplateDefinition(d.Get("definition").([]interface{}))
-		//}
+
+		// One of source_entity or definition is required for update
+		if _, ok := d.GetOk("source_entity"); ok {
+			in.SourceEntity = quicksightschema.ExpandTemplateSourceEntity(d.Get("source_entity").([]interface{}))
+		} else {
+			in.Definition = quicksightschema.ExpandTemplateDefinition(d.Get("definition").([]interface{}))
+		}
 
 		log.Printf("[DEBUG] Updating QuickSight Template (%s): %#v", d.Id(), in)
 		_, err := conn.UpdateTemplateWithContext(ctx, in)
