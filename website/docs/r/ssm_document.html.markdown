@@ -74,8 +74,9 @@ The following arguments are supported:
 * `attachments_source` - (Optional) One or more configuration blocks describing attachments sources to a version of a document. Defined below.
 * `content` - (Required) The JSON or YAML content of the document.
 * `document_format` - (Optional, defaults to JSON) The format of the document. Valid document types include: `JSON` and `YAML`
-* `document_type` - (Required) The type of the document. Valid document types include: `Automation`, `Command`, `Package`, `Policy`, and `Session`
+* `document_type` - (Required) The type of the document. Valid document types include: `ApplicationConfiguration`, `ApplicationConfigurationSchema`, `Automation`, `Command`, `Package`, `Policy`, and `Session`
 * `permissions` - (Optional) Additional Permissions to attach to the document. See [Permissions](#permissions) below for details.
+* `requires` - (Optional) A list of SSM documents required by a document. See [Requires](#requires) below for details.
 * `target_type` - (Optional) The target type which defines the kinds of resources the document can run on. For example, /AWS::EC2::Instance. For a list of valid resource types, see AWS Resource Types Reference (http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html)
 * `tags` - (Optional) A map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `version_name` - (Optional) A field specifying the version of the artifact you are creating with the document. For example, "Release 12, Update 6". This value is unique across all versions of a document and cannot be changed for an existing document version.
@@ -119,6 +120,17 @@ The permissions mapping supports the following:
 
 * `type` - The permission type for the document. The permission type can be `Share`.
 * `account_ids` - The AWS user accounts that should have access to the document. The account IDs can either be a group of account IDs or `All`.
+
+## Requires
+
+This parameter is used exclusively by AWS AppConfig. When a user creates an AWS AppConfig configuration in an SSM document, the user must also specify a required document for validation purposes. In this case, an `ApplicationConfiguration` document requires an `ApplicationConfigurationSchema` document for validation purposes.
+
+The `requires` block supports the following:
+
+* `name` - (Required) The name of the required SSM document. The name can be an Amazon Resource Name (ARN).
+* `require_type` - (Optional) The document type of the required SSM document.
+* `version` - (Optional) The document version required by the current document.
+* `version_name` - (Optional) An optional field specifying the version of the artifact associated with the document. For example, "Release 12, Update 6". This value is unique across all versions of a document, and can't be changed.
 
 ## Import
 
