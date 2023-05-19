@@ -231,15 +231,15 @@ func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta int
 	})
 
 	if err != nil {
-		return diag.Errorf("error describing QuickSight Dashboard (%s) Definition: %s", d.Id(), err)
+		return diag.Errorf("describing QuickSight Dashboard (%s) Definition: %s", d.Id(), err)
 	}
 
 	if err := d.Set("definition", quicksightschema.FlattenDashboardDefinition(descResp.Definition)); err != nil {
-		return diag.Errorf("error setting definition: %s", err)
+		return diag.Errorf("setting definition: %s", err)
 	}
 
 	if err := d.Set("dashboard_publish_options", quicksightschema.FlattenDashboardPublishOptions(descResp.DashboardPublishOptions)); err != nil {
-		return diag.Errorf("error setting dashboard_publish_options: %s", err)
+		return diag.Errorf("setting dashboard_publish_options: %s", err)
 
 	}
 
@@ -249,11 +249,11 @@ func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta int
 	})
 
 	if err != nil {
-		return diag.Errorf("error describing QuickSight Dashboard (%s) Permissions: %s", d.Id(), err)
+		return diag.Errorf("describing QuickSight Dashboard (%s) Permissions: %s", d.Id(), err)
 	}
 
 	if err := d.Set("permissions", flattenPermissions(permsResp.Permissions)); err != nil {
-		return diag.Errorf("error setting permissions: %s", err)
+		return diag.Errorf("setting permissions: %s", err)
 	}
 
 	return nil
@@ -334,7 +334,7 @@ func resourceDashboardUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		_, err = conn.UpdateDashboardPermissionsWithContext(ctx, params)
 
 		if err != nil {
-			return diag.Errorf("error updating QuickSight Dashboard (%s) permissions: %s", dashboardId, err)
+			return diag.Errorf("updating QuickSight Dashboard (%s) permissions: %s", dashboardId, err)
 		}
 	}
 
