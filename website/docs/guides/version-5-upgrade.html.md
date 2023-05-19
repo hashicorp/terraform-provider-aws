@@ -20,9 +20,10 @@ Upgrade topics:
 - [Provider Arguments](#provider-arguments)
 - [Default Tags](#default-tags)
 - [Data Source: aws_api_gateway_rest_api](#data-source-aws_api_gateway_rest_api)
-- [Data Source: aws_connect_hours_of_operation](#resource-aws_connect_hours_of_operation)
+- [Data Source: aws_connect_hours_of_operation](#data-source-aws_connect_hours_of_operation)
 - [Data Source: aws_identitystore_group](#data-source-aws_identitystore_group)
 - [Data Source: aws_identitystore_user](#data-source-aws_identitystore_user)
+- [Data Source: aws_quicksight_data_set](#data-source-aws_quicksight_data_set)
 - [Data Source: aws_redshift_service_account](#data-source-aws_redshift_service_account)
 - [Data Source: aws_secretsmanager_secret](#data-source-aws_secretsmanager_secret)
 - [Data Source: aws_service_discovery_service](#data-source-aws_service_discovery_service)
@@ -222,6 +223,10 @@ The `filter` argument has been removed.
 ## Data Source: aws_identitystore_user
 
 The `filter` argument has been removed.
+
+## Data Source: aws_quicksight_data_set
+
+The `tags_all` attribute has been deprecated and will be removed in a future version.
 
 ## Data Source: aws_redshift_service_account
 
