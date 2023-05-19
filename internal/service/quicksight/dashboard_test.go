@@ -80,32 +80,6 @@ func TestAccQuickSightDashboard_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDashboardDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_quicksight_dashboard" {
-				continue
-			}
-
-			output, err := tfquicksight.FindDashboardByID(ctx, conn, rs.Primary.ID)
-			if err != nil {
-				if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
-					return nil
-				}
-				return err
-			}
-
-			if output != nil {
-				return fmt.Errorf("QuickSight Dashboard (%s) still exists", rs.Primary.ID)
-			}
-		}
-
-		return nil
-	}
-}
-
 func TestAccQuickSightDashboard_sourceEntity(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -218,6 +192,32 @@ func TestAccQuickSightDashboard_dashboardSpecificConfig(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckDashboardDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_quicksight_dashboard" {
+				continue
+			}
+
+			output, err := tfquicksight.FindDashboardByID(ctx, conn, rs.Primary.ID)
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+					return nil
+				}
+				return err
+			}
+
+			if output != nil {
+				return fmt.Errorf("QuickSight Dashboard (%s) still exists", rs.Primary.ID)
+			}
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckDashboardExists(ctx context.Context, name string, dashboard *quicksight.Dashboard) resource.TestCheckFunc {
