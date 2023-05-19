@@ -162,8 +162,9 @@ func DataSourceDomain() *schema.Resource {
 				},
 			},
 			"kibana_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "use 'dashboard_endpoint' attribute instead",
 			},
 			"node_to_node_encryption": {
 				Type:     schema.TypeList,
