@@ -15,7 +15,7 @@ Resource for managing a QuickSight Dashboard.
 ### From Source Template
 
 ```terraform
-resource "aws_quicksight_dashboard" "test" {
+resource "aws_quicksight_dashboard" "example" {
   dashboard_id        = "example-id"
   name                = "example-name"
   version_description = "version"
@@ -37,11 +37,11 @@ resource "aws_quicksight_dashboard" "test" {
 resource "aws_quicksight_dashboard" "example" {
   dashboard_id        = "example-id"
   name                = "example-name"
-  version_description = "example"
+  version_description = "version"
   definition {
     data_set_identifiers_declarations {
-        data_set_arn = aws_quicksight_data_set.dataset.arn
-        identifier   = "1"
+      data_set_arn = aws_quicksight_data_set.dataset.arn
+      identifier   = "1"
     }
     sheets {
       title    = "Example"
@@ -97,12 +97,13 @@ The following arguments are required:
 The following arguments are optional:
 
 * `aws_account_id` - (Optional, Forces new resource) AWS account ID.
+* `dashboard_publish_options` - (Optional) Options for publishing the dashboard. See [dashboard_publish_options](#dashboard_publish_options).
 * `definition` - (Optional) A detailed dashboard definition. Only one of `definition` or `source_entity` should be configured. See [definition](#definition).
+* `parameters` - (Optional) The parameters for the creation of the dashboard, which you want to use to override the default settings. A dashboard can have any type of parameters, and some parameters might accept multiple values. See [parameters](#parameters).
 * `permissions` - (Optional) A set of resource permissions on the dashboard. Maximum of 64 items. See [permissions](#permissions).
 * `source_entity` - (Optional) The entity that you are using as a source when you create the dashboard (template). Only one of `definition` or `source_entity` should be configured. See [source_entity](#source_entity).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `theme_arn` - (Optional) The Amazon Resource Name (ARN) of the theme that is being used for this dashboard. The theme ARN must exist in the same AWS account where you create the dashboard.
-
 
 ### permissions
 
@@ -113,18 +114,79 @@ The following arguments are optional:
 
 * `source_template` - (Optional) The source template. See [source_template](#source_template).
 
+### source_template
+
+* `arn` - (Required) The Amazon Resource Name (ARN) of the resource.
+* `data_set_references` - (Required) List of dataset references. See [data_set_references](#data_set_references).
+
 ### data_set_references
 
 * `data_set_arn` - (Required) Dataset Amazon Resource Name (ARN).
 * `data_set_placeholder` - (Required) Dataset placeholder.
 
-### source_template
+### dashboard_publish_options
 
-* `arn` - (Required) The Amazon Resource Name (ARN) of the resource.
+* `ad_hoc_filtering_option` - (Optional) Ad hoc (one-time) filtering option. See [ad_hoc_filtering_option](#ad_hoc_filtering_option).
+* `data_point_drill_up_down_option` - (Optional) The drill-down options of data points in a dashboard. See [data_point_drill_up_down_option](#data_point_drill_up_down_option).
+* `data_point_menu_label_option` - (Optional) The data point menu label options of a dashboard. See [data_point_menu_label_option](#data_point_menu_label_option).
+* `data_point_tooltip_option` - (Optional) The data point tool tip options of a dashboard. See [data_point_tooltip_option](#data_point_tooltip_option).
+* `export_to_csv_option` - (Optional) Export to .csv option. See [export_to_csv_option](#export_to_csv_option).
+* `export_with_hidden_fields_option` - (Optional) Determines if hidden fields are exported with a dashboard. See [export_with_hidden_fields_option](#export_with_hidden_fields_option).
+* `sheet_controls_option` - (Optional) Sheet controls option. See [sheet_controls_option](#sheet_controls_option).
+* `sheet_layout_element_maximization_option` - (Optional) The sheet layout maximization options of a dashbaord. See [sheet_layout_element_maximization_option](#sheet_layout_element_maximization_option).
+* `visual_axis_sort_option` - (Optional) The axis sort options of a dashboard. See [visual_axis_sort_option](#visual_axis_sort_option).
+* `visual_menu_option` - (Optional) The menu options of a visual in a dashboard. See [visual_menu_option](#visual_menu_option).
+
+### ad_hoc_filtering_option
+
+* `availability_status` - (Optional) Availability status. Possibles values: ENABLED, DISABLED.
+
+### data_point_drill_up_down_option
+
+* `availability_status` - (Optional) Availability status. Possibles values: ENABLED, DISABLED.
+
+### data_point_menu_label_option
+
+* `availability_status` - (Optional) Availability status. Possibles values: ENABLED, DISABLED.
+
+### data_point_tooltip_option
+
+* `availability_status` - (Optional) Availability status. Possibles values: ENABLED, DISABLED.
+
+### export_to_csv_option
+
+* `availability_status` - (Optional) Availability status. Possibles values: ENABLED, DISABLED.
+
+### export_with_hidden_fields_option
+
+* `availability_status` - (Optional) Availability status. Possibles values: ENABLED, DISABLED.
+
+### sheet_controls_option
+
+* `visibility_state` - (Optional) Visibility state. Possibles values: EXPANDED, COLLAPSED.
+
+### sheet_layout_element_maximization_option
+
+* `availability_status` - (Optional) Availability status. Possibles values: ENABLED, DISABLED.
+
+### visual_axis_sort_option
+
+* `availability_status` - (Optional) Availability status. Possibles values: ENABLED, DISABLED.
+
+### visual_menu_option
+
+* `availability_status` - (Optional) Availability status. Possibles values: ENABLED, DISABLED.
+
+### parameters
+
+* `date_time_parameters` - (Optional) A list of parameters that have a data type of date-time. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeParameter.html).
+* `decimal_parameters` - (Optional) A list of parameters that have a data type of decimal. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DecimalParameter.html).
+* `integer_parameters` - (Optional) A list of parameters that have a data type of integer. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_IntegerParameter.html).
+* `string_parameters` - (Optional) A list of parameters that have a data type of string. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringParameter.html).
 
 ### definition
 
-* `data_set_configuration` - (Required) A list of dataset configurations. These configurations define the required columns for each dataset used within a dashboard. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetConfiguration.html).
+* `data_set_identifiers_declarations` - (Required) A list dataset identifier declarations. With this mapping,you can use dataset identifiers instead of dataset Amazon Resource Names (ARNs) throughout the dashboard's sub-structures. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetIdentifierDeclaration.html).
 * `analysis_defaults` - (Optional) The configuration for default analysis settings. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AnalysisDefaults.html).
 * `calculated_fields` - (Optional) A list of calculated field definitions for the dashboard. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedField.html).
 * `column_configurations` - (Optional) A list of dashboard-level column configurations. Column configurations are used to set default formatting for a column that's used throughout a dashboard. See [AWS API Documentation for complete description](ttps://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnConfiguration.html).
@@ -155,7 +217,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-A QuickSight Template can be imported using the AWS account ID and dashboard ID separated by a comma (`,`) e.g.,
+A QuickSight Dashboard can be imported using the AWS account ID and dashboard ID separated by a comma (`,`) e.g.,
 
 ```
 $ terraform import aws_quicksight_dashboard.example 123456789012,example-id

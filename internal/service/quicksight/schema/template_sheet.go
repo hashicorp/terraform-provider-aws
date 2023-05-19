@@ -2092,8 +2092,6 @@ func flattenGridLayoutElement(apiObject []*quicksight.GridLayoutElement) []inter
 		}
 		if config.ColumnIndex != nil {
 			tfMap["column_index"] = aws.Int64Value(config.ColumnIndex)
-		} else {
-
 		}
 		if config.RowIndex != nil {
 			tfMap["row_index"] = aws.Int64Value(config.RowIndex)

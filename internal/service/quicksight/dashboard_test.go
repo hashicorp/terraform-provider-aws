@@ -312,8 +312,8 @@ resource "aws_quicksight_dashboard" "test" {
   version_description = "test"
   definition {
     data_set_identifiers_declarations {
-        data_set_arn = aws_quicksight_data_set.test.arn
-        identifier   = "1"
+      data_set_arn = aws_quicksight_data_set.test.arn
+      identifier   = "1"
     }
     sheets {
       title    = "Test"
@@ -446,18 +446,18 @@ resource "aws_quicksight_template" "test" {
 }
 
 resource "aws_quicksight_dashboard" "test" {
-    dashboard_id        = %[1]q
-    name                = %[2]q
-    version_description = "test"
-    source_entity {
-        source_template {
-            arn = aws_quicksight_template.test.arn
-            data_set_references {
-                data_set_arn         = aws_quicksight_data_set.test.arn
-                data_set_placeholder = "1"
-            }
-        }
+  dashboard_id        = %[1]q
+  name                = %[2]q
+  version_description = "test"
+  source_entity {
+    source_template {
+      arn = aws_quicksight_template.test.arn
+      data_set_references {
+        data_set_arn         = aws_quicksight_data_set.test.arn
+        data_set_placeholder = "1"
+      }
     }
+  }
 }
 `, rId, rName, sourceId, sourceName))
 }
@@ -467,109 +467,104 @@ func testAccDashboardConfig_DashboardSpecificConfig(rId, rName string) string {
 		testAccDashboardConfigBase(rId, rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_dashboard" "test" {
-    dashboard_id        = %[1]q
-    name                = %[2]q
-    version_description = "test"
-
-    parameters {
-        string_parameters {
-        name   = "test"
-        values = ["value"]
-        }
+  dashboard_id        = %[1]q
+  name                = %[2]q
+  version_description = "test"
+  parameters {
+    string_parameters {
+      name   = "test"
+      values = ["value"]
     }
-
-    dashboard_publish_options {
-        ad_hoc_filtering_option {
-            availability_status = "DISABLED"
-        }
-        data_point_drill_up_down_option {
-            availability_status = "ENABLED"
-        }
-        data_point_menu_label_option {
-            availability_status = "ENABLED"
-        }
-        data_point_tooltip_option {
-            availability_status = "ENABLED"
-        }
-        export_to_csv_option {
-            availability_status = "ENABLED"
-        }
-        export_with_hidden_fields_option {
-            availability_status = "DISABLED"
-        }
-        sheet_controls_option {
-            visibility_state = "COLLAPSED"
-        }
-        sheet_layout_element_maximization_option {
-            availability_status = "ENABLED"
-        }
-        visual_axis_sort_option {
-            availability_status = "ENABLED"
-        }
-        visual_menu_option {
-            availability_status = "ENABLED"
-        }
+  }
+  dashboard_publish_options {
+    ad_hoc_filtering_option {
+      availability_status = "DISABLED"
     }
-
-    definition {
-        data_set_identifiers_declarations {
-            data_set_arn = aws_quicksight_data_set.test.arn
-            identifier   = "1"
+    data_point_drill_up_down_option {
+      availability_status = "ENABLED"
+    }
+    data_point_menu_label_option {
+      availability_status = "ENABLED"
+    }
+    data_point_tooltip_option {
+      availability_status = "ENABLED"
+    }
+    export_to_csv_option {
+      availability_status = "ENABLED"
+    }
+    export_with_hidden_fields_option {
+      availability_status = "DISABLED"
+    }
+    sheet_controls_option {
+      visibility_state = "COLLAPSED"
+    }
+    sheet_layout_element_maximization_option {
+      availability_status = "ENABLED"
+    }
+    visual_axis_sort_option {
+      availability_status = "ENABLED"
+    }
+    visual_menu_option {
+      availability_status = "ENABLED"
+    }
+  }
+  definition {
+    data_set_identifiers_declarations {
+      data_set_arn = aws_quicksight_data_set.test.arn
+      identifier   = "1"
+    }
+    parameters_declarations {
+      string_parameter_declaration {
+        name                 = "test"
+        parameter_value_type = "SINGLE_VALUED"
+        default_values {
+          static_values = ["value"]
         }
-
-        parameters_declarations {
-            string_parameter_declaration {
-                name                 = "test"
-                parameter_value_type = "SINGLE_VALUED"
-                default_values {
-                    static_values = ["value"]
-                }
-                values_when_unset {
-                    value_when_unset_option = "NULL"
-                }
+        values_when_unset {
+          value_when_unset_option = "NULL"
+        }
+      }
+    }
+    sheets {
+      title    = "Example"
+      sheet_id = "Example1"
+      visuals {
+        line_chart_visual {
+          visual_id = "LineChart"
+          title {
+            format_text {
+              plain_text = "Line Chart Example"
             }
-        }
-
-        sheets {
-            title    = "Example"
-            sheet_id = "Example1"
-            visuals {
-                line_chart_visual {
-                    visual_id = "LineChart"
-                    title {
-                        format_text {
-                            plain_text = "Line Chart Example"
-                        }
+          }
+          chart_configuration {
+            field_wells {
+              line_chart_aggregated_field_wells {
+                category {
+                  categorical_dimension_field {
+                    field_id = "1"
+                    column {
+                      data_set_identifier = "1"
+                      column_name         = "Column1"
                     }
-                    chart_configuration {
-                        field_wells {
-                            line_chart_aggregated_field_wells {
-                                category {
-                                    categorical_dimension_field {
-                                        field_id = "1"
-                                        column {
-                                            data_set_identifier = "1"
-                                            column_name         = "Column1"
-                                        }
-                                    }
-                                }
-                                values {
-                                    categorical_measure_field {
-                                        field_id = "2"
-                                        column {
-                                            data_set_identifier = "1"
-                                            column_name         = "Column1"
-                                        }
-                                        aggregation_function = "COUNT"
-                                    }
-                                }
-                            }
-                        }
-                    }
+                  }
                 }
+                values {
+                  categorical_measure_field {
+                    field_id = "2"
+                    column {
+                      data_set_identifier = "1"
+                      column_name         = "Column1"
+                    }
+                    aggregation_function = "COUNT"
+                  }
+                }
+              }
             }
+          }
         }
+      }
     }
+  }
 }
 `, rId, rName))
 }
