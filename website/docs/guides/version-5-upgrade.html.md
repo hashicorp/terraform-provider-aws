@@ -23,6 +23,7 @@ Upgrade topics:
 - [Data Source: aws_identitystore_group](#data-source-aws_identitystore_group)
 - [Data Source: aws_identitystore_user](#data-source-aws_identitystore_user)
 - [Data Source: aws_redshift_service_account](#data-source-aws_redshift_service_account)
+- [Data Source: aws_secretsmanager_secret](#resource-aws_secretsmanager_secret)
 - [Data Source: aws_subnet_ids](#data-source-aws_subnet_ids)
 - [Resource: aws_acmpca_certificate_authority](#resource-aws_acmpca_certificate_authority)
 - [Resource: aws_api_gateway_rest_api](#resource-aws_api_gateway_rest_api)
@@ -41,6 +42,7 @@ Upgrade topics:
 - [Resource: aws_msk_cluster](#resource-aws_msk_cluster)
 - [Resource: aws_neptune_cluster](#resource-aws_neptune_cluster)
 - [Resource: aws_rds_cluster](#resource-aws_rds_cluster)
+- [Resource: aws_secretsmanager_secret](#resource-aws_secretsmanager_secret)
 - [Resource: aws_wafv2_web_acl](#resource-aws_wafv2_web_acl)
 - [Resource: aws_wafv2_web_acl_logging_configuration](#resource-aws_wafv2_web_acl_logging_configuration)
 
@@ -179,6 +181,10 @@ Changes to the `snapshot_identifier` attribute will now correctly force re-creat
 
 Automated snapshots **should not** be used for this attribute, unless from a different cluster. Automated snapshots are deleted as part of cluster destruction when the resource is replaced.
 
+## Resource: aws_secretsmanager_secret
+
+The `rotation_enabled`, `rotation_lambda_arn` and `rotation_rules` attributes have been removed.
+
 ## Resource: aws_wafv2_web_acl
 
 The `statement.managed_rule_group_statement.excluded_rule` and `statement.rule_group_reference_statement.excluded_rule` attributes have been removed.
@@ -205,6 +211,10 @@ The `filter` argument has been removed.
 
 [AWS document](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions) that [a service principal name](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html#principal-services) be used instead of AWS account ID in any relevant IAM policy.
 The [`aws_redshift_service_account`](/docs/providers/aws/d/redshift_service_account.html) data source should now be considered deprecated and will be removed in a future version.
+
+## Data Source: aws_secretsmanager_secret
+
+The `rotation_enabled`, `rotation_lambda_arn` and `rotation_rules` attributes have been removed.
 
 ## Data Source: aws_subnet_ids
 
