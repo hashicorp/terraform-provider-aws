@@ -268,7 +268,7 @@ func ProviderAccountID(provo *schema.Provider) string {
 		log.Print("[DEBUG] Unable to read account ID from test provider: unconfigured provider")
 		return ""
 	}
-	client, ok := provo.Meta().(*conns.AWSClient)
+	client, ok := provo.Meta().(*conns.ProviderMeta).AWSClients[Provider.Meta().(*conns.ProviderMeta).Region]
 	if !ok {
 		log.Print("[DEBUG] Unable to read account ID from test provider: non-AWS or unconfigured AWS provider")
 		return ""
@@ -884,7 +884,7 @@ func PreCheckPartitionNot(t *testing.T, partitions ...string) {
 }
 
 func PreCheckOrganizationsAccount(ctx context.Context, t *testing.T) {
-	_, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsConn())
+	_, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.ProviderMeta).AWSClients[Provider.Meta().(*conns.ProviderMeta).Region].OrganizationsConn())
 
 	if tfresource.NotFound(err) {
 		return
@@ -898,7 +898,7 @@ func PreCheckOrganizationsAccount(ctx context.Context, t *testing.T) {
 }
 
 func PreCheckOrganizationsEnabled(ctx context.Context, t *testing.T) {
-	_, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsConn())
+	_, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.ProviderMeta).AWSClients[Provider.Meta().(*conns.ProviderMeta).Region].OrganizationsConn())
 
 	if tfresource.NotFound(err) {
 		t.Skip("this AWS account must be an existing member of an AWS Organization")
@@ -910,13 +910,13 @@ func PreCheckOrganizationsEnabled(ctx context.Context, t *testing.T) {
 }
 
 func PreCheckOrganizationManagementAccount(ctx context.Context, t *testing.T) {
-	organization, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsConn())
+	organization, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.ProviderMeta).AWSClients[Provider.Meta().(*conns.ProviderMeta).Region].OrganizationsConn())
 
 	if err != nil {
 		t.Fatalf("describing AWS Organization: %s", err)
 	}
 
-	callerIdentity, err := tfsts.FindCallerIdentity(ctx, Provider.Meta().(*conns.AWSClient).STSConn())
+	callerIdentity, err := tfsts.FindCallerIdentity(ctx, Provider.Meta().(*conns.ProviderMeta).AWSClients[Provider.Meta().(*conns.ProviderMeta).Region].STSConn())
 
 	if err != nil {
 		t.Fatalf("getting current identity: %s", err)
@@ -928,7 +928,7 @@ func PreCheckOrganizationManagementAccount(ctx context.Context, t *testing.T) {
 }
 
 func PreCheckSSOAdminInstances(ctx context.Context, t *testing.T) {
-	conn := Provider.Meta().(*conns.AWSClient).SSOAdminConn()
+	conn := Provider.Meta().(*conns.ProviderMeta).AWSClients[Provider.Meta().(*conns.ProviderMeta).Region].SSOAdminConn()
 	input := &ssoadmin.ListInstancesInput{}
 	var instances []*ssoadmin.InstanceMetadata
 
@@ -956,7 +956,7 @@ func PreCheckSSOAdminInstances(ctx context.Context, t *testing.T) {
 }
 
 func PreCheckHasIAMRole(ctx context.Context, t *testing.T, roleName string) {
-	conn := Provider.Meta().(*conns.AWSClient).IAMConn()
+	conn := Provider.Meta().(*conns.ProviderMeta).AWSClients[Provider.Meta().(*conns.ProviderMeta).Region].IAMConn()
 	input := &iam.GetRoleInput{
 		RoleName: aws.String(roleName),
 	}
@@ -977,7 +977,7 @@ func PreCheckHasIAMRole(ctx context.Context, t *testing.T, roleName string) {
 }
 
 func PreCheckIAMServiceLinkedRole(ctx context.Context, t *testing.T, pathPrefix string) {
-	conn := Provider.Meta().(*conns.AWSClient).IAMConn()
+	conn := Provider.Meta().(*conns.ProviderMeta).AWSClients[Provider.Meta().(*conns.ProviderMeta).Region].IAMConn()
 	input := &iam.ListRolesInput{
 		PathPrefix: aws.String(pathPrefix),
 	}
@@ -1006,7 +1006,7 @@ func PreCheckIAMServiceLinkedRole(ctx context.Context, t *testing.T, pathPrefix 
 }
 
 func PreCheckDirectoryService(ctx context.Context, t *testing.T) {
-	conn := Provider.Meta().(*conns.AWSClient).DSConn()
+	conn := Provider.Meta().(*conns.ProviderMeta).AWSClients[Provider.Meta().(*conns.ProviderMeta).Region].DSConn()
 	input := &directoryservice.DescribeDirectoriesInput{}
 
 	_, err := conn.DescribeDirectoriesWithContext(ctx, input)
@@ -1024,7 +1024,7 @@ func PreCheckDirectoryService(ctx context.Context, t *testing.T) {
 // and we do not have a good read-only way to determine this situation. Here we
 // opt to perform a creation that will fail so we can determine Simple AD support.
 func PreCheckDirectoryServiceSimpleDirectory(ctx context.Context, t *testing.T) {
-	conn := Provider.Meta().(*conns.AWSClient).DSConn()
+	conn := Provider.Meta().(*conns.ProviderMeta).AWSClients[Provider.Meta().(*conns.ProviderMeta).Region].DSConn()
 	input := &directoryservice.CreateDirectoryInput{
 		Name:     aws.String("corp.example.com"),
 		Password: aws.String("PreCheck123"),
@@ -1043,7 +1043,7 @@ func PreCheckDirectoryServiceSimpleDirectory(ctx context.Context, t *testing.T) 
 }
 
 func PreCheckOutpostsOutposts(ctx context.Context, t *testing.T) {
-	conn := Provider.Meta().(*conns.AWSClient).OutpostsConn()
+	conn := Provider.Meta().(*conns.ProviderMeta).AWSClients[Provider.Meta().(*conns.ProviderMeta).Region].OutpostsConn()
 	input := &outposts.ListOutpostsInput{}
 
 	output, err := conn.ListOutpostsWithContext(ctx, input)
@@ -1233,7 +1233,7 @@ func RegionProviderFunc(region string, providers *[]*schema.Provider) func() *sc
 			}
 
 			// Ignore if Meta is not conns.AWSClient, this will happen for other providers
-			client, ok := provo.Meta().(*conns.AWSClient)
+			client, ok := provo.Meta().(*conns.ProviderMeta).AWSClients[Provider.Meta().(*conns.ProviderMeta).Region]
 			if !ok {
 				log.Printf("[DEBUG] Skipping non-AWS provider")
 				continue
@@ -1672,7 +1672,7 @@ func ACMCertificateRandomSubDomain(rootDomain string) string {
 
 func CheckACMPCACertificateAuthorityActivateRootCA(ctx context.Context, certificateAuthority *acmpca.CertificateAuthority) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := Provider.Meta().(*conns.AWSClient).ACMPCAConn()
+		conn := Provider.Meta().(*conns.ProviderMeta).AWSClients[Provider.Meta().(*conns.ProviderMeta).Region].ACMPCAConn()
 
 		if v := aws.StringValue(certificateAuthority.Type); v != acmpca.CertificateAuthorityTypeRoot {
 			return fmt.Errorf("attempting to activate ACM PCA %s Certificate Authority", v)
@@ -1738,7 +1738,7 @@ func CheckACMPCACertificateAuthorityActivateRootCA(ctx context.Context, certific
 
 func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, rootCertificateAuthority, certificateAuthority *acmpca.CertificateAuthority) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := Provider.Meta().(*conns.AWSClient).ACMPCAConn()
+		conn := Provider.Meta().(*conns.ProviderMeta).AWSClients[Provider.Meta().(*conns.ProviderMeta).Region].ACMPCAConn()
 
 		if v := aws.StringValue(certificateAuthority.Type); v != acmpca.CertificateAuthorityTypeSubordinate {
 			return fmt.Errorf("attempting to activate ACM PCA %s Certificate Authority", v)
@@ -1807,7 +1807,7 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, r
 
 func CheckACMPCACertificateAuthorityDisableCA(ctx context.Context, certificateAuthority *acmpca.CertificateAuthority) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := Provider.Meta().(*conns.AWSClient).ACMPCAConn()
+		conn := Provider.Meta().(*conns.ProviderMeta).AWSClients[Provider.Meta().(*conns.ProviderMeta).Region].ACMPCAConn()
 
 		_, err := conn.UpdateCertificateAuthorityWithContext(ctx, &acmpca.UpdateCertificateAuthorityInput{
 			CertificateAuthorityArn: certificateAuthority.Arn,
@@ -1829,7 +1829,7 @@ func CheckACMPCACertificateAuthorityExists(ctx context.Context, n string, certif
 			return fmt.Errorf("no ACM PCA Certificate Authority ID is set")
 		}
 
-		conn := Provider.Meta().(*conns.AWSClient).ACMPCAConn()
+		conn := Provider.Meta().(*conns.ProviderMeta).AWSClients[Provider.Meta().(*conns.ProviderMeta).Region].ACMPCAConn()
 
 		output, err := tfacmpca.FindCertificateAuthorityByARN(ctx, conn, rs.Primary.ID)
 
@@ -2193,7 +2193,7 @@ func CheckVPCExists(ctx context.Context, n string, v *ec2.Vpc) resource.TestChec
 			return fmt.Errorf("no VPC ID is set")
 		}
 
-		conn := Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := Provider.Meta().(*conns.ProviderMeta).AWSClients[Provider.Meta().(*conns.ProviderMeta).Region].EC2Conn()
 
 		output, err := tfec2.FindVPCByID(ctx, conn, rs.Primary.ID)
 
@@ -2218,7 +2218,7 @@ func CheckCallerIdentityAccountID(n string) resource.TestCheckFunc {
 			return fmt.Errorf("account Id resource ID not set.")
 		}
 
-		expected := Provider.Meta().(*conns.AWSClient).AccountID
+		expected := Provider.Meta().(*conns.ProviderMeta).AWSClients[Provider.Meta().(*conns.ProviderMeta).Region].AccountID
 		if rs.Primary.Attributes["account_id"] != expected {
 			return fmt.Errorf("incorrect Account ID: expected %q, got %q", expected, rs.Primary.Attributes["account_id"])
 		}

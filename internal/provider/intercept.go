@@ -209,7 +209,7 @@ func (r tagsInterceptor) run(ctx context.Context, d schemaResourceData, meta any
 		return ctx, diags
 	}
 
-	sp, ok := meta.(*conns.AWSClient).ServicePackages[inContext.ServicePackageName]
+	sp, ok := meta.(*conns.ProviderMeta).ServicePackages[inContext.ServicePackageName]
 	if !ok {
 		return ctx, diags
 	}
@@ -273,7 +273,7 @@ func (r tagsInterceptor) run(ctx context.Context, d schemaResourceData, meta any
 							}
 
 							// ISO partitions may not support tagging, giving error.
-							if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+							if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.ProviderMeta).Partition, err) {
 								return ctx, diags
 							}
 
@@ -325,7 +325,7 @@ func (r tagsInterceptor) run(ctx context.Context, d schemaResourceData, meta any
 						}
 
 						// ISO partitions may not support tagging, giving error.
-						if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+						if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.ProviderMeta).Partition, err) {
 							return ctx, diags
 						}
 

@@ -48,6 +48,10 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 				ElementType: types.StringType,
 				Optional:    true,
 			},
+			"allowed_regions": schema.SetAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+			},
 			"custom_ca_bundle": schema.StringAttribute{
 				Optional:    true,
 				Description: "File containing custom root and intermediate certificates. Can also be configured using the `AWS_CA_BUNDLE` environment variable. (Setting `ca_bundle` in the shared config file is not supported.)",
@@ -280,7 +284,7 @@ func (p *fwprovider) Configure(ctx context.Context, request provider.ConfigureRe
 func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	var dataSources []func() datasource.DataSource
 
-	for n, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
+	for n, sp := range p.Primary.Meta().(*conns.ProviderMeta).ServicePackages {
 		servicePackageName := sp.ServicePackageName()
 
 		for _, v := range sp.FrameworkDataSources(ctx) {
@@ -324,7 +328,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 	var errs *multierror.Error
 	var resources []func() resource.Resource
 
-	for _, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
+	for _, sp := range p.Primary.Meta().(*conns.ProviderMeta).ServicePackages {
 		servicePackageName := sp.ServicePackageName()
 
 		for _, v := range sp.FrameworkResources(ctx) {

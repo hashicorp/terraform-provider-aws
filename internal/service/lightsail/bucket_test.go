@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -43,7 +44,7 @@ func TestAccLightsailBucket_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bundle_id", "small_1_0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "region"),
+					resource.TestCheckResourceAttr(resourceName, "region", endpoints.UsWest2RegionID),
 					resource.TestCheckResourceAttrSet(resourceName, "support_code"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "url"),
@@ -53,6 +54,47 @@ func TestAccLightsailBucket_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccLightsailBucket_region(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lightsail_bucket.test"
+	region1 := endpoints.UsWest2RegionID
+	region2 := endpoints.UsEast1RegionID
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_region(rName, region1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "region", region1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBucketConfig_region(rName2, region2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "region", region2),
+				),
 			},
 		},
 	})
@@ -185,7 +227,8 @@ func testAccCheckBucketExists(ctx context.Context, resourceName string) resource
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
+		region := rs.Primary.Attributes["region"]
+		conn := acctest.Provider.Meta().(*conns.ProviderMeta).AWSClients[region].LightsailConn()
 
 		out, err := tflightsail.FindBucketById(ctx, conn, rs.Primary.ID)
 
@@ -203,13 +246,13 @@ func testAccCheckBucketExists(ctx context.Context, resourceName string) resource
 
 func testAccCheckBucketDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lightsail_bucket" {
 				continue
 			}
-
+			region := rs.Primary.Attributes["region"]
+			conn := acctest.Provider.Meta().(*conns.ProviderMeta).AWSClients[region].LightsailConn()
 			_, err := tflightsail.FindBucketById(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
@@ -234,6 +277,16 @@ resource "aws_lightsail_bucket" "test" {
   bundle_id = "small_1_0"
 }
 `, rName)
+}
+
+func testAccBucketConfig_region(rName string, region string) string {
+	return fmt.Sprintf(`
+resource "aws_lightsail_bucket" "test" {
+  name      = %[1]q
+  region = %[2]q
+  bundle_id = "small_1_0"
+}
+`, rName, region)
 }
 
 func testAccBucketConfig_bundleId(rName string, rBundleId string) string {
