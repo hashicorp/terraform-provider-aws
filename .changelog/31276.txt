@@ -1,0 +1,3 @@
+```release-note:breaking-change
+provider: Now uses the default retry count for AWS SDKs
+```
