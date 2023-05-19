@@ -24,12 +24,10 @@ The following arguments are required:
 
 * `pipeline_id` - (Required) ID of the pipeline.
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `name` - Name of Pipeline.
 * `description` - Description of Pipeline.
-* `tags` - A map of tags assigned to the resource.
-
+* `tags` - Map of tags assigned to the resource.

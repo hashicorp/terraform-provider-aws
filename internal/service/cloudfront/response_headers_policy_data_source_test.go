@@ -5,25 +5,26 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccCloudFrontResponseHeadersPolicyDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSource1Name := "data.aws_cloudfront_response_headers_policy.by_id"
 	dataSource2Name := "data.aws_cloudfront_response_headers_policy.by_name"
 	resourceName := "aws_cloudfront_response_headers_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPublicKeyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPublicKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResponseHeadersPolicyDataSourceConfig(rName),
+				Config: testAccResponseHeadersPolicyDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSource1Name, "comment", resourceName, "comment"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "cors_config.#", resourceName, "cors_config.#"),
@@ -43,6 +44,8 @@ func TestAccCloudFrontResponseHeadersPolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSource1Name, "etag", resourceName, "etag"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSource1Name, "remove_headers_config.#", resourceName, "remove_headers_config.#"),
+					resource.TestCheckResourceAttrPair(dataSource1Name, "remove_headers_config.0.items.#", resourceName, "remove_headers_config.0.items.#"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "security_headers_config.#", resourceName, "security_headers_config.#"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "security_headers_config.0.content_security_policy.#", resourceName, "security_headers_config.0.content_security_policy.#"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "security_headers_config.0.frame_options.#", resourceName, "security_headers_config.0.frame_options.#"),
@@ -71,6 +74,8 @@ func TestAccCloudFrontResponseHeadersPolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSource2Name, "etag", resourceName, "etag"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSource2Name, "remove_headers_config.#", resourceName, "remove_headers_config.#"),
+					resource.TestCheckResourceAttrPair(dataSource2Name, "remove_headers_config.0.items.#", resourceName, "remove_headers_config.0.items.#"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "security_headers_config.#", resourceName, "security_headers_config.#"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "security_headers_config.0.content_security_policy.#", resourceName, "security_headers_config.0.content_security_policy.#"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "security_headers_config.0.frame_options.#", resourceName, "security_headers_config.0.frame_options.#"),
@@ -86,7 +91,7 @@ func TestAccCloudFrontResponseHeadersPolicyDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccResponseHeadersPolicyDataSourceConfig(rName string) string {
+func testAccResponseHeadersPolicyDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_cloudfront_response_headers_policy" "by_name" {
   name = aws_cloudfront_response_headers_policy.test.name
@@ -129,6 +134,16 @@ resource "aws_cloudfront_response_headers_policy" "test" {
       header   = "X-Header1"
       override = true
       value    = "value1"
+    }
+  }
+
+  remove_headers_config {
+    items {
+      header = "X-Header3"
+    }
+
+    items {
+      header = "X-Header4"
     }
   }
 

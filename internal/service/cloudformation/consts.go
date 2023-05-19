@@ -1,9 +1,11 @@
 package cloudformation
 
-import "time"
+import (
+	"time"
+)
 
 const (
-	ResStack = "Stack"
+	ResNameStack = "Stack"
 )
 
 const (

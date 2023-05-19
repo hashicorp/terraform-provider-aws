@@ -59,8 +59,9 @@ The following arguments are supported:
 * `identity_management_type` - (Required) Specifies the identity management type attached to the instance. Allowed Values are: `SAML`, `CONNECT_MANAGED`, `EXISTING_DIRECTORY`.
 * `inbound_calls_enabled` - (Required) Specifies whether inbound calls are enabled.
 * `instance_alias` - (Optional) Specifies the name of the instance. Required if `directory_id` not specified.
+* `multi_party_conference_enabled` - (Optional) Specifies whether multi-party calls/conference is enabled. Defaults to `false`.
 * `outbound_calls_enabled` - (Required) Specifies whether outbound calls are enabled.
-<!-- * `use_custom_tts_voices` - (Optional) Specifies Whether use custom tts voices is enabled. Defaults to `false` -->
+<!-- * `use_custom_tts_voices` - (Optional) Whether use custom tts voices is enabled. Defaults to `false` -->
 
 ## Attributes Reference
 
@@ -68,16 +69,16 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The identifier of the instance.
 * `arn` - Amazon Resource Name (ARN) of the instance.
-* `created_time` - Specifies when the instance was created.
+* `created_time` - When the instance was created.
 * `service_role` - The service role of the instance.
 * `status` - The state of the instance.
 
-### Timeouts
+## Timeouts
 
-`aws_connect_instance` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Defaults to 5 mins) Used when creating the instance.
-* `delete` - (Defaults to 5 mins) Used when deleting the instance.
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 

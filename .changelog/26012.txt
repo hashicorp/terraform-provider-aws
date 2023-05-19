@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_appmesh_gateway_route: Fix crash when only one of hostname rewrite or path rewrite is configured
+```

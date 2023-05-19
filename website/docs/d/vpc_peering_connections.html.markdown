@@ -38,13 +38,13 @@ The arguments of this data source act as filters for querying the available VPC 
 
 * `filter` - (Optional) Custom filter block as described below.
 
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match
+* `tags` - (Optional) Mapping of tags, each pair of which must exactly match
   a pair on the desired VPC Peering Connection.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,
 which take the following arguments:
 
-* `name` - (Required) The name of the field to filter by, as defined by
+* `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVpcPeeringConnections.html).
 
 * `values` - (Required) Set of values that are accepted for the given field.
@@ -55,4 +55,10 @@ which take the following arguments:
 All of the argument attributes except `filter` are also exported as result attributes.
 
 * `id` - AWS Region.
-* `ids` - The IDs of the VPC Peering Connections.
+* `ids` - IDs of the VPC Peering Connections.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

@@ -1,0 +1,19 @@
+```release-note:enhancement
+resource/aws_db_instance: Add `network_type` argument
+```
+
+```release-note:enhancement
+data-source/aws_db_instance: Add `network_type` attribute
+```
+
+```release-note:enhancement
+resource/aws_db_subnet_group: Add `supported_network_types` argument
+```
+
+```release-note:enhancement
+data-source/aws_db_subnet_group: Add `supported_network_types` attribute
+```
+
+```release-note:enhancement
+data-source/aws_rds_orderable_db_instance: Add `supported_network_types` attribute
+```

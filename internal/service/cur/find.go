@@ -1,16 +1,18 @@
 package cur
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/costandusagereportservice"
 )
 
-func FindReportDefinitionByName(conn *costandusagereportservice.CostandUsageReportService, name string) (*costandusagereportservice.ReportDefinition, error) {
+func FindReportDefinitionByName(ctx context.Context, conn *costandusagereportservice.CostandUsageReportService, name string) (*costandusagereportservice.ReportDefinition, error) {
 	input := &costandusagereportservice.DescribeReportDefinitionsInput{}
 
 	var result *costandusagereportservice.ReportDefinition
 
-	err := conn.DescribeReportDefinitionsPages(input, func(page *costandusagereportservice.DescribeReportDefinitionsOutput, lastPage bool) bool {
+	err := conn.DescribeReportDefinitionsPagesWithContext(ctx, input, func(page *costandusagereportservice.DescribeReportDefinitionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

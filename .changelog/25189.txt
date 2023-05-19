@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_vpc_endpoint_service: Add `supported_ip_address_types` argument
+```
+
+```release-note:enhancement
+data-source/aws_vpc_endpoint_service: Add `supported_ip_address_types` attribute
+```

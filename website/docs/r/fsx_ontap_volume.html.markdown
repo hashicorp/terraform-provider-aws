@@ -11,7 +11,6 @@ description: |-
 Manages a FSx ONTAP Volume.
 See the [FSx ONTAP User Guide](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/managing-volumes.html) for more information.
 
-
 ## Example Usage
 
 ### Basic Usage
@@ -55,7 +54,7 @@ The following arguments are supported:
 * `size_in_megabytes` - (Required) Specifies the size of the volume, in megabytes (MB), that you are creating.
 * `storage_efficiency_enabled` - (Required) Set to true to enable deduplication, compression, and compaction storage efficiency features on the volume.
 * `storage_virtual_machine_id` - (Required) Specifies the storage virtual machine in which to create the volume.
-* `tags` - (Optional) A map of tags to assign to the volume. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the volume. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### tiering_policy
 
@@ -73,18 +72,17 @@ In addition to all arguments above, the following attributes are exported:
 * `file_system_id` - Describes the file system for the volume, e.g. `fs-12345679`
 * `flexcache_endpoint_type` - Specifies the FlexCache endpoint type of the volume, Valid values are `NONE`, `ORIGIN`, `CACHE`. Default value is `NONE`. These can be set by the ONTAP CLI or API and are use with FlexCache feature.
 * `ontap_volume_type` - Specifies the type of volume, Valid values are `RW`, `DP`,  and `LS`. Default value is `RW`. These can be set by the ONTAP CLI or API. This setting is used as part of migration and replication [Migrating to Amazon FSx for NetApp ONTAP](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/migrating-fsx-ontap.html)
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `uuid` - The Volume's UUID (universally unique identifier).
 * `volume_type` - The type of volume, currently the only valid value is `ONTAP`.
 
 ## Timeouts
 
-`aws_fsx_ontap_volume` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
-configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30m`) How long to wait for the storage virtual machine to be created.
-* `delete` - (Default `30m`) How long to wait for the storage virtual machine to be deleted.
-* `update` - (Default `30m`) How long to wait for the storage virtual machine to be updated.
+* `create` - (Default `30m`)
+* `delete` - (Default `30m`)
+* `update` - (Default `30m`)
 
 ## Import
 

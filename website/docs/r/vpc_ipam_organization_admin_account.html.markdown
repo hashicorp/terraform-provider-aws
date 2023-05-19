@@ -15,12 +15,18 @@ Enables the IPAM Service and promotes a delegated administrator.
 Basic usage:
 
 ```terraform
-data "aws_caller_identity" "delegated" {
-  provider = "awsalternate"
-}
-
 resource "aws_vpc_ipam_organization_admin_account" "example" {
   delegated_admin_account_id = data.aws_caller_identity.delegated.account_id
+}
+
+data "aws_caller_identity" "delegated" {
+  provider = aws.ipam_delegate_account
+}
+
+provider "aws" {
+  alias = "ipam_delegate_account"
+
+  # authentication arguments omitted
 }
 ```
 

@@ -1,6 +1,8 @@
 package storagegateway
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	authenticationActiveDirectory = "ActiveDirectory"
@@ -108,7 +110,6 @@ const (
 	fileSystemAssociationDeleteTimeout = 10 * time.Minute
 )
 
-//nolint:deadcode,varcheck // These constants are missing from the AWS SDK
 const (
 	fileSystemAssociationStatusAvailable     = "AVAILABLE"
 	fileSystemAssociationStatusCreating      = "CREATING"

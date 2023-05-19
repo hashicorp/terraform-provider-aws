@@ -1,7 +1,7 @@
 ---
 subcategory: "KMS (Key Management)"
 layout: "aws"
-page_title: "AWS: aws_replica_kms_key"
+page_title: "AWS: aws_kms_replica_key"
 description: |-
   Manages a KMS multi-Region replica key.
 ---
@@ -52,7 +52,7 @@ If you specify a value, it must be between `7` and `30`, inclusive. If you do no
 * `policy` - (Optional) The key policy to attach to the KMS key. If you do not specify a key policy, AWS KMS attaches the [default key policy](https://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html#key-policy-default) to the KMS key.
 For more information about building policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
 * `primary_key_arn` - (Required) The ARN of the multi-Region primary key to replicate. The primary key must be in a different AWS Region of the same AWS Partition. You can create only one replica of a given primary key in each AWS Region.
-* `tags` - (Optional) A map of tags to assign to the replica key. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the replica key. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
@@ -63,7 +63,7 @@ In addition to all arguments above, the following attributes are exported:
 * `key_rotation_enabled` - A Boolean value that specifies whether key rotation is enabled. This is a shared property of multi-Region keys.
 * `key_spec` - The type of key material in the KMS key. This is a shared property of multi-Region keys.
 * `key_usage` - The [cryptographic operations](https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#cryptographic-operations) for which you can use the KMS key. This is a shared property of multi-Region keys.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

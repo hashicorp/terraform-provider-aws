@@ -5,18 +5,19 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/outposts"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccOutpostsSiteDataSource_id(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_outposts_site.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSites(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, outposts.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSites(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, outposts.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteDataSourceConfig_id(),
@@ -32,14 +33,15 @@ func TestAccOutpostsSiteDataSource_id(t *testing.T) {
 }
 
 func TestAccOutpostsSiteDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	sourceDataSourceName := "data.aws_outposts_site.source"
 	dataSourceName := "data.aws_outposts_site.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSites(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, outposts.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSites(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, outposts.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteDataSourceConfig_name(),

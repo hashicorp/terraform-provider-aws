@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_sesv2_dedicated_ip_pool
+```
+
+```release-note:new-data-source
+aws_sesv2_dedicated_ip_pool
+```

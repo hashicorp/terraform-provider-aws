@@ -19,8 +19,9 @@ resource "aws_chime_voice_connector" "default" {
 }
 
 resource "aws_chime_voice_connector_logging" "default" {
-  enable_sip_logs    = true
-  voice_connector_id = aws_chime_voice_connector.default.id
+  enable_sip_logs          = true
+  enable_media_metric_logs = true
+  voice_connector_id       = aws_chime_voice_connector.default.id
 }
 ```
 
@@ -30,6 +31,7 @@ The following arguments are supported:
 
 * `voice_connector_id` - (Required) The Amazon Chime Voice Connector ID.
 * `enable_sip_logs` - (Optional) When true, enables SIP message logs for sending to Amazon CloudWatch Logs.
+* `enable_media_metric_logs` - (Optional) When true, enables logging of detailed media metrics for Voice Connectors to Amazon CloudWatch logs.
 
 ## Attributes Reference
 

@@ -17,9 +17,10 @@ func expandMethodParametersOperations(d *schema.ResourceData, key string, prefix
 	oldParametersMap := oldParameters.(map[string]interface{})
 	newParametersMap := newParameters.(map[string]interface{})
 
-	for k := range oldParametersMap {
+	for k, kV := range oldParametersMap {
+		keyValueUnchanged := false
 		operation := apigateway.PatchOperation{
-			Op:   aws.String("remove"),
+			Op:   aws.String(apigateway.OpRemove),
 			Path: aws.String(fmt.Sprintf("/%s/%s", prefix, k)),
 		}
 
@@ -29,13 +30,18 @@ func expandMethodParametersOperations(d *schema.ResourceData, key string, prefix
 				value, _ := strconv.ParseBool(nV.(string))
 				b = value
 			}
-			if nK == k {
-				operation.Op = aws.String("replace")
+
+			if (nK == k) && (nV != kV) {
+				operation.Op = aws.String(apigateway.OpReplace)
 				operation.Value = aws.String(strconv.FormatBool(b))
+			} else if (nK == k) && (nV == kV) {
+				keyValueUnchanged = true
 			}
 		}
 
-		operations = append(operations, &operation)
+		if !keyValueUnchanged {
+			operations = append(operations, &operation)
+		}
 	}
 
 	for nK, nV := range newParametersMap {
@@ -52,7 +58,7 @@ func expandMethodParametersOperations(d *schema.ResourceData, key string, prefix
 				b = value
 			}
 			operation := apigateway.PatchOperation{
-				Op:    aws.String("add"),
+				Op:    aws.String(apigateway.OpAdd),
 				Path:  aws.String(fmt.Sprintf("/%s/%s", prefix, nK)),
 				Value: aws.String(strconv.FormatBool(b)),
 			}
@@ -72,13 +78,13 @@ func expandRequestResponseModelOperations(d *schema.ResourceData, key string, pr
 
 	for k := range oldModelMap {
 		operation := apigateway.PatchOperation{
-			Op:   aws.String("remove"),
+			Op:   aws.String(apigateway.OpRemove),
 			Path: aws.String(fmt.Sprintf("/%s/%s", prefix, strings.Replace(k, "/", "~1", -1))),
 		}
 
 		for nK, nV := range newModelMap {
 			if nK == k {
-				operation.Op = aws.String("replace")
+				operation.Op = aws.String(apigateway.OpReplace)
 				operation.Value = aws.String(nV.(string))
 			}
 		}
@@ -95,7 +101,7 @@ func expandRequestResponseModelOperations(d *schema.ResourceData, key string, pr
 		}
 		if !exists {
 			operation := apigateway.PatchOperation{
-				Op:    aws.String("add"),
+				Op:    aws.String(apigateway.OpAdd),
 				Path:  aws.String(fmt.Sprintf("/%s/%s", prefix, strings.Replace(nK, "/", "~1", -1))),
 				Value: aws.String(nV.(string)),
 			}
@@ -104,23 +110,4 @@ func expandRequestResponseModelOperations(d *schema.ResourceData, key string, pr
 	}
 
 	return operations
-}
-
-func FlattenThrottleSettings(settings *apigateway.ThrottleSettings) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, 1)
-
-	if settings != nil {
-		r := make(map[string]interface{})
-		if settings.BurstLimit != nil {
-			r["burst_limit"] = aws.Int64Value(settings.BurstLimit)
-		}
-
-		if settings.RateLimit != nil {
-			r["rate_limit"] = aws.Float64Value(settings.RateLimit)
-		}
-
-		result = append(result, r)
-	}
-
-	return result
 }

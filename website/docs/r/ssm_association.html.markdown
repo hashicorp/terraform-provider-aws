@@ -55,6 +55,30 @@ resource "aws_ssm_association" "example" {
 }
 ```
 
+### Create an association with a specific schedule
+
+This example shows how to schedule an association in various ways.
+
+```terraform
+resource "aws_ssm_association" "example" {
+  name = aws_ssm_document.example.name
+
+  # Cron expression example
+  schedule_expression = "cron(0 2 ? * SUN *)"
+
+  # Single-run example
+  # schedule_expression = "at(2020-07-07T15:55:00)"
+
+  # Rate expression example
+  # schedule_expression = "rate(7 days)"
+
+  targets {
+    key    = "InstanceIds"
+    values = [aws_instance.example.id]
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -63,10 +87,10 @@ The following arguments are supported:
 * `apply_only_at_cron_interval` - (Optional) By default, when you create a new or update associations, the system runs it immediately and then according to the schedule you specified. Enable this option if you do not want an association to run immediately after you create or update it. This parameter is not supported for rate expressions. Default: `false`.
 * `association_name` - (Optional) The descriptive name for the association.
 * `document_version` - (Optional) The document version you want to associate with the target(s). Can be a specific version or the default version.
-* `instance_id` - (Optional) The instance ID to apply an SSM document to. Use `targets` with key `InstanceIds` for document schema versions 2.0 and above.
+* `instance_id` - (Optional, **Deprecated**) The instance ID to apply an SSM document to. Use `targets` with key `InstanceIds` for document schema versions 2.0 and above. Use the `targets` attribute instead.
 * `output_location` - (Optional) An output location block. Output Location is documented below.
 * `parameters` - (Optional) A block of arbitrary string parameters to pass to the SSM document.
-* `schedule_expression` - (Optional) A cron expression when the association will be applied to the target(s).
+* `schedule_expression` - (Optional) A [cron or rate expression](https://docs.aws.amazon.com/systems-manager/latest/userguide/reference-cron-and-rate-expressions.html) that specifies when the association runs.
 * `targets` - (Optional) A block containing the targets of the SSM association. Targets are documented below. AWS currently supports a maximum of 5 targets.
 * `compliance_severity` - (Optional) The compliance severity for the association. Can be one of the following: `UNSPECIFIED`, `LOW`, `MEDIUM`, `HIGH` or `CRITICAL`
 * `max_concurrency` - (Optional) The maximum number of targets allowed to run the association at the same time. You can specify a number, for example 10, or a percentage of the target set, for example 10%.

@@ -47,7 +47,6 @@ In addition to all arguments above, the following attributes are exported:
 
 * `expire_passwords` - Indicates whether passwords in the account expire. Returns `true` if `max_password_age` contains a value greater than `0`. Returns `false` if it is `0` or _not present_.
 
-
 ## Import
 
 IAM Account Password Policy can be imported using the word `iam-account-password-policy`, e.g.,

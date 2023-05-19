@@ -1,6 +1,7 @@
 package appconfig
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -11,21 +12,26 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/appconfig"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_appconfig_deployment", name="Deployment")
+// @Tags(identifierAttribute="arn")
 func ResourceDeployment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDeploymentCreate,
-		Read:   resourceDeploymentRead,
-		Update: resourceDeploymentUpdate,
-		Delete: resourceDeploymentDelete,
+		CreateWithoutTimeout: resourceDeploymentCreate,
+		ReadWithoutTimeout:   resourceDeploymentRead,
+		UpdateWithoutTimeout: resourceDeploymentUpdate,
+		DeleteWithoutTimeout: resourceDeploymentDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -77,17 +83,16 @@ func ResourceDeployment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceDeploymentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 
 	input := &appconfig.StartDeploymentInput{
 		ApplicationId:          aws.String(d.Get("application_id").(string)),
@@ -96,17 +101,17 @@ func resourceDeploymentCreate(d *schema.ResourceData, meta interface{}) error {
 		ConfigurationVersion:   aws.String(d.Get("configuration_version").(string)),
 		DeploymentStrategyId:   aws.String(d.Get("deployment_strategy_id").(string)),
 		Description:            aws.String(d.Get("description").(string)),
-		Tags:                   Tags(tags.IgnoreAWS()),
+		Tags:                   GetTagsIn(ctx),
 	}
 
-	output, err := conn.StartDeployment(input)
+	output, err := conn.StartDeploymentWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error starting AppConfig Deployment: %w", err)
+		return sdkdiag.AppendErrorf(diags, "starting AppConfig Deployment: %s", err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error starting AppConfig Deployment: empty response")
+		return sdkdiag.AppendErrorf(diags, "starting AppConfig Deployment: empty response")
 	}
 
 	appID := aws.StringValue(output.ApplicationId)
@@ -115,18 +120,17 @@ func resourceDeploymentCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(fmt.Sprintf("%s/%s/%d", appID, envID, deployNum))
 
-	return resourceDeploymentRead(d, meta)
+	return append(diags, resourceDeploymentRead(ctx, d, meta)...)
 }
 
-func resourceDeploymentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 
 	appID, envID, deploymentNum, err := DeploymentParseID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading AppConfig Deployment (%s): %s", d.Id(), err)
 	}
 
 	input := &appconfig.GetDeploymentInput{
@@ -135,20 +139,20 @@ func resourceDeploymentRead(d *schema.ResourceData, meta interface{}) error {
 		EnvironmentId:    aws.String(envID),
 	}
 
-	output, err := conn.GetDeployment(input)
+	output, err := conn.GetDeploymentWithContext(ctx, input)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Appconfig Deployment (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting AppConfig Deployment (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading AppConfig Deployment (%s): %s", d.Id(), err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error getting AppConfig Deployment (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "reading AppConfig Deployment (%s): empty response", d.Id())
 	}
 
 	arn := arn.ARN{
@@ -169,43 +173,21 @@ func resourceDeploymentRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("environment_id", output.EnvironmentId)
 	d.Set("state", output.State)
 
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for AppConfig Deployment (%s): %w", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceDeploymentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	// Tags only.
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating AppConfig Deployment (%s) tags: %w", d.Get("arn").(string), err)
-		}
-	}
-
-	return resourceDeploymentRead(d, meta)
+	return append(diags, resourceDeploymentRead(ctx, d, meta)...)
 }
 
-func resourceDeploymentDelete(_ *schema.ResourceData, _ interface{}) error {
+func resourceDeploymentDelete(ctx context.Context, _ *schema.ResourceData, _ interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	log.Printf("[WARN] Cannot destroy AppConfig Deployment. Terraform will remove this resource from the state file, however this resource remains.")
-	return nil
+	return diags
 }
 
 func DeploymentParseID(id string) (string, string, int, error) {
