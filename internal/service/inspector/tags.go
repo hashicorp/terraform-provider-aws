@@ -49,6 +49,14 @@ func updateTags(ctx context.Context, conn inspectoriface.InspectorAPI, identifie
 	return nil
 }
 
+func createTags(ctx context.Context, conn inspectoriface.InspectorAPI, identifier string, tags []*inspector.Tag) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return updateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+}
+
 // UpdateTags updates Inspector Classic service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {

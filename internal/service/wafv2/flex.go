@@ -1016,7 +1016,6 @@ func expandManagedRuleGroupStatement(l []interface{}) *wafv2.ManagedRuleGroupSta
 
 	m := l[0].(map[string]interface{})
 	r := &wafv2.ManagedRuleGroupStatement{
-		ExcludedRules:       expandExcludedRules(m["excluded_rule"].([]interface{})),
 		Name:                aws.String(m["name"].(string)),
 		RuleActionOverrides: expandRuleActionOverrides(m["rule_action_override"].([]interface{})),
 		VendorName:          aws.String(m["vendor_name"].(string)),
@@ -1260,35 +1259,8 @@ func expandRuleGroupReferenceStatement(l []interface{}) *wafv2.RuleGroupReferenc
 	m := l[0].(map[string]interface{})
 
 	return &wafv2.RuleGroupReferenceStatement{
-		ARN:           aws.String(m["arn"].(string)),
-		ExcludedRules: expandExcludedRules(m["excluded_rule"].([]interface{})),
-	}
-}
-
-func expandExcludedRules(l []interface{}) []*wafv2.ExcludedRule {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	rules := make([]*wafv2.ExcludedRule, 0)
-
-	for _, rule := range l {
-		if rule == nil {
-			continue
-		}
-		rules = append(rules, expandExcludedRule(rule.(map[string]interface{})))
-	}
-
-	return rules
-}
-
-func expandExcludedRule(m map[string]interface{}) *wafv2.ExcludedRule {
-	if m == nil {
-		return nil
-	}
-
-	return &wafv2.ExcludedRule{
-		Name: aws.String(m["name"].(string)),
+		ARN:                 aws.String(m["arn"].(string)),
+		RuleActionOverrides: expandRuleActionOverrides(m["rule_action_override"].([]interface{})),
 	}
 }
 
@@ -2176,10 +2148,6 @@ func flattenManagedRuleGroupStatement(apiObject *wafv2.ManagedRuleGroupStatement
 
 	tfMap := map[string]interface{}{}
 
-	if apiObject.ExcludedRules != nil {
-		tfMap["excluded_rule"] = flattenExcludedRules(apiObject.ExcludedRules)
-	}
-
 	if apiObject.Name != nil {
 		tfMap["name"] = aws.StringValue(apiObject.Name)
 	}
@@ -2410,28 +2378,20 @@ func flattenRateBasedStatement(apiObject *wafv2.RateBasedStatement) interface{} 
 	return []interface{}{tfMap}
 }
 
-func flattenRuleGroupReferenceStatement(r *wafv2.RuleGroupReferenceStatement) interface{} {
-	if r == nil {
+func flattenRuleGroupReferenceStatement(apiObject *wafv2.RuleGroupReferenceStatement) interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"excluded_rule": flattenExcludedRules(r.ExcludedRules),
-		"arn":           aws.StringValue(r.ARN),
+	tfMap := map[string]interface{}{
+		"arn": aws.StringValue(apiObject.ARN),
 	}
 
-	return []interface{}{m}
-}
-
-func flattenExcludedRules(r []*wafv2.ExcludedRule) interface{} {
-	out := make([]map[string]interface{}, len(r))
-	for i, rule := range r {
-		m := make(map[string]interface{})
-		m["name"] = aws.StringValue(rule.Name)
-		out[i] = m
+	if apiObject.RuleActionOverrides != nil {
+		tfMap["rule_action_override"] = flattenRuleActionOverrides(apiObject.RuleActionOverrides)
 	}
 
-	return out
+	return []interface{}{tfMap}
 }
 
 func flattenRuleActionOverrides(r []*wafv2.RuleActionOverride) interface{} {

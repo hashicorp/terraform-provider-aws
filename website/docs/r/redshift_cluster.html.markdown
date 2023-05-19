@@ -45,7 +45,6 @@ The following arguments are supported:
   Note that this may show up in logs, and it will be stored in the state file. Password must contain at least 8 chars and
   contain at least one uppercase letter, one lowercase letter, and one number.
 * `master_username` - (Required unless a `snapshot_identifier` is provided) Username for the master DB user.
-* `cluster_security_groups` - (Optional) A list of security groups to be associated with this cluster.
 * `vpc_security_group_ids` - (Optional) A list of Virtual Private Cloud (VPC) security groups to be associated with the cluster.
 * `cluster_subnet_group_name` - (Optional) The name of a cluster subnet group to be associated with this cluster. If this parameter is not provided the resulting cluster will be deployed outside virtual private cloud (VPC).
 * `availability_zone` - (Optional) The EC2 Availability Zone (AZ) in which you want Amazon Redshift to provision the cluster. For example, if you have several EC2 instances running in a specific Availability Zone, then you might want the cluster to be provisioned in the same zone in order to decrease network latency. Can only be changed if `availability_zone_relocation_enabled` is `true`.
@@ -113,7 +112,6 @@ In addition to all arguments above, the following attributes are exported:
 * `preferred_maintenance_window` - The backup window
 * `endpoint` - The connection endpoint
 * `encrypted` - Whether the data in the cluster is encrypted
-* `cluster_security_groups` - The security groups associated with the cluster
 * `vpc_security_group_ids` - The VPC security group Ids associated with the cluster
 * `dns_name` - The DNS name of the cluster
 * `port` - The Port the cluster responds on

@@ -452,28 +452,6 @@ func ResourceProject() *schema.Resource {
 				MaxItems: 12,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"auth": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"resource": {
-										Type:       schema.TypeString,
-										Sensitive:  true,
-										Optional:   true,
-										Deprecated: "Use the aws_codebuild_source_credential resource instead",
-									},
-									"type": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(codebuild.SourceAuthType_Values(), false),
-										Deprecated:   "Use the aws_codebuild_source_credential resource instead",
-									},
-								},
-							},
-							Deprecated: "Use the aws_codebuild_source_credential resource instead",
-						},
 						"buildspec": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -565,28 +543,6 @@ func ResourceProject() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"auth": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"resource": {
-										Type:       schema.TypeString,
-										Sensitive:  true,
-										Optional:   true,
-										Deprecated: "Use the aws_codebuild_source_credential resource instead",
-									},
-									"type": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(codebuild.SourceAuthType_Values(), false),
-										Deprecated:   "Use the aws_codebuild_source_credential resource instead",
-									},
-								},
-							},
-							Deprecated: "Use the aws_codebuild_source_credential resource instead",
-						},
 						"buildspec": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -1292,17 +1248,6 @@ func expandProjectSourceData(data map[string]interface{}) codebuild.ProjectSourc
 		projectSource.ReportBuildStatus = aws.Bool(data["report_build_status"].(bool))
 	}
 
-	// Probe data for auth details (max of 1 auth per ProjectSource object)
-	if v, ok := data["auth"]; ok && len(v.([]interface{})) > 0 {
-		if auths := v.([]interface{}); auths[0] != nil {
-			auth := auths[0].(map[string]interface{})
-			projectSource.Auth = &codebuild.SourceAuth{
-				Type:     aws.String(auth["type"].(string)),
-				Resource: aws.String(auth["resource"].(string)),
-			}
-		}
-	}
-
 	// Only valid for CODECOMMIT, GITHUB, GITHUB_ENTERPRISE, BITBUCKET source types.
 	if sourceType == codebuild.SourceTypeCodecommit || sourceType == codebuild.SourceTypeGithub || sourceType == codebuild.SourceTypeGithubEnterprise || sourceType == codebuild.SourceTypeBitbucket {
 		if v, ok := data["git_submodules_config"]; ok && len(v.([]interface{})) > 0 {
@@ -1833,9 +1778,6 @@ func flattenProjectSourceData(source *codebuild.ProjectSource) interface{} {
 
 	m["build_status_config"] = flattenProjectBuildStatusConfig(source.BuildStatusConfig)
 
-	if source.Auth != nil {
-		m["auth"] = []interface{}{sourceAuthToMap(source.Auth)}
-	}
 	if source.SourceIdentifier != nil {
 		m["source_identifier"] = aws.StringValue(source.SourceIdentifier)
 	}
@@ -1999,17 +1941,6 @@ func environmentVariablesToMap(environmentVariables []*codebuild.EnvironmentVari
 	}
 
 	return envVariables
-}
-
-func sourceAuthToMap(sourceAuth *codebuild.SourceAuth) map[string]interface{} {
-	auth := map[string]interface{}{}
-	auth["type"] = aws.StringValue(sourceAuth.Type)
-
-	if sourceAuth.Resource != nil {
-		auth["resource"] = aws.StringValue(sourceAuth.Resource)
-	}
-
-	return auth
 }
 
 func ValidProjectName(v interface{}, k string) (ws []string, errors []error) {
