@@ -24,7 +24,8 @@ Upgrade topics:
 - [Data Source: aws_identitystore_group](#data-source-aws_identitystore_group)
 - [Data Source: aws_identitystore_user](#data-source-aws_identitystore_user)
 - [Data Source: aws_redshift_service_account](#data-source-aws_redshift_service_account)
-- [Data Source: aws_secretsmanager_secret](#resource-aws_secretsmanager_secret)
+- [Data Source: aws_secretsmanager_secret](#data-source-aws_secretsmanager_secret)
+- [Data Source: aws_service_discovery_service](#data-source-aws_service_discovery_service)
 - [Data Source: aws_subnet_ids](#data-source-aws_subnet_ids)
 - [Resource: aws_acmpca_certificate_authority](#resource-aws_acmpca_certificate_authority)
 - [Resource: aws_api_gateway_rest_api](#resource-aws_api_gateway_rest_api)
@@ -226,6 +227,10 @@ The `filter` argument has been removed.
 
 [AWS document](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions) that [a service principal name](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html#principal-services) be used instead of AWS account ID in any relevant IAM policy.
 The [`aws_redshift_service_account`](/docs/providers/aws/d/redshift_service_account.html) data source should now be considered deprecated and will be removed in a future version.
+
+## Data Source: aws_service_discovery_service
+
+The `tags_all` attribute has been deprecated and will be removed in a future version.
 
 ## Data Source: aws_secretsmanager_secret
 
