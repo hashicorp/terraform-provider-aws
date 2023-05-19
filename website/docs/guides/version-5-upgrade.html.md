@@ -50,6 +50,7 @@ Upgrade topics:
 - [Resource: aws_neptune_cluster](#resource-aws_neptune_cluster)
 - [Resource: aws_rds_cluster](#resource-aws_rds_cluster)
 - [Resource: aws_secretsmanager_secret](#resource-aws_secretsmanager_secret)
+- [Resource: aws_ssm_association](#resource-aws_ssm_association)
 - [Resource: aws_wafv2_web_acl](#resource-aws_wafv2_web_acl)
 - [Resource: aws_wafv2_web_acl_logging_configuration](#resource-aws_wafv2_web_acl_logging_configuration)
 
@@ -207,6 +208,10 @@ Automated snapshots **should not** be used for this attribute, unless from a dif
 ## Resource: aws_secretsmanager_secret
 
 The `rotation_enabled`, `rotation_lambda_arn` and `rotation_rules` attributes have been removed.
+
+## Resource: aws_ssm_association
+
+The `instance_id` attribute has been deprecated. All configurations using `instance_id` should be updated to use the `targets` attribute instead.
 
 ## Resource: aws_wafv2_web_acl
 
