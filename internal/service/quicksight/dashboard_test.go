@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -240,16 +239,6 @@ func testAccCheckDashboardExists(ctx context.Context, name string, dashboard *qu
 		}
 
 		*dashboard = *output
-
-		return nil
-	}
-}
-
-func testAccCheckDashboardNotRecreated(before, after *quicksight.Dashboard) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if creationTimeBefore, creationTimeAfter := aws.TimeValue(before.CreatedTime), aws.TimeValue(after.CreatedTime); creationTimeBefore != creationTimeAfter {
-			return create.Error(names.QuickSight, create.ErrActionCheckingNotRecreated, tfquicksight.ResNameDashboard, aws.StringValue(before.DashboardId), errors.New("recreated"))
-		}
 
 		return nil
 	}

@@ -240,7 +240,6 @@ func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	if err := d.Set("dashboard_publish_options", quicksightschema.FlattenDashboardPublishOptions(descResp.DashboardPublishOptions)); err != nil {
 		return diag.Errorf("setting dashboard_publish_options: %s", err)
-
 	}
 
 	permsResp, err := conn.DescribeDashboardPermissionsWithContext(ctx, &quicksight.DescribeDashboardPermissionsInput{
