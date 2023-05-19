@@ -20,6 +20,7 @@ Upgrade topics:
 - [Provider Arguments](#provider-arguments)
 - [Default Tags](#default-tags)
 - [Data Source: aws_api_gateway_rest_api](#data-source-aws_api_gateway_rest_api)
+- [Data Source: aws_connect_hours_of_operation](#resource-aws_connect_hours_of_operation)
 - [Data Source: aws_identitystore_group](#data-source-aws_identitystore_group)
 - [Data Source: aws_identitystore_user](#data-source-aws_identitystore_user)
 - [Data Source: aws_redshift_service_account](#data-source-aws_redshift_service_account)
@@ -32,6 +33,7 @@ Upgrade topics:
 - [Resource: aws_ce_anomaly_subscription](#resource-aws_ce_anomaly_subscription)
 - [Resource: aws_cloudwatch_event_target](#resource-aws_cloudwatch_event_target)
 - [Resource: aws_codebuild_project](#resource-aws_codebuild_project)
+- [Resource: aws_connect_hours_of_operation](#resource-aws_connect_hours_of_operation)
 - [Resource: aws_connect_queue](#resource-aws_connect_queue)
 - [Resource: aws_connect_routing_profile](#resource-aws_connect_routing_profile)
 - [Resource: aws_docdb_cluster](#resource-aws_docdb_cluster)
@@ -135,6 +137,10 @@ The `ecs_target.propagate_tags` attribute now has no default value. If no value 
 
 The `secondary_sources.auth` and `source.auth` attributes have been removed.
 
+## Resource: aws_connect_hours_of_operation
+
+The `hours_of_operation_arn` attribute has been removed.
+
 ## Resource: aws_connect_queue
 
 The `quick_connect_ids_associated` attribute has been removed.
@@ -198,6 +204,10 @@ The `redacted_fields.all_query_arguments`, `redacted_fields.body` and `redacted_
 ## Data Source: aws_api_gateway_rest_api
 
 The `minimum_compression_size` attribute is now a String type, allowing it to be computed when set via the `body` attribute.
+
+## Data Source: aws_connect_hours_of_operation
+
+The `hours_of_operation_arn` attribute has been removed.
 
 ## Data Source: aws_identitystore_group
 
