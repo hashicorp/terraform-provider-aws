@@ -20,11 +20,14 @@ Upgrade topics:
 - [Provider Arguments](#provider-arguments)
 - [Default Tags](#default-tags)
 - [Data Source: aws_api_gateway_rest_api](#data-source-aws_api_gateway_rest_api)
-- [Data Source: aws_connect_hours_of_operation](#resource-aws_connect_hours_of_operation)
+- [Data Source: aws_connect_hours_of_operation](#data-source-aws_connect_hours_of_operation)
 - [Data Source: aws_identitystore_group](#data-source-aws_identitystore_group)
 - [Data Source: aws_identitystore_user](#data-source-aws_identitystore_user)
+- [Data Source: aws_opensearch_domain](#data-source-aws_opensearch_domain)
+- [Data Source: aws_quicksight_data_set](#data-source-aws_quicksight_data_set)
 - [Data Source: aws_redshift_service_account](#data-source-aws_redshift_service_account)
-- [Data Source: aws_secretsmanager_secret](#resource-aws_secretsmanager_secret)
+- [Data Source: aws_secretsmanager_secret](#data-source-aws_secretsmanager_secret)
+- [Data Source: aws_service_discovery_service](#data-source-aws_service_discovery_service)
 - [Data Source: aws_subnet_ids](#data-source-aws_subnet_ids)
 - [Resource: aws_acmpca_certificate_authority](#resource-aws_acmpca_certificate_authority)
 - [Resource: aws_api_gateway_rest_api](#resource-aws_api_gateway_rest_api)
@@ -37,14 +40,19 @@ Upgrade topics:
 - [Resource: aws_connect_queue](#resource-aws_connect_queue)
 - [Resource: aws_connect_routing_profile](#resource-aws_connect_routing_profile)
 - [Resource: aws_docdb_cluster](#resource-aws_docdb_cluster)
+- [Resource: aws_dx_gateway_association](#resource-aws_dx_gateway_association)
 - [Resource: aws_ec2_client_vpn_endpoint](#resource-aws_ec2_client_vpn_endpoint)
 - [Resource: aws_ec2_client_vpn_network_association](#resource-aws_ec2_client_vpn_network_association)
 - [Resource: aws_ecs_cluster](#resource-aws_ecs_cluster)
+- [Resource: aws_eks_addon](#resource-aws_eks_addon)
+- [Resource: aws_flow_log](#resource-aws_flow_log)
 - [Resource: aws_lightsail_instance](#resource-aws_lightsail_instance)
 - [Resource: aws_msk_cluster](#resource-aws_msk_cluster)
 - [Resource: aws_neptune_cluster](#resource-aws_neptune_cluster)
+- [Resource: aws_opensearch_domain](#resource-aws_opensearch_domain)
 - [Resource: aws_rds_cluster](#resource-aws_rds_cluster)
 - [Resource: aws_secretsmanager_secret](#resource-aws_secretsmanager_secret)
+- [Resource: aws_ssm_association](#resource-aws_ssm_association)
 - [Resource: aws_wafv2_web_acl](#resource-aws_wafv2_web_acl)
 - [Resource: aws_wafv2_web_acl_logging_configuration](#resource-aws_wafv2_web_acl_logging_configuration)
 
@@ -155,6 +163,10 @@ Changes to the `snapshot_identifier` attribute will now correctly force re-creat
 
 Automated snapshots **should not** be used for this attribute, unless from a different cluster. Automated snapshots are deleted as part of cluster destruction when the resource is replaced.
 
+## Resource: aws_dx_gateway_association
+
+The `vpn_gateway_id` attribute has been deprecated. All configurations using `vpn_gateway_id` should be updated to use the `associated_gateway_id` attribute instead.
+
 ## Resource: aws_ec2_client_vpn_endpoint
 
 The `security_groups` and `status` attributes have been removed.
@@ -166,6 +178,14 @@ The `status` attribute has been removed.
 ## Resource: aws_ecs_cluster
 
 The `capacity_providers` and `default_capacity_provider_strategy` attributes have been removed.
+
+## Resource: aws_eks_addon
+
+The `resolve_conflicts` argument has been deprecated. Use the `resolve_conflicts_on_create` and/or `resolve_conflicts_on_update` arguments instead.
+
+## Resource: aws_flow_log
+
+The `log_group_name` attribute has been deprecated. All configurations using `log_group_name` should be updated to use the `log_destination` attribute instead.
 
 ## Resource: aws_lightsail_instance
 
@@ -181,6 +201,10 @@ Changes to the `snapshot_identifier` attribute will now correctly force re-creat
 
 Automated snapshots **should not** be used for this attribute, unless from a different cluster. Automated snapshots are deleted as part of cluster destruction when the resource is replaced.
 
+## Resource: aws_opensearch_domain
+
+The `kibana_endpoint` attribute has been deprecated. All configurations using `kibana_endpoint` should be updated to use the `dashboard_endpoint` attribute instead.
+
 ## Resource: aws_rds_cluster
 
 Changes to the `snapshot_identifier` attribute will now correctly force re-creation of the resource. Previously, changing this attribute would result in a successful apply, but without the cluster being restored (only the resource state was changed). This change brings behavior of the cluster `snapshot_identifier` attribute into alignment with other RDS resources, such as `aws_db_instance`.
@@ -190,6 +214,10 @@ Automated snapshots **should not** be used for this attribute, unless from a dif
 ## Resource: aws_secretsmanager_secret
 
 The `rotation_enabled`, `rotation_lambda_arn` and `rotation_rules` attributes have been removed.
+
+## Resource: aws_ssm_association
+
+The `instance_id` attribute has been deprecated. All configurations using `instance_id` should be updated to use the `targets` attribute instead.
 
 ## Resource: aws_wafv2_web_acl
 
@@ -217,10 +245,22 @@ The `filter` argument has been removed.
 
 The `filter` argument has been removed.
 
+## Data Source: aws_opensearch_domain
+
+The `kibana_endpoint` attribute has been deprecated. All configurations using `kibana_endpoint` should be updated to use the `dashboard_endpoint` attribute instead.
+
+## Data Source: aws_quicksight_data_set
+
+The `tags_all` attribute has been deprecated and will be removed in a future version.
+
 ## Data Source: aws_redshift_service_account
 
 [AWS document](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions) that [a service principal name](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html#principal-services) be used instead of AWS account ID in any relevant IAM policy.
 The [`aws_redshift_service_account`](/docs/providers/aws/d/redshift_service_account.html) data source should now be considered deprecated and will be removed in a future version.
+
+## Data Source: aws_service_discovery_service
+
+The `tags_all` attribute has been deprecated and will be removed in a future version.
 
 ## Data Source: aws_secretsmanager_secret
 
