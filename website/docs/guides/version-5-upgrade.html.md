@@ -148,6 +148,8 @@ Version 5.0.0 removes these `provider` arguments:
 * `shared_credentials_file` - Use `shared_credentials_files` instead
 * `skip_get_ec2_platforms` - Removed following the retirement of EC2-Classic
 
+The default value of `max_retries` now uses the default from the AWS SDKs instead of `25`, which could cause the provider to appear to hang in some cases.
+
 ## Default Tags
 
 The following enhancements are included:
