@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -261,9 +260,10 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if err := d.Set("resource_type_list", policy.ResourceTypeList); err != nil {
 		sdkdiag.AppendErrorf(diags, "setting resource_type_list: %s", err)
 	}
-	securityServicePolicy := []map[string]string{{
+	securityServicePolicy := []map[string]interface{}{{
 		"type":                 aws.StringValue(policy.SecurityServicePolicyData.Type),
 		"managed_service_data": aws.StringValue(policy.SecurityServicePolicyData.ManagedServiceData),
+		"policy_option":        flattenPolicyOption(policy.SecurityServicePolicyData.PolicyOption),
 	}}
 	if err := d.Set("security_service_policy_data", securityServicePolicy); err != nil {
 		sdkdiag.AppendErrorf(diags, "setting security_service_policy_data: %s", err)
@@ -335,41 +335,6 @@ func FindPolicyByID(ctx context.Context, conn *fms.FMS, id string) (*fms.GetPoli
 	}
 
 	return output, nil
-}
-
-func resourcePolicyFlattenPolicy(d *schema.ResourceData, resp *fms.GetPolicyOutput) error {
-	d.Set("arn", resp.PolicyArn)
-
-	d.Set("name", resp.Policy.PolicyName)
-	d.Set("exclude_resource_tags", resp.Policy.ExcludeResourceTags)
-	if err := d.Set("exclude_map", flattenPolicyMap(resp.Policy.ExcludeMap)); err != nil {
-		return create.SettingError(names.FMS, ResNamePolicy, d.Id(), "exclude_resource_tags", err)
-	}
-	if err := d.Set("include_map", flattenPolicyMap(resp.Policy.IncludeMap)); err != nil {
-		return create.SettingError(names.FMS, ResNamePolicy, d.Id(), "include_map", err)
-	}
-	d.Set("remediation_enabled", resp.Policy.RemediationEnabled)
-	if err := d.Set("resource_type_list", resp.Policy.ResourceTypeList); err != nil {
-		return create.SettingError(names.FMS, ResNamePolicy, d.Id(), "remediation_enabled", err)
-	}
-	d.Set("delete_unused_fm_managed_resources", resp.Policy.DeleteUnusedFMManagedResources)
-	d.Set("resource_type", resp.Policy.ResourceType)
-	d.Set("policy_update_token", resp.Policy.PolicyUpdateToken)
-	if err := d.Set("resource_tags", flattenResourceTags(resp.Policy.ResourceTags)); err != nil {
-		return create.SettingError(names.FMS, ResNamePolicy, d.Id(), "policy_update_token", err)
-	}
-
-	securityServicePolicy := []map[string]interface{}{{
-		"type":                 *resp.Policy.SecurityServicePolicyData.Type,
-		"managed_service_data": *resp.Policy.SecurityServicePolicyData.ManagedServiceData,
-		"policy_option":        flattenPolicyOption(resp.Policy.SecurityServicePolicyData.PolicyOption),
-	}}
-
-	if err := d.Set("security_service_policy_data", securityServicePolicy); err != nil {
-		return create.SettingError(names.FMS, ResNamePolicy, d.Id(), "security_service_policy_data", err)
-	}
-
-	return nil
 }
 
 func resourcePolicyExpandPolicy(d *schema.ResourceData) *fms.Policy {
