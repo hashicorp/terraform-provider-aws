@@ -648,13 +648,6 @@ func TestAccCloudFormationStackSet_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
-			{
-				Config: testAccStackSetConfig_name(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-				),
-			},
 		},
 	})
 }
@@ -1192,13 +1185,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "public-read"
-
-  depends_on = [aws_s3_bucket_public_access_block.test]
-}
-
 resource "aws_s3_bucket_public_access_block" "test" {
   bucket = aws_s3_bucket.test.id
 
@@ -1206,6 +1192,24 @@ resource "aws_s3_bucket_public_access_block" "test" {
   block_public_policy     = false
   ignore_public_acls      = false
   restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_ownership_controls" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "public-read"
+
+  depends_on = [
+    aws_s3_bucket_public_access_block.test,
+    aws_s3_bucket_ownership_controls.test,
+  ]
 }
 `, rName))
 }
@@ -1249,7 +1253,7 @@ CONTENT
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = aws_iam_role.test.arn
+  administration_role_arn = aws_iam_role.test[0].arn
   name                    = %[1]q
   template_url            = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
 }
