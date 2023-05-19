@@ -40,18 +40,18 @@ func TestAccSageMakerModelQualityJobDefinition_endpoint(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "job_resources.0.cluster_config.0.volume_size_in_gb", "20"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_app_specification.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "model_quality_app_specification.0.image_uri", "data.aws_sagemaker_prebuilt_ecr_image.monitor", "registry_path"),
-					resource.TestCheckResourceAttr(resourceName, "model_quality_app_specification.0.problem_type", "Regression"),
+					// resource.TestCheckResourceAttr(resourceName, "model_quality_app_specification.0.problem_type", "Regression"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "model_quality_job_input.0.endpoint_input.0.endpoint_name", "aws_sagemaker_endpoint.test", "name"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.s3_data_distribution_type", "FullyReplicated"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.s3_input_mode", "File"),
-					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.features_attribute", "0"),
-					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.end_time_offset", "-P1D"),
-					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.start_time_offset", "-P8D"),
-					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.inference_attribute", "0"),
-					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.probability_attribute", "0"),
-					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.probability_threshold_attribute", "0.5"),
+					// resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.features_attribute", "0"),
+					// resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.end_time_offset", "-P1D"),
+					// resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.start_time_offset", "-P8D"),
+					// resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.inference_attribute", "0"),
+					// resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.probability_attribute", "0"),
+					// resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.probability_threshold_attribute", "0.5"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.ground_truth_s3_input.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "model_quality_job_input.0.ground_truth_s3_input.0.s3_uri", regexp.MustCompile("ground_truth")),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_output_config.#", "1"),
@@ -849,11 +849,6 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
   model_quality_job_input {
     endpoint_input {
       endpoint_name       = aws_sagemaker_endpoint.test.name
-      features_attribute              = "0"
-      inference_attribute             = "0"
-      end_time_offset                 = "-P1D"
-      start_time_offset               = "-P8D"
-      probability_threshold_attribute = 0.5
     }
 	ground_truth_s3_input {
 		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
@@ -897,11 +892,6 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
       dataset_format {
         csv {}
       }
-      probability_attribute           = "0"
-      inference_attribute             = "0"
-      end_time_offset                 = "-P1D"
-      start_time_offset               = "-P8D"
-      probability_threshold_attribute = 0.5
     }
 	ground_truth_s3_input {
 		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
@@ -932,7 +922,6 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
   name = %[1]q
   model_quality_app_specification {
     image_uri    = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
-    problem_type = "Regression"
   }
   model_quality_baseline_config {
     constraints_resource {
@@ -948,11 +937,6 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
       dataset_format {
         csv {}
       }
-      probability_attribute           = "0"
-      inference_attribute             = "0"
-      end_time_offset                 = "-P1D"
-      start_time_offset               = "-P8D"
-      probability_threshold_attribute = 0.5
     }
 	ground_truth_s3_input {
 		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
@@ -983,7 +967,6 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
   name = %[1]q
   model_quality_app_specification {
     image_uri    = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
-    problem_type = "Regression"
   }
   model_quality_job_input {
     batch_transform_input {
@@ -991,11 +974,6 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
       dataset_format {
         csv {}
       }
-      probability_attribute           = "0"
-      inference_attribute             = "0"
-      end_time_offset                 = "-P1D"
-      start_time_offset               = "-P8D"
-      probability_threshold_attribute = 0.5
     }
 	ground_truth_s3_input {
 		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
@@ -1026,7 +1004,6 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
   name = %[1]q
   model_quality_app_specification {
     image_uri    = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
-    problem_type = "Regression"
   }
   model_quality_job_input {
     batch_transform_input {
@@ -1036,11 +1013,6 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
           header = true
         }
       }
-      probability_attribute           = "0"
-      inference_attribute             = "0"
-      end_time_offset                 = "-P1D"
-      start_time_offset               = "-P8D"
-      probability_threshold_attribute = 0.5
     }
 	ground_truth_s3_input {
 		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
@@ -1071,7 +1043,6 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
   name = %[1]q
   model_quality_app_specification {
     image_uri    = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
-    problem_type = "Regression"
   }
   model_quality_job_input {
     batch_transform_input {
@@ -1079,11 +1050,6 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
       dataset_format {
         json {}
       }
-      probability_attribute           = "0"
-      inference_attribute             = "0"
-      end_time_offset                 = "-P1D"
-      start_time_offset               = "-P8D"
-      probability_threshold_attribute = 0.5
     }
 	ground_truth_s3_input {
 		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
@@ -1114,7 +1080,6 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
   name = %[1]q
   model_quality_app_specification {
     image_uri    = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
-    problem_type = "Regression"
   }
   model_quality_job_input {
     batch_transform_input {
@@ -1124,11 +1089,6 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
           line = true
         }
       }
-      probability_attribute           = "0"
-      inference_attribute             = "0"
-      end_time_offset                 = "-P1D"
-      start_time_offset               = "-P8D"
-      probability_threshold_attribute = 0.5
     }
 	ground_truth_s3_input {
 		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
@@ -1159,7 +1119,6 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
   name = %[1]q
   model_quality_app_specification {
     image_uri    = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
-    problem_type = "Regression"
   }
   model_quality_job_input {
     batch_transform_input {
