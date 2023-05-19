@@ -126,9 +126,9 @@ func TestAccSageMakerModelQualityJobDefinition_baselineConfig(t *testing.T) {
 					testAccCheckModelQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_baseline_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "model_quality_baseline_config.0.constraints_resource.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "model_quality_baseline_config.0.constraints_resource.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "model_quality_baseline_config.0.constraints_resource.0.s3_uri", regexp.MustCompile("constraints")),
-					resource.TestCheckResourceAttr(resourceName, "model_quality_baseline_config.0.statistics_resource.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "model_quality_baseline_config.0.statistics_resource.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "model_quality_baseline_config.0.statistics_resource.0.s3_uri", regexp.MustCompile("statistics")),
 				),
 			},
@@ -159,7 +159,7 @@ func TestAccSageMakerModelQualityJobDefinition_batchTransform(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.data_captured_destination_s3_uri", regexp.MustCompile("captured")),
-					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.dataset_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.dataset_format.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.dataset_format.0.csv.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.features_attribute", "0"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.end_time_offset", "-P1D"),
@@ -194,7 +194,7 @@ func TestAccSageMakerModelQualityJobDefinition_batchTransformCSVHeader(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.dataset_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.dataset_format.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.dataset_format.0.csv.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.dataset_format.0.csv.0.header", "true"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.features_attribute", "0"),
@@ -230,7 +230,7 @@ func TestAccSageMakerModelQualityJobDefinition_batchTransformJSON(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.dataset_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.dataset_format.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.dataset_format.0.json.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.features_attribute", "0"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.end_time_offset", "-P1D"),
@@ -267,7 +267,7 @@ func TestAccSageMakerModelQualityJobDefinition_batchTransformJSONLine(t *testing
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.data_captured_destination_s3_uri", regexp.MustCompile("captured")),
-					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.dataset_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.dataset_format.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.dataset_format.0.json.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.dataset_format.0.json.0.line", "true"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.features_attribute", "0"),
@@ -897,6 +897,7 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
       dataset_format {
         csv {}
       }
+      features_attribute              = "0"
       probability_attribute           = "0"
       inference_attribute             = "0"
       end_time_offset                 = "-P1D"
@@ -1170,6 +1171,7 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
       local_path                      = "/opt/ml/processing/local_path"
       s3_data_distribution_type       = "ShardedByS3Key"
       s3_input_mode                   = "Pipe"
+      features_attribute              = "0"
       probability_attribute           = "0"
       inference_attribute             = "0"
       end_time_offset                 = "-P1D"
@@ -1253,6 +1255,7 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
   name = %[1]q
   model_quality_app_specification {
     image_uri    = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
+    problem_type = "Regression"
   }
   model_quality_job_input {
     batch_transform_input {
@@ -1291,6 +1294,7 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
   name = %[1]q
   model_quality_app_specification {
     image_uri    = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
+    problem_type = "Regression"
   }
   model_quality_job_input {
     batch_transform_input {
