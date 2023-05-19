@@ -75,6 +75,8 @@ The following arguments are supported:
 * `content` - (Required) The JSON or YAML content of the document.
 * `document_format` - (Optional, defaults to JSON) The format of the document. Valid document types include: `JSON` and `YAML`
 * `document_type` - (Required) The type of the document. Valid document types include: `ApplicationConfiguration`, `ApplicationConfigurationSchema`, `Automation`, `Command`, `Package`, `Policy`, and `Session`
+* `force_delete` - (Optional) If `true`, will force the deletion of the document. This is required to be set to `true` for `ApplicationConfigurationSchema` in order for the document to be deleted.  
+  Defaults to `false`.
 * `permissions` - (Optional) Additional Permissions to attach to the document. See [Permissions](#permissions) below for details.
 * `requires` - (Optional) A list of SSM documents required by a document. See [Requires](#requires) below for details.
 * `target_type` - (Optional) The target type which defines the kinds of resources the document can run on. For example, /AWS::EC2::Instance. For a list of valid resource types, see AWS Resource Types Reference (http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html)
