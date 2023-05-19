@@ -31,7 +31,7 @@ func TestAccSageMakerModelQualityJobDefinition_endpoint(t *testing.T) {
 				Config: testAccModelQualityJobDefinitionConfig_endpointBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "job_definition_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("model-quality-job-definition/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "job_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "job_resources.0.cluster_config.#", "1"),
@@ -47,8 +47,8 @@ func TestAccSageMakerModelQualityJobDefinition_endpoint(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.s3_data_distribution_type", "FullyReplicated"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.s3_input_mode", "File"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.features_attribute", "0"),
-					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.end_time_offset", "-P8D"),
-					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.start_time_offset", "-P1D"),
+					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.end_time_offset", "-P1D"),
+					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.start_time_offset", "-P8D"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.inference_attribute", "0"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.probability_attribute", "0"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.probability_threshold_attribute", "0.5"),
@@ -126,9 +126,9 @@ func TestAccSageMakerModelQualityJobDefinition_baselineConfig(t *testing.T) {
 					testAccCheckModelQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_baseline_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "model_quality_baseline_config.0.constraints_resource.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "model_quality_baseline_config.0.constraints_resource.#", "0"),
 					resource.TestMatchResourceAttr(resourceName, "model_quality_baseline_config.0.constraints_resource.0.s3_uri", regexp.MustCompile("constraints")),
-					resource.TestCheckResourceAttr(resourceName, "model_quality_baseline_config.0.statistics_resource.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "model_quality_baseline_config.0.statistics_resource.#", "0"),
 					resource.TestMatchResourceAttr(resourceName, "model_quality_baseline_config.0.statistics_resource.0.s3_uri", regexp.MustCompile("statistics")),
 				),
 			},
@@ -162,8 +162,8 @@ func TestAccSageMakerModelQualityJobDefinition_batchTransform(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.dataset_format.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.dataset_format.0.csv.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.features_attribute", "0"),
-					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.end_time_offset", "-P8D"),
-					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.start_time_offset", "-P1D"),
+					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.end_time_offset", "-P1D"),
+					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.start_time_offset", "-P8D"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.inference_attribute", "0"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.probability_attribute", "0"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.probability_threshold_attribute", "0.5"),
@@ -198,8 +198,8 @@ func TestAccSageMakerModelQualityJobDefinition_batchTransformCSVHeader(t *testin
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.dataset_format.0.csv.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.dataset_format.0.csv.0.header", "true"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.features_attribute", "0"),
-					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.end_time_offset", "-P8D"),
-					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.start_time_offset", "-P1D"),
+					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.end_time_offset", "-P1D"),
+					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.start_time_offset", "-P8D"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.inference_attribute", "0"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.probability_attribute", "0"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.probability_threshold_attribute", "0.5"),
@@ -233,8 +233,8 @@ func TestAccSageMakerModelQualityJobDefinition_batchTransformJSON(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.dataset_format.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.dataset_format.0.json.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.features_attribute", "0"),
-					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.end_time_offset", "-P8D"),
-					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.start_time_offset", "-P1D"),
+					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.end_time_offset", "-P1D"),
+					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.start_time_offset", "-P8D"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.inference_attribute", "0"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.probability_attribute", "0"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.probability_threshold_attribute", "0.5"),
@@ -271,8 +271,8 @@ func TestAccSageMakerModelQualityJobDefinition_batchTransformJSONLine(t *testing
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.dataset_format.0.json.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.dataset_format.0.json.0.line", "true"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.features_attribute", "0"),
-					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.end_time_offset", "-P8D"),
-					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.start_time_offset", "-P1D"),
+					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.end_time_offset", "-P1D"),
+					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.start_time_offset", "-P8D"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.inference_attribute", "0"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.probability_attribute", "0"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.batch_transform_input.0.probability_threshold_attribute", "0.5"),
@@ -339,8 +339,8 @@ func TestAccSageMakerModelQualityJobDefinition_endpointOptional(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.s3_data_distribution_type", "ShardedByS3Key"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.s3_input_mode", "Pipe"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.features_attribute", "0"),
-					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.end_time_offset", "-P8D"),
-					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.start_time_offset", "-P1D"),
+					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.end_time_offset", "-P1D"),
+					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.start_time_offset", "-P8D"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.inference_attribute", "0"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.probability_attribute", "0"),
 					resource.TestCheckResourceAttr(resourceName, "model_quality_job_input.0.endpoint_input.0.probability_threshold_attribute", "0.5"),
@@ -851,9 +851,9 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
       endpoint_name       = aws_sagemaker_endpoint.test.name
       features_attribute              = "0"
       inference_attribute             = "0"
-      end_time_offset                 = "-P8D"
-      start_time_offset               = "-P1D"
-      probability_threshold_attribute = "0.5"
+      end_time_offset                 = "-P1D"
+      start_time_offset               = "-P8D"
+      probability_threshold_attribute = 0.5
     }
 	ground_truth_s3_input {
 		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
@@ -899,9 +899,9 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
       }
       probability_attribute           = "0"
       inference_attribute             = "0"
-      end_time_offset                 = "-P8D"
-      start_time_offset               = "-P1D"
-      probability_threshold_attribute = "0.5"
+      end_time_offset                 = "-P1D"
+      start_time_offset               = "-P8D"
+      probability_threshold_attribute = 0.5
     }
 	ground_truth_s3_input {
 		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
@@ -950,9 +950,9 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
       }
       probability_attribute           = "0"
       inference_attribute             = "0"
-      end_time_offset                 = "-P8D"
-      start_time_offset               = "-P1D"
-      probability_threshold_attribute = "0.5"
+      end_time_offset                 = "-P1D"
+      start_time_offset               = "-P8D"
+      probability_threshold_attribute = 0.5
     }
 	ground_truth_s3_input {
 		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
@@ -993,9 +993,9 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
       }
       probability_attribute           = "0"
       inference_attribute             = "0"
-      end_time_offset                 = "-P8D"
-      start_time_offset               = "-P1D"
-      probability_threshold_attribute = "0.5"
+      end_time_offset                 = "-P1D"
+      start_time_offset               = "-P8D"
+      probability_threshold_attribute = 0.5
     }
 	ground_truth_s3_input {
 		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
@@ -1038,9 +1038,9 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
       }
       probability_attribute           = "0"
       inference_attribute             = "0"
-      end_time_offset                 = "-P8D"
-      start_time_offset               = "-P1D"
-      probability_threshold_attribute = "0.5"
+      end_time_offset                 = "-P1D"
+      start_time_offset               = "-P8D"
+      probability_threshold_attribute = 0.5
     }
 	ground_truth_s3_input {
 		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
@@ -1081,9 +1081,9 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
       }
       probability_attribute           = "0"
       inference_attribute             = "0"
-      end_time_offset                 = "-P8D"
-      start_time_offset               = "-P1D"
-      probability_threshold_attribute = "0.5"
+      end_time_offset                 = "-P1D"
+      start_time_offset               = "-P8D"
+      probability_threshold_attribute = 0.5
     }
 	ground_truth_s3_input {
 		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
@@ -1126,9 +1126,9 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
       }
       probability_attribute           = "0"
       inference_attribute             = "0"
-      end_time_offset                 = "-P8D"
-      start_time_offset               = "-P1D"
-      probability_threshold_attribute = "0.5"
+      end_time_offset                 = "-P1D"
+      start_time_offset               = "-P8D"
+      probability_threshold_attribute = 0.5
     }
 	ground_truth_s3_input {
 		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
@@ -1172,9 +1172,9 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
       s3_input_mode                   = "Pipe"
       probability_attribute           = "0"
       inference_attribute             = "0"
-      end_time_offset                 = "-P8D"
-      start_time_offset               = "-P1D"
-      probability_threshold_attribute = "0.5"
+      end_time_offset                 = "-P1D"
+      start_time_offset               = "-P8D"
+      probability_threshold_attribute = 0.5
     }
 	ground_truth_s3_input {
 		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
@@ -1205,7 +1205,6 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
   name = %[1]q
   model_quality_app_specification {
     image_uri    = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
-    problem_type = "Regression"
   }
   model_quality_job_input {
     endpoint_input {
@@ -1215,9 +1214,10 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
       s3_input_mode                   = "Pipe"
       features_attribute              = "0"
       inference_attribute             = "0"
-      end_time_offset                 = "-P8D"
-      start_time_offset               = "-P1D"
-      probability_threshold_attribute = "0.5"
+      end_time_offset                 = "-P1D"
+      start_time_offset               = "-P8D"
+      probability_threshold_attribute = 0.5
+      probability_attribute           = "0"
     }
 	ground_truth_s3_input {
 		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
@@ -1253,7 +1253,6 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
   name = %[1]q
   model_quality_app_specification {
     image_uri    = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
-    problem_type = "Regression"
   }
   model_quality_job_input {
     batch_transform_input {
@@ -1261,11 +1260,6 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
       dataset_format {
         csv {}
       }
-      probability_attribute           = "0"
-      inference_attribute             = "0"
-      end_time_offset                 = "-P8D"
-      start_time_offset               = "-P1D"
-      probability_threshold_attribute = "0.5"
     }
 	ground_truth_s3_input {
 		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
@@ -1297,7 +1291,6 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
   name = %[1]q
   model_quality_app_specification {
     image_uri    = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
-    problem_type = "Regression"
   }
   model_quality_job_input {
     batch_transform_input {
@@ -1305,11 +1298,6 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
       dataset_format {
         csv {}
       }
-      probability_attribute           = "0"
-      inference_attribute             = "0"
-      end_time_offset                 = "-P8D"
-      start_time_offset               = "-P1D"
-      probability_threshold_attribute = "0.5"
     }
 	ground_truth_s3_input {
 		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
@@ -1347,7 +1335,6 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
   name = %[1]q
   model_quality_app_specification {
     image_uri    = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
-    problem_type = "Regression"
   }
   model_quality_job_input {
     batch_transform_input {
@@ -1355,11 +1342,6 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
       dataset_format {
         csv {}
       }
-      probability_attribute           = "0"
-      inference_attribute             = "0"
-      end_time_offset                 = "-P8D"
-      start_time_offset               = "-P1D"
-      probability_threshold_attribute = "0.5"
     }
 	ground_truth_s3_input {
 		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
@@ -1391,7 +1373,6 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
   name = %[1]q
   model_quality_app_specification {
     image_uri    = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
-    problem_type = "Regression"
   }
   model_quality_job_input {
     batch_transform_input {
@@ -1399,11 +1380,6 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
       dataset_format {
         csv {}
       }
-      probability_attribute           = "0"
-      inference_attribute             = "0"
-      end_time_offset                 = "-P8D"
-      start_time_offset               = "-P1D"
-      probability_threshold_attribute = "0.5"
     }
 	ground_truth_s3_input {
 		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
@@ -1437,7 +1413,6 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
   name = %[1]q
   model_quality_app_specification {
     image_uri    = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
-    problem_type = "Regression"
   }
   model_quality_job_input {
     batch_transform_input {
@@ -1445,11 +1420,6 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
       dataset_format {
         csv {}
       }
-      probability_attribute           = "0"
-      inference_attribute             = "0"
-      end_time_offset                 = "-P8D"
-      start_time_offset               = "-P1D"
-      probability_threshold_attribute = "0.5"
     }
 	ground_truth_s3_input {
 		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
@@ -1484,7 +1454,6 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
   name = %[1]q
   model_quality_app_specification {
     image_uri    = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
-    problem_type = "Regression"
   }
   model_quality_job_input {
     batch_transform_input {
@@ -1492,11 +1461,6 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
       dataset_format {
         csv {}
       }
-      probability_attribute           = "0"
-      inference_attribute             = "0"
-      end_time_offset                 = "-P8D"
-      start_time_offset               = "-P1D"
-      probability_threshold_attribute = "0.5"
     }
 	ground_truth_s3_input {
 		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
@@ -1545,7 +1509,6 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
   name = %[1]q
   model_quality_app_specification {
     image_uri    = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
-    problem_type = "Regression"
   }
   model_quality_job_input {
     batch_transform_input {
@@ -1553,11 +1516,6 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
       dataset_format {
         csv {}
       }
-      probability_attribute           = "0"
-      inference_attribute             = "0"
-      end_time_offset                 = "-P8D"
-      start_time_offset               = "-P1D"
-      probability_threshold_attribute = "0.5"
     }
 	ground_truth_s3_input {
 		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
@@ -1607,7 +1565,6 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
   name = %[1]q
   model_quality_app_specification {
     image_uri    = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
-    problem_type = "Regression"
   }
   model_quality_job_input {
     batch_transform_input {
@@ -1615,11 +1572,6 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
       dataset_format {
         csv {}
       }
-      probability_attribute           = "0"
-      inference_attribute             = "0"
-      end_time_offset                 = "-P8D"
-      start_time_offset               = "-P1D"
-      probability_threshold_attribute = "0.5"
     }
 	ground_truth_s3_input {
 		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
@@ -1678,11 +1630,6 @@ resource "aws_sagemaker_model_quality_job_definition" "test" {
       dataset_format {
         csv {}
       }
-      probability_attribute           = "0"
-      inference_attribute             = "0"
-      end_time_offset                 = "-P8D"
-      start_time_offset               = "-P1D"
-      probability_threshold_attribute = "0.5"
     }
 	ground_truth_s3_input {
 		s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/ground_truth"
