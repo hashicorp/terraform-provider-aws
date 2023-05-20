@@ -484,8 +484,7 @@ One possible way to fix this configuration involves referring to the `primary_ne
 ```terraform
 resource "aws_route_table" "example" {
   route {
-    network_interface_id = aws_instance.example.
-    primary_network_interface_id
+    network_interface_id = aws_instance.example.primary_network_interface_id
     # ...other configuration...
   }
 
