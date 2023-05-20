@@ -246,7 +246,7 @@ Configurations that define `source_ids` using the `id` attribute of `aws_db_inst
 
 `id` is _now_ the DBI Resource ID (_i.e._, `dbi-resource-id`), an immutable "identifier" for an instance. `id` is now the same as the `resource_id`. (We recommend using `resource_id` rather than `id` when you need to refer to the DBI Resource ID.) _Previously_, `id` was the DB Identifier. Now when you need to refer to the _DB Identifier_, use `identifier`.
 
-Fixing configurations involves changes any `id` references to `identifier`, where the reference expects the DB Identifier. For example, if you're replicating an `aws_db_instance`, you can no longer use `id` to define the `replicate_source_db`.
+Fixing configurations involves changing any `id` references to `identifier`, where the reference expects the DB Identifier. For example, if you're replicating an `aws_db_instance`, you can no longer use `id` to define the `replicate_source_db`.
 
 This configuration will now result in an error since `replicate_source_db` expects a _DB Identifier_:
 
