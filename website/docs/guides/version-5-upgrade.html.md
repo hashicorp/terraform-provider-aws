@@ -17,7 +17,7 @@ Upgrade topics:
 - [Provider Version Configuration](#provider-version-configuration)
 - [Provider Arguments](#provider-arguments)
 - [Default Tags](#default-tags)
-- [EC2 Classic Retirement](#ec2-classic-retirement)
+- [EC2-Classic Retirement](#ec2-classic-retirement)
 - [Macie Classic Retirement](#macie-classic-retirement)
 - [resource/aws_acmpca_certificate_authority](#resourceaws_acmpca_certificate_authority)
 - [resource/aws_api_gateway_rest_api](#resourceaws_api_gateway_rest_api)
@@ -146,7 +146,7 @@ Version 5.0.0 removes these `provider` arguments:
 * `assume_role_with_web_identity.duration_seconds` - Use `assume_role_with_web_identity.duration` instead
 * `s3_force_path_style` - Use `s3_use_path_style` instead
 * `shared_credentials_file` - Use `shared_credentials_files` instead
-* `skip_get_ec2_platforms` - Removed following the retirement of EC2 Classic
+* `skip_get_ec2_platforms` - Removed following the retirement of EC2-Classic
 
 ## Default Tags
 
@@ -156,9 +156,9 @@ The following enhancements are included:
 * Zero value tags, `""`, can now be included in both `default_tags` and resource `tags`.
 * Tags can now be `computed`.
 
-## EC2 Classic Retirement
+## EC2-Classic Retirement
 
-Following the retirement of EC2 Classic, we removed a number of resources, arguments, and attributes. This list summarizes what we _removed_:
+Following the retirement of EC2-Classic, we removed a number of resources, arguments, and attributes. This list summarizes what we _removed_:
 
 * `aws_db_security_group` resource
 * `aws_elasticache_security_group` resource
@@ -272,7 +272,7 @@ Change `name` to `db_name` in configurations as `name` no longer exists.
 
 ### Remove `db_security_groups`
 
-Remove `db_security_groups` from configurations as it no longer exists. We removed it as part of the EC2 Classic retirement.
+Remove `db_security_groups` from configurations as it no longer exists. We removed it as part of the EC2-Classic retirement.
 
 ## resource/aws_db_instance_role_association
 
@@ -284,7 +284,7 @@ Configurations that define `db_instance_identifier` using the `id` attribute of 
 
 ## resource/aws_db_security_group
 
-We removed this resource as part of the EC2 Classic retirement.
+We removed this resource as part of the EC2-Classic retirement.
 
 ## resource/aws_db_snapshot
 
@@ -292,7 +292,7 @@ Configurations that define `db_instance_identifier` using the `id` attribute of 
 
 ## resource/aws_default_vpc
 
-Remove `enable_classiclink` and `enable_classiclink_dns_support` from configurations as they no longer exist. They were part of the EC2 Classic retirement.
+Remove `enable_classiclink` and `enable_classiclink_dns_support` from configurations as they no longer exist. They were part of the EC2-Classic retirement.
 
 ## resource/aws_dms_endpoint
 
@@ -322,11 +322,11 @@ Remove `capacity_providers` and `default_capacity_provider_strategy` from config
 
 ## resource/aws_eip
 
-With the retirement of EC2 Classic, the `standard` domain is no longer supported.
+With the retirement of EC2-Classic, the `standard` domain is no longer supported.
 
 ## resource/aws_eip_association
 
-With the retirement of EC2 Classic, the `standard` domain is no longer supported.
+With the retirement of EC2-Classic, the `standard` domain is no longer supported.
 
 ## resource/aws_eks_addon
 
@@ -334,7 +334,7 @@ The `resolve_conflicts` argument has been deprecated. Use the `resolve_conflicts
 
 ## resource/aws_elasticache_cluster
 
-Remove `security_group_names` from configurations as it no longer exists. We removed it as part of the EC2 Classic retirement.
+Remove `security_group_names` from configurations as it no longer exists. We removed it as part of the EC2-Classic retirement.
 
 ## resource/aws_elasticache_replication_group
 
@@ -343,7 +343,7 @@ Remove `security_group_names` from configurations as it no longer exists. We rem
 
 ## resource/aws_elasticache_security_group
 
-We removed this resource as part of the EC2 Classic retirement.
+We removed this resource as part of the EC2-Classic retirement.
 
 ## resource/aws_flow_log
 
@@ -363,7 +363,7 @@ The `auto_enable` argument has been deprecated. Use the `auto_enable_organizatio
 
 ## resource/aws_launch_configuration
 
-Remove `vpc_classic_link_id` and `vpc_classic_link_security_groups` from configurations as they no longer exist. We removed them as part of the EC2 Classic retirement.
+Remove `vpc_classic_link_id` and `vpc_classic_link_security_groups` from configurations as they no longer exist. We removed them as part of the EC2-Classic retirement.
 
 ## resource/aws_lightsail_instance
 
@@ -410,11 +410,11 @@ Update configurations to always include `engine` since it is now required and ha
 
 ## resource/aws_redshift_cluster
 
-Remove `cluster_security_groups` from configurations as it no longer exists. We removed it as part of the EC2 Classic retirement.
+Remove `cluster_security_groups` from configurations as it no longer exists. We removed it as part of the EC2-Classic retirement.
 
 ## resource/aws_redshift_security_group
 
-We removed this resource as part of the EC2 Classic retirement.
+We removed this resource as part of the EC2-Classic retirement.
 
 ## resource/aws_route
 
@@ -526,9 +526,14 @@ resource "aws_route_table" "example" {
 
 Remove `rotation_enabled`, `rotation_lambda_arn` and `rotation_rules` from configurations as they no longer exist.
 
+
+## resource/aws_security_group
+
+With the retirement of EC2-Classic, non-VPC security groups are no longer supported.
+
 ## resource/aws_security_group_rule
 
-With the retirement of EC2 Classic, non-VPC security groups are no longer supported.
+With the retirement of EC2-Classic, non-VPC security groups are no longer supported.
 
 ## resource/aws_servicecatalog_product
 
@@ -540,19 +545,19 @@ The `instance_id` attribute has been deprecated. All configurations using `insta
 
 ## resource/aws_vpc
 
-Remove `enable_classiclink` and `enable_classiclink_dns_support` from configurations as they no longer exist. They were part of the EC2 Classic retirement.
+Remove `enable_classiclink` and `enable_classiclink_dns_support` from configurations as they no longer exist. They were part of the EC2-Classic retirement.
 
 ## resource/aws_vpc_peering_connection
 
-Remove `allow_classic_link_to_remote_vpc` and `allow_vpc_to_remote_classic_link` from configurations as they no longer exist. They were part of the EC2 Classic retirement.
+Remove `allow_classic_link_to_remote_vpc` and `allow_vpc_to_remote_classic_link` from configurations as they no longer exist. They were part of the EC2-Classic retirement.
 
 ## resource/aws_vpc_peering_connection_accepter
 
-Remove `allow_classic_link_to_remote_vpc` and `allow_vpc_to_remote_classic_link` from configurations as they no longer exist. They were part of the EC2 Classic retirement.
+Remove `allow_classic_link_to_remote_vpc` and `allow_vpc_to_remote_classic_link` from configurations as they no longer exist. They were part of the EC2-Classic retirement.
 
 ## resource/aws_vpc_peering_connection_options
 
-Remove `allow_classic_link_to_remote_vpc` and `allow_vpc_to_remote_classic_link` from configurations as they no longer exist. They were part of the EC2 Classic retirement.
+Remove `allow_classic_link_to_remote_vpc` and `allow_vpc_to_remote_classic_link` from configurations as they no longer exist. They were part of the EC2-Classic retirement.
 
 ## resource/aws_wafv2_web_acl
 
@@ -573,11 +578,11 @@ Remove `hours_of_operation_arn` from configurations as it no longer exists.
 
 ## data-source/aws_db_instance
 
-Remove `db_security_groups` from configurations as it no longer exists. We removed it as part of the EC2 Classic retirement.
+Remove `db_security_groups` from configurations as it no longer exists. We removed it as part of the EC2-Classic retirement.
 
 ## data-source/aws_elasticache_cluster
 
-Remove `security_group_names` from configurations as it no longer exists. We removed it as part of the EC2 Classic retirement.
+Remove `security_group_names` from configurations as it no longer exists. We removed it as part of the EC2-Classic retirement.
 
 ## data-source/aws_elasticache_replication_group
 
@@ -598,7 +603,7 @@ Remove `filter` from configurations as it no longer exists.
 
 ## data-source/aws_launch_configuration
 
-Remove `vpc_classic_link_id` and `vpc_classic_link_security_groups` from configurations as they no longer exist. They were part of the EC2 Classic retirement.
+Remove `vpc_classic_link_id` and `vpc_classic_link_security_groups` from configurations as they no longer exist. They were part of the EC2-Classic retirement.
 
 ## data-source/aws_opensearch_domain
 
@@ -610,7 +615,7 @@ The `tags_all` attribute has been deprecated and will be removed in a future ver
 
 ## data-source/aws_redshift_cluster
 
-Remove `cluster_security_groups` from configurations as it no longer exists. We removed it as part of the EC2 Classic retirement.
+Remove `cluster_security_groups` from configurations as it no longer exists. We removed it as part of the EC2-Classic retirement.
 
 ## data-source/aws_redshift_service_account
 
@@ -631,4 +636,4 @@ We removed the `aws_subnet_ids` data source. Use the [`aws_subnets`](/docs/provi
 
 ## data-source/aws_vpc_peering_connection
 
-Remove `allow_classic_link_to_remote_vpc` and `allow_vpc_to_remote_classic_link` from configurations as they no longer exist. They were part of the EC2 Classic retirement.
+Remove `allow_classic_link_to_remote_vpc` and `allow_vpc_to_remote_classic_link` from configurations as they no longer exist. They were part of the EC2-Classic retirement.
