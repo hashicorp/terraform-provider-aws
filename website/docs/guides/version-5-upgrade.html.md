@@ -579,7 +579,6 @@ Remove `db_security_groups` from configurations as it no longer exists. We remov
 
 Remove `security_group_names` from configurations as it no longer exists. We removed it as part of the EC2 Classic retirement.
 
-
 ## data-source/aws_elasticache_replication_group
 
 Rename `number_cache_clusters` and `replication_group_description`, which no longer exist, to `num_cache_clusters`, and `description`, respectively.
