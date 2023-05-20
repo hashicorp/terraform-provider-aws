@@ -526,7 +526,6 @@ resource "aws_route_table" "example" {
 
 Remove `rotation_enabled`, `rotation_lambda_arn` and `rotation_rules` from configurations as they no longer exist.
 
-
 ## resource/aws_security_group
 
 With the retirement of EC2-Classic, non-VPC security groups are no longer supported.
