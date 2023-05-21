@@ -96,13 +96,7 @@ func ResourceEventSubscription() *schema.Resource {
 			"source_type": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"cluster",
-					"cluster-parameter-group",
-					"cluster-security-group",
-					"cluster-snapshot",
-					"scheduled-action",
-				}, false),
+				ValidateFunc: validation.StringInSlice(redshift.SourceType_Values(), false),
 			},
 			"status": {
 				Type:     schema.TypeString,
