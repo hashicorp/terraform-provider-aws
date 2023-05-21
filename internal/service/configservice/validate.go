@@ -7,5 +7,5 @@ import (
 )
 
 func validExecutionFrequency() schema.SchemaValidateFunc {
-	return validation.StringInSlice(configservice.MaximumExecutionFrequency_Values(), false),
+	return validation.StringInSlice(configservice.MaximumExecutionFrequency_Values(), false)
 }
