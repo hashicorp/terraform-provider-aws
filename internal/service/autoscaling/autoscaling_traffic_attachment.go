@@ -15,10 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_autoscaling_traffic_attachment")
@@ -75,7 +73,6 @@ const (
 )
 
 func resourceTrafficAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingConn()
 	sourceIdentifier := expandTrafficSourceIdentifier(d.Get("traffic_sources").([]interface{})[0].(map[string]interface{}))
 	asgName := d.Get("autoscaling_group_name").(string)
@@ -84,18 +81,19 @@ func resourceTrafficAttachmentCreate(ctx context.Context, d *schema.ResourceData
 		TrafficSources:       []*autoscaling.TrafficSourceIdentifier{sourceIdentifier},
 	}
 
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate),
-		func() (interface{}, error) {
-			return conn.AttachTrafficSourcesWithContext(ctx, in)
-		},
-		// ValidationError: Trying to update too many Load Balancers/Target Groups at once. The limit is 10
-		ErrCodeValidationError, "update too many")
+	_, err := conn.AttachTrafficSourcesWithContext(ctx, in)
+
+	id := id.PrefixedUniqueId(fmt.Sprintf("%s-", asgName))
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) with (%s): %s", asgName, *sourceIdentifier.Identifier, err)
+		return diag.Errorf("creating Autoscaling Attachment (%s): %s", id, err)
 	}
 
-	d.SetId(id.PrefixedUniqueId(fmt.Sprintf("%s-", asgName)))
+	d.SetId(id)
+
+	if _, err := waitTrafficAttachmentCreated(ctx, conn, asgName, *sourceIdentifier.Type, *sourceIdentifier.Identifier, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return diag.Errorf("waiting for Autescaling Attachment (%s) create: %s", id, err)
+	}
 
 	return resourceTrafficAttachmentRead(ctx, d, meta)
 }
@@ -109,26 +107,22 @@ func resourceTrafficAttachmentRead(ctx context.Context, d *schema.ResourceData, 
 	sourceIdentifier := aws.StringValue(trafficSources.Identifier)
 	sourceType := aws.StringValue(trafficSources.Type)
 	out, err := FindTrafficAttachment(ctx, conn, asgName, sourceType, sourceIdentifier)
-	fmt.Println(out)
-	// if sourceIdentifier.Type == aws.String("elb") {
-	// 	err = FindAttachmentByLoadBalancerName(ctx, conn, asgName, *sourceIdentifier.Identifier)
-	// } else {
-	// 	err = FindTrafficAttachmentByTargetGroupARN(ctx, conn, asgName, *sourceIdentifier.Identifier)
-	// }
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] VPC Lattice Target Group Attachment (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Source Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("reading VPC Lattice Target Group Attachment (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Source Attachment (%s): %s", d.Id(), err)
 	}
 
-	// if err := d.Set("traffic_sources", []interface{}{flattenTargetSummary(output)}); err != nil {
-	// 	return diag.Errorf("setting target: %s", err)
-	// }
+	if err := d.Set("traffic_sources", []interface{}{flattenTrafficSourceIdentifier(out.TrafficSources[0])}); err != nil {
+		return diag.Errorf("setting attachment: %s", err)
+	}
+
+	d.Set("autoscaling_group_name", asgName)
 
 	return nil
 }
@@ -146,115 +140,79 @@ func resourceTrafficAttachmentDelete(ctx context.Context, d *schema.ResourceData
 		TrafficSources:       []*autoscaling.TrafficSourceIdentifier{sourceIdentifier},
 	})
 
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil
-		}
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil
+	}
 
-		return create.DiagError(names.AutoScaling, create.ErrActionDeleting, ResNameAutoscalingTrafficAttachment, d.Id(), err)
+	if err != nil {
+		return diag.Errorf("deleting Source Attachment (%s): %s", d.Id(), err)
+	}
+
+	if _, err := waitTrafficAttachmentDeleted(ctx, conn, asgName, *sourceIdentifier.Type, *sourceIdentifier.Identifier, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return diag.Errorf("waiting Source Attachment (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-// func FindTrafficAttachmentByLoadBalancerName(ctx context.Context, conn *autoscaling.AutoScaling, asgName, loadBalancerName string) error {
-// 	asg, err := FindGroupByName(ctx, conn, asgName)
-// 	fmt.Println(asg)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	for _, v := range asg.LoadBalancerNames {
-// 		fmt.Println(aws.StringValue(v))
-// 		if aws.StringValue(v) == loadBalancerName {
-// 			fmt.Println("Found")
-// 			return nil
-// 		}
-// 	}
-
-// 	return &retry.NotFoundError{
-// 		LastError: fmt.Errorf("Auto Scaling Group (%s) load balancer (%s) attachment not found", asgName, loadBalancerName),
-// 	}
-// }
-
-// func FindTrafficAttachmentByTargetGroupARN(ctx context.Context, conn *autoscaling.AutoScaling, asgName, targetGroupARN string) error {
-// 	asg, err := FindGroupByName(ctx, conn, asgName)
-// 	fmt.Println(asg)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	for _, v := range asg.TargetGroupARNs {
-// 		fmt.Println(aws.StringValue(v))
-// 		if aws.StringValue(v) == targetGroupARN {
-// 			return nil
-// 		}
-// 	}
-
-// 	return &retry.NotFoundError{
-// 		LastError: fmt.Errorf("Auto Scaling Group (%s) target group (%s) attachment not found", asgName, targetGroupARN),
-// 	}
-// }
-
-// func flattenTrafficSourceIdentifier(apiObject *autoscaling.) *autoscaling.TrafficSourceIdentifier {
-// 	apiObject := &autoscaling.TrafficSourceIdentifier{}
-
-// 	if v, ok := tfMap["identifier"].(string); ok && v != "" {
-// 		apiObject.Identifier = aws.String(v)
-// 	}
-
-// 	if v, ok := tfMap["type"].(string); ok && v != "" {
-// 		apiObject.Type = aws.String(v)
-// 	}
-
-// 	return apiObject
-// }
-
-func expandTrafficSourceIdentifier(tfMap map[string]interface{}) *autoscaling.TrafficSourceIdentifier {
-	apiObject := &autoscaling.TrafficSourceIdentifier{}
-
-	if v, ok := tfMap["identifier"].(string); ok && v != "" {
-		apiObject.Identifier = aws.String(v)
+func waitTrafficAttachmentCreated(ctx context.Context, conn *autoscaling.AutoScaling, asgName string, sourceType string, sourceIdentifier string, timeout time.Duration) (*autoscaling.TrafficSourceState, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{"Adding"},
+		Target:                    []string{"InService", "Added"},
+		Refresh:                   statusTrafficAttachment(ctx, conn, asgName, sourceType, sourceIdentifier),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
-		apiObject.Type = aws.String(v)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*autoscaling.TrafficSourceState); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.State)))
+		return output, err
 	}
 
-	return apiObject
+	return nil, err
 }
 
-// func findTrafficAttachment(ctx context.Context, conn *autoscaling.AutoScaling, asgName string, sourceType string, sourceIdentifier string) (*autoscaling.DescribeTrafficSourcesOutput, error) {
-// 	input := &autoscaling.DescribeTrafficSourcesInput{
-// 		AutoScalingGroupName: aws.String(asgName),
-// 		TrafficSourceType:    aws.String(sourceType),
-// 	}
+func waitTrafficAttachmentDeleted(ctx context.Context, conn *autoscaling.AutoScaling, asgName string, sourceType string, sourceIdentifier string, timeout time.Duration) (*autoscaling.TrafficSourceState, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{"Removing", "Removed"},
+		Target:                    []string{},
+		Refresh:                   statusTrafficAttachment(ctx, conn, asgName, sourceType, sourceIdentifier),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
 
-// 	paginator, err := conn.DescribeTrafficSources(input)
-// 	for paginator {
-// 		output, err := paginator.NextPage(ctx)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-// 		if errs.IsA[*types.ResourceNotFoundException](err) {
-// 			return nil, &retry.NotFoundError{
-// 				LastError:   err,
-// 				LastRequest: input,
-// 			}
-// 		}
+	if output, ok := outputRaw.(*autoscaling.TrafficSourceState); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.State)))
+		return output, err
+	}
 
-// 		if err != nil {
-// 			return nil, err
-// 		}
+	return nil, err
+}
 
-// 		if output != nil && len(output.Items) == 1 {
-// 			return &(output.Items[0]), nil
-// 		}
-// 	}
+func statusTrafficAttachment(ctx context.Context, conn *autoscaling.AutoScaling, asgName string, sourceType string, sourceIdentifier string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindTrafficAttachment(ctx, conn, asgName, sourceType, sourceIdentifier)
 
-// 	return nil, &retry.NotFoundError{}
-// }
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(*output.TrafficSources[0].State), nil
+	}
+}
 
 func FindTrafficAttachment(ctx context.Context, conn *autoscaling.AutoScaling, asgName string, sourceType string, sourceIdentifier string) (*autoscaling.DescribeTrafficSourcesOutput, error) {
+
 	input := &autoscaling.DescribeTrafficSourcesInput{
 		AutoScalingGroupName: aws.String(asgName),
 		TrafficSourceType:    aws.String(sourceType),
@@ -275,10 +233,41 @@ func FindTrafficAttachment(ctx context.Context, conn *autoscaling.AutoScaling, a
 
 	for _, v := range out.TrafficSources {
 		if aws.StringValue(v.Identifier) == sourceIdentifier {
-			fmt.Println(out)
 			return out, nil
 		}
 	}
 
 	return nil, &retry.NotFoundError{}
+}
+
+func flattenTrafficSourceIdentifier(apiObject *autoscaling.TrafficSourceState) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Identifier; v != nil {
+		tfMap["identifier"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Type; v != nil {
+		tfMap["type"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func expandTrafficSourceIdentifier(tfMap map[string]interface{}) *autoscaling.TrafficSourceIdentifier {
+	apiObject := &autoscaling.TrafficSourceIdentifier{}
+
+	if v, ok := tfMap["identifier"].(string); ok && v != "" {
+		apiObject.Identifier = aws.String(v)
+	}
+
+	if v, ok := tfMap["type"].(string); ok && v != "" {
+		apiObject.Type = aws.String(v)
+	}
+
+	return apiObject
 }

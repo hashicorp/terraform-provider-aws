@@ -57,11 +57,10 @@ func TestAccTrafficAttachment_albTargetGroup(t *testing.T) {
 	})
 }
 
-func TestAccTrafficAttachment_multipleELBs(t *testing.T) {
+func TestAccTrafficAttachment_vpcLattice(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resource1Name := "aws_autoscaling_traffic_attachment.test.0"
-	resource11Name := "aws_autoscaling_traffic_attachment.test.10"
+	resourceName := "aws_autoscaling_traffic_attachment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -69,85 +68,74 @@ func TestAccTrafficAttachment_multipleELBs(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrafficAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
-			// Create all the ELBs first.
 			{
-				Config: testAccTrafficAttachmentConfig_elbBase(rName, 11),
-			},
-			{
-				Config: testAccTrafficAttachmentConfig_multipleELBs(rName, 11),
+				Config: testAccTrafficAttachmentConfig_vpcLattice(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrafficAttachmentExists(ctx, resource1Name),
-					testAccCheckTrafficAttachmentExists(ctx, resource11Name),
+					testAccCheckTrafficAttachmentExists(ctx, resourceName),
 				),
-			},
-			{
-				Config: testAccTrafficAttachmentConfig_elbBase(rName, 11),
 			},
 		},
 	})
 }
 
-func TestAccTrafficAttachment_multipleALBTargetGroups(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resource1Name := "aws_autoscaling_traffic_attachment.test.0"
-	resource11Name := "aws_autoscaling_traffic_attachment.test.10"
+// func TestAccTrafficAttachment_multipleELBs(t *testing.T) {
+// 	ctx := acctest.Context(t)
+// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+// 	resource1Name := "aws_autoscaling_traffic_attachment.test.0"
+// 	resource11Name := "aws_autoscaling_traffic_attachment.test.10"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrafficAttachmentDestroy(ctx),
-		Steps: []resource.TestStep{
-			// Create all the target groups first.
-			{
-				Config: testAccTrafficAttachmentConfig_targetGroupBase(rName, 11),
-			},
-			{
-				Config: testAccTrafficAttachmentConfig_multipleTargetGroups(rName, 11),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrafficAttachmentExists(ctx, resource1Name),
-					testAccCheckTrafficAttachmentExists(ctx, resource11Name),
-				),
-			},
-			{
-				Config: testAccTrafficAttachmentConfig_targetGroupBase(rName, 11),
-			},
-		},
-	})
-}
+// 	resource.ParallelTest(t, resource.TestCase{
+// 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+// 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+// 		CheckDestroy:             testAccCheckTrafficAttachmentDestroy(ctx),
+// 		Steps: []resource.TestStep{
+// 			// Create all the ELBs first.
+// 			{
+// 				Config: testAccTrafficAttachmentConfig_elbBase(rName, 11),
+// 			},
+// 			{
+// 				Config: testAccTrafficAttachmentConfig_multipleELBs(rName, 11),
+// 				Check: resource.ComposeTestCheckFunc(
+// 					testAccCheckTrafficAttachmentExists(ctx, resource1Name),
+// 					testAccCheckTrafficAttachmentExists(ctx, resource11Name),
+// 				),
+// 			},
+// 			{
+// 				Config: testAccTrafficAttachmentConfig_elbBase(rName, 11),
+// 			},
+// 		},
+// 	})
+// }
 
-func testAccCheckTrafficAttachmentExists(ctx context.Context, n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
+// func TestAccTrafficAttachment_multipleALBTargetGroups(t *testing.T) {
+// 	ctx := acctest.Context(t)
+// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+// 	resource1Name := "aws_autoscaling_traffic_attachment.test.0"
+// 	resource11Name := "aws_autoscaling_traffic_attachment.test.10"
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No VPC Lattice Target Group Attachment ID is set")
-		}
-		var err error
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
-
-		_, err = tfautoscaling.FindTrafficAttachment(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.Attributes["traffic_sources.0.type"], rs.Primary.Attributes["traffic_sources.0.identifier"])
-
-		return err
-	}
-}
-
-// func testAccCheckTrafficAttachmentByTargetGroupARNExists(ctx context.Context, n string) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		rs, ok := s.RootModule().Resources[n]
-// 		if !ok {
-// 			return fmt.Errorf("Not found: %s", n)
-// 		}
-
-// 		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
-
-// 		return tfautoscaling.testAccCheckTrafficAttachmentExists(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.Attributes["lb_target_group_arn"])
-// 	}
+// 	resource.ParallelTest(t, resource.TestCase{
+// 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+// 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+// 		CheckDestroy:             testAccCheckTrafficAttachmentDestroy(ctx),
+// 		Steps: []resource.TestStep{
+// 			// Create all the target groups first.
+// 			{
+// 				Config: testAccTrafficAttachmentConfig_targetGroupBase(rName, 11),
+// 			},
+// 			{
+// 				Config: testAccTrafficAttachmentConfig_multipleTargetGroups(rName, 11),
+// 				Check: resource.ComposeTestCheckFunc(
+// 					testAccCheckTrafficAttachmentExists(ctx, resource1Name),
+// 					testAccCheckTrafficAttachmentExists(ctx, resource11Name),
+// 				),
+// 			},
+// 			{
+// 				Config: testAccTrafficAttachmentConfig_targetGroupBase(rName, 11),
+// 			},
+// 		},
+// 	})
 // }
 
 func testAccTrafficAttachmentConfig_elbBase(rName string, elbCount int) string {
@@ -234,10 +222,29 @@ resource "aws_autoscaling_group" "test" {
 `, rName, targetGroupCount))
 }
 
+func testAccTrafficAttachmentConfig_VpcLatticebase(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 0), fmt.Sprintf(`
+resource "aws_vpclattice_service" "test" {
+  name = %[1]q
+}
+
+resource "aws_vpclattice_target_group" "test" {
+	name = %[1]q
+	type = "INSTANCE"
+  
+	config {
+	  port           = 80
+	  protocol       = "HTTP"
+	  vpc_identifier = aws_vpc.test.id
+	}
+  }
+`, rName))
+}
+
 func testAccTrafficAttachmentConfig_elb(rName string) string {
 	return acctest.ConfigCompose(testAccTrafficAttachmentConfig_elbBase(rName, 1), `
 resource "aws_autoscaling_traffic_attachment" "test" {
-  autoscaling_group_name = aws_autoscaling_group.test.id
+  autoscaling_group_name = "tf-acc-test-1479843287004434133"
   traffic_sources {
 	identifier = aws_elb.test[0].id
 	type = "elb"
@@ -263,7 +270,7 @@ resource "aws_autoscaling_traffic_attachment" "test" {
 func testAccTrafficAttachmentConfig_targetGroup(rName string) string {
 	return acctest.ConfigCompose(testAccTrafficAttachmentConfig_targetGroupBase(rName, 1), `
 resource "aws_autoscaling_traffic_attachment" "test" {
-  autoscaling_group_name = aws_autoscaling_group.test.id
+  autoscaling_group_name = "tf-acc-test-1479843287004434133"
   traffic_sources {
 	identifier = aws_lb_target_group.test[0].arn
 	type = "elbv2"
@@ -283,6 +290,35 @@ resource "aws_autoscaling_traffic_attachment" "test" {
   }
 }
 `, n))
+}
+
+func testAccTrafficAttachmentConfig_vpcLattice(rName string) string {
+	return acctest.ConfigCompose(testAccTrafficAttachmentConfig_VpcLatticebase(rName), `
+resource "aws_autoscaling_traffic_attachment" "test" {
+  autoscaling_group_name = "tf-acc-test-1479843287004434133"
+  traffic_sources {
+	identifier = aws_vpclattice_target_group.test.arn
+	type = "vpc-lattice"
+  }
+}
+`)
+}
+
+func testAccCheckTrafficAttachmentExists(ctx context.Context, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		var err error
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
+
+		_, err = tfautoscaling.FindTrafficAttachment(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.Attributes["traffic_sources.0.type"], rs.Primary.Attributes["traffic_sources.0.identifier"])
+
+		return err
+	}
 }
 
 func testAccCheckTrafficAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
@@ -312,35 +348,3 @@ func testAccCheckTrafficAttachmentDestroy(ctx context.Context) resource.TestChec
 		return nil
 	}
 }
-
-// func testAccCheckTrafficAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
-
-// 		for _, rs := range s.RootModule().Resources {
-// 			if rs.Type != "aws_autoscaling_traffic_attachment" {
-// 				continue
-// 			}
-
-// 			var err error
-
-// 			if lbName := rs.Primary.Attributes["elb"]; lbName != "" {
-// 				err = tfautoscaling.FindTrafficAttachmentByLoadBalancerName(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], lbName)
-// 			} else {
-// 				err = tfautoscaling.FindTrafficAttachmentByTargetGroupARN(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.Attributes["lb_target_group_arn"])
-// 			}
-
-// 			if tfresource.NotFound(err) {
-// 				continue
-// 			}
-
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			return fmt.Errorf("Auto Scaling Group Attachment %s still exists", rs.Primary.ID)
-// 		}
-
-// 		return nil
-// 	}
-// }
