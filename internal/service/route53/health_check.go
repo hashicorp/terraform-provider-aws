@@ -132,16 +132,7 @@ func ResourceHealthCheck() *schema.Resource {
 				MaxItems: 64,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{
-						endpoints.UsWest1RegionID,
-						endpoints.UsWest2RegionID,
-						endpoints.UsEast1RegionID,
-						endpoints.EuWest1RegionID,
-						endpoints.SaEast1RegionID,
-						endpoints.ApSoutheast1RegionID,
-						endpoints.ApSoutheast2RegionID,
-						endpoints.ApNortheast1RegionID,
-					}, true),
+					ValidateFunc: validation.StringInSlice(route53.HealthCheckRegion_Values(), false),
 				},
 				Optional: true,
 			},
