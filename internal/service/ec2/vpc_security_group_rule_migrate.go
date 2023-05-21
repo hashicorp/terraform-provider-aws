@@ -41,7 +41,7 @@ func migrateSGRuleStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceS
 	}
 
 	log.Printf("[DEBUG] Attributes before migration: %#v", is.Attributes)
-	newID := IPPermissionIDHash(is.Attributes["security_group_id"], is.Attributes["type"], perm)
+	newID := SecurityGroupRuleCreateID(is.Attributes["security_group_id"], is.Attributes["type"], perm)
 	is.Attributes["id"] = newID
 	is.ID = newID
 	log.Printf("[DEBUG] Attributes after migration: %#v, new id: %s", is.Attributes, newID)

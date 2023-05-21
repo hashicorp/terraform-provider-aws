@@ -22,16 +22,16 @@ data "aws_efs_access_point" "test" {
 
 The following arguments are supported:
 
-* `access_point_id` - (Required) The ID that identifies the file system.
+* `access_point_id` - (Required) ID that identifies the file system.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the access point.
+* `id` - ID of the access point.
 * `arn` - Amazon Resource Name of the file system.
 * `file_system_arn` - Amazon Resource Name of the file system.
-* `file_system_id` - The ID of the file system for which the access point is intended.
+* `file_system_id` - ID of the file system for which the access point is intended.
 * `posix_user` - Single element list containing operating system user and group applied to all file system requests made using the access point.
     * `gid` - Group ID
     * `secondary_gids` - Secondary group IDs

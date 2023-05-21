@@ -16,7 +16,7 @@ Provides an [S3 Intelligent-Tiering](https://docs.aws.amazon.com/AmazonS3/latest
 
 ```terraform
 resource "aws_s3_bucket_intelligent_tiering_configuration" "example-entire-bucket" {
-  bucket = aws_s3_bucket.example.bucket
+  bucket = aws_s3_bucket.example.id
   name   = "EntireBucket"
 
   tiering {
@@ -38,7 +38,7 @@ resource "aws_s3_bucket" "example" {
 
 ```terraform
 resource "aws_s3_bucket_intelligent_tiering_configuration" "example-filtered" {
-  bucket = aws_s3_bucket.example.bucket
+  bucket = aws_s3_bucket.example.id
   name   = "ImportantBlueDocuments"
 
   status = "Disabled"
@@ -67,21 +67,21 @@ resource "aws_s3_bucket" "example" {
 
 The following arguments are supported:
 
-* `bucket` - (Required) The name of the bucket this intelligent tiering configuration is associated with.
-* `name` - (Required) The unique name used to identify the S3 Intelligent-Tiering configuration for the bucket.
+* `bucket` - (Required) Name of the bucket this intelligent tiering configuration is associated with.
+* `name` - (Required) Unique name used to identify the S3 Intelligent-Tiering configuration for the bucket.
 * `status` - (Optional) Specifies the status of the configuration. Valid values: `Enabled`, `Disabled`.
-* `filter` - (Optional) A bucket filter. The configuration only includes objects that meet the filter's criteria (documented below).
-* `tiering` - (Required) The S3 Intelligent-Tiering storage class tiers of the configuration (documented below).
+* `filter` - (Optional) Bucket filter. The configuration only includes objects that meet the filter's criteria (documented below).
+* `tiering` - (Required) S3 Intelligent-Tiering storage class tiers of the configuration (documented below).
 
 The `filter` configuration supports the following:
 
-* `prefix` - (Optional) An object key name prefix that identifies the subset of objects to which the configuration applies.
+* `prefix` - (Optional) Object key name prefix that identifies the subset of objects to which the configuration applies.
 * `tags` - (Optional) All of these tags must exist in the object's tag set in order for the configuration to apply.
 
 The `tiering` configuration supports the following:
 
 * `access_tier` - (Required) S3 Intelligent-Tiering access tier. Valid values: `ARCHIVE_ACCESS`, `DEEP_ARCHIVE_ACCESS`.
-* `days` - (Required) The number of consecutive days of no access after which an object will be eligible to be transitioned to the corresponding tier.
+* `days` - (Required) Number of consecutive days of no access after which an object will be eligible to be transitioned to the corresponding tier.
 
 ## Attributes Reference
 

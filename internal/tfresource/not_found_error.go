@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 type EmptyResultError struct {
@@ -24,17 +24,17 @@ func (e *EmptyResultError) Error() string {
 }
 
 func (e *EmptyResultError) Is(err error) bool {
-	_, ok := err.(*EmptyResultError)
+	_, ok := err.(*EmptyResultError) //nolint:errorlint // Explicitly does *not* match down the error tree
 	return ok
 }
 
 func (e *EmptyResultError) As(target interface{}) bool {
-	t, ok := target.(**resource.NotFoundError)
+	t, ok := target.(**retry.NotFoundError)
 	if !ok {
 		return false
 	}
 
-	*t = &resource.NotFoundError{
+	*t = &retry.NotFoundError{
 		Message:     e.Error(),
 		LastRequest: e.LastRequest,
 	}
@@ -61,17 +61,17 @@ func (e *TooManyResultsError) Error() string {
 }
 
 func (e *TooManyResultsError) Is(err error) bool {
-	_, ok := err.(*TooManyResultsError)
+	_, ok := err.(*TooManyResultsError) //nolint:errorlint // Explicitly does *not* match down the error tree
 	return ok
 }
 
 func (e *TooManyResultsError) As(target interface{}) bool {
-	t, ok := target.(**resource.NotFoundError)
+	t, ok := target.(**retry.NotFoundError)
 	if !ok {
 		return false
 	}
 
-	*t = &resource.NotFoundError{
+	*t = &retry.NotFoundError{
 		Message:     e.Error(),
 		LastRequest: e.LastRequest,
 	}
@@ -89,5 +89,25 @@ func SingularDataSourceFindError(resourceType string, err error) error {
 		return fmt.Errorf("no matching %[1]s found", resourceType)
 	}
 
-	return fmt.Errorf("error reading %s: %w", resourceType, err)
+	return fmt.Errorf("reading %s: %w", resourceType, err)
+}
+
+func AssertSinglePtrResult[T any](a []*T) (*T, error) {
+	if l := len(a); l == 0 {
+		return nil, NewEmptyResultError(nil)
+	} else if l > 1 {
+		return nil, NewTooManyResultsError(l, nil)
+	} else if a[0] == nil {
+		return nil, NewEmptyResultError(nil)
+	}
+	return a[0], nil
+}
+
+func AssertSingleValueResult[T any](a []T) (*T, error) {
+	if l := len(a); l == 0 {
+		return nil, NewEmptyResultError(nil)
+	} else if l > 1 {
+		return nil, NewTooManyResultsError(l, nil)
+	}
+	return &a[0], nil
 }

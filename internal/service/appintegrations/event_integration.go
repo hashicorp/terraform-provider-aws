@@ -10,20 +10,23 @@ import (
 	"github.com/aws/aws-sdk-go/service/appintegrationsservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_appintegrations_event_integration", name="Event Integration")
+// @Tags(identifierAttribute="arn")
 func ResourceEventIntegration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceEventIntegrationCreate,
-		ReadContext:   resourceEventIntegrationRead,
-		UpdateContext: resourceEventIntegrationUpdate,
-		DeleteContext: resourceEventIntegrationDelete,
+		CreateWithoutTimeout: resourceEventIntegrationCreate,
+		ReadWithoutTimeout:   resourceEventIntegrationRead,
+		UpdateWithoutTimeout: resourceEventIntegrationUpdate,
+		DeleteWithoutTimeout: resourceEventIntegrationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -65,33 +68,27 @@ func ResourceEventIntegration() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\/\._\-]{1,255}$`), "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
 
 	name := d.Get("name").(string)
-
 	input := &appintegrationsservice.CreateEventIntegrationInput{
-		ClientToken:    aws.String(resource.UniqueId()),
+		ClientToken:    aws.String(id.UniqueId()),
 		EventBridgeBus: aws.String(d.Get("eventbridge_bus").(string)),
 		EventFilter:    expandEventFilter(d.Get("event_filter").([]interface{})),
 		Name:           aws.String(name),
+		Tags:           GetTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating AppIntegrations Event Integration %s", input)
@@ -112,9 +109,7 @@ func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
 
 	name := d.Id()
 
@@ -145,22 +140,13 @@ func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(fmt.Errorf("error setting event_filter: %w", err))
 	}
 
-	tags := KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
-	}
+	SetTagsOut(ctx, resp.Tags)
 
 	return nil
 }
 
 func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
 
 	name := d.Id()
 
@@ -171,14 +157,7 @@ func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData,
 		})
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating EventIntegration (%s): %w", d.Id(), err))
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
+			return diag.FromErr(fmt.Errorf("updating EventIntegration (%s): %w", d.Id(), err))
 		}
 	}
 
@@ -186,7 +165,7 @@ func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceEventIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
 
 	name := d.Id()
 

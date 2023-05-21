@@ -41,6 +41,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `accept_language` - (Optional) Language code. Valid values: `en` (English), `jp` (Japanese), `zh` (Chinese). Default value is `en`.
+* `share_principals` - (Optional) Enables or disables Principal sharing when creating the portfolio share. If this flag is not provided, principal sharing is disabled.
 * `share_tag_options` - (Optional) Whether to enable sharing of `aws_servicecatalog_tag_option` resources when creating the portfolio share.
 * `wait_for_acceptance` - (Optional) Whether to wait (up to the timeout) for the share to be accepted. Organizational shares are automatically accepted.
 
@@ -52,13 +53,12 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_servicecatalog_portfolio_share` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `3 minutes`)
-- `read` - (Default `10 minutes`)
-- `update` - (Default `3 minutes`)
-- `delete` - (Default `3 minutes`)
+- `create` - (Default `3m`)
+- `read` - (Default `10m`)
+- `update` - (Default `3m`)
+- `delete` - (Default `3m`)
 
 ## Import
 

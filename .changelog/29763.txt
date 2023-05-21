@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_acm_certificate: Change `options` to `Computed`
+```
+
+```release-note:bug
+resource/aws_acm_certificate: Update `options.certificate_transparency_logging_preference` in place rather than replacing the resource
+```

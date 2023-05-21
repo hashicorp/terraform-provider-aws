@@ -5,25 +5,26 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/rds"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccRDSSnapshotDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	rInt := sdkacctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckSnapshotDataSourceConfig(rInt),
+				Config: testAccSnapshotDataSourceConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotIDDataSource("data.aws_db_snapshot.snapshot"),
 				),
@@ -46,7 +47,7 @@ func testAccCheckSnapshotIDDataSource(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckSnapshotDataSourceConfig(rInt int) string {
+func testAccSnapshotDataSourceConfig_basic(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "mysql"
@@ -63,7 +64,7 @@ resource "aws_db_instance" "bar" {
   engine              = data.aws_rds_engine_version.default.engine
   engine_version      = data.aws_rds_engine_version.default.version
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  name                = "baz"
+  db_name             = "baz"
   password            = "barbarbarbar"
   username            = "foo"
   skip_final_snapshot = true
@@ -84,7 +85,7 @@ data "aws_db_snapshot" "snapshot" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.bar.id
+  db_instance_identifier = aws_db_instance.bar.identifier
   db_snapshot_identifier = "testsnapshot%[2]d"
 }
 `, mySQLPreferredInstanceClasses, rInt)

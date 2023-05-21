@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var validRolePolicyName = validResourceName(rolePolicyNameMaxLen)
@@ -45,6 +46,17 @@ var validOpenIDURL = validation.All(
 		}
 		if len(u.Query()) > 0 {
 			es = append(es, fmt.Errorf("%q cannot contain query parameters per the OIDC standard", k))
+		}
+		return
+	},
+)
+
+var validRolePolicyRole = validation.All(
+	validation.StringLenBetween(1, 128),
+	validation.StringMatch(regexp.MustCompile(`[\w+=,.@-]+`), ""),
+	func(v interface{}, k string) (ws []string, es []error) {
+		if _, errs := verify.ValidARN(v, k); len(errs) == 0 {
+			es = append(es, fmt.Errorf("%q must be the role's name not its ARN", k))
 		}
 		return
 	},

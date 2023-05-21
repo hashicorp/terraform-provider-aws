@@ -8,6 +8,8 @@ import (
 )
 
 func TestFlattenShardLevelMetrics(t *testing.T) {
+	t.Parallel()
+
 	expanded := []*kinesis.EnhancedMetrics{
 		{
 			ShardLevelMetrics: []*string{

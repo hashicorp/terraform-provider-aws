@@ -50,7 +50,7 @@ resource "aws_db_instance" "default" {
   engine                  = "postgres"
   engine_version          = "13.4"
   instance_class          = "db.t3.micro"
-  name                    = "mydb"
+  db_name                 = "mydb"
   username                = "masterusername"
   password                = "mustbeeightcharacters"
   backup_retention_period = 7
@@ -86,6 +86,13 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Amazon Resource Name (ARN) of the replicated automated backups.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `75m`)
+- `delete` - (Default `75m`)
 
 ## Import
 

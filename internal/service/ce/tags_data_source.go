@@ -9,13 +9,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_ce_tags")
 func DataSourceTags() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceTagsRead,
+		ReadWithoutTimeout: dataSourceTagsRead,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -87,7 +89,7 @@ func DataSourceTags() *schema.Resource {
 }
 
 func dataSourceTagsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn
+	conn := meta.(*conns.AWSClient).CEConn()
 
 	input := &costexplorer.GetTagsInput{
 		TimePeriod: expandTagsTimePeriod(d.Get("time_period").([]interface{})[0].(map[string]interface{})),
@@ -112,7 +114,7 @@ func dataSourceTagsRead(ctx context.Context, d *schema.ResourceData, meta interf
 	resp, err := conn.GetTagsWithContext(ctx, input)
 
 	if err != nil {
-		return names.DiagError(names.CE, names.ErrActionReading, ResTags, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionReading, DSNameTags, d.Id(), err)
 	}
 
 	d.Set("tags", flex.FlattenStringList(resp.Tags))

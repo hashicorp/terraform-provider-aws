@@ -14,7 +14,6 @@ Provides a resource to manage AWS Device Farm Uploads.
 
 ## Example Usage
 
-
 ```terraform
 resource "aws_devicefarm_project" "example" {
   name = "example"
@@ -42,7 +41,6 @@ In addition to all arguments above, the following attributes are exported:
 * `url` - The presigned Amazon S3 URL that was used to store a file using a PUT request.
 * `category` - The upload's category.
 * `metadata` - The upload's metadata. For example, for Android, this contains information that is parsed from the manifest and is displayed in the AWS Device Farm console after the associated app is uploaded.
-
 
 ## Import
 

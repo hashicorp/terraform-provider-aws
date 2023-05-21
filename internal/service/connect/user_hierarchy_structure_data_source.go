@@ -12,9 +12,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_connect_user_hierarchy_structure")
 func DataSourceUserHierarchyStructure() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceUserHierarchyStructureRead,
+		ReadWithoutTimeout: dataSourceUserHierarchyStructureRead,
 		Schema: map[string]*schema.Schema{
 			"hierarchy_structure": {
 				Type:     schema.TypeList,
@@ -22,23 +23,23 @@ func DataSourceUserHierarchyStructure() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"level_one": func() *schema.Schema {
-							schema := connectUserHierarchyLevelDataSourceSchema()
+							schema := userHierarchyLevelDataSourceSchema()
 							return schema
 						}(),
 						"level_two": func() *schema.Schema {
-							schema := connectUserHierarchyLevelDataSourceSchema()
+							schema := userHierarchyLevelDataSourceSchema()
 							return schema
 						}(),
 						"level_three": func() *schema.Schema {
-							schema := connectUserHierarchyLevelDataSourceSchema()
+							schema := userHierarchyLevelDataSourceSchema()
 							return schema
 						}(),
 						"level_four": func() *schema.Schema {
-							schema := connectUserHierarchyLevelDataSourceSchema()
+							schema := userHierarchyLevelDataSourceSchema()
 							return schema
 						}(),
 						"level_five": func() *schema.Schema {
-							schema := connectUserHierarchyLevelDataSourceSchema()
+							schema := userHierarchyLevelDataSourceSchema()
 							return schema
 						}(),
 					},
@@ -54,7 +55,7 @@ func DataSourceUserHierarchyStructure() *schema.Resource {
 }
 
 // Each level shares the same schema
-func connectUserHierarchyLevelDataSourceSchema() *schema.Schema {
+func userHierarchyLevelDataSourceSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Computed: true,
@@ -78,7 +79,7 @@ func connectUserHierarchyLevelDataSourceSchema() *schema.Schema {
 }
 
 func dataSourceUserHierarchyStructureRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID := d.Get("instance_id").(string)
 

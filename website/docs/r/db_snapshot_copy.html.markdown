@@ -18,7 +18,7 @@ resource "aws_db_instance" "example" {
   engine            = "mysql"
   engine_version    = "5.6.21"
   instance_class    = "db.t2.micro"
-  name              = "baz"
+  db_name           = "baz"
   password          = "barbarbarbar"
   username          = "foo"
 
@@ -28,7 +28,7 @@ resource "aws_db_instance" "example" {
 }
 
 resource "aws_db_snapshot" "example" {
-  db_instance_identifier = aws_db_instance.example.id
+  db_instance_identifier = aws_db_instance.example.identifier
   db_snapshot_identifier = "testsnapshot1234"
 }
 
@@ -50,8 +50,7 @@ The following arguments are supported:
 * `source_db_snapshot_identifier` - (Required) Snapshot identifier of the source snapshot.
 * `target_custom_availability_zone` - (Optional) The external custom Availability Zone.
 * `target_db_snapshot_identifier` - (Required) The Identifier for the snapshot.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
@@ -71,14 +70,14 @@ In addition to all arguments above, the following attributes are exported:
 * `source_db_snapshot_identifier` - The DB snapshot Arn that the DB snapshot was copied from. It only has value in case of cross customer or cross region copy.
 * `source_region` - The region that the DB snapshot was created in or copied from.
 * `storage_type` - Specifies the storage type associated with DB snapshot.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpc_id` - Provides the VPC ID associated with the DB snapshot.
 
 ## Timeouts
 
-`aws_db_snapshot_copy` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `20 minutes`)  Length of time to wait for the snapshot to become available
+- `create` - (Default `20m`)
 
 ## Import
 

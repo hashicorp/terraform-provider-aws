@@ -159,7 +159,7 @@ The following arguments are supported:
 * `mutual_tls_authentication` - (Optional) Mutual TLS authentication configuration for the domain name. See below.
 * `ownership_verification_certificate_arn` - (Optional) ARN of the AWS-issued certificate used to validate custom domain ownership (when `certificate_arn` is issued via an ACM Private CA or `mutual_tls_authentication` is configured with an ACM-imported certificate.)
 * `security_policy` - (Optional) Transport Layer Security (TLS) version + cipher suite for this DomainName. Valid values are `TLS_1_0` and `TLS_1_2`. Must be configured to perform drift detection.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 When referencing an AWS-managed certificate, the following arguments are supported:
 
@@ -194,7 +194,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Internal identifier assigned to this domain name by API Gateway.
 * `regional_domain_name` - Hostname for the custom domain's regional endpoint.
 * `regional_zone_id` - Hosted zone ID that can be used to create a Route53 alias record for the regional endpoint.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
