@@ -156,3 +156,9 @@ func DiffStringMaps(oldMap, newMap map[string]interface{}) (map[string]*string, 
 
 	return add, remove, unchanged
 }
+
+// RegionDiffSuppress handles configuration block attributes in the following scenario:
+//   - The resource schema includes an optional region field
+func RegionDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
+	return new == ""
+}
