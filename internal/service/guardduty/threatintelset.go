@@ -50,9 +50,9 @@ func ResourceThreatIntelSet() *schema.Resource {
 				Required: true,
 			},
 			"format": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(guardduty.ThreatIntelSetFormat_Values(), false),
 			},
 			"location": {

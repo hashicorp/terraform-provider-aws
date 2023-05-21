@@ -130,7 +130,7 @@ func ResourceHealthCheck() *schema.Resource {
 				MinItems: 3,
 				MaxItems: 64,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
+					Type:         schema.TypeString,
 					ValidateFunc: validation.StringInSlice(route53.HealthCheckRegion_Values(), false),
 				},
 				Optional: true,

@@ -94,8 +94,8 @@ func ResourceEventSubscription() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"source_type": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
 				ValidateFunc: validation.StringInSlice(redshift.SourceType_Values(), false),
 			},
 			"status": {
