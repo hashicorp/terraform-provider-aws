@@ -365,12 +365,6 @@ func FindLoadBalancerHTTPSRedirectionPolicyById(ctx context.Context, conn *light
 }
 
 func FindBucketById(ctx context.Context, conn *lightsail.Lightsail, id string) (*lightsail.Bucket, error) {
-	partCount := flex.ResourceIdPartCount(id)
-	if partCount == 2 {
-		idParts := strings.Split(id, flex.ResourceIdSeparator)
-		id = idParts[0]
-	}
-
 	in := &lightsail.GetBucketsInput{BucketName: aws.String(id)}
 	out, err := conn.GetBucketsWithContext(ctx, in)
 
