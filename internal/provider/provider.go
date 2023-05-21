@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -315,7 +316,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			// bootstrapContext is run on all wrapped methods before any interceptors.
 			bootstrapContext := func(ctx context.Context, meta any) context.Context {
 				ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
-				if v, ok := meta.(*conns.AWSClient); ok {
+				if v, ok := meta.(*conns.ProviderMeta); ok {
 					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig, v.IgnoreTagsConfig)
 				}
 
@@ -515,13 +516,6 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		}
 	}
 
-	// var meta *conns.AWSClient
-	// if v, ok := provider.Meta().(*conns.AWSClient); ok {
-	// 	meta = v
-	// } else {
-	// 	meta = new(conns.AWSClient)
-	// }
-
 	var providerMeta *conns.ProviderMeta
 	if v, ok := provider.Meta().(*conns.ProviderMeta); ok {
 		providerMeta = v
@@ -533,8 +527,7 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 	providerMeta.IgnoreTagsConfig = config.IgnoreTagsConfig
 
 	var diags diag.Diagnostics
-	// awsRegions := []string{"us-east-1", "us-west-2"}
-	providerMeta.AWSClients = make(map[string]*conns.AWSClient)
+
 	if config.Region == "" {
 		providerMeta.Region = endpoints.UsWest2RegionID
 	} else {
@@ -543,7 +536,8 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 
 	if v, ok := d.GetOk("allowed_regions"); ok && v.(*schema.Set).Len() > 0 {
 		providerMeta.AllowedRegions = append(flex.ExpandStringValueSet(v.(*schema.Set)), providerMeta.Region)
-	} else {
+	} else if len(providerMeta.AWSClients) == 0 {
+		providerMeta.AWSClients = make(map[string]*conns.AWSClient)
 		meta := new(conns.AWSClient)
 		meta, diags := config.ConfigureProvider(ctx, meta)
 
@@ -551,10 +545,9 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 			return nil, diags
 		}
 		client := meta.EC2Conn()
-		regions, err := client.DescribeRegions(nil)
+		regions, err := client.DescribeRegionsWithContext(ctx, &ec2.DescribeRegionsInput{AllRegions: aws.Bool(false)})
 
 		for _, region := range regions.Regions {
-			fmt.Sprint(region.RegionName)
 			providerMeta.AllowedRegions = append(providerMeta.AllowedRegions, aws.ToString(region.RegionName))
 		}
 		if err != nil {
@@ -578,9 +571,7 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 	}
 	providerMeta.AccountID = providerMeta.AWSClients[providerMeta.Region].AccountID
 	providerMeta.Partition = providerMeta.AWSClients[providerMeta.Region].Partition
-	// meta, diags := config.ConfigureProvider(ctx, meta)
 
-	fmt.Sprintf("%v", providerMeta.DefaultTagsConfig)
 	return providerMeta, diags
 }
 
