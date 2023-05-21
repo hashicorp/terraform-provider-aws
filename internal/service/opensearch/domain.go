@@ -278,13 +278,9 @@ func ResourceDomain() *schema.Resource {
 							Optional: true,
 						},
 						"warm_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								opensearchservice.OpenSearchWarmPartitionInstanceTypeUltrawarm1MediumSearch,
-								opensearchservice.OpenSearchWarmPartitionInstanceTypeUltrawarm1LargeSearch,
-								"ultrawarm1.xlarge.search",
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(opensearchservice.OpenSearchWarmPartitionInstanceType_Values(), false),
 						},
 						"zone_awareness_config": {
 							Type:             schema.TypeList,
