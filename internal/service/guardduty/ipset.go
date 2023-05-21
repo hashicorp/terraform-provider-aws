@@ -53,14 +53,7 @@ func ResourceIPSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					guardduty.IpSetFormatTxt,
-					guardduty.IpSetFormatStix,
-					guardduty.IpSetFormatOtxCsv,
-					guardduty.IpSetFormatAlienVault,
-					guardduty.IpSetFormatProofPoint,
-					guardduty.IpSetFormatFireEye,
-				}, false),
+				ValidateFunc: validation.StringInSlice(guardduty.IpSetFormat_Values(), false),
 			},
 			"location": {
 				Type:     schema.TypeString,
