@@ -36,7 +36,7 @@ data "aws_iam_policy_document" "example" {
       identifiers = ["*"]
     }
 
-    actions   = ["codeartifact:GetRepositoryEndpoint"]
+    actions   = ["codeartifact:ReadFromRepository"]
     resources = [aws_codeartifact_repository.example.arn]
   }
 }
