@@ -67,6 +67,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_autoscaling_schedule",
 		},
 		{
+			Factory:  ResourceAutoscalingTrafficAttachment,
+			TypeName: "aws_autoscaling_traffic_attachment",
+		},
+		{
 			Factory:  ResourceLaunchConfiguration,
 			TypeName: "aws_launch_configuration",
 		},
