@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -55,10 +54,10 @@ func ResourceBucket() *schema.Resource {
 				ForceNew: true,
 			},
 			"region": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  endpoints.UsWest2RegionID,
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: verify.RegionDiffSuppress,
 			},
 			"support_code": {
 				Type:     schema.TypeString,
