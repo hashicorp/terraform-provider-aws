@@ -2,7 +2,6 @@ package lightsail
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"time"
 
@@ -97,34 +96,39 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateBucket, ResBucket, d.Get("name").(string), err)
 	}
 
-	id := fmt.Sprintf("%s,%s", d.Get("name").(string), region)
-	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeCreateBucket, ResBucket, id)
+	diag := expandOperations(ctx, conn, out.Operations, lightsail.OperationTypeCreateBucket, ResBucket, d.Get("name").(string))
 
 	if diag != nil {
 		return diag
 	}
 
-	d.SetId(id)
+	d.SetId(d.Get("name").(string))
 
 	return resourceBucketRead(ctx, d, meta)
 }
 
 func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	// To allow importing a resource that is not in the provider default region
+	// import using terraform import <bucket-name>,<region-name>
 	partCount := flex.ResourceIdPartCount(d.Id())
+	var id string
 	var region string
 	if partCount == 2 {
 		idParts := strings.Split(d.Id(), flex.ResourceIdSeparator)
 		region = idParts[1]
-	}
-	if v, ok := d.GetOk("region"); ok {
-		region = v.(string)
-	} else if flex.ResourceIdPartCount(d.Id()) != 2 {
-		region = meta.(*conns.ProviderMeta).Region
+		id = idParts[0]
+	} else {
+		if v, ok := d.GetOk("region"); ok {
+			region = v.(string)
+		} else {
+			region = meta.(*conns.ProviderMeta).Region
+		}
+		id = d.Id()
 	}
 
 	conn := meta.(*conns.ProviderMeta).AWSClients[region].LightsailConn()
 
-	out, err := FindBucketById(ctx, conn, d.Id())
+	out, err := FindBucketById(ctx, conn, id)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.Lightsail, create.ErrActionReading, ResBucket, d.Id())
@@ -181,15 +185,6 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	partCount := flex.ResourceIdPartCount(d.Id())
-	var id string
-	if partCount == 2 {
-		idParts := strings.Split(d.Id(), flex.ResourceIdSeparator)
-		id = idParts[0]
-	} else {
-		id = d.Id()
-	}
-
 	var region string
 	if v, ok := d.GetOk("region"); ok {
 		region = v.(string)
@@ -199,7 +194,7 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.ProviderMeta).AWSClients[region].LightsailConn()
 
 	out, err := conn.DeleteBucketWithContext(ctx, &lightsail.DeleteBucketInput{
-		BucketName: aws.String(id),
+		BucketName: aws.String(d.Id()),
 	})
 
 	if err != nil && tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
