@@ -51,14 +51,9 @@ func DataSourceAvailabilityZones() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"state": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.AvailabilityZoneStateAvailable,
-					ec2.AvailabilityZoneStateInformation,
-					ec2.AvailabilityZoneStateImpaired,
-					ec2.AvailabilityZoneStateUnavailable,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(ec2.AvailabilityZoneState_Values(), false),
 			},
 			"zone_ids": {
 				Type:     schema.TypeList,
