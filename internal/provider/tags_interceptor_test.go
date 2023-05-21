@@ -129,6 +129,10 @@ func (d *resourceData) Get(key string) any {
 	return nil
 }
 
+func (d *resourceData) GetOk(key string) (interface{}, bool) {
+	return nil, false
+}
+
 func (d *resourceData) Id() string {
 	return "id"
 }
