@@ -262,6 +262,33 @@ func TestAccSageMakerModel_primaryContainerModeSingle(t *testing.T) {
 	})
 }
 
+func TestAccSageMakerModel_primaryContainerModelPackageName(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_model.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccModelConfig_primaryContainerPackageName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckModelExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_container.0.model_package_name"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccSageMakerModel_containers(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -615,6 +642,66 @@ resource "aws_s3_object" "test" {
   key     = "model.tar.gz"
   content = "some-data"
 }
+`, rName))
+}
+
+func testAccModelConfig_primaryContainerPackageName(rName string) string {
+	return acctest.ConfigCompose(testAccModelConfigBase(rName), fmt.Sprintf(`
+resource "aws_sagemaker_model" "test" {
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  primary_container {
+    image          = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+    model_package_name = %[1]q
+  }
+}
+
+resource "aws_iam_policy" "test" {
+  name        = %[1]q
+  description = "Allow SageMaker to create model"
+  policy      = data.aws_iam_policy_document.policy.json
+}
+
+data "aws_iam_policy_document" "policy" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "cloudwatch:PutMetricData",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "logs:CreateLogGroup",
+      "logs:DescribeLogStreams",
+      "ecr:GetAuthorizationToken",
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchGetImage",
+    ]
+
+    resources = [
+      "*",
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "sagemaker:*",
+    ]
+
+    resources = [
+      "*",
+    ]
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = aws_iam_policy.test.arn
+}
+
 `, rName))
 }
 
