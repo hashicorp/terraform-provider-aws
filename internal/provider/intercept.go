@@ -359,7 +359,7 @@ func (r tagsInterceptor) run(ctx context.Context, d schemaResourceData, meta any
 	case Finally:
 		switch why {
 		case Update:
-			if !d.GetRawPlan().GetAttr(names.AttrTagsAll).IsWhollyKnown() {
+			if r.tags.IdentifierAttribute != "" && !d.GetRawPlan().GetAttr(names.AttrTagsAll).IsWhollyKnown() {
 				ctx, diags = r.updateFunc(ctx, d, sp, r.tags, serviceName, resourceName, meta, diags)
 				ctx, diags = r.readFunc(ctx, d, sp, r.tags, serviceName, resourceName, meta, diags)
 			}
