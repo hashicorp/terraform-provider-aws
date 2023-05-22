@@ -1527,7 +1527,7 @@ resource "aws_elasticache_global_replication_group" "test" {
 
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[2]q
-  replication_group_description = "test"
+  description = "test"
 
   engine                = "redis"
   engine_version        = "5.0.6"
@@ -1546,7 +1546,7 @@ resource "aws_elasticache_global_replication_group" "test" {
 
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[2]q
-  replication_group_description = "test"
+  description = "test"
 
   engine                = "redis"
   engine_version        = "5.0.6"
@@ -1565,7 +1565,7 @@ resource "aws_elasticache_global_replication_group" "test" {
 
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[2]q
-  replication_group_description = "test"
+  description = "test"
 
   node_type = "cache.m5.large"
 
@@ -1589,7 +1589,7 @@ resource "aws_elasticache_global_replication_group" "test" {
 
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[2]q
-  replication_group_description = "test"
+  description = "test"
 
   engine                = "redis"
   engine_version        = "5.0.6"
@@ -1609,7 +1609,7 @@ resource "aws_elasticache_global_replication_group" "test" {
 
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[2]q
-  replication_group_description = "test"
+  description = "test"
 
   engine                = "redis"
   engine_version        = "5.0.6"
@@ -1629,7 +1629,7 @@ resource "aws_elasticache_global_replication_group" "test" {
 
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[2]q
-  replication_group_description = "test"
+  description = "test"
 
   engine                = "redis"
   engine_version        = "5.0.6"
@@ -1653,7 +1653,7 @@ resource "aws_elasticache_global_replication_group" "test" {
 
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[2]q
-  replication_group_description = "test"
+  description = "test"
 
   engine                = "redis"
   engine_version        = "5.0.6"
@@ -1673,7 +1673,7 @@ resource "aws_elasticache_global_replication_group" "test" {
 
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[2]q
-  replication_group_description = "test"
+  description = "test"
 
   node_type = "cache.m5.large"
 
@@ -1697,7 +1697,7 @@ resource "aws_elasticache_global_replication_group" "test" {
 
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[2]q
-  replication_group_description = "test"
+  description = "test"
 
   node_type = "cache.m5.large"
 
@@ -1725,7 +1725,7 @@ resource "aws_elasticache_global_replication_group" "test" {
 
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[2]q
-  replication_group_description = "test"
+  description = "test"
 
   engine                = "redis"
   engine_version        = "5.0.6"
@@ -1756,7 +1756,7 @@ resource "aws_elasticache_replication_group" "primary" {
   provider = aws
 
   replication_group_id          = "%[1]s-p"
-  replication_group_description = "primary"
+  description = "primary"
 
   subnet_group_name = aws_elasticache_subnet_group.primary.name
 
@@ -1771,7 +1771,7 @@ resource "aws_elasticache_replication_group" "alternate" {
   provider = awsalternate
 
   replication_group_id          = "%[1]s-a"
-  replication_group_description = "alternate"
+  description = "alternate"
   global_replication_group_id   = aws_elasticache_global_replication_group.test.global_replication_group_id
 
   subnet_group_name = aws_elasticache_subnet_group.alternate.name
@@ -1783,7 +1783,7 @@ resource "aws_elasticache_replication_group" "third" {
   provider = awsthird
 
   replication_group_id          = "%[1]s-t"
-  replication_group_description = "third"
+  description = "third"
   global_replication_group_id   = aws_elasticache_global_replication_group.test.global_replication_group_id
 
   subnet_group_name = aws_elasticache_subnet_group.third.name
@@ -1811,7 +1811,7 @@ resource "aws_elasticache_replication_group" "primary" {
   provider = aws
 
   replication_group_id          = "%[1]s-p"
-  replication_group_description = "primary"
+  description = "primary"
 
   subnet_group_name = aws_elasticache_subnet_group.primary.name
 
@@ -1826,7 +1826,7 @@ resource "aws_elasticache_replication_group" "secondary" {
   provider = awsalternate
 
   replication_group_id          = "%[1]s-a"
-  replication_group_description = "alternate"
+  description = "alternate"
   global_replication_group_id   = aws_elasticache_global_replication_group.test.global_replication_group_id
 
   subnet_group_name = aws_elasticache_subnet_group.secondary.name
@@ -1854,7 +1854,7 @@ resource "aws_elasticache_replication_group" "primary" {
   provider = aws
 
   replication_group_id          = "%[1]s-p"
-  replication_group_description = "primary"
+  description = "primary"
 
   subnet_group_name = aws_elasticache_subnet_group.primary.name
 
@@ -1869,7 +1869,7 @@ resource "aws_elasticache_replication_group" "third" {
   provider = awsthird
 
   replication_group_id          = "%[1]s-t"
-  replication_group_description = "third"
+  description = "third"
   global_replication_group_id   = aws_elasticache_global_replication_group.test.global_replication_group_id
 
   subnet_group_name = aws_elasticache_subnet_group.third.name
@@ -1888,7 +1888,7 @@ resource "aws_elasticache_global_replication_group" "test" {
 
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
-  replication_group_description = "test"
+  description = "test"
 
   engine         = "redis"
   engine_version = "6.2"
@@ -1911,7 +1911,7 @@ resource "aws_elasticache_global_replication_group" "test" {
 
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
-  replication_group_description = "test"
+  description = "test"
 
   engine         = "redis"
   engine_version = "6.2"
@@ -1940,7 +1940,7 @@ resource "aws_elasticache_global_replication_group" "test" {
 
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
-  replication_group_description = "test"
+  description = "test"
 
   engine         = "redis"
   engine_version = "6.2"
@@ -1967,7 +1967,7 @@ resource "aws_elasticache_global_replication_group" "test" {
 
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[2]q
-  replication_group_description = "test"
+  description = "test"
 
   engine                = "redis"
   engine_version        = %[3]q
@@ -1988,7 +1988,7 @@ resource "aws_elasticache_global_replication_group" "test" {
 
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[2]q
-  replication_group_description = "test"
+  description = "test"
 
   engine                = "redis"
   engine_version        = %[3]q
@@ -2014,7 +2014,7 @@ resource "aws_elasticache_global_replication_group" "test" {
 
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[2]q
-  replication_group_description = "test"
+  description = "test"
 
   engine                = "redis"
   engine_version        = %[3]q
@@ -2040,7 +2040,7 @@ resource "aws_elasticache_global_replication_group" "test" {
 
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[2]q
-  replication_group_description = "test"
+  description = "test"
 
   engine                = "redis"
   engine_version        = %[3]q
@@ -2071,7 +2071,7 @@ resource "aws_elasticache_global_replication_group" "test" {
 
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[2]q
-  replication_group_description = "test"
+  description = "test"
 
   engine                = "redis"
   engine_version        = %[3]q
