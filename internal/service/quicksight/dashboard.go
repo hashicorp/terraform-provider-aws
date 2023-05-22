@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_quicksight_dashboard")
+// @SDKResource("aws_quicksight_dashboard", name="Dashboard")
 // @Tags(identifierAttribute="arn")
 func ResourceDashboard() *schema.Resource {
 	return &schema.Resource{

@@ -84,6 +84,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDashboard,
 			TypeName: "aws_quicksight_dashboard",
+			Name:     "Dashboard",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "arn",
 			},
