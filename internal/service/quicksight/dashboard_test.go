@@ -502,7 +502,7 @@ resource "aws_quicksight_dashboard" "test" {
       data_set_arn = aws_quicksight_data_set.test.arn
       identifier   = "1"
     }
-    parameters_declarations {
+    parameter_declarations {
       string_parameter_declaration {
         name                 = "test"
         parameter_value_type = "SINGLE_VALUED"
