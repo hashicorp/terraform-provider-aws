@@ -5,31 +5,27 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_autoscaling_traffic_attachment")
+// @SDKResource("aws_autoscaling_traffic_attachment" name="Autoscaling Traffic Attachment")
 func ResourceAutoscalingTrafficAttachment() *schema.Resource {
 	return &schema.Resource{
-
 		CreateWithoutTimeout: resourceTrafficAttachmentCreate,
 		ReadWithoutTimeout:   resourceTrafficAttachmentRead,
 		DeleteWithoutTimeout: resourceTrafficAttachmentDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
@@ -51,15 +47,17 @@ func ResourceAutoscalingTrafficAttachment() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"identifier": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringLenBetween(1, 2048),
 						},
 
 						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringLenBetween(1, 2048),
 						},
 					},
 				},
@@ -74,16 +72,17 @@ const (
 
 func resourceTrafficAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AutoScalingConn()
-	sourceIdentifier := expandTrafficSourceIdentifier(d.Get("traffic_sources").([]interface{})[0].(map[string]interface{}))
+	trafficSources := expandTrafficSourceIdentifier(d.Get("traffic_sources").([]interface{})[0].(map[string]interface{}))
+	trafficSourcesIdentifier := aws.StringValue(trafficSources.Identifier)
+	trafficSourcesType := aws.StringValue(trafficSources.Type)
 	asgName := d.Get("autoscaling_group_name").(string)
+	id := strings.Join([]string{asgName, aws.StringValue(trafficSources.Type), aws.StringValue(trafficSources.Identifier)}, "/")
 	in := &autoscaling.AttachTrafficSourcesInput{
 		AutoScalingGroupName: aws.String(asgName),
-		TrafficSources:       []*autoscaling.TrafficSourceIdentifier{sourceIdentifier},
+		TrafficSources:       []*autoscaling.TrafficSourceIdentifier{trafficSources},
 	}
 
 	_, err := conn.AttachTrafficSourcesWithContext(ctx, in)
-
-	id := id.PrefixedUniqueId(fmt.Sprintf("%s-", asgName))
 
 	if err != nil {
 		return diag.Errorf("creating Autoscaling Attachment (%s): %s", id, err)
@@ -91,7 +90,7 @@ func resourceTrafficAttachmentCreate(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(id)
 
-	if _, err := waitTrafficAttachmentCreated(ctx, conn, asgName, *sourceIdentifier.Type, *sourceIdentifier.Identifier, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitTrafficAttachmentCreated(ctx, conn, asgName, trafficSourcesType, trafficSourcesIdentifier, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("waiting for Autescaling Attachment (%s) create: %s", id, err)
 	}
 
@@ -99,32 +98,26 @@ func resourceTrafficAttachmentCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceTrafficAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingConn()
-	asgName := d.Get("autoscaling_group_name").(string)
 
-	var err error
+	asgName := d.Get("autoscaling_group_name").(string)
 	trafficSources := expandTrafficSourceIdentifier(d.Get("traffic_sources").([]interface{})[0].(map[string]interface{}))
 	sourceIdentifier := aws.StringValue(trafficSources.Identifier)
 	sourceType := aws.StringValue(trafficSources.Type)
-	out, err := FindTrafficAttachment(ctx, conn, asgName, sourceType, sourceIdentifier)
+	_, err := FindTrafficAttachment(ctx, conn, asgName, sourceType, sourceIdentifier)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Source Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
 		return diag.Errorf("reading Source Attachment (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("traffic_sources", []interface{}{flattenTrafficSourceIdentifier(out.TrafficSources[0])}); err != nil {
-		return diag.Errorf("setting attachment: %s", err)
-	}
-
-	d.Set("autoscaling_group_name", asgName)
-
-	return nil
+	return diags
 }
 
 func resourceTrafficAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -213,12 +206,32 @@ func statusTrafficAttachment(ctx context.Context, conn *autoscaling.AutoScaling,
 
 func FindTrafficAttachment(ctx context.Context, conn *autoscaling.AutoScaling, asgName string, sourceType string, sourceIdentifier string) (*autoscaling.DescribeTrafficSourcesOutput, error) {
 
+	// Fetch the ASG first
+	_, err := FindGroupByName(ctx, conn, asgName)
+	if err != nil {
+		return nil, err
+	}
+
 	input := &autoscaling.DescribeTrafficSourcesInput{
 		AutoScalingGroupName: aws.String(asgName),
 		TrafficSourceType:    aws.String(sourceType),
 	}
 
-	out, err := conn.DescribeTrafficSourcesWithContext(ctx, input)
+	var result *autoscaling.DescribeTrafficSourcesOutput
+
+	err = conn.DescribeTrafficSourcesPagesWithContext(ctx, input,
+		func(page *autoscaling.DescribeTrafficSourcesOutput, lastPage bool) bool {
+			for _, v := range page.TrafficSources {
+				if aws.StringValue(v.Identifier) == sourceIdentifier {
+					result = page
+					return false
+				}
+			}
+
+			return true
+		},
+	)
+
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
@@ -231,31 +244,13 @@ func FindTrafficAttachment(ctx context.Context, conn *autoscaling.AutoScaling, a
 		return nil, err
 	}
 
-	for _, v := range out.TrafficSources {
-		if aws.StringValue(v.Identifier) == sourceIdentifier {
-			return out, nil
+	if result == nil {
+		return nil, &retry.NotFoundError{
+			LastError: fmt.Errorf("Auto Scaling Group (%s) attachment not found", asgName),
 		}
 	}
 
-	return nil, &retry.NotFoundError{}
-}
-
-func flattenTrafficSourceIdentifier(apiObject *autoscaling.TrafficSourceState) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.Identifier; v != nil {
-		tfMap["identifier"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.Type; v != nil {
-		tfMap["type"] = aws.StringValue(v)
-	}
-
-	return tfMap
+	return result, nil
 }
 
 func expandTrafficSourceIdentifier(tfMap map[string]interface{}) *autoscaling.TrafficSourceIdentifier {
