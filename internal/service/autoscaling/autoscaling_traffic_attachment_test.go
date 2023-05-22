@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccTrafficAttachment_elb(t *testing.T) {
+func TestAccAutoScalingTrafficAttachment_elb(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_traffic_attachment.test"
@@ -36,7 +36,7 @@ func TestAccTrafficAttachment_elb(t *testing.T) {
 	})
 }
 
-func TestAccTrafficAttachment_albTargetGroup(t *testing.T) {
+func TestAccAutoScalingTrafficAttachment_albTargetGroup(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_traffic_attachment.test"
@@ -57,7 +57,7 @@ func TestAccTrafficAttachment_albTargetGroup(t *testing.T) {
 	})
 }
 
-func TestAccTrafficAttachment_vpcLatticeTargetGroup(t *testing.T) {
+func TestAccAutoScalingTrafficAttachment_vpcLatticeTargetGroup(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_traffic_attachment.test"
@@ -78,7 +78,7 @@ func TestAccTrafficAttachment_vpcLatticeTargetGroup(t *testing.T) {
 	})
 }
 
-func TestAccTrafficAttachment_multipleELBs(t *testing.T) {
+func TestAccAutoScalingTrafficAttachment_multipleELBs(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource1Name := "aws_autoscaling_traffic_attachment.test.0"
@@ -108,11 +108,11 @@ func TestAccTrafficAttachment_multipleELBs(t *testing.T) {
 	})
 }
 
-func TestAccTrafficAttachment_multipleVpcLatticeTargetGroups(t *testing.T) {
+func TestAccAutoScalingTrafficAttachment_multipleVPCLatticeTargetGroups(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource1Name := "aws_autoscaling_traffic_attachment.test.0"
-	resource11Name := "aws_autoscaling_traffic_attachment.test.4"
+	resource4Name := "aws_autoscaling_traffic_attachment.test.4"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -125,10 +125,10 @@ func TestAccTrafficAttachment_multipleVpcLatticeTargetGroups(t *testing.T) {
 				Config: testAccTrafficAttachmentConfig_vpcLatticebase(rName, 5),
 			},
 			{
-				Config: testAccTrafficAttachmentConfig_multipleVpcLatticeTargetGroups(rName, 5),
+				Config: testAccTrafficAttachmentConfig_multipleVPCLatticeTargetGroups(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficAttachmentExists(ctx, resource1Name),
-					testAccCheckTrafficAttachmentExists(ctx, resource11Name),
+					testAccCheckTrafficAttachmentExists(ctx, resource4Name),
 				),
 			},
 			{
@@ -138,7 +138,7 @@ func TestAccTrafficAttachment_multipleVpcLatticeTargetGroups(t *testing.T) {
 	})
 }
 
-func TestAccTrafficAttachment_multipleALBTargetGroups(t *testing.T) {
+func TestAccAutoScalingTrafficAttachment_multipleALBTargetGroups(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource1Name := "aws_autoscaling_traffic_attachment.test.0"
@@ -303,44 +303,45 @@ func testAccTrafficAttachmentConfig_vpcLatticebase(rName string, targetGroupCoun
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 
-		resource "aws_vpclattice_target_group" "test" {
-			count = %[2]d
-			name = format("%%s-%%d", substr(%[1]q, 0, 28), count.index)
-			type = "INSTANCE"
-		  
-			config {
-			  port           = 80
-			  protocol       = "HTTP"
-			  vpc_identifier = aws_vpc.test.id
-			}
-		  }
 
-	resource "aws_launch_configuration" "test" {
-		name          = %[1]q
-		image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-		instance_type = "t2.micro"
-	  }
+resource "aws_vpclattice_target_group" "test" {
+  count = %[2]d
+  name  = format("%%s-%%d", substr(%[1]q, 0, 28), count.index)
+  type  = "INSTANCE"
 
-	resource "aws_autoscaling_group" "test" {
-		vpc_zone_identifier       = aws_subnet.test[*].id
-		max_size                  = 1
-		min_size                  = 0
-		desired_capacity          = 0
-		health_check_grace_period = 300
-		force_delete              = true
-		name                      = %[1]q
-		launch_configuration      = aws_launch_configuration.test.name
-	  
-		tag {
-		  key                 = "Name"
-		  value               = %[1]q
-		  propagate_at_launch = true
-		}
-	  
-		lifecycle {
-		  ignore_changes = [target_group_arns]
-		}
-	  }
+  config {
+    port           = 80
+    protocol       = "HTTP"
+    vpc_identifier = aws_vpc.test.id
+  }
+}
+
+resource "aws_launch_configuration" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
+}
+
+resource "aws_autoscaling_group" "test" {
+  vpc_zone_identifier       = aws_subnet.test[*].id
+  max_size                  = 1
+  min_size                  = 0
+  desired_capacity          = 0
+  health_check_grace_period = 300
+  force_delete              = true
+  name                      = %[1]q
+  launch_configuration      = aws_launch_configuration.test.name
+
+  tag {
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
+  }
+
+  lifecycle {
+    ignore_changes = [target_group_arns]
+  }
+}
 `, rName, targetGroupCount))
 }
 
@@ -349,8 +350,8 @@ func testAccTrafficAttachmentConfig_elb(rName string) string {
 resource "aws_autoscaling_traffic_attachment" "test" {
   autoscaling_group_name = aws_autoscaling_group.test.id
   traffic_sources {
-	identifier = aws_elb.test[0].id
-	type = "elb"
+    identifier = aws_elb.test[0].id
+    type       = "elb"
   }
 }
 `)
@@ -363,8 +364,8 @@ resource "aws_autoscaling_traffic_attachment" "test" {
 
   autoscaling_group_name = aws_autoscaling_group.test.id
   traffic_sources {
-	identifier = aws_elb.test[count.index].id
-	type = "elb"
+    identifier = aws_elb.test[count.index].id
+    type       = "elb"
   }
 }
 `, n))
@@ -375,8 +376,8 @@ func testAccTrafficAttachmentConfig_targetGroup(rName string) string {
 resource "aws_autoscaling_traffic_attachment" "test" {
   autoscaling_group_name = aws_autoscaling_group.test.id
   traffic_sources {
-	identifier = aws_lb_target_group.test[0].arn
-	type = "elbv2"
+    identifier = aws_lb_target_group.test[0].arn
+    type       = "elbv2"
   }
 }
 `)
@@ -385,11 +386,11 @@ resource "aws_autoscaling_traffic_attachment" "test" {
 func testAccTrafficAttachmentConfig_multipleTargetGroups(rName string, n int) string {
 	return acctest.ConfigCompose(testAccTrafficAttachmentConfig_targetGroupBase(rName, n), fmt.Sprintf(`
 resource "aws_autoscaling_traffic_attachment" "test" {
-  count = %[1]d
+  count                  = %[1]d
   autoscaling_group_name = aws_autoscaling_group.test.id
   traffic_sources {
-	identifier = aws_lb_target_group.test[0].arn
-	type = "elbv2"
+    identifier = aws_lb_target_group.test[0].arn
+    type       = "elbv2"
   }
 }
 `, n))
@@ -400,21 +401,21 @@ func testAccTrafficAttachmentConfig_vpcLatticeTargetGrpoup(rName string) string 
 resource "aws_autoscaling_traffic_attachment" "test" {
   autoscaling_group_name = aws_autoscaling_group.test.id
   traffic_sources {
-	identifier = aws_vpclattice_target_group.test[0].arn
-	type = "vpc-lattice"
+    identifier = aws_vpclattice_target_group.test[0].arn
+    type       = "vpc-lattice"
   }
 }
 `)
 }
 
-func testAccTrafficAttachmentConfig_multipleVpcLatticeTargetGroups(rName string, n int) string {
+func testAccTrafficAttachmentConfig_multipleVPCLatticeTargetGroups(rName string, n int) string {
 	return acctest.ConfigCompose(testAccTrafficAttachmentConfig_vpcLatticebase(rName, n), fmt.Sprintf(`
 resource "aws_autoscaling_traffic_attachment" "test" {
-  count = %[1]d
+  count                  = %[1]d
   autoscaling_group_name = aws_autoscaling_group.test.id
   traffic_sources {
-	identifier = aws_vpclattice_target_group.test[count.index].arn
-	type = "vpc-lattice"
+    identifier = aws_vpclattice_target_group.test[count.index].arn
+    type       = "vpc-lattice"
   }
 }
 `, n))

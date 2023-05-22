@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_autoscaling_traffic_attachment" name="Autoscaling Traffic Attachment")
-func ResourceAutoscalingTrafficAttachment() *schema.Resource {
+// @SDKResource("aws_autoscaling_traffic_attachment")
+func ResourceTrafficAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrafficAttachmentCreate,
 		ReadWithoutTimeout:   resourceTrafficAttachmentRead,
@@ -29,7 +29,6 @@ func ResourceAutoscalingTrafficAttachment() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
-			Update: schema.DefaultTimeout(30 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
@@ -67,7 +66,7 @@ func ResourceAutoscalingTrafficAttachment() *schema.Resource {
 }
 
 const (
-	ResNameAutoscalingTrafficAttachment = "Autoscaling Traffic Attachment"
+	ResNameTrafficAttachment = "Autoscaling Traffic Attachment"
 )
 
 func resourceTrafficAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -121,7 +120,6 @@ func resourceTrafficAttachmentRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceTrafficAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	conn := meta.(*conns.AWSClient).AutoScalingConn()
 	asgName := d.Get("autoscaling_group_name").(string)
 	sourceIdentifier := expandTrafficSourceIdentifier(d.Get("traffic_sources").([]interface{})[0].(map[string]interface{}))
@@ -200,12 +198,11 @@ func statusTrafficAttachment(ctx context.Context, conn *autoscaling.AutoScaling,
 			return nil, "", err
 		}
 
-		return output, string(*output.TrafficSources[0].State), nil
+		return output, aws.StringValue(output.TrafficSources[0].State), nil
 	}
 }
 
 func FindTrafficAttachment(ctx context.Context, conn *autoscaling.AutoScaling, asgName string, sourceType string, sourceIdentifier string) (*autoscaling.DescribeTrafficSourcesOutput, error) {
-
 	// Fetch the ASG first
 	_, err := FindGroupByName(ctx, conn, asgName)
 	if err != nil {
