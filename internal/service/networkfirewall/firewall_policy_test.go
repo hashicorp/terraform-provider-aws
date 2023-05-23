@@ -1182,7 +1182,7 @@ resource "aws_networkfirewall_firewall_policy" "test" {
     stateless_default_actions          = ["aws:pass"]
 
     stateful_engine_options {
-      rule_order              = %[2]q
+      rule_order = %[2]q
     }
   }
 }
