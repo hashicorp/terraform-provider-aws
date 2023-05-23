@@ -1529,10 +1529,10 @@ resource "aws_elasticache_replication_group" "test" {
   replication_group_id = %[2]q
   description          = "test"
 
-  engine                = "redis"
-  engine_version        = "5.0.6"
-  node_type             = "cache.m5.large"
-  number_cache_clusters = 1
+  engine             = "redis"
+  engine_version     = "5.0.6"
+  node_type          = "cache.m5.large"
+  num_cache_clusters = 1
 }
 `, rName, primaryReplicationGroupId)
 }
@@ -1548,10 +1548,10 @@ resource "aws_elasticache_replication_group" "test" {
   replication_group_id = %[2]q
   description          = "test"
 
-  engine                = "redis"
-  engine_version        = "5.0.6"
-  node_type             = %[3]q
-  number_cache_clusters = 1
+  engine             = "redis"
+  engine_version     = "5.0.6"
+  node_type          = %[3]q
+  num_cache_clusters = 1
 }
 `, rName, primaryReplicationGroupId, nodeType)
 }
@@ -1569,9 +1569,9 @@ resource "aws_elasticache_replication_group" "test" {
 
   node_type = "cache.m5.large"
 
-  engine                = "redis"
-  engine_version        = "5.0.6"
-  number_cache_clusters = 2
+  engine             = "redis"
+  engine_version     = "5.0.6"
+  num_cache_clusters = 2
 
   automatic_failover_enabled = %[3]s
 }
@@ -1591,10 +1591,10 @@ resource "aws_elasticache_replication_group" "test" {
   replication_group_id = %[2]q
   description          = "test"
 
-  engine                = "redis"
-  engine_version        = "5.0.6"
-  node_type             = "cache.m5.large"
-  number_cache_clusters = 1
+  engine             = "redis"
+  engine_version     = "5.0.6"
+  node_type          = "cache.m5.large"
+  num_cache_clusters = 1
 }
 `, rName, primaryReplicationGroupId, description)
 }
@@ -1611,10 +1611,10 @@ resource "aws_elasticache_replication_group" "test" {
   replication_group_id = %[2]q
   description          = "test"
 
-  engine                = "redis"
-  engine_version        = "5.0.6"
-  node_type             = %[3]q
-  number_cache_clusters = 1
+  engine             = "redis"
+  engine_version     = "5.0.6"
+  node_type          = %[3]q
+  num_cache_clusters = 1
 }
 `, rName, primaryReplicationGroupId, nodeType)
 }
@@ -1631,10 +1631,10 @@ resource "aws_elasticache_replication_group" "test" {
   replication_group_id = %[2]q
   description          = "test"
 
-  engine                = "redis"
-  engine_version        = "5.0.6"
-  node_type             = %[3]q
-  number_cache_clusters = 1
+  engine             = "redis"
+  engine_version     = "5.0.6"
+  node_type          = %[3]q
+  num_cache_clusters = 1
 
   lifecycle {
     ignore_changes = [node_type]
@@ -1655,9 +1655,9 @@ resource "aws_elasticache_replication_group" "test" {
   replication_group_id = %[2]q
   description          = "test"
 
-  engine                = "redis"
-  engine_version        = "5.0.6"
-  number_cache_clusters = 1
+  engine             = "redis"
+  engine_version     = "5.0.6"
+  num_cache_clusters = 1
 }
 `, rName, primaryReplicationGroupId, nodeType)
 }
@@ -1677,9 +1677,9 @@ resource "aws_elasticache_replication_group" "test" {
 
   node_type = "cache.m5.large"
 
-  engine                = "redis"
-  engine_version        = "5.0.6"
-  number_cache_clusters = 2
+  engine             = "redis"
+  engine_version     = "5.0.6"
+  num_cache_clusters = 2
 
   automatic_failover_enabled = %[3]s
 }
@@ -1701,9 +1701,9 @@ resource "aws_elasticache_replication_group" "test" {
 
   node_type = "cache.m5.large"
 
-  engine                = "redis"
-  engine_version        = "5.0.6"
-  number_cache_clusters = 2
+  engine             = "redis"
+  engine_version     = "5.0.6"
+  num_cache_clusters = 2
 
   automatic_failover_enabled = %[3]s
 
@@ -1727,9 +1727,9 @@ resource "aws_elasticache_replication_group" "test" {
   replication_group_id = %[2]q
   description          = "test"
 
-  engine                = "redis"
-  engine_version        = "5.0.6"
-  number_cache_clusters = 2
+  engine             = "redis"
+  engine_version     = "5.0.6"
+  num_cache_clusters = 2
 
   lifecycle {
     ignore_changes = [automatic_failover_enabled]
@@ -1762,9 +1762,9 @@ resource "aws_elasticache_replication_group" "primary" {
 
   node_type = "cache.m5.large"
 
-  engine                = "redis"
-  engine_version        = "5.0.6"
-  number_cache_clusters = 1
+  engine             = "redis"
+  engine_version     = "5.0.6"
+  num_cache_clusters = 1
 }
 
 resource "aws_elasticache_replication_group" "alternate" {
@@ -1776,7 +1776,7 @@ resource "aws_elasticache_replication_group" "alternate" {
 
   subnet_group_name = aws_elasticache_subnet_group.alternate.name
 
-  number_cache_clusters = 1
+  num_cache_clusters = 1
 }
 
 resource "aws_elasticache_replication_group" "third" {
@@ -1788,7 +1788,7 @@ resource "aws_elasticache_replication_group" "third" {
 
   subnet_group_name = aws_elasticache_subnet_group.third.name
 
-  number_cache_clusters = 1
+  num_cache_clusters = 1
 }
 `, rName))
 }
@@ -1817,9 +1817,9 @@ resource "aws_elasticache_replication_group" "primary" {
 
   node_type = "cache.m5.large"
 
-  engine                = "redis"
-  engine_version        = "5.0.6"
-  number_cache_clusters = 1
+  engine             = "redis"
+  engine_version     = "5.0.6"
+  num_cache_clusters = 1
 }
 
 resource "aws_elasticache_replication_group" "secondary" {
@@ -1831,7 +1831,7 @@ resource "aws_elasticache_replication_group" "secondary" {
 
   subnet_group_name = aws_elasticache_subnet_group.secondary.name
 
-  number_cache_clusters = 1
+  num_cache_clusters = 1
 }
 `, rName))
 }
@@ -1860,9 +1860,9 @@ resource "aws_elasticache_replication_group" "primary" {
 
   node_type = "cache.m5.large"
 
-  engine                = "redis"
-  engine_version        = "5.0.6"
-  number_cache_clusters = 1
+  engine             = "redis"
+  engine_version     = "5.0.6"
+  num_cache_clusters = 1
 }
 
 resource "aws_elasticache_replication_group" "third" {
@@ -1874,7 +1874,7 @@ resource "aws_elasticache_replication_group" "third" {
 
   subnet_group_name = aws_elasticache_subnet_group.third.name
 
-  number_cache_clusters = 1
+  num_cache_clusters = 1
 }
 `, rName))
 }
@@ -1969,10 +1969,10 @@ resource "aws_elasticache_replication_group" "test" {
   replication_group_id = %[2]q
   description          = "test"
 
-  engine                = "redis"
-  engine_version        = %[3]q
-  node_type             = "cache.m5.large"
-  number_cache_clusters = 1
+  engine             = "redis"
+  engine_version     = %[3]q
+  node_type          = "cache.m5.large"
+  num_cache_clusters = 1
 }
 `, rName, primaryReplicationGroupId, repGroupEngineVersion)
 }
@@ -1990,10 +1990,10 @@ resource "aws_elasticache_replication_group" "test" {
   replication_group_id = %[2]q
   description          = "test"
 
-  engine                = "redis"
-  engine_version        = %[3]q
-  node_type             = "cache.m5.large"
-  number_cache_clusters = 1
+  engine             = "redis"
+  engine_version     = %[3]q
+  node_type          = "cache.m5.large"
+  num_cache_clusters = 1
 
   lifecycle {
     ignore_changes = [engine_version]
@@ -2016,10 +2016,10 @@ resource "aws_elasticache_replication_group" "test" {
   replication_group_id = %[2]q
   description          = "test"
 
-  engine                = "redis"
-  engine_version        = %[3]q
-  node_type             = "cache.m5.large"
-  number_cache_clusters = 1
+  engine             = "redis"
+  engine_version     = %[3]q
+  node_type          = "cache.m5.large"
+  num_cache_clusters = 1
 
   lifecycle {
     ignore_changes = [engine_version]
@@ -2042,10 +2042,10 @@ resource "aws_elasticache_replication_group" "test" {
   replication_group_id = %[2]q
   description          = "test"
 
-  engine                = "redis"
-  engine_version        = %[3]q
-  node_type             = "cache.m5.large"
-  number_cache_clusters = 1
+  engine             = "redis"
+  engine_version     = %[3]q
+  node_type          = "cache.m5.large"
+  num_cache_clusters = 1
 
   lifecycle {
     ignore_changes = [engine_version]
@@ -2073,10 +2073,10 @@ resource "aws_elasticache_replication_group" "test" {
   replication_group_id = %[2]q
   description          = "test"
 
-  engine                = "redis"
-  engine_version        = %[3]q
-  node_type             = "cache.m5.large"
-  number_cache_clusters = 1
+  engine             = "redis"
+  engine_version     = %[3]q
+  node_type          = "cache.m5.large"
+  num_cache_clusters = 1
 
   lifecycle {
     ignore_changes = [engine_version]
