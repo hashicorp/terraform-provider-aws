@@ -577,7 +577,9 @@ func testAccDetector_features_rds_login_events(t *testing.T) {
 				Config: testAccDetectorConfig_features_rds_login_events(true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "datasources.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "features.#", "9"),
 					resource.TestCheckResourceAttr(resourceName, "features.0.name", "CLOUD_TRAIL"),
 					resource.TestCheckResourceAttr(resourceName, "features.0.enable", "true"),
@@ -611,7 +613,9 @@ func testAccDetector_features_rds_login_events(t *testing.T) {
 				Config: testAccDetectorConfig_features_rds_login_events(false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "datasources.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "features.#", "9"),
 					resource.TestCheckResourceAttr(resourceName, "features.0.name", "CLOUD_TRAIL"),
 					resource.TestCheckResourceAttr(resourceName, "features.0.enable", "true"),
@@ -654,7 +658,9 @@ func testAccDetector_features_eks_runtime_monitoring(t *testing.T) {
 				Config: testAccDetectorConfig_features_eks_runtime_monitoring(true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "datasources.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "features.#", "9"),
 					resource.TestCheckResourceAttr(resourceName, "features.0.name", "CLOUD_TRAIL"),
 					resource.TestCheckResourceAttr(resourceName, "features.0.enable", "true"),
@@ -688,7 +694,9 @@ func testAccDetector_features_eks_runtime_monitoring(t *testing.T) {
 				Config: testAccDetectorConfig_features_rds_login_events(false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "datasources.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "features.#", "9"),
 					resource.TestCheckResourceAttr(resourceName, "features.0.name", "CLOUD_TRAIL"),
 					resource.TestCheckResourceAttr(resourceName, "features.0.enable", "true"),
