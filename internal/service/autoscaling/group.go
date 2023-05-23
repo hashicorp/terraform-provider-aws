@@ -836,6 +836,8 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
+	startTime := time.Now()
+
 	asgName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	createInput := &autoscaling.CreateAutoScalingGroupInput{
 		AutoScalingGroupName:             aws.String(asgName),
@@ -985,7 +987,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("wait_for_capacity_timeout"); ok {
-		if v, _ := time.ParseDuration(v.(string)); v > 0 {
+		if timeout, _ := time.ParseDuration(v.(string)); timeout > 0 {
 			// On creation all targets are minimums.
 			f := func(nASG, nELB int) error {
 				minSize := minSize
@@ -1009,7 +1011,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 				return nil
 			}
 
-			if err := waitGroupCapacitySatisfied(ctx, conn, meta.(*conns.AWSClient).ELBConn(), meta.(*conns.AWSClient).ELBV2Conn(), d.Id(), f, v); err != nil {
+			if err := waitGroupCapacitySatisfied(ctx, conn, meta.(*conns.AWSClient).ELBConn(), meta.(*conns.AWSClient).ELBV2Conn(), d.Id(), f, startTime, timeout); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) capacity satisfied: %s", d.Id(), err)
 			}
 		}
@@ -1147,6 +1149,8 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingConn()
+
+	startTime := time.Now()
 
 	var shouldWaitForCapacity bool
 	var shouldRefreshInstances bool
@@ -1463,7 +1467,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if shouldWaitForCapacity {
 		if v, ok := d.GetOk("wait_for_capacity_timeout"); ok {
-			if v, _ := time.ParseDuration(v.(string)); v > 0 {
+			if timeout, _ := time.ParseDuration(v.(string)); timeout > 0 {
 				// On update all targets are specific.
 				f := func(nASG, nELB int) error {
 					minSize := d.Get("min_size").(int)
@@ -1484,7 +1488,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 					return nil
 				}
 
-				if err := waitGroupCapacitySatisfied(ctx, conn, meta.(*conns.AWSClient).ELBConn(), meta.(*conns.AWSClient).ELBV2Conn(), d.Id(), f, v); err != nil {
+				if err := waitGroupCapacitySatisfied(ctx, conn, meta.(*conns.AWSClient).ELBConn(), meta.(*conns.AWSClient).ELBV2Conn(), d.Id(), f, startTime, timeout); err != nil {
 					return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) capacity satisfied: %s", d.Id(), err)
 				}
 			}
@@ -1997,7 +2001,7 @@ func findLoadBalancerTargetGroupStates(ctx context.Context, conn *autoscaling.Au
 	return output, nil
 }
 
-func findScalingActivities(ctx context.Context, conn *autoscaling.AutoScaling, input *autoscaling.DescribeScalingActivitiesInput) ([]*autoscaling.Activity, error) {
+func findScalingActivities(ctx context.Context, conn *autoscaling.AutoScaling, input *autoscaling.DescribeScalingActivitiesInput, startTime time.Time) ([]*autoscaling.Activity, error) {
 	var output []*autoscaling.Activity
 
 	err := conn.DescribeScalingActivitiesPagesWithContext(ctx, input, func(page *autoscaling.DescribeScalingActivitiesOutput, lastPage bool) bool {
@@ -2005,12 +2009,14 @@ func findScalingActivities(ctx context.Context, conn *autoscaling.AutoScaling, i
 			return !lastPage
 		}
 
-		for _, v := range page.Activities {
-			if v == nil {
+		for _, activity := range page.Activities {
+			if activity == nil {
 				continue
 			}
 
-			output = append(output, v)
+			if startTime.Before(aws.TimeValue(activity.StartTime)) {
+				output = append(output, activity)
+			}
 		}
 
 		return !lastPage
@@ -2030,12 +2036,12 @@ func findScalingActivities(ctx context.Context, conn *autoscaling.AutoScaling, i
 	return output, nil
 }
 
-func findScalingActivitiesByName(ctx context.Context, conn *autoscaling.AutoScaling, name string) ([]*autoscaling.Activity, error) {
+func findScalingActivitiesByName(ctx context.Context, conn *autoscaling.AutoScaling, name string, startTime time.Time) ([]*autoscaling.Activity, error) {
 	input := &autoscaling.DescribeScalingActivitiesInput{
 		AutoScalingGroupName: aws.String(name),
 	}
 
-	return findScalingActivities(ctx, conn, input)
+	return findScalingActivities(ctx, conn, input, startTime)
 }
 
 func findWarmPool(ctx context.Context, conn *autoscaling.AutoScaling, name string) (*autoscaling.DescribeWarmPoolOutput, error) {
@@ -2076,10 +2082,10 @@ func findWarmPool(ctx context.Context, conn *autoscaling.AutoScaling, name strin
 	return output, nil
 }
 
-func statusGroupCapacity(ctx context.Context, conn *autoscaling.AutoScaling, elbconn *elb.ELB, elbv2conn *elbv2.ELBV2, name string, cb func(int, int) error) retry.StateRefreshFunc {
+func statusGroupCapacity(ctx context.Context, conn *autoscaling.AutoScaling, elbconn *elb.ELB, elbv2conn *elbv2.ELBV2, name string, startTime time.Time, cb func(int, int) error) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		// Check for fatal error in activity logs.
-		scalingActivities, err := findScalingActivitiesByName(ctx, conn, name)
+		scalingActivities, err := findScalingActivitiesByName(ctx, conn, name, startTime)
 
 		if err != nil {
 			return nil, "", fmt.Errorf("reading scaling activities: %w", err)
@@ -2298,10 +2304,10 @@ func statusWarmPoolInstanceCount(ctx context.Context, conn *autoscaling.AutoScal
 	}
 }
 
-func waitGroupCapacitySatisfied(ctx context.Context, conn *autoscaling.AutoScaling, elbconn *elb.ELB, elbv2conn *elbv2.ELBV2, name string, cb func(int, int) error, timeout time.Duration) error {
+func waitGroupCapacitySatisfied(ctx context.Context, conn *autoscaling.AutoScaling, elbconn *elb.ELB, elbv2conn *elbv2.ELBV2, name string, cb func(int, int) error, startTime time.Time, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Target:  []string{"ok"},
-		Refresh: statusGroupCapacity(ctx, conn, elbconn, elbv2conn, name, cb),
+		Refresh: statusGroupCapacity(ctx, conn, elbconn, elbv2conn, name, startTime, cb),
 		Timeout: timeout,
 	}
 
