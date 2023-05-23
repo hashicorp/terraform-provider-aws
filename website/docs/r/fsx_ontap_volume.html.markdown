@@ -50,6 +50,7 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the Volume. You can use a maximum of 203 alphanumeric characters, plus the underscore (_) special character.
 * `junction_path` - (Required) Specifies the location in the storage virtual machine's namespace where the volume is mounted. The junction_path must have a leading forward slash, such as `/vol3`
+* `ontap_volume_type` - (Optional) Specifies the type of volume, valid values are `RW`, `DP`. Default value is `RW`. These can be set by the ONTAP CLI or API. This setting is used as part of migration and replication [Migrating to Amazon FSx for NetApp ONTAP](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/migrating-fsx-ontap.html)
 * `security_style` - (Optional) Specifies the volume security style, Valid values are `UNIX`, `NTFS`, and `MIXED`. Default value is `UNIX`.
 * `size_in_megabytes` - (Required) Specifies the size of the volume, in megabytes (MB), that you are creating.
 * `storage_efficiency_enabled` - (Required) Set to true to enable deduplication, compression, and compaction storage efficiency features on the volume.
@@ -71,7 +72,6 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Identifier of the volume, e.g., `fsvol-12345678`
 * `file_system_id` - Describes the file system for the volume, e.g. `fs-12345679`
 * `flexcache_endpoint_type` - Specifies the FlexCache endpoint type of the volume, Valid values are `NONE`, `ORIGIN`, `CACHE`. Default value is `NONE`. These can be set by the ONTAP CLI or API and are use with FlexCache feature.
-* `ontap_volume_type` - Specifies the type of volume, Valid values are `RW`, `DP`,  and `LS`. Default value is `RW`. These can be set by the ONTAP CLI or API. This setting is used as part of migration and replication [Migrating to Amazon FSx for NetApp ONTAP](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/migrating-fsx-ontap.html)
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `uuid` - The Volume's UUID (universally unique identifier).
 * `volume_type` - The type of volume, currently the only valid value is `ONTAP`.

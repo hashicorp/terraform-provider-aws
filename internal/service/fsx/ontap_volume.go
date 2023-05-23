@@ -63,8 +63,10 @@ func ResourceOntapVolume() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 203),
 			},
 			"ontap_volume_type": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:         schema.TypeString,
+				Default:      fsx.InputOntapVolumeTypeRw,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(fsx.InputOntapVolumeType_Values(), false),
 			},
 			"security_style": {
 				Type:         schema.TypeString,
@@ -138,6 +140,10 @@ func resourceOntapVolumeCreate(ctx context.Context, d *schema.ResourceData, meta
 			StorageVirtualMachineId:  aws.String(d.Get("storage_virtual_machine_id").(string)),
 		},
 		Tags: GetTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("ontap_volume_type"); ok {
+		input.OntapConfiguration.OntapVolumeType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("security_style"); ok {
