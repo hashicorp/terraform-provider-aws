@@ -51,6 +51,7 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 			"allowed_regions": schema.SetAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Description: "A list of aws regions that are allowed to be used as a `region` input at the resource level.",
 			},
 			"custom_ca_bundle": schema.StringAttribute{
 				Optional:    true,
