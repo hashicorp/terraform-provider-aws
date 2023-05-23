@@ -283,7 +283,7 @@ func testAccBucketConfig_region(rName string, region string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_bucket" "test" {
   name      = %[1]q
-  region = %[2]q
+  region    = %[2]q
   bundle_id = "small_1_0"
 }
 `, rName, region)
